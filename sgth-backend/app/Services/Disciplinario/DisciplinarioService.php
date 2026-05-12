@@ -10,13 +10,15 @@ use App\Models\Disciplinario\SancionDisciplinaria;
 use App\Models\Disciplinario\Sumario;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
-use App\Models\Asistencia\FeriadoInstitucional;
+use App\Helpers\DiasHabilesHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final class DisciplinarioService implements DisciplinarioServiceInterface
 {
+    use DiasHabilesHelper;
+
     public function resolverSumario(int $sumarioId, array $datosSancion, int $userId): Sumario
     {
         $sumario = Sumario::findOrFail($sumarioId);
@@ -94,31 +96,5 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
                 Log::error("ALERTA LEGAL: Sumario #{$sumario->id} ha excedido el plazo de resolución de 10 días hábiles desde el informe. Fecha límite era: {$fechaLimiteResolucion->toDateString()}. Riesgo de caducidad.");
             }
         }
-    }
-
-    /**
-     * Calcula una fecha futura sumando únicamente días hábiles (excluyendo fines de semana y feriados).
-     */
-    private function calcularDiasHabiles(Carbon $fechaInicio, int $dias): Carbon
-    {
-        $fecha = $fechaInicio->copy();
-        $diasSumados = 0;
-
-        while ($diasSumados < $dias) {
-            $fecha->addDay();
-
-            if ($fecha->isWeekend()) {
-                continue;
-            }
-
-            $esFeriado = FeriadoInstitucional::esFeriado($fecha)->exists();
-            if ($esFeriado) {
-                continue;
-            }
-
-            $diasSumados++;
-        }
-
-        return $fecha;
     }
 }
