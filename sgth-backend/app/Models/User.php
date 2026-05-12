@@ -65,6 +65,14 @@ class User extends Authenticatable
             ->where('unidad_administrativa_id', $mismaUnidad)
             ->exists();
 
-        return $esJefeTitular;
+        if ($esJefeTitular) return true;
+
+        // Caso 2: está en subrogación o encargo activo en esa unidad
+        return \App\Models\Expediente\Subrogacion::where('servidor_subrogante_id', $miServidor->id)
+            ->where('unidad_administrativa_id', $mismaUnidad)
+            ->where('estado', \App\Enums\EstadoSubrogacion::ACTIVA)
+            ->where('fecha_inicio', '<=', now())
+            ->where('fecha_fin', '>=', now())
+            ->exists();
     }
 }

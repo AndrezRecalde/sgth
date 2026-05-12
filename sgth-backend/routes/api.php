@@ -30,6 +30,22 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::apiResource('puestos', \App\Http\Controllers\Estructura\PuestoController::class);
     });
 
+    // Módulo 02: Expediente Digital
+    Route::prefix('expediente')->group(function () {
+        Route::apiResource('servidores', \App\Http\Controllers\Expediente\ServidorController::class);
+        
+        Route::post('servidores/{servidor}/documentos', [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'store']);
+        Route::get('servidores/{servidor}/movimientos', [\App\Http\Controllers\Expediente\MovimientoPersonalController::class, 'index']);
+
+        Route::prefix('subrogaciones')->group(function () {
+            Route::get('activas', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'listarActivas']);
+            Route::get('servidor/{servidorId}', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'listarPorServidor']);
+            Route::post('/', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'registrar']);
+            Route::put('{id}/finalizar', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'finalizar']);
+            Route::put('{id}/cancelar', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'cancelar']);
+        });
+    });
+
     // Admin TI
     Route::prefix('admin')
         ->middleware('role:admin-ti')
