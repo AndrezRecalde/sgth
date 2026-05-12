@@ -46,6 +46,22 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         });
     });
 
+    // Módulo 03: Nómina y Remuneraciones
+    Route::prefix('nomina')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Nomina\NominaController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Nomina\NominaController::class, 'calcular']);
+        Route::get('{id}', [\App\Http\Controllers\Nomina\NominaController::class, 'show']);
+        Route::post('{id}/cerrar', [\App\Http\Controllers\Nomina\NominaController::class, 'cerrar']);
+        
+        Route::get('{nominaId}/rol-pago/{servidorId}', [\App\Http\Controllers\Nomina\RolPagoController::class, 'show']);
+        
+        Route::get('conceptos', [\App\Http\Controllers\Nomina\ConceptoNominaController::class, 'index']);
+        Route::get('handoffs', [\App\Http\Controllers\Nomina\HandoffErpController::class, 'index']);
+        
+        Route::apiResource('descuentos-recurrentes', \App\Http\Controllers\Nomina\DescuentoRecurrenteController::class)
+            ->middleware('role:admin-uath|asistente-uath');
+    });
+
     // Admin TI
     Route::prefix('admin')
         ->middleware('role:admin-ti')
