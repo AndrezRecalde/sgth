@@ -11,11 +11,18 @@ return new class extends Migration
         Schema::create('feriados_institucionales', function (Blueprint $table) {
             $table->id();
             
-            $table->date('fecha')->unique();
+            $table->date('fecha')->nullable();
+            $table->unsignedTinyInteger('mes')->nullable();
+            $table->unsignedTinyInteger('dia')->nullable();
             $table->string('descripcion');
-            $table->boolean('es_nacional')->default(true); // false = feriado local del GAD
+            $table->boolean('es_nacional')->default(true);
+            $table->boolean('es_movil')->default(false);
             
             $table->timestamps();
+            
+            // Índices para optimizar las consultas de la scope
+            $table->index(['es_movil', 'mes', 'dia']);
+            $table->index(['es_movil', 'fecha']);
         });
     }
 

@@ -103,23 +103,19 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
     {
         $fecha = $fechaInicio->copy();
         $diasSumados = 0;
-        
-        // Cachear feriados para evitar múltiples consultas en el bucle
-        $feriados = FeriadoInstitucional::where('fecha', '>=', $fechaInicio->toDateString())->pluck('fecha')->map(fn($d) => $d->toDateString())->toArray();
 
         while ($diasSumados < $dias) {
             $fecha->addDay();
-            
-            // Si es sábado o domingo, se omite
+
             if ($fecha->isWeekend()) {
                 continue;
             }
-            
-            // Si es un feriado nacional o institucional, se omite
-            if (in_array($fecha->toDateString(), $feriados)) {
+
+            $esFeriado = FeriadoInstitucional::esFeriado($fecha)->exists();
+            if ($esFeriado) {
                 continue;
             }
-            
+
             $diasSumados++;
         }
 
