@@ -18,7 +18,7 @@ class HandoffErpService implements HandoffErpServiceInterface
     public function generarHandoffNomina(int $nominaId): HandoffErp
     {
         return DB::transaction(function () use ($nominaId) {
-            $nomina = Nomina::with('rolesPago.servidor')->findOrFail($nominaId);
+            $nomina = Nomina::with(['rolesPago.servidor', 'detalles.concepto'])->findOrFail($nominaId);
 
             // 1. Construir el XML
             $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><HandoffNomina></HandoffNomina>');
@@ -33,10 +33,21 @@ class HandoffErpService implements HandoffErpServiceInterface
             foreach ($nomina->rolesPago as $rol) {
                 $item = $roles->addChild('Rol');
                 $item->addChild('Cedula', $rol->servidor->cedula);
-                $item->addChild('Nombres', $rol->servidor->nombreCompleto());
+                $item->addChild('Nombres', htmlspecialchars($rol->servidor->nombreCompleto()));
                 $item->addChild('Ingresos', $rol->total_ingresos);
                 $item->addChild('Descuentos', $rol->total_descuentos);
                 $item->addChild('Neto', $rol->total_neto);
+                
+                $conceptosXml = $item->addChild('Conceptos');
+                $detallesServidor = $nomina->detalles->where('servidor_id', $rol->servidor_id);
+                
+                foreach ($detallesServidor as $detalle) {
+                    $conceptoXml = $conceptosXml->addChild('Concepto');
+                    $conceptoXml->addChild('Codigo', $detalle->concepto->codigo);
+                    $conceptoXml->addChild('Nombre', htmlspecialchars($detalle->concepto->nombre));
+                    $conceptoXml->addChild('Tipo', $detalle->concepto->tipo->value);
+                    $conceptoXml->addChild('Valor', $detalle->valor);
+                }
             }
 
             $xmlContent = $xml->asXML();
