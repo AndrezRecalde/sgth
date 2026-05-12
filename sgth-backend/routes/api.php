@@ -7,6 +7,9 @@ Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('login', [\App\Http\Controllers\Auth\AuthController::class, 'login']);
     });
+
+    // Endpoint público para escanear el QR del permiso físico
+    Route::get('permisos/verificar/{folio}', [\App\Http\Controllers\Asistencia\FolioPermisoController::class, 'verificar']);
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
@@ -60,6 +63,31 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         
         Route::apiResource('descuentos-recurrentes', \App\Http\Controllers\Nomina\DescuentoRecurrenteController::class)
             ->middleware('role:admin-uath|asistente-uath');
+    });
+
+    // Módulo 04: Asistencia, Permisos y Vacaciones
+    Route::prefix('asistencia')->group(function () {
+        // Biométrico (Solo lectura)
+        Route::get('marcaciones', [\App\Http\Controllers\Asistencia\MarcacionController::class, 'index']);
+
+        // Vacaciones
+        Route::prefix('vacaciones')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Asistencia\VacacionController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Asistencia\VacacionController::class, 'store']);
+            Route::get('saldo/{servidorId}', [\App\Http\Controllers\Asistencia\VacacionController::class, 'saldo']);
+            Route::put('{id}', [\App\Http\Controllers\Asistencia\VacacionController::class, 'update']);
+        });
+
+        // Permisos
+        Route::prefix('permisos')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'store']);
+            Route::get('{id}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'show']);
+            Route::put('{id}/anular', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'anular']);
+            
+            Route::post('confirmar/{folio}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'confirmar']);
+            Route::post('{id}/validar-ts', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'validar']);
+        });
     });
 
     // Admin TI
