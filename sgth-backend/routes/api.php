@@ -10,6 +10,10 @@ Route::prefix('v1')->group(function () {
 
     // Endpoint público para escanear el QR del permiso físico
     Route::get('permisos/verificar/{folio}', [\App\Http\Controllers\Asistencia\FolioPermisoController::class, 'verificar']);
+
+    // Endpoint público protegido criptográficamente mediante firmas temporales (URL firmada)
+    Route::get('sgd/documentos/{documento}/descargar', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'descargar'])
+        ->name('sgd.documentos.descargar');
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
@@ -88,6 +92,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::post('confirmar/{folio}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'confirmar']);
             Route::post('{id}/validar-ts', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'validar']);
         });
+    });
+
+    // Módulo 05: Sistema de Gestión Documental (SGD)
+    Route::prefix('sgd')->group(function () {
+        Route::post('documentos', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'store']);
+        Route::get('documentos/{id}/generar-enlace', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'generarEnlace']);
+    });
+
+    // Módulo 06: Autoservicio
+    Route::prefix('autoservicio')->group(function () {
+        Route::get('mis-permisos', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misPermisos']);
+        Route::get('mis-vacaciones', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misVacaciones']);
+        Route::get('mis-roles-pago', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misRolesPago']);
+        Route::get('mi-expediente', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'miExpediente']);
+        Route::get('mis-actividades', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misActividades']);
+        
+        // Integración con Clínica y Módulo Asistencia
+        Route::post('solicitar-cita', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'solicitarCita']);
+        Route::get('mi-historia-clinica', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'miHistoriaClinica']);
     });
 
     // Admin TI
