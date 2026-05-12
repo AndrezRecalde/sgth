@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "SGTH Desarrollo",
+      "Group": "GAD Esmeraldas",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "postgres",
+      "Username": "postgres",
+      "Password": "sgth_password_dev",
+      "SSLMode": "prefer",
+      "SavePassword": true
+    }
+  }
+}

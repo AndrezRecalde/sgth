@@ -1,0 +1,48 @@
+# ── Sistema operativo ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDEs y editores ────────────────────────────────────────────────
+.idea/
+.vscode/
+*.suo
+*.user
+*.swp
+*.swo
+.antigravity/cache/
+
+# ── Laravel (sgth-backend) ─────────────────────────────────────────
+sgth-backend/.env
+sgth-backend/.env.backup
+sgth-backend/.env.testing
+sgth-backend/vendor/
+sgth-backend/node_modules/
+sgth-backend/storage/logs/*.log
+sgth-backend/storage/app/public/
+sgth-backend/storage/framework/cache/
+sgth-backend/storage/framework/sessions/
+sgth-backend/storage/framework/views/
+sgth-backend/bootstrap/cache/*.php
+sgth-backend/.phpunit.result.cache
+sgth-backend/coverage/
+
+# ── Next.js (sgth-frontend) ────────────────────────────────────────
+sgth-frontend/.env.local
+sgth-frontend/.env.development.local
+sgth-frontend/.env.test.local
+sgth-frontend/.env.production.local
+sgth-frontend/node_modules/
+sgth-frontend/.next/
+sgth-frontend/out/
+sgth-frontend/coverage/
+
+# ── Docker ─────────────────────────────────────────────────────────
+docker/postgres/data/
+docker/redis/data/
+
+# ── Archivos sensibles ─────────────────────────────────────────────
+*.pem
+*.key
+*.crt
+*.p12
