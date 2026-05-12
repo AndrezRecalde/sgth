@@ -10,6 +10,8 @@ use App\Models\Disciplinario\SancionDisciplinaria;
 use App\Models\Disciplinario\Sumario;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Models\Asistencia\FeriadoInstitucional;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -67,24 +69,60 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
 
     public function controlarPlazosLegales(): void
     {
+        $hoy = Carbon::today();
+
         // 1. Control de Notificación: 3 días hábiles desde apertura
-        $vencidosNotificacion = Sumario::where('estado', EstadoSumario::ABIERTO)
+        $sumariosSinNotificar = Sumario::where('estado', EstadoSumario::ABIERTO)
             ->where('notificado_sn', false)
-            ->whereRaw("fecha_apertura <= CURRENT_DATE - INTERVAL '3 days'") // Simplificado para días calendario en este sprint
             ->get();
 
-        foreach ($vencidosNotificacion as $sumario) {
-            Log::warning("Sumario #{$sumario->id} ha excedido el plazo legal de notificación de 3 días.");
+        foreach ($sumariosSinNotificar as $sumario) {
+            $fechaLimiteNotificacion = $this->calcularDiasHabiles(Carbon::parse($sumario->fecha_apertura), 3);
+            if ($hoy->gt($fechaLimiteNotificacion)) {
+                Log::warning("Sumario #{$sumario->id} ha excedido el plazo legal de notificación de 3 días hábiles. Fecha límite era: {$fechaLimiteNotificacion->toDateString()}");
+            }
         }
 
         // 2. Control de Resolución: 10 días hábiles desde el informe
-        $vencidosResolucion = Sumario::where('estado', EstadoSumario::CON_INFORME)
+        $sumariosConInforme = Sumario::where('estado', EstadoSumario::CON_INFORME)
             ->whereNotNull('fecha_informe')
-            ->whereRaw("fecha_informe <= CURRENT_DATE - INTERVAL '10 days'") // Simplificado
             ->get();
 
-        foreach ($vencidosResolucion as $sumario) {
-            Log::error("ALERTA LEGAL: Sumario #{$sumario->id} ha excedido el plazo de resolución de 10 días desde el informe. Riesgo de caducidad.");
+        foreach ($sumariosConInforme as $sumario) {
+            $fechaLimiteResolucion = $this->calcularDiasHabiles(Carbon::parse($sumario->fecha_informe), 10);
+            if ($hoy->gt($fechaLimiteResolucion)) {
+                Log::error("ALERTA LEGAL: Sumario #{$sumario->id} ha excedido el plazo de resolución de 10 días hábiles desde el informe. Fecha límite era: {$fechaLimiteResolucion->toDateString()}. Riesgo de caducidad.");
+            }
         }
+    }
+
+    /**
+     * Calcula una fecha futura sumando únicamente días hábiles (excluyendo fines de semana y feriados).
+     */
+    private function calcularDiasHabiles(Carbon $fechaInicio, int $dias): Carbon
+    {
+        $fecha = $fechaInicio->copy();
+        $diasSumados = 0;
+        
+        // Cachear feriados para evitar múltiples consultas en el bucle
+        $feriados = FeriadoInstitucional::where('fecha', '>=', $fechaInicio->toDateString())->pluck('fecha')->map(fn($d) => $d->toDateString())->toArray();
+
+        while ($diasSumados < $dias) {
+            $fecha->addDay();
+            
+            // Si es sábado o domingo, se omite
+            if ($fecha->isWeekend()) {
+                continue;
+            }
+            
+            // Si es un feriado nacional o institucional, se omite
+            if (in_array($fecha->toDateString(), $feriados)) {
+                continue;
+            }
+            
+            $diasSumados++;
+        }
+
+        return $fecha;
     }
 }
