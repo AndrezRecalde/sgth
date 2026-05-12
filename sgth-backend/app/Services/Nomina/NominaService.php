@@ -131,6 +131,40 @@ class NominaService implements NominaServiceInterface
                     ]);
                 }
 
+                // 4. Descuentos Recurrentes (Préstamos, Multas, etc.)
+                $hoy = now()->toDateString();
+                $descuentosRecurrentes = \App\Models\Nomina\DescuentoRecurrente::where('servidor_id', $servidor->id)
+                    ->where('estado', \App\Enums\EstadoDescuentoRecurrente::ACTIVO)
+                    ->where('fecha_inicio', '<=', $hoy)
+                    ->where(function ($query) use ($hoy) {
+                        $query->whereNull('fecha_fin')
+                              ->orWhere('fecha_fin', '>=', $hoy);
+                    })
+                    ->get();
+
+                foreach ($descuentosRecurrentes as $descuentoRecurrente) {
+                    if ($descuentoRecurrente->numero_cuotas_pagadas < $descuentoRecurrente->numero_cuotas_total) {
+                        $cuota = $descuentoRecurrente->valor_cuota;
+                        $descuentos += $cuota;
+
+                        DetalleNomina::create([
+                            'nomina_id' => $nomina->id,
+                            'servidor_id' => $servidor->id,
+                            'concepto_nomina_id' => $descuentoRecurrente->concepto_nomina_id,
+                            'valor' => $cuota,
+                            'observacion' => $descuentoRecurrente->referencia_externa ? "Cuota " . ($descuentoRecurrente->numero_cuotas_pagadas + 1) . " Ref: {$descuentoRecurrente->referencia_externa}" : "Cuota " . ($descuentoRecurrente->numero_cuotas_pagadas + 1),
+                        ]);
+
+                        $descuentoRecurrente->numero_cuotas_pagadas += 1;
+
+                        if ($descuentoRecurrente->numero_cuotas_pagadas >= $descuentoRecurrente->numero_cuotas_total) {
+                            $descuentoRecurrente->estado = \App\Enums\EstadoDescuentoRecurrente::COMPLETADO;
+                        }
+
+                        $descuentoRecurrente->save();
+                    }
+                }
+
                 // Generar Rol de Pago Individual
                 $neto = $ingresos - $descuentos;
 
