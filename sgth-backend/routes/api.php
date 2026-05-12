@@ -113,6 +113,23 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('mi-historia-clinica', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'miHistoriaClinica']);
     });
 
+    // Módulo 07: Selección e Incorporación
+    Route::prefix('seleccion')->group(function () {
+        Route::post('postulantes/{id}/calificar', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'calificar']);
+        Route::post('convocatorias/{id}/declarar-ganador', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'declararGanador']);
+    });
+
+    // Módulo 08: Evaluación del Desempeño
+    Route::prefix('evaluacion')->group(function () {
+        Route::post('evaluaciones/{evaluacionId}/servidor/{servidorId}', [\App\Http\Controllers\Evaluacion\EvaluacionController::class, 'registrarResultado']);
+    });
+
+    // Módulo 14: Disciplinario
+    Route::prefix('disciplinario')->group(function () {
+        Route::post('sumarios/{id}/resolver', [\App\Http\Controllers\Disciplinario\DisciplinarioController::class, 'resolver'])
+            ->middleware('role:admin-uath');
+    });
+
     // Admin TI
     Route::prefix('admin')
         ->middleware('role:admin-ti')
