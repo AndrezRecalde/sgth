@@ -9,6 +9,10 @@ use App\Contracts\Admin\UsuarioServiceInterface;
 use App\Services\Admin\UsuarioService;
 use App\Contracts\Estructura\EstructuraServiceInterface;
 use App\Services\Estructura\EstructuraService;
+use App\Contracts\Expediente\SubrogacionServiceInterface;
+use App\Services\Expediente\SubrogacionService;
+use App\Contracts\Expediente\ExpedienteServiceInterface;
+use App\Services\Expediente\ExpedienteService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +32,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             EstructuraServiceInterface::class,
             EstructuraService::class
+        );
+        $this->app->bind(
+            SubrogacionServiceInterface::class,
+            SubrogacionService::class
+        );
+        $this->app->bind(
+            ExpedienteServiceInterface::class,
+            ExpedienteService::class
         );
     }
 
