@@ -179,12 +179,12 @@ class NominaService implements NominaServiceInterface
 
             // Aquí se dispararían los Jobs asíncronos en el orden requerido:
             // 1. Dispatch GenerarHandoffErpJob
-            // \App\Jobs\Nomina\GenerarHandoffErpJob::dispatch($nomina->id)->onQueue('erp');
+            \App\Jobs\Nomina\GenerarHandoffErpJob::dispatch($nomina->id);
             
             // 2. Dispatch EnviarRolPagoJob por cada servidor
-            // foreach($nomina->rolesPago as $rol) {
-            //     \App\Jobs\Nomina\EnviarRolPagoJob::dispatch($rol->id)->onQueue('correos');
-            // }
+            foreach($nomina->rolesPago as $rol) {
+                \App\Jobs\Nomina\EnviarRolPagoJob::dispatch($rol->id);
+            }
 
             return $nomina;
         });
