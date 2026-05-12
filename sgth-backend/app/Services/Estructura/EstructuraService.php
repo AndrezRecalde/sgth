@@ -1,0 +1,150 @@
+<?php
+
+namespace App\Services\Estructura;
+
+use App\Contracts\Estructura\EstructuraServiceInterface;
+use App\Models\Estructura\UnidadAdministrativa;
+use App\Models\Estructura\Puesto;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use App\Exceptions\ReglaNegocioException;
+
+final class EstructuraService implements EstructuraServiceInterface
+{
+    // ── GESTIÓN DE UNIDADES ADMINISTRATIVAS ──────────────────────────────────
+
+    public function listarUnidades(array $filtros): LengthAwarePaginator
+    {
+        return UnidadAdministrativa::query()
+            ->with(['padre'])
+            ->when(isset($filtros['nivel']), fn($q) => $q->where('nivel', $filtros['nivel']))
+            ->when(isset($filtros['estado']), fn($q) => $q->where('estado', $filtros['estado']))
+            ->orderBy('nivel')
+            ->orderBy('nombre')
+            ->paginate($filtros['por_pagina'] ?? 15);
+    }
+
+    public function crearUnidad(array $datos): UnidadAdministrativa
+    {
+        return UnidadAdministrativa::create($datos);
+    }
+
+    public function obtenerUnidad(int $id): UnidadAdministrativa
+    {
+        return UnidadAdministrativa::with(['padre', 'hijos', 'puestos'])->findOrFail($id);
+    }
+
+    public function actualizarUnidad(int $id, array $datos): UnidadAdministrativa
+    {
+        $unidad = $this->obtenerUnidad($id);
+
+        if (isset($datos['unidad_padre_id']) && $datos['unidad_padre_id'] == $id) {
+            throw new ReglaNegocioException('Una unidad administrativa no puede ser hija de sí misma.');
+        }
+
+        $unidad->update($datos);
+        return $unidad;
+    }
+
+    public function eliminarUnidad(int $id): void
+    {
+        $unidad = $this->obtenerUnidad($id);
+        
+        if ($unidad->hijos()->exists()) {
+            throw new ReglaNegocioException('No se puede eliminar la unidad porque tiene subunidades o procesos dependientes.');
+        }
+
+        if ($unidad->puestos()->exists()) {
+            throw new ReglaNegocioException('No se puede eliminar la unidad porque tiene puestos orgánicos asignados.');
+        }
+
+        $unidad->delete();
+    }
+
+    // ── ORGANIGRAMA ──────────────────────────────────────────────────────────
+
+    public function obtenerOrganigrama(): Collection
+    {
+        // Se cargan las unidades de Nivel 1 (Raíz GAD) y se anidan
+        // eficientemente los hijos (Direcciones y Subprocesos) junto con sus Puestos
+        return UnidadAdministrativa::whereNull('unidad_padre_id')
+            ->where('estado', true)
+            ->with([
+                'hijos' => fn($q) => $q->where('estado', true)->orderBy('nombre'),
+                'hijos.hijos' => fn($q) => $q->where('estado', true)->orderBy('nombre'),
+                'hijos.puestos' => fn($q) => $q->where('estado', true)->orderBy('nivel'),
+                'hijos.hijos.puestos' => fn($q) => $q->where('estado', true)->orderBy('nivel'),
+                'puestos' => fn($q) => $q->where('estado', true)->orderBy('nivel'),
+            ])
+            ->orderBy('nivel')
+            ->orderBy('nombre')
+            ->get();
+    }
+
+    // ── GESTIÓN DE PUESTOS ───────────────────────────────────────────────────
+
+    public function listarPuestos(array $filtros): LengthAwarePaginator
+    {
+        return Puesto::query()
+            ->with(['unidadAdministrativa'])
+            ->when(isset($filtros['unidad_administrativa_id']), fn($q) => $q->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']))
+            ->when(isset($filtros['es_jefe']), fn($q) => $q->where('es_jefe', $filtros['es_jefe']))
+            ->when(isset($filtros['estado']), fn($q) => $q->where('estado', $filtros['estado']))
+            ->orderBy('unidad_administrativa_id')
+            ->orderBy('nivel')
+            ->paginate($filtros['por_pagina'] ?? 15);
+    }
+
+    public function crearPuesto(array $datos): Puesto
+    {
+        return DB::transaction(function () use ($datos) {
+            // Regla de Negocio: Solo puede haber un Jefe por Unidad Administrativa
+            if (isset($datos['es_jefe']) && $datos['es_jefe']) {
+                $existeJefe = Puesto::where('unidad_administrativa_id', $datos['unidad_administrativa_id'])
+                    ->where('es_jefe', true)
+                    ->exists();
+
+                if ($existeJefe) {
+                    throw new ReglaNegocioException('La unidad administrativa seleccionada ya posee un puesto de conducción o jefatura activo.');
+                }
+            }
+
+            return Puesto::create($datos);
+        });
+    }
+
+    public function obtenerPuesto(int $id): Puesto
+    {
+        return Puesto::with(['unidadAdministrativa'])->findOrFail($id);
+    }
+
+    public function actualizarPuesto(int $id, array $datos): Puesto
+    {
+        return DB::transaction(function () use ($id, $datos) {
+            $puesto = $this->obtenerPuesto($id);
+
+            if (isset($datos['es_jefe']) && $datos['es_jefe'] && !$puesto->es_jefe) {
+                $unidadId = $datos['unidad_administrativa_id'] ?? $puesto->unidad_administrativa_id;
+                
+                $existeJefe = Puesto::where('unidad_administrativa_id', $unidadId)
+                    ->where('es_jefe', true)
+                    ->where('id', '!=', $puesto->id)
+                    ->exists();
+
+                if ($existeJefe) {
+                    throw new ReglaNegocioException('La unidad administrativa ya posee un puesto de conducción asignado.');
+                }
+            }
+
+            $puesto->update($datos);
+            return $puesto;
+        });
+    }
+
+    public function eliminarPuesto(int $id): void
+    {
+        $puesto = $this->obtenerPuesto($id);
+        $puesto->delete();
+    }
+}
