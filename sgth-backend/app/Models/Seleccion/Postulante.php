@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Models\Seleccion;
+
+use App\Enums\EstadoPostulante;
+use App\Models\User;
+use App\Observers\Seleccion\PostulanteObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+#[ObservedBy(PostulanteObserver::class)]
+class Postulante extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'convocatoria_id',
+        'cedula',
+        'nombres',
+        'apellidos',
+        'correo',
+        'telefono',
+        'cv_ruta',
+        'estado',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'estado' => EstadoPostulante::class,
+        ];
+    }
+
+    public function convocatoria(): BelongsTo
+    {
+        return $this->belongsTo(Convocatoria::class);
+    }
+
+    public function evaluacion(): HasOne
+    {
+        return $this->hasOne(EvaluacionSeleccion::class);
+    }
+
+    public function onboarding(): HasOne
+    {
+        return $this->hasOne(Onboarding::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+}
