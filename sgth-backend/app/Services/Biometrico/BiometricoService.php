@@ -3,72 +3,98 @@
 namespace App\Services\Biometrico;
 
 use App\Contracts\Biometrico\BiometricoServiceInterface;
+use App\Models\Asistencia\Marcacion;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use PDO;
-use PDOException;
 
-final class BiometricoService implements BiometricoServiceInterface
+class BiometricoService implements BiometricoServiceInterface
 {
-    private ?PDO $conexionBiometrico = null;
+    /**
+     * Instancia de conexión PDO al SQL Server externo.
+     */
+    private ?\PDO $conexionBiometrico = null;
 
     public function __construct()
     {
-        try {
-            // Se leen las credenciales externas desde el .env
-            $host = env('BIOMETRICO_DB_HOST', 'localhost');
-            $db   = env('BIOMETRICO_DB_DATABASE', 'biometrico');
-            $user = env('BIOMETRICO_DB_USERNAME', 'sa');
-            $pass = env('BIOMETRICO_DB_PASSWORD', '');
+        // En producción las credenciales vendrían de config('database.connections.biometrico')
+        $host = env('BIOMETRICO_HOST', '192.168.1.100');
+        $db   = env('BIOMETRICO_DATABASE', 'ZKTecoDB');
+        $user = env('BIOMETRICO_USERNAME', 'sa');
+        $pass = env('BIOMETRICO_PASSWORD', 'secret');
 
-            // Conexión nativa PDO (ejemplo usando driver sqlsrv). NUNCA usaremos permisos de escritura aquí.
-            $this->conexionBiometrico = new PDO("sqlsrv:Server=$host;Database=$db", $user, $pass);
-            $this->conexionBiometrico->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $e) {
-            Log::warning('No se pudo establecer la conexión PDO con el reloj biométrico: ' . $e->getMessage());
+        try {
+            // Se usa el driver sqlsrv/odbc para conectarse al servidor de marcaciones
+            $dsn = "sqlsrv:Server=$host;Database=$db";
+            $this->conexionBiometrico = new \PDO($dsn, $user, $pass);
+            $this->conexionBiometrico->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        } catch (\PDOException $e) {
+            Log::error("Error al conectar con la base de datos del Biométrico: " . $e->getMessage());
+            // No bloqueamos la instanciación para no tumbar la app entera, pero se reportará al intentar importar.
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function importarMarcaciones(Carbon $desde, Carbon $hasta): int
     {
         if (!$this->conexionBiometrico) {
-            Log::error('Se intentó importar marcaciones sin una conexión activa a SQL Server.');
-            return 0;
+            throw new \Exception("No hay conexión disponible con el sistema biométrico SQL Server.");
         }
 
-        // Obtener servidores activos que tienen asignado un código en el reloj biométrico
+        // 1. Obtener servidores estrictamente con código asignado
         $servidores = Servidor::whereNotNull('codigo_marcacion')
             ->where('estado', true)
             ->get();
 
-        $registrosImportados = 0;
+        if ($servidores->isEmpty()) {
+            return 0;
+        }
+
+        $importadas = 0;
+
+        // 2. Preparar el Stored Procedure
+        // REGLA CRÍTICA: SGTH NUNCA ESCRIBE EN LA BD BIOMÉTRICO (SOLO LECTURA)
+        $stmt = $this->conexionBiometrico->prepare(
+            'EXEC sp_ObtenerMarcaciones @CodigoEmpleado = ?, @FechaDesde = ?, @FechaHasta = ?'
+        );
 
         foreach ($servidores as $servidor) {
             try {
-                // Llamada estricta al Stored Procedure del sistema biométrico
-                $stmt = $this->conexionBiometrico->prepare(
-                    'EXEC sp_ObtenerMarcaciones @CodigoEmpleado = ?, @FechaDesde = ?, @FechaHasta = ?'
-                );
-                
+                // 3. Ejecutar SP
                 $stmt->execute([
-                    $servidor->codigo_marcacion, 
-                    $desde->format('Y-m-d'), 
+                    $servidor->codigo_marcacion,
+                    $desde->format('Y-m-d'),
                     $hasta->format('Y-m-d')
                 ]);
-                
-                $marcaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                // El guardado real en la tabla de BD nativa 'marcaciones' se implementará en el Módulo 04.
-                // Por ahora realizamos el conteo de prueba y dejamos validada la comunicación.
-                $registrosImportados += count($marcaciones);
+                $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+                // 4. Registrar en la base de datos local (PostgreSQL)
+                foreach ($resultados as $row) {
+                    // Idempotencia: previene que la misma marcación se duplique si el cron corre de nuevo
+                    $existe = Marcacion::where('servidor_id', $servidor->id)
+                        ->where('fecha_hora', $row['FechaHora'])
+                        ->exists();
+
+                    if (!$existe) {
+                        Marcacion::create([
+                            'servidor_id'    => $servidor->id,
+                            'fecha_hora'     => $row['FechaHora'],
+                            // Mapeamos lo que devuelva el SP a los enums permitidos
+                            'tipo'           => strtolower($row['TipoRegistro']) === 'entrada' ? 'entrada' : 'salida',
+                            'dispositivo_id' => $row['IdDispositivo'] ?? 'Generico',
+                        ]);
+                        $importadas++;
+                    }
+                }
             } catch (\Exception $e) {
-                // Continuamos con el resto de servidores si uno falla
-                Log::error("Fallo al obtener marcaciones del código {$servidor->codigo_marcacion} (Servidor ID: {$servidor->id}): " . $e->getMessage());
+                // Registra la falla específica pero permite que el ciclo continúe con los otros empleados
+                Log::error("Error importando marcaciones del servidor [{$servidor->codigo_marcacion}]: " . $e->getMessage());
             }
         }
 
-        return $registrosImportados;
+        return $importadas;
     }
 }

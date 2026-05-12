@@ -7,11 +7,12 @@ use Carbon\Carbon;
 interface BiometricoServiceInterface
 {
     /**
-     * Importa las marcaciones desde el sistema biométrico externo (SQL Server).
-     *
-     * @param Carbon $desde Fecha de inicio del rango a importar
-     * @param Carbon $hasta Fecha de fin del rango a importar
-     * @return int Número de registros importados exitosamente
+     * Importa las marcaciones desde el reloj biométrico al SGTH.
+     * NUNCA escribe en la BD externa; consume un Stored Procedure de solo lectura.
+     * 
+     * @param Carbon $desde
+     * @param Carbon $hasta
+     * @return int Número de registros importados
      */
     public function importarMarcaciones(Carbon $desde, Carbon $hasta): int;
 }
