@@ -119,6 +119,104 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::post('convocatorias/{id}/declarar-ganador', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'declararGanador']);
     });
 
+    // Módulo 12 — Inventario de Bienes Informáticos
+    Route::prefix('inventario')
+        ->group(function () {
+            // Bienes — DTIC gestiona, todos pueden ver el suyo
+            Route::apiResource('bienes', \App\Http\Controllers\InventarioTi\BienInformaticoController::class)
+                ->middleware('role:tecnico-dtic,admin-ti');
+            Route::get('bienes/{bien}/historial',
+                [\App\Http\Controllers\InventarioTi\BienInformaticoController::class, 'historial'])
+                ->middleware('role:tecnico-dtic,admin-ti,auditor');
+
+            // Asignaciones
+            Route::apiResource('asignaciones', \App\Http\Controllers\InventarioTi\AsignacionBienController::class)
+                ->middleware('role:tecnico-dtic,admin-ti');
+
+            // Mantenimientos
+            Route::apiResource('mantenimientos', \App\Http\Controllers\InventarioTi\MantenimientoBienController::class)
+                ->middleware('role:tecnico-dtic,admin-ti');
+
+            // Auditoría física por QR
+            Route::post('auditoria/escanear',
+                [\App\Http\Controllers\InventarioTi\AuditoriaInventarioController::class, 'escanear'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+            Route::post('auditoria/registrar',
+                [\App\Http\Controllers\InventarioTi\AuditoriaInventarioController::class, 'registrarAuditoria'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+
+            // Bajas conforme Contraloría
+            Route::get('bajas',
+                [\App\Http\Controllers\InventarioTi\BajaController::class, 'index'])
+                ->middleware('role:tecnico-dtic,admin-ti,auditor');
+            Route::post('bajas',
+                [\App\Http\Controllers\InventarioTi\BajaController::class, 'store'])
+                ->middleware('role:admin-ti');
+        });
+
+    // Módulo 13 — Helpdesk
+    Route::prefix('helpdesk')
+        ->group(function () {
+            // Tickets — cualquier servidor autenticado puede crear
+            Route::get('tickets',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'index']);
+            Route::post('tickets',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'store']);
+            Route::get('tickets/{ticket}',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'show']);
+            Route::patch('tickets/{ticket}/estado',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'cambiarEstado'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+            Route::post('tickets/{ticket}/asignar',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'asignar'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+            Route::post('tickets/{ticket}/escalar',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'escalar'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+            Route::post('tickets/{ticket}/cerrar',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'cerrar'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+            Route::post('tickets/{ticket}/vincular-bien',
+                [\App\Http\Controllers\Helpdesk\TicketController::class, 'vincularBien'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+
+            // Comentarios
+            Route::post('tickets/{ticket}/comentarios',
+                [\App\Http\Controllers\Helpdesk\ComentarioTicketController::class, 'store']);
+            Route::get('tickets/{ticket}/comentarios',
+                [\App\Http\Controllers\Helpdesk\ComentarioTicketController::class, 'index']);
+
+            // Áreas DTIC
+            Route::apiResource('areas', \App\Http\Controllers\Helpdesk\AreaDticController::class)
+                ->middleware('role:admin-ti');
+
+            // Técnicos
+            Route::apiResource('tecnicos', \App\Http\Controllers\Helpdesk\TecnicoDticController::class)
+                ->middleware('role:admin-ti');
+            Route::get('tecnicos/{tecnico}/carga-trabajo',
+                [\App\Http\Controllers\Helpdesk\TecnicoDticController::class, 'cargaTrabajo'])
+                ->middleware('role:tecnico-dtic,admin-ti');
+
+            // SLA
+            Route::apiResource('slas', \App\Http\Controllers\Helpdesk\SlaController::class)
+                ->middleware('role:admin-ti');
+
+            // Base de conocimiento
+            Route::apiResource('base-conocimiento',
+                \App\Http\Controllers\Helpdesk\BaseConocimientoController::class);
+
+            // Encuestas de satisfacción
+            Route::get('encuestas-satisfaccion',
+                [\App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController::class, 'index'])
+                ->middleware('role:admin-ti,auditor');
+            Route::get('encuestas-satisfaccion/{encuesta}',
+                [\App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController::class, 'show'])
+                ->middleware('role:admin-ti');
+            Route::get('encuestas-satisfaccion/resultados',
+                [\App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController::class, 'resultados'])
+                ->middleware('role:admin-ti,director,maxima-autoridad');
+        });
+
     // Módulo 08: Evaluación del Desempeño
     Route::prefix('evaluacion')->group(function () {
         Route::post('evaluaciones/{evaluacionId}/servidor/{servidorId}', [\App\Http\Controllers\Evaluacion\EvaluacionController::class, 'registrarResultado']);
