@@ -25,6 +25,8 @@ use App\Contracts\Dispensario\InventarioMedicinasServiceInterface;
 use App\Services\Dispensario\InventarioMedicinasService;
 use App\Contracts\InventarioTi\InventarioTiServiceInterface;
 use App\Services\InventarioTi\InventarioTiService;
+use App\Contracts\Helpdesk\HelpdeskServiceInterface;
+use App\Services\Helpdesk\HelpdeskService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -76,6 +78,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             InventarioTiServiceInterface::class,
             InventarioTiService::class
+        );
+        $this->app->bind(
+            HelpdeskServiceInterface::class,
+            HelpdeskService::class
         );
     }
 

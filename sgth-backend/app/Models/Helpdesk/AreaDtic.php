@@ -1,0 +1,1 @@
+<?php namespace App\Models\Helpdesk; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\SoftDeletes; class AreaDtic extends Model { use SoftDeletes; protected $table = 'areas_dtic'; protected $fillable = ['nombre', 'descripcion']; }
