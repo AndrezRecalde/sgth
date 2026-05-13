@@ -355,4 +355,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'resultados'])
                 ->middleware('role:admin-uath,director,maxima-autoridad');
         });
+
+    // Módulo 18 — Reportería e Inteligencia Institucional
+    Route::prefix('reporteria')
+        ->group(function () {
+            Route::get('dashboard',
+                [\App\Http\Controllers\Reporteria\DashboardController::class, 'kpis'])
+                ->middleware('role:admin-uath,maxima-autoridad,auditor,director');
+        });
 });
