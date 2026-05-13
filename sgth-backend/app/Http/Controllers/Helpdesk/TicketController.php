@@ -1,11 +1,4 @@
 <?php
-<<<<<<< HEAD
-namespace App\Http\Controllers\Helpdesk;
-use App\Http\Controllers\Controller;
-use App\Http\Responses\ApiResponse;
-use App\Contracts\Helpdesk\HelpdeskServiceInterface;
-use Illuminate\Http\Request;
-=======
 
 namespace App\Http\Controllers\Helpdesk;
 
@@ -15,29 +8,11 @@ use App\Models\Helpdesk\Ticket;
 use App\Contracts\Helpdesk\HelpdeskServiceInterface;
 use Illuminate\Http\Request;
 
->>>>>>> feature/sprint-10-inventario-helpdesk
 class TicketController extends Controller
 {
     public function __construct(private readonly HelpdeskServiceInterface $service)
     {
     }
-<<<<<<< HEAD
-    public function index()
-    {
-        return ApiResponse::ok([], 'Tickets listados');
-    }
-    public function store(Request $request)
-    {
-        return ApiResponse::created($this->service->crearTicket($request->all()), 'Ticket creado');
-    }
-    public function update(Request $request, int $id)
-    {
-        return ApiResponse::ok([], 'Ticket actualizado');
-    }
-    public function cerrar(Request $request, int $id)
-    {
-        return ApiResponse::ok($this->service->cerrarTicket($id, $request->all()), 'Ticket cerrado');
-=======
 
     public function index()
     {
@@ -70,7 +45,6 @@ class TicketController extends Controller
     public function update(Request $request, int $id)
     {
         $ticket = Ticket::findOrFail($id);
-        // Lógica estándar de update si corresponde
         $ticket->update($request->only(['asunto', 'descripcion']));
         return ApiResponse::ok($ticket, 'Ticket actualizado correctamente.');
     }
@@ -94,7 +68,6 @@ class TicketController extends Controller
     public function escalar(Request $request, int $id)
     {
         $validated = $request->validate(['nivel' => 'required|integer|min:2|max:3']);
-        // Se asume que el servicio maneja la reasignación en base al nivel
         $ticket = $this->service->escalarTicket($id, $validated['nivel']);
         return ApiResponse::ok($ticket, 'Ticket escalado exitosamente.');
     }
@@ -105,7 +78,6 @@ class TicketController extends Controller
             'bien_informatico_id' => 'required|exists:bienes_informaticos,id'
         ]);
         
-        // Delegar al servicio para que lo vincule y cambie el estado a en_mantenimiento
         $ticket = $this->service->vincularBienATicket($id, $validated['bien_informatico_id']);
         
         return ApiResponse::ok($ticket, 'Bien informático vinculado al ticket exitosamente.');
@@ -115,6 +87,5 @@ class TicketController extends Controller
     {
         $ticket = $this->service->cerrarTicket($id, $request->all());
         return ApiResponse::ok($ticket, 'Ticket cerrado exitosamente.');
->>>>>>> feature/sprint-10-inventario-helpdesk
     }
 }

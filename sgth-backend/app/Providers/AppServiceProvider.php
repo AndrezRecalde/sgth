@@ -35,6 +35,8 @@ use App\Contracts\Actividades\ActividadesServiceInterface;
 use App\Services\Actividades\ActividadesService;
 use App\Contracts\Bienestar\BienestarServiceInterface;
 use App\Services\Bienestar\BienestarService;
+use App\Contracts\Reporteria\ReporteriaServiceInterface;
+use App\Services\Reporteria\ReporteriaService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -107,6 +109,10 @@ class AppServiceProvider extends ServiceProvider
             BienestarServiceInterface::class,
             BienestarService::class
         );
+        $this->app->bind(
+            ReporteriaServiceInterface::class,
+            ReporteriaService::class
+        );
     }
 
     /**
@@ -114,6 +120,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \App\Models\Expediente\Servidor::observe(\App\Observers\ServidorObserver::class);
     }
 }
