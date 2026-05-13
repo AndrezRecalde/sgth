@@ -13,6 +13,16 @@ use App\Contracts\Expediente\SubrogacionServiceInterface;
 use App\Services\Expediente\SubrogacionService;
 use App\Contracts\Expediente\ExpedienteServiceInterface;
 use App\Services\Expediente\ExpedienteService;
+use App\Contracts\Sso\SsoServiceInterface;
+use App\Services\Sso\SsoService;
+use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
+use App\Services\Dispensario\HistoriaClinicaService;
+use App\Contracts\Dispensario\RecetaServiceInterface;
+use App\Services\Dispensario\RecetaService;
+use App\Contracts\Dispensario\AgendaServiceInterface;
+use App\Services\Dispensario\AgendaService;
+use App\Contracts\Dispensario\InventarioMedicinasServiceInterface;
+use App\Services\Dispensario\InventarioMedicinasService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +50,26 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ExpedienteServiceInterface::class,
             ExpedienteService::class
+        );
+        $this->app->bind(
+            SsoServiceInterface::class,
+            SsoService::class
+        );
+        $this->app->bind(
+            HistoriaClinicaServiceInterface::class,
+            HistoriaClinicaService::class
+        );
+        $this->app->bind(
+            RecetaServiceInterface::class,
+            RecetaService::class
+        );
+        $this->app->bind(
+            AgendaServiceInterface::class,
+            AgendaService::class
+        );
+        $this->app->bind(
+            InventarioMedicinasServiceInterface::class,
+            InventarioMedicinasService::class
         );
     }
 
