@@ -29,6 +29,8 @@ use App\Contracts\Helpdesk\HelpdeskServiceInterface;
 use App\Services\Helpdesk\HelpdeskService;
 use App\Contracts\Helpdesk\SlaServiceInterface;
 use App\Services\Helpdesk\SlaService;
+use App\Contracts\Capacitacion\CapacitacionServiceInterface;
+use App\Services\Capacitacion\CapacitacionService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -88,6 +90,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             SlaServiceInterface::class,
             SlaService::class
+        );
+        $this->app->bind(
+            CapacitacionServiceInterface::class,
+            CapacitacionService::class
         );
     }
 

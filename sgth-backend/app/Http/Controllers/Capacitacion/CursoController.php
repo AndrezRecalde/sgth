@@ -1,0 +1,1 @@
+<?php namespace App\Http\Controllers\Capacitacion; use App\Http\Controllers\Controller; use App\Http\Responses\ApiResponse; use Illuminate\Http\Request; class CursoController extends Controller { public function index() { return ApiResponse::ok([], 'Cursos listados'); } public function store(Request $request) { return ApiResponse::created([], 'Curso creado'); } }
