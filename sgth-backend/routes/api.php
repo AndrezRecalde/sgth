@@ -130,6 +130,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->middleware('role:admin-uath');
     });
 
+    // Módulo 10: SSO
+    Route::prefix('sso')->middleware('role:admin-uath|admin-dispensario|tecnico-dtic|medico|enfermera')->group(function () {
+        Route::apiResource('riesgos-laborales', \App\Http\Controllers\Sso\RiesgoLaboralController::class);
+        Route::apiResource('accidentes-trabajo', \App\Http\Controllers\Sso\AccidenteTrabajoController::class);
+        Route::apiResource('equipos-proteccion', \App\Http\Controllers\Sso\EquipoProteccionController::class);
+        Route::apiResource('inspecciones', \App\Http\Controllers\Sso\InspeccionSsoController::class);
+        Route::apiResource('capacitaciones', \App\Http\Controllers\Sso\CapacitacionSsoController::class);
+    });
+
     // Admin TI
     Route::prefix('admin')
         ->middleware('role:admin-ti')

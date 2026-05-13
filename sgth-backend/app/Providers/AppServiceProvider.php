@@ -13,6 +13,8 @@ use App\Contracts\Expediente\SubrogacionServiceInterface;
 use App\Services\Expediente\SubrogacionService;
 use App\Contracts\Expediente\ExpedienteServiceInterface;
 use App\Services\Expediente\ExpedienteService;
+use App\Contracts\Sso\SsoServiceInterface;
+use App\Services\Sso\SsoService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ExpedienteServiceInterface::class,
             ExpedienteService::class
+        );
+        $this->app->bind(
+            SsoServiceInterface::class,
+            SsoService::class
         );
     }
 
