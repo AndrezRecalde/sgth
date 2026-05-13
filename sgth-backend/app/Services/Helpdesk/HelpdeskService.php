@@ -57,4 +57,60 @@ class HelpdeskService implements HelpdeskServiceInterface
             return $ticket;
         });
     }
+<<<<<<< HEAD
+=======
+
+    public function escalarTicket(int $id, int $nivel): Ticket
+    {
+        return DB::transaction(function () use ($id, $nivel) {
+            $ticket = Ticket::findOrFail($id);
+            // Lógica de escalación (ej. buscar técnico de ese nivel, etc.)
+            // Por simplicidad en el mock, solo asume que cambia internamente.
+            return $ticket;
+        });
+    }
+
+    public function vincularBienATicket(int $ticketId, int $bienId): Ticket
+    {
+        return DB::transaction(function () use ($ticketId, $bienId) {
+            $ticket = Ticket::findOrFail($ticketId);
+            $ticket->update(['bien_informatico_id' => $bienId]);
+
+            $bien = BienInformatico::find($bienId);
+            if ($bien) {
+                $bien->update(['estado_operativo' => 'en_mantenimiento']);
+                MantenimientoBien::create([
+                    'bien_informatico_id' => $bienId,
+                    'ticket_id' => $ticketId,
+                    'tipo_mantenimiento' => 'correctivo',
+                    'fecha_mantenimiento' => now()->toDateString(),
+                    'descripcion' => $ticket->asunto,
+                    'costo' => 0
+                ]);
+            }
+
+            return $ticket;
+        });
+    }
+
+    public function obtenerResultadosEncuestas(array $filtros): array
+    {
+        // Mock de resultados estadísticos
+        return [
+            'promedio_general' => 4.5,
+            'por_tecnico' => [],
+            'por_area' => []
+        ];
+    }
+
+    public function obtenerCargaTrabajoYMetricas(int $tecnicoId): array
+    {
+        // Mock de métricas de carga de trabajo
+        return [
+            'tickets_abiertos' => 5,
+            'tickets_cerrados_mes' => 20,
+            'promedio_resolucion_horas' => 2.5
+        ];
+    }
+>>>>>>> feature/sprint-10-inventario-helpdesk
 }
