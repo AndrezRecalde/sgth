@@ -37,6 +37,8 @@ use App\Contracts\Bienestar\BienestarServiceInterface;
 use App\Services\Bienestar\BienestarService;
 use App\Contracts\Reporteria\ReporteriaServiceInterface;
 use App\Services\Reporteria\ReporteriaService;
+use App\Contracts\Handoff\HandoffErpServiceInterface;
+use App\Services\Handoff\HandoffErpService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -112,6 +114,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ReporteriaServiceInterface::class,
             ReporteriaService::class
+        );
+        $this->app->bind(
+            HandoffErpServiceInterface::class,
+            HandoffErpService::class
         );
     }
 
