@@ -1,1 +1,17 @@
-<?php namespace App\Http\Controllers\Capacitacion; use App\Http\Controllers\Controller; use App\Http\Responses\ApiResponse; use App\Contracts\Capacitacion\CapacitacionServiceInterface; use Illuminate\Http\Request; class InscripcionCursoController extends Controller { public function __construct(private readonly CapacitacionServiceInterface $service) {} public function calificar(Request $request, int $id) { $nota = $request->input('nota'); return ApiResponse::ok($this->service->registrarNotaYCertificar($id, $nota), 'Calificación registrada y certificado emitido si aplica'); } }
+<?php
+namespace App\Http\Controllers\Capacitacion;
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use App\Contracts\Capacitacion\CapacitacionServiceInterface;
+use Illuminate\Http\Request;
+class InscripcionCursoController extends Controller
+{
+    public function __construct(private readonly CapacitacionServiceInterface $service)
+    {
+    }
+    public function calificar(Request $request, int $id)
+    {
+        $nota = $request->input('nota');
+        return ApiResponse::ok($this->service->registrarNotaYCertificar($id, $nota), 'Calificación registrada y certificado emitido si aplica');
+    }
+}

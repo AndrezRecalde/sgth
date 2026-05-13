@@ -1,1 +1,12 @@
-<?php namespace App\Http\Controllers\Helpdesk; use App\Http\Controllers\Controller; use App\Http\Responses\ApiResponse; use Illuminate\Http\Request; class ComentarioTicketController extends Controller { public function store(Request $request) { return ApiResponse::created([], 'Comentario agregado'); } }
+<?php
+namespace App\Http\Controllers\Helpdesk;
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use Illuminate\Http\Request;
+class ComentarioTicketController extends Controller
+{
+    public function store(Request $request)
+    {
+        return ApiResponse::created([], 'Comentario agregado');
+    }
+}

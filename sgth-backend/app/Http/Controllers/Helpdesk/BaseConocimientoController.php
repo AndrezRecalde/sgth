@@ -1,1 +1,16 @@
-<?php namespace App\Http\Controllers\Helpdesk; use App\Http\Controllers\Controller; use App\Http\Responses\ApiResponse; use Illuminate\Http\Request; class BaseConocimientoController extends Controller { public function index() { return ApiResponse::ok([], 'Articulos listados'); } public function show(int $id) { return ApiResponse::ok(['id'=>$id], 'Detalle de articulo'); } }
+<?php
+namespace App\Http\Controllers\Helpdesk;
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use Illuminate\Http\Request;
+class BaseConocimientoController extends Controller
+{
+    public function index()
+    {
+        return ApiResponse::ok([], 'Articulos listados');
+    }
+    public function show(int $id)
+    {
+        return ApiResponse::ok(['id' => $id], 'Detalle de articulo');
+    }
+}
