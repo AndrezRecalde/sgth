@@ -120,6 +120,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \App\Models\Expediente\Servidor::observe(\App\Observers\ServidorObserver::class);
     }
 }

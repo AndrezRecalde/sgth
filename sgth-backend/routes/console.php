@@ -17,3 +17,6 @@ use App\Jobs\Helpdesk\EnviarAlertaSlaJob;
 
 // Tarea 4 (Sprint 10): Alertas de SLA Helpdesk cada 15 minutos
 Schedule::job(new EnviarAlertaSlaJob)->everyFifteenMinutes();
+
+// Sprint 12: Generación automática de reportes LOTAIP Art. 7
+Schedule::command('lotaip:generar-reportes')->dailyAt('01:00');
