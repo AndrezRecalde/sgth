@@ -1,0 +1,1 @@
+<?php namespace App\Models\Helpdesk; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\SoftDeletes; class CategoriaTicket extends Model { use SoftDeletes; protected $table = 'categorias_ticket'; protected $fillable = ['nombre', 'es_hardware']; protected function casts(): array { return ['es_hardware' => 'boolean']; } }
