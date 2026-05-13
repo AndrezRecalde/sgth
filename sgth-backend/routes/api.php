@@ -130,13 +130,68 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->middleware('role:admin-uath');
     });
 
-    // Módulo 10: SSO
-    Route::prefix('sso')->middleware('role:admin-uath|admin-dispensario|tecnico-dtic|medico|enfermera')->group(function () {
-        Route::apiResource('riesgos-laborales', \App\Http\Controllers\Sso\RiesgoLaboralController::class);
-        Route::apiResource('accidentes-trabajo', \App\Http\Controllers\Sso\AccidenteTrabajoController::class);
-        Route::apiResource('equipos-proteccion', \App\Http\Controllers\Sso\EquipoProteccionController::class);
-        Route::apiResource('inspecciones', \App\Http\Controllers\Sso\InspeccionSsoController::class);
-        Route::apiResource('capacitaciones', \App\Http\Controllers\Sso\CapacitacionSsoController::class);
+    // Módulo 10 — SSO
+    Route::prefix('sso')
+        ->middleware('role:admin-uath,asistente-uath,auditor')
+        ->group(function () {
+            Route::apiResource('riesgos', \App\Http\Controllers\Sso\RiesgoLaboralController::class);
+            Route::apiResource('accidentes', \App\Http\Controllers\Sso\AccidenteTrabajoController::class);
+            Route::apiResource('equipos-proteccion', \App\Http\Controllers\Sso\EquipoProteccionController::class);
+        });
+
+    // Módulo 11 — Dispensario Médico
+    Route::prefix('dispensario')->group(function () {
+
+        // Agenda — accesible para todo el personal del dispensario
+        Route::apiResource('agenda', \App\Http\Controllers\Dispensario\AgendaController::class)
+            ->middleware('role:medico,odontologo,enfermera,admin-dispensario');
+
+        // Historias clínicas — SOLO personal médico
+        Route::prefix('historias-clinicas')
+            ->middleware('role:medico,odontologo,enfermera,admin-dispensario')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'index']);
+                Route::post('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'store']);
+                Route::get('{id}', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'show']);
+            });
+
+        // Consultas médicas — SOLO médicos y odontólogos crean,
+        // todo el personal médico puede ver
+        Route::prefix('consultas')
+            ->middleware('role:medico,odontologo,enfermera,admin-dispensario')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'index']);
+                Route::post('/', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'store']);
+                Route::get('{id}', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'show']);
+            });
+
+        // Recetas — médicos emiten, enfermeras y admin despachan
+        Route::prefix('recetas')->group(function () {
+            Route::post('/', [\App\Http\Controllers\Dispensario\RecetaController::class, 'store'])
+                ->middleware('role:medico,odontologo');
+            Route::get('{id}', [\App\Http\Controllers\Dispensario\RecetaController::class, 'show'])
+                ->middleware('role:medico,odontologo,enfermera,admin-dispensario');
+            Route::post('{id}/despachar', [\App\Http\Controllers\Dispensario\RecetaController::class, 'despachar'])
+                ->middleware('role:enfermera,admin-dispensario');
+        });
+
+        // Inventario — todo el personal del dispensario
+        Route::prefix('inventario')
+            ->middleware('role:medico,odontologo,enfermera,admin-dispensario')
+            ->group(function () {
+                Route::apiResource('medicinas', \App\Http\Controllers\Dispensario\InventarioMedicinasController::class);
+                Route::get('medicinas/{id}/kardex',
+                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'kardex']);
+            });
+
+        // Fichas de salud ocupacional
+        Route::prefix('fichas-sso')
+            ->middleware('role:medico,admin-dispensario')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'index']);
+                Route::post('/', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'store']);
+                Route::get('{id}', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'show']);
+            });
     });
 
     // Admin TI
