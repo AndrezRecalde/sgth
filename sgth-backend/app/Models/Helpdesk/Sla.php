@@ -1,0 +1,1 @@
+<?php namespace App\Models\Helpdesk; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\SoftDeletes; class Sla extends Model { use SoftDeletes; protected $table = 'slas'; protected $fillable = ['prioridad', 'tiempo_resolucion_horas', 'tiempo_respuesta_horas']; }

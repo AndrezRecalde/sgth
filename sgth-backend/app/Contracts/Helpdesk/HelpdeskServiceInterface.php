@@ -1,0 +1,1 @@
+<?php namespace App\Contracts\Helpdesk; use App\Models\Helpdesk\Ticket; interface HelpdeskServiceInterface { public function crearTicket(array $datos): Ticket; public function cerrarTicket(int $id, array $datos): Ticket; }
