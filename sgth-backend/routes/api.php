@@ -200,7 +200,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             });
     });
 
-    // Admin TI
+        // Admin TI
     Route::prefix('admin')
         ->middleware('role:admin-ti')
         ->group(function () {
@@ -208,5 +208,53 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::post('usuarios/{usuario}/restablecer-contrasena',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'restablecerContrasena']
             );
+        });
+
+    // Módulo 15 — Capacitación
+    Route::prefix('capacitacion')
+        ->group(function () {
+            Route::apiResource('planes', \App\Http\Controllers\Capacitacion\PlanCapacitacionController::class)
+                ->middleware('role:admin-uath,asistente-uath');
+            Route::apiResource('cursos', \App\Http\Controllers\Capacitacion\CursoController::class)
+                ->middleware('role:admin-uath,asistente-uath');
+            Route::post('cursos/{curso}/inscribir',
+                [\App\Http\Controllers\Capacitacion\CursoController::class, 'inscribir']);
+            Route::post('cursos/{curso}/evaluar',
+                [\App\Http\Controllers\Capacitacion\CursoController::class, 'evaluar'])
+                ->middleware('role:admin-uath,asistente-uath');
+            Route::get('certificados/{servidorId}',
+                [\App\Http\Controllers\Capacitacion\CertificadoCapacitacionController::class, 'show']);
+            Route::post('certificados/{inscripcionId}/generar',
+                [\App\Http\Controllers\Capacitacion\CertificadoCapacitacionController::class, 'generar'])
+                ->middleware('role:admin-uath,asistente-uath');
+        });
+
+    // Módulo 16 — Actividades Laborales
+    Route::prefix('actividades')
+        ->group(function () {
+            Route::apiResource('/', \App\Http\Controllers\Actividades\ActividadLaboralController::class)
+                ->parameters(['' => 'actividad']); // Para que las rutas resource funcionen con /
+            Route::get('por-unidad',
+                [\App\Http\Controllers\Actividades\ActividadLaboralController::class, 'porUnidad'])
+                ->middleware('role:jefe-unidad,director,admin-uath');
+            Route::post('exportar-informe',
+                [\App\Http\Controllers\Actividades\ActividadLaboralController::class, 'exportarInforme']);
+        });
+
+    // Módulo 17 — Bienestar y Clima
+    Route::prefix('bienestar')
+        ->group(function () {
+            Route::apiResource('planes', \App\Http\Controllers\Bienestar\PlanBienestarController::class)
+                ->middleware('role:admin-uath,asistente-uath');
+            Route::get('encuestas',
+                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'index']);
+            Route::post('encuestas',
+                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'store'])
+                ->middleware('role:admin-uath');
+            Route::post('encuestas/{encuesta}/responder',
+                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'responder']);
+            Route::get('encuestas/{encuesta}/resultados',
+                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'resultados'])
+                ->middleware('role:admin-uath,director,maxima-autoridad');
         });
 });
