@@ -6,3 +6,9 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+use Illuminate\Support\Facades\Schedule;
+use App\Jobs\Dispensario\VerificarAlertasInventarioJob;
+
+// Tarea 8: Alertas Dispensario
+Schedule::job(new VerificarAlertasInventarioJob)->dailyAt('06:00');
