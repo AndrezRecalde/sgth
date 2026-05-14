@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Http\Request;
+use Laravel\Pulse\Facades\Pulse;
 use App\Contracts\Auth\AuthServiceInterface;
 use App\Services\Auth\AuthService;
 use App\Contracts\Admin\UsuarioServiceInterface;
@@ -139,5 +141,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \App\Models\Expediente\Servidor::observe(\App\Observers\ServidorObserver::class);
+
+        Pulse::authorizeUsing(function (Request $request) {
+            return $request->user()?->hasRole('admin-ti')
+                || app()->environment('local');
+        });
     }
 }
