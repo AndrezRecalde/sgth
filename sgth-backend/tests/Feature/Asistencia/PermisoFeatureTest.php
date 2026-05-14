@@ -127,6 +127,8 @@ test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {
         'folio' => 'PER-2026-00001',
     ]);
 
+    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+
     $userRecepcion = User::create([
         'name' => 'Recepción',
         'email' => 'rec@example.com',
@@ -134,6 +136,7 @@ test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {
         'password' => bcrypt('123456'),
         'primer_login' => false,
     ]);
+    $userRecepcion->assignRole('recepcion');
     
     $response = $this->actingAs($userRecepcion, 'sanctum')->postJson("/api/v1/asistencia/permisos/confirmar/{$permiso->folio}");
 
