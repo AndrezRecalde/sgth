@@ -20,3 +20,8 @@ Schedule::job(new EnviarAlertaSlaJob)->everyFifteenMinutes();
 
 // Sprint 12: Generación automática de reportes LOTAIP Art. 7
 Schedule::command('lotaip:generar-reportes')->dailyAt('01:00');
+
+// Tarea 8: Backup Automático Diario
+Schedule::command('backup:base-datos')
+    ->dailyAt('02:00')
+    ->onOneServer();
