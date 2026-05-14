@@ -29,13 +29,12 @@ final class ViaticoService implements ViaticoServiceInterface
         $fechaInicio = Carbon::parse($datos['fecha_inicio']);
         $fechaFin = Carbon::parse($datos['fecha_fin']);
 
-        $montoCalculado = $this->calcularMonto($servidor, $datos['zona'], $datos['tipo'], $fechaInicio, $fechaFin, $datos['destino']);
+        $montoCalculado = $this->calcularMonto($servidor, $datos['zona'], $datos['tipo'], $fechaInicio, $fechaFin);
 
         return Viatico::create([
             'servidor_id'      => $servidorId,
             'zona'             => $datos['zona'],
             'tipo'             => $datos['tipo'],
-            'destino'          => $datos['destino'],
             'fecha_inicio'     => $fechaInicio,
             'fecha_fin'        => $fechaFin,
             'justificacion'    => $datos['justificacion'],
@@ -115,7 +114,7 @@ final class ViaticoService implements ViaticoServiceInterface
         return false;
     }
 
-    private function calcularMonto(Servidor $servidor, string $zona, string $tipo, Carbon $inicio, Carbon $fin, string $destino): float
+    private function calcularMonto(Servidor $servidor, string $zona, string $tipo, Carbon $inicio, Carbon $fin): float
     {
         // Determinar nivel jerárquico
         $esAutoridad = str_contains(strtolower($servidor->puesto?->denominacion ?? ''), 'ministro') || str_contains(strtolower($servidor->puesto?->denominacion ?? ''), 'secretario');
@@ -133,10 +132,9 @@ final class ViaticoService implements ViaticoServiceInterface
                                     ->where('nivel', $nivel)
                                     ->where('tipo_tarifa', $tipoTarifaBuscar);
                                     
-        if ($zona === ZonaViatico::EXTERIOR->value) {
-            $queryTarifa->where('pais_destino', $destino);
-        }
-
+        // TODO: Para exterior, el país se debería obtener de la relación destinos_viatico
+        // Por ahora omitimos el where pais_destino si no está disponible.
+        
         $tarifa = $queryTarifa->first();
         if (!$tarifa) {
             throw new ReglaNegocioException("No se encontró tarifa definida en el MRL para la zona {$zona}, nivel {$nivel}, tipo {$tipoTarifaBuscar}.");

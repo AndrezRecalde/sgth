@@ -17,7 +17,6 @@ class SolicitarViaticoRequest extends FormRequest
         return [
             'zona'          => ['required', 'string', 'in:dentro_provincia,fuera_provincia,exterior'],
             'tipo'          => ['required', 'string', 'in:con_pernocte,sin_pernocte'],
-            'destino'       => ['required', 'string', 'max:255'],
             'fecha_inicio'  => ['required', 'date'],
             'fecha_fin'     => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'justificacion' => ['required', 'string', 'min:10', 'max:2000'],

@@ -90,7 +90,7 @@ class HandoffErpService implements HandoffErpServiceInterface
             $servidor->addChild('Cedula', $viatico->servidor->cedula);
             $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombre_completo));
             
-            $xml->addChild('Destino', htmlspecialchars($viatico->destino));
+            $xml->addChild('Destino', ''); // TODO: Tarea 3: $viatico->destinos->pluck('ciudad.nombre')->join(', ')
             $xml->addChild('FechaInicio', $viatico->fecha_inicio->format('Y-m-d'));
             $xml->addChild('FechaFin', $viatico->fecha_fin->format('Y-m-d'));
             $xml->addChild('MontoAprobado', $viatico->monto_anticipo);

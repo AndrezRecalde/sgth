@@ -22,10 +22,11 @@ class Viatico extends Model
     protected $table = 'viaticos';
 
     protected $fillable = [
+        'codigo_viatico',
+        'comision_id',
         'servidor_id',
         'zona',
         'tipo',
-        'destino',
         'fecha_inicio',
         'fecha_fin',
         'justificacion',
@@ -58,6 +59,11 @@ class Viatico extends Model
     public function liquidacion(): HasOne
     {
         return $this->hasOne(LiquidacionViatico::class, 'viatico_id');
+    }
+
+    public function comision(): BelongsTo
+    {
+        return $this->belongsTo(Comision::class);
     }
 
     public function createdBy(): BelongsTo
