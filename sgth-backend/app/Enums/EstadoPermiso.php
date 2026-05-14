@@ -9,5 +9,5 @@ enum EstadoPermiso: string
     case ANULADO             = 'anulado';
     case RECHAZADO           = 'rechazado';
     case FALTA_INJUSTIFICADA = 'falta_injustificada';
-    case VALIDADO_TS         = 'validado_trabajo_social';
+    case VALIDADO_TRABAJO_SOCIAL = 'validado_trabajo_social';
 }

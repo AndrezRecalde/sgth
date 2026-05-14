@@ -87,10 +87,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::get('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'store']);
             Route::get('{id}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'show']);
-            Route::put('{id}/anular', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'anular']);
+            Route::put('{id}/anular', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'anular'])
+                ->middleware('role:admin-uath|asistente-uath');
             
-            Route::post('confirmar/{folio}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'confirmar']);
-            Route::post('{id}/validar-ts', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'validar']);
+            Route::post('confirmar/{folio}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'confirmar'])
+                ->middleware('role:recepcion');
+            Route::post('{id}/validar-ts', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'validar'])
+                ->middleware('role:trabajo-social');
         });
     });
 

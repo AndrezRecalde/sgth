@@ -94,7 +94,7 @@ class PermisoService implements PermisoServiceInterface
         $permiso = PermisoServidor::where('folio', $folio)->firstOrFail();
 
         if ($permiso->estado !== EstadoPermiso::PENDIENTE) {
-            throw new \Exception("Solo se pueden confirmar permisos en estado PENDIENTE. Estado actual: {$permiso->estado->value}");
+            throw new \App\Exceptions\ReglaNegocioException("Solo se pueden confirmar permisos en estado PENDIENTE. Estado actual: {$permiso->estado->value}");
         }
 
         $permiso->estado = EstadoPermiso::ACTIVO->value;
@@ -111,15 +111,15 @@ class PermisoService implements PermisoServiceInterface
 
         // Solo aplica para Enfermedad y Calamidad
         if (!in_array($permiso->tipo, [TipoPermiso::ENFERMEDAD, TipoPermiso::CALAMIDAD])) {
-            throw new \Exception("La validación de Trabajo Social solo aplica para permisos por Enfermedad o Calamidad Doméstica.");
+            throw new \App\Exceptions\ReglaNegocioException("La validación de Trabajo Social solo aplica para permisos por Enfermedad o Calamidad Doméstica.");
         }
 
         // Debe estar ACTIVO (ya confirmado por recepción)
         if ($permiso->estado !== EstadoPermiso::ACTIVO) {
-            throw new \Exception("El permiso debe estar ACTIVO para ser validado por Trabajo Social.");
+            throw new \App\Exceptions\ReglaNegocioException("El permiso debe estar ACTIVO para ser validado por Trabajo Social.");
         }
 
-        $permiso->estado = EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value;
+        $permiso->estado = EstadoPermiso::VALIDADO_TRABAJO_SOCIAL;
         $permiso->validado_ts_por = $tsUserId;
         $permiso->validado_ts_en = now();
         $permiso->save();
