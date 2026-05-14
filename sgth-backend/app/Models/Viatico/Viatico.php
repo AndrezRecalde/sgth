@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -64,6 +65,11 @@ class Viatico extends Model
     public function comision(): BelongsTo
     {
         return $this->belongsTo(Comision::class);
+    }
+
+    public function destinos(): HasMany
+    {
+        return $this->hasMany(DestinoViatico::class);
     }
 
     public function createdBy(): BelongsTo
