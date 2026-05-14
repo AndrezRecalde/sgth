@@ -37,6 +37,14 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiResponse::noAutorizado();
         });
 
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e) {
+            return ApiResponse::noAutorizado();
+        });
+
+        $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e) {
+            return ApiResponse::noAutorizado();
+        });
+
         $exceptions->render(function (AuthenticationException $e) {
             return ApiResponse::error(
                 'No autenticado. Por favor inicie sesión.',
