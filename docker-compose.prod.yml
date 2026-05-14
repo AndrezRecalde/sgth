@@ -1,0 +1,128 @@
+# docker-compose.prod.yml
+name: sgth-prod
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: sgth_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+      - ./sgth-backend/public:/var/www/backend/public
+    depends_on:
+      - laravel
+      - nextjs
+    networks:
+      - sgth_prod_network
+
+  laravel:
+    build:
+      context: ./sgth-backend
+      dockerfile: Dockerfile.prod
+    container_name: sgth_laravel_prod
+    restart: unless-stopped
+    env_file:
+      - ./sgth-backend/.env
+    healthcheck:
+      test: ["CMD", "php", "artisan", "about", "--only=Environment"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./sgth-backend/storage:/var/www/backend/storage
+      - ./sgth-backend/bootstrap/cache:/var/www/backend/bootstrap/cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sgth_prod_network
+
+  nextjs:
+    build:
+      context: ./sgth-frontend
+      dockerfile: Dockerfile.prod
+    container_name: sgth_nextjs_prod
+    restart: unless-stopped
+    env_file:
+      - ./sgth-frontend/.env
+    networks:
+      - sgth_prod_network
+
+  postgres:
+    image: postgres:18
+    container_name: sgth_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sgth_prod_pass}
+      POSTGRES_DB: ${DB_DATABASE:-sgth_produccion}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - sgth_postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sgth_prod_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: sgth_redis_prod
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-sgth_redis_prod}
+    volumes:
+      - sgth_redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-sgth_redis_prod}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sgth_prod_network
+
+  queue-worker:
+    build:
+      context: ./sgth-backend
+      dockerfile: Dockerfile.prod
+    container_name: sgth_queue_worker_prod
+    restart: unless-stopped
+    command: php artisan queue:work --queue=nomina,erp,correos,reportes,default --tries=3 --timeout=300
+    env_file:
+      - ./sgth-backend/.env
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - sgth_prod_network
+
+  scheduler:
+    build:
+      context: ./sgth-backend
+      dockerfile: Dockerfile.prod
+    container_name: sgth_scheduler_prod
+    restart: unless-stopped
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    env_file:
+      - ./sgth-backend/.env
+    depends_on:
+      - laravel
+    networks:
+      - sgth_prod_network
+
+volumes:
+  sgth_postgres_prod_data:
+    driver: local
+  sgth_redis_prod_data:
+    driver: local
+
+networks:
+  sgth_prod_network:
+    driver: bridge
