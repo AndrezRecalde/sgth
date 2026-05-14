@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->string('tipo_ticket', 50); // incidente, solicitud_servicio, cambio, problema
             $table->string('categoria', 50);
             $table->foreignId('sla_id')->constrained('slas')->restrictOnDelete();
-            $table->string('estado', 50)->default('nuevo'); // nuevo, asignado, en_progreso, escalado, resuelto, cerrado
+            $table->string('estado', 50)->default('abierto'); // abierto, asignado, en_proceso, escalado, resuelto, cerrado
             $table->string('asunto');
             $table->text('descripcion');
             $table->foreignId('bien_informatico_id')->nullable()->constrained('bienes_informaticos');

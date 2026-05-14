@@ -53,12 +53,20 @@ class HelpdeskService implements HelpdeskServiceInterface
                     $bien->update(['estado_operativo' => 'activo']);
                 }
             }
-            // Disparar encuesta de satisfaccion (Mock/Simulado)
+            // Disparar encuesta de satisfaccion
+            $encuesta = \App\Models\Helpdesk\EncuestaSatisfaccion::create([
+                'ticket_id' => $ticket->id,
+                'calificacion' => 0, // Pendiente
+                'fecha_respuesta' => null
+            ]);
+            
+            // Enviar correo de cierre
+            \Illuminate\Support\Facades\Mail::to($ticket->solicitante->user->email ?? 'test@example.com')
+                ->queue(new \App\Mail\Helpdesk\TicketCerradoMail($ticket, $encuesta));
+                
             return $ticket;
         });
     }
-<<<<<<< HEAD
-=======
 
     public function escalarTicket(int $id, int $nivel): Ticket
     {
@@ -112,5 +120,4 @@ class HelpdeskService implements HelpdeskServiceInterface
             'promedio_resolucion_horas' => 2.5
         ];
     }
->>>>>>> feature/sprint-10-inventario-helpdesk
 }

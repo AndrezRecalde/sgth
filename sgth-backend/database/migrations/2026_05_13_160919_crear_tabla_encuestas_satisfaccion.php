@@ -9,7 +9,7 @@ return new class extends Migration {
             $table->foreignId('ticket_id')->constrained('tickets')->cascadeOnDelete();
             $table->integer('calificacion'); // 1 a 5
             $table->text('comentarios')->nullable();
-            $table->datetime('fecha_respuesta');
+            $table->datetime('fecha_respuesta')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
