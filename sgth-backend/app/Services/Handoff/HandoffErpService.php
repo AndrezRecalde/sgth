@@ -35,7 +35,7 @@ class HandoffErpService implements HandoffErpServiceInterface
             foreach ($nomina->rolesPago as $rol) {
                 $item = $roles->addChild('Rol');
                 $item->addChild('Cedula', $rol->servidor->cedula);
-                $item->addChild('Nombres', htmlspecialchars($rol->servidor->nombreCompleto()));
+                $item->addChild('Nombres', htmlspecialchars($rol->servidor->nombre_completo));
                 $item->addChild('Ingresos', $rol->total_ingresos);
                 $item->addChild('Descuentos', $rol->total_descuentos);
                 $item->addChild('Neto', $rol->total_neto);
@@ -88,7 +88,7 @@ class HandoffErpService implements HandoffErpServiceInterface
             
             $servidor = $xml->addChild('Servidor');
             $servidor->addChild('Cedula', $viatico->servidor->cedula);
-            $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombres . ' ' . $viatico->servidor->apellidos));
+            $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombre_completo));
             
             $xml->addChild('Destino', htmlspecialchars($viatico->destino));
             $xml->addChild('FechaInicio', $viatico->fecha_inicio->format('Y-m-d'));
@@ -127,7 +127,7 @@ class HandoffErpService implements HandoffErpServiceInterface
             
             $servidor = $xml->addChild('Servidor');
             $servidor->addChild('Cedula', $viatico->servidor->cedula);
-            $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombres . ' ' . $viatico->servidor->apellidos));
+            $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombre_completo));
             
             $facturasXml = $xml->addChild('Facturas');
             $facturasArr = is_array($liquidacion->facturas) ? $liquidacion->facturas : json_decode($liquidacion->facturas ?? '[]', true);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\PermisoServiceInterface;
 use App\Enums\EstadoPermiso;
+use App\Enums\TipoPermiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Asistencia\StorePermisoServidorRequest;
 use App\Http\Responses\ApiResponse;
@@ -16,8 +17,25 @@ class PermisoServidorController extends Controller
 
     public function index(Request $request)
     {
-        // Lista general, se restringe en base a roles/policies (Jefe ve su área, UATH ve todos)
-        $permisos = PermisoServidor::with('servidor')->orderBy('created_at', 'desc')->get();
+        $user = $request->user();
+        $query = PermisoServidor::with('servidor')->orderBy('created_at', 'desc');
+
+        // Si no es admin/asistente de UATH, restringir vista
+        if (!($user->hasRole(['admin-uath', 'asistente-uath']))) {
+            if ($user->servidor && $user->servidor->puesto && $user->servidor->puesto->es_jefe) {
+                // Jefe ve los de su unidad
+                $unidadId = $user->servidor->unidad_administrativa_id;
+                $query->whereHas('servidor', function ($q) use ($unidadId) {
+                    $q->where('unidad_administrativa_id', $unidadId);
+                });
+            } else {
+                // Empleado normal ve solo los suyos
+                $servidorId = $user->servidor->id ?? 0;
+                $query->where('servidor_id', $servidorId);
+            }
+        }
+
+        $permisos = $query->get();
         return ApiResponse::ok($permisos, 'Listado de permisos');
     }
 
@@ -31,9 +49,17 @@ class PermisoServidorController extends Controller
         return ApiResponse::created($permiso, 'Permiso solicitado correctamente.');
     }
 
-    public function show(int $id)
+    public function show(int $id, Request $request)
     {
         $permiso = PermisoServidor::with(['servidor', 'folioPermiso'])->findOrFail($id);
+        
+        $user = $request->user();
+        
+        // Regla de privacidad: Jefe no puede ver motivo de permiso personal de su subordinado
+        if ($permiso->tipo === TipoPermiso::PERSONAL && $user->servidor && $permiso->servidor_id !== $user->servidor->id) {
+            $permiso->makeHidden('observacion');
+        }
+
         return ApiResponse::ok($permiso, 'Detalle del permiso');
     }
 

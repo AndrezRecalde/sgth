@@ -121,30 +121,31 @@ final class ViaticoService implements ViaticoServiceInterface
         $esAutoridad = str_contains(strtolower($servidor->puesto?->denominacion ?? ''), 'ministro') || str_contains(strtolower($servidor->puesto?->denominacion ?? ''), 'secretario');
         $nivel = $esAutoridad ? 'autoridad' : 'servidor';
 
-        $queryTarifa = TarifaViatico::where('zona', $zona)->where('nivel', $nivel);
+        $horasComision = $fin->diffInHours($inicio);
+        $diasComision = $fin->diffInDays($inicio) ?: 1; // Mínimo 1 para el multiplicador si pasa de 1 día
+
+        $tipoTarifaBuscar = 'con_pernocte';
+        if ($tipo === 'sin_pernocte') {
+            $tipoTarifaBuscar = $horasComision < 10 ? 'subsistencia' : 'sin_pernocte';
+        }
+
+        $queryTarifa = TarifaViatico::where('zona', $zona)
+                                    ->where('nivel', $nivel)
+                                    ->where('tipo_tarifa', $tipoTarifaBuscar);
+                                    
         if ($zona === ZonaViatico::EXTERIOR->value) {
             $queryTarifa->where('pais_destino', $destino);
         }
 
         $tarifa = $queryTarifa->first();
         if (!$tarifa) {
-            throw new ReglaNegocioException("No se encontró tarifa definida en el MRL para la zona {$zona}, nivel {$nivel}.");
+            throw new ReglaNegocioException("No se encontró tarifa definida en el MRL para la zona {$zona}, nivel {$nivel}, tipo {$tipoTarifaBuscar}.");
         }
 
-        $horasComision = $fin->diffInHours($inicio);
-        $diasComision = $fin->diffInDays($inicio) ?: 1; // Mínimo 1 para el multiplicador si pasa de 1 día
-
-        // Regla de Subsistencia MRL: Si es < 10 horas y no hay pernocte, se calcula tarifa proporcional (Ej: 50% del valor)
-        if ($tipo === 'sin_pernocte' && $horasComision < 10) {
-            return $tarifa->valor_diario * 0.5; // Subsistencia
-        }
-
-        // Si hay pernocte, es viático completo por cada noche (días = noches)
         if ($tipo === 'con_pernocte') {
             return $tarifa->valor_diario * $diasComision;
         }
 
-        // Si no hay pernocte pero es > 10 horas
         return $tarifa->valor_diario;
     }
 }
