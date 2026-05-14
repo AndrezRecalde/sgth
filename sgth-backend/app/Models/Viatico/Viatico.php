@@ -72,6 +72,11 @@ class Viatico extends Model
         return $this->hasMany(DestinoViatico::class);
     }
 
+    public function transportes(): HasMany
+    {
+        return $this->hasMany(TransporteViatico::class);
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
