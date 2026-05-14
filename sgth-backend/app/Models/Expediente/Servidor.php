@@ -100,6 +100,16 @@ class Servidor extends Model
         return $this->hasMany(DocumentoServidor::class);
     }
 
+    public function expedientesDisciplinarios(): HasMany
+    {
+        return $this->hasMany(ExpedienteDisciplinario::class);
+    }
+
+    public function cuentasBancarias(): HasMany
+    {
+        return $this->hasMany(CuentaBancariaServidor::class);
+    }
+
     public function movimientos(): HasMany
     {
         return $this->hasMany(MovimientoPersonal::class);

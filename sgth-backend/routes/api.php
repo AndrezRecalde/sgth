@@ -31,6 +31,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         );
     });
 
+    // Rutas públicas de catálogo
+    Route::get('catalogos/entidades-financieras', [\App\Http\Controllers\Catalogo\EntidadFinancieraController::class, 'index']);
+
+    // Rutas de administración
+    Route::apiResource('catalogos/entidades-financieras', \App\Http\Controllers\Catalogo\EntidadFinancieraController::class)
+        ->except(['index', 'show'])
+        ->middleware('role:admin-ti,admin-uath');
+
     // Módulo 01: Estructura Organizacional
     Route::prefix('estructura')->group(function () {
         Route::get('organigrama', \App\Http\Controllers\Estructura\OrganigramaController::class);
