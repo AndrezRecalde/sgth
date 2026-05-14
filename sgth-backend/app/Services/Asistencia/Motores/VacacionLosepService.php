@@ -4,6 +4,7 @@ namespace App\Services\Asistencia\Motores;
 
 use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Models\Expediente\Servidor;
+use App\Models\Asistencia\FeriadoInstitucional;
 use Carbon\Carbon;
 
 class VacacionLosepService implements VacacionMotorInterface
@@ -54,7 +55,15 @@ class VacacionLosepService implements VacacionMotorInterface
 
         while ($actual->lessThanOrEqualTo($fechaFin)) {
             if (!$actual->isWeekend()) {
-                $dias++;
+                // Verificar si es feriado
+                $esFeriado = false;
+                if (class_exists(FeriadoInstitucional::class)) {
+                    $esFeriado = FeriadoInstitucional::esFeriado($actual)->exists();
+                }
+
+                if (!$esFeriado) {
+                    $dias++;
+                }
             }
             $actual->addDay();
         }

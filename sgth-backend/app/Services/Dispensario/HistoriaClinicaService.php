@@ -5,6 +5,7 @@ use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 
 final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
 {
@@ -16,7 +17,8 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
     public function registrarConsulta(array $datos): ConsultaMedica
     {
         return DB::transaction(function () use ($datos) {
-            $consulta = ConsultaMedica::create($datos);
+            $datosConsulta = Arr::except($datos, ['agenda_medica_id']);
+            $consulta = ConsultaMedica::create($datosConsulta);
             
             // Si la consulta atiende una agenda, actualizar el estado de la cita
             if (isset($datos['agenda_medica_id'])) {

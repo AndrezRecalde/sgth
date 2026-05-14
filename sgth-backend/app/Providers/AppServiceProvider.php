@@ -39,6 +39,10 @@ use App\Contracts\Reporteria\ReporteriaServiceInterface;
 use App\Services\Reporteria\ReporteriaService;
 use App\Contracts\Handoff\HandoffErpServiceInterface;
 use App\Services\Handoff\HandoffErpService;
+use App\Contracts\Asistencia\PermisoServiceInterface;
+use App\Services\Asistencia\PermisoService;
+use App\Contracts\Asistencia\VacacionServiceInterface;
+use App\Services\Asistencia\VacacionService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -118,6 +122,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             HandoffErpServiceInterface::class,
             HandoffErpService::class
+        );
+        $this->app->bind(
+            PermisoServiceInterface::class,
+            PermisoService::class
+        );
+        $this->app->bind(
+            VacacionServiceInterface::class,
+            VacacionService::class
         );
     }
 

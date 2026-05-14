@@ -51,17 +51,15 @@ class ReporteriaService implements ReporteriaServiceInterface
         // En un entorno real se extraería de la tabla nominas del mes actual
         return [
             'costo_nomina_mes_actual' => DB::table('nominas')
-                ->whereMonth('mes', now()->month)
-                ->whereYear('anio', now()->year)
+                ->where('periodo', now()->format('Y-m'))
                 ->sum('total_neto'),
             'variacion_nomina' => 2.5, // Porcentaje mock simulado
             'descuentos_iess_mes' => DB::table('roles_pago')
                 ->join('nominas', 'roles_pago.nomina_id', '=', 'nominas.id')
-                ->whereMonth('nominas.mes', now()->month)
-                ->whereYear('nominas.anio', now()->year)
-                ->sum('total_descuentos'), // Simplificado
+                ->where('nominas.periodo', now()->format('Y-m'))
+                ->sum('roles_pago.total_descuentos'), // Simplificado
             'handoffs_pendientes' => DB::table('handoffs_erp')
-                ->where('estado', 'pendiente')
+                ->whereNull('importado_erp_en')
                 ->count()
         ];
     }
@@ -69,49 +67,24 @@ class ReporteriaService implements ReporteriaServiceInterface
     private function calcularKpisAsistencia(): array
     {
         return [
-            'faltas_injustificadas_mes' => DB::table('permisos')
+            'faltas_injustificadas_mes' => DB::table('permisos_servidor')
                 ->where('estado', 'falta_injustificada')
-                ->whereMonth('fecha_inicio', now()->month)
-                ->whereYear('fecha_inicio', now()->year)
+                ->whereMonth('fecha', now()->month)
+                ->whereYear('fecha', now()->year)
                 ->count(),
-            'permisos_pendientes' => DB::table('permisos')
+            'permisos_pendientes' => DB::table('permisos_servidor')
                 ->where('estado', 'pendiente')
                 ->count(),
-            'vacaciones_proximas_vencer' => DB::table('saldos_vacaciones')
-                ->join('servidores', 'saldos_vacaciones.servidor_id', '=', 'servidores.id')
-                ->whereNull('servidores.deleted_at')
-                ->where(function ($query) {
-                    // LOSEP: Máximo 60 días permitidos. Peligro de pérdida a los > 45 días
-                    $query->where('servidores.regimen_laboral', 'LOSEP')
-                          ->where('saldos_vacaciones.dias_disponibles', '>', 45);
-                })
-                ->orWhere(function ($query) {
-                    // Código del Trabajo: Alerta cuando llevan 2 años sin gozar vacaciones
-                    $query->where('servidores.regimen_laboral', 'CODIGO_TRABAJO')
-                          ->where(function ($q) {
-                              $q->where(function ($subQ) {
-                                  // Nunca han gozado vacaciones y llevan más de 2 años en la institución
-                                  $subQ->whereNotExists(function ($sub) {
-                                      $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                                          ->from('vacaciones')
-                                          ->whereColumn('vacaciones.servidor_id', 'servidores.id')
-                                          ->where('vacaciones.estado', 'gozada');
-                                  })
-                                  ->where('servidores.fecha_ingreso_institucion', '<=', now()->subYears(2)->toDateString());
-                              })
-                              ->orWhere(function ($subQ) {
-                                  // Su última vacación gozada fue hace más de 2 años
-                                  $subQ->whereExists(function ($sub) {
-                                      $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                                          ->from('vacaciones')
-                                          ->whereColumn('vacaciones.servidor_id', 'servidores.id')
-                                          ->where('vacaciones.estado', 'gozada')
-                                          ->havingRaw('MAX(fecha_fin) <= ?', [now()->subYears(2)->toDateString()]);
-                                  });
-                              });
-                          });
-                })
-                ->count(),
+            'vacaciones_proximas_vencer' => \App\Models\Expediente\Servidor::where('estado', true)
+                ->get()
+                ->filter(function($serv) {
+                    try {
+                        $service = app(\App\Contracts\Asistencia\VacacionServiceInterface::class);
+                        return $service->calcularSaldoActual($serv->id) >= 45;
+                    } catch (\Exception $e) {
+                        return false;
+                    }
+                })->map(fn($s) => ['servidor_id' => $s->id])->values()->toArray(),
             'servidores_en_comision' => DB::table('viaticos')
                 ->where('estado', 'en_comision')
                 ->count()
@@ -132,7 +105,7 @@ class ReporteriaService implements ReporteriaServiceInterface
             'satisfaccion_promedio' => DB::table('encuestas_satisfaccion')
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
-                ->avg('calificacion_general') ?? 0
+                ->avg('calificacion') ?? 0
         ];
     }
 

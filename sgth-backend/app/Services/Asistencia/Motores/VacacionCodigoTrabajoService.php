@@ -15,7 +15,7 @@ class VacacionCodigoTrabajoService implements VacacionMotorInterface
         
         if (!$fechaIngreso) return 15;
 
-        $aniosServicio = $fechaIngreso->diffInYears(now());
+        $aniosServicio = (int) floor($fechaIngreso->diffInYears(now()));
 
         // CT: 15 días base + 1 día por cada año adicional a partir del 5to año (hasta 15 adicionales máximo)
         // La regla general en Ecuador es: cumplidos los 5 años en la misma empresa, al 6to año recibe 1 día adicional.

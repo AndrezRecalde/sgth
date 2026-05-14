@@ -214,7 +214,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 ->middleware('role:admin-ti');
             Route::get('encuestas-satisfaccion/resultados',
                 [\App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController::class, 'resultados'])
-                ->middleware('role:admin-ti,director,maxima-autoridad');
+                ->middleware('role:admin-ti|director|maxima-autoridad');
         });
 
     // Módulo 08: Evaluación del Desempeño
@@ -353,7 +353,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'responder']);
             Route::get('encuestas/{encuesta}/resultados',
                 [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'resultados'])
-                ->middleware('role:admin-uath,director,maxima-autoridad');
+                ->middleware('role:admin-uath|director|maxima-autoridad');
         });
 
     // Módulo 18 — Reportería e Inteligencia Institucional
@@ -361,31 +361,31 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         ->group(function () {
             Route::get('dashboard',
                 [\App\Http\Controllers\Reporteria\DashboardController::class, 'kpis'])
-                ->middleware('role:admin-uath,maxima-autoridad,auditor,director');
+                ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
 
             // Reportes Ad Hoc y Configuración
             Route::get('configuraciones',
                 [\App\Http\Controllers\Reporteria\ReporteController::class, 'indexConfiguraciones'])
-                ->middleware('role:admin-uath,auditor,director');
+                ->middleware('role:admin-uath|auditor|director');
             Route::post('configuraciones',
                 [\App\Http\Controllers\Reporteria\ReporteController::class, 'storeConfiguracion'])
-                ->middleware('role:admin-uath,auditor,director');
+                ->middleware('role:admin-uath|auditor|director');
             Route::post('ad-hoc',
                 [\App\Http\Controllers\Reporteria\ReporteController::class, 'generarAdHoc'])
-                ->middleware('role:admin-uath,auditor,director');
+                ->middleware('role:admin-uath|auditor|director');
 
             // Reportes Asíncronos (Background)
             Route::post('background',
                 [\App\Http\Controllers\Reporteria\ReporteController::class, 'solicitarFondo'])
-                ->middleware('role:admin-uath,maxima-autoridad,auditor,director');
+                ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
             Route::get('background/{job_id}',
                 [\App\Http\Controllers\Reporteria\ReporteController::class, 'estadoFondo'])
-                ->middleware('role:admin-uath,maxima-autoridad,auditor,director');
+                ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
         });
 
     // Dashboard ejecutivo — acceso directo sin prefijo reporteria
     Route::prefix('dashboard')
-        ->middleware('role:admin-uath,maxima-autoridad,director,auditor')
+        ->middleware('role:admin-uath|maxima-autoridad|director|auditor')
         ->group(function () {
             Route::get('kpis',
                 [\App\Http\Controllers\Reporteria\DashboardController::class, 'kpis']);

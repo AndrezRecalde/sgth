@@ -16,13 +16,15 @@ final class AgendaService implements AgendaServiceInterface
             // Para evitar un acoplamiento estricto a clases, insertamos el permiso directamente en su tabla
             // o a través de un Evento. Aquí lo insertamos como pendiente.
             
-            DB::table('permisos')->insert([
+            DB::table('permisos_servidor')->insert([
                 'servidor_id'      => $cita->servidor_id,
-                'tipo_permiso_id'  => 3, // ID asumido para Permiso por Enfermedad
-                'fecha_inicio'     => $cita->fecha . ' ' . $cita->hora_inicio,
-                'fecha_fin'        => $cita->fecha . ' ' . $cita->hora_fin,
-                'motivo'           => 'Cita médica institucional en el dispensario GAD',
+                'tipo'             => 'enfermedad', 
+                'fecha'            => $cita->fecha,
+                'hora_inicio'      => $cita->hora_inicio,
+                'hora_fin'         => $cita->hora_fin,
+                'observacion'      => 'Cita médica institucional en el dispensario GAD',
                 'estado'           => 'pendiente',
+                'vence_en'         => \Carbon\Carbon::parse(substr((string)$cita->fecha, 0, 10) . ' ' . $cita->hora_fin)->addHours(48),
                 'created_at'       => now(),
                 'updated_at'       => now(),
             ]);

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Asistencia;
 use App\Enums\TipoPermiso;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class StorePermisoServidorRequest extends FormRequest
 {
@@ -37,6 +38,27 @@ class StorePermisoServidorRequest extends FormRequest
             'hora_fin.required'    => 'La hora de fin es obligatoria.',
             'hora_fin.date_format' => 'El formato de la hora de fin debe ser HH:MM.',
             'hora_fin.after'       => 'La hora de fin debe ser posterior a la hora de inicio.',
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                if ($this->hora_inicio && $this->hora_fin) {
+                    $inicio = Carbon::parse($this->hora_inicio);
+                    $fin = Carbon::parse($this->hora_fin);
+                    $diferencia = $inicio->diffInHours($fin);
+
+                    if ($this->tipo === TipoPermiso::PERSONAL->value && $diferencia > 4) {
+                        $validator->errors()->add('hora_fin', 'Los permisos de tipo PERSONAL no pueden exceder las 4 horas por día.');
+                    }
+                }
+
+                if ($this->tipo === TipoPermiso::OFICIAL->value && empty(trim((string)$this->observacion))) {
+                    $validator->errors()->add('observacion', 'La observación es OBLIGATORIA para los permisos de tipo OFICIAL.');
+                }
+            }
         ];
     }
 }
