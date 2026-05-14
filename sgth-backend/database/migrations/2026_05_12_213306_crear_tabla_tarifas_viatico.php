@@ -13,6 +13,7 @@ return new class extends Migration
             
             $table->enum('zona', ['dentro_provincia', 'fuera_provincia', 'exterior']);
             $table->enum('nivel', ['autoridad', 'servidor']);
+            $table->enum('tipo_tarifa', ['con_pernocte', 'sin_pernocte', 'subsistencia'])->default('con_pernocte');
             $table->decimal('valor_diario', 8, 2);
             $table->string('pais_destino')->nullable(); // Aplica sólo si zona es exterior
             
@@ -21,7 +22,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            $table->unique(['zona', 'nivel', 'pais_destino'], 'uq_tarifa_viatico');
+            $table->unique(['zona', 'nivel', 'tipo_tarifa', 'pais_destino'], 'uq_tarifa_viatico');
         });
     }
 
