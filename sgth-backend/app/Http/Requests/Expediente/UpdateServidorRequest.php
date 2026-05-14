@@ -22,7 +22,13 @@ class UpdateServidorRequest extends FormRequest
 
         return [
             // Identidad base
-            'cedula'  => ['sometimes', 'required', 'string', 'max:15', Rule::unique('servidores')->ignore($servidorId)],
+            'cedula'  => [
+                'sometimes', 
+                'required', 
+                'string', 
+                'regex:/^\d{10}$/', 
+                Rule::unique('servidores')->ignore($servidorId)
+            ],
             'nombre'  => 'sometimes|required|string|max:100',
             'segundo_nombre'   => 'nullable|string|max:100',
             'apellido'         => 'sometimes|required|string|max:100',
@@ -102,6 +108,8 @@ class UpdateServidorRequest extends FormRequest
             
             'codigo_marcacion.regex'           => 'El código de marcación debe contener exactamente 10 caracteres alfanuméricos.',
             'codigo_marcacion.unique'          => 'El código de marcación biométrica ya se encuentra asignado a otro servidor.',
+            
+            'cedula.regex'                     => 'La cédula debe contener exactamente 10 dígitos numéricos.',
             
             'fecha_fin_ultimo_contrato.after'  => 'La fecha de fin del contrato debe ser posterior a la fecha de inicio del mismo.',
         ];

@@ -18,7 +18,7 @@ final class StoreUsuarioRequest extends FormRequest
             'nombre'   => ['required', 'string', 'max:100'],
             'apellido' => ['required', 'string', 'max:100'],
             'email'    => ['required', 'email', 'unique:users,email'],
-            'cedula'   => ['required', 'string', 'size:10'],
+            'cedula'   => ['required', 'string', 'regex:/^\d{10}$/'],
             'roles'    => ['required', 'array'],
             'roles.*'  => ['string', 'exists:roles,name'],
         ];
@@ -33,7 +33,7 @@ final class StoreUsuarioRequest extends FormRequest
             'email.email'       => 'Debe proporcionar un correo electrónico válido.',
             'email.unique'      => 'Este correo electrónico ya está registrado.',
             'cedula.required'   => 'La cédula es obligatoria.',
-            'cedula.size'       => 'La cédula debe tener exactamente 10 caracteres.',
+            'cedula.regex'      => 'La cédula debe contener exactamente 10 dígitos numéricos.',
             'roles.required'    => 'Debe asignar al menos un rol al usuario.',
             'roles.*.exists'    => 'El rol seleccionado no existe en el sistema.',
         ];

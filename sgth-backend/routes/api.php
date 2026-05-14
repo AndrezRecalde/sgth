@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Route;
 // ── Rutas públicas (sin autenticación) ────────────────────────────
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
-        Route::post('login', [\App\Http\Controllers\Auth\AuthController::class, 'login']);
+        Route::post('login', [\App\Http\Controllers\Auth\AuthController::class, 'login'])
+            ->middleware('throttle:5,1');
     });
 
     // Endpoint público para escanear el QR del permiso físico

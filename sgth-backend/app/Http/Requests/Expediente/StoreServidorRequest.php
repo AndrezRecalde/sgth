@@ -20,7 +20,12 @@ class StoreServidorRequest extends FormRequest
         return [
             // Identidad base
             'user_id' => 'required|exists:users,id|unique:servidores,user_id',
-            'cedula'  => 'required|string|max:15|unique:servidores,cedula',
+            'cedula'  => [
+                'required',
+                'string',
+                'regex:/^\d{10}$/',
+                'unique:servidores,cedula',
+            ],
             'nombre'  => 'required|string|max:100',
             'segundo_nombre'   => 'nullable|string|max:100',
             'apellido'         => 'required|string|max:100',
@@ -100,6 +105,8 @@ class StoreServidorRequest extends FormRequest
             
             'codigo_marcacion.regex'           => 'El código de marcación debe contener exactamente 10 caracteres alfanuméricos.',
             'codigo_marcacion.unique'          => 'El código de marcación biométrica ya se encuentra asignado a otro servidor.',
+            
+            'cedula.regex'                     => 'La cédula debe contener exactamente 10 dígitos numéricos.',
             
             'fecha_fin_ultimo_contrato.after'  => 'La fecha de fin del contrato debe ser posterior a la fecha de inicio del mismo.',
         ];
