@@ -77,6 +77,15 @@ class Viatico extends Model
         return $this->hasMany(TransporteViatico::class);
     }
 
+    public function tieneAutorizacionesPendientes(): bool
+    {
+        return $this->transportes()
+            ->where('tipo', 'avion')
+            ->whereHas('autorizacion', fn($q) =>
+                $q->where('estado', 'pendiente'))
+            ->exists();
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

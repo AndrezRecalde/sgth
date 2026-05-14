@@ -238,6 +238,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('viaticos')->group(function () {
         Route::post('servidor/{servidorId}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar']);
         Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
+        
+        Route::prefix('vuelos')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'index'])
+                ->middleware('role:maxima-autoridad');
+            Route::post('{id}/aprobar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'aprobar'])
+                ->middleware('role:maxima-autoridad');
+            Route::post('{id}/rechazar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'rechazar'])
+                ->middleware('role:maxima-autoridad');
+            Route::post('{id}/documento', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'subirDocumento']);
+        });
     });
 
     // Módulo 14: Disciplinario

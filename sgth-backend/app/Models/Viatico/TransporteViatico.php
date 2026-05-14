@@ -7,7 +7,11 @@ use App\Models\Geografia\Provincia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use App\Observers\Viatico\TransporteViaticoObserver;
 
+#[ObservedBy(TransporteViaticoObserver::class)]
 class TransporteViatico extends Model
 {
     use HasFactory;
@@ -66,5 +70,10 @@ class TransporteViatico extends Model
     public function ciudadDestino(): BelongsTo
     {
         return $this->belongsTo(Ciudad::class, 'ciudad_destino_id');
+    }
+
+    public function autorizacion(): HasOne
+    {
+        return $this->hasOne(AutorizacionVuelo::class, 'transporte_viatico_id');
     }
 }
