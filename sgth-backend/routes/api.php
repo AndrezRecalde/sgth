@@ -239,6 +239,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::post('servidor/{servidorId}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar']);
         Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
         
+        Route::get('{id}/informe/generar-enlace', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']);
+        Route::get('informe/descargar/{archivo}', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'descargar'])
+            ->name('viaticos.informe.descargar')
+            ->middleware('signed');
+        
         Route::prefix('vuelos')->group(function () {
             Route::get('/', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'index'])
                 ->middleware('role:maxima-autoridad');
