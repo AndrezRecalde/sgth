@@ -21,7 +21,6 @@ class StoreDestinoViaticoRequest extends FormRequest
             'estado_region'=> ['exclude_if:tipo_destino,nacional', 'nullable', 'string', 'max:100'],
             'fecha_llegada'=> ['required', 'date'],
             'fecha_salida' => ['required', 'date', 'after_or_equal:fecha_llegada'],
-            'dias_pernocte'=> ['required', 'integer', 'min:0'],
         ];
     }
 
@@ -38,7 +37,6 @@ class StoreDestinoViaticoRequest extends FormRequest
             'fecha_llegada.required' => 'La fecha de llegada es obligatoria.',
             'fecha_salida.required'  => 'La fecha de salida es obligatoria.',
             'fecha_salida.after_or_equal' => 'La fecha de salida no puede ser anterior a la de llegada.',
-            'dias_pernocte.required' => 'Los días de pernocte son obligatorios.',
         ];
     }
 }
