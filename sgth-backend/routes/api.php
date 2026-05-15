@@ -15,6 +15,10 @@ Route::prefix('v1')->group(function () {
     // Endpoint público protegido criptográficamente mediante firmas temporales (URL firmada)
     Route::get('sgd/documentos/{documento}/descargar', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'descargar'])
         ->name('sgd.documentos.descargar');
+        
+    // Catálogos geográficos públicos
+    Route::get('catalogos/provincias', [\App\Http\Controllers\Catalogo\ProvinciaController::class, 'index']);
+    Route::get('catalogos/provincias/{id}/ciudades', [\App\Http\Controllers\Catalogo\CiudadController::class, 'porProvincia']);
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
@@ -52,6 +56,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         
         Route::post('servidores/{servidor}/documentos', [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'store']);
         Route::get('servidores/{servidor}/movimientos', [\App\Http\Controllers\Expediente\MovimientoPersonalController::class, 'index']);
+
+        // Cuentas bancarias
+        Route::prefix('servidores/{id}/cuentas-bancarias')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'store']);
+            Route::put('{cuenta}', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'update']);
+            Route::delete('{cuenta}', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'destroy']);
+            Route::post('{cuenta}/set-principal', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'setPrincipal']);
+        });
 
         Route::prefix('subrogaciones')->group(function () {
             Route::get('activas', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'listarActivas']);
@@ -236,13 +249,34 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
     // Módulo 09: Viáticos
     Route::prefix('viaticos')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'store']);
+        Route::get('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'show']);
+        
         Route::post('servidor/{servidorId}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar']);
+        Route::post('{id}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitarParaAprobacion']);
         Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
         
         Route::get('{id}/informe/generar-enlace', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']);
         Route::get('informe/descargar/{archivo}', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'descargar'])
             ->name('viaticos.informe.descargar')
             ->middleware('signed');
+            
+        // Destinos
+        Route::prefix('{id}/destinos')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'store']);
+            Route::put('{destino}', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'update']);
+            Route::delete('{destino}', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'destroy']);
+        });
+
+        // Transportes
+        Route::prefix('{id}/transportes')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'store']);
+            Route::put('{transporte}', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'update']);
+            Route::delete('{transporte}', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'destroy']);
+        });
         
         Route::prefix('vuelos')->group(function () {
             Route::get('/', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'index'])
@@ -253,6 +287,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 ->middleware('role:maxima-autoridad');
             Route::post('{id}/documento', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'subirDocumento']);
         });
+    });
+
+    // Liquidaciones y Facturas
+    Route::prefix('liquidaciones')->group(function () {
+        Route::get('{id}/facturas', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'index']);
+        Route::post('{id}/facturas', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'store']);
+        Route::delete('{id}/facturas/{factura}', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'destroy']);
+    });
+
+    // Comisiones
+    Route::prefix('comisiones')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Viatico\ComisionController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Viatico\ComisionController::class, 'store']);
+        Route::get('{id}', [\App\Http\Controllers\Viatico\ComisionController::class, 'show']);
     });
 
     // Módulo 14: Disciplinario
