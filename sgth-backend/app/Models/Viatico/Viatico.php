@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -22,10 +23,11 @@ class Viatico extends Model
     protected $table = 'viaticos';
 
     protected $fillable = [
+        'codigo_viatico',
+        'comision_id',
         'servidor_id',
         'zona',
         'tipo',
-        'destino',
         'fecha_inicio',
         'fecha_fin',
         'justificacion',
@@ -58,6 +60,30 @@ class Viatico extends Model
     public function liquidacion(): HasOne
     {
         return $this->hasOne(LiquidacionViatico::class, 'viatico_id');
+    }
+
+    public function comision(): BelongsTo
+    {
+        return $this->belongsTo(Comision::class);
+    }
+
+    public function destinos(): HasMany
+    {
+        return $this->hasMany(DestinoViatico::class);
+    }
+
+    public function transportes(): HasMany
+    {
+        return $this->hasMany(TransporteViatico::class);
+    }
+
+    public function tieneAutorizacionesPendientes(): bool
+    {
+        return $this->transportes()
+            ->where('tipo', 'avion')
+            ->whereHas('autorizacion', fn($q) =>
+                $q->where('estado', 'pendiente'))
+            ->exists();
     }
 
     public function createdBy(): BelongsTo
