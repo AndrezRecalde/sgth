@@ -1,22 +1,27 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('movimientos_personal', function (Blueprint $table) {
-            $table->string('tipo_movimiento')->change();
-        });
+        // En PostgreSQL los enums de Laravel se almacenan
+        // como VARCHAR con CHECK constraint.
+        // Para agregar un valor nuevo debemos:
+        // 1. Eliminar el constraint existente
+        // 2. Agregar el nuevo constraint con los valores actualizados
 
-        Schema::table('movimientos_personal', function (Blueprint $table) {
-            $table->enum('tipo_movimiento', [
+        DB::statement("
+            ALTER TABLE movimientos_personal
+            DROP CONSTRAINT IF EXISTS movimientos_personal_tipo_movimiento_check
+        ");
+
+        DB::statement("
+            ALTER TABLE movimientos_personal
+            ADD CONSTRAINT movimientos_personal_tipo_movimiento_check
+            CHECK (tipo_movimiento IN (
                 'traslado',
                 'ascenso',
                 'subrogacion',
@@ -26,21 +31,21 @@ return new class extends Migration
                 'ingreso',
                 'egreso',
                 'novedad_contrato'
-            ])->change();
-        });
+            ))
+        ");
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('movimientos_personal', function (Blueprint $table) {
-            $table->string('tipo_movimiento')->change();
-        });
+        DB::statement("
+            ALTER TABLE movimientos_personal
+            DROP CONSTRAINT IF EXISTS movimientos_personal_tipo_movimiento_check
+        ");
 
-        Schema::table('movimientos_personal', function (Blueprint $table) {
-            $table->enum('tipo_movimiento', [
+        DB::statement("
+            ALTER TABLE movimientos_personal
+            ADD CONSTRAINT movimientos_personal_tipo_movimiento_check
+            CHECK (tipo_movimiento IN (
                 'traslado',
                 'ascenso',
                 'subrogacion',
@@ -49,7 +54,7 @@ return new class extends Migration
                 'cambio_puesto',
                 'ingreso',
                 'egreso'
-            ])->change();
-        });
+            ))
+        ");
     }
 };
