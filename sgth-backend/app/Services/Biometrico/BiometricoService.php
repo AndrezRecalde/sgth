@@ -43,8 +43,12 @@ class BiometricoService implements BiometricoServiceInterface
             throw new \Exception("No hay conexión disponible con el sistema biométrico SQL Server.");
         }
 
-        // 1. Obtener servidores estrictamente con código asignado
-        $servidores = Servidor::whereNotNull('codigo_marcacion')
+        // 1. Obtener servidores con contrato vigente y código asignado
+        // Para esto necesitamos traer la relación contratoVigente
+        $servidores = Servidor::whereHas('contratos', function ($q) {
+                $q->vigente()->whereNotNull('codigo_marcacion');
+            })
+            ->with('contratoVigente')
             ->where('estado', true)
             ->get();
 
@@ -62,9 +66,16 @@ class BiometricoService implements BiometricoServiceInterface
 
         foreach ($servidores as $servidor) {
             try {
+                // Obtenemos el código vigente a través de la relación
+                $codigoMarcacion = $servidor->codigoMarcacionVigente();
+                
+                if (!$codigoMarcacion) {
+                    continue;
+                }
+
                 // 3. Ejecutar SP
                 $stmt->execute([
-                    $servidor->codigo_marcacion,
+                    $codigoMarcacion,
                     $desde->format('Y-m-d'),
                     $hasta->format('Y-m-d')
                 ]);
@@ -91,7 +102,8 @@ class BiometricoService implements BiometricoServiceInterface
                 }
             } catch (\Exception $e) {
                 // Registra la falla específica pero permite que el ciclo continúe con los otros empleados
-                Log::error("Error importando marcaciones del servidor [{$servidor->codigo_marcacion}]: " . $e->getMessage());
+                $codigo = $codigoMarcacion ?? 'DESCONOCIDO';
+                Log::error("Error importando marcaciones del servidor [{$codigo}]: " . $e->getMessage());
             }
         }
 

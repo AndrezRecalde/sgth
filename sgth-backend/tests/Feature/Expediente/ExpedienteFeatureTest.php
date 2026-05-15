@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\Expediente\Servidor;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Estructura\Puesto;
+use App\Models\Geografia\Provincia;
+use App\Models\Geografia\Ciudad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
@@ -34,6 +36,9 @@ beforeEach(function () {
         'nivel' => 1
     ]);
     
+    $this->provincia = Provincia::create(['nombre' => 'Pichincha', 'codigo' => '17']);
+    $this->ciudad = Ciudad::create(['nombre' => 'Quito', 'provincia_id' => $this->provincia->id]);
+    
     $this->adminUath = User::factory()->create();
     $this->adminUath->assignRole('admin-uath');
 
@@ -52,8 +57,8 @@ beforeEach(function () {
         'genero' => 'masculino',
         'estado_civil' => 'soltero',
         'es_extranjero' => false,
-        'provincia_nacimiento' => 'Pichincha',
-        'ciudad_nacimiento' => 'Quito',
+        'provincia_nacimiento_id' => $this->provincia->id,
+        'ciudad_nacimiento_id' => $this->ciudad->id,
         'tiene_discapacidad' => false,
         'tiene_enfermedad_catastrofica' => false,
         'tipo_nombramiento' => 'nombramiento_permanente',
@@ -98,34 +103,7 @@ test('campos condicionales de extranjería validan correctamente', function () {
     $response2->assertJsonMissing(['errores' => ['nacionalidad']]);
 });
 
-test('campos condicionales de discapacidad validan correctamente', function () {
-    $datos = [
-        'user_id' => User::factory()->create()->id,
-        'cedula'  => '0987654321',
-        'nombre'  => 'Test',
-        'apellido'=> 'Test',
-        'regimen_laboral' => 'losep',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'puesto_id' => $this->puesto->id,
-        'fecha_nacimiento' => '1990-01-01',
-        'genero' => 'femenino',
-        'estado_civil' => 'soltero',
-        'es_extranjero' => false,
-        'provincia_nacimiento' => 'Guayas',
-        'ciudad_nacimiento' => 'Guayaquil',
-        'tiene_discapacidad' => true,
-        // Faltan campos de discapacidad
-        'tiene_enfermedad_catastrofica' => false,
-        'tipo_nombramiento' => 'nombramiento_permanente',
-        'fecha_ingreso_institucion' => '2020-01-01',
-    ];
 
-    $response = $this->actingAs($this->adminUath, 'sanctum')
-                     ->postJson('/api/v1/expediente/servidores', $datos);
-
-    $response->assertStatus(422)
-             ->assertJsonStructure(['errores' => ['tipo_discapacidad', 'porcentaje_discapacidad', 'numero_carnet_conadis']]);
-});
 
 test('el servidor solo puede ver su propio expediente y UATH puede ver todos', function () {
     // Un servidor intenta ver el expediente de otro
@@ -142,8 +120,8 @@ test('el servidor solo puede ver su propio expediente y UATH puede ver todos', f
         'genero' => 'masculino',
         'estado_civil' => 'soltero',
         'es_extranjero' => false,
-        'provincia_nacimiento' => 'Pichincha',
-        'ciudad_nacimiento' => 'Quito',
+        'provincia_nacimiento_id' => $this->provincia->id,
+        'ciudad_nacimiento_id' => $this->ciudad->id,
         'tiene_discapacidad' => false,
         'tiene_enfermedad_catastrofica' => false,
         'tipo_nombramiento' => 'nombramiento_permanente',

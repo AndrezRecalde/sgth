@@ -7,6 +7,8 @@ use App\Enums\TipoDiscapacidad;
 use App\Enums\TipoNombramiento;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Models\Geografia\Ciudad;
+use App\Models\Geografia\Provincia;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -37,17 +39,16 @@ class Servidor extends Model
         'estado',
         // Sección A
         'fecha_nacimiento', 'genero', 'estado_civil', 'tipo_sangre', 'es_extranjero', 
-        'nacionalidad', 'pais_origen', 'provincia_nacimiento', 'ciudad_nacimiento',
+        'nacionalidad', 'pais_origen', 'provincia_nacimiento_id', 'ciudad_nacimiento_id',
         // Sección B
         'numero_papeleta_votacion', 'pasaporte_numero', 'pasaporte_vencimiento',
         // Sección C
         'telefono_celular', 'telefono_convencional', 'correo_institucional', 'correo_personal',
         'direccion_domicilio', 'provincia_domicilio', 'ciudad_domicilio',
         // Sección D
-        'tiene_discapacidad', 'tipo_discapacidad', 'porcentaje_discapacidad', 'numero_carnet_conadis', 
-        'carnet_conadis_ruta', 'carnet_conadis_vencimiento',
+        'tiene_discapacidad',
         // Sección E
-        'tiene_enfermedad_catastrofica', 'tipo_enfermedad_catastrofica', 'enfermedad_catastrofica_certificado_ruta',
+        'tiene_enfermedad_catastrofica',
         // Sección F
         'tipo_nombramiento', 'numero_contrato', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
         'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato',
@@ -59,7 +60,6 @@ class Servidor extends Model
     {
         return [
             'regimen_laboral'               => RegimenLaboral::class,
-            'tipo_discapacidad'             => TipoDiscapacidad::class,
             'tipo_nombramiento'             => TipoNombramiento::class,
             'estado'                        => 'boolean',
             'es_extranjero'                 => 'boolean',
@@ -67,13 +67,11 @@ class Servidor extends Model
             'tiene_enfermedad_catastrofica' => 'boolean',
             'fecha_nacimiento'              => 'date',
             'pasaporte_vencimiento'         => 'date',
-            'carnet_conadis_vencimiento'    => 'date',
             'fecha_ingreso_institucion'     => 'date',
             'fecha_ingreso_sector_publico'  => 'date',
             'fecha_nombramiento'            => 'date',
             'fecha_inicio_ultimo_contrato'  => 'date',
             'fecha_fin_ultimo_contrato'     => 'date',
-            'porcentaje_discapacidad'       => 'decimal:2',
         ];
     }
 
@@ -95,6 +93,16 @@ class Servidor extends Model
         return $this->belongsTo(Puesto::class);
     }
 
+    public function provinciaNacimiento(): BelongsTo
+    {
+        return $this->belongsTo(Provincia::class, 'provincia_nacimiento_id');
+    }
+
+    public function ciudadNacimiento(): BelongsTo
+    {
+        return $this->belongsTo(Ciudad::class, 'ciudad_nacimiento_id');
+    }
+
     public function documentos(): HasMany
     {
         return $this->hasMany(DocumentoServidor::class);
@@ -113,6 +121,40 @@ class Servidor extends Model
     public function movimientos(): HasMany
     {
         return $this->hasMany(MovimientoPersonal::class);
+    }
+
+    public function contratos(): HasMany
+    {
+        return $this->hasMany(ContratoServidor::class);
+    }
+
+    public function discapacidades(): HasMany
+    {
+        return $this->hasMany(DiscapacidadServidor::class);
+    }
+
+    public function enfermedadesCatastroficas(): HasMany
+    {
+        return $this->hasMany(EnfermedadCatastroficaServidor::class);
+    }
+
+    public function contratoVigente()
+    {
+        return $this->hasOne(ContratoServidor::class)->ofMany(
+            ['fecha_inicio' => 'max', 'id' => 'max'],
+            function ($query) {
+                $query->where('estado', 'vigente')
+                      ->where(function ($q) {
+                          $q->whereNull('fecha_fin')
+                            ->orWhere('fecha_fin', '>=', now()->toDateString());
+                      });
+            }
+        );
+    }
+
+    public function codigoMarcacionVigente(): ?string
+    {
+        return $this->contratoVigente?->codigo_marcacion;
     }
 
     /**
