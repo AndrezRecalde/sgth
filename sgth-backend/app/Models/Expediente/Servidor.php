@@ -46,7 +46,7 @@ class Servidor extends Model
         // Sección D
         'tiene_discapacidad',
         // Sección E
-        'tiene_enfermedad_catastrofica', 'tipo_enfermedad_catastrofica', 'enfermedad_catastrofica_certificado_ruta',
+        'tiene_enfermedad_catastrofica',
         // Sección F
         'tipo_nombramiento', 'numero_contrato', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
         'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato',
@@ -119,6 +119,11 @@ class Servidor extends Model
     public function discapacidades(): HasMany
     {
         return $this->hasMany(DiscapacidadServidor::class);
+    }
+
+    public function enfermedadesCatastroficas(): HasMany
+    {
+        return $this->hasMany(EnfermedadCatastroficaServidor::class);
     }
 
     public function contratoVigente()
