@@ -57,6 +57,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::post('servidores/{servidor}/documentos', [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'store']);
         Route::get('servidores/{servidor}/movimientos', [\App\Http\Controllers\Expediente\MovimientoPersonalController::class, 'index']);
 
+        Route::get('servidores/{id}/certificado-laboral', [\App\Http\Controllers\Expediente\CertificadoLaboralController::class, 'generar']);
+        Route::get('certificado-laboral/descargar/{archivo}', [\App\Http\Controllers\Expediente\CertificadoLaboralController::class, 'descargar'])
+            ->name('expediente.certificado.descargar')
+            ->middleware('signed');
+
         // Cuentas bancarias
         Route::prefix('servidores/{id}/cuentas-bancarias')->group(function () {
             Route::get('/', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'index']);
