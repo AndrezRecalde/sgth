@@ -17,9 +17,11 @@ class LiquidarViaticoRequest extends FormRequest
             'fecha_retorno'       => ['required', 'date'],
             'observaciones'       => ['nullable', 'string', 'max:1000'],
             'facturas'            => ['nullable', 'array'],
-            'facturas.*.numero'   => ['required_with:facturas', 'string'],
-            'facturas.*.proveedor'=> ['required_with:facturas', 'string'],
-            'facturas.*.monto'    => ['required_with:facturas', 'numeric', 'min:0.01'],
+            'facturas.*.concepto'         => ['required_with:facturas', 'string'],
+            'facturas.*.numero_factura'   => ['required_with:facturas', 'string'],
+            'facturas.*.ruc_proveedor'    => ['required_with:facturas', 'string'],
+            'facturas.*.nombre_proveedor' => ['required_with:facturas', 'string'],
+            'facturas.*.monto'            => ['required_with:facturas', 'numeric', 'min:0.01'],
         ];
     }
 }

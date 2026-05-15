@@ -42,4 +42,22 @@ class CuentaBancariaServidorService
             return CuentaBancariaServidor::create($datosCuenta);
         });
     }
+
+    public function actualizarCuenta(CuentaBancariaServidor $cuenta, array $datos): CuentaBancariaServidor
+    {
+        return $this->guardarCuenta($cuenta->servidor_id, $datos, $cuenta->id);
+    }
+
+    public function marcarComoPrincipal(CuentaBancariaServidor $cuenta, string $proposito): void
+    {
+        $campo = $proposito === 'sueldo' ? 'es_principal_sueldo' : 'es_principal_viatico';
+        
+        DB::transaction(function () use ($cuenta, $campo) {
+            CuentaBancariaServidor::where('servidor_id', $cuenta->servidor_id)
+                ->where('id', '!=', $cuenta->id)
+                ->update([$campo => false]);
+            
+            $cuenta->update([$campo => true]);
+        });
+    }
 }
