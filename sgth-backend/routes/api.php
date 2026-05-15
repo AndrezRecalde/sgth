@@ -62,6 +62,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->name('expediente.certificado.descargar')
             ->middleware('signed');
 
+        // Historiales gestionados por la UATH
+        Route::prefix('servidores/{servidorId}')
+            ->middleware('role:admin-uath,asistente-uath')
+            ->group(function () {
+                Route::apiResource('contratos', \App\Http\Controllers\Expediente\ContratoServidorController::class)->parameters(['contratos' => 'contrato']);
+                Route::apiResource('discapacidades', \App\Http\Controllers\Expediente\DiscapacidadServidorController::class)->parameters(['discapacidades' => 'discapacidade']);
+                Route::apiResource('enfermedades', \App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController::class)->parameters(['enfermedades' => 'enfermedade']);
+            });
+
         // Cuentas bancarias
         Route::prefix('servidores/{id}/cuentas-bancarias')->group(function () {
             Route::get('/', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'index']);
