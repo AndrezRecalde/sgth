@@ -89,11 +89,9 @@ it('destino_nacional_requiere_provincia_y_ciudad', function () {
     $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/destinos", [
         'tipo_destino' => 'nacional',
         'fecha_llegada' => now()->toDateString(),
-        'fecha_salida' => now()->addDays(1)->toDateString(),
-        'dias_pernocte' => 1
+        'fecha_salida' => now()->addDays(1)->toDateString()
     ]);
 
-    $response->dump();
     $response->assertStatus(422);
     $response->assertJsonStructure(['errores' => ['provincia_id', 'ciudad_id']]);
 });
@@ -102,8 +100,7 @@ it('destino_internacional_requiere_pais', function () {
     $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/destinos", [
         'tipo_destino' => 'internacional',
         'fecha_llegada' => now()->toDateString(),
-        'fecha_salida' => now()->addDays(1)->toDateString(),
-        'dias_pernocte' => 1
+        'fecha_salida' => now()->addDays(1)->toDateString()
     ]);
 
     $response->assertStatus(422);
@@ -116,8 +113,7 @@ it('destino_nacional_se_crea_correctamente', function () {
         'provincia_id' => $this->provincia->id,
         'ciudad_id' => $this->ciudad->id,
         'fecha_llegada' => now()->toDateString(),
-        'fecha_salida' => now()->addDays(1)->toDateString(),
-        'dias_pernocte' => 1
+        'fecha_salida' => now()->addDays(1)->toDateString()
     ]);
 
     $response->assertCreated();
@@ -291,7 +287,6 @@ it('no_puede_solicitar_con_autorizacion_vuelo_pendiente', function () {
         'ciudad_id' => $this->ciudad->id,
         'fecha_llegada' => now(),
         'fecha_salida' => now()->addDays(1),
-        'dias_pernocte' => 1,
         'orden' => 1
     ]);
 
