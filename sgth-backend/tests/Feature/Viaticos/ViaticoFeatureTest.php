@@ -73,7 +73,6 @@ test('servidor_con_liquidacion_pendiente_no_puede_solicitar', function () {
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
         'tipo' => 'con_pernocte',
-        'destino' => 'Quito',
         'fecha_inicio' => now()->subDays(12),
         'fecha_fin' => now()->subDays(10), // Hace 10 dias calendario (mas de 5 habiles seguros)
         'justificacion' => 'Comisión anterior',
@@ -87,7 +86,6 @@ test('servidor_con_liquidacion_pendiente_no_puede_solicitar', function () {
         $service->solicitar($this->servidor->id, [
             'zona' => 'dentro_provincia',
             'tipo' => 'con_pernocte',
-            'destino' => 'Guayaquil',
             'fecha_inicio' => now()->addDays(1)->format('Y-m-d H:i:s'),
             'fecha_fin' => now()->addDays(2)->format('Y-m-d H:i:s'),
             'justificacion' => 'Nueva comision',
@@ -118,7 +116,6 @@ test('viatico_menos_10_horas_aplica_subsistencia', function () {
     $viatico = $service->solicitar($this->servidor->id, [
         'zona' => 'dentro_provincia',
         'tipo' => 'sin_pernocte',
-        'destino' => 'Ibarra',
         'fecha_inicio' => now()->setTime(8, 0)->format('Y-m-d H:i:s'),
         'fecha_fin' => now()->setTime(16, 0)->format('Y-m-d H:i:s'),
         'justificacion' => 'Reunión rápida',
@@ -135,7 +132,6 @@ test('handoff_compromiso_generado_al_aprobar_financiero', function () {
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
         'tipo' => 'con_pernocte',
-        'destino' => 'Manta',
         'fecha_inicio' => now()->addDays(2),
         'fecha_fin' => now()->addDays(4),
         'justificacion' => 'Supervisión de obras',
@@ -165,7 +161,6 @@ test('handoff_devengado_generado_al_liquidar', function () {
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
         'tipo' => 'con_pernocte',
-        'destino' => 'Manta',
         'fecha_inicio' => now()->subDays(4),
         'fecha_fin' => now()->subDays(2),
         'justificacion' => 'Supervisión de obras',
@@ -218,7 +213,6 @@ test('liquidacion_vence_a_los_5_dias_habiles', function () {
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
         'tipo' => 'con_pernocte',
-        'destino' => 'Quito',
         'fecha_inicio' => $fechaFin->copy()->subDays(2),
         'fecha_fin' => $fechaFin, // Lunes
         'justificacion' => 'Comisión en Quito',
