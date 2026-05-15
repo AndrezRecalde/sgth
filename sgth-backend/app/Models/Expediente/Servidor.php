@@ -44,8 +44,7 @@ class Servidor extends Model
         'telefono_celular', 'telefono_convencional', 'correo_institucional', 'correo_personal',
         'direccion_domicilio', 'provincia_domicilio', 'ciudad_domicilio',
         // Sección D
-        'tiene_discapacidad', 'tipo_discapacidad', 'porcentaje_discapacidad', 'numero_carnet_conadis', 
-        'carnet_conadis_ruta', 'carnet_conadis_vencimiento',
+        'tiene_discapacidad',
         // Sección E
         'tiene_enfermedad_catastrofica', 'tipo_enfermedad_catastrofica', 'enfermedad_catastrofica_certificado_ruta',
         // Sección F
@@ -59,7 +58,6 @@ class Servidor extends Model
     {
         return [
             'regimen_laboral'               => RegimenLaboral::class,
-            'tipo_discapacidad'             => TipoDiscapacidad::class,
             'tipo_nombramiento'             => TipoNombramiento::class,
             'estado'                        => 'boolean',
             'es_extranjero'                 => 'boolean',
@@ -67,13 +65,11 @@ class Servidor extends Model
             'tiene_enfermedad_catastrofica' => 'boolean',
             'fecha_nacimiento'              => 'date',
             'pasaporte_vencimiento'         => 'date',
-            'carnet_conadis_vencimiento'    => 'date',
             'fecha_ingreso_institucion'     => 'date',
             'fecha_ingreso_sector_publico'  => 'date',
             'fecha_nombramiento'            => 'date',
             'fecha_inicio_ultimo_contrato'  => 'date',
             'fecha_fin_ultimo_contrato'     => 'date',
-            'porcentaje_discapacidad'       => 'decimal:2',
         ];
     }
 
@@ -118,6 +114,11 @@ class Servidor extends Model
     public function contratos(): HasMany
     {
         return $this->hasMany(ContratoServidor::class);
+    }
+
+    public function discapacidades(): HasMany
+    {
+        return $this->hasMany(DiscapacidadServidor::class);
     }
 
     public function contratoVigente()
