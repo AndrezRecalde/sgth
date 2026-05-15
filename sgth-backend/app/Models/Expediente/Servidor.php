@@ -115,6 +115,30 @@ class Servidor extends Model
         return $this->hasMany(MovimientoPersonal::class);
     }
 
+    public function contratos(): HasMany
+    {
+        return $this->hasMany(ContratoServidor::class);
+    }
+
+    public function contratoVigente()
+    {
+        return $this->hasOne(ContratoServidor::class)->ofMany(
+            ['fecha_inicio' => 'max', 'id' => 'max'],
+            function ($query) {
+                $query->where('estado', 'vigente')
+                      ->where(function ($q) {
+                          $q->whereNull('fecha_fin')
+                            ->orWhere('fecha_fin', '>=', now()->toDateString());
+                      });
+            }
+        );
+    }
+
+    public function codigoMarcacionVigente(): ?string
+    {
+        return $this->contratoVigente?->codigo_marcacion;
+    }
+
     /**
      * Accessor para el nombre completo.
      */
