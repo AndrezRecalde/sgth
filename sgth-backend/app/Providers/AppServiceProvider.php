@@ -133,6 +133,10 @@ class AppServiceProvider extends ServiceProvider
             VacacionServiceInterface::class,
             VacacionService::class
         );
+        $this->app->bind(
+            \App\Contracts\Viatico\ViaticoServiceInterface::class,
+            \App\Services\Viatico\ViaticoService::class
+        );
     }
 
     /**

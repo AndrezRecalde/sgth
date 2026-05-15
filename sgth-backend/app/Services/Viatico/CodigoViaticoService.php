@@ -18,11 +18,14 @@ class CodigoViaticoService
 
         return DB::transaction(function () use ($codigoUnidad, $anio) {
             $ultimo = Viatico::where('codigo_viatico', 'like', "{$codigoUnidad}-{$anio}-%")
+                ->orderBy('codigo_viatico', 'desc')
                 ->lockForUpdate()
-                ->max('codigo_viatico');
+                ->first();
 
-            $secuencial = $ultimo
-                ? (int) substr($ultimo, strrpos($ultimo, '-') + 1) + 1
+            $ultimoCodigo = $ultimo ? $ultimo->codigo_viatico : null;
+
+            $secuencial = $ultimoCodigo
+                ? (int) substr($ultimoCodigo, strrpos($ultimoCodigo, '-') + 1) + 1
                 : 1;
 
             return sprintf('%s-%d-%04d', $codigoUnidad, $anio, $secuencial);
@@ -39,11 +42,14 @@ class CodigoViaticoService
 
         return DB::transaction(function () use ($codigoUnidad, $anio) {
             $ultimo = Comision::where('codigo_comision', 'like', "COM-{$codigoUnidad}-{$anio}-%")
+                ->orderBy('codigo_comision', 'desc')
                 ->lockForUpdate()
-                ->max('codigo_comision');
+                ->first();
 
-            $secuencial = $ultimo
-                ? (int) substr($ultimo, strrpos($ultimo, '-') + 1) + 1
+            $ultimoCodigo = $ultimo ? $ultimo->codigo_comision : null;
+
+            $secuencial = $ultimoCodigo
+                ? (int) substr($ultimoCodigo, strrpos($ultimoCodigo, '-') + 1) + 1
                 : 1;
 
             return sprintf('COM-%s-%d-%04d', $codigoUnidad, $anio, $secuencial);
