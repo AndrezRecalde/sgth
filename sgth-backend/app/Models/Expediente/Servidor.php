@@ -7,6 +7,8 @@ use App\Enums\TipoDiscapacidad;
 use App\Enums\TipoNombramiento;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Models\Geografia\Ciudad;
+use App\Models\Geografia\Provincia;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -37,7 +39,7 @@ class Servidor extends Model
         'estado',
         // Sección A
         'fecha_nacimiento', 'genero', 'estado_civil', 'tipo_sangre', 'es_extranjero', 
-        'nacionalidad', 'pais_origen', 'provincia_nacimiento', 'ciudad_nacimiento',
+        'nacionalidad', 'pais_origen', 'provincia_nacimiento_id', 'ciudad_nacimiento_id',
         // Sección B
         'numero_papeleta_votacion', 'pasaporte_numero', 'pasaporte_vencimiento',
         // Sección C
@@ -89,6 +91,16 @@ class Servidor extends Model
     public function puesto(): BelongsTo
     {
         return $this->belongsTo(Puesto::class);
+    }
+
+    public function provinciaNacimiento(): BelongsTo
+    {
+        return $this->belongsTo(Provincia::class, 'provincia_nacimiento_id');
+    }
+
+    public function ciudadNacimiento(): BelongsTo
+    {
+        return $this->belongsTo(Ciudad::class, 'ciudad_nacimiento_id');
     }
 
     public function documentos(): HasMany
