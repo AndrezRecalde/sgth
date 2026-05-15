@@ -43,9 +43,9 @@ class StoreServidorRequest extends FormRequest
             'tipo_sangre'      => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
             
             // Extranjería condicional
-            'es_extranjero'        => 'required|boolean',
-            'provincia_nacimiento' => 'required_if:es_extranjero,false|nullable|string|max:100',
-            'ciudad_nacimiento'    => 'required_if:es_extranjero,false|nullable|string|max:100',
+            'es_extranjero'           => 'required|boolean',
+            'provincia_nacimiento_id' => 'required_if:es_extranjero,false|nullable|exists:provincias,id',
+            'ciudad_nacimiento_id'    => 'required_if:es_extranjero,false|nullable|exists:ciudades,id',
             'nacionalidad'         => 'required_if:es_extranjero,true|nullable|string|max:100',
             'pais_origen'          => 'required_if:es_extranjero,true|nullable|string|max:100',
 
@@ -65,13 +65,6 @@ class StoreServidorRequest extends FormRequest
 
             // Sección D — Discapacidad condicional
             'tiene_discapacidad'      => 'required|boolean',
-            'tipo_discapacidad'       => ['required_if:tiene_discapacidad,true', 'nullable', new Enum(TipoDiscapacidad::class)],
-            'porcentaje_discapacidad' => 'required_if:tiene_discapacidad,true|nullable|numeric|min:0.01|max:100.00',
-            'numero_carnet_conadis'   => 'required_if:tiene_discapacidad,true|nullable|string|max:50',
-            
-            // Sección E — Enfermedad catastrófica
-            'tiene_enfermedad_catastrofica' => 'required|boolean',
-            'tipo_enfermedad_catastrofica'  => 'required_if:tiene_enfermedad_catastrofica,true|nullable|string|max:255',
 
             // Sección F — Laboral
             'tipo_nombramiento'            => ['required', new Enum(TipoNombramiento::class)],
@@ -90,18 +83,12 @@ class StoreServidorRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'provincia_nacimiento.required_if' => 'La provincia de nacimiento es obligatoria si el servidor no es extranjero.',
-            'ciudad_nacimiento.required_if'    => 'La ciudad de nacimiento es obligatoria si el servidor no es extranjero.',
-            'nacionalidad.required_if'         => 'La nacionalidad es obligatoria para servidores extranjeros.',
-            'pais_origen.required_if'          => 'El país de origen es obligatorio para servidores extranjeros.',
-            
-            'tipo_discapacidad.required_if'    => 'Debe especificar el tipo de discapacidad.',
-            'porcentaje_discapacidad.required_if' => 'Debe especificar el porcentaje de discapacidad.',
-            'porcentaje_discapacidad.min'      => 'El porcentaje de discapacidad debe ser mayor a 0.',
-            'porcentaje_discapacidad.max'      => 'El porcentaje de discapacidad no puede ser mayor a 100.',
-            'numero_carnet_conadis.required_if'=> 'El número de carnet del CONADIS es obligatorio al declarar discapacidad.',
-            
-            'tipo_enfermedad_catastrofica.required_if' => 'Debe especificar el nombre de la enfermedad catastrófica.',
+            'provincia_nacimiento_id.required_if' => 'La provincia de nacimiento es obligatoria si el servidor no es extranjero.',
+            'provincia_nacimiento_id.exists'      => 'La provincia de nacimiento seleccionada no existe en el catálogo.',
+            'ciudad_nacimiento_id.required_if'    => 'El cantón de nacimiento es obligatorio si el servidor no es extranjero.',
+            'ciudad_nacimiento_id.exists'         => 'El cantón de nacimiento seleccionado no existe en el catálogo.',
+            'nacionalidad.required_if'            => 'La nacionalidad es obligatoria para servidores extranjeros.',
+            'pais_origen.required_if'             => 'El país de origen es obligatorio para servidores extranjeros.',
             
             'codigo_marcacion.regex'           => 'El código de marcación debe contener exactamente 10 caracteres alfanuméricos.',
             'codigo_marcacion.unique'          => 'El código de marcación biométrica ya se encuentra asignado a otro servidor.',
