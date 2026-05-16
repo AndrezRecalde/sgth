@@ -4,21 +4,22 @@ namespace App\Models\Geografia;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Provincia extends Model
+class Canton extends Model
 {
     use HasFactory;
 
-    protected $table = 'provincias';
+    protected $table = 'cantones';
 
     protected $fillable = [
+        'provincia_id',
         'nombre',
         'codigo',
     ];
 
-    public function cantones(): HasMany
+    public function provincia(): BelongsTo
     {
-        return $this->hasMany(Canton::class);
+        return $this->belongsTo(Provincia::class);
     }
 }
