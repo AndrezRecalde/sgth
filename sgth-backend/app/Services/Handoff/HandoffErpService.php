@@ -94,7 +94,7 @@ class HandoffErpService implements HandoffErpServiceInterface
                 ->sortBy('orden')
                 ->map(function ($d) {
                     if ($d->tipo_destino === 'nacional') {
-                        return $d->ciudad->nombre . ' - ' . $d->provincia->nombre;
+                        return $d->canton->nombre . ' - ' . $d->provincia->nombre;
                     }
                     return $d->estado_region ? $d->estado_region . ' - ' . $d->pais : $d->pais;
                 })

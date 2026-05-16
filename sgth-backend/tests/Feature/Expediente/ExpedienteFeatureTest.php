@@ -7,7 +7,7 @@ use App\Models\Expediente\Servidor;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Estructura\Puesto;
 use App\Models\Geografia\Provincia;
-use App\Models\Geografia\Ciudad;
+use App\Models\Geografia\Canton;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
@@ -37,7 +37,7 @@ beforeEach(function () {
     ]);
     
     $this->provincia = Provincia::create(['nombre' => 'Pichincha', 'codigo' => '17']);
-    $this->ciudad = Ciudad::create(['nombre' => 'Quito', 'provincia_id' => $this->provincia->id]);
+    $this->canton = Canton::create(['nombre' => 'Quito', 'provincia_id' => $this->provincia->id, 'codigo' => '1701']);
     
     $this->adminUath = User::factory()->create();
     $this->adminUath->assignRole('admin-uath');
@@ -58,7 +58,7 @@ beforeEach(function () {
         'estado_civil' => 'soltero',
         'es_extranjero' => false,
         'provincia_nacimiento_id' => $this->provincia->id,
-        'ciudad_nacimiento_id' => $this->ciudad->id,
+        'canton_nacimiento_id' => $this->canton->id,
         'tiene_discapacidad' => false,
         'tiene_enfermedad_catastrofica' => false,
         'tipo_nombramiento' => 'nombramiento_permanente',
@@ -121,7 +121,7 @@ test('el servidor solo puede ver su propio expediente y UATH puede ver todos', f
         'estado_civil' => 'soltero',
         'es_extranjero' => false,
         'provincia_nacimiento_id' => $this->provincia->id,
-        'ciudad_nacimiento_id' => $this->ciudad->id,
+        'canton_nacimiento_id' => $this->canton->id,
         'tiene_discapacidad' => false,
         'tiene_enfermedad_catastrofica' => false,
         'tipo_nombramiento' => 'nombramiento_permanente',

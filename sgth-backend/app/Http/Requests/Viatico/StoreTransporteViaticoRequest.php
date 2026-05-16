@@ -16,9 +16,9 @@ class StoreTransporteViaticoRequest extends FormRequest
         return [
             'tipo' => ['required', 'string', 'in:bus_interprovincial,avion,vehiculo_propio,taxi,transporte_institucional,otro'],
             'provincia_origen_id' => ['nullable', 'exists:provincias,id'],
-            'ciudad_origen_id' => ['nullable', 'exists:ciudades,id'],
+            'canton_origen_id' => ['nullable', 'exists:cantones,id'],
             'provincia_destino_id' => ['nullable', 'exists:provincias,id'],
-            'ciudad_destino_id' => ['nullable', 'exists:ciudades,id'],
+            'canton_destino_id' => ['nullable', 'exists:cantones,id'],
             'pais_origen' => ['nullable', 'string', 'max:100'],
             'pais_destino' => ['nullable', 'string', 'max:100'],
             'fecha_viaje' => ['required', 'date'],

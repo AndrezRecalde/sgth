@@ -6,15 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Ciudad extends Model
+class Canton extends Model
 {
     use HasFactory;
 
-    protected $table = 'ciudades';
+    protected $table = 'cantones';
 
     protected $fillable = [
         'provincia_id',
         'nombre',
+        'codigo',
     ];
 
     public function provincia(): BelongsTo

@@ -17,8 +17,8 @@ class Provincia extends Model
         'codigo',
     ];
 
-    public function ciudades(): HasMany
+    public function cantones(): HasMany
     {
-        return $this->hasMany(Ciudad::class);
+        return $this->hasMany(Canton::class);
     }
 }
