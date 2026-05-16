@@ -2,7 +2,7 @@
 
 use App\Enums\ConceptoFactura;
 use App\Enums\EstadoViatico;
-use App\Models\Geografia\Ciudad;
+use App\Models\Geografia\Canton;
 use App\Models\Catalogo\EntidadFinanciera;
 use App\Models\Geografia\Provincia;
 use App\Models\Estructura\Puesto;
@@ -65,7 +65,7 @@ beforeEach(function () {
     ]);
 
     $this->provincia = Provincia::create(['nombre' => 'Pichincha', 'codigo' => '17']);
-    $this->ciudad = Ciudad::create(['provincia_id' => $this->provincia->id, 'nombre' => 'Quito']);
+    $this->canton = Canton::create(['provincia_id' => $this->provincia->id, 'nombre' => 'Quito', 'codigo' => '1701']);
 
     $this->viatico = Viatico::create([
         'servidor_id' => $this->servidor->id,
@@ -93,7 +93,7 @@ it('destino_nacional_requiere_provincia_y_ciudad', function () {
     ]);
 
     $response->assertStatus(422);
-    $response->assertJsonStructure(['errores' => ['provincia_id', 'ciudad_id']]);
+    $response->assertJsonStructure(['errores' => ['provincia_id', 'canton_id']]);
 });
 
 it('destino_internacional_requiere_pais', function () {
@@ -111,7 +111,7 @@ it('destino_nacional_se_crea_correctamente', function () {
     $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/destinos", [
         'tipo_destino' => 'nacional',
         'provincia_id' => $this->provincia->id,
-        'ciudad_id' => $this->ciudad->id,
+        'canton_id' => $this->canton->id,
         'fecha_llegada' => now()->toDateString(),
         'fecha_salida' => now()->addDays(1)->toDateString()
     ]);
@@ -121,7 +121,7 @@ it('destino_nacional_se_crea_correctamente', function () {
         'viatico_id' => $this->viatico->id,
         'tipo_destino' => 'nacional',
         'provincia_id' => $this->provincia->id,
-        'ciudad_id' => $this->ciudad->id
+        'canton_id' => $this->canton->id
     ]);
 });
 
@@ -284,7 +284,7 @@ it('no_puede_solicitar_con_autorizacion_vuelo_pendiente', function () {
         'viatico_id' => $this->viatico->id,
         'tipo_destino' => 'nacional',
         'provincia_id' => $this->provincia->id,
-        'ciudad_id' => $this->ciudad->id,
+        'canton_id' => $this->canton->id,
         'fecha_llegada' => now(),
         'fecha_salida' => now()->addDays(1),
         'orden' => 1
