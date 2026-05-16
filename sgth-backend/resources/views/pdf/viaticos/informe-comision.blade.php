@@ -88,7 +88,7 @@
             @forelse($viatico->destinos->sortBy('orden') as $destino)
             <tr>
                 <td class="text-center">{{ $destino->orden }}</td>
-                <td>{{ $destino->ciudad_id ? optional($destino->ciudad)->nombre : $destino->pais }}</td>
+                <td>{{ $destino->canton_id ? optional($destino->canton)->nombre : $destino->pais }}</td>
                 <td class="text-center">{{ $destino->fecha_llegada ? \Carbon\Carbon::parse($destino->fecha_llegada)->format('Y-m-d H:i') : 'N/A' }}</td>
                 <td class="text-center">{{ $destino->fecha_salida ? \Carbon\Carbon::parse($destino->fecha_salida)->format('Y-m-d H:i') : 'N/A' }}</td>
                 <td class="text-center">{{ $destino->dias_pernocte ?? 0 }}</td>
@@ -117,8 +117,8 @@
             @forelse($viatico->transportes as $transporte)
             <tr>
                 <td>{{ ucfirst(str_replace('_', ' ', $transporte->tipo)) }}</td>
-                <td>{{ $transporte->ciudad_origen_id ? optional($transporte->ciudadOrigen)->nombre : $transporte->pais_origen }}</td>
-                <td>{{ $transporte->ciudad_destino_id ? optional($transporte->ciudadDestino)->nombre : $transporte->pais_destino }}</td>
+                <td>{{ $transporte->canton_origen_id ? optional($transporte->cantonOrigen)->nombre : $transporte->pais_origen }}</td>
+                <td>{{ $transporte->canton_destino_id ? optional($transporte->cantonDestino)->nombre : $transporte->pais_destino }}</td>
                 <td class="text-center">{{ $transporte->fecha_viaje ? \Carbon\Carbon::parse($transporte->fecha_viaje)->format('Y-m-d H:i') : '' }}</td>
                 <td>{{ $transporte->empresa_o_aerolinea ?? $transporte->placa_vehiculo ?? 'N/A' }}</td>
                 <td class="text-right">${{ number_format($transporte->monto ?? 0, 2) }}</td>
