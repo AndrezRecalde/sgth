@@ -2,7 +2,7 @@
 
 namespace App\Models\Viatico;
 
-use App\Models\Geografia\Ciudad;
+use App\Models\Geografia\Canton;
 use App\Models\Geografia\Provincia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +18,7 @@ class DestinoViatico extends Model
         'viatico_id',
         'tipo_destino',
         'provincia_id',
-        'ciudad_id',
+        'canton_id',
         'pais',
         'estado_region',
         'fecha_llegada',
@@ -39,12 +39,12 @@ class DestinoViatico extends Model
      * Validación de consistencia de destinos_viatico (Implementado en StoreDestinoViaticoRequest en Tarea 10):
      * 
      * Si tipo_destino = nacional:
-     *   - provincia_id y ciudad_id son requeridos
+     *   - provincia_id y canton_id son requeridos
      *   - pais y estado_region deben ser null
      * 
      * Si tipo_destino = internacional:
      *   - pais es requerido
-     *   - provincia_id, ciudad_id y estado_region pueden ser null
+     *   - provincia_id, canton_id y estado_region pueden ser null
      */
 
     public function viatico(): BelongsTo
@@ -57,8 +57,8 @@ class DestinoViatico extends Model
         return $this->belongsTo(Provincia::class);
     }
 
-    public function ciudad(): BelongsTo
+    public function canton(): BelongsTo
     {
-        return $this->belongsTo(Ciudad::class);
+        return $this->belongsTo(Canton::class);
     }
 }
