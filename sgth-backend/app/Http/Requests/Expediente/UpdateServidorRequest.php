@@ -48,7 +48,7 @@ class UpdateServidorRequest extends FormRequest
             // Extranjería condicional
             'es_extranjero'           => 'sometimes|required|boolean',
             'provincia_nacimiento_id' => 'required_if:es_extranjero,false|nullable|exists:provincias,id',
-            'ciudad_nacimiento_id'    => 'required_if:es_extranjero,false|nullable|exists:ciudades,id',
+            'canton_nacimiento_id'    => 'required_if:es_extranjero,false|nullable|exists:cantones,id',
             'nacionalidad'         => 'required_if:es_extranjero,true|nullable|string|max:100',
             'pais_origen'          => 'required_if:es_extranjero,true|nullable|string|max:100',
 
@@ -63,8 +63,6 @@ class UpdateServidorRequest extends FormRequest
             'correo_institucional'  => ['nullable', 'email', 'max:150', Rule::unique('servidores')->ignore($servidorId)],
             'correo_personal'       => 'nullable|email|max:150',
             'direccion_domicilio'   => 'nullable|string|max:255',
-            'provincia_domicilio'   => 'nullable|string|max:100',
-            'ciudad_domicilio'      => 'nullable|string|max:100',
 
             // Sección D
             'tiene_discapacidad'      => 'sometimes|required|boolean',
@@ -81,8 +79,6 @@ class UpdateServidorRequest extends FormRequest
             'fecha_inicio_ultimo_contrato' => 'nullable|date',
             'fecha_fin_ultimo_contrato'    => 'nullable|date|after:fecha_inicio_ultimo_contrato',
 
-            // Sección G
-            'codigo_marcacion' => ['nullable', 'string', 'regex:/^[A-Za-z0-9]{10}$/', Rule::unique('servidores')->ignore($servidorId)],
         ];
     }
 
@@ -91,13 +87,10 @@ class UpdateServidorRequest extends FormRequest
         return [
             'provincia_nacimiento_id.required_if' => 'La provincia de nacimiento es obligatoria si el servidor no es extranjero.',
             'provincia_nacimiento_id.exists'      => 'La provincia de nacimiento seleccionada no existe en el catálogo.',
-            'ciudad_nacimiento_id.required_if'    => 'El cantón de nacimiento es obligatorio si el servidor no es extranjero.',
-            'ciudad_nacimiento_id.exists'         => 'El cantón de nacimiento seleccionado no existe en el catálogo.',
+            'canton_nacimiento_id.required_if'    => 'El cantón de nacimiento es obligatorio si el servidor no es extranjero.',
+            'canton_nacimiento_id.exists'         => 'El cantón de nacimiento seleccionado no existe en el catálogo.',
             'nacionalidad.required_if'            => 'La nacionalidad es obligatoria para servidores extranjeros.',
             'pais_origen.required_if'             => 'El país de origen es obligatorio para servidores extranjeros.',
-            
-            'codigo_marcacion.regex'           => 'El código de marcación debe contener exactamente 10 caracteres alfanuméricos.',
-            'codigo_marcacion.unique'          => 'El código de marcación biométrica ya se encuentra asignado a otro servidor.',
             
             'cedula.regex'                     => 'La cédula debe contener exactamente 10 dígitos numéricos.',
             

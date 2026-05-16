@@ -2,7 +2,7 @@
 
 namespace App\Models\Viatico;
 
-use App\Models\Geografia\Ciudad;
+use App\Models\Geografia\Canton;
 use App\Models\Geografia\Provincia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,9 +22,9 @@ class TransporteViatico extends Model
         'viatico_id',
         'tipo',
         'provincia_origen_id',
-        'ciudad_origen_id',
+        'canton_origen_id',
         'provincia_destino_id',
-        'ciudad_destino_id',
+        'canton_destino_id',
         'pais_origen',
         'pais_destino',
         'fecha_viaje',
@@ -57,9 +57,9 @@ class TransporteViatico extends Model
         return $this->belongsTo(Provincia::class, 'provincia_origen_id');
     }
 
-    public function ciudadOrigen(): BelongsTo
+    public function cantonOrigen(): BelongsTo
     {
-        return $this->belongsTo(Ciudad::class, 'ciudad_origen_id');
+        return $this->belongsTo(Canton::class, 'canton_origen_id');
     }
 
     public function provinciaDestino(): BelongsTo
@@ -67,9 +67,9 @@ class TransporteViatico extends Model
         return $this->belongsTo(Provincia::class, 'provincia_destino_id');
     }
 
-    public function ciudadDestino(): BelongsTo
+    public function cantonDestino(): BelongsTo
     {
-        return $this->belongsTo(Ciudad::class, 'ciudad_destino_id');
+        return $this->belongsTo(Canton::class, 'canton_destino_id');
     }
 
     public function autorizacion(): HasOne

@@ -7,7 +7,7 @@ use App\Enums\TipoDiscapacidad;
 use App\Enums\TipoNombramiento;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
-use App\Models\Geografia\Ciudad;
+use App\Models\Geografia\Canton;
 use App\Models\Geografia\Provincia;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,21 +39,19 @@ class Servidor extends Model
         'estado',
         // Sección A
         'fecha_nacimiento', 'genero', 'estado_civil', 'tipo_sangre', 'es_extranjero', 
-        'nacionalidad', 'pais_origen', 'provincia_nacimiento_id', 'ciudad_nacimiento_id',
+        'nacionalidad', 'pais_origen', 'provincia_nacimiento_id', 'canton_nacimiento_id',
         // Sección B
         'numero_papeleta_votacion', 'pasaporte_numero', 'pasaporte_vencimiento',
         // Sección C
         'telefono_celular', 'telefono_convencional', 'correo_institucional', 'correo_personal',
-        'direccion_domicilio', 'provincia_domicilio', 'ciudad_domicilio',
+        'direccion_domicilio',
         // Sección D
         'tiene_discapacidad',
         // Sección E
         'tiene_enfermedad_catastrofica',
         // Sección F
         'tipo_nombramiento', 'numero_contrato', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
-        'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato',
-        // Sección G
-        'codigo_marcacion'
+        'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato'
     ];
 
     protected function casts(): array
@@ -98,9 +96,9 @@ class Servidor extends Model
         return $this->belongsTo(Provincia::class, 'provincia_nacimiento_id');
     }
 
-    public function ciudadNacimiento(): BelongsTo
+    public function cantonNacimiento(): BelongsTo
     {
-        return $this->belongsTo(Ciudad::class, 'ciudad_nacimiento_id');
+        return $this->belongsTo(Canton::class, 'canton_nacimiento_id');
     }
 
     public function documentos(): HasMany
@@ -193,6 +191,8 @@ class Servidor extends Model
 
     public function scopePorCodigo(Builder $query, string $codigo): Builder
     {
-        return $query->where('codigo_marcacion', $codigo);
+        return $query->whereHas('contratos', function (Builder $q) use ($codigo) {
+            $q->where('codigo_marcacion', $codigo)->where('estado', 'vigente');
+        });
     }
 }
