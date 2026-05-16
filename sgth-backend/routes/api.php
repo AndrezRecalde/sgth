@@ -18,7 +18,7 @@ Route::prefix('v1')->group(function () {
         
     // Catálogos geográficos públicos
     Route::get('catalogos/provincias', [\App\Http\Controllers\Catalogo\ProvinciaController::class, 'index']);
-    Route::get('catalogos/provincias/{id}/ciudades', [\App\Http\Controllers\Catalogo\CiudadController::class, 'porProvincia']);
+    Route::get('catalogos/provincias/{id}/cantones', [\App\Http\Controllers\Catalogo\CantonController::class, 'porProvincia']);
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
