@@ -79,8 +79,6 @@ class UpdateServidorRequest extends FormRequest
             'fecha_inicio_ultimo_contrato' => 'nullable|date',
             'fecha_fin_ultimo_contrato'    => 'nullable|date|after:fecha_inicio_ultimo_contrato',
 
-            // Sección G
-            'codigo_marcacion' => ['nullable', 'string', 'regex:/^[A-Za-z0-9]{10}$/', Rule::unique('servidores')->ignore($servidorId)],
         ];
     }
 
@@ -93,9 +91,6 @@ class UpdateServidorRequest extends FormRequest
             'canton_nacimiento_id.exists'         => 'El cantón de nacimiento seleccionado no existe en el catálogo.',
             'nacionalidad.required_if'            => 'La nacionalidad es obligatoria para servidores extranjeros.',
             'pais_origen.required_if'             => 'El país de origen es obligatorio para servidores extranjeros.',
-            
-            'codigo_marcacion.regex'           => 'El código de marcación debe contener exactamente 10 caracteres alfanuméricos.',
-            'codigo_marcacion.unique'          => 'El código de marcación biométrica ya se encuentra asignado a otro servidor.',
             
             'cedula.regex'                     => 'La cédula debe contener exactamente 10 dígitos numéricos.',
             

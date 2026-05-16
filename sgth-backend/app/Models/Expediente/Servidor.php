@@ -51,9 +51,7 @@ class Servidor extends Model
         'tiene_enfermedad_catastrofica',
         // Sección F
         'tipo_nombramiento', 'numero_contrato', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
-        'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato',
-        // Sección G
-        'codigo_marcacion'
+        'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato'
     ];
 
     protected function casts(): array
@@ -193,6 +191,8 @@ class Servidor extends Model
 
     public function scopePorCodigo(Builder $query, string $codigo): Builder
     {
-        return $query->where('codigo_marcacion', $codigo);
+        return $query->whereHas('contratos', function (Builder $q) use ($codigo) {
+            $q->where('codigo_marcacion', $codigo)->where('estado', 'vigente');
+        });
     }
 }
