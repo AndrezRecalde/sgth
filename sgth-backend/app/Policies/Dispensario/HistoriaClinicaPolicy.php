@@ -26,7 +26,12 @@ final class HistoriaClinicaPolicy
     public function view(User $user, HistoriaClinica $model): bool
     {
         // El propio servidor puede ver su propia Historia Clínica básica (autoservicio)
-        if ($user->servidor_id === $model->servidor_id) {
+        // o la de sus beneficiarios
+        if ($model->servidor_id && $user->servidor_id === $model->servidor_id) {
+            return true;
+        }
+
+        if ($model->beneficiario_id && $user->servidor_id === $model->beneficiario->servidor_id) {
             return true;
         }
 

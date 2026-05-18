@@ -5,6 +5,8 @@ namespace App\Models\Expediente;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoDiscapacidad;
 use App\Enums\TipoNombramiento;
+use App\Models\Dispensario\Beneficiario;
+use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Geografia\Canton;
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 #[ObservedBy(\App\Observers\ServidorObserver::class)]
@@ -124,6 +127,21 @@ class Servidor extends Model
     public function contratos(): HasMany
     {
         return $this->hasMany(ContratoServidor::class);
+    }
+
+    public function historiaClinica(): HasOne
+    {
+        return $this->hasOne(HistoriaClinica::class, 'servidor_id');
+    }
+
+    public function beneficiarios(): HasMany
+    {
+        return $this->hasMany(Beneficiario::class);
+    }
+
+    public function beneficiariosActivos(): HasMany
+    {
+        return $this->hasMany(Beneficiario::class)->activos();
     }
 
     public function discapacidades(): HasMany
