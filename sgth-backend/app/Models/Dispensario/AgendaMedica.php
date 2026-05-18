@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\User;
 use App\Models\Expediente\Servidor;
 
@@ -46,5 +47,10 @@ class AgendaMedica extends Model
     public function paciente()
     {
         return $this->servidor ?? $this->beneficiario;
+    }
+
+    public function triaje(): HasOne
+    {
+        return $this->hasOne(Triaje::class);
     }
 }
