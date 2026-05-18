@@ -8,7 +8,7 @@ use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\MovimientoInventarioMed;
 use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Exceptions\ReglaNegocioException;
 
 final class RecetaService implements RecetaServiceInterface
 {
@@ -55,7 +55,7 @@ final class RecetaService implements RecetaServiceInterface
             $receta = RecetaMedica::with('items')->findOrFail($recetaId);
 
             if (in_array($receta->estado, ['despachada_completa', 'anulada'])) {
-                throw new Exception("La receta no puede ser despachada porque su estado es: {$receta->estado}");
+                throw new ReglaNegocioException("La receta no puede ser despachada porque su estado es: {$receta->estado}");
             }
 
             foreach ($itemsDespachados as $despacho) {
@@ -68,20 +68,20 @@ final class RecetaService implements RecetaServiceInterface
 
                 $item = $receta->items->where('id', $itemRecetaId)->first();
                 if (!$item) {
-                    throw new Exception("El ítem de receta {$itemRecetaId} no pertenece a esta receta.");
+                    throw new ReglaNegocioException("El ítem de receta {$itemRecetaId} no pertenece a esta receta.");
                 }
 
                 // No se puede despachar más de lo prescrito
                 $cantidadFaltante = $item->cantidad_prescrita - $item->cantidad_despachada;
                 if ($cantidadADespachar > $cantidadFaltante) {
-                    throw new Exception("No se puede despachar más de lo prescrito para el ítem {$itemRecetaId}. Falta por despachar: {$cantidadFaltante}");
+                    throw new ReglaNegocioException("No se puede despachar más de lo prescrito para el ítem {$itemRecetaId}. Falta por despachar: {$cantidadFaltante}");
                 }
 
                 $medicina = InventarioMedicina::lockForUpdate()->findOrFail($item->inventario_medicina_id);
 
                 // Validar que exista stock suficiente para el despacho físico
                 if ($medicina->stock_actual < $cantidadADespachar) {
-                    throw new Exception("Stock insuficiente para el medicamento: {$medicina->nombre}. Stock actual: {$medicina->stock_actual}");
+                    throw new ReglaNegocioException("Stock insuficiente para el medicamento: {$medicina->nombre}. Stock actual: {$medicina->stock_actual}");
                 }
 
                 // Actualizar el estado del ítem
