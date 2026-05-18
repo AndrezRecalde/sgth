@@ -6,18 +6,31 @@ use App\Models\Dispensario\RecetaMedica;
 use App\Models\Dispensario\ItemReceta;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\MovimientoInventarioMed;
+use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
 final class RecetaService implements RecetaServiceInterface
 {
-    public function emitirReceta(array $datosReceta, array $items): RecetaMedica
+    public function emitirReceta(array $datosReceta, array $items): array
     {
         return DB::transaction(function () use ($datosReceta, $items) {
             $receta = RecetaMedica::create($datosReceta);
+            $alertasAlergias = [];
+
+            // Obtener alergias del paciente tipo medicamento
+            $consulta = ConsultaMedica::with('historiaClinica.alergias')->find($datosReceta['consulta_medica_id'] ?? null);
+            $alergiasMedicamento = $consulta ? $consulta->historiaClinica->alergias()->where('tipo', 'medicamento')->get() : collect();
 
             foreach ($items as $item) {
                 $medicina = InventarioMedicina::lockForUpdate()->findOrFail($item['inventario_medicina_id']);
+
+                // Validar alergias (informativo)
+                foreach ($alergiasMedicamento as $alergia) {
+                    if (stripos($medicina->nombre, $alergia->descripcion) !== false || stripos($alergia->descripcion, $medicina->nombre) !== false) {
+                        $alertasAlergias[] = "Advertencia: El paciente tiene alergia registrada a {$alergia->descripcion} con severidad {$alergia->severidad}";
+                    }
+                }
 
                 // Validar que exista stock suficiente
                 if ($medicina->stock_actual < $item['cantidad_prescrita']) {
@@ -43,7 +56,10 @@ final class RecetaService implements RecetaServiceInterface
                 ]);
             }
 
-            return $receta;
+            return [
+                'receta' => $receta,
+                'alertas_alergias' => array_values(array_unique($alertasAlergias))
+            ];
         });
     }
 }
