@@ -14,7 +14,7 @@ class ItemReceta extends Model
 
     protected $fillable = [
         'receta_medica_id', 'inventario_medicina_id', 'cantidad_prescrita',
-        'cantidad_despachada', 'dosis', 'frecuencia', 'duracion', 'observaciones'
+        'cantidad_despachada', 'estado', 'dosis', 'frecuencia', 'duracion', 'observaciones'
     ];
 
     public function receta(): BelongsTo
