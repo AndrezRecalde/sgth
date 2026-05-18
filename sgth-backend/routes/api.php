@@ -19,6 +19,9 @@ Route::prefix('v1')->group(function () {
     // Catálogos geográficos públicos
     Route::get('catalogos/provincias', [\App\Http\Controllers\Catalogo\ProvinciaController::class, 'index']);
     Route::get('catalogos/provincias/{id}/cantones', [\App\Http\Controllers\Catalogo\CantonController::class, 'porProvincia']);
+
+    // Dispensario Médico: Búsqueda pública CIE-10 para autocompletado
+    Route::get('dispensario/cie10/buscar', [\App\Http\Controllers\Dispensario\DiagnosticoCie10Controller::class, 'buscar']);
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
