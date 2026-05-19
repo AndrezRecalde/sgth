@@ -28,6 +28,10 @@ final class RecetaController extends Controller
 
     public function despachar(Request $request, int $id): JsonResponse
     {
-        return ApiResponse::ok([], 'Receta despachada exitosamente');
+        $items = $request->input('items', []);
+        
+        $receta = $this->recetaService->despacharReceta($id, $items, auth()->id());
+        
+        return ApiResponse::ok($receta, 'Receta despachada exitosamente');
     }
 }

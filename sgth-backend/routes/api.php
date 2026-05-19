@@ -19,6 +19,9 @@ Route::prefix('v1')->group(function () {
     // Catálogos geográficos públicos
     Route::get('catalogos/provincias', [\App\Http\Controllers\Catalogo\ProvinciaController::class, 'index']);
     Route::get('catalogos/provincias/{id}/cantones', [\App\Http\Controllers\Catalogo\CantonController::class, 'porProvincia']);
+
+    // Dispensario Médico: Búsqueda pública CIE-10 para autocompletado
+    Route::get('dispensario/cie10/buscar', [\App\Http\Controllers\Dispensario\DiagnosticoCie10Controller::class, 'buscar']);
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
@@ -69,6 +72,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::apiResource('contratos', \App\Http\Controllers\Expediente\ContratoServidorController::class)->parameters(['contratos' => 'contrato']);
                 Route::apiResource('discapacidades', \App\Http\Controllers\Expediente\DiscapacidadServidorController::class)->parameters(['discapacidades' => 'discapacidade']);
                 Route::apiResource('enfermedades', \App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController::class)->parameters(['enfermedades' => 'enfermedade']);
+
+                // Beneficiarios (Dispensario) gestionados por UATH
+                Route::prefix('beneficiarios')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'indexUath']);
+                    Route::post('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'storeUath']);
+                    Route::put('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'updateUath']);
+                    Route::delete('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'destroyUath']);
+                });
             });
 
         // Cuentas bancarias
@@ -150,6 +161,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         // Integración con Clínica y Módulo Asistencia
         Route::post('solicitar-cita', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'solicitarCita']);
         Route::get('mi-historia-clinica', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'miHistoriaClinica']);
+
+        // Beneficiarios Familiares
+        Route::prefix('mis-beneficiarios')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'misBeneficiarios']);
+            Route::post('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'storeMisBeneficiarios']);
+            Route::put('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'updateMisBeneficiarios']);
+            Route::delete('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'destroyMisBeneficiarios']);
+        });
     });
 
     // Módulo 07: Selección e Incorporación
@@ -339,6 +358,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::apiResource('agenda', \App\Http\Controllers\Dispensario\AgendaController::class)
             ->middleware('role:medico,odontologo,enfermera,admin-dispensario');
 
+        // Triaje
+        Route::prefix('agenda/{agendaId}/triaje')->group(function () {
+            Route::post('/', [\App\Http\Controllers\Dispensario\TriajeController::class, 'store'])
+                ->middleware('role:enfermera,admin-dispensario');
+            Route::get('/', [\App\Http\Controllers\Dispensario\TriajeController::class, 'show'])
+                ->middleware('role:medico,odontologo,enfermera,admin-dispensario');
+        });
+
+        // Dashboard Estadístico — SOLO admin-dispensario (y máxima autoridad)
+        Route::get('dashboard/kpis', [\App\Http\Controllers\Dispensario\DashboardDispensarioController::class, 'kpis'])
+            ->middleware('role:admin-dispensario|maxima-autoridad');
+
         // Historias clínicas — SOLO personal médico
         Route::prefix('historias-clinicas')
             ->middleware('role:medico,odontologo,enfermera,admin-dispensario')
@@ -346,6 +377,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::get('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'index']);
                 Route::post('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'store']);
                 Route::get('{id}', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'show']);
+
+                // Alergias
+                Route::prefix('{id}/alergias')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'index']);
+                    Route::post('/', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'store']);
+                    Route::delete('{alergia}', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'destroy']);
+                });
+
+                // Antecedentes
+                Route::prefix('{id}/antecedentes')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'index']);
+                    Route::post('/', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'store']);
+                    Route::delete('{antecedente}', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'destroy']);
+                });
             });
 
         // Consultas médicas — SOLO médicos y odontólogos crean,

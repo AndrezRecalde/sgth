@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\User;
 use App\Models\Expediente\Servidor;
 
@@ -15,7 +16,7 @@ class AgendaMedica extends Model
     protected $table = 'agendas_medicas';
 
     protected $fillable = [
-        'medico_id', 'servidor_id', 'fecha', 'hora_inicio',
+        'medico_id', 'servidor_id', 'beneficiario_id', 'fecha', 'hora_inicio',
         'hora_fin', 'estado', 'motivo_solicitud', 'estado_registro',
         'created_by', 'updated_by'
     ];
@@ -36,5 +37,20 @@ class AgendaMedica extends Model
     public function servidor(): BelongsTo
     {
         return $this->belongsTo(Servidor::class);
+    }
+
+    public function beneficiario(): BelongsTo
+    {
+        return $this->belongsTo(Beneficiario::class);
+    }
+
+    public function paciente()
+    {
+        return $this->servidor ?? $this->beneficiario;
+    }
+
+    public function triaje(): HasOne
+    {
+        return $this->hasOne(Triaje::class);
     }
 }

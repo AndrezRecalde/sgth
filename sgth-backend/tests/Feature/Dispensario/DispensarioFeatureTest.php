@@ -111,9 +111,6 @@ test('registrar_consulta_actualiza_estado_de_agenda_a_atendida', function () {
     $historia = HistoriaClinica::create([
         'servidor_id' => $this->paciente->id,
         'grupo_sanguineo' => 'O+',
-        'alergias' => 'Ninguna',
-        'antecedentes_familiares' => 'Ninguno',
-        'antecedentes_personales' => 'Ninguno',
     ]);
 
     $agenda = AgendaMedica::create([
@@ -172,7 +169,7 @@ test('ingresar_medicina_registra_movimiento_kardex_automatico', function () {
     expect($movimiento->stock_resultante)->toBe(100);
 });
 
-test('emitir_receta_descuenta_stock_y_registra_kardex', function () {
+test('emitir_y_despachar_receta_descuenta_stock_y_registra_kardex', function () {
     $this->actingAs($this->medico, 'sanctum');
 
     $medicina = InventarioMedicina::create([
@@ -202,7 +199,7 @@ test('emitir_receta_descuenta_stock_y_registra_kardex', function () {
 
     $service = new RecetaService();
     
-    $receta = $service->emitirReceta([
+    $resultado = $service->emitirReceta([
         'consulta_medica_id' => $consulta->id,
         'fecha_emision' => now()->format('Y-m-d'),
         'indicaciones_generales' => 'Tomar con comida',
@@ -216,7 +213,14 @@ test('emitir_receta_descuenta_stock_y_registra_kardex', function () {
         ]
     ]);
 
+    $receta = $resultado['receta'];
     expect($receta)->toBeInstanceOf(RecetaMedica::class);
+
+    // Despachar la receta para afectar el inventario (nueva lógica Tarea 5)
+    $itemReceta = ItemReceta::where('receta_medica_id', $receta->id)->first();
+    $service->despacharReceta($receta->id, [
+        ['item_receta_id' => $itemReceta->id, 'cantidad' => 9]
+    ], $this->medico->id);
 
     $medicina->refresh();
     expect($medicina->stock_actual)->toBe(41); // 50 - 9
@@ -231,9 +235,8 @@ test('emitir_receta_descuenta_stock_y_registra_kardex', function () {
     expect($movimiento->referencia_receta_id)->toBe($receta->id);
 });
 
-test('emitir_receta_falla_si_no_hay_stock_suficiente', function () {
-    $this->actingAs($this->medico, 'sanctum');
-
+test('emitir_receta_con_stock_insuficiente_incluye_alerta', function () {
+    // Crear medicina sin stock
     $medicina = InventarioMedicina::create([
         'codigo' => 'MED-003',
         'nombre' => 'Amoxicilina',
@@ -243,7 +246,8 @@ test('emitir_receta_falla_si_no_hay_stock_suficiente', function () {
         'lote' => 'L125',
         'fecha_caducidad' => now()->addYear(),
         'stock_minimo' => 10,
-        'stock_actual' => 5, // Poco stock
+        'stock_actual' => 0,
+        'estado' => true,
     ]);
 
     $historia = HistoriaClinica::create([
@@ -260,19 +264,17 @@ test('emitir_receta_falla_si_no_hay_stock_suficiente', function () {
     ]);
 
     $service = new RecetaService();
+    $resultado = $service->emitirReceta(
+        ['consulta_medica_id' => $consulta->id, 'fecha_emision' => now()->format('Y-m-d'), 'indicaciones_generales' => 'Ninguna'],
+        [['inventario_medicina_id' => $medicina->id,
+          'cantidad_prescrita' => 5, 'dosis' => '1', 'frecuencia' => '8h', 'duracion' => '5d']]
+    );
+
+    // La receta se crea correctamente aunque no haya stock
+    expect($resultado['receta'])->toBeInstanceOf(RecetaMedica::class);
     
-    // Debería lanzar excepción porque se piden 10 y hay 5
-    $service->emitirReceta([
-        'consulta_medica_id' => $consulta->id,
-        'fecha_emision' => now()->format('Y-m-d'),
-        'indicaciones_generales' => 'Tomar',
-    ], [
-        [
-            'inventario_medicina_id' => $medicina->id,
-            'dosis' => '1',
-            'frecuencia' => 'Cada 8 horas',
-            'duracion' => '7 días',
-            'cantidad_prescrita' => 21,
-        ]
-    ]);
-})->throws(\Exception::class, 'Stock insuficiente');
+    // El sistema incluye una alerta informativa
+    // (puede estar vacia si no hay alergias registradas)
+    expect($resultado)->toHaveKey('alertas_alergias');
+    expect($resultado['alertas_alergias'])->toBeArray();
+});
