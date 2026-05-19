@@ -14,6 +14,6 @@ class TipoUnidadController extends Controller
     public function index()
     {
         $tipos = TipoUnidad::orderBy('acronimo')->get();
-        return ApiResponse::ok('Tipos de unidad recuperados correctamente', $tipos);
+        return ApiResponse::ok($tipos, 'Tipos de unidad recuperados correctamente');
     }
 }
