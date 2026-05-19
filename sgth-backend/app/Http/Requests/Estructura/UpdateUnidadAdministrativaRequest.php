@@ -20,6 +20,8 @@ final class UpdateUnidadAdministrativaRequest extends FormRequest
         return [
             'codigo'          => ['sometimes', 'string', 'max:50', 'unique:unidades_administrativas,codigo,' . $unidadId],
             'nombre'          => ['sometimes', 'string', 'max:255'],
+            'acronimo'        => ['nullable', 'string', 'max:50'],
+            'tipo_unidad_id'  => ['nullable', 'uuid', 'exists:tipos_unidad,id'],
             'descripcion'     => ['nullable', 'string'],
             'unidad_padre_id' => ['nullable', 'integer', 'exists:unidades_administrativas,id'],
             'nivel'           => ['sometimes', 'integer', 'min:1'],
@@ -31,6 +33,9 @@ final class UpdateUnidadAdministrativaRequest extends FormRequest
     {
         return [
             'codigo.unique'          => 'El código ingresado ya se encuentra en uso por otra unidad.',
+            'acronimo.max'           => 'El acrónimo no puede superar los 50 caracteres.',
+            'tipo_unidad_id.exists'  => 'El tipo de unidad seleccionado no es válido.',
+            'tipo_unidad_id.uuid'    => 'El tipo de unidad debe ser un UUID válido.',
             'unidad_padre_id.exists' => 'La unidad padre seleccionada no es válida.',
             'nivel.min'              => 'El nivel mínimo debe ser 1.',
         ];

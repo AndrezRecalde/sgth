@@ -20,7 +20,9 @@ class UnidadAdministrativa extends Model
     protected $fillable = [
         'codigo',
         'nombre',
+        'acronimo',
         'descripcion',
+        'tipo_unidad_id',
         'unidad_padre_id',
         'nivel',
         'estado',
@@ -31,6 +33,7 @@ class UnidadAdministrativa extends Model
         return [
             'estado' => 'boolean',
             'nivel'  => 'integer',
+            'tipo_unidad_id' => 'string',
         ];
     }
 
@@ -40,6 +43,14 @@ class UnidadAdministrativa extends Model
     public function padre(): BelongsTo
     {
         return $this->belongsTo(UnidadAdministrativa::class, 'unidad_padre_id');
+    }
+
+    /**
+     * Tipo de unidad administrativa.
+     */
+    public function tipoUnidad(): BelongsTo
+    {
+        return $this->belongsTo(TipoUnidad::class, 'tipo_unidad_id');
     }
 
     /**
@@ -56,5 +67,21 @@ class UnidadAdministrativa extends Model
     public function puestos(): HasMany
     {
         return $this->hasMany(Puesto::class, 'unidad_administrativa_id');
+    }
+
+    /**
+     * Extensiones telefónicas asociadas a esta unidad.
+     */
+    public function extensiones(): HasMany
+    {
+        return $this->hasMany(ExtensionTelefonica::class, 'unidad_administrativa_id');
+    }
+
+    /**
+     * Extensiones telefónicas activas asociadas a esta unidad.
+     */
+    public function extensionesActivas(): HasMany
+    {
+        return $this->hasMany(ExtensionTelefonica::class, 'unidad_administrativa_id')->activas();
     }
 }
