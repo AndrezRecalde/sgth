@@ -16,9 +16,9 @@ class Cie10Seeder extends Seeder
             return;
         }
 
-        // PRECISIÓN 3 - Encoding del CSV
+        // PRECISIÓN 3 - Encoding del CSV (Excel en español suele ser ISO-8859-1)
         $contenido = file_get_contents($rutaCsv);
-        $contenido = mb_convert_encoding($contenido, 'UTF-8', 'UTF-8');
+        $contenido = mb_convert_encoding($contenido, 'UTF-8', 'ISO-8859-1');
         
         // Escribir el contenido temporalmente para leerlo con fgetcsv
         $tempPath = tempnam(sys_get_temp_dir(), 'cie10');
@@ -35,16 +35,8 @@ class Cie10Seeder extends Seeder
             // Si la fila no parece tener al menos 2 columnas, intentamos con punto y coma
             if (count($filaPrueba) < 2) {
                 $separador = ';';
-                rewind($archivo);
-                $filaPrueba = fgetcsv($archivo, 1000, $separador);
             }
-            
-            if (str_contains(strtolower($filaPrueba[0]), 'digo')) {
-                // Ya la saltamos, continuar con el resto
-            } else {
-                // No hay encabezado, necesitamos procesar esta fila también
-                rewind($archivo);
-            }
+            rewind($archivo);
         }
 
         $lote = [];
@@ -59,7 +51,8 @@ class Cie10Seeder extends Seeder
             $codigo = trim($fila[0]);
             $descripcion = trim($fila[1]);
             
-            if (empty($codigo)) {
+            // Ignorar filas de encabezado, vacías o de presentación del Excel
+            if (empty($codigo) || empty($descripcion) || str_contains(strtolower($codigo), 'digo') || str_contains(strtolower($codigo), 'lista tabular') || str_contains(strtolower($descripcion), 'descripci')) {
                 continue;
             }
 
