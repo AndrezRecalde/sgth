@@ -15,8 +15,8 @@ class HistoriaClinica extends Model
     protected $table = 'historias_clinicas';
 
     protected $fillable = [
-        'servidor_id', 'antecedentes_personales', 'antecedentes_familiares',
-        'alergias', 'medicacion_habitual', 'grupo_sanguineo', 'estado',
+        'servidor_id', 'beneficiario_id',
+        'medicacion_habitual', 'grupo_sanguineo', 'estado',
         'created_by', 'updated_by'
     ];
 
@@ -24,9 +24,6 @@ class HistoriaClinica extends Model
     {
         return [
             // Cifrado estricto de campos de salud
-            'antecedentes_personales' => 'encrypted',
-            'antecedentes_familiares' => 'encrypted',
-            'alergias'                => 'encrypted',
             'medicacion_habitual'     => 'encrypted',
             'estado'                  => 'boolean',
         ];
@@ -40,5 +37,25 @@ class HistoriaClinica extends Model
     public function consultasMedicas(): HasMany
     {
         return $this->hasMany(ConsultaMedica::class);
+    }
+
+    public function beneficiario(): BelongsTo
+    {
+        return $this->belongsTo(Beneficiario::class);
+    }
+
+    public function propietario()
+    {
+        return $this->servidor ?? $this->beneficiario;
+    }
+
+    public function alergias(): HasMany
+    {
+        return $this->hasMany(AlergiaPaciente::class);
+    }
+
+    public function antecedentes(): HasMany
+    {
+        return $this->hasMany(AntecedentePaciente::class);
     }
 }
