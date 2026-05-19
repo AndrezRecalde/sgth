@@ -68,4 +68,20 @@ class UnidadAdministrativa extends Model
     {
         return $this->hasMany(Puesto::class, 'unidad_administrativa_id');
     }
+
+    /**
+     * Extensiones telefónicas asociadas a esta unidad.
+     */
+    public function extensiones(): HasMany
+    {
+        return $this->hasMany(ExtensionTelefonica::class, 'unidad_administrativa_id');
+    }
+
+    /**
+     * Extensiones telefónicas activas asociadas a esta unidad.
+     */
+    public function extensionesActivas(): HasMany
+    {
+        return $this->hasMany(ExtensionTelefonica::class, 'unidad_administrativa_id')->activas();
+    }
 }

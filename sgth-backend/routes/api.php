@@ -52,6 +52,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('organigrama', \App\Http\Controllers\Estructura\OrganigramaController::class);
         Route::apiResource('unidades-administrativas', \App\Http\Controllers\Estructura\UnidadAdministrativaController::class);
         Route::apiResource('puestos', \App\Http\Controllers\Estructura\PuestoController::class);
+        
+        // Directorio telefónico público para servidores
+        Route::get('directorio-telefonico', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'index']);
+        
+        // Gestión de extensiones (protegida por middleware)
+        Route::middleware('role:admin-ti,admin-uath')->group(function () {
+            Route::post('extensiones', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'store']);
+            Route::put('extensiones/{id}', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'update']);
+            Route::delete('extensiones/{id}', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'destroy']);
+        });
     });
 
     // Módulo 02: Expediente Digital
