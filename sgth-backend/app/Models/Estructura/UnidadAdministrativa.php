@@ -20,7 +20,9 @@ class UnidadAdministrativa extends Model
     protected $fillable = [
         'codigo',
         'nombre',
+        'acronimo',
         'descripcion',
+        'tipo_unidad_id',
         'unidad_padre_id',
         'nivel',
         'estado',
@@ -31,6 +33,7 @@ class UnidadAdministrativa extends Model
         return [
             'estado' => 'boolean',
             'nivel'  => 'integer',
+            'tipo_unidad_id' => 'string',
         ];
     }
 
@@ -40,6 +43,14 @@ class UnidadAdministrativa extends Model
     public function padre(): BelongsTo
     {
         return $this->belongsTo(UnidadAdministrativa::class, 'unidad_padre_id');
+    }
+
+    /**
+     * Tipo de unidad administrativa.
+     */
+    public function tipoUnidad(): BelongsTo
+    {
+        return $this->belongsTo(TipoUnidad::class, 'tipo_unidad_id');
     }
 
     /**

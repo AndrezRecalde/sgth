@@ -40,6 +40,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
     // Rutas públicas de catálogo
     Route::get('catalogos/entidades-financieras', [\App\Http\Controllers\Catalogo\EntidadFinancieraController::class, 'index']);
+    Route::get('catalogos/tipos-unidad', [\App\Http\Controllers\Catalogo\TipoUnidadController::class, 'index']);
 
     // Rutas de administración
     Route::apiResource('catalogos/entidades-financieras', \App\Http\Controllers\Catalogo\EntidadFinancieraController::class)
