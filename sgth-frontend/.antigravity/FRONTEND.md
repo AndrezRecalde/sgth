@@ -625,14 +625,14 @@ interface AuthState {
 }
 ```
 
-### 10.3 Guard de ruta — middleware.ts
+### 10.3 Guard de ruta — proxy.ts
 
 ```typescript
-// middleware.ts en raíz del proyecto
+// proxy.ts en raíz del proyecto
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get('sgth_token')?.value
   const isAuth = request.nextUrl.pathname.startsWith('/login')
 
