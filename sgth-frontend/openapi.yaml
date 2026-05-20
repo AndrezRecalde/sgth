@@ -5536,52 +5536,7 @@
         },
         "/v1/reporteria/dashboard": {
             "get": {
-                "operationId": "reporteria.dashboard.kpis_0",
-                "tags": [
-                    "Dashboard"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "KPIs del dashboard ejecutivo obtenidos correctamente."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {}
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/dashboard/kpis": {
-            "get": {
-                "operationId": "reporteria.dashboard.kpis_0",
+                "operationId": "dashboard.kpis",
                 "tags": [
                     "Dashboard"
                 ],
@@ -15080,7 +15035,7 @@
         },
         "/v1/viaticos/servidor/{servidorId}/solicitar": {
             "post": {
-                "operationId": "viatico.viatico.solicitar_0",
+                "operationId": "viatico.solicitar.por.servidor",
                 "tags": [
                     "Viatico"
                 ],
@@ -15147,7 +15102,7 @@
         },
         "/v1/viaticos/{servidorId}/solicitar": {
             "post": {
-                "operationId": "viatico.viatico.solicitar_0",
+                "operationId": "viatico.solicitar.propio",
                 "tags": [
                     "Viatico"
                 ],
