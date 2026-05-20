@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://sgth-backend.test/api"
+            "url": "http://sgth.test/api"
         }
     ],
     "security": [
@@ -2031,10 +2031,31 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AutorizacionVuelo"
-                                    }
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Operaci\u00f3n exitosa."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AutorizacionVueloResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
                                 }
                             }
                         }
@@ -2081,7 +2102,28 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Operaci\u00f3n exitosa."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/AutorizacionVueloResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
                                 }
                             }
                         }
@@ -2128,7 +2170,28 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Operaci\u00f3n exitosa."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/AutorizacionVueloResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
                                 }
                             }
                         }
@@ -2182,7 +2245,28 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Operaci\u00f3n exitosa."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/AutorizacionVueloResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
                                 }
                             }
                         }
@@ -2790,7 +2874,7 @@
                                         "datos": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Beneficiario"
+                                                "$ref": "#/components/schemas/BeneficiarioResource"
                                             }
                                         },
                                         "meta": {
@@ -2853,7 +2937,7 @@
                                             "const": "Beneficiario registrado exitosamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/Beneficiario"
+                                            "$ref": "#/components/schemas/BeneficiarioResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -2928,7 +3012,7 @@
                                             "const": "Beneficiario actualizado exitosamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/BeneficiarioResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -3044,7 +3128,7 @@
                                         "datos": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Beneficiario"
+                                                "$ref": "#/components/schemas/BeneficiarioResource"
                                             }
                                         },
                                         "meta": {
@@ -3130,7 +3214,7 @@
                                             "const": "Beneficiario registrado exitosamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/Beneficiario"
+                                            "$ref": "#/components/schemas/BeneficiarioResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -3198,7 +3282,7 @@
                                             "const": "Beneficiario actualizado exitosamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/BeneficiarioResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -3915,7 +3999,7 @@
                                         "datos": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Comision"
+                                                "$ref": "#/components/schemas/ComisionResource"
                                             }
                                         },
                                         "meta": {
@@ -3968,7 +4052,7 @@
                                             "const": "Comisi\u00f3n registrada exitosamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/Comision"
+                                            "$ref": "#/components/schemas/ComisionResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -4025,7 +4109,7 @@
                                             "const": "Detalle de comisi\u00f3n."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/ComisionResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -10746,7 +10830,10 @@
                                             "const": "Provincias listadas exitosamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ProvinciaResource"
+                                            }
                                         },
                                         "meta": {
                                             "type": "null"
@@ -15636,72 +15723,35 @@
                 ],
                 "title": "AsignacionBien"
             },
-            "AutorizacionVuelo": {
+            "AutorizacionVueloResource": {
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "transporte_viatico_id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "viatico_id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "documento_invitacion_ruta": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "justificacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "estado": {
                         "type": "string"
                     },
                     "aprobado_por": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "observacion_aprobador": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "aprobado_en": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "deleted_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -15713,21 +15763,18 @@
                     "estado",
                     "aprobado_por",
                     "observacion_aprobador",
-                    "aprobado_en",
-                    "created_at",
-                    "updated_at",
-                    "deleted_at"
+                    "aprobado_en"
                 ],
-                "title": "AutorizacionVuelo"
+                "title": "AutorizacionVueloResource"
             },
-            "Beneficiario": {
+            "BeneficiarioResource": {
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "servidor_id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "nombre": {
                         "type": "string"
@@ -15736,53 +15783,22 @@
                         "type": "string"
                     },
                     "fecha_nacimiento": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "genero": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "cedula": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "tipo_familiar": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "estado": {
-                        "type": "boolean"
+                        "type": "string"
                     },
                     "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "deleted_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -15795,11 +15811,9 @@
                     "cedula",
                     "tipo_familiar",
                     "estado",
-                    "created_at",
-                    "updated_at",
-                    "deleted_at"
+                    "created_at"
                 ],
-                "title": "Beneficiario"
+                "title": "BeneficiarioResource"
             },
             "BienInformatico": {
                 "type": "object",
@@ -16067,11 +16081,11 @@
                 ],
                 "title": "CertificadoCapacitacion"
             },
-            "Comision": {
+            "ComisionResource": {
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "codigo_comision": {
                         "type": "string"
@@ -16080,48 +16094,25 @@
                         "type": "string"
                     },
                     "unidad_administrativa_id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "fecha_inicio": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "fecha_fin": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "documento_autorizacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "estado": {
                         "type": "string"
                     },
                     "creado_por": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "deleted_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -16134,11 +16125,9 @@
                     "documento_autorizacion",
                     "estado",
                     "creado_por",
-                    "created_at",
-                    "updated_at",
-                    "deleted_at"
+                    "created_at"
                 ],
-                "title": "Comision"
+                "title": "ComisionResource"
             },
             "ConceptoFactura": {
                 "type": "string",
@@ -18614,6 +18603,26 @@
                     "deleted_at"
                 ],
                 "title": "Postulante"
+            },
+            "ProvinciaResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "codigo": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre",
+                    "codigo"
+                ],
+                "title": "ProvinciaResource"
             },
             "PuestoResource": {
                 "type": "object",
