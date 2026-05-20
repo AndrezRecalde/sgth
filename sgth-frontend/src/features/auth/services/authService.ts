@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import type { LoginRequest, LoginResponse, ApiResponse } from '@/types/api'
+import type { LoginRequest, LoginResponse, ApiResponse, CambiarContrasenaRequest } from '@/types/api'
 
 export const authService = {
   login: (data: LoginRequest) =>
@@ -7,4 +7,7 @@ export const authService = {
     
   logout: () =>
     api.post<ApiResponse<void>>('/auth/logout').then(r => r.data.datos),
+
+  cambiarContrasena: (data: CambiarContrasenaRequest) =>
+    api.post<ApiResponse<void>>('/auth/cambiar-contrasena', data).then(r => r.data.datos),
 }

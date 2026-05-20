@@ -52,6 +52,7 @@ export type LoginResponse = {
     permisos: string[]
   }
 }
+export type CambiarContrasenaRequest = components['schemas']['CambiarContrasenaRequest']
 
 // ── Geografía ────────────────────────────────
 // Provincia no tiene schema en OpenAPI — definido manualmente
