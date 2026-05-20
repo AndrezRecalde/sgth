@@ -54,51 +54,51 @@ export type LoginResponse = {
 }
 
 // ── Geografía ────────────────────────────────
-export type Provincia = components['schemas']['Provincia']
-export type Canton = components['schemas']['Canton']
+// export type Provincia = components['schemas']['Provincia']
+// export type Canton = components['schemas']['Canton']
 
 // ── Estructura ───────────────────────────────
-export type UnidadAdministrativa = components['schemas']['UnidadAdministrativa']
-export type Puesto = components['schemas']['Puesto']
-export type TipoUnidad = components['schemas']['TipoUnidad']
-export type ExtensionTelefonica = components['schemas']['ExtensionTelefonica']
+// export type UnidadAdministrativa = components['schemas']['UnidadAdministrativa']
+// export type Puesto = components['schemas']['Puesto']
+// export type TipoUnidad = components['schemas']['TipoUnidad']
+// export type ExtensionTelefonica = components['schemas']['ExtensionTelefonica']
 
 // ── Expediente ───────────────────────────────
-export type Servidor = components['schemas']['Servidor']
-export type ContratoServidor = components['schemas']['ContratoServidor']
-export type DiscapacidadServidor = components['schemas']['DiscapacidadServidor']
-export type EnfermedadCatastroficaServidor = components['schemas']['EnfermedadCatastroficaServidor']
-export type CuentaBancariaServidor = components['schemas']['CuentaBancariaServidor']
-export type EntidadFinanciera = components['schemas']['EntidadFinanciera']
+// export type Servidor = components['schemas']['Servidor']
+// export type ContratoServidor = components['schemas']['ContratoServidor']
+// export type DiscapacidadServidor = components['schemas']['DiscapacidadServidor']
+// export type EnfermedadCatastroficaServidor = components['schemas']['EnfermedadCatastroficaServidor']
+// export type CuentaBancariaServidor = components['schemas']['CuentaBancariaServidor']
+// export type EntidadFinanciera = components['schemas']['EntidadFinanciera']
 
 // ── Viáticos ─────────────────────────────────
-export type Viatico = components['schemas']['Viatico']
-export type DestinoViatico = components['schemas']['DestinoViatico']
-export type TransporteViatico = components['schemas']['TransporteViatico']
-export type LiquidacionViatico = components['schemas']['LiquidacionViatico']
-export type FacturaViatico = components['schemas']['FacturaViatico']
-export type Comision = components['schemas']['Comision']
-export type AutorizacionVuelo = components['schemas']['AutorizacionVuelo']
+// export type Viatico = components['schemas']['Viatico']
+// export type DestinoViatico = components['schemas']['DestinoViatico']
+// export type TransporteViatico = components['schemas']['TransporteViatico']
+// export type LiquidacionViatico = components['schemas']['LiquidacionViatico']
+// export type FacturaViatico = components['schemas']['FacturaViatico']
+// export type Comision = components['schemas']['Comision']
+// export type AutorizacionVuelo = components['schemas']['AutorizacionVuelo']
 
 // ── Dispensario ──────────────────────────────
-export type Beneficiario = components['schemas']['Beneficiario']
-export type HistoriaClinica = components['schemas']['HistoriaClinica']
-export type AgendaMedica = components['schemas']['AgendaMedica']
-export type ConsultaMedica = components['schemas']['ConsultaMedica']
-export type Triaje = components['schemas']['Triaje']
-export type RecetaMedica = components['schemas']['RecetaMedica']
-export type DiagnosticoCie10 = components['schemas']['DiagnosticoCie10']
-export type AlergiaPaciente = components['schemas']['AlergiaPaciente']
-export type AntecedentePaciente = components['schemas']['AntecedentePaciente']
-export type InventarioMedicina = components['schemas']['InventarioMedicina']
+// export type Beneficiario = components['schemas']['Beneficiario']
+// export type HistoriaClinica = components['schemas']['HistoriaClinica']
+// export type AgendaMedica = components['schemas']['AgendaMedica']
+// export type ConsultaMedica = components['schemas']['ConsultaMedica']
+// export type Triaje = components['schemas']['Triaje']
+// export type RecetaMedica = components['schemas']['RecetaMedica']
+// export type DiagnosticoCie10 = components['schemas']['DiagnosticoCie10']
+// export type AlergiaPaciente = components['schemas']['AlergiaPaciente']
+// export type AntecedentePaciente = components['schemas']['AntecedentePaciente']
+// export type InventarioMedicina = components['schemas']['InventarioMedicina']
 
 // ── Nómina ───────────────────────────────────
-export type RolPago = components['schemas']['RolPago']
-export type DetalleRolPago = components['schemas']['DetalleRolPago']
+// export type RolPago = components['schemas']['RolPago']
+// export type DetalleRolPago = components['schemas']['DetalleRolPago']
 
 // ── Asistencia ───────────────────────────────
-export type Permiso = components['schemas']['Permiso']
-export type Vacacion = components['schemas']['Vacacion']
+// export type Permiso = components['schemas']['Permiso']
+// export type Vacacion = components['schemas']['Vacacion']
 
 // ── Enums de conveniencia ────────────────────
 export type EstadoViatico =

@@ -7298,32 +7298,7 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "reporteria.dashboard.kpis_0": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "KPIs del dashboard ejecutivo obtenidos correctamente.";
-                        datos: unknown[];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
+
     "dashboardDispensario.kpis": {
         parameters: {
             query?: never;
@@ -12068,39 +12043,7 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "viatico.viatico.solicitar_0": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                servidorId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SolicitarViaticoRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Solicitud de viático creada con éxito. El monto ha sido calculado automáticamente basado en la normativa del MRL.";
-                        datos: components["schemas"]["Viatico"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
+
     "viatico.liquidar": {
         parameters: {
             query?: never;
