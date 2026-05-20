@@ -2,16 +2,20 @@ import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { notifications } from '@mantine/notifications'
 import { IconX, IconCheck } from '@tabler/icons-react'
-import { authService } from '../services/authService'
-import type { AxiosError } from 'axios'
-import type { ApiResponse } from '@/types/api'
 import React from 'react'
+import type { AxiosError } from 'axios'
+import { authService } from '../services/authService'
+import type { ApiResponse } from '@/types/api'
+import type { CambiarPasswordFormData } from '../schemas/cambiarPassword.schema'
 
 export function useCambiarPassword() {
   const router = useRouter()
 
   return useMutation({
-    mutationFn: authService.cambiarPassword,
+    mutationFn: (data: CambiarPasswordFormData) =>
+      authService.cambiarPassword({
+        nueva_contrasena: data.nueva_contrasena,
+      }),
     onSuccess: () => {
       notifications.show({
         title: 'Contraseña actualizada',
