@@ -7,6 +7,7 @@ import { zodResolver } from 'mantine-form-zod-resolver'
 import { IconUser, IconLock } from '@tabler/icons-react'
 import { loginSchema, type LoginFormData } from '../schemas/login.schema'
 import { useLogin } from '../hooks/useLogin'
+import { containedInputStyles } from '../styles/authInputStyles'
 
 export function LoginForm() {
   const { mutate, isPending } = useLogin()
@@ -17,21 +18,6 @@ export function LoginForm() {
   })
 
   const handleSubmit = (values: LoginFormData) => mutate(values)
-
-  const containedInputStyles = {
-    root: {},
-    label: {
-      fontSize: '10px',
-      fontWeight: 500,
-      color: 'var(--mantine-color-dimmed)',
-      marginBottom: '2px',
-    },
-    input: {
-      paddingTop: '18px',
-      paddingBottom: '6px',
-    },
-    wrapper: { position: 'relative' as const },
-  }
 
   return (
     <Container size={420} my={40}>

@@ -1,12 +1,25 @@
 import { z } from 'zod/v4'
 
 export const cambiarPasswordSchema = z.object({
-  password_actual: z.string().min(6, 'Mínimo 6 caracteres'),
-  password_nuevo: z.string().min(8, 'Mínimo 8 caracteres'),
-  password_confirmacion: z.string().min(8, 'Mínimo 8 caracteres'),
-}).refine((data) => data.password_nuevo === data.password_confirmacion, {
-  message: 'Las contraseñas no coinciden',
-  path: ['password_confirmacion'],
-})
+  nueva_contrasena: z
+    .string()
+    .min(8, 'Mínimo 8 caracteres')
+    .regex(/[a-zA-Z]/, 'Debe contener al menos una letra')
+    .regex(/[0-9]/, 'Debe contener al menos un número'),
+  confirmar_contrasena: z
+    .string()
+    .min(8, 'Mínimo 8 caracteres'),
+}).refine(
+  (data) => data.nueva_contrasena === data.confirmar_contrasena,
+  {
+    message: 'Las contraseñas no coinciden',
+    path: ['confirmar_contrasena'],
+  }
+)
 
 export type CambiarPasswordFormData = z.infer<typeof cambiarPasswordSchema>
+
+// Tipo que el backend realmente espera
+export type CambiarPasswordPayload = {
+  nueva_contrasena: string
+}
