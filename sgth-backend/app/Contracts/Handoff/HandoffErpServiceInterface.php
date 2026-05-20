@@ -10,8 +10,7 @@ interface HandoffErpServiceInterface
      * Genera un archivo de integración (Handoff) XML con la información de la nómina
      * y asegura su integridad generando un hash SHA-256.
      *
-     * @param int $nominaId ID de la nómina
-     * @return HandoffErp
+     * @param  int  $nominaId  ID de la nómina
      */
     public function generarHandoffNomina(int $nominaId): HandoffErp;
 

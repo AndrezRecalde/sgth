@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Contracts\Dispensario;
 
 use App\Models\Dispensario\AgendaMedica;

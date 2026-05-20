@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use App\Models\User;
 use App\Contracts\Auth\AuthServiceInterface;
 use App\Services\Auth\AuthService;
@@ -150,7 +153,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \App\Models\Expediente\Servidor::observe(\App\Observers\ServidorObserver::class);
+        \App\Models\Expediente\Servidor::observe(
+            \App\Observers\ServidorObserver::class
+        );
 
         Gate::define('viewPulse', function (?User $user) {
             if (app()->environment('local')) {
@@ -158,5 +163,19 @@ class AppServiceProvider extends ServiceProvider
             }
             return $user?->hasRole('admin-ti');
         });
+
+        Gate::define('viewApiDocs', function (?User $user) {
+            if (app()->environment('local')) {
+                return true;
+            }
+            return $user?->hasRole('admin-ti');
+        });
+
+        Scramble::configure()
+            ->withDocumentTransformers(function (OpenApi $openApi) {
+                $openApi->secure(
+                    SecurityScheme::http('bearer')
+                );
+            });
     }
 }
