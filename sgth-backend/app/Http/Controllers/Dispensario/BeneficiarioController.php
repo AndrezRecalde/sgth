@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\Beneficiario;
 use App\Http\Requests\Dispensario\StoreBeneficiarioRequest;
+use App\Http\Resources\Dispensario\BeneficiarioResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -24,7 +25,7 @@ class BeneficiarioController extends Controller
 
         $beneficiarios = Beneficiario::where('servidor_id', $servidorId)->get();
 
-        return ApiResponse::ok($beneficiarios);
+        return ApiResponse::ok(BeneficiarioResource::collection($beneficiarios));
     }
 
     /**
@@ -41,7 +42,7 @@ class BeneficiarioController extends Controller
         $datos = array_merge($request->validated(), ['servidor_id' => $servidorId]);
         $beneficiario = Beneficiario::create($datos);
 
-        return ApiResponse::created($beneficiario, 'Beneficiario registrado exitosamente.');
+        return ApiResponse::created(new BeneficiarioResource($beneficiario), 'Beneficiario registrado exitosamente.');
     }
 
     /**
@@ -54,7 +55,7 @@ class BeneficiarioController extends Controller
         
         $beneficiario->update($request->validated());
 
-        return ApiResponse::ok($beneficiario, 'Beneficiario actualizado exitosamente.');
+        return ApiResponse::ok(new BeneficiarioResource($beneficiario), 'Beneficiario actualizado exitosamente.');
     }
 
     /**
@@ -75,7 +76,7 @@ class BeneficiarioController extends Controller
     public function indexUath(int $servidorId): JsonResponse
     {
         $beneficiarios = Beneficiario::where('servidor_id', $servidorId)->get();
-        return ApiResponse::ok($beneficiarios);
+        return ApiResponse::ok(BeneficiarioResource::collection($beneficiarios));
     }
 
     public function storeUath(StoreBeneficiarioRequest $request, int $servidorId): JsonResponse
@@ -83,7 +84,7 @@ class BeneficiarioController extends Controller
         $datos = array_merge($request->validated(), ['servidor_id' => $servidorId]);
         $beneficiario = Beneficiario::create($datos);
 
-        return ApiResponse::created($beneficiario, 'Beneficiario registrado exitosamente.');
+        return ApiResponse::created(new BeneficiarioResource($beneficiario), 'Beneficiario registrado exitosamente.');
     }
 
     public function updateUath(StoreBeneficiarioRequest $request, int $servidorId, int $id): JsonResponse
@@ -91,7 +92,7 @@ class BeneficiarioController extends Controller
         $beneficiario = Beneficiario::where('servidor_id', $servidorId)->findOrFail($id);
         $beneficiario->update($request->validated());
 
-        return ApiResponse::ok($beneficiario, 'Beneficiario actualizado exitosamente.');
+        return ApiResponse::ok(new BeneficiarioResource($beneficiario), 'Beneficiario actualizado exitosamente.');
     }
 
     public function destroyUath(int $servidorId, int $id): JsonResponse

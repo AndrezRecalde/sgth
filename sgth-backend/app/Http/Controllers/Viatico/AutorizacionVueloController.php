@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Viatico;
 
 use App\Http\Controllers\Controller;
 use App\Models\Viatico\AutorizacionVuelo;
+use App\Http\Resources\Viatico\AutorizacionVueloResource;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,7 +17,7 @@ class AutorizacionVueloController extends Controller
             ->where('estado', 'pendiente')
             ->get();
             
-        return response()->json($autorizaciones);
+        return ApiResponse::ok(AutorizacionVueloResource::collection($autorizaciones));
     }
 
     public function aprobar(Request $request, string $id): JsonResponse
@@ -29,7 +31,7 @@ class AutorizacionVueloController extends Controller
             'aprobado_en'           => now(),
         ]);
 
-        return response()->json($autorizacion);
+        return ApiResponse::ok(new AutorizacionVueloResource($autorizacion));
     }
 
     public function rechazar(Request $request, string $id): JsonResponse
@@ -43,7 +45,7 @@ class AutorizacionVueloController extends Controller
             'aprobado_en'           => now(),
         ]);
 
-        return response()->json($autorizacion);
+        return ApiResponse::ok(new AutorizacionVueloResource($autorizacion));
     }
 
     public function subirDocumento(Request $request, string $id): JsonResponse
@@ -59,6 +61,6 @@ class AutorizacionVueloController extends Controller
             'documento_invitacion_ruta' => $path,
         ]);
 
-        return response()->json($autorizacion);
+        return ApiResponse::ok(new AutorizacionVueloResource($autorizacion));
     }
 }
