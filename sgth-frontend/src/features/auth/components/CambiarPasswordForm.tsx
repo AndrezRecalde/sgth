@@ -3,7 +3,6 @@
 import { PasswordInput, Button, Stack } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zodResolver } from 'mantine-form-zod-resolver'
-import { IconLock } from '@tabler/icons-react'
 import { cambiarPasswordSchema } from '../schemas/cambiarPassword.schema'
 import type { CambiarPasswordFormData } from '../schemas/cambiarPassword.schema'
 import { useCambiarPassword } from '../hooks/useCambiarPassword'
@@ -31,7 +30,6 @@ export function CambiarPasswordForm() {
           label="Nueva contraseña"
           placeholder="Ingrese nueva contraseña"
           variant="filled"
-          leftSection={<IconLock size={16} />}
           styles={containedInputStyles}
           {...form.getInputProps('nueva_contrasena')}
         />
@@ -39,7 +37,6 @@ export function CambiarPasswordForm() {
           label="Confirmar nueva contraseña"
           placeholder="Repita la nueva contraseña"
           variant="filled"
-          leftSection={<IconLock size={16} />}
           styles={containedInputStyles}
           {...form.getInputProps('confirmar_contrasena')}
         />
