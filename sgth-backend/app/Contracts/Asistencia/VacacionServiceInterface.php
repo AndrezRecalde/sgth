@@ -17,10 +17,8 @@ interface VacacionServiceInterface
      * Solicita una nueva vacación.
      * Invoca automáticamente al motor correspondiente para calcular días a descontar
      * (hábiles vs calendario) y verifica que el saldo sea suficiente.
-     * 
-     * @param array $datos ['fecha_inicio', 'fecha_fin']
-     * @param int $servidorId
-     * @return Vacacion
+     *
+     * @param  array  $datos  ['fecha_inicio', 'fecha_fin']
      */
     public function solicitar(array $datos, int $servidorId): Vacacion;
 

@@ -10,8 +10,7 @@ interface NominaServiceInterface
      * Calcula los ingresos, descuentos y totales para un periodo específico,
      * generando la nómina en estado borrador o en_proceso.
      *
-     * @param string $periodo Formato YYYY-MM
-     * @return Nomina
+     * @param  string  $periodo  Formato YYYY-MM
      */
     public function calcularNomina(string $periodo): Nomina;
 
@@ -19,9 +18,8 @@ interface NominaServiceInterface
      * Cierra de forma definitiva la nómina, congelando los valores y disparando
      * las integraciones (Handoff ERP) y envíos de correo.
      *
-     * @param int $nominaId ID de la nómina a cerrar
-     * @param int $userId ID del usuario que ejecuta el cierre
-     * @return Nomina
+     * @param  int  $nominaId  ID de la nómina a cerrar
+     * @param  int  $userId  ID del usuario que ejecuta el cierre
      */
     public function cerrarNomina(int $nominaId, int $userId): Nomina;
 }

@@ -13,7 +13,7 @@ interface SeleccionServiceInterface
     public function calificarPostulante(int $postulanteId, array $datos, int $evaluadorId): EvaluacionSeleccion;
 
     /**
-     * Declara a un postulante como ganador del concurso, cambia los estados, 
+     * Declara a un postulante como ganador del concurso, cambia los estados,
      * e inserta un registro en movimientos de personal (ingreso).
      */
     public function declararGanador(int $convocatoriaId, int $postulanteGanadorId, int $userId): Postulante;
