@@ -1,0 +1,11 @@
+﻿feat(auth+shell): Sprint F-02 — Login y AppShell completo
+
+- LoginForm con validación Zod + inputs contained Mantine
+- useLogin hook con TanStack Query y notificaciones
+- Página de login responsive centrada
+- AppShell con sidebar Navy + topbar
+- Sidebar dinámico por rol con buildNavGroups
+- NavItem con íconos Tabler + estado activo
+- Toggle modo claro/oscuro en topbar
+- Burger + Drawer para móvil
+- Dashboard placeholder
