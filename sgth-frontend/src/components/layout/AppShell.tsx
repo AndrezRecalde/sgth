@@ -7,7 +7,8 @@ import { Topbar } from './Topbar'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
 export function SGTHAppShell({ children }: { children: React.ReactNode }) {
-  const [opened, { toggle }] = useDisclosure()
+  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure(false)
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true)
   const { isTablet, isMobile } = useMobileBreakpoint()
 
   return (
@@ -16,16 +17,21 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
       navbar={{
         width: isTablet ? 60 : 220,
         breakpoint: 'md',
-        collapsed: { mobile: !opened },
+        collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}
       padding="md"
     >
       <AppShell.Header>
-        <Topbar opened={opened} onBurgerClick={toggle} />
+        <Topbar 
+          mobileOpened={mobileOpened} 
+          desktopOpened={desktopOpened} 
+          onMobileToggle={toggleMobile} 
+          onDesktopToggle={toggleDesktop} 
+        />
       </AppShell.Header>
 
       <AppShell.Navbar>
-        <Sidebar collapsed={isTablet && !isMobile} onNavClick={() => isMobile && toggle()} />
+        <Sidebar collapsed={isTablet && !isMobile} onNavClick={() => isMobile && toggleMobile()} />
       </AppShell.Navbar>
 
       <AppShell.Main>
