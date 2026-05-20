@@ -11,7 +11,7 @@ export function useCambiarPassword() {
   const router = useRouter()
 
   return useMutation({
-    mutationFn: authService.cambiarContrasena,
+    mutationFn: authService.cambiarPassword,
     onSuccess: () => {
       notifications.show({
         title: 'Contraseña actualizada',
@@ -24,7 +24,7 @@ export function useCambiarPassword() {
     onError: (error: AxiosError<ApiResponse>) => {
       notifications.show({
         title: 'Error al cambiar contraseña',
-        message: error.response?.data?.mensaje ?? 'Error inesperado. Intente nuevamente.',
+        message: error.response?.data?.mensaje ?? 'Error inesperado.',
         color: 'red',
         icon: React.createElement(IconX, { size: 16 }),
       })
