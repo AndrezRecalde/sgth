@@ -297,8 +297,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::post('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'store']);
         Route::get('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'show']);
         
-        Route::post('servidor/{servidorId}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar']);
-        Route::post('{id}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar']);
+        Route::post('servidor/{servidorId}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar'])
+            ->name('viatico.solicitar.por.servidor');
+        Route::post('{id}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar'])
+            ->name('viatico.solicitar.propio');
         Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
         
         Route::get('{id}/informe/generar-enlace', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']);
@@ -528,13 +530,5 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
         });
 
-    // Dashboard ejecutivo — acceso directo sin prefijo reporteria
-    Route::prefix('dashboard')
-        ->middleware('role:admin-uath|maxima-autoridad|director|auditor')
-        ->group(function () {
-            Route::get('kpis',
-                [\App\Http\Controllers\Reporteria\DashboardController::class, 'kpis']);
-            Route::get('kpis/{categoria}',
-                [\App\Http\Controllers\Reporteria\DashboardController::class, 'kpisPorCategoria']);
-        });
+
 });
