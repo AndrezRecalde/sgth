@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import React from 'react'
 import type { AxiosError } from 'axios'
-import { estructuraService } from '../services/estructuraService'
+import { puestosExtensionesService } from '../services/puestosExtensionesService'
 import type { PuestoFormData } from '../schemas/puesto.schema'
 import type { ApiResponse } from '@/types/api'
 
@@ -24,7 +24,7 @@ export function usePuestoMutations() {
 
   const crear = useMutation({
     mutationFn: (data: PuestoFormData) =>
-      estructuraService.crearPuesto(data),
+      puestosExtensionesService.crearPuesto(data),
     onSuccess: () => {
       notifications.show({
         title: 'Puesto creado',
@@ -39,7 +39,7 @@ export function usePuestoMutations() {
 
   const editar = useMutation({
     mutationFn: ({ id, data }: { id: number; data: PuestoFormData }) =>
-      estructuraService.editarPuesto(id, data),
+      puestosExtensionesService.editarPuesto(id, data),
     onSuccess: () => {
       notifications.show({
         title: 'Puesto actualizado',
@@ -53,7 +53,7 @@ export function usePuestoMutations() {
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => estructuraService.eliminarPuesto(id),
+    mutationFn: (id: number) => puestosExtensionesService.eliminarPuesto(id),
     onSuccess: () => {
       notifications.show({
         title: 'Puesto eliminado',
