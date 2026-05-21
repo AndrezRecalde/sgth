@@ -1,8 +1,16 @@
-import { Badge, Text } from '@mantine/core'
+import { Badge, Text, ActionIcon, Group } from '@mantine/core'
+import { IconEdit, IconTrash } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ExtensionConRelaciones } from '@/types/api'
 
-export const directorioColumns: DataTableColumn<ExtensionConRelaciones>[] = [
+type Handlers = {
+  onEdit: (record: ExtensionConRelaciones) => void
+  onDelete: (record: ExtensionConRelaciones) => void
+}
+
+export const getDirectorioColumns = (
+  handlers?: Handlers
+): DataTableColumn<ExtensionConRelaciones>[] => [
   {
     accessor: 'servidor',
     title: 'Servidor',
@@ -47,5 +55,31 @@ export const directorioColumns: DataTableColumn<ExtensionConRelaciones>[] = [
     render: ({ servidor }) => (
       <Text size="sm">{servidor?.correo_institucional ?? '-'}</Text>
     ),
+  },
+  {
+    accessor: 'acciones',
+    title: '',
+    width: 80,
+    hidden: !handlers,
+    render: (record) => handlers ? (
+      <Group gap={4} justify="center">
+        <ActionIcon
+          variant="subtle"
+          color="blue"
+          onClick={() => handlers.onEdit(record)}
+          aria-label="Editar extensión"
+        >
+          <IconEdit size={16} />
+        </ActionIcon>
+        <ActionIcon
+          variant="subtle"
+          color="red"
+          onClick={() => handlers.onDelete(record)}
+          aria-label="Eliminar extensión"
+        >
+          <IconTrash size={16} />
+        </ActionIcon>
+      </Group>
+    ) : null,
   },
 ]
