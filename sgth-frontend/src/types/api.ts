@@ -221,3 +221,72 @@ export type ExtensionConRelaciones = ExtensionTelefonica & {
   }
   numero_extension?: string
 }
+
+export type ContratoParams = {
+  page?: number
+  per_page?: number
+  servidor_id?: number
+  estado?: EstadoContrato
+}
+
+export type MovimientoPersonalParams = {
+  page?: number
+  per_page?: number
+  servidor_id?: number
+}
+
+// Tipos extendidos con relaciones para Expediente
+export type ServidorConRelaciones = Servidor & {
+  nombres?: string
+  apellidos?: string
+  cedula?: string
+  fecha_nacimiento?: string
+  genero?: string
+  estado_civil?: string
+  telefono_personal?: string
+  telefono_institucional?: string
+  correo_personal?: string
+  correo_institucional?: string
+  direccion?: string
+  provincia_nacimiento_id?: number
+  canton_nacimiento_id?: number
+  contrato_vigente?: ContratoConRelaciones
+  unidad_administrativa?: { id: number; nombre?: string }
+}
+
+export type ContratoConRelaciones = ContratoServidor & {
+  tipo_nombramiento?: string
+  fecha_ingreso?: string
+  fecha_fin?: string | null
+  remuneracion?: number
+  estado?: EstadoContrato
+  unidad_administrativa?: { id: number; nombre?: string }
+  puesto?: { id: number; nombre?: string }
+}
+
+export type DocumentoServidorConRelaciones = {
+  id: number
+  servidor_id: number
+  tipo_documento?: string
+  numero_documento?: string
+  archivo_ruta?: string
+  fecha_emision?: string | null
+  fecha_vencimiento?: string | null
+  created_at?: string
+}
+
+export type CuentaBancariaConRelaciones = CuentaBancariaServidor & {
+  entidad_financiera?: { id: number; nombre?: string }
+  numero_cuenta?: string
+  tipo_cuenta?: 'ahorros' | 'corriente'
+  es_principal?: boolean
+}
+
+export type MovimientoPersonalConRelaciones = {
+  id: number
+  servidor_id: number
+  tipo_movimiento?: string
+  descripcion?: string
+  fecha_movimiento?: string
+  created_at?: string
+}
