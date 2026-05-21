@@ -22,7 +22,7 @@ Si un tipo ya existe en api.ts, impórtalo desde ahí — nunca lo redefinas.
 | F-02 | Auth + AppShell | ✅ Completo |
 | F-03a | Estructura — Vistas lectura | ✅ Completo |
 | F-03b | Estructura — CRUD completo | ✅ Completo |
-| F-04 | Expediente Digital | ⏳ Pendiente |
+| F-04 | Expediente Digital | ✅ Completo |
 | F-05 | Nómina y Asistencia | ⏳ Pendiente |
 | F-06 | Viáticos | ⏳ Pendiente |
 | F-07 | Dispensario Médico | ⏳ Pendiente |
@@ -375,7 +375,7 @@ Agregar métodos:
 
 ---
 
-## SPRINT F-04 — Expediente Digital ⏳ PENDIENTE
+## SPRINT F-04 — Expediente Digital ✅ COMPLETO
 
 **Rama:** feature/sprint-f04
 **Ruta:** /expediente
