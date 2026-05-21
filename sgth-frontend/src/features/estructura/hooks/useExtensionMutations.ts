@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import React from 'react'
 import type { AxiosError } from 'axios'
-import { estructuraService } from '../services/estructuraService'
+import { puestosExtensionesService } from '../services/puestosExtensionesService'
 import type { ExtensionFormData } from '../schemas/extension.schema'
 import type { ApiResponse } from '@/types/api'
 
@@ -24,7 +24,7 @@ export function useExtensionMutations() {
 
   const crear = useMutation({
     mutationFn: (data: ExtensionFormData) =>
-      estructuraService.crearExtension(data),
+      puestosExtensionesService.crearExtension(data),
     onSuccess: () => {
       notifications.show({
         title: 'Extensión registrada',
@@ -39,7 +39,7 @@ export function useExtensionMutations() {
 
   const editar = useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExtensionFormData }) =>
-      estructuraService.editarExtension(id, data),
+      puestosExtensionesService.editarExtension(id, data),
     onSuccess: () => {
       notifications.show({
         title: 'Extensión actualizada',
@@ -54,7 +54,7 @@ export function useExtensionMutations() {
 
   const eliminar = useMutation({
     mutationFn: (id: number) =>
-      estructuraService.eliminarExtension(id),
+      puestosExtensionesService.eliminarExtension(id),
     onSuccess: () => {
       notifications.show({
         title: 'Extensión eliminada',

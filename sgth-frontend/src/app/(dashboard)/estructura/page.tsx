@@ -18,6 +18,7 @@ import { UnidadModal } from '@/features/estructura/components/UnidadModal'
 import { ExtensionModal } from '@/features/estructura/components/ExtensionModal'
 import { useOrganigrama } from '@/features/estructura/hooks/useOrganigrama'
 import { useDirectorio } from '@/features/estructura/hooks/useDirectorio'
+import { useExtensionMutations } from '@/features/estructura/hooks/useExtensionMutations'
 import type { UnidadConRelaciones, ExtensionConRelaciones } from '@/types/api'
 
 export default function EstructuraPage() {
@@ -31,6 +32,8 @@ export default function EstructuraPage() {
     useState<UnidadConRelaciones | null>(null)
   const [editExtension, setEditExtension] =
     useState<ExtensionConRelaciones | null>(null)
+
+  const { eliminar: eliminarExtension } = useExtensionMutations()
 
   const { data: organigrama, isLoading: isLoadingOrg, error: errorOrg } =
     useOrganigrama()
@@ -113,8 +116,8 @@ export default function EstructuraPage() {
             isLoading={isLoadingDir}
             onEdit={handleEditExtension}
             onDelete={(ext) => {
-              if (confirm('¿Eliminar esta extensión?')) {
-                // La mutation se maneja en el componente hijo
+              if (confirm(`¿Eliminar la extensión ${ext.numero_extension ?? ''}?`)) {
+                eliminarExtension.mutate(Number((ext as unknown as { id: number }).id))
               }
             }}
           />
