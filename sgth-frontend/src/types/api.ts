@@ -174,3 +174,25 @@ export type AgendaParams = {
   fecha?: string
   medico_id?: number
 }
+
+export type UnidadAdministrativaParams = {
+  page?: number
+  per_page?: number
+  search?: string
+  tipo_unidad_id?: number
+  con_puestos?: boolean
+}
+
+export type PuestoParams = {
+  page?: number
+  per_page?: number
+  search?: string
+  unidad_administrativa_id?: number
+}
+
+export type ExtensionTelefonicaParams = {
+  page?: number
+  per_page?: number
+  search?: string
+  unidad_administrativa_id?: number
+}
