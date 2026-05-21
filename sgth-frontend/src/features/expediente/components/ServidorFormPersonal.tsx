@@ -1,7 +1,10 @@
 'use client'
 
-import { TextInput, Select, Grid } from '@mantine/core'
-import { DateInput } from '@mantine/dates'
+import {
+  TextInput, Select, Grid, Switch, Text,
+} from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useProvincias } from '../hooks/useProvincias'
 import { useCantones } from '../hooks/useCantones'
@@ -23,15 +26,23 @@ const ESTADO_CIVIL_OPTIONS = [
   { value: 'union_libre', label: 'Unión libre' },
 ]
 
+const TIPO_SANGRE_OPTIONS = [
+  'A+','A-','B+','B-','AB+','AB-','O+','O-',
+].map(v => ({ value: v, label: v }))
+
 interface Props {
   form: UseFormReturnType<ServidorFormData>
 }
 
 export function ServidorFormPersonal({ form }: Props) {
-  const contained = useContainedInput()
+  const contained   = useContainedInput()
+  const esExtranjero = form.values.es_extranjero
+
   const { data: provincias = [] } = useProvincias()
   const provinciaId = form.values.provincia_nacimiento_id
-  const { data: cantones = [] } = useCantones(provinciaId ?? null)
+  const { data: cantones = [] } = useCantones(
+    esExtranjero ? null : (provinciaId ?? null)
+  )
 
   const provinciaOptions = (provincias as Provincia[]).map(p => ({
     value: String(p.id),
@@ -43,22 +54,47 @@ export function ServidorFormPersonal({ form }: Props) {
     label: (c as Canton & { nombre?: string }).nombre ?? `Cantón ${c.id}`,
   }))
 
+  const toDate = (v?: string | null) =>
+    v ? new Date(v) : null
+
+  const fromDate = (d: any) => {
+    if (!d) return null
+    const date = new Date(d)
+    return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
+  }
+
   return (
     <Grid>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
-          label="Nombres"
-          placeholder="Nombres del servidor"
+          label="Primer nombre"
+          placeholder="Primer nombre"
           {...contained}
-          {...form.getInputProps('nombres')}
+          {...form.getInputProps('nombre')}
         />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
-          label="Apellidos"
-          placeholder="Apellidos del servidor"
+          label="Segundo nombre"
+          placeholder="Segundo nombre (opcional)"
           {...contained}
-          {...form.getInputProps('apellidos')}
+          {...form.getInputProps('segundo_nombre')}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <TextInput
+          label="Primer apellido"
+          placeholder="Primer apellido"
+          {...contained}
+          {...form.getInputProps('apellido')}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <TextInput
+          label="Segundo apellido"
+          placeholder="Segundo apellido (opcional)"
+          {...contained}
+          {...form.getInputProps('segundo_apellido')}
         />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -95,46 +131,125 @@ export function ServidorFormPersonal({ form }: Props) {
         />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
-        <TextInput
+        <DatePickerInput
           label="Fecha de nacimiento"
-          placeholder="YYYY-MM-DD"
+          placeholder="Seleccionar fecha"
+          maxDate={new Date()}
+          valueFormat="YYYY-MM-DD"
           {...contained}
-          {...form.getInputProps('fecha_nacimiento')}
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Select
-          label="Provincia de nacimiento"
-          placeholder="Seleccionar provincia"
-          data={provinciaOptions}
-          searchable
-          {...contained}
-          value={form.values.provincia_nacimiento_id
-            ? String(form.values.provincia_nacimiento_id) : ''}
-          onChange={(v) => {
-            form.setFieldValue('provincia_nacimiento_id',
-              v ? Number(v) : ('' as unknown as number))
-            form.setFieldValue('canton_nacimiento_id',
-              '' as unknown as number)
-          }}
-          error={form.errors.provincia_nacimiento_id}
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Select
-          label="Cantón de nacimiento"
-          placeholder="Seleccionar cantón"
-          data={cantonOptions}
-          searchable
-          disabled={!provinciaId}
-          {...contained}
-          value={form.values.canton_nacimiento_id
-            ? String(form.values.canton_nacimiento_id) : ''}
-          onChange={(v) =>
-            form.setFieldValue('canton_nacimiento_id',
-              v ? Number(v) : ('' as unknown as number))
+          value={toDate(form.values.fecha_nacimiento)}
+          onChange={(date) =>
+            form.setFieldValue('fecha_nacimiento',
+              fromDate(date) ?? '')
           }
-          error={form.errors.canton_nacimiento_id}
+          error={form.errors.fecha_nacimiento}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Select
+          label="Tipo de sangre"
+          placeholder="Seleccionar (opcional)"
+          data={TIPO_SANGRE_OPTIONS}
+          clearable
+          {...contained}
+          value={form.values.tipo_sangre ?? ''}
+          onChange={(v) => form.setFieldValue('tipo_sangre', (v ?? null) as ServidorFormData['tipo_sangre'])}
+        />
+      </Grid.Col>
+
+      <Grid.Col span={12}>
+        <Switch
+          label="¿Es extranjero?"
+          checked={form.values.es_extranjero}
+          onChange={(e) => {
+            form.setFieldValue('es_extranjero', e.currentTarget.checked)
+            form.setFieldValue('provincia_nacimiento_id', null)
+            form.setFieldValue('canton_nacimiento_id', null)
+          }}
+          color="emerald"
+          mt="xs"
+        />
+      </Grid.Col>
+
+      {!esExtranjero ? (
+        <>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Select
+              label="Provincia de nacimiento"
+              placeholder="Seleccionar provincia"
+              data={provinciaOptions}
+              searchable
+              {...contained}
+              value={form.values.provincia_nacimiento_id
+                ? String(form.values.provincia_nacimiento_id) : ''}
+              onChange={(v) => {
+                form.setFieldValue('provincia_nacimiento_id',
+                  v ? Number(v) : null)
+                form.setFieldValue('canton_nacimiento_id', null)
+              }}
+              error={form.errors.provincia_nacimiento_id}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Select
+              label="Cantón de nacimiento"
+              placeholder="Seleccionar cantón"
+              data={cantonOptions}
+              searchable
+              disabled={!provinciaId}
+              {...contained}
+              value={form.values.canton_nacimiento_id
+                ? String(form.values.canton_nacimiento_id) : ''}
+              onChange={(v) =>
+                form.setFieldValue('canton_nacimiento_id',
+                  v ? Number(v) : null)
+              }
+              error={form.errors.canton_nacimiento_id}
+            />
+          </Grid.Col>
+        </>
+      ) : (
+        <>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="Nacionalidad"
+              placeholder="Ej: Colombiana"
+              {...contained}
+              {...form.getInputProps('nacionalidad')}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="País de origen"
+              placeholder="Ej: Colombia"
+              {...contained}
+              {...form.getInputProps('pais_origen')}
+            />
+          </Grid.Col>
+        </>
+      )}
+
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Switch
+          label="¿Tiene discapacidad?"
+          checked={form.values.tiene_discapacidad}
+          onChange={(e) =>
+            form.setFieldValue('tiene_discapacidad', e.currentTarget.checked)
+          }
+          color="emerald"
+          mt="xs"
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Switch
+          label="¿Tiene enfermedad catastrófica?"
+          checked={form.values.tiene_enfermedad_catastrofica}
+          onChange={(e) =>
+            form.setFieldValue('tiene_enfermedad_catastrofica',
+              e.currentTarget.checked)
+          }
+          color="emerald"
+          mt="xs"
         />
       </Grid.Col>
     </Grid>

@@ -235,22 +235,32 @@ export type MovimientoPersonalParams = {
   servidor_id?: number
 }
 
-// Tipos extendidos con relaciones para Expediente
 export type ServidorConRelaciones = Servidor & {
   id: number
-  nombres?: string
-  apellidos?: string
+  nombre?: string
+  segundo_nombre?: string
+  apellido?: string
+  segundo_apellido?: string
+  nombres?: string        // campo calculado para compatibilidad
+  apellidos?: string      // campo calculado para compatibilidad
   cedula?: string
   fecha_nacimiento?: string
   genero?: string
   estado_civil?: string
+  tipo_sangre?: string | null
+  es_extranjero?: boolean
+  provincia_nacimiento_id?: number | null
+  canton_nacimiento_id?: number | null
+  telefono_celular?: string
+  telefono_convencional?: string
   telefono_personal?: string
   telefono_institucional?: string
-  correo_personal?: string
   correo_institucional?: string
+  correo_personal?: string
   direccion?: string
-  provincia_nacimiento_id?: number
-  canton_nacimiento_id?: number
+  direccion_domicilio?: string
+  tiene_discapacidad?: boolean
+  tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones
   unidad_administrativa?: { id: number; nombre?: string }
 }

@@ -16,18 +16,18 @@ export function ServidorFormContacto({ form }: Props) {
     <Grid>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
-          label="Teléfono personal"
+          label="Teléfono celular"
           placeholder="0999999999"
           {...contained}
-          {...form.getInputProps('telefono_personal')}
+          {...form.getInputProps('telefono_celular')}
         />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
-          label="Teléfono institucional"
+          label="Teléfono convencional"
           placeholder="072000000"
           {...contained}
-          {...form.getInputProps('telefono_institucional')}
+          {...form.getInputProps('telefono_convencional')}
         />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -51,7 +51,23 @@ export function ServidorFormContacto({ form }: Props) {
           label="Dirección domiciliaria"
           placeholder="Barrio, calle principal y número"
           {...contained}
-          {...form.getInputProps('direccion')}
+          {...form.getInputProps('direccion_domicilio')}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <TextInput
+          label="Número papeleta de votación"
+          placeholder="Opcional"
+          {...contained}
+          {...form.getInputProps('numero_papeleta_votacion')}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <TextInput
+          label="Número de pasaporte"
+          placeholder="Opcional"
+          {...contained}
+          {...form.getInputProps('pasaporte_numero')}
         />
       </Grid.Col>
     </Grid>
