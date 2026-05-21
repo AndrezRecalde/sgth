@@ -37,7 +37,7 @@ export default function LoginPage() {
                 lineHeight: 1,
               }}
             >
-              SGTH
+              INTRANET
             </Title>
             <Text
               size="xs"

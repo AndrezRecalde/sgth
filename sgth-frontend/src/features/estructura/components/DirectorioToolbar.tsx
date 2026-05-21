@@ -26,12 +26,14 @@ export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: Directo
   const content = (
     <>
       <TextInput
+        label="Busqueda rápida"
         placeholder="Buscar por nombre, unidad o extensión"
         onChange={(e) => onSearch(e.currentTarget.value)}
         {...contained}
         style={{ flex: 1 }}
       />
       <Select
+        label="Unidad Administrativa"
         placeholder="Filtrar por unidad"
         data={unidadOptions}
         onChange={onUnidadChange}

@@ -1,25 +1,59 @@
 'use client'
 
 import { useState } from 'react'
-import { Tabs, Box, Skeleton } from '@mantine/core'
-import { IconSitemap, IconPhone } from '@tabler/icons-react'
+import { Tabs, Box, Button, Group } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import {
+  IconSitemap,
+  IconPhone,
+  IconBriefcase,
+  IconPlus,
+} from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { OrganigramaTree } from '@/features/estructura/components/OrganigramaTree'
 import { DirectorioTable } from '@/features/estructura/components/DirectorioTable'
 import { DirectorioToolbar } from '@/features/estructura/components/DirectorioToolbar'
+import { PuestosTab } from '@/features/estructura/components/PuestosTab'
+import { UnidadModal } from '@/features/estructura/components/UnidadModal'
+import { ExtensionModal } from '@/features/estructura/components/ExtensionModal'
 import { useOrganigrama } from '@/features/estructura/hooks/useOrganigrama'
 import { useDirectorio } from '@/features/estructura/hooks/useDirectorio'
+import type { UnidadConRelaciones, ExtensionConRelaciones } from '@/types/api'
 
 export default function EstructuraPage() {
-  const { data: organigrama, isLoading: isLoadingOrg, error: errorOrg } = useOrganigrama()
-  
-  const [search, setSearch] = useState('')
+  const [search, setSearch]   = useState('')
   const [unidadId, setUnidadId] = useState<string | null>(null)
-  
+
+  const [unidadModal, unidadModalHandlers]     = useDisclosure(false)
+  const [extensionModal, extensionModalHandlers] = useDisclosure(false)
+
+  const [editUnidad, setEditUnidad] =
+    useState<UnidadConRelaciones | null>(null)
+  const [editExtension, setEditExtension] =
+    useState<ExtensionConRelaciones | null>(null)
+
+  const { data: organigrama, isLoading: isLoadingOrg, error: errorOrg } =
+    useOrganigrama()
+
   const { data: directorio = [], isLoading: isLoadingDir } = useDirectorio({
     search: search || undefined,
-    unidad_administrativa_id: unidadId ? Number(unidadId) : undefined
+    unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
   })
+
+  const handleEditExtension = (ext: ExtensionConRelaciones) => {
+    setEditExtension(ext)
+    extensionModalHandlers.open()
+  }
+
+  const handleCloseExtension = () => {
+    setEditExtension(null)
+    extensionModalHandlers.close()
+  }
+
+  const handleCloseUnidad = () => {
+    setEditUnidad(null)
+    unidadModalHandlers.close()
+  }
 
   return (
     <Box>
@@ -37,31 +71,70 @@ export default function EstructuraPage() {
           <Tabs.Tab value="directorio" leftSection={<IconPhone size={16} />}>
             Directorio telefónico
           </Tabs.Tab>
+          <Tabs.Tab value="puestos" leftSection={<IconBriefcase size={16} />}>
+            Puestos
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="organigrama">
-          {isLoadingOrg ? (
-            <Skeleton height={200} radius="md" />
-          ) : (
-            <OrganigramaTree 
-              unidades={organigrama || []} 
-              error={errorOrg} 
-            />
-          )}
+          <Group justify="flex-end" mb="md">
+            <Button
+              leftSection={<IconPlus size={16} />}
+              color="emerald"
+              onClick={unidadModalHandlers.open}
+            >
+              Nueva unidad
+            </Button>
+          </Group>
+          <OrganigramaTree
+            unidades={organigrama ?? []}
+            isLoading={isLoadingOrg}
+            error={errorOrg}
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="directorio">
-          <DirectorioToolbar 
+          <Group justify="flex-end" mb="sm">
+            <Button
+              leftSection={<IconPlus size={16} />}
+              color="emerald"
+              onClick={extensionModalHandlers.open}
+            >
+              Nueva extensión
+            </Button>
+          </Group>
+          <DirectorioToolbar
             onSearch={setSearch}
             onUnidadChange={setUnidadId}
-            onClear={() => {
-              setSearch('')
-              setUnidadId(null)
+            onClear={() => { setSearch(''); setUnidadId(null) }}
+          />
+          <DirectorioTable
+            data={directorio}
+            isLoading={isLoadingDir}
+            onEdit={handleEditExtension}
+            onDelete={(ext) => {
+              if (confirm('¿Eliminar esta extensión?')) {
+                // La mutation se maneja en el componente hijo
+              }
             }}
           />
-          <DirectorioTable data={directorio} isLoading={isLoadingDir} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="puestos">
+          <PuestosTab />
         </Tabs.Panel>
       </Tabs>
+
+      <UnidadModal
+        opened={unidadModal}
+        onClose={handleCloseUnidad}
+        unidad={editUnidad}
+      />
+      <ExtensionModal
+        opened={extensionModal}
+        onClose={handleCloseExtension}
+        extension={editExtension}
+      />
     </Box>
   )
 }

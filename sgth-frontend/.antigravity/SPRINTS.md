@@ -21,7 +21,7 @@ Si un tipo ya existe en api.ts, impórtalo desde ahí — nunca lo redefinas.
 | F-01 | Setup base | ✅ Completo |
 | F-02 | Auth + AppShell | ✅ Completo |
 | F-03a | Estructura — Vistas lectura | ✅ Completo |
-| F-03b | Estructura — CRUD completo | ⏳ Pendiente |
+| F-03b | Estructura — CRUD completo | ✅ Completo |
 | F-04 | Expediente Digital | ⏳ Pendiente |
 | F-05 | Nómina y Asistencia | ⏳ Pendiente |
 | F-06 | Viáticos | ⏳ Pendiente |
@@ -205,7 +205,7 @@ GET /catalogos/tipos-unidad
 
 ---
 
-## SPRINT F-03b — Estructura Organizacional (CRUD) ⏳ PENDIENTE
+## SPRINT F-03b — Estructura Organizacional (CRUD) ✅ COMPLETO
 
 **Rama:** feature/sprint-f03b
 **Prioridad:** Alta — el módulo está incompleto sin CRUD
