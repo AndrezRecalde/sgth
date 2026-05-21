@@ -43,7 +43,7 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
 
   const handleSubmit = (values: ServidorFormData) => {
     const mutation = isEditing
-      ? editar.mutateAsync({ id: Number((servidor! as unknown as { id: number }).id), data: values })
+      ? editar.mutateAsync({ id: Number(servidor!.id), data: values })
       : crear.mutateAsync(values)
     mutation.then(() => { form.reset(); onClose() }).catch(() => {})
   }

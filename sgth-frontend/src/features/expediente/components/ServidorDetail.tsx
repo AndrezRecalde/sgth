@@ -92,11 +92,11 @@ export function ServidorDetail({ opened, onClose, servidor }: Props) {
           </Tabs.Panel>
 
           <Tabs.Panel value="contratos" pt="md">
-            <ContratosTab servidorId={Number((servidor as unknown as { id: number }).id)} />
+            <ContratosTab servidorId={Number(servidor.id)} />
           </Tabs.Panel>
 
           <Tabs.Panel value="cuentas" pt="md">
-            <CuentasBancariasTab servidorId={Number((servidor as unknown as { id: number }).id)} />
+            <CuentasBancariasTab servidorId={Number(servidor.id)} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

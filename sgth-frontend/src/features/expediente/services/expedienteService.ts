@@ -3,18 +3,9 @@ import type {
   ApiResponse,
   PaginatedResponse,
   Servidor,
-  ContratoServidor,
-  CuentaBancariaServidor,
-  EntidadFinanciera,
   ServidorParams,
-  ContratoParams,
-  MovimientoPersonalParams,
-  Provincia,
-  Canton,
 } from '@/types/api'
 import type { ServidorFormData } from '../schemas/servidor.schema'
-import type { ContratoFormData } from '../schemas/contrato.schema'
-import type { CuentaBancariaFormData } from '../schemas/cuentaBancaria.schema'
 
 export const expedienteService = {
   // Servidores

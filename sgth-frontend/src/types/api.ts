@@ -237,6 +237,7 @@ export type MovimientoPersonalParams = {
 
 // Tipos extendidos con relaciones para Expediente
 export type ServidorConRelaciones = Servidor & {
+  id: number
   nombres?: string
   apellidos?: string
   cedula?: string
