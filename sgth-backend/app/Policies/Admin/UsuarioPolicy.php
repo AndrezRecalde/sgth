@@ -39,4 +39,9 @@ final class UsuarioPolicy
     {
         return $user->can(Permiso::RESTABLECER_CONTRASENA->value);
     }
+
+    public function toggleActivo(User $user, User $model): bool
+    {
+        return $user->can(Permiso::ACTIVAR_USUARIO->value);
+    }
 }

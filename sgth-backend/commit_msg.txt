@@ -1,0 +1,13 @@
+feat(expediente+usuarios): reestructurar flujo servidor y usuarios
+
+- Permiso::ACTIVAR_USUARIO agregado al Enum
+- UsuarioPolicy: método toggleActivo
+- User: campo activo (migración + fillable + cast)
+- UsuarioController: toggleActivo, sinServidor
+- StoreServidorBasicoRequest: registro básico sin datos laborales
+- ServidorController: storeBasico
+- ExpedienteServiceInterface: crearServidorBasico
+- ExpedienteService: crearServidorBasico con movimiento inicial
+- Rutas: usuarios/sin-servidor, usuarios/toggle-activo,
+  expediente/servidores/basico
+- RolPermisoSeeder: ACTIVAR_USUARIO en ADMIN_TI y ADMIN_UATH

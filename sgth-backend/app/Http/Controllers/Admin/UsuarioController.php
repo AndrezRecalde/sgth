@@ -65,4 +65,24 @@ final class UsuarioController extends Controller
         $this->usuarioService->restablecerContrasena($id);
         return ApiResponse::ok(null, 'Contraseña restablecida al número de cédula exitosamente.');
     }
+
+    public function toggleActivo(int $id): JsonResponse
+    {
+        $usuario = $this->usuarioService->obtener($id);
+        $this->authorize('toggleActivo', $usuario);
+        $usuario->update(['activo' => !$usuario->activo]);
+        $estado = $usuario->activo ? 'activado' : 'desactivado';
+        return ApiResponse::ok($usuario, "Usuario {$estado} exitosamente.");
+    }
+
+    public function sinServidor(): JsonResponse
+    {
+        $this->authorize('viewAny', User::class);
+        $usuarios = User::whereDoesntHave('servidor')
+            ->where('activo', true)
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+        return ApiResponse::ok($usuarios, 'Usuarios sin servidor asignado.');
+    }
 }

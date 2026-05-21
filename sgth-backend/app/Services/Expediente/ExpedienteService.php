@@ -33,6 +33,24 @@ class ExpedienteService implements ExpedienteServiceInterface
         });
     }
 
+    public function crearServidorBasico(array $datos): Servidor
+    {
+        return DB::transaction(function () use ($datos) {
+            $servidor = Servidor::create($datos);
+
+            // Movimiento inicial de ingreso
+            MovimientoPersonal::create([
+                'servidor_id'     => $servidor->id,
+                'tipo_movimiento' => 'ingreso',
+                'descripcion'     => 'Registro inicial del servidor en el sistema SGTH.',
+                'fecha_efectiva'  => now(),
+                'autorizado_por'  => auth()->id(),
+            ]);
+
+            return $servidor;
+        });
+    }
+
     public function actualizarServidor(int $id, array $datos): Servidor
     {
         return DB::transaction(function () use ($id, $datos) {

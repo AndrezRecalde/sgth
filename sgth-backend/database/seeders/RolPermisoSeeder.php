@@ -46,6 +46,7 @@ class RolPermisoSeeder extends Seeder
         
         // ADMIN_TI
         $this->crearRol(Rol::ADMIN_TI, array_merge($permisosBase, [
+            Permiso::ACTIVAR_USUARIO,
             Permiso::GESTIONAR_USUARIOS,
             Permiso::GESTIONAR_ROLES,
             Permiso::RESTABLECER_CONTRASENA,
@@ -60,6 +61,7 @@ class RolPermisoSeeder extends Seeder
 
         // ADMIN_UATH
         $this->crearRol(Rol::ADMIN_UATH, array_merge($permisosBase, [
+            Permiso::ACTIVAR_USUARIO,
             Permiso::VER_ESTRUCTURA,
             Permiso::GESTIONAR_PUESTOS,
             Permiso::GESTIONAR_ORGANIGRAMA,

@@ -65,6 +65,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     });
 
     // Módulo 02: Expediente Digital
+    Route::post('expediente/servidores/basico',
+        [\App\Http\Controllers\Expediente\ServidorController::class, 'storeBasico'])
+        ->name('servidores.storeBasico');
+
     Route::prefix('expediente')->group(function () {
         Route::apiResource('servidores', \App\Http\Controllers\Expediente\ServidorController::class);
         
@@ -449,6 +453,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('admin')
         ->middleware('role:admin-ti')
         ->group(function () {
+            Route::get('usuarios/sin-servidor',
+                [\App\Http\Controllers\Admin\UsuarioController::class, 'sinServidor'])
+                ->name('usuarios.sinServidor');
+            Route::post('usuarios/{usuario}/toggle-activo',
+                [\App\Http\Controllers\Admin\UsuarioController::class, 'toggleActivo'])
+                ->name('usuarios.toggleActivo');
             Route::apiResource('usuarios', \App\Http\Controllers\Admin\UsuarioController::class);
             Route::post('usuarios/{usuario}/restablecer-contrasena',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'restablecerContrasena']

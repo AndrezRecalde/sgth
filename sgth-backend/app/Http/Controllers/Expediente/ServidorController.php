@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Expediente;
 
 use App\Contracts\Expediente\ExpedienteServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Expediente\StoreServidorBasicoRequest;
 use App\Http\Requests\Expediente\StoreServidorRequest;
 use App\Http\Requests\Expediente\UpdateServidorRequest;
 use App\Http\Resources\Expediente\ServidorResource;
@@ -19,6 +20,18 @@ class ServidorController extends Controller
     public function __construct(ExpedienteServiceInterface $expedienteService)
     {
         $this->expedienteService = $expedienteService;
+    }
+
+    public function storeBasico(StoreServidorBasicoRequest $request): JsonResponse
+    {
+        $this->authorize('crear', Servidor::class);
+        $servidor = $this->expedienteService->crearServidorBasico(
+            $request->validated()
+        );
+        return ApiResponse::created(
+            new ServidorResource($servidor),
+            'Datos básicos del servidor registrados.'
+        );
     }
 
     public function index(Request $request): JsonResponse

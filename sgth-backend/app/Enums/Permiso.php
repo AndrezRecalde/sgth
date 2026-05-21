@@ -132,6 +132,7 @@ enum Permiso: string
 
     // ── ADMIN SISTEMA ────────────────────────────────────────────
     case GESTIONAR_USUARIOS          = 'gestionar-usuarios';
+    case ACTIVAR_USUARIO             = 'activar-usuario';
     case GESTIONAR_ROLES             = 'gestionar-roles';
     case VER_AUDITORIA               = 'ver-auditoria';
     case CONFIGURAR_SISTEMA          = 'configurar-sistema';

@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['name', 'email', 'password', 'usuario_ti', 'primer_login'])]
+#[Fillable(['name', 'email', 'password', 'usuario_ti', 'primer_login', 'activo'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -32,7 +32,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'usuario_ti' => 'boolean',
             'primer_login' => 'boolean',
+            'activo' => 'boolean',
         ];
     }
 

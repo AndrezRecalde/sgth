@@ -10,6 +10,8 @@ interface ExpedienteServiceInterface
 {
     public function crearServidor(array $datos): Servidor;
 
+    public function crearServidorBasico(array $datos): Servidor;
+
     public function actualizarServidor(int $id, array $datos): Servidor;
 
     public function subirDocumento(int $servidorId, array $datos, UploadedFile $archivo): DocumentoServidor;
