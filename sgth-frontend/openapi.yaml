@@ -3722,6 +3722,260 @@
                 }
             }
         },
+        "/v1/expediente/servidores/{servidorId}/cargas-familiares": {
+            "get": {
+                "operationId": "cargaFamiliar.index",
+                "tags": [
+                    "CargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cargas familiares del servidor."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "cargaFamiliar.store",
+                "tags": [
+                    "CargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCargaFamiliarRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Carga familiar registrada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/CargaFamiliar"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/cargas-familiares/{id}": {
+            "put": {
+                "operationId": "cargaFamiliar.update",
+                "tags": [
+                    "CargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCargaFamiliarRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Carga familiar actualizada."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "cargaFamiliar.destroy",
+                "tags": [
+                    "CargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Carga familiar eliminada."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/capacitacion/certificados/{servidorId}": {
             "get": {
                 "operationId": "certificadoCapacitacion.show",
@@ -5614,6 +5868,372 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas": {
+            "get": {
+                "operationId": "declaracionJuramentada.index",
+                "tags": [
+                    "DeclaracionJuramentada"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Declaraciones juramentadas."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "declaracionJuramentada.store",
+                "tags": [
+                    "DeclaracionJuramentada"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreDeclaracionJuramentadaRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Declaraci\u00f3n juramentada registrada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/DeclaracionJuramentada"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas/{id}": {
+            "delete": {
+                "operationId": "declaracionJuramentada.destroy",
+                "tags": [
+                    "DeclaracionJuramentada"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Declaraci\u00f3n eliminada."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas/exportar": {
+            "get": {
+                "operationId": "declaracionJuramentada.exportar",
+                "tags": [
+                    "DeclaracionJuramentada"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "fecha_inicio",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_fin",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "formato",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "txt",
+                                "pdf"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "exito": {
+                                                    "type": "boolean"
+                                                },
+                                                "mensaje": {
+                                                    "type": "string",
+                                                    "const": "No hay declaraciones en el rango indicado."
+                                                },
+                                                "datos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "minItems": 0,
+                                                    "maxItems": 0,
+                                                    "additionalItems": false
+                                                },
+                                                "meta": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "exito",
+                                                "mensaje",
+                                                "datos",
+                                                "meta"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            "text/plain; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas/{id}/documento": {
+            "get": {
+                "operationId": "declaracionJuramentada.verDocumento",
+                "tags": [
+                    "DeclaracionJuramentada"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Documento no encontrado."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "integer",
+                                            "const": 404
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
                                     ]
                                 }
                             }
@@ -8920,6 +9540,260 @@
                 }
             }
         },
+        "/v1/expediente/servidores/{servidorId}/historial-academico": {
+            "get": {
+                "operationId": "historialAcademico.index",
+                "tags": [
+                    "HistorialAcademico"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Historial acad\u00e9mico del servidor."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "historialAcademico.store",
+                "tags": [
+                    "HistorialAcademico"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreHistorialAcademicoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Registro acad\u00e9mico agregado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/HistorialAcademicoServidor"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/historial-academico/{id}": {
+            "put": {
+                "operationId": "historialAcademico.update",
+                "tags": [
+                    "HistorialAcademico"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreHistorialAcademicoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Registro acad\u00e9mico actualizado."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "historialAcademico.destroy",
+                "tags": [
+                    "HistorialAcademico"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Registro acad\u00e9mico eliminado."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/viaticos/{id}/informe/generar-enlace": {
             "get": {
                 "operationId": "informeViatico.generarEnlace",
@@ -11986,6 +12860,66 @@
                 }
             }
         },
+        "/v1/expediente/servidores/basico": {
+            "post": {
+                "operationId": "servidores.storeBasico",
+                "tags": [
+                    "Servidor"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreServidorBasicoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Datos b\u00e1sicos del servidor registrados."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ServidorResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores": {
             "get": {
                 "operationId": "servidores.index",
@@ -14425,6 +15359,112 @@
                 }
             }
         },
+        "/v1/admin/usuarios/sin-servidor": {
+            "get": {
+                "operationId": "usuarios.sinServidor",
+                "tags": [
+                    "Usuario"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Usuarios sin servidor asignado."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/admin/usuarios/{id}/toggle-activo": {
+            "post": {
+                "operationId": "usuarios.toggleActivo",
+                "tags": [
+                    "Usuario"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/User"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/admin/usuarios": {
             "get": {
                 "operationId": "usuarios.index",
@@ -15970,6 +17010,78 @@
                 ],
                 "title": "Canton"
             },
+            "CargaFamiliar": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "apellidos": {
+                        "type": "string"
+                    },
+                    "nombres": {
+                        "type": "string"
+                    },
+                    "parentesco": {
+                        "$ref": "#/components/schemas/TipoParentesco"
+                    },
+                    "fecha_nacimiento": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "persona_con_discapacidad": {
+                        "type": "boolean"
+                    },
+                    "posee_enfermedad_catastrofica": {
+                        "type": "boolean"
+                    },
+                    "observaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "servidor_id",
+                    "apellidos",
+                    "nombres",
+                    "parentesco",
+                    "fecha_nacimiento",
+                    "persona_con_discapacidad",
+                    "posee_enfermedad_catastrofica",
+                    "observaciones",
+                    "created_at",
+                    "updated_at",
+                    "deleted_at"
+                ],
+                "title": "CargaFamiliar"
+            },
             "CategoriaActividadEnum": {
                 "type": "string",
                 "enum": [
@@ -16601,6 +17713,73 @@
                     "deleted_at"
                 ],
                 "title": "Curso"
+            },
+            "DeclaracionJuramentada": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "fecha_declaracion": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "codigo_barras": {
+                        "type": "string"
+                    },
+                    "tipo_declaracion": {
+                        "$ref": "#/components/schemas/TipoDeclaracion"
+                    },
+                    "documento_ruta": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "documento_nombre_archivo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "servidor_id",
+                    "fecha_declaracion",
+                    "codigo_barras",
+                    "tipo_declaracion",
+                    "documento_ruta",
+                    "documento_nombre_archivo",
+                    "created_at",
+                    "updated_at",
+                    "deleted_at"
+                ],
+                "title": "DeclaracionJuramentada"
             },
             "DeclararGanadorRequest": {
                 "type": "object",
@@ -17402,13 +18581,62 @@
                 "title": "EvaluacionSeleccion"
             },
             "ExtensionTelefonica": {
-                "type": "array",
-                "items": {
-                    "type": "string"
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "unidad_administrativa_id": {
+                        "type": "integer"
+                    },
+                    "numero_extension": {
+                        "type": "string"
+                    },
+                    "responsable": {
+                        "type": "string"
+                    },
+                    "descripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "estado": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
                 },
-                "minItems": 0,
-                "maxItems": 0,
-                "additionalItems": false,
+                "required": [
+                    "id",
+                    "unidad_administrativa_id",
+                    "numero_extension",
+                    "responsable",
+                    "descripcion",
+                    "estado",
+                    "created_at",
+                    "updated_at",
+                    "deleted_at"
+                ],
                 "title": "ExtensionTelefonica"
             },
             "FacturaViatico": {
@@ -17630,6 +18858,93 @@
                     "beneficiario_id"
                 ],
                 "title": "HistoriaClinica"
+            },
+            "HistorialAcademicoServidor": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "tipo_estudio": {
+                        "$ref": "#/components/schemas/TipoEstudio"
+                    },
+                    "nivel_estudio": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/NivelEstudio"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "nacionalidad_estudio": {
+                        "$ref": "#/components/schemas/NacionalidadEstudio"
+                    },
+                    "institucion": {
+                        "type": "string"
+                    },
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "titulo_capacitacion": {
+                        "type": "string"
+                    },
+                    "codigo_senescyt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "servidor_id",
+                    "tipo_estudio",
+                    "nivel_estudio",
+                    "nacionalidad_estudio",
+                    "institucion",
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "titulo_capacitacion",
+                    "codigo_senescyt",
+                    "created_at",
+                    "updated_at",
+                    "deleted_at"
+                ],
+                "title": "HistorialAcademicoServidor"
             },
             "InformeActividad": {
                 "type": "object",
@@ -18166,6 +19481,24 @@
                     "updated_at"
                 ],
                 "title": "MovimientoPersonal"
+            },
+            "NacionalidadEstudio": {
+                "type": "string",
+                "enum": [
+                    "nacional",
+                    "internacional"
+                ],
+                "title": "NacionalidadEstudio"
+            },
+            "NivelEstudio": {
+                "type": "string",
+                "enum": [
+                    "primaria",
+                    "secundaria",
+                    "tercer_nivel",
+                    "cuarto_nivel"
+                ],
+                "title": "NivelEstudio"
             },
             "Nomina": {
                 "type": "object",
@@ -19210,6 +20543,47 @@
                 ],
                 "title": "StoreBeneficiarioRequest"
             },
+            "StoreCargaFamiliarRequest": {
+                "type": "object",
+                "properties": {
+                    "apellidos": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "nombres": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "parentesco": {
+                        "$ref": "#/components/schemas/TipoParentesco"
+                    },
+                    "fecha_nacimiento": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "persona_con_discapacidad": {
+                        "type": "boolean"
+                    },
+                    "posee_enfermedad_catastrofica": {
+                        "type": "boolean"
+                    },
+                    "observaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "apellidos",
+                    "nombres",
+                    "parentesco",
+                    "fecha_nacimiento",
+                    "persona_con_discapacidad",
+                    "posee_enfermedad_catastrofica"
+                ],
+                "title": "StoreCargaFamiliarRequest"
+            },
             "StoreCitaMedicaAutoservicioRequest": {
                 "type": "object",
                 "properties": {
@@ -19373,6 +20747,37 @@
                     "proposito"
                 ],
                 "title": "StoreCuentaBancariaServidorRequest"
+            },
+            "StoreDeclaracionJuramentadaRequest": {
+                "type": "object",
+                "properties": {
+                    "fecha_declaracion": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "codigo_barras": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "tipo_declaracion": {
+                        "$ref": "#/components/schemas/TipoDeclaracion"
+                    },
+                    "documento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "fecha_declaracion",
+                    "codigo_barras",
+                    "tipo_declaracion"
+                ],
+                "title": "StoreDeclaracionJuramentadaRequest"
             },
             "StoreDescuentoRecurrenteRequest": {
                 "type": "object",
@@ -19692,6 +21097,54 @@
                 ],
                 "title": "StoreFacturaViaticoRequest"
             },
+            "StoreHistorialAcademicoRequest": {
+                "type": "object",
+                "properties": {
+                    "tipo_estudio": {
+                        "$ref": "#/components/schemas/TipoEstudio"
+                    },
+                    "nivel_estudio": {
+                        "$ref": "#/components/schemas/NivelEstudio"
+                    },
+                    "nacionalidad_estudio": {
+                        "$ref": "#/components/schemas/NacionalidadEstudio"
+                    },
+                    "institucion": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "titulo_capacitacion": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "codigo_senescyt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    }
+                },
+                "required": [
+                    "tipo_estudio",
+                    "nacionalidad_estudio",
+                    "institucion",
+                    "fecha_inicio",
+                    "titulo_capacitacion"
+                ],
+                "title": "StoreHistorialAcademicoRequest"
+            },
             "StoreNominaRequest": {
                 "type": "object",
                 "properties": {
@@ -19800,6 +21253,110 @@
                     "nivel"
                 ],
                 "title": "StorePuestoRequest"
+            },
+            "StoreServidorBasicoRequest": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "integer"
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "pattern": "^\\d{10}$"
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "segundo_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "apellido": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "segundo_apellido": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "fecha_nacimiento": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "genero": {
+                        "type": "string",
+                        "enum": [
+                            "masculino",
+                            "femenino",
+                            "otro"
+                        ]
+                    },
+                    "estado_civil": {
+                        "type": "string",
+                        "enum": [
+                            "soltero",
+                            "casado",
+                            "union_libre",
+                            "divorciado",
+                            "viudo"
+                        ]
+                    },
+                    "es_extranjero": {
+                        "type": "boolean"
+                    },
+                    "provincia_nacimiento_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "canton_nacimiento_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "nacionalidad": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "pais_origen": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "tiene_discapacidad": {
+                        "type": "boolean"
+                    },
+                    "tiene_enfermedad_catastrofica": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "user_id",
+                    "cedula",
+                    "nombre",
+                    "apellido",
+                    "fecha_nacimiento",
+                    "genero",
+                    "estado_civil",
+                    "es_extranjero",
+                    "tiene_discapacidad",
+                    "tiene_enfermedad_catastrofica"
+                ],
+                "title": "StoreServidorBasicoRequest"
             },
             "StoreServidorRequest": {
                 "type": "object",
@@ -20681,6 +22238,15 @@
                 ],
                 "title": "TipoConcepto"
             },
+            "TipoDeclaracion": {
+                "type": "string",
+                "enum": [
+                    "inicio_gestion",
+                    "periodica",
+                    "fin_gestion"
+                ],
+                "title": "TipoDeclaracion"
+            },
             "TipoDiscapacidad": {
                 "type": "string",
                 "enum": [
@@ -20693,6 +22259,14 @@
                 ],
                 "title": "TipoDiscapacidad"
             },
+            "TipoEstudio": {
+                "type": "string",
+                "enum": [
+                    "estudio",
+                    "capacitacion"
+                ],
+                "title": "TipoEstudio"
+            },
             "TipoNombramiento": {
                 "type": "string",
                 "enum": [
@@ -20704,6 +22278,14 @@
                     "servicios_profesionales"
                 ],
                 "title": "TipoNombramiento"
+            },
+            "TipoParentesco": {
+                "type": "string",
+                "enum": [
+                    "conyugue",
+                    "hijo"
+                ],
+                "title": "TipoParentesco"
             },
             "TipoPermiso": {
                 "type": "string",
@@ -20724,13 +22306,39 @@
                 "title": "TipoSubrogacion"
             },
             "TipoUnidad": {
-                "type": "array",
-                "items": {
-                    "type": "string"
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "acronimo": {
+                        "type": "string"
+                    },
+                    "descripcion": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
                 },
-                "minItems": 0,
-                "maxItems": 0,
-                "additionalItems": false,
+                "required": [
+                    "id",
+                    "acronimo",
+                    "descripcion",
+                    "created_at",
+                    "updated_at"
+                ],
                 "title": "TipoUnidad"
             },
             "TransporteViatico": {
@@ -21608,11 +23216,14 @@
                     },
                     "usuario_ti": {
                         "type": [
-                            "string",
+                            "boolean",
                             "null"
                         ]
                     },
                     "primer_login": {
+                        "type": "boolean"
+                    },
+                    "activo": {
                         "type": "boolean"
                     }
                 },
@@ -21624,7 +23235,8 @@
                     "created_at",
                     "updated_at",
                     "usuario_ti",
-                    "primer_login"
+                    "primer_login",
+                    "activo"
                 ],
                 "title": "User"
             },

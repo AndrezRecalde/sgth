@@ -301,3 +301,109 @@ export type MovimientoPersonalConRelaciones = {
   fecha_movimiento?: string
   created_at?: string
 }
+
+// ── Historial Académico ───────────────────────
+export type TipoEstudio = 'estudio' | 'capacitacion'
+export type NivelEstudio = 'primaria' | 'secundaria' | 'tercer_nivel' | 'cuarto_nivel'
+export type NacionalidadEstudio = 'nacional' | 'internacional'
+
+export type HistorialAcademicoServidor = {
+  id: number
+  servidor_id: number
+  tipo_estudio: TipoEstudio
+  nivel_estudio: NivelEstudio | null
+  nacionalidad_estudio: NacionalidadEstudio
+  institucion: string
+  fecha_inicio: string
+  fecha_fin: string | null
+  titulo_capacitacion: string
+  codigo_senescyt: string | null
+  created_at?: string
+}
+
+export type HistorialAcademicoParams = {
+  servidor_id?: number
+}
+
+// ── Cargas Familiares ─────────────────────────
+export type TipoParentesco = 'conyugue' | 'hijo'
+
+export type CargaFamiliar = {
+  id: number
+  servidor_id: number
+  apellidos: string
+  nombres: string
+  parentesco: TipoParentesco
+  fecha_nacimiento: string
+  persona_con_discapacidad: boolean
+  posee_enfermedad_catastrofica: boolean
+  observaciones: string | null
+  discapacidades?: DiscapacidadCargaFamiliar[]
+  enfermedades_catastroficas?: EnfermedadCatastroficaCargaFamiliar[]
+  created_at?: string
+}
+
+export type DiscapacidadCargaFamiliar = {
+  id: number
+  carga_familiar_id: number
+  tipo_discapacidad: string
+  porcentaje: number | null
+  numero_carnet_conadis: string | null
+  carnet_vencimiento: string | null
+}
+
+export type EnfermedadCatastroficaCargaFamiliar = {
+  id: number
+  carga_familiar_id: number
+  tipo_enfermedad: string
+  codigo_cie10: string | null
+  fecha_diagnostico: string | null
+}
+
+// ── Declaraciones Juramentadas ────────────────
+export type TipoDeclaracion =
+  | 'inicio_gestion'
+  | 'periodica'
+  | 'fin_gestion'
+
+export type DeclaracionJuramentada = {
+  id: number
+  servidor_id: number
+  fecha_declaracion: string
+  codigo_barras: string
+  tipo_declaracion: TipoDeclaracion
+  documento_ruta: string | null
+  documento_nombre_archivo: string | null
+  created_at?: string
+}
+
+export type DeclaracionExportParams = {
+  fecha_inicio: string
+  fecha_fin: string
+  formato: 'txt' | 'pdf'
+}
+
+// ── Usuario del sistema ───────────────────────
+export type Usuario = {
+  id: number
+  name: string
+  email: string
+  activo: boolean
+  primer_login: boolean
+  roles?: string[]
+  servidor?: { id: number } | null
+}
+
+export type UsuarioParams = {
+  page?: number
+  per_page?: number
+  search?: string
+}
+
+export type UsuarioFormData = {
+  nombre: string
+  apellido: string
+  email: string
+  cedula: string
+  roles: string[]
+}

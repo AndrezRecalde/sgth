@@ -697,6 +697,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/servidores/{servidorId}/cargas-familiares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cargaFamiliar.index"];
+        put?: never;
+        post: operations["cargaFamiliar.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/cargas-familiares/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["cargaFamiliar.update"];
+        post?: never;
+        delete: operations["cargaFamiliar.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/capacitacion/certificados/{servidorId}": {
         parameters: {
             query?: never;
@@ -1026,6 +1058,70 @@ export interface paths {
         };
         /** Retorna los KPIs integrales del dispensario */
         get: operations["dashboardDispensario.kpis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["declaracionJuramentada.index"];
+        put?: never;
+        post: operations["declaracionJuramentada.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["declaracionJuramentada.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["declaracionJuramentada.exportar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/declaraciones-juramentadas/{id}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["declaracionJuramentada.verDocumento"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1618,6 +1714,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/historial-academico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["historialAcademico.index"];
+        put?: never;
+        post: operations["historialAcademico.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/historial-academico/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["historialAcademico.update"];
+        post?: never;
+        delete: operations["historialAcademico.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2219,6 +2347,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/servidores/basico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["servidores.storeBasico"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores": {
         parameters: {
             query?: never;
@@ -2620,6 +2764,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/usuarios/sin-servidor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["usuarios.sinServidor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/usuarios/{id}/toggle-activo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["usuarios.toggleActivo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/usuarios": {
         parameters: {
             query?: never;
@@ -2948,6 +3124,25 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** CargaFamiliar */
+        CargaFamiliar: {
+            id: number;
+            servidor_id: number;
+            apellidos: string;
+            nombres: string;
+            parentesco: components["schemas"]["TipoParentesco"];
+            /** Format: date-time */
+            fecha_nacimiento: string;
+            persona_con_discapacidad: boolean;
+            posee_enfermedad_catastrofica: boolean;
+            observaciones: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            /** Format: date-time */
+            deleted_at: string | null;
+        };
         /**
          * CategoriaActividadEnum
          * @enum {string}
@@ -3098,6 +3293,23 @@ export interface components {
             /** Format: date-time */
             fecha_fin: string | null;
             proveedor: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            /** Format: date-time */
+            deleted_at: string | null;
+        };
+        /** DeclaracionJuramentada */
+        DeclaracionJuramentada: {
+            id: number;
+            servidor_id: number;
+            /** Format: date-time */
+            fecha_declaracion: string;
+            codigo_barras: string;
+            tipo_declaracion: components["schemas"]["TipoDeclaracion"];
+            documento_ruta: string | null;
+            documento_nombre_archivo: string | null;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
@@ -3325,7 +3537,20 @@ export interface components {
             deleted_at: string | null;
         };
         /** ExtensionTelefonica */
-        ExtensionTelefonica: string[];
+        ExtensionTelefonica: {
+            id: number;
+            unidad_administrativa_id: number;
+            numero_extension: string;
+            responsable: string;
+            descripcion: string | null;
+            estado: boolean;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            /** Format: date-time */
+            deleted_at: string | null;
+        };
         /** FacturaViatico */
         FacturaViatico: {
             id: number;
@@ -3377,6 +3602,27 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
             beneficiario_id: number | null;
+        };
+        /** HistorialAcademicoServidor */
+        HistorialAcademicoServidor: {
+            id: number;
+            servidor_id: number;
+            tipo_estudio: components["schemas"]["TipoEstudio"];
+            nivel_estudio: components["schemas"]["NivelEstudio"] | null;
+            nacionalidad_estudio: components["schemas"]["NacionalidadEstudio"];
+            institucion: string;
+            /** Format: date-time */
+            fecha_inicio: string;
+            /** Format: date-time */
+            fecha_fin: string | null;
+            titulo_capacitacion: string;
+            codigo_senescyt: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            /** Format: date-time */
+            deleted_at: string | null;
         };
         /** InformeActividad */
         InformeActividad: {
@@ -3510,6 +3756,16 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /**
+         * NacionalidadEstudio
+         * @enum {string}
+         */
+        NacionalidadEstudio: "nacional" | "internacional";
+        /**
+         * NivelEstudio
+         * @enum {string}
+         */
+        NivelEstudio: "primaria" | "secundaria" | "tercer_nivel" | "cuarto_nivel";
         /** Nomina */
         Nomina: {
             id: number;
@@ -3775,6 +4031,17 @@ export interface components {
             /** @enum {string|null} */
             genero?: "masculino" | "femenino" | "otro" | null;
         };
+        /** StoreCargaFamiliarRequest */
+        StoreCargaFamiliarRequest: {
+            apellidos: string;
+            nombres: string;
+            parentesco: components["schemas"]["TipoParentesco"];
+            /** Format: date-time */
+            fecha_nacimiento: string;
+            persona_con_discapacidad: boolean;
+            posee_enfermedad_catastrofica: boolean;
+            observaciones?: string | null;
+        };
         /** StoreCitaMedicaAutoservicioRequest */
         StoreCitaMedicaAutoservicioRequest: {
             /** Format: date-time */
@@ -3818,6 +4085,15 @@ export interface components {
             es_principal_sueldo?: boolean;
             es_principal_viatico?: boolean;
             nombre_banco_otro?: string | null;
+        };
+        /** StoreDeclaracionJuramentadaRequest */
+        StoreDeclaracionJuramentadaRequest: {
+            /** Format: date-time */
+            fecha_declaracion: string;
+            codigo_barras: string;
+            tipo_declaracion: components["schemas"]["TipoDeclaracion"];
+            /** Format: binary */
+            documento?: string | null;
         };
         /** StoreDescuentoRecurrenteRequest */
         StoreDescuentoRecurrenteRequest: {
@@ -3902,6 +4178,19 @@ export interface components {
             monto: number;
             archivo_ruta?: string | null;
         };
+        /** StoreHistorialAcademicoRequest */
+        StoreHistorialAcademicoRequest: {
+            tipo_estudio: components["schemas"]["TipoEstudio"];
+            nivel_estudio?: components["schemas"]["NivelEstudio"];
+            nacionalidad_estudio: components["schemas"]["NacionalidadEstudio"];
+            institucion: string;
+            /** Format: date-time */
+            fecha_inicio: string;
+            /** Format: date-time */
+            fecha_fin?: string | null;
+            titulo_capacitacion: string;
+            codigo_senescyt?: string | null;
+        };
         /** StoreNominaRequest */
         StoreNominaRequest: {
             periodo: string;
@@ -3931,6 +4220,28 @@ export interface components {
             es_jefe?: boolean;
             nivel: number;
             estado?: boolean;
+        };
+        /** StoreServidorBasicoRequest */
+        StoreServidorBasicoRequest: {
+            user_id: number;
+            cedula: string;
+            nombre: string;
+            segundo_nombre?: string | null;
+            apellido: string;
+            segundo_apellido?: string | null;
+            /** Format: date-time */
+            fecha_nacimiento: string;
+            /** @enum {string} */
+            genero: "masculino" | "femenino" | "otro";
+            /** @enum {string} */
+            estado_civil: "soltero" | "casado" | "union_libre" | "divorciado" | "viudo";
+            es_extranjero: boolean;
+            provincia_nacimiento_id?: number | null;
+            canton_nacimiento_id?: number | null;
+            nacionalidad?: string | null;
+            pais_origen?: string | null;
+            tiene_discapacidad: boolean;
+            tiene_enfermedad_catastrofica: boolean;
         };
         /** StoreServidorRequest */
         StoreServidorRequest: {
@@ -4145,15 +4456,30 @@ export interface components {
          */
         TipoConcepto: "ingreso" | "descuento" | "aporte";
         /**
+         * TipoDeclaracion
+         * @enum {string}
+         */
+        TipoDeclaracion: "inicio_gestion" | "periodica" | "fin_gestion";
+        /**
          * TipoDiscapacidad
          * @enum {string}
          */
         TipoDiscapacidad: "fisica" | "sensorial" | "intelectual" | "psicosocial" | "visceral" | "multiple";
         /**
+         * TipoEstudio
+         * @enum {string}
+         */
+        TipoEstudio: "estudio" | "capacitacion";
+        /**
          * TipoNombramiento
          * @enum {string}
          */
         TipoNombramiento: "nombramiento_permanente" | "nombramiento_provisional" | "servicios_ocasionales" | "libre_nombramiento_remocion" | "codigo_trabajo" | "servicios_profesionales";
+        /**
+         * TipoParentesco
+         * @enum {string}
+         */
+        TipoParentesco: "conyugue" | "hijo";
         /**
          * TipoPermiso
          * @enum {string}
@@ -4165,7 +4491,15 @@ export interface components {
          */
         TipoSubrogacion: "subrogacion" | "encargo";
         /** TipoUnidad */
-        TipoUnidad: string[];
+        TipoUnidad: {
+            id: string;
+            acronimo: string;
+            descripcion: string;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** TransporteViatico */
         TransporteViatico: {
             id: number;
@@ -4389,8 +4723,9 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
-            usuario_ti: string | null;
+            usuario_ti: boolean | null;
             primer_login: boolean;
+            activo: boolean;
         };
         /** Vacacion */
         Vacacion: {
@@ -6376,6 +6711,130 @@ export interface operations {
             };
         };
     };
+    "cargaFamiliar.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cargas familiares del servidor.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "cargaFamiliar.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCargaFamiliarRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Carga familiar registrada.";
+                        datos: components["schemas"]["CargaFamiliar"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "cargaFamiliar.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCargaFamiliarRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Carga familiar actualizada.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "cargaFamiliar.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Carga familiar eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "certificadoCapacitacion.show": {
         parameters: {
             query?: never;
@@ -7316,6 +7775,169 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "declaracionJuramentada.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Declaraciones juramentadas.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "declaracionJuramentada.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreDeclaracionJuramentadaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Declaración juramentada registrada.";
+                        datos: components["schemas"]["DeclaracionJuramentada"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "declaracionJuramentada.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Declaración eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "declaracionJuramentada.exportar": {
+        parameters: {
+            query: {
+                fecha_inicio: string;
+                fecha_fin: string;
+                formato: "txt" | "pdf";
+            };
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No hay declaraciones en el rango indicado.";
+                        datos: string[];
+                        meta: null;
+                    };
+                    "text/plain; charset=UTF-8": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "declaracionJuramentada.verDocumento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Documento no encontrado.";
+                        datos: null;
+                        /** @constant */
+                        errores: 404;
+                    };
+                };
+            };
         };
     };
     "descuentos-recurrentes.index": {
@@ -8963,6 +9585,130 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "historialAcademico.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Historial académico del servidor.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "historialAcademico.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreHistorialAcademicoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Registro académico agregado.";
+                        datos: components["schemas"]["HistorialAcademicoServidor"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "historialAcademico.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreHistorialAcademicoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Registro académico actualizado.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "historialAcademico.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Registro académico eliminado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "informeViatico.generarEnlace": {
         parameters: {
             query?: never;
@@ -10493,6 +11239,38 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "servidores.storeBasico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreServidorBasicoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Datos básicos del servidor registrados.";
+                        datos: components["schemas"]["ServidorResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "servidores.index": {
         parameters: {
             query?: never;
@@ -11693,6 +12471,61 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "usuarios.sinServidor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Usuarios sin servidor asignado.";
+                        datos: components["schemas"]["User"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "usuarios.toggleActivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: components["schemas"]["User"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "usuarios.index": {

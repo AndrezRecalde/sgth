@@ -1,120 +1,277 @@
 <?php
-
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Estructura\UnidadAdministrativa;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class UnidadAdministrativaSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        /*
-         * LÓGICA DE NIVELES JERÁRQUICOS:
-         * Nivel 1: Raíz institucional (Prefectura, Viceprefectura). No tienen padre.
-         * Nivel 2: Direcciones o Coordinaciones Generales (Gestiones). Dependen de la raíz.
-         * Nivel 3: Subprocesos (Jefaturas, Unidades internas). Dependen de un Nivel 2.
-         */
+        // ── IDs de tipos de unidad (del TipoUnidadSeeder) ──
+        $GOBERNANTE  = '11111111-1111-1111-1111-111111111111';
+        $APOYO       = '22222222-2222-2222-2222-222222222222';
+        $ASESOR      = '33333333-3333-3333-3333-333333333333';
+        $AGREGADOR   = '44444444-4444-4444-4444-444444444444';
 
-        // ─────────────────────────────────────────────────────────
-        // NIVEL 1: Raíz Institucional
-        // ─────────────────────────────────────────────────────────
-        $prefectura = UnidadAdministrativa::firstOrCreate(
-            ['codigo' => 'PR'],
-            [
-                'nombre' => 'PREFECTURA',
-                'tipo_unidad_id' => '11111111-1111-1111-1111-111111111111',
-                'nivel' => 1,
-                'unidad_padre_id' => null,
-            ]
-        );
+        // ── RAÍZ ─────────────────────────────────────────
+        $gadpe = $this->crear([
+            'nombre'          => 'GADPE',
+            'descripcion'     => 'Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas',
+            'tipo_unidad_id'  => $GOBERNANTE,
+            'unidad_padre_id' => null,
+        ]);
 
-        $viceprefectura = UnidadAdministrativa::firstOrCreate(
-            ['codigo' => 'VP'],
-            [
-                'nombre' => 'VICEPREFECTURA',
-                'tipo_unidad_id' => '11111111-1111-1111-1111-111111111111',
-                'nivel' => 1,
-                'unidad_padre_id' => null,
-            ]
-        );
+        // ══════════════════════════════════════════════════
+        // PROCESOS GOBERNANTES
+        // ══════════════════════════════════════════════════
+        $prefectura = $this->crear([
+            'nombre'          => 'Prefectura Provincial',
+            'tipo_unidad_id'  => $GOBERNANTE,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
 
-        // ─────────────────────────────────────────────────────────
-        // NIVEL 2: Direcciones o Coordinaciones Generales
-        // Dependen de la Prefectura
-        // ─────────────────────────────────────────────────────────
-        $nivel2 = [
-            ['codigo' => 'GAD', 'nombre' => 'GESTIÓN ADMINISTRATIVA', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'SG', 'nombre' => 'GESTIÓN DE SECRETARÍA GENERAL', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'GAL', 'nombre' => 'GESTIÓN DE ASESORÍA LEGAL', 'tipo' => '33333333-3333-3333-3333-333333333333'],
-            ['codigo' => 'GTH', 'nombre' => 'GESTIÓN DE TALENTO HUMANO', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'GF', 'nombre' => 'GESTIÓN FINANCIERA', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'GCS', 'nombre' => 'GESTIÓN DE COMUNICACION SOCIAL', 'tipo' => '33333333-3333-3333-3333-333333333333'],
-            ['codigo' => 'GA', 'nombre' => 'GESTIÓN AMBIENTAL', 'tipo' => '44444444-4444-4444-4444-444444444444'],
-            ['codigo' => 'GAI', 'nombre' => 'GESTIÓN DE AUDITORIA INTERNA', 'tipo' => '33333333-3333-3333-3333-333333333333'],
-            ['codigo' => 'GFODEPRO', 'nombre' => 'GESTIÓN DE FOMENTO Y DESARROLLO PRODUCTIVO', 'tipo' => '44444444-4444-4444-4444-444444444444'],
-            ['codigo' => 'GFZ', 'nombre' => 'GESTIÓN DE FISCALIZACIÓN', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'GIV', 'nombre' => 'GESTIÓN DE INFRAESTRUCTURA VIAL PROVINCIAL', 'tipo' => '44444444-4444-4444-4444-444444444444'],
-            ['codigo' => 'GTIC', 'nombre' => 'GESTIÓN DE TECNOLOGIAS DE LA INFORMACIÓN Y COMUNICACIÓN', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'UCP', 'nombre' => 'UNIDAD DE COMPRAS PÚBLICAS', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'GCI', 'nombre' => 'GESTIÓN DE COORDINACIÓN INSTITUCIONAL', 'tipo' => '22222222-2222-2222-2222-222222222222'],
-            ['codigo' => 'GC', 'nombre' => 'UNIDAD DE GESTIÓN DE CALIDAD', 'tipo' => '33333333-3333-3333-3333-333333333333'],
-            ['codigo' => 'GCRD', 'nombre' => 'GESTIÓN DE CUENCAS, RIEGO Y DRENAJE', 'tipo' => '44444444-4444-4444-4444-444444444444'],
-            ['codigo' => 'GACIT', 'nombre' => 'GESTIÓN DE RELACIONES INTERNACIONALES Y COOPERACIÓN', 'tipo' => '44444444-4444-4444-4444-444444444444'],
-        ];
+        $viceprefectura = $this->crear([
+            'nombre'          => 'Viceprefectura Provincial',
+            'tipo_unidad_id'  => $GOBERNANTE,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
 
-        $direccionesGuardadas = [];
+        // ══════════════════════════════════════════════════
+        // PROCESOS HABILITANTES DE ASESORÍA
+        // ══════════════════════════════════════════════════
+        $coordinacion = $this->crear([
+            'nombre'          => 'Gestión de Coordinación Institucional',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
 
-        foreach ($nivel2 as $unidad) {
-            $direccionesGuardadas[$unidad['codigo']] = UnidadAdministrativa::firstOrCreate(
-                ['codigo' => $unidad['codigo']],
-                [
-                    'nombre' => $unidad['nombre'],
-                    'tipo_unidad_id' => $unidad['tipo'],
-                    'nivel' => 2,
-                    'unidad_padre_id' => $prefectura->id,
-                ]
-            );
-        }
+        $auditoria = $this->crear([
+            'nombre'          => 'Unidad de Gestión de Auditoría Interna',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
 
-        // ─────────────────────────────────────────────────────────
-        // NIVEL 3: Subprocesos
-        // Agregamos un par de subprocesos de ejemplo para ilustrar la profundidad.
-        // ─────────────────────────────────────────────────────────
-        
-        // Subprocesos de Talento Humano (Habilitantes de Apoyo)
-        UnidadAdministrativa::firstOrCreate(
-            ['codigo' => 'SUB-GTH-NOM'],
-            [
-                'nombre' => 'SUBPROCESO DE NÓMINA Y REMUNERACIONES',
-                'tipo_unidad_id' => '22222222-2222-2222-2222-222222222222', 
-                'nivel' => 3,
-                'unidad_padre_id' => $direccionesGuardadas['GTH']->id,
-            ]
-        );
+        $procuraduria = $this->crear([
+            'nombre'          => 'Gestión de Procuraduría Síndica',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
 
-        UnidadAdministrativa::firstOrCreate(
-            ['codigo' => 'SUB-GTH-BIE'],
-            [
-                'nombre' => 'SUBPROCESO DE BIENESTAR SOCIAL Y SSO',
-                'tipo_unidad_id' => '22222222-2222-2222-2222-222222222222', 
-                'nivel' => 3,
-                'unidad_padre_id' => $direccionesGuardadas['GTH']->id,
-            ]
-        );
+        // Subprocesos de Procuraduría
+        $this->crear(['nombre' => 'Patrocinio Jurídico',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $procuraduria->id]);
+        $this->crear(['nombre' => 'Asesoría Legal',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $procuraduria->id]);
+        $this->crear(['nombre' => 'Coactiva',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $procuraduria->id]);
+        $this->crear(['nombre' => 'Archivo, Manejo y Control Documental Jurídico',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $procuraduria->id]);
 
-        // Subprocesos de Tecnología (Habilitantes de Apoyo)
-        UnidadAdministrativa::firstOrCreate(
-            ['codigo' => 'SUB-GTIC-DEV'],
-            [
-                'nombre' => 'SUBPROCESO DE DESARROLLO DE SISTEMAS',
-                'tipo_unidad_id' => '22222222-2222-2222-2222-222222222222', 
-                'nivel' => 3,
-                'unidad_padre_id' => $direccionesGuardadas['GTIC']->id,
-            ]
+        $comunicacion = $this->crear([
+            'nombre'          => 'Gestión de Comunicación Social',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Comunicación
+        $this->crear(['nombre' => 'Comunicación Organizacional',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $comunicacion->id]);
+        $this->crear(['nombre' => 'Logística Comunicacional',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $comunicacion->id]);
+        $this->crear(['nombre' => 'Comunicación Estratégica',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $comunicacion->id]);
+        $this->crear(['nombre' => 'Relaciones Públicas y Eventos',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $comunicacion->id]);
+        $this->crear(['nombre' => 'Producción Audiovisual y Diseño Gráfico',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $comunicacion->id]);
+
+        $planificacion = $this->crear([
+            'nombre'          => 'Gestión de Planificación',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Planificación
+        $this->crear(['nombre' => 'Planificación Territorial',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $planificacion->id]);
+        $this->crear(['nombre' => 'Planificación Institucional',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $planificacion->id]);
+        $this->crear(['nombre' => 'Proyectos Estratégicos y Operativos',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $planificacion->id]);
+
+        $accionSocial = $this->crear([
+            'nombre'          => 'Gestión de Acción Social, Inclusión y Participación',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Acción Social
+        $this->crear(['nombre' => 'Participación Ciudadana',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $accionSocial->id]);
+        $this->crear(['nombre' => 'Igualdades y Derechos',
+            'tipo_unidad_id' => $ASESOR, 'unidad_padre_id' => $accionSocial->id]);
+
+        $calidad = $this->crear([
+            'nombre'          => 'Unidad de Gestión de Calidad',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        $riesgos = $this->crear([
+            'nombre'          => 'Unidad de Gestión de Riesgos de Desastres',
+            'tipo_unidad_id'  => $ASESOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // ══════════════════════════════════════════════════
+        // PROCESOS HABILITANTES DE APOYO
+        // ══════════════════════════════════════════════════
+        $talentoHumano = $this->crear([
+            'nombre'          => 'Gestión de Talento Humano y Riesgos Laborales',
+            'tipo_unidad_id'  => $APOYO,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Talento Humano
+        $this->crear(['nombre' => 'Administración del Talento Humano',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $talentoHumano->id]);
+        $this->crear(['nombre' => 'Nómina y Remuneraciones',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $talentoHumano->id]);
+        $this->crear(['nombre' => 'Seguridad y Salud Ocupacional',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $talentoHumano->id]);
+        $this->crear(['nombre' => 'Bienestar Social',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $talentoHumano->id]);
+        $this->crear(['nombre' => 'Dispensario Médico',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $talentoHumano->id]);
+
+        $financiera = $this->crear([
+            'nombre'          => 'Gestión Financiera',
+            'tipo_unidad_id'  => $APOYO,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Financiera
+        $this->crear(['nombre' => 'Presupuesto',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $financiera->id]);
+        $this->crear(['nombre' => 'Contabilidad',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $financiera->id]);
+        $this->crear(['nombre' => 'Tesorería',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $financiera->id]);
+        $this->crear(['nombre' => 'Rentas',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $financiera->id]);
+
+        $administrativa = $this->crear([
+            'nombre'          => 'Gestión Administrativa',
+            'tipo_unidad_id'  => $APOYO,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Administrativa
+        $this->crear(['nombre' => 'Servicios Generales y Transporte',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $administrativa->id]);
+        $this->crear(['nombre' => 'Activos Fijos y Bodega',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $administrativa->id]);
+        $this->crear(['nombre' => 'Guardalmacén',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $administrativa->id]);
+
+        $fiscalizacion = $this->crear([
+            'nombre'          => 'Gestión de Fiscalización',
+            'tipo_unidad_id'  => $APOYO,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        $secretaria = $this->crear([
+            'nombre'          => 'Gestión de Secretaría General',
+            'tipo_unidad_id'  => $APOYO,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Secretaría
+        $this->crear(['nombre' => 'Archivo Central y Gestión Documental',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $secretaria->id]);
+
+        $tic = $this->crear([
+            'nombre'          => 'Gestión de Tecnologías de la Información y Comunicación',
+            'tipo_unidad_id'  => $APOYO,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de TIC
+        $this->crear(['nombre' => 'Infraestructura y Redes',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $tic->id]);
+        $this->crear(['nombre' => 'Desarrollo de Software',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $tic->id]);
+        $this->crear(['nombre' => 'Soporte Técnico',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $tic->id]);
+        $this->crear(['nombre' => 'Seguridad de la Información',
+            'tipo_unidad_id' => $APOYO, 'unidad_padre_id' => $tic->id]);
+
+        $contratacion = $this->crear([
+            'nombre'          => 'Unidad de Gestión de Contratación Pública',
+            'tipo_unidad_id'  => $APOYO,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // ══════════════════════════════════════════════════
+        // PROCESOS AGREGADORES DE VALOR
+        // ══════════════════════════════════════════════════
+        $vial = $this->crear([
+            'nombre'          => 'Gestión de Infraestructura Vial',
+            'tipo_unidad_id'  => $AGREGADOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Infraestructura Vial
+        $this->crear(['nombre' => 'Planificación Vial',
+            'tipo_unidad_id' => $AGREGADOR, 'unidad_padre_id' => $vial->id]);
+        $this->crear(['nombre' => 'Construcción y Mantenimiento Vial',
+            'tipo_unidad_id' => $AGREGADOR, 'unidad_padre_id' => $vial->id]);
+        $this->crear(['nombre' => 'Maquinaria y Equipo',
+            'tipo_unidad_id' => $AGREGADOR, 'unidad_padre_id' => $vial->id]);
+
+        $fomento = $this->crear([
+            'nombre'          => 'Gestión de Fomento y Desarrollo Productivo',
+            'tipo_unidad_id'  => $AGREGADOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        $cuencas = $this->crear([
+            'nombre'          => 'Gestión de Cuencas, Riego y Drenaje',
+            'tipo_unidad_id'  => $AGREGADOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        $ambiental = $this->crear([
+            'nombre'          => 'Gestión Ambiental',
+            'tipo_unidad_id'  => $AGREGADOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+
+        // Subprocesos de Gestión Ambiental
+        $this->crear(['nombre' => 'Calidad Ambiental',
+            'tipo_unidad_id' => $AGREGADOR, 'unidad_padre_id' => $ambiental->id]);
+        $this->crear(['nombre' => 'Áreas Protegidas y Biodiversidad',
+            'tipo_unidad_id' => $AGREGADOR, 'unidad_padre_id' => $ambiental->id]);
+
+        $cooperacion = $this->crear([
+            'nombre'          => 'Gestión de Relaciones Internacionales y Cooperación',
+            'tipo_unidad_id'  => $AGREGADOR,
+            'unidad_padre_id' => $gadpe->id,
+        ]);
+    }
+
+    private function crear(array $datos): UnidadAdministrativa
+    {
+        return UnidadAdministrativa::firstOrCreate(
+            ['nombre' => $datos['nombre']],
+            array_merge($datos, [
+                'codigo'          => strtoupper(substr(\Illuminate\Support\Str::slug($datos['nombre']), 0, 15)) . '-' . rand(10, 99),
+                'nivel'           => 1,
+                'descripcion'     => $datos['descripcion'] ?? null,
+                'unidad_padre_id' => $datos['unidad_padre_id'] ?? null,
+            ])
         );
     }
 }
