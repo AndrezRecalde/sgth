@@ -2,7 +2,7 @@
 
 import { Modal, Tabs, Button, Group } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { IconUser, IconPhone, IconBriefcase } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useServidorMutations } from '../hooks/useServidorMutations'
@@ -61,7 +61,7 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
       fecha_inicio_ultimo_contrato: null,
       fecha_fin_ultimo_contrato:    null,
     },
-    validate: zodResolver(servidorSchema),
+    validate: zod4Resolver(servidorSchema),
   })
 
   const handleSubmit = (values: ServidorFormData) => {
