@@ -174,3 +174,50 @@ export type AgendaParams = {
   fecha?: string
   medico_id?: number
 }
+
+export type UnidadAdministrativaParams = {
+  page?: number
+  per_page?: number
+  search?: string
+  tipo_unidad_id?: number
+  con_puestos?: boolean
+}
+
+export type PuestoParams = {
+  page?: number
+  per_page?: number
+  search?: string
+  unidad_administrativa_id?: number
+}
+
+export type ExtensionTelefonicaParams = {
+  page?: number
+  per_page?: number
+  search?: string
+  unidad_administrativa_id?: number
+}
+
+// Tipos extendidos con relaciones (no generados por OpenAPI)
+export type UnidadConRelaciones = UnidadAdministrativa & {
+  nombre?: string
+  tipo_unidad?: { nombre: string }
+  puestos?: Puesto[]
+  puestos_count?: number
+  hijas?: UnidadConRelaciones[]
+}
+
+export type ExtensionConRelaciones = ExtensionTelefonica & {
+  servidor?: {
+    id: number
+    nombres?: string
+    apellidos?: string
+    correo_institucional?: string
+    telefono_institucional?: string
+    telefono_celular?: string
+  }
+  unidad_administrativa?: {
+    id: number
+    nombre?: string
+  }
+  numero_extension?: string
+}
