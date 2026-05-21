@@ -3,6 +3,7 @@
 import { TextInput, Select, ActionIcon, Stack, Group } from '@mantine/core'
 import { IconX } from '@tabler/icons-react'
 import { useUnidades } from '../hooks/useUnidades'
+import type { UnidadConRelaciones } from '@/types/api'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
@@ -19,7 +20,7 @@ export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: Directo
 
   const unidadOptions = unidades.map(u => ({
     value: u.id.toString(),
-    label: (u as any).nombre || `Unidad ${u.id}`
+    label: (u as UnidadConRelaciones).nombre ?? `Unidad ${u.id}`
   }))
 
   const content = (

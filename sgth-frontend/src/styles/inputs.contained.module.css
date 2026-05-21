@@ -6,24 +6,26 @@
   position: relative;
 }
 
-.label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--mantine-color-dimmed);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 3px;
-  display: block;
+.input {
+  height: 54px;
+  padding-top: 18px;
+  transition: border-color 0.15s ease;
 }
 
-.input {
-  padding-top: 18px;
-  padding-bottom: 6px;
-  font-size: 14px;
+.label {
+  position: absolute;
+  pointer-events: none;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  color: var(--mantine-color-dimmed);
+  padding-left: var(--mantine-spacing-sm);
+  padding-top: calc(var(--mantine-spacing-sm) / 2);
+  z-index: 1;
+  transition: color 0.15s ease;
 }
 
 .innerInput {
-  padding-top: 12px;
+  padding-top: 18px;
   font-size: 14px;
 }
 
@@ -40,4 +42,8 @@
   background-color: var(--mantine-color-body);
   border-color: var(--mantine-color-emerald-6);
   border-width: 1.5px;
+}
+
+.root:focus-within .label {
+  color: var(--mantine-color-emerald-7);
 }
