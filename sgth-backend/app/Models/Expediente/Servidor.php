@@ -9,6 +9,9 @@ use App\Models\Dispensario\Beneficiario;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Models\Expediente\CargaFamiliar;
+use App\Models\Expediente\DeclaracionJuramentada;
+use App\Models\Expediente\HistorialAcademicoServidor;
 use App\Models\Geografia\Canton;
 use App\Models\Geografia\Provincia;
 use App\Models\User;
@@ -152,6 +155,21 @@ class Servidor extends Model
     public function enfermedadesCatastroficas(): HasMany
     {
         return $this->hasMany(EnfermedadCatastroficaServidor::class);
+    }
+
+    public function historialAcademico(): HasMany
+    {
+        return $this->hasMany(HistorialAcademicoServidor::class);
+    }
+
+    public function cargasFamiliares(): HasMany
+    {
+        return $this->hasMany(CargaFamiliar::class);
+    }
+
+    public function declaracionesJuramentadas(): HasMany
+    {
+        return $this->hasMany(DeclaracionJuramentada::class);
     }
 
     public function contratoVigente()

@@ -17,6 +17,7 @@ enum Permiso: string
     case VER_EXPEDIENTE_TODOS        = 'ver-expediente-todos';
     case GESTIONAR_EXPEDIENTE        = 'gestionar-expediente';
     case CARGAR_DOCUMENTOS           = 'cargar-documentos';
+    case GESTIONAR_CARGAS_FAMILIARES = 'gestionar-cargas-familiares';
 
     // ── MÓDULO 03: Nómina ────────────────────────────────────────
     case VER_ROL_PAGO_PROPIO         = 'ver-rol-pago-propio';

@@ -85,8 +85,27 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->middleware('role:admin-uath,asistente-uath')
             ->group(function () {
                 Route::apiResource('contratos', \App\Http\Controllers\Expediente\ContratoServidorController::class)->parameters(['contratos' => 'contrato']);
-                Route::apiResource('discapacidades', \App\Http\Controllers\Expediente\DiscapacidadServidorController::class)->parameters(['discapacidades' => 'discapacidade']);
-                Route::apiResource('enfermedades', \App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController::class)->parameters(['enfermedades' => 'enfermedade']);
+                Route::apiResource('discapacidades', \App\Http\Controllers\Expediente\DiscapacidadServidorController::class);
+                Route::apiResource('enfermedades', \App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController::class);
+
+                // Historial académico
+                Route::get('historial-academico', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'index']);
+                Route::post('historial-academico', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'store']);
+                Route::put('historial-academico/{id}', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'update']);
+                Route::delete('historial-academico/{id}', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'destroy']);
+
+                // Cargas familiares
+                Route::get('cargas-familiares', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'index']);
+                Route::post('cargas-familiares', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'store']);
+                Route::put('cargas-familiares/{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'update']);
+                Route::delete('cargas-familiares/{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'destroy']);
+
+                // Declaraciones juramentadas
+                Route::get('declaraciones-juramentadas', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'index']);
+                Route::post('declaraciones-juramentadas', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'store']);
+                Route::delete('declaraciones-juramentadas/{id}', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'destroy']);
+                Route::get('declaraciones-juramentadas/exportar', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'exportar']);
+                Route::get('declaraciones-juramentadas/{id}/documento', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'verDocumento']);
 
                 // Beneficiarios (Dispensario) gestionados por UATH
                 Route::prefix('beneficiarios')->group(function () {
