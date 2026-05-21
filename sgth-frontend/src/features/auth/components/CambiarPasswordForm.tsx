@@ -3,13 +3,16 @@
 import { PasswordInput, Button, Stack } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zodResolver } from 'mantine-form-zod-resolver'
-import { cambiarPasswordSchema } from '../schemas/cambiarPassword.schema'
-import type { CambiarPasswordFormData } from '../schemas/cambiarPassword.schema'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import {
+  cambiarPasswordSchema,
+  type CambiarPasswordFormData,
+} from '../schemas/cambiarPassword.schema'
 import { useCambiarPassword } from '../hooks/useCambiarPassword'
-import { containedInputStyles } from '../styles/authInputStyles'
 
 export function CambiarPasswordForm() {
   const { mutate, isPending } = useCambiarPassword()
+  const contained = useContainedInput()
 
   const form = useForm<CambiarPasswordFormData>({
     initialValues: {
@@ -19,29 +22,29 @@ export function CambiarPasswordForm() {
     validate: zodResolver(cambiarPasswordSchema),
   })
 
-  const handleSubmit = (values: CambiarPasswordFormData) => {
-    mutate(values)
-  }
-
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)}>
+    <form onSubmit={form.onSubmit((v) => mutate(v))}>
       <Stack gap="md">
         <PasswordInput
           label="Nueva contraseña"
-          placeholder="Ingrese nueva contraseña"
-          variant="filled"
-          styles={containedInputStyles}
+          placeholder="Mínimo 8 caracteres con letras y números"
+          {...contained}
           {...form.getInputProps('nueva_contrasena')}
         />
         <PasswordInput
           label="Confirmar nueva contraseña"
           placeholder="Repita la nueva contraseña"
-          variant="filled"
-          styles={containedInputStyles}
+          {...contained}
           {...form.getInputProps('confirmar_contrasena')}
         />
-        <Button type="submit" loading={isPending} size="md" w="100%" mt="md">
-          Cambiar Contraseña
+        <Button
+          type="submit"
+          loading={isPending}
+          size="md"
+          fullWidth
+          mt="md"
+        >
+          Cambiar contraseña
         </Button>
       </Stack>
     </form>

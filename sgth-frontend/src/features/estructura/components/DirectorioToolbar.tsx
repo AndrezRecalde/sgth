@@ -3,7 +3,7 @@
 import { TextInput, Select, ActionIcon, Stack, Group } from '@mantine/core'
 import { IconX } from '@tabler/icons-react'
 import { useUnidades } from '../hooks/useUnidades'
-import { containedInputStyles } from '@/styles/inputStyles'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
 interface DirectorioToolbarProps {
@@ -15,6 +15,7 @@ interface DirectorioToolbarProps {
 export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: DirectorioToolbarProps) {
   const { data: unidades = [] } = useUnidades()
   const { isMobile } = useMobileBreakpoint()
+  const contained = useContainedInput()
 
   const unidadOptions = unidades.map(u => ({
     value: u.id.toString(),
@@ -26,7 +27,7 @@ export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: Directo
       <TextInput
         placeholder="Buscar por nombre, unidad o extensión"
         onChange={(e) => onSearch(e.currentTarget.value)}
-        styles={containedInputStyles}
+        {...contained}
         style={{ flex: 1 }}
       />
       <Select
@@ -35,7 +36,7 @@ export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: Directo
         onChange={onUnidadChange}
         searchable
         clearable
-        styles={containedInputStyles}
+        {...contained}
         style={{ flex: 1 }}
       />
       <ActionIcon 

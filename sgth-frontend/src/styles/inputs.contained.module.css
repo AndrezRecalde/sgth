@@ -1,0 +1,43 @@
+.root {
+  position: relative;
+}
+
+.wrapper {
+  position: relative;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--mantine-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+  display: block;
+}
+
+.input {
+  padding-top: 18px;
+  padding-bottom: 6px;
+  font-size: 14px;
+}
+
+.innerInput {
+  padding-top: 12px;
+  font-size: 14px;
+}
+
+.input:focus {
+  border-color: var(--mantine-color-emerald-6);
+  border-width: 1.5px;
+}
+
+.input[data-variant='filled'] {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.input[data-variant='filled']:focus {
+  background-color: var(--mantine-color-body);
+  border-color: var(--mantine-color-emerald-6);
+  border-width: 1.5px;
+}

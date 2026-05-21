@@ -77,11 +77,33 @@ echarts-for-react (versión instalada)
 - Los tipos del API vienen de `src/types/api.ts` (generados desde OpenAPI).
 - `tsconfig.json` tiene `"strict": true`. No deshabilitarlo.
 
-### 2.5 Estilos
+### 2.5 Estilos — CSS Modules obligatorio
 
-- **Solo Mantine** para estilos. No instalar Tailwind, Bootstrap, ni ningún otro framework CSS.
-- Para estilos custom usar `style={{}}` inline con tokens de Mantine o
-  CSS Modules (`.module.css`) en casos excepcionales.
+- Usar CSS Modules (.module.css) para todos los estilos
+  de componentes. NUNCA usar el prop styles={{}} inline
+  en componentes Mantine para estilos reutilizables.
+- El patrón "contained" (label inside input) se aplica
+  con el hook useContainedInput():
+
+  import { useContainedInput } from '@/hooks/useContainedInput'
+
+  const contained = useContainedInput()
+  <TextInput {...contained} label="Nombres" />
+
+- El hook retorna classNames y variant='filled' listos
+  para usar en: TextInput, PasswordInput, Select,
+  Textarea, DateInput, NumberInput, MultiSelect.
+- Archivo CSS: src/styles/inputs.contained.module.css
+- Para estilos únicos de un componente usar:
+  ComponentName.module.css junto al componente.
+- NUNCA usar styles={{}} para estilos que se repiten
+  en más de un componente.
+- NUNCA usar Tailwind CSS.
+- Colores siempre con variables CSS de Mantine:
+  var(--mantine-color-emerald-6)
+  var(--mantine-color-dimmed)
+  var(--mantine-color-body)
+  etc.
 - Usar `useMantineTheme()` para acceder a colores, espaciado y radios del tema.
 - No hardcodear colores hexadecimales en componentes. Usar `theme.colors.emerald[6]` etc.
 
