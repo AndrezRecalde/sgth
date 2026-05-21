@@ -3,7 +3,7 @@
 import { TextInput, Select, ActionIcon, Stack, Group } from '@mantine/core'
 import { IconX } from '@tabler/icons-react'
 import { useUnidades } from '../hooks/useUnidades'
-import { containedInputStyles } from '@/features/auth/styles/authInputStyles'
+import { containedInputStyles } from '@/styles/inputStyles'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
 interface DirectorioToolbarProps {

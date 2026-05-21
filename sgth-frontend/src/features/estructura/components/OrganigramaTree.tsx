@@ -2,21 +2,30 @@
 
 import { useState } from 'react'
 import { Stack, Text, Skeleton, Box } from '@mantine/core'
-import type { UnidadAdministrativa } from '@/types/api'
+import type { UnidadConRelaciones } from '@/types/api'
 import { OrganigramaNode } from './OrganigramaNode'
 
 interface OrganigramaTreeProps {
-  unidades: UnidadAdministrativa[]
+  unidades: UnidadConRelaciones[]
   nivel?: number
   isLoading?: boolean
   error?: Error | null
 }
 
-export function OrganigramaTree({ unidades, nivel = 0, isLoading, error }: OrganigramaTreeProps) {
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+export function OrganigramaTree({
+  unidades,
+  nivel = 0,
+  isLoading,
+  error,
+}: OrganigramaTreeProps) {
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
 
-  if (error) {
-    return <Text c="red">Ocurrió un error al cargar el organigrama.</Text>
+  const handleToggle = (id: number) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
   }
 
   if (isLoading) {
@@ -29,32 +38,43 @@ export function OrganigramaTree({ unidades, nivel = 0, isLoading, error }: Organ
     )
   }
 
-  const handleToggle = (id: string) => {
-    setExpandedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  if (error) {
+    return (
+      <Text c="red" size="sm">
+        Ocurrió un error al cargar el organigrama.
+      </Text>
+    )
+  }
+
+  if (!unidades.length) {
+    return (
+      <Text c="dimmed" size="sm">
+        No hay unidades registradas.
+      </Text>
+    )
   }
 
   return (
-    <Stack gap="xs" style={{ paddingLeft: nivel > 0 ? '24px' : '0' }}>
+    <Stack gap="xs" style={{ paddingLeft: nivel > 0 ? 24 : 0 }}>
       {unidades.map(unidad => {
-        const isExpanded = expandedIds.has(unidad.id)
-        const hijos = (unidad as any).hijas || (unidad as any).unidades_hijas || (unidad as any).children || []
+        const id         = Number(unidad.id)
+        const isExpanded = expandedIds.has(id)
+        const hijas      = unidad.hijas ?? []
 
         return (
-          <Box key={unidad.id}>
+          <Box key={id}>
             <OrganigramaNode
               unidad={unidad}
               nivel={nivel}
               expanded={isExpanded}
               onToggle={handleToggle}
             />
-            {isExpanded && hijos.length > 0 && (
+            {isExpanded && hijas.length > 0 && (
               <Box mt="xs">
-                <OrganigramaTree unidades={hijos} nivel={nivel + 1} />
+                <OrganigramaTree
+                  unidades={hijas}
+                  nivel={nivel + 1}
+                />
               </Box>
             )}
           </Box>

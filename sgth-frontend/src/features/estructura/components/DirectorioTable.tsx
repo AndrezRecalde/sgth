@@ -2,11 +2,11 @@
 
 import { DataTable } from 'mantine-datatable'
 import { Box } from '@mantine/core'
-import type { ExtensionTelefonica } from '@/types/api'
+import type { ExtensionConRelaciones } from '@/types/api'
 import { directorioColumns } from './directorio.columns'
 
 interface DirectorioTableProps {
-  data: ExtensionTelefonica[]
+  data: ExtensionConRelaciones[]
   isLoading: boolean
 }
 
