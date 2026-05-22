@@ -24,8 +24,21 @@ class PuestoController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Puesto::class);
-        $puestos = $this->estructuraService->listarPuestos($request->all());
-        return ApiResponse::ok(PuestoResource::collection($puestos), 'Puestos orgánicos obtenidos exitosamente');
+        $paginator = $this->estructuraService->listarPuestos($request->all());
+
+        return response()->json([
+            'exito'   => true,
+            'mensaje' => 'Puestos orgánicos obtenidos exitosamente.',
+            'datos'   => PuestoResource::collection($paginator->items()),
+            'meta'    => [
+                'pagina_actual' => $paginator->currentPage(),
+                'por_pagina'    => $paginator->perPage(),
+                'total'         => $paginator->total(),
+                'ultima_pagina' => $paginator->lastPage(),
+                'desde'         => $paginator->firstItem(),
+                'hasta'         => $paginator->lastItem(),
+            ],
+        ]);
     }
 
     public function store(StorePuestoRequest $request): JsonResponse
