@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import {
   Tabs, Box, Button, Group, SegmentedControl,
+  Center,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
@@ -99,19 +100,19 @@ export default function EstructuraPage() {
                 {
                   value: 'acordeon',
                   label: (
-                    <Group gap="xs">
+                    <Center style={{ gap: 10 }}>
                       <IconListTree size={14} />
                       Acordeón
-                    </Group>
+                    </Center>
                   ),
                 },
                 {
                   value: 'nodo',
                   label: (
-                    <Group gap="xs">
+                    <Center style={{ gap: 10 }}>
                       <IconHierarchy size={14} />
                       Nodos
-                    </Group>
+                    </Center>
                   ),
                 },
               ]}
