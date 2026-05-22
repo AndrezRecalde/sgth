@@ -19,15 +19,14 @@ class Puesto extends Model
     protected $table = 'puestos';
 
     protected $fillable = [
-        'codigo',
         'denominacion',
         'mision',
         'unidad_administrativa_id',
         'grupo_ocupacional_id',
+        'partida_presupuestaria_id',
         'plazas',
         'rol_puesto',
         'nivel_complejidad',
-        'nivel_jerarquico',
         'regimen_laboral',
         'es_jefe',
         'activo',

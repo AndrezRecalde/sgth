@@ -18,7 +18,6 @@ final class StorePuestoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'codigo'                    => ['required', 'string', 'max:50', 'unique:puestos,codigo'],
             'denominacion'              => ['required', 'string', 'max:255'],
             'mision'                    => ['nullable', 'string'],
             'unidad_administrativa_id'  => ['required', 'integer', 'exists:unidades_administrativas,id'],
@@ -27,7 +26,6 @@ final class StorePuestoRequest extends FormRequest
             'plazas'                    => ['required', 'integer', 'min:1'],
             'rol_puesto'                => ['nullable', new Enum(RolPuesto::class)],
             'nivel_complejidad'         => ['nullable', new Enum(NivelComplejidadPuesto::class)],
-            'nivel_jerarquico'          => ['nullable', 'integer', 'min:1'],
             'regimen_laboral'           => ['required', 'string', 'in:losep,codigo_trabajo'],
             'es_jefe'                   => ['boolean'],
             'activo'                    => ['boolean'],

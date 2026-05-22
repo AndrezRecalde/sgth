@@ -10,36 +10,31 @@ class PuestoResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'                       => $this->id,
-            'codigo'                   => $this->codigo,
-            'denominacion'             => $this->denominacion,
-            'mision'                   => $this->mision,
-            'unidad_administrativa_id' => $this->unidad_administrativa_id,
-            'grupo_ocupacional_id'     => $this->grupo_ocupacional_id,
+            'id'                        => $this->id,
+            'denominacion'              => $this->denominacion,
+            'mision'                    => $this->mision,
+            'unidad_administrativa_id'  => $this->unidad_administrativa_id,
+            'grupo_ocupacional_id'      => $this->grupo_ocupacional_id,
             'partida_presupuestaria_id' => $this->partida_presupuestaria_id,
-            'plazas'                   => $this->plazas,
-            'rol_puesto'               => $this->rol_puesto,
-            'nivel_complejidad'        => $this->nivel_complejidad,
-            'nivel_jerarquico'         => $this->nivel_jerarquico,
-            'regimen_laboral'          => $this->regimen_laboral,
-            'es_jefe'                  => $this->es_jefe,
-            'activo'                   => $this->activo,
+            'plazas'                    => $this->plazas,
+            'rol_puesto'                => $this->rol_puesto,
+            'nivel_complejidad'         => $this->nivel_complejidad,
+            'regimen_laboral'           => $this->regimen_laboral,
+            'es_jefe'                   => $this->es_jefe,
+            'activo'                    => $this->activo,
+            'rmu'                       => $this->rmu,
 
-            // RMU calculada desde grupo ocupacional
-            'rmu'                      => $this->rmu,
-
-            // Relaciones
-            'unidad_administrativa'    => new UnidadAdministrativaResource(
+            'unidad_administrativa' => new UnidadAdministrativaResource(
                 $this->whenLoaded('unidadAdministrativa')
             ),
-            'grupo_ocupacional'        => $this->whenLoaded(
+            'grupo_ocupacional' => $this->whenLoaded(
                 'grupoOcupacional',
                 fn() => [
-                    'id'          => $this->grupoOcupacional->id,
+                    'id'           => $this->grupoOcupacional->id,
                     'grado_codigo' => $this->grupoOcupacional->grado_codigo,
-                    'grupo'       => $this->grupoOcupacional->grupo,
-                    'rmu'         => $this->grupoOcupacional->rmu,
-                    'regimen'     => $this->grupoOcupacional->regimen,
+                    'grupo'        => $this->grupoOcupacional->grupo,
+                    'rmu'          => $this->grupoOcupacional->rmu,
+                    'regimen'      => $this->grupoOcupacional->regimen,
                 ]
             ),
         ];
