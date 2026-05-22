@@ -1,7 +1,6 @@
 'use client'
 
-import { Box } from '@mantine/core'
-import { DataTable } from 'mantine-datatable'
+import { SgthTable } from '@/components/ui/SgthTable'
 import { getUsuarioColumns } from './usuario.columns'
 import type { Usuario } from '@/types/api'
 
@@ -22,26 +21,19 @@ export function UsuarioTable({
   onToggleActivo, onRestablecerPassword,
 }: Props) {
   return (
-    <Box style={{ overflowX: 'auto' }}>
-      <DataTable
-        records={data}
-        columns={getUsuarioColumns({
-          onEdit,
-          onToggleActivo,
-          onRestablecerPassword,
-        })}
-        fetching={isLoading}
-        totalRecords={total}
-        recordsPerPage={15}
-        page={page}
-        onPageChange={onPageChange}
-        withTableBorder
-        borderRadius="md"
-        highlightOnHover
-        striped
-        noRecordsText="No hay usuarios registrados"
-        minHeight={200}
-      />
-    </Box>
+    <SgthTable
+      records={data}
+      columns={getUsuarioColumns({
+        onEdit,
+        onToggleActivo,
+        onRestablecerPassword,
+      })}
+      fetching={isLoading}
+      totalRecords={total}
+      recordsPerPage={15}
+      page={page}
+      onPageChange={onPageChange}
+      minHeight={200}
+    />
   )
 }

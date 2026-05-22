@@ -1,7 +1,6 @@
 'use client'
 
-import { Box } from '@mantine/core'
-import { DataTable } from 'mantine-datatable'
+import { SgthTable } from '@/components/ui/SgthTable'
 import { getServidorColumns } from './servidor.columns'
 import type { ServidorConRelaciones } from '@/types/api'
 
@@ -20,22 +19,15 @@ export function ServidorTable({
   onPageChange, onView, onEdit,
 }: Props) {
   return (
-    <Box style={{ overflowX: 'auto' }}>
-      <DataTable
-        records={data}
-        columns={getServidorColumns({ onView, onEdit })}
-        fetching={isLoading}
-        totalRecords={total}
-        recordsPerPage={15}
-        page={page}
-        onPageChange={onPageChange}
-        withTableBorder
-        borderRadius="md"
-        highlightOnHover
-        striped
-        noRecordsText="No hay servidores registrados"
-        minHeight={200}
-      />
-    </Box>
+    <SgthTable
+      records={data}
+      columns={getServidorColumns({ onView, onEdit })}
+      fetching={isLoading}
+      totalRecords={total}
+      recordsPerPage={15}
+      page={page}
+      onPageChange={onPageChange}
+      minHeight={200}
+    />
   )
 }

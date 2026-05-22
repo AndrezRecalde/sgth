@@ -1,0 +1,52 @@
+'use client'
+
+import { ActionIcon, Menu } from '@mantine/core'
+import { IconDotsVertical } from '@tabler/icons-react'
+
+export type TableAction = {
+  label: string
+  icon: React.ReactNode
+  color?: string
+  onClick: () => void
+  hidden?: boolean
+}
+
+interface TableActionsProps {
+  actions: TableAction[]
+}
+
+export function TableActions({ actions }: TableActionsProps) {
+  const visibles = actions.filter(a => !a.hidden)
+  if (!visibles.length) return null
+
+  return (
+    <Menu
+      shadow="md"
+      width={180}
+      position="bottom-end"
+      withinPortal
+    >
+      <Menu.Target>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          aria-label="Acciones"
+        >
+          <IconDotsVertical size={16} />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        {visibles.map((action, i) => (
+          <Menu.Item
+            key={i}
+            leftSection={action.icon}
+            color={action.color}
+            onClick={action.onClick}
+          >
+            {action.label}
+          </Menu.Item>
+        ))}
+      </Menu.Dropdown>
+    </Menu>
+  )
+}

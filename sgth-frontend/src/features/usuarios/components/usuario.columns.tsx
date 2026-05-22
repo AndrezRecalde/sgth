@@ -1,9 +1,6 @@
-import {
-  Text, Badge, Group, ActionIcon, Switch, Tooltip,
-} from '@mantine/core'
-import {
-  IconEdit, IconKey, IconUserCheck, IconUserX,
-} from '@tabler/icons-react'
+import { Text, Badge, Switch, Tooltip } from '@mantine/core'
+import { IconEdit, IconKey } from '@tabler/icons-react'
+import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Usuario } from '@/types/api'
 
@@ -46,7 +43,7 @@ export const getUsuarioColumns = (
   },
   {
     accessor: 'email',
-    title: 'Correo',
+    title: 'Correo institucional',
     render: ({ email }) => (
       <Text size="sm">{email}</Text>
     ),
@@ -55,13 +52,13 @@ export const getUsuarioColumns = (
     accessor: 'roles',
     title: 'Roles',
     render: ({ roles }) => (
-      <Group gap={4}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {((roles as unknown as string[]) || []).map(r => (
           <Badge key={r} size="xs" variant="light" color="blue">
             {ROL_LABELS[r] ?? r}
           </Badge>
         ))}
-      </Group>
+      </div>
     ),
   },
   {
@@ -70,11 +67,14 @@ export const getUsuarioColumns = (
     width: 90,
     render: (usuario) => (
       <Tooltip
-        label={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
+        label={usuario.activo ? 'Desactivar' : 'Activar'}
         withArrow
       >
         <Switch
-          checked={String(usuario.activo) === '1' || String(usuario.activo) === 'true'}
+          checked={
+            String(usuario.activo) === '1' ||
+            String(usuario.activo) === 'true'
+          }
           onChange={() => onToggleActivo(usuario)}
           color="emerald"
           size="sm"
@@ -85,30 +85,22 @@ export const getUsuarioColumns = (
   {
     accessor: 'acciones',
     title: '',
-    width: 90,
+    width: 50,
     render: (usuario) => (
-      <Group gap={4} justify="center">
-        <Tooltip label="Editar usuario" withArrow>
-          <ActionIcon
-            variant="subtle"
-            color="blue"
-            onClick={() => onEdit(usuario)}
-            aria-label="Editar usuario"
-          >
-            <IconEdit size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Restablecer contraseña" withArrow>
-          <ActionIcon
-            variant="subtle"
-            color="orange"
-            onClick={() => onRestablecerPassword(usuario)}
-            aria-label="Restablecer contraseña"
-          >
-            <IconKey size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
+      <TableActions actions={[
+        {
+          label: 'Editar usuario',
+          icon: <IconEdit size={14} />,
+          color: 'blue',
+          onClick: () => onEdit(usuario),
+        },
+        {
+          label: 'Restablecer contraseña',
+          icon: <IconKey size={14} />,
+          color: 'orange',
+          onClick: () => onRestablecerPassword(usuario),
+        },
+      ]} />
     ),
   },
 ]

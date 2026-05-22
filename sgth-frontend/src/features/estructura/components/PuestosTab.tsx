@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCubePlus } from "@tabler/icons-react";
-import { DataTable } from "mantine-datatable";
+import { SgthTable } from '@/components/ui/SgthTable';
 import { usePuestos } from "../hooks/usePuestos";
 import { usePuestoMutations } from "../hooks/usePuestoMutations";
 import { getPuestoColumns } from "./puesto.columns";
@@ -53,25 +53,19 @@ export function PuestosTab() {
           Nuevo puesto
         </Button>
       </Group>
-      <Box style={{ overflowX: "auto" }}>
-        <DataTable
-          records={records}
-          columns={getPuestoColumns({
-            onEdit: handleEdit,
-            onDelete: handleDelete,
-          })}
-          fetching={isLoading}
-          totalRecords={data?.total ?? 0}
-          recordsPerPage={15}
-          page={page}
-          onPageChange={setPage}
-          withTableBorder
-          borderRadius="md"
-          highlightOnHover
-          noRecordsText="No hay puestos registrados"
-          minHeight={200}
-        />
-      </Box>
+      <SgthTable
+        records={records}
+        columns={getPuestoColumns({
+          onEdit: handleEdit,
+          onDelete: handleDelete,
+        })}
+        fetching={isLoading}
+        totalRecords={data?.total ?? 0}
+        recordsPerPage={15}
+        page={page}
+        onPageChange={setPage}
+        minHeight={200}
+      />
       <PuestoModal
         opened={modalOpened}
         onClose={handleClose}

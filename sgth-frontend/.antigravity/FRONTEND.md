@@ -1,6 +1,6 @@
 # SGTH Frontend — Documento de Contexto del Agente
 # GAD Provincial de Esmeraldas
-# Versión 1.0 — Mayo 2026
+# Versión 1.4 — Mayo 2026
 
 ---
 
@@ -370,52 +370,91 @@ const form = useForm({
 
 ## 6. TABLAS — MANTINE DATATABLE
 
-### 6.1 Estructura base obligatoria
+### 6.1 Componente base obligatorio — SgthTable
+
+TODAS las tablas del sistema usan el componente SgthTable.
+NUNCA usar DataTable directamente en páginas o tabs.
+El componente vive en src/components/ui/SgthTable.tsx y
+aplica el estilo unificado a todas las tablas.
 
 ```tsx
-import { DataTable } from 'mantine-datatable'
-import type { DataTableColumn } from 'mantine-datatable'
+import { SgthTable } from '@/components/ui/SgthTable'
 
-// Siempre tipar las columnas
-const columns: DataTableColumn<Servidor>[] = [
-  {
-    accessor: 'cedula',
-    title: 'Cédula',
-    width: 120,
-  },
-  {
-    accessor: 'nombres',
-    title: 'Nombres',
-    render: (row) => `${row.nombres} ${row.apellidos}`,
-  },
-  {
-    accessor: 'estado',
-    title: 'Estado',
-    render: (row) => <EstadoBadge estado={row.estado} />,
-  },
-]
-
-<DataTable
+<SgthTable
   records={data}
   columns={columns}
   fetching={isLoading}
   totalRecords={total}
-  recordsPerPage={perPage}
+  recordsPerPage={15}
   page={page}
   onPageChange={setPage}
-  highlightOnHover
-  striped
-  withTableBorder
-  borderRadius="md"
-  shadow="none"
 />
 ```
 
-### 6.2 Paginación
+Props que SgthTable aplica por defecto (NO repetir):
+- withTableBorder
+- withColumnBorders
+- borderRadius="md"
+- striped
+- highlightOnHover
+- verticalSpacing="sm"
+- noRecordsText="No hay registros para mostrar"
+- overflowX: auto en el Box contenedor
+
+### 6.2 Acciones de tabla — siempre como menú
+
+Las acciones de cada fila (editar, eliminar, ver, etc.)
+se muestran SIEMPRE como un menú desplegable usando
+el componente TableActions de src/components/ui/TableActions.tsx.
+NUNCA usar ActionIcon individuales en línea para acciones de tabla.
+
+```tsx
+import { TableActions } from '@/components/ui/TableActions'
+import { IconEdit, IconTrash } from '@tabler/icons-react'
+
+// En el archivo .columns.tsx:
+{
+  accessor: 'acciones',
+  title: '',
+  width: 50,
+  render: (record) => (
+    <TableActions actions={[
+      {
+        label: 'Editar',
+        icon: <IconEdit size={14} />,
+        color: 'blue',
+        onClick: () => onEdit(record),
+      },
+      {
+        label: 'Eliminar',
+        icon: <IconTrash size={14} />,
+        color: 'red',
+        onClick: () => onDelete(record),
+      },
+    ]} />
+  ),
+},
+```
+
+### 6.3 Empty state
+
+Cuando una tabla no tiene datos se muestra automáticamente
+el texto "No hay registros para mostrar" de mantine-datatable.
+SgthTable configura esto por defecto.
+
+### 6.4 Paginación
 
 - Siempre paginación server-side. Nunca cargar todos los registros.
-- Parámetros: `page`, `per_page` (default 15).
-- El backend devuelve `current_page`, `last_page`, `total`, `data`.
+- Parámetros: page, per_page (default 15).
+- El backend devuelve datos en campo 'datos' y meta en campo 'meta'.
+- El service mapea la respuesta a { data, total, current_page }.
+
+### 6.5 Columnas
+
+- Siempre en archivo separado: nombre.columns.tsx
+- Siempre tipadas con DataTableColumn<T>
+- La columna de acciones siempre es la última
+- La columna de acciones tiene width: 50 y usa TableActions
 
 ---
 
@@ -813,6 +852,10 @@ const SIDEBAR = {
 ❌ Importar desde 'zod' directamente (usar 'zod/v4')
 ❌ Labels flotantes externos en formularios (siempre contained)
 ❌ Modals con position:fixed manual (usar @mantine/modals)
+❌ DataTable directo en páginas (usar SgthTable)
+❌ ActionIcon individuales para acciones de tabla (usar TableActions)
+❌ Columnas de acción con múltiples botones en línea
+❌ Box con overflowX manual cuando se usa SgthTable
 ```
 
 ---

@@ -1,5 +1,6 @@
-import { Badge, Text, ActionIcon, Group } from '@mantine/core'
+import { Badge, Text } from '@mantine/core'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
+import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ExtensionConRelaciones } from '@/types/api'
 
@@ -35,31 +36,26 @@ export const getDirectorioColumns = (
       <Text size="sm">{unidad_administrativa?.nombre ?? '-'}</Text>
     ),
   },
-
   {
     accessor: 'acciones',
     title: '',
-    width: 80,
+    width: 50,
     hidden: !handlers,
     render: (record) => handlers ? (
-      <Group gap={4} justify="center">
-        <ActionIcon
-          variant="subtle"
-          color="blue"
-          onClick={() => handlers.onEdit(record)}
-          aria-label="Editar extensión"
-        >
-          <IconEdit size={16} />
-        </ActionIcon>
-        <ActionIcon
-          variant="subtle"
-          color="red"
-          onClick={() => handlers.onDelete(record)}
-          aria-label="Eliminar extensión"
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
-      </Group>
+      <TableActions actions={[
+        {
+          label: 'Editar extensión',
+          icon: <IconEdit size={14} />,
+          color: 'blue',
+          onClick: () => handlers.onEdit(record),
+        },
+        {
+          label: 'Eliminar extensión',
+          icon: <IconTrash size={14} />,
+          color: 'red',
+          onClick: () => handlers.onDelete(record),
+        },
+      ]} />
     ) : null,
   },
 ]

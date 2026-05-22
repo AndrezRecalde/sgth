@@ -1,5 +1,6 @@
-import { Text, Badge, Group, ActionIcon } from '@mantine/core'
+import { Text, Badge } from '@mantine/core'
 import { IconEye, IconEdit } from '@tabler/icons-react'
+import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ServidorConRelaciones, EstadoContrato } from '@/types/api'
 
@@ -60,7 +61,7 @@ export const getServidorColumns = (
     width: 100,
     render: ({ contrato_vigente }) => {
       const estado = contrato_vigente?.estado
-      if (!estado) return <Text size="sm" c="dimmed">-</Text>
+      if (!estado) return <Text size="sm" c="dimmed">Sin contrato</Text>
       return (
         <Badge
           color={ESTADO_COLORS[estado] ?? 'gray'}
@@ -75,26 +76,22 @@ export const getServidorColumns = (
   {
     accessor: 'acciones',
     title: '',
-    width: 80,
+    width: 50,
     render: (servidor) => (
-      <Group gap={4} justify="center">
-        <ActionIcon
-          variant="subtle"
-          color="blue"
-          onClick={() => onView(servidor)}
-          aria-label="Ver expediente"
-        >
-          <IconEye size={16} />
-        </ActionIcon>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          onClick={() => onEdit(servidor)}
-          aria-label="Editar servidor"
-        >
-          <IconEdit size={16} />
-        </ActionIcon>
-      </Group>
+      <TableActions actions={[
+        {
+          label: 'Ver expediente',
+          icon: <IconEye size={14} />,
+          color: 'blue',
+          onClick: () => onView(servidor),
+        },
+        {
+          label: 'Editar datos',
+          icon: <IconEdit size={14} />,
+          color: 'gray',
+          onClick: () => onEdit(servidor),
+        },
+      ]} />
     ),
   },
 ]
