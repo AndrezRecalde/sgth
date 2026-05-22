@@ -3,62 +3,79 @@
 namespace App\Http\Controllers\Estructura;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Estructura\ExtensionTelefonicaResource;
 use App\Models\Estructura\ExtensionTelefonica;
 use App\Http\Requests\Estructura\StoreExtensionTelefonicaRequest;
 use App\Http\Requests\Estructura\UpdateExtensionTelefonicaRequest;
 use App\Http\Responses\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ExtensionTelefonicaController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     * Directorio completo agrupado por unidad administrativa.
+     * Directorio telefónico — lista plana con filtros opcionales.
      */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
         $extensiones = ExtensionTelefonica::with('unidadAdministrativa')
             ->activas()
-            ->get()
-            ->sortBy(function ($ext) {
-                return $ext->unidadAdministrativa ? $ext->unidadAdministrativa->nombre : '';
-            })
-            ->sortBy('numero_extension')
-            ->groupBy(function ($ext) {
-                return $ext->unidadAdministrativa ? $ext->unidadAdministrativa->nombre : 'Sin Unidad';
-            });
+            ->when(
+                $request->filled('search'),
+                fn($q) => $q->where(function ($q) use ($request) {
+                    $q->where('numero_extension', 'ilike', "%{$request->search}%")
+                      ->orWhere('responsable', 'ilike', "%{$request->search}%")
+                      ->orWhereHas('unidadAdministrativa', fn($q) =>
+                          $q->where('nombre', 'ilike', "%{$request->search}%")
+                      );
+                })
+            )
+            ->when(
+                $request->filled('unidad_administrativa_id'),
+                fn($q) => $q->where(
+                    'unidad_administrativa_id',
+                    $request->unidad_administrativa_id
+                )
+            )
+            ->orderBy('numero_extension')
+            ->get();
 
-        return ApiResponse::ok($extensiones, 'Directorio telefónico recuperado correctamente');
+        return ApiResponse::ok(
+            ExtensionTelefonicaResource::collection($extensiones),
+            'Directorio telefónico recuperado correctamente.'
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreExtensionTelefonicaRequest $request)
+    public function store(StoreExtensionTelefonicaRequest $request): JsonResponse
     {
         $extension = ExtensionTelefonica::create($request->validated());
-        
-        return ApiResponse::created($extension, 'Extensión telefónica registrada correctamente');
+        $extension->load('unidadAdministrativa');
+
+        return ApiResponse::created(
+            new ExtensionTelefonicaResource($extension),
+            'Extensión telefónica registrada correctamente.'
+        );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateExtensionTelefonicaRequest $request, int $id)
-    {
+    public function update(
+        UpdateExtensionTelefonicaRequest $request,
+        int $id
+    ): JsonResponse {
         $extension = ExtensionTelefonica::findOrFail($id);
         $extension->update($request->validated());
+        $extension->load('unidadAdministrativa');
 
-        return ApiResponse::ok($extension, 'Extensión telefónica actualizada correctamente');
+        return ApiResponse::ok(
+            new ExtensionTelefonicaResource($extension),
+            'Extensión telefónica actualizada correctamente.'
+        );
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(int $id)
+    public function destroy(int $id): JsonResponse
     {
         $extension = ExtensionTelefonica::findOrFail($id);
         $extension->delete();
 
-        return ApiResponse::ok(null, 'Extensión telefónica eliminada correctamente');
+        return ApiResponse::ok(null, 'Extensión telefónica eliminada correctamente.');
     }
 }
