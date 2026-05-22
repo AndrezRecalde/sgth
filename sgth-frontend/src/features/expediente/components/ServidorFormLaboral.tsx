@@ -38,11 +38,10 @@ export function ServidorFormLaboral({ form }: Props) {
     label: u.nombre ?? `Unidad ${u.id}`,
   }))
 
-  type PuestoConNombre = Puesto & { nombre?: string }
-  const puestoOptions = (puestosData?.data ?? [] as PuestoConNombre[])
-    .map((p: PuestoConNombre) => ({
+  const puestoOptions = (puestosData?.data ?? [])
+    .map((p: any) => ({
       value: String(p.id),
-      label: p.nombre ?? `Puesto ${p.id}`,
+      label: p.denominacion ?? p.nombre ?? `Puesto ${p.id}`,
     }))
 
   const toDate = (v?: string | null) =>

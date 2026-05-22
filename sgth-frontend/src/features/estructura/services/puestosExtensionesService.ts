@@ -9,14 +9,21 @@ import type {
   PaginatedResponse,
   PuestoParams,
   ExtensionTelefonicaParams,
+  PuestoConRelaciones,
 } from '@/types/api'
 
 export const puestosExtensionesService = {
   // Puestos
   listarPuestos: (params?: PuestoParams) =>
-    api.get<ApiResponse<PaginatedResponse<Puesto>>>(
-      '/estructura/puestos', { params }
-    ).then(r => r.data.datos),
+    api.get<ApiResponse<any>>('/estructura/puestos', { params })
+    .then(r => {
+      const data = r.data as any;
+      return {
+        data: data.datos as PuestoConRelaciones[],
+        total: data.meta?.total ?? 0,
+        current_page: data.meta?.pagina_actual ?? 1,
+      };
+    }),
 
   crearPuesto: (data: PuestoFormData) =>
     api.post<ApiResponse<Puesto>>(

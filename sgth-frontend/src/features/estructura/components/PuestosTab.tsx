@@ -20,7 +20,7 @@ export function PuestosTab() {
   const { eliminar } = usePuestoMutations();
 
   const { data, isLoading } = usePuestos({ page, per_page: 15 });
-  const records = (data?.data ?? []) as unknown as PuestoConRelaciones[];
+  const records = (data?.data ?? []) as PuestoConRelaciones[];
 
   const handleEdit = (puesto: PuestoConRelaciones) => {
     setEditPuesto(puesto);

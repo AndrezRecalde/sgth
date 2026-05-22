@@ -10800,9 +10800,16 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Puestos orgánicos obtenidos exitosamente";
+                        mensaje: "Puestos orgánicos obtenidos exitosamente.";
                         datos: components["schemas"]["PuestoResource"][];
-                        meta: null;
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
                     };
                 };
             };
