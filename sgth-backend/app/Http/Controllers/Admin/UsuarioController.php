@@ -25,10 +25,21 @@ final class UsuarioController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', User::class);
-        $usuarios = $this->usuarioService->listar($request->all());
-        return ApiResponse::paginado(
-            UsuarioResource::collection($usuarios)
-        );
+        $paginator = $this->usuarioService->listar($request->all());
+
+        return response()->json([
+            'exito'   => true,
+            'mensaje' => 'Consulta exitosa.',
+            'datos'   => UsuarioResource::collection($paginator->items()),
+            'meta'    => [
+                'pagina_actual' => $paginator->currentPage(),
+                'por_pagina'    => $paginator->perPage(),
+                'total'         => $paginator->total(),
+                'ultima_pagina' => $paginator->lastPage(),
+                'desde'         => $paginator->firstItem(),
+                'hasta'         => $paginator->lastItem(),
+            ],
+        ]);
     }
 
     public function store(StoreUsuarioRequest $request): JsonResponse
