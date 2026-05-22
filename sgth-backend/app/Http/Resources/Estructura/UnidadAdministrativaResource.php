@@ -13,15 +13,22 @@ class UnidadAdministrativaResource extends JsonResource
             'id'              => $this->id,
             'codigo'          => $this->codigo,
             'nombre'          => $this->nombre,
+            'acronimo'        => $this->acronimo,
             'descripcion'     => $this->descripcion,
             'unidad_padre_id' => $this->unidad_padre_id,
             'nivel'           => $this->nivel,
             'estado'          => $this->estado,
-            
-            // Relaciones anidadas condicionales
-            'padre'           => new UnidadAdministrativaResource($this->whenLoaded('padre')),
-            'hijos'           => UnidadAdministrativaResource::collection($this->whenLoaded('hijos')),
-            'puestos'         => PuestoResource::collection($this->whenLoaded('puestos')),
+            'tipo_unidad'     => $this->whenLoaded('tipoUnidad', fn() => [
+                'id'          => $this->tipoUnidad->id,
+                'acronimo'    => $this->tipoUnidad->acronimo,
+                'descripcion' => $this->tipoUnidad->descripcion,
+            ]),
+            'puestos_count'   => $this->whenLoaded('puestos',
+                fn() => $this->puestos->count(), 0
+            ),
+            'hijos'           => UnidadAdministrativaResource::collection(
+                $this->whenLoaded('hijos')
+            ),
         ];
     }
 }

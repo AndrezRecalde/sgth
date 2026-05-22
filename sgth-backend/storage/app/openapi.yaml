@@ -22653,6 +22653,9 @@
                     "nombre": {
                         "type": "string"
                     },
+                    "acronimo": {
+                        "type": "string"
+                    },
                     "descripcion": {
                         "type": "string"
                     },
@@ -22665,20 +22668,42 @@
                     "estado": {
                         "type": "string"
                     },
-                    "padre": {
-                        "description": "Relaciones anidadas condicionales",
-                        "$ref": "#/components/schemas/UnidadAdministrativaResource"
+                    "tipo_unidad": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "acronimo": {
+                                "type": "string"
+                            },
+                            "descripcion": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "acronimo",
+                            "descripcion"
+                        ]
+                    },
+                    "puestos_count": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer",
+                                "enum": [
+                                    0
+                                ]
+                            }
+                        ]
                     },
                     "hijos": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/UnidadAdministrativaResource"
-                        }
-                    },
-                    "puestos": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/PuestoResource"
                         }
                     }
                 },
@@ -22686,10 +22711,12 @@
                     "id",
                     "codigo",
                     "nombre",
+                    "acronimo",
                     "descripcion",
                     "unidad_padre_id",
                     "nivel",
-                    "estado"
+                    "estado",
+                    "puestos_count"
                 ],
                 "title": "UnidadAdministrativaResource"
             },

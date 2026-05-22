@@ -66,20 +66,31 @@ final class EstructuraService implements EstructuraServiceInterface
 
     public function obtenerOrganigrama(): Collection
     {
-        // Se cargan las unidades de Nivel 1 (Raíz GAD) y se anidan
-        // eficientemente los hijos (Direcciones y Subprocesos) junto con sus Puestos
         return UnidadAdministrativa::whereNull('unidad_padre_id')
             ->where('estado', true)
-            ->with([
-                'hijos' => fn($q) => $q->where('estado', true)->orderBy('nombre'),
-                'hijos.hijos' => fn($q) => $q->where('estado', true)->orderBy('nombre'),
-                'hijos.puestos' => fn($q) => $q->where('estado', true)->orderBy('nivel'),
-                'hijos.hijos.puestos' => fn($q) => $q->where('estado', true)->orderBy('nivel'),
-                'puestos' => fn($q) => $q->where('estado', true)->orderBy('nivel'),
-            ])
+            ->with(['tipoUnidad'])
             ->orderBy('nivel')
             ->orderBy('nombre')
-            ->get();
+            ->get()
+            ->map(fn($u) => $this->cargarHijosRecursivo($u));
+    }
+
+    private function cargarHijosRecursivo(
+        UnidadAdministrativa $unidad
+    ): UnidadAdministrativa {
+        $unidad->load([
+            'tipoUnidad',
+            'hijos' => fn($q) => $q->where('estado', true)
+                                    ->orderBy('nombre'),
+            'puestos' => fn($q) => $q->where('activo', true)
+                                      ->orderBy('denominacion'),
+        ]);
+
+        $unidad->hijos->each(
+            fn($hijo) => $this->cargarHijosRecursivo($hijo)
+        );
+
+        return $unidad;
     }
 
     // ── GESTIÓN DE PUESTOS ───────────────────────────────────────────────────
@@ -90,7 +101,7 @@ final class EstructuraService implements EstructuraServiceInterface
             ->with(['unidadAdministrativa'])
             ->when(isset($filtros['unidad_administrativa_id']), fn($q) => $q->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']))
             ->when(isset($filtros['es_jefe']), fn($q) => $q->where('es_jefe', $filtros['es_jefe']))
-            ->when(isset($filtros['estado']), fn($q) => $q->where('estado', $filtros['estado']))
+            ->when(isset($filtros['activo']), fn($q) => $q->where('activo', $filtros['activo']))
             ->orderBy('unidad_administrativa_id')
             ->orderBy('nivel')
             ->paginate($filtros['por_pagina'] ?? 15);
