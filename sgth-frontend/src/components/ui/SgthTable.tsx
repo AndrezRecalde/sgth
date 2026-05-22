@@ -6,7 +6,7 @@ import type { DataTableProps } from 'mantine-datatable'
 
 type SgthTableProps<T> = DataTableProps<T>
 
-export function SgthTable<T = any>(
+export function SgthTable<T>(
   props: SgthTableProps<T>
 ) {
   return (
