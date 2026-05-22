@@ -222,7 +222,7 @@ export type ExtensionConRelaciones = {
   id: number
   numero_extension?: string
   responsable?: string
-  descripcion?: string
+
   estado?: boolean
   unidad_administrativa_id?: number
   unidad_administrativa?: {
@@ -264,7 +264,7 @@ export type ServidorConRelaciones = Servidor & {
   telefono_convencional?: string
   telefono_personal?: string
   telefono_institucional?: string
-  correo_institucional?: string
+
   correo_personal?: string
   direccion?: string
   direccion_domicilio?: string

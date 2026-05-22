@@ -18686,9 +18686,6 @@
                     "responsable": {
                         "type": "string"
                     },
-                    "descripcion": {
-                        "type": "string"
-                    },
                     "estado": {
                         "type": "string"
                     },
@@ -18715,7 +18712,6 @@
                     "id",
                     "numero_extension",
                     "responsable",
-                    "descripcion",
                     "estado",
                     "unidad_administrativa_id"
                 ],
@@ -21267,13 +21263,6 @@
                         "type": "string",
                         "maxLength": 100
                     },
-                    "descripcion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
-                    },
                     "estado": {
                         "type": "boolean"
                     }
@@ -21743,14 +21732,6 @@
                             "null"
                         ],
                         "maxLength": 20
-                    },
-                    "correo_institucional": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "email",
-                        "maxLength": 150
                     },
                     "correo_personal": {
                         "type": [
@@ -23076,13 +23057,6 @@
                         "type": "string",
                         "maxLength": 100
                     },
-                    "descripcion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
-                    },
                     "estado": {
                         "type": "boolean"
                     }
@@ -23288,14 +23262,6 @@
                             "null"
                         ],
                         "maxLength": 20
-                    },
-                    "correo_institucional": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "email",
-                        "maxLength": 150
                     },
                     "correo_personal": {
                         "type": [

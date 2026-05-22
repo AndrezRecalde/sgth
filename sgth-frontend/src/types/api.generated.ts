@@ -3575,7 +3575,6 @@ export interface components {
             id: string;
             numero_extension: string;
             responsable: string;
-            descripcion: string;
             estado: string;
             unidad_administrativa_id: string;
             unidad_administrativa?: {
@@ -4234,7 +4233,6 @@ export interface components {
             unidad_administrativa_id: number;
             numero_extension: string;
             responsable: string;
-            descripcion?: string | null;
             estado?: boolean;
         };
         /** StoreFacturaViaticoRequest */
@@ -4352,8 +4350,6 @@ export interface components {
             /** @description Sección C — Contacto */
             telefono_celular?: string | null;
             telefono_convencional?: string | null;
-            /** Format: email */
-            correo_institucional?: string | null;
             /** Format: email */
             correo_personal?: string | null;
             direccion_domicilio?: string | null;
@@ -4686,7 +4682,6 @@ export interface components {
             unidad_administrativa_id?: number;
             numero_extension?: string;
             responsable?: string;
-            descripcion?: string | null;
             estado?: boolean;
         };
         /** UpdatePuestoRequest */
@@ -4741,8 +4736,6 @@ export interface components {
             /** @description Sección C */
             telefono_celular?: string | null;
             telefono_convencional?: string | null;
-            /** Format: email */
-            correo_institucional?: string | null;
             /** Format: email */
             correo_personal?: string | null;
             direccion_domicilio?: string | null;

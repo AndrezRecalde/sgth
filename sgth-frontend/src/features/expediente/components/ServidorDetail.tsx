@@ -80,7 +80,7 @@ export function ServidorDetail({ opened, onClose, servidor }: Props) {
                 ['Teléfono personal', servidor.telefono_personal],
                 ['Teléfono institucional', servidor.telefono_institucional],
                 ['Correo personal', servidor.correo_personal],
-                ['Correo institucional', servidor.correo_institucional],
+
                 ['Dirección', servidor.direccion],
               ] as [string, string | undefined][]).map(([label, value]) => (
                 <Group key={label} justify="space-between">

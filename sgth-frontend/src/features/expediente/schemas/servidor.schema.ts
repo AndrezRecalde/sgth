@@ -39,8 +39,7 @@ export const servidorSchema = z.object({
   // Contacto
   telefono_celular:       z.string().optional(),
   telefono_convencional:  z.string().optional(),
-  correo_institucional:   z.string().email('Email inválido')
-    .optional().or(z.literal('')),
+
   correo_personal:        z.string().email('Email inválido')
     .optional().or(z.literal('')),
   direccion_domicilio:    z.string().optional(),

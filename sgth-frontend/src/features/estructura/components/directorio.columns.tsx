@@ -35,13 +35,7 @@ export const getDirectorioColumns = (
       <Text size="sm">{unidad_administrativa?.nombre ?? '-'}</Text>
     ),
   },
-  {
-    accessor: 'descripcion',
-    title: 'Descripción',
-    render: ({ descripcion }) => (
-      <Text size="sm" c="dimmed">{descripcion ?? '-'}</Text>
-    ),
-  },
+
   {
     accessor: 'acciones',
     title: '',

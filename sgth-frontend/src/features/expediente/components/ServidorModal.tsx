@@ -48,7 +48,7 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
       pasaporte_numero: '',
       telefono_celular:      servidor?.telefono_personal ?? '',
       telefono_convencional: servidor?.telefono_institucional ?? '',
-      correo_institucional:  servidor?.correo_institucional ?? '',
+
       correo_personal:       servidor?.correo_personal ?? '',
       direccion_domicilio:   servidor?.direccion ?? '',
       tiene_discapacidad:           false,

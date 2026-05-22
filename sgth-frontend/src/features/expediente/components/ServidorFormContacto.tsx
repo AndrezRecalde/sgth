@@ -38,14 +38,7 @@ export function ServidorFormContacto({ form }: Props) {
           {...form.getInputProps('correo_personal')}
         />
       </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <TextInput
-          label="Correo institucional"
-          placeholder="usuario@gad-esmeraldas.gob.ec"
-          {...contained}
-          {...form.getInputProps('correo_institucional')}
-        />
-      </Grid.Col>
+
       <Grid.Col span={12}>
         <TextInput
           label="Dirección domiciliaria"

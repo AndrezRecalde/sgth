@@ -23,7 +23,7 @@ export function ExtensionForm({ initialValues, onSubmit }: Props) {
         ?? ('' as unknown as number),
       numero_extension: initialValues?.numero_extension ?? '',
       responsable:      initialValues?.responsable ?? '',
-      descripcion:      initialValues?.descripcion ?? '',
+
       estado:           initialValues?.estado ?? true,
     },
     validate: zodResolver(extensionSchema),
@@ -70,15 +70,7 @@ export function ExtensionForm({ initialValues, onSubmit }: Props) {
             {...form.getInputProps('responsable')}
           />
         </Grid.Col>
-        <Grid.Col span={12}>
-          <Textarea
-            label="Descripción"
-            placeholder="Descripción opcional"
-            rows={2}
-            {...contained}
-            {...form.getInputProps('descripcion')}
-          />
-        </Grid.Col>
+
         <Grid.Col span={12}>
           <Switch
             label="Extensión activa"
