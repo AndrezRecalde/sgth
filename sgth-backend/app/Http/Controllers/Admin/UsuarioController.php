@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUsuarioRequest;
 use App\Http\Requests\Admin\UpdateUsuarioRequest;
+use App\Http\Resources\Admin\UsuarioResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Admin\UsuarioServiceInterface;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Spatie\Permission\Models\Role;
 
 final class UsuarioController extends Controller
 {
@@ -23,36 +25,43 @@ final class UsuarioController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', User::class);
-
         $usuarios = $this->usuarioService->listar($request->all());
-        return ApiResponse::paginado($usuarios);
+        return ApiResponse::paginado(
+            UsuarioResource::collection($usuarios)
+        );
     }
 
     public function store(StoreUsuarioRequest $request): JsonResponse
     {
         $usuario = $this->usuarioService->crear($request->validated());
-        return ApiResponse::created($usuario, 'Usuario creado exitosamente.');
+        return ApiResponse::created(
+            new UsuarioResource($usuario->load('roles')),
+            'Usuario creado exitosamente.'
+        );
     }
 
     public function show(int $id): JsonResponse
     {
         $usuario = $this->usuarioService->obtener($id);
         $this->authorize('view', $usuario);
-
-        return ApiResponse::ok($usuario);
+        return ApiResponse::ok(
+            new UsuarioResource($usuario->load(['roles', 'servidor']))
+        );
     }
 
     public function update(UpdateUsuarioRequest $request, int $id): JsonResponse
     {
         $usuario = $this->usuarioService->actualizar($id, $request->validated());
-        return ApiResponse::ok($usuario, 'Usuario actualizado exitosamente.');
+        return ApiResponse::ok(
+            new UsuarioResource($usuario->load('roles')),
+            'Usuario actualizado exitosamente.'
+        );
     }
 
     public function destroy(int $id): JsonResponse
     {
         $usuario = $this->usuarioService->obtener($id);
         $this->authorize('delete', $usuario);
-
         $this->usuarioService->eliminar($id);
         return ApiResponse::noContent('Usuario eliminado exitosamente.');
     }
@@ -61,9 +70,8 @@ final class UsuarioController extends Controller
     {
         $usuario = $this->usuarioService->obtener($id);
         $this->authorize('restablecerContrasena', $usuario);
-
         $this->usuarioService->restablecerContrasena($id);
-        return ApiResponse::ok(null, 'Contraseña restablecida al número de cédula exitosamente.');
+        return ApiResponse::ok(null, 'Contraseña restablecida exitosamente.');
     }
 
     public function toggleActivo(int $id): JsonResponse
@@ -71,8 +79,11 @@ final class UsuarioController extends Controller
         $usuario = $this->usuarioService->obtener($id);
         $this->authorize('toggleActivo', $usuario);
         $usuario->update(['activo' => !$usuario->activo]);
-        $estado = $usuario->activo ? 'activado' : 'desactivado';
-        return ApiResponse::ok($usuario, "Usuario {$estado} exitosamente.");
+        $estado = $usuario->fresh()->activo ? 'activado' : 'desactivado';
+        return ApiResponse::ok(
+            new UsuarioResource($usuario->fresh('roles')),
+            "Usuario {$estado} exitosamente."
+        );
     }
 
     public function sinServidor(): JsonResponse
@@ -80,9 +91,23 @@ final class UsuarioController extends Controller
         $this->authorize('viewAny', User::class);
         $usuarios = User::whereDoesntHave('servidor')
             ->where('activo', true)
-            ->select('id', 'name', 'email')
+            ->with('roles')
             ->orderBy('name')
             ->get();
-        return ApiResponse::ok($usuarios, 'Usuarios sin servidor asignado.');
+        return ApiResponse::ok(
+            UsuarioResource::collection($usuarios),
+            'Usuarios disponibles para asignar a servidor.'
+        );
+    }
+
+    /**
+     * Lista todos los roles disponibles del sistema.
+     * Usado por el frontend para el Select de roles.
+     */
+    public function roles(): JsonResponse
+    {
+        $this->authorize('viewAny', User::class);
+        $roles = Role::orderBy('name')->pluck('name');
+        return ApiResponse::ok($roles, 'Roles del sistema.');
     }
 }

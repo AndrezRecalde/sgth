@@ -478,6 +478,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::post('usuarios/{usuario}/toggle-activo',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'toggleActivo'])
                 ->name('usuarios.toggleActivo');
+            
+            Route::get('usuarios-roles',
+                [\App\Http\Controllers\Admin\UsuarioController::class, 'roles'])
+                ->name('usuarios.roles');
             Route::apiResource('usuarios', \App\Http\Controllers\Admin\UsuarioController::class);
             Route::post('usuarios/{usuario}/restablecer-contrasena',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'restablecerContrasena']

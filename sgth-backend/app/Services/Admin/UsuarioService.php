@@ -15,9 +15,31 @@ final class UsuarioService implements UsuarioServiceInterface
     public function listar(array $filtros): LengthAwarePaginator
     {
         return User::query()
-            ->with('roles')
+            ->with(['roles', 'servidor'])
+            ->when(
+                !empty($filtros['search']),
+                fn($q) => $q->where(function ($q) use ($filtros) {
+                    $q->where('name', 'ilike', "%{$filtros['search']}%")
+                      ->orWhere('email', 'ilike', "%{$filtros['search']}%")
+                      ->orWhere('usuario_ti', 'ilike', "%{$filtros['search']}%");
+                })
+            )
+            ->when(
+                !empty($filtros['rol']),
+                fn($q) => $q->role($filtros['rol'])
+            )
+            ->when(
+                isset($filtros['activo']),
+                fn($q) => $q->where('activo', filter_var(
+                    $filtros['activo'], FILTER_VALIDATE_BOOLEAN
+                ))
+            )
+            ->when(
+                !empty($filtros['sin_servidor']),
+                fn($q) => $q->whereDoesntHave('servidor')
+            )
             ->orderBy('name')
-            ->paginate($filtros['por_pagina'] ?? 15);
+            ->paginate($filtros['per_page'] ?? 15);
     }
 
     public function crear(array $datos): User
