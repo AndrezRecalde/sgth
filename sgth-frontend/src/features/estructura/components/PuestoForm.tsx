@@ -1,12 +1,33 @@
 'use client'
 
-import { TextInput, Select, NumberInput, Grid } from '@mantine/core'
+import { TextInput, Select, NumberInput, Grid, Switch, Textarea } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zodResolver } from 'mantine-form-zod-resolver'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '../hooks/useUnidades'
+import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
 import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
-import type { UnidadConRelaciones } from '@/types/api'
+import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
+
+const ROL_OPTIONS = [
+  { value: 'dignatario',             label: 'Dignatario' },
+  { value: 'ejecucion_coordinacion', label: 'Ejecución y Coordinación' },
+  { value: 'ejecucion_procesos',     label: 'Ejecución de Procesos' },
+  { value: 'ejecucion_procesos_apoyo', label: 'Ejecución de Procesos de Apoyo' },
+  { value: 'administrativo',         label: 'Administrativo' },
+  { value: 'codigo_trabajo',         label: 'Código del Trabajo' },
+]
+
+const COMPLEJIDAD_OPTIONS = [
+  { value: 'bajo',  label: 'Nivel Bajo' },
+  { value: 'medio', label: 'Nivel Medio' },
+  { value: 'alto',  label: 'Nivel Alto' },
+]
+
+const REGIMEN_OPTIONS = [
+  { value: 'losep',          label: 'LOSEP' },
+  { value: 'codigo_trabajo', label: 'Código del Trabajo' },
+]
 
 interface Props {
   initialValues?: Partial<PuestoFormData>
@@ -16,15 +37,24 @@ interface Props {
 export function PuestoForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput()
   const { data: unidades = [] } = useUnidades()
+  const { data: grupos = [] }   = useGruposOcupacionales()
 
   const form = useForm<PuestoFormData>({
     initialValues: {
-      nombre:                   initialValues?.nombre ?? '',
-      unidad_administrativa_id: initialValues?.unidad_administrativa_id
+      codigo:                    initialValues?.codigo ?? '',
+      denominacion:              initialValues?.denominacion ?? '',
+      mision:                    initialValues?.mision ?? null,
+      unidad_administrativa_id:  initialValues?.unidad_administrativa_id
         ?? ('' as unknown as number),
-      codigo:                   initialValues?.codigo ?? '',
-      nivel:                    initialValues?.nivel ?? '',
-      remuneracion:             initialValues?.remuneracion ?? null,
+      grupo_ocupacional_id:      initialValues?.grupo_ocupacional_id ?? null,
+      partida_presupuestaria_id: initialValues?.partida_presupuestaria_id ?? null,
+      plazas:                    initialValues?.plazas ?? 1,
+      rol_puesto:                initialValues?.rol_puesto ?? null,
+      nivel_complejidad:         initialValues?.nivel_complejidad ?? null,
+      nivel_jerarquico:          initialValues?.nivel_jerarquico ?? null,
+      regimen_laboral:           initialValues?.regimen_laboral ?? 'losep',
+      es_jefe:                   initialValues?.es_jefe ?? false,
+      activo:                    initialValues?.activo ?? true,
     },
     validate: zodResolver(puestoSchema),
   })
@@ -34,15 +64,50 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     label: u.nombre ?? `Unidad ${u.id}`,
   }))
 
+  type GrupoItem = {
+    id: number
+    grado_codigo?: string
+    grupo?: string
+    rmu?: number
+    regimen?: string
+  }
+  const grupoOptions = (grupos as GrupoItem[]).map(g => ({
+    value: String(g.id),
+    label: `${g.grado_codigo ?? ''} — ${g.grupo ?? ''} ($${g.rmu ?? 0})`,
+  }))
+
+  const regimenActual = form.values.regimen_laboral
+
   return (
     <form id="puesto-form" onSubmit={form.onSubmit(onSubmit)}>
       <Grid>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <TextInput
+            label="Código del puesto"
+            placeholder="Ej: GADPE-TH-001"
+            {...contained}
+            {...form.getInputProps('codigo')}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Select
+            label="Régimen laboral"
+            data={REGIMEN_OPTIONS}
+            {...contained}
+            value={form.values.regimen_laboral}
+            onChange={(v) =>
+              form.setFieldValue('regimen_laboral',
+                (v ?? 'losep') as 'losep' | 'codigo_trabajo')
+            }
+            error={form.errors.regimen_laboral}
+          />
+        </Grid.Col>
         <Grid.Col span={12}>
           <TextInput
-            label="Nombre del puesto"
+            label="Denominación del puesto"
             placeholder="Ej: Analista de Talento Humano"
             {...contained}
-            {...form.getInputProps('nombre')}
+            {...form.getInputProps('denominacion')}
           />
         </Grid.Col>
         <Grid.Col span={12}>
@@ -61,34 +126,112 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             error={form.errors.unidad_administrativa_id}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Código"
-            placeholder="Ej: PUESTO-001"
+        <Grid.Col span={12}>
+          <Select
+            label={regimenActual === 'losep'
+              ? 'Grupo ocupacional (LOSEP)'
+              : 'Grupo ocupacional (CT — referencial)'}
+            placeholder="Seleccionar grupo"
+            data={grupoOptions}
+            searchable
+            clearable
             {...contained}
-            {...form.getInputProps('codigo')}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Nivel"
-            placeholder="Ej: Profesional 4"
-            {...contained}
-            {...form.getInputProps('nivel')}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <NumberInput
-            label="Remuneración"
-            placeholder="0.00"
-            decimalScale={2}
-            prefix="$"
-            {...contained}
-            value={form.values.remuneracion ?? ''}
+            value={form.values.grupo_ocupacional_id
+              ? String(form.values.grupo_ocupacional_id) : ''}
             onChange={(v) =>
-              form.setFieldValue('remuneracion',
+              form.setFieldValue('grupo_ocupacional_id',
+                v ? Number(v) : null)
+            }
+            error={form.errors.grupo_ocupacional_id}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
+          <NumberInput
+            label="Plazas"
+            placeholder="1"
+            min={1}
+            {...contained}
+            value={form.values.plazas}
+            onChange={(v) =>
+              form.setFieldValue('plazas', typeof v === 'number' ? v : 1)
+            }
+            error={form.errors.plazas}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
+          <NumberInput
+            label="Nivel jerárquico"
+            placeholder="Ej: 5"
+            min={1}
+            {...contained}
+            value={form.values.nivel_jerarquico ?? ''}
+            onChange={(v) =>
+              form.setFieldValue('nivel_jerarquico',
                 typeof v === 'number' ? v : null)
             }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
+          <Select
+            label="Complejidad"
+            placeholder="Seleccionar"
+            data={COMPLEJIDAD_OPTIONS}
+            clearable
+            {...contained}
+            value={form.values.nivel_complejidad ?? ''}
+            onChange={(v) =>
+              form.setFieldValue('nivel_complejidad',
+                v as PuestoFormData['nivel_complejidad'] ?? null)
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Select
+            label="Rol del puesto"
+            placeholder="Seleccionar rol"
+            data={ROL_OPTIONS}
+            clearable
+            {...contained}
+            value={form.values.rol_puesto ?? ''}
+            onChange={(v) =>
+              form.setFieldValue('rol_puesto',
+                v as PuestoFormData['rol_puesto'] ?? null)
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Textarea
+            label="Misión del puesto"
+            placeholder="Describa la misión del puesto (opcional)"
+            rows={3}
+            {...contained}
+            value={form.values.mision ?? ''}
+            onChange={(e) =>
+              form.setFieldValue('mision',
+                e.currentTarget.value || null)
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Switch
+            label="Es jefe de unidad"
+            checked={form.values.es_jefe}
+            onChange={(e) =>
+              form.setFieldValue('es_jefe', e.currentTarget.checked)
+            }
+            color="emerald"
+            mt="xs"
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Switch
+            label="Puesto activo"
+            checked={form.values.activo}
+            onChange={(e) =>
+              form.setFieldValue('activo', e.currentTarget.checked)
+            }
+            color="emerald"
+            mt="xs"
           />
         </Grid.Col>
       </Grid>

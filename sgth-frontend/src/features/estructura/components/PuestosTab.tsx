@@ -7,7 +7,8 @@ import { IconBriefcase, IconPlus } from '@tabler/icons-react'
 import { DataTable } from 'mantine-datatable'
 import { usePuestos } from '../hooks/usePuestos'
 import { usePuestoMutations } from '../hooks/usePuestoMutations'
-import { getPuestoColumns, type PuestoConRelaciones } from './puesto.columns'
+import { getPuestoColumns } from './puesto.columns'
+import type { PuestoConRelaciones } from '@/types/api'
 import { PuestoModal } from './PuestoModal'
 
 export function PuestosTab() {
@@ -18,7 +19,7 @@ export function PuestosTab() {
   const { eliminar } = usePuestoMutations()
 
   const { data, isLoading } = usePuestos({ page, per_page: 15 })
-  const records = (data?.data ?? []) as PuestoConRelaciones[]
+  const records = (data?.data ?? []) as unknown as PuestoConRelaciones[]
 
   const handleEdit = (puesto: PuestoConRelaciones) => {
     setEditPuesto(puesto)
@@ -26,7 +27,7 @@ export function PuestosTab() {
   }
 
   const handleDelete = (puesto: PuestoConRelaciones) => {
-    if (confirm(`¿Eliminar el puesto "${puesto.nombre}"?`)) {
+    if (confirm(`¿Eliminar el puesto "${puesto.denominacion}"?`)) {
       eliminar.mutate(Number(puesto.id))
     }
   }

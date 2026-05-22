@@ -5,7 +5,7 @@ import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { usePuestoMutations } from '../hooks/usePuestoMutations'
 import { PuestoForm } from './PuestoForm'
 import type { PuestoFormData } from '../schemas/puesto.schema'
-import type { PuestoConRelaciones } from './puesto.columns'
+import type { PuestoConRelaciones } from '@/types/api'
 
 interface Props {
   opened: boolean
@@ -37,11 +37,19 @@ export function PuestoModal({ opened, onClose, puesto }: Props) {
       <Stack>
         <PuestoForm
           initialValues={isEditing ? {
-            nombre:                   puesto?.nombre,
-            unidad_administrativa_id: puesto?.unidad_administrativa_id,
-            codigo:                   puesto?.codigo,
-            nivel:                    puesto?.nivel,
-            remuneracion:             puesto?.remuneracion,
+            denominacion:              puesto?.denominacion,
+            unidad_administrativa_id:  puesto?.unidad_administrativa_id,
+            codigo:                    puesto?.codigo,
+            grupo_ocupacional_id:      puesto?.grupo_ocupacional_id,
+            partida_presupuestaria_id: puesto?.partida_presupuestaria_id,
+            plazas:                    puesto?.plazas,
+            rol_puesto:                puesto?.rol_puesto as any,
+            nivel_complejidad:         puesto?.nivel_complejidad as any,
+            nivel_jerarquico:          puesto?.nivel_jerarquico,
+            regimen_laboral:           puesto?.regimen_laboral,
+            es_jefe:                   puesto?.es_jefe,
+            activo:                    puesto?.activo,
+            mision:                    puesto?.mision,
           } : undefined}
           onSubmit={handleSubmit}
         />

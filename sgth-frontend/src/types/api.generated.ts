@@ -1665,6 +1665,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/grupos-ocupacionales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lista todos los grupos ocupacionales.
+         *     Opcionalmente filtra por régimen laboral
+         */
+        get: operations["estructura.grupos-ocupacionales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/nomina/handoffs": {
         parameters: {
             query?: never;
@@ -3580,6 +3600,23 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** GrupoOcupacional */
+        GrupoOcupacional: {
+            id: number;
+            grado_codigo: string;
+            grado_numerico: number | null;
+            grupo: string;
+            denominacion_generica: string | null;
+            rmu: string;
+            regimen: string;
+            nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
+            rol_puesto: components["schemas"]["RolPuesto"] | null;
+            activo: boolean;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** HandoffErp */
         HandoffErp: {
             id: number;
@@ -3774,6 +3811,11 @@ export interface components {
          */
         NacionalidadEstudio: "nacional" | "internacional";
         /**
+         * NivelComplejidadPuesto
+         * @enum {string}
+         */
+        NivelComplejidadPuesto: "bajo" | "medio" | "alto";
+        /**
          * NivelEstudio
          * @enum {string}
          */
@@ -3889,15 +3931,28 @@ export interface components {
             id: string;
             codigo: string;
             denominacion: string;
+            mision: string;
             unidad_administrativa_id: string;
-            grupo_ocupacional: string;
-            grado_rmu: string;
-            rmu: string;
+            grupo_ocupacional_id: string;
+            partida_presupuestaria_id: string;
+            plazas: string;
+            rol_puesto: string;
+            nivel_complejidad: string;
+            nivel_jerarquico: string;
+            regimen_laboral: string;
             es_jefe: string;
-            nivel: string;
-            estado: string;
-            /** @description Relaciones anidadas condicionales */
+            activo: string;
+            /** @description RMU calculada desde grupo ocupacional */
+            rmu: string;
+            /** @description Relaciones */
             unidad_administrativa?: components["schemas"]["UnidadAdministrativaResource"];
+            grupo_ocupacional?: {
+                id: string;
+                grado_codigo: string;
+                grupo: string;
+                rmu: string;
+                regimen: string;
+            };
         };
         /** RecetaMedica */
         RecetaMedica: {
@@ -3988,6 +4043,11 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /**
+         * RolPuesto
+         * @enum {string}
+         */
+        RolPuesto: "dignatario" | "ejecucion_coordinacion" | "ejecucion_procesos" | "ejecucion_procesos_apoyo" | "administrativo" | "codigo_trabajo";
         /** ServidorResource */
         ServidorResource: unknown[];
         /** Sla */
@@ -4225,13 +4285,18 @@ export interface components {
         StorePuestoRequest: {
             codigo: string;
             denominacion: string;
+            mision?: string | null;
             unidad_administrativa_id: number;
-            grupo_ocupacional: string;
-            grado_rmu: number;
-            rmu: number;
+            grupo_ocupacional_id?: number | null;
+            partida_presupuestaria_id?: number | null;
+            plazas: number;
+            rol_puesto?: components["schemas"]["RolPuesto"];
+            nivel_complejidad?: components["schemas"]["NivelComplejidadPuesto"];
+            nivel_jerarquico?: number | null;
+            /** @enum {string} */
+            regimen_laboral: "losep" | "codigo_trabajo";
             es_jefe?: boolean;
-            nivel: number;
-            estado?: boolean;
+            activo?: boolean;
         };
         /** StoreServidorBasicoRequest */
         StoreServidorBasicoRequest: {
@@ -4634,13 +4699,18 @@ export interface components {
         UpdatePuestoRequest: {
             codigo?: string;
             denominacion?: string;
+            mision?: string | null;
             unidad_administrativa_id?: number;
-            grupo_ocupacional?: string;
-            grado_rmu?: number;
-            rmu?: number;
+            grupo_ocupacional_id?: number | null;
+            partida_presupuestaria_id?: number | null;
+            plazas?: number;
+            rol_puesto?: components["schemas"]["RolPuesto"];
+            nivel_complejidad?: components["schemas"]["NivelComplejidadPuesto"];
+            nivel_jerarquico?: number | null;
+            /** @enum {string} */
+            regimen_laboral?: "losep" | "codigo_trabajo";
             es_jefe?: boolean;
-            nivel?: number;
-            estado?: boolean;
+            activo?: boolean;
         };
         /** UpdateServidorRequest */
         UpdateServidorRequest: {
@@ -9495,6 +9565,32 @@ export interface operations {
             };
         };
     };
+    "estructura.grupos-ocupacionales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Grupos ocupacionales.";
+                        datos: components["schemas"]["GrupoOcupacional"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "handoffErp.index": {
         parameters: {
             query?: never;
@@ -10806,7 +10902,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
