@@ -53,6 +53,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::apiResource('unidades-administrativas', \App\Http\Controllers\Estructura\UnidadAdministrativaController::class);
         Route::apiResource('puestos', \App\Http\Controllers\Estructura\PuestoController::class);
         
+        Route::get('grupos-ocupacionales', [\App\Http\Controllers\Estructura\GrupoOcupacionalController::class, 'index'])
+            ->name('estructura.grupos-ocupacionales');
+        
         // Directorio telefónico público para servidores
         Route::get('directorio-telefonico', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'index']);
         

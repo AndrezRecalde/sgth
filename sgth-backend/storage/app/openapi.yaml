@@ -9308,6 +9308,54 @@
                 }
             }
         },
+        "/v1/estructura/grupos-ocupacionales": {
+            "get": {
+                "operationId": "estructura.grupos-ocupacionales",
+                "summary": "Lista todos los grupos ocupacionales.\nOpcionalmente filtra por r\u00e9gimen laboral",
+                "tags": [
+                    "GrupoOcupacional"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Grupos ocupacionales."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/GrupoOcupacional"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/nomina/handoffs": {
             "get": {
                 "operationId": "handoffErp.index",
@@ -18745,6 +18793,90 @@
                     "updated_at"
                 ],
                 "title": "FacturaViatico"
+            },
+            "GrupoOcupacional": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "grado_codigo": {
+                        "type": "string"
+                    },
+                    "grado_numerico": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "grupo": {
+                        "type": "string"
+                    },
+                    "denominacion_generica": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "rmu": {
+                        "type": "string"
+                    },
+                    "regimen": {
+                        "type": "string"
+                    },
+                    "nivel_complejidad": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/NivelComplejidadPuesto"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "rol_puesto": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/RolPuesto"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "grado_codigo",
+                    "grado_numerico",
+                    "grupo",
+                    "denominacion_generica",
+                    "rmu",
+                    "regimen",
+                    "nivel_complejidad",
+                    "rol_puesto",
+                    "activo",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "GrupoOcupacional"
             },
             "HandoffErp": {
                 "type": "object",
