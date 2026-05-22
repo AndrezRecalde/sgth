@@ -15378,12 +15378,12 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Usuarios sin servidor asignado."
+                                            "const": "Usuarios disponibles para asignar a servidor."
                                         },
                                         "datos": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/User"
+                                                "$ref": "#/components/schemas/UsuarioResource"
                                             }
                                         },
                                         "meta": {
@@ -15440,7 +15440,56 @@
                                             "type": "string"
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/User"
+                                            "$ref": "#/components/schemas/UsuarioResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/admin/usuarios-roles": {
+            "get": {
+                "operationId": "usuarios.roles",
+                "summary": "Lista todos los roles disponibles del sistema.\nUsado por el frontend para el Select de roles",
+                "tags": [
+                    "Usuario"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Roles del sistema."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
                                         },
                                         "meta": {
                                             "type": "null"
@@ -15579,7 +15628,7 @@
                                             "const": "Usuario creado exitosamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/User"
+                                            "$ref": "#/components/schemas/UsuarioResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -15639,7 +15688,7 @@
                                             "const": "Operaci\u00f3n exitosa."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/User"
+                                            "$ref": "#/components/schemas/UsuarioResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -15703,7 +15752,7 @@
                                             "const": "Usuario actualizado exitosamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/User"
+                                            "$ref": "#/components/schemas/UsuarioResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -15815,7 +15864,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Contrase\u00f1a restablecida al n\u00famero de c\u00e9dula exitosamente."
+                                            "const": "Contrase\u00f1a restablecida exitosamente."
                                         },
                                         "datos": {
                                             "type": "null"
@@ -23239,6 +23288,65 @@
                     "activo"
                 ],
                 "title": "User"
+            },
+            "UsuarioResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "usuario_ti": {
+                        "type": "string"
+                    },
+                    "activo": {
+                        "type": "string"
+                    },
+                    "primer_login": {
+                        "type": "string"
+                    },
+                    "roles": {
+                        "type": "string"
+                    },
+                    "servidor": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "cedula": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cedula",
+                            "nombre"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "usuario_ti",
+                    "activo",
+                    "primer_login",
+                    "roles",
+                    "created_at"
+                ],
+                "title": "UsuarioResource"
             },
             "Vacacion": {
                 "type": "object",

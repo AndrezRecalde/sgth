@@ -2796,6 +2796,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/usuarios-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lista todos los roles disponibles del sistema.
+         *     Usado por el frontend para el Select de roles
+         */
+        get: operations["usuarios.roles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/usuarios": {
         parameters: {
             query?: never;
@@ -4726,6 +4746,22 @@ export interface components {
             usuario_ti: boolean | null;
             primer_login: boolean;
             activo: boolean;
+        };
+        /** UsuarioResource */
+        UsuarioResource: {
+            id: string;
+            name: string;
+            email: string;
+            usuario_ti: string;
+            activo: string;
+            primer_login: string;
+            roles: string;
+            servidor?: {
+                id: string;
+                cedula: string;
+                nombre: string;
+            };
+            created_at: string;
         };
         /** Vacacion */
         Vacacion: {
@@ -12490,8 +12526,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Usuarios sin servidor asignado.";
-                        datos: components["schemas"]["User"][];
+                        mensaje: "Usuarios disponibles para asignar a servidor.";
+                        datos: components["schemas"]["UsuarioResource"][];
                         meta: null;
                     };
                 };
@@ -12519,7 +12555,34 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         mensaje: string;
-                        datos: components["schemas"]["User"];
+                        datos: components["schemas"]["UsuarioResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "usuarios.roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Roles del sistema.";
+                        datos: unknown[];
                         meta: null;
                     };
                 };
@@ -12586,7 +12649,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Usuario creado exitosamente.";
-                        datos: components["schemas"]["User"];
+                        datos: components["schemas"]["UsuarioResource"];
                         meta: null;
                     };
                 };
@@ -12616,7 +12679,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Operación exitosa.";
-                        datos: components["schemas"]["User"];
+                        datos: components["schemas"]["UsuarioResource"];
                         meta: null;
                     };
                 };
@@ -12649,7 +12712,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Usuario actualizado exitosamente.";
-                        datos: components["schemas"]["User"];
+                        datos: components["schemas"]["UsuarioResource"];
                         meta: null;
                     };
                 };
@@ -12707,7 +12770,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Contraseña restablecida al número de cédula exitosamente.";
+                        mensaje: "Contraseña restablecida exitosamente.";
                         datos: null;
                         meta: null;
                     };
