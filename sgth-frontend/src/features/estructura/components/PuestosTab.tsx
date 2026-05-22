@@ -60,7 +60,7 @@ export function PuestosTab() {
           onDelete: handleDelete,
         })}
         fetching={isLoading}
-        totalRecords={data?.total ?? 0}
+        totalRecords={data?.total || records.length || 0}
         recordsPerPage={15}
         page={page}
         onPageChange={setPage}

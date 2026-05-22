@@ -29,7 +29,7 @@ export function UsuarioTable({
         onRestablecerPassword,
       })}
       fetching={isLoading}
-      totalRecords={total}
+      totalRecords={total || data.length || 0}
       recordsPerPage={15}
       page={page}
       onPageChange={onPageChange}

@@ -23,7 +23,7 @@ export function ServidorTable({
       records={data}
       columns={getServidorColumns({ onView, onEdit })}
       fetching={isLoading}
-      totalRecords={total}
+      totalRecords={total || data.length || 0}
       recordsPerPage={15}
       page={page}
       onPageChange={onPageChange}
