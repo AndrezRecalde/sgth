@@ -57,7 +57,7 @@ class StoreServidorRequest extends FormRequest
             // Sección C — Contacto
             'telefono_celular'      => 'nullable|string|max:20',
             'telefono_convencional' => 'nullable|string|max:20',
-            'correo_institucional'  => 'nullable|email|max:150|unique:servidores,correo_institucional',
+
             'correo_personal'       => 'nullable|email|max:150',
             'direccion_domicilio'   => 'nullable|string|max:255',
 

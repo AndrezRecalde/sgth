@@ -87,9 +87,8 @@ class GenerarReporteJob implements ShouldQueue
 
             // 4. Notificar al usuario por correo
             $servidor = Servidor::find($this->servidorId);
-            if ($servidor && $servidor->correo_institucional) {
-                // Mock de envío de correo
-                // Mail::to($servidor->correo_institucional)->send(new ReporteTerminadoMail($urlDescarga));
+            if ($servidor && $servidor->usuario?->email) {
+                // Mail::to($servidor->usuario->email)->send(new ReporteTerminadoMail($urlDescarga));
             }
 
         } catch (\Exception $e) {

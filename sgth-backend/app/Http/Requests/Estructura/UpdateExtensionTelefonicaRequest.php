@@ -25,7 +25,6 @@ class UpdateExtensionTelefonicaRequest extends FormRequest
             'unidad_administrativa_id' => ['sometimes', 'exists:unidades_administrativas,id'],
             'numero_extension'         => ['sometimes', 'string', 'max:10'],
             'responsable'              => ['sometimes', 'string', 'max:100'],
-            'descripcion'              => ['nullable', 'string', 'max:255'],
             'estado'                   => ['boolean'],
         ];
     }

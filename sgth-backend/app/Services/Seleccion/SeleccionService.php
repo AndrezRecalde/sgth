@@ -70,7 +70,7 @@ final class SeleccionService implements SeleccionServiceInterface
                 'cedula'    => $ganador->cedula,
                 'nombres'   => $ganador->nombres,
                 'apellidos' => $ganador->apellidos,
-                'correo_institucional' => $ganador->correo, // Se generaría el institucional real después
+
                 'puesto_id' => $convocatoria->puesto_id,
                 'estado'    => true, // Inicia activo
             ]);

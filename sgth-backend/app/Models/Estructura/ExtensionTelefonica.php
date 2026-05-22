@@ -18,7 +18,6 @@ class ExtensionTelefonica extends Model
         'unidad_administrativa_id',
         'numero_extension',
         'responsable',
-        'descripcion',
         'estado',
     ];
 

@@ -118,7 +118,7 @@ final class EstructuraService implements EstructuraServiceInterface
                 isset($filtros['activo']),
                 fn($q) => $q->where('activo', $filtros['activo'])
             )
-            ->orderBy('nivel_jerarquico')
+            ->orderBy('denominacion')
             ->orderBy('denominacion')
             ->paginate($filtros['per_page'] ?? 15);
     }

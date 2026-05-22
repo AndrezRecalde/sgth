@@ -25,7 +25,6 @@ class StoreExtensionTelefonicaRequest extends FormRequest
             'unidad_administrativa_id' => ['required', 'exists:unidades_administrativas,id'],
             'numero_extension'         => ['required', 'string', 'max:10'],
             'responsable'              => ['required', 'string', 'max:100'],
-            'descripcion'              => ['nullable', 'string', 'max:255'],
             'estado'                   => ['boolean'],
         ];
     }

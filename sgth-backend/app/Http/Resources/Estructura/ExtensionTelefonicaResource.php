@@ -13,7 +13,6 @@ class ExtensionTelefonicaResource extends JsonResource
             'id'                       => $this->id,
             'numero_extension'         => $this->numero_extension,
             'responsable'              => $this->responsable,
-            'descripcion'              => $this->descripcion,
             'estado'                   => $this->estado,
             'unidad_administrativa_id' => $this->unidad_administrativa_id,
             'unidad_administrativa'    => $this->whenLoaded(

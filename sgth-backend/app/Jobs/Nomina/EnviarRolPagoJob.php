@@ -29,12 +29,12 @@ class EnviarRolPagoJob implements ShouldQueue
     {
         $rol = RolPago::with('servidor')->find($this->rolPagoId);
         
-        if (!$rol || !$rol->servidor || !$rol->servidor->correo_institucional) {
+        if (!$rol || !$rol->servidor || !$rol->servidor->usuario?->email) {
             return;
         }
 
         // Aquí se enviaría el correo real con Mail::to(...)
-        Log::info("Simulando envío de rol de pago a: {$rol->servidor->correo_institucional}");
+        Log::info("Simulando envío de rol de pago a: {$rol->servidor->usuario?->email}");
 
         $rol->enviado_por_correo = true;
         $rol->enviado_en = now();

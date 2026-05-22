@@ -49,7 +49,7 @@ class Servidor extends Model
         // Sección B
         'numero_papeleta_votacion', 'pasaporte_numero', 'pasaporte_vencimiento',
         // Sección C
-        'telefono_celular', 'telefono_convencional', 'correo_institucional', 'correo_personal',
+        'telefono_celular', 'telefono_convencional', 'correo_personal',
         'direccion_domicilio',
         // Sección D
         'tiene_discapacidad',

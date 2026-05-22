@@ -60,7 +60,7 @@ class UpdateServidorRequest extends FormRequest
             // Sección C
             'telefono_celular'      => 'nullable|string|max:20',
             'telefono_convencional' => 'nullable|string|max:20',
-            'correo_institucional'  => ['nullable', 'email', 'max:150', Rule::unique('servidores')->ignore($servidorId)],
+
             'correo_personal'       => 'nullable|email|max:150',
             'direccion_domicilio'   => 'nullable|string|max:255',
 
