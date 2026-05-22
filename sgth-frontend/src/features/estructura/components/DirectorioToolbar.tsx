@@ -20,7 +20,7 @@ export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: Directo
 
   const unidadOptions = unidades.map(u => ({
     value: u.id.toString(),
-    label: (u as UnidadConRelaciones).nombre ?? `Unidad ${u.id}`
+    label: (u as unknown as UnidadConRelaciones).nombre ?? `Unidad ${u.id}`
   }))
 
   const content = (

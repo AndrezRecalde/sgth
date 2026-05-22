@@ -15536,9 +15536,9 @@
                                             "const": "Consulta exitosa."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/UsuarioResource"
                                             }
                                         },
                                         "meta": {

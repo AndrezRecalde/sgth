@@ -8,7 +8,6 @@ import type {
 import type { ServidorFormData } from '../schemas/servidor.schema'
 
 export const expedienteService = {
-  // Servidores
   listar: (params?: ServidorParams) =>
     api.get<ApiResponse<PaginatedResponse<Servidor>>>(
       '/expediente/servidores', { params }
@@ -19,12 +18,19 @@ export const expedienteService = {
       `/expediente/servidores/${id}`
     ).then(r => r.data.datos),
 
+  // Registro básico — solo datos personales obligatorios
+  crearBasico: (data: Partial<ServidorFormData>) =>
+    api.post<ApiResponse<Servidor>>(
+      '/expediente/servidores/basico', data
+    ).then(r => r.data.datos),
+
+  // Registro completo — todos los datos
   crear: (data: ServidorFormData) =>
     api.post<ApiResponse<Servidor>>(
       '/expediente/servidores', data
     ).then(r => r.data.datos),
 
-  editar: (id: number, data: ServidorFormData) =>
+  editar: (id: number, data: Partial<ServidorFormData>) =>
     api.put<ApiResponse<Servidor>>(
       `/expediente/servidores/${id}`, data
     ).then(r => r.data.datos),

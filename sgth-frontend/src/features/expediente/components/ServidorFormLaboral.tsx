@@ -33,7 +33,7 @@ export function ServidorFormLaboral({ form }: Props) {
   const { data: unidades = [] } = useUnidades()
   const { data: puestosData }   = usePuestos()
 
-  const unidadOptions = (unidades as UnidadConRelaciones[]).map(u => ({
+  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))

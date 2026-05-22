@@ -34,6 +34,7 @@ export function OrganigramaTree({
         <Skeleton height={60} radius="md" />
         <Skeleton height={60} radius="md" ml="xl" />
         <Skeleton height={60} radius="md" ml="xl" />
+        <Skeleton height={60} radius="md" ml={48} />
       </Stack>
     )
   }
@@ -41,7 +42,7 @@ export function OrganigramaTree({
   if (error) {
     return (
       <Text c="red" size="sm">
-        Ocurrió un error al cargar el organigrama.
+        Error al cargar el organigrama: {error.message}
       </Text>
     )
   }
@@ -59,7 +60,7 @@ export function OrganigramaTree({
       {unidades.map(unidad => {
         const id         = Number(unidad.id)
         const isExpanded = expandedIds.has(id)
-        const hijas      = unidad.hijas ?? []
+        const hijos      = unidad.hijos ?? []
 
         return (
           <Box key={id}>
@@ -69,10 +70,10 @@ export function OrganigramaTree({
               expanded={isExpanded}
               onToggle={handleToggle}
             />
-            {isExpanded && hijas.length > 0 && (
+            {isExpanded && hijos.length > 0 && (
               <Box mt="xs">
                 <OrganigramaTree
-                  unidades={hijas}
+                  unidades={hijos}
                   nivel={nivel + 1}
                 />
               </Box>

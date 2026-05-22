@@ -17,17 +17,14 @@ const NIVEL_COLORS = [
 ]
 
 export function OrganigramaNode({
-  unidad,
-  nivel,
-  expanded,
-  onToggle,
+  unidad, nivel, expanded, onToggle,
 }: OrganigramaNodeProps) {
   const borderColor = NIVEL_COLORS[Math.min(nivel, NIVEL_COLORS.length - 1)]
   const nombre      = unidad.nombre ?? 'Sin nombre'
-  const tipoNombre  = unidad.tipo_unidad?.nombre ?? 'Unidad'
+  const tipoNombre  = unidad.tipo_unidad?.descripcion ?? 'Unidad'
   const puestos     = unidad.puestos_count ?? unidad.puestos?.length ?? 0
-  const hijas       = unidad.hijas ?? []
-  const hasChildren = hijas.length > 0
+  const hijos       = unidad.hijos ?? []
+  const hasChildren = hijos.length > 0
 
   return (
     <Card
@@ -45,7 +42,8 @@ export function OrganigramaNode({
           <Stack gap={0}>
             <Text fw={600} size="sm">{nombre}</Text>
             <Text size="xs" c="dimmed">
-              {tipoNombre} · {puestos} {puestos === 1 ? 'puesto' : 'puestos'}
+              {tipoNombre}
+              {puestos > 0 && ` · ${puestos} ${puestos === 1 ? 'puesto' : 'puestos'}`}
             </Text>
           </Stack>
         </Group>

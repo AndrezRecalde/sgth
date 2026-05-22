@@ -29,7 +29,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     validate: zodResolver(puestoSchema),
   })
 
-  const unidadOptions = (unidades as UnidadConRelaciones[]).map(u => ({
+  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))

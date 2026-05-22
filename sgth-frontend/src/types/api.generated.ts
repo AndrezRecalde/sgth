@@ -12609,9 +12609,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Consulta exitosa.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["UsuarioResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;

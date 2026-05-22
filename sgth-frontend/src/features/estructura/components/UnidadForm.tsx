@@ -45,7 +45,7 @@ export function UnidadForm({
 
   const unidadOptions = [
     { value: '', label: 'Sin unidad padre (raíz)' },
-    ...(unidades as UnidadConRelaciones[]).map(u => ({
+    ...(unidades as unknown as UnidadConRelaciones[]).map(u => ({
       value: String(u.id),
       label: u.nombre ?? `Unidad ${u.id}`,
     })),

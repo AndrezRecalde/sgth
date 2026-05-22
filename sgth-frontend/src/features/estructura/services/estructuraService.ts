@@ -5,6 +5,7 @@ import type {
   TipoUnidad,
   ApiResponse,
   UnidadAdministrativaParams,
+  UnidadConRelaciones,
 } from '@/types/api'
 
 export const estructuraService = {
@@ -36,7 +37,7 @@ export const estructuraService = {
 
   // Organigrama (árbol completo)
   organigrama: () =>
-    api.get<ApiResponse<UnidadAdministrativa[]>>(
+    api.get<ApiResponse<UnidadConRelaciones[]>>(
       '/estructura/organigrama'
     ).then(r => r.data.datos),
 

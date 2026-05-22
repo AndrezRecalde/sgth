@@ -46,7 +46,7 @@ export function ContratoModal({ opened, onClose, servidorId }: Props) {
     validate: zodResolver(contratoSchema),
   })
 
-  const unidadOptions = (unidades as UnidadConRelaciones[]).map(u => ({
+  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))

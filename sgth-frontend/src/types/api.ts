@@ -198,12 +198,23 @@ export type ExtensionTelefonicaParams = {
 }
 
 // Tipos extendidos con relaciones (no generados por OpenAPI)
-export type UnidadConRelaciones = UnidadAdministrativa & {
+export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | 'nombre' | 'acronimo' | 'descripcion' | 'nivel' | 'estado' | 'unidad_padre_id' | 'tipo_unidad' | 'puestos_count' | 'puestos' | 'hijos'> & {
+  id: number
+  codigo?: string
   nombre?: string
-  tipo_unidad?: { nombre: string }
-  puestos?: Puesto[]
+  acronimo?: string
+  descripcion?: string
+  nivel?: number
+  estado?: boolean
+  unidad_padre_id?: number | null
+  tipo_unidad?: {
+    id: string
+    acronimo?: string
+    descripcion?: string
+  }
   puestos_count?: number
-  hijas?: UnidadConRelaciones[]
+  puestos?: Puesto[]
+  hijos?: UnidadConRelaciones[]
 }
 
 export type ExtensionConRelaciones = ExtensionTelefonica & {
