@@ -13,16 +13,35 @@ class PuestoResource extends JsonResource
             'id'                       => $this->id,
             'codigo'                   => $this->codigo,
             'denominacion'             => $this->denominacion,
+            'mision'                   => $this->mision,
             'unidad_administrativa_id' => $this->unidad_administrativa_id,
-            'grupo_ocupacional'        => $this->grupo_ocupacional,
-            'grado_rmu'                => $this->grado_rmu,
-            'rmu'                      => $this->rmu,
+            'grupo_ocupacional_id'     => $this->grupo_ocupacional_id,
+            'partida_presupuestaria_id' => $this->partida_presupuestaria_id,
+            'plazas'                   => $this->plazas,
+            'rol_puesto'               => $this->rol_puesto,
+            'nivel_complejidad'        => $this->nivel_complejidad,
+            'nivel_jerarquico'         => $this->nivel_jerarquico,
+            'regimen_laboral'          => $this->regimen_laboral,
             'es_jefe'                  => $this->es_jefe,
-            'nivel'                    => $this->nivel,
-            'estado'                   => $this->estado,
-            
-            // Relaciones anidadas condicionales
-            'unidad_administrativa'    => new UnidadAdministrativaResource($this->whenLoaded('unidadAdministrativa')),
+            'activo'                   => $this->activo,
+
+            // RMU calculada desde grupo ocupacional
+            'rmu'                      => $this->rmu,
+
+            // Relaciones
+            'unidad_administrativa'    => new UnidadAdministrativaResource(
+                $this->whenLoaded('unidadAdministrativa')
+            ),
+            'grupo_ocupacional'        => $this->whenLoaded(
+                'grupoOcupacional',
+                fn() => [
+                    'id'          => $this->grupoOcupacional->id,
+                    'grado_codigo' => $this->grupoOcupacional->grado_codigo,
+                    'grupo'       => $this->grupoOcupacional->grupo,
+                    'rmu'         => $this->grupoOcupacional->rmu,
+                    'regimen'     => $this->grupoOcupacional->regimen,
+                ]
+            ),
         ];
     }
 }

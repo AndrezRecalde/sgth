@@ -98,13 +98,29 @@ final class EstructuraService implements EstructuraServiceInterface
     public function listarPuestos(array $filtros): LengthAwarePaginator
     {
         return Puesto::query()
-            ->with(['unidadAdministrativa'])
-            ->when(isset($filtros['unidad_administrativa_id']), fn($q) => $q->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']))
-            ->when(isset($filtros['es_jefe']), fn($q) => $q->where('es_jefe', $filtros['es_jefe']))
-            ->when(isset($filtros['activo']), fn($q) => $q->where('activo', $filtros['activo']))
-            ->orderBy('unidad_administrativa_id')
-            ->orderBy('nivel')
-            ->paginate($filtros['por_pagina'] ?? 15);
+            ->with(['unidadAdministrativa', 'grupoOcupacional'])
+            ->when(
+                isset($filtros['unidad_administrativa_id']),
+                fn($q) => $q->where(
+                    'unidad_administrativa_id',
+                    $filtros['unidad_administrativa_id']
+                )
+            )
+            ->when(
+                isset($filtros['regimen_laboral']),
+                fn($q) => $q->where('regimen_laboral', $filtros['regimen_laboral'])
+            )
+            ->when(
+                isset($filtros['es_jefe']),
+                fn($q) => $q->where('es_jefe', $filtros['es_jefe'])
+            )
+            ->when(
+                isset($filtros['activo']),
+                fn($q) => $q->where('activo', $filtros['activo'])
+            )
+            ->orderBy('nivel_jerarquico')
+            ->orderBy('denominacion')
+            ->paginate($filtros['per_page'] ?? 15);
     }
 
     public function crearPuesto(array $datos): Puesto

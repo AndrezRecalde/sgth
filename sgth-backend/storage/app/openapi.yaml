@@ -11914,9 +11914,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             },
@@ -19527,6 +19524,15 @@
                 ],
                 "title": "NacionalidadEstudio"
             },
+            "NivelComplejidadPuesto": {
+                "type": "string",
+                "enum": [
+                    "bajo",
+                    "medio",
+                    "alto"
+                ],
+                "title": "NivelComplejidadPuesto"
+            },
             "NivelEstudio": {
                 "type": "string",
                 "enum": [
@@ -19961,43 +19967,91 @@
                     "denominacion": {
                         "type": "string"
                     },
+                    "mision": {
+                        "type": "string"
+                    },
                     "unidad_administrativa_id": {
                         "type": "string"
                     },
-                    "grupo_ocupacional": {
+                    "grupo_ocupacional_id": {
                         "type": "string"
                     },
-                    "grado_rmu": {
+                    "partida_presupuestaria_id": {
                         "type": "string"
                     },
-                    "rmu": {
+                    "plazas": {
+                        "type": "string"
+                    },
+                    "rol_puesto": {
+                        "type": "string"
+                    },
+                    "nivel_complejidad": {
+                        "type": "string"
+                    },
+                    "nivel_jerarquico": {
+                        "type": "string"
+                    },
+                    "regimen_laboral": {
                         "type": "string"
                     },
                     "es_jefe": {
                         "type": "string"
                     },
-                    "nivel": {
+                    "activo": {
                         "type": "string"
                     },
-                    "estado": {
-                        "type": "string"
+                    "rmu": {
+                        "type": "string",
+                        "description": "RMU calculada desde grupo ocupacional"
                     },
                     "unidad_administrativa": {
-                        "description": "Relaciones anidadas condicionales",
+                        "description": "Relaciones",
                         "$ref": "#/components/schemas/UnidadAdministrativaResource"
+                    },
+                    "grupo_ocupacional": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "grado_codigo": {
+                                "type": "string"
+                            },
+                            "grupo": {
+                                "type": "string"
+                            },
+                            "rmu": {
+                                "type": "string"
+                            },
+                            "regimen": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "grado_codigo",
+                            "grupo",
+                            "rmu",
+                            "regimen"
+                        ]
                     }
                 },
                 "required": [
                     "id",
                     "codigo",
                     "denominacion",
+                    "mision",
                     "unidad_administrativa_id",
-                    "grupo_ocupacional",
-                    "grado_rmu",
-                    "rmu",
+                    "grupo_ocupacional_id",
+                    "partida_presupuestaria_id",
+                    "plazas",
+                    "rol_puesto",
+                    "nivel_complejidad",
+                    "nivel_jerarquico",
+                    "regimen_laboral",
                     "es_jefe",
-                    "nivel",
-                    "estado"
+                    "activo",
+                    "rmu"
                 ],
                 "title": "PuestoResource"
             },
@@ -20357,6 +20411,18 @@
                     "deleted_at"
                 ],
                 "title": "RolPago"
+            },
+            "RolPuesto": {
+                "type": "string",
+                "enum": [
+                    "dignatario",
+                    "ejecucion_coordinacion",
+                    "ejecucion_procesos",
+                    "ejecucion_procesos_apoyo",
+                    "administrativo",
+                    "codigo_trabajo"
+                ],
+                "title": "RolPuesto"
             },
             "ServidorResource": {
                 "type": "array",
@@ -21254,29 +21320,55 @@
                         "type": "string",
                         "maxLength": 255
                     },
+                    "mision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "unidad_administrativa_id": {
                         "type": "integer"
                     },
-                    "grupo_ocupacional": {
-                        "type": "string",
-                        "maxLength": 100
+                    "grupo_ocupacional_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
-                    "grado_rmu": {
+                    "partida_presupuestaria_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "plazas": {
                         "type": "integer",
                         "minimum": 1
                     },
-                    "rmu": {
-                        "type": "number",
-                        "minimum": 0
+                    "rol_puesto": {
+                        "$ref": "#/components/schemas/RolPuesto"
+                    },
+                    "nivel_complejidad": {
+                        "$ref": "#/components/schemas/NivelComplejidadPuesto"
+                    },
+                    "nivel_jerarquico": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "regimen_laboral": {
+                        "type": "string",
+                        "enum": [
+                            "losep",
+                            "codigo_trabajo"
+                        ]
                     },
                     "es_jefe": {
                         "type": "boolean"
                     },
-                    "nivel": {
-                        "type": "integer",
-                        "minimum": 1
-                    },
-                    "estado": {
+                    "activo": {
                         "type": "boolean"
                     }
                 },
@@ -21284,10 +21376,8 @@
                     "codigo",
                     "denominacion",
                     "unidad_administrativa_id",
-                    "grupo_ocupacional",
-                    "grado_rmu",
-                    "rmu",
-                    "nivel"
+                    "plazas",
+                    "regimen_laboral"
                 ],
                 "title": "StorePuestoRequest"
             },
@@ -22900,29 +22990,55 @@
                         "type": "string",
                         "maxLength": 255
                     },
+                    "mision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "unidad_administrativa_id": {
                         "type": "integer"
                     },
-                    "grupo_ocupacional": {
-                        "type": "string",
-                        "maxLength": 100
+                    "grupo_ocupacional_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
-                    "grado_rmu": {
+                    "partida_presupuestaria_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "plazas": {
                         "type": "integer",
                         "minimum": 1
                     },
-                    "rmu": {
-                        "type": "number",
-                        "minimum": 0
+                    "rol_puesto": {
+                        "$ref": "#/components/schemas/RolPuesto"
+                    },
+                    "nivel_complejidad": {
+                        "$ref": "#/components/schemas/NivelComplejidadPuesto"
+                    },
+                    "nivel_jerarquico": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "regimen_laboral": {
+                        "type": "string",
+                        "enum": [
+                            "losep",
+                            "codigo_trabajo"
+                        ]
                     },
                     "es_jefe": {
                         "type": "boolean"
                     },
-                    "nivel": {
-                        "type": "integer",
-                        "minimum": 1
-                    },
-                    "estado": {
+                    "activo": {
                         "type": "boolean"
                     }
                 },
