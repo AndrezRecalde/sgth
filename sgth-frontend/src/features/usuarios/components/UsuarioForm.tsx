@@ -1,12 +1,13 @@
 'use client'
 
 import {
-  TextInput, MultiSelect, Grid, Text,
+  TextInput, MultiSelect, Select, Grid, Text,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zodResolver } from 'mantine-form-zod-resolver'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRoles } from '../hooks/useRoles'
+import { useServidoresSinUsuario } from '../hooks/useServidoresSinUsuario'
 import {
   usuarioSchema,
   type UsuarioFormData,
@@ -38,20 +39,32 @@ interface Props {
 
 export function UsuarioForm({ initialValues, onSubmit, isEditing }: Props) {
   const contained = useContainedInput()
-  const { data: roles = [] } = useRoles()
+  const { data: roles = [] }      = useRoles()
+  const { data: servidores = [] } = useServidoresSinUsuario()
 
   const rolOptions = (roles as string[]).map(r => ({
     value: r,
     label: ROL_LABELS[r] ?? r,
   }))
 
+  type ServidorItem = {
+    id: number
+    cedula: string
+    nombre_completo: string
+  }
+  const servidorOptions = (servidores as ServidorItem[]).map(s => ({
+    value: String(s.id),
+    label: `${s.cedula} — ${s.nombre_completo}`,
+  }))
+
   const form = useForm<UsuarioFormData>({
     initialValues: {
-      nombre:   initialValues?.nombre   ?? '',
-      apellido: initialValues?.apellido ?? '',
-      email:    initialValues?.email    ?? '',
-      cedula:   initialValues?.cedula   ?? '',
-      roles:    initialValues?.roles    ?? [],
+      nombre:      initialValues?.nombre      ?? '',
+      apellido:    initialValues?.apellido    ?? '',
+      email:       initialValues?.email       ?? '',
+      cedula:      initialValues?.cedula      ?? '',
+      roles:       initialValues?.roles       ?? [],
+      servidor_id: initialValues?.servidor_id ?? null,
     },
     validate: zodResolver(usuarioSchema),
   })
@@ -59,6 +72,25 @@ export function UsuarioForm({ initialValues, onSubmit, isEditing }: Props) {
   return (
     <form id="usuario-form" onSubmit={form.onSubmit(onSubmit)}>
       <Grid>
+        {!isEditing && (
+          <Grid.Col span={12}>
+            <Select
+              label="Vincular a servidor (expediente)"
+              placeholder="Buscar por cédula o nombre"
+              data={servidorOptions}
+              searchable
+              clearable
+              {...contained}
+              value={form.values.servidor_id
+                ? String(form.values.servidor_id) : ''}
+              onChange={(v) =>
+                form.setFieldValue('servidor_id',
+                  v ? Number(v) : null)
+              }
+              error={form.errors.servidor_id}
+            />
+          </Grid.Col>
+        )}
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <TextInput
             label="Nombre"

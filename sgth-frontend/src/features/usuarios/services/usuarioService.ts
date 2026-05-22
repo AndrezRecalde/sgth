@@ -39,6 +39,12 @@ export const usuarioService = {
       `/admin/usuarios/${id}/restablecer-contrasena`
     ).then(r => r.data),
 
+  servidoresSinUsuario: (search?: string) =>
+    api.get<ApiResponse<{ id: number; cedula: string; nombre_completo: string }[]>>(
+      '/expediente/servidores/sin-usuario',
+      { params: search ? { search } : undefined }
+    ).then(r => r.data.datos),
+
   sinServidor: () =>
     api.get<ApiResponse<Usuario[]>>(
       '/admin/usuarios/sin-servidor'

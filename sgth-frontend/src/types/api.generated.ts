@@ -2361,6 +2361,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/servidores/sin-usuario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["servidores.sinUsuario"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/basico": {
         parameters: {
             query?: never;
@@ -4421,6 +4437,7 @@ export interface components {
             /** Format: email */
             email: string;
             cedula: string;
+            servidor_id?: number | null;
             roles: string[];
         };
         /** StoreVacacionRequest */
@@ -11349,6 +11366,37 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "servidores.sinUsuario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Servidores sin usuario del sistema.";
+                        datos: {
+                            id: number;
+                            cedula: string;
+                            nombre_completo: string;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "servidores.storeBasico": {

@@ -12905,6 +12905,72 @@
                 }
             }
         },
+        "/v1/expediente/servidores/sin-usuario": {
+            "get": {
+                "operationId": "servidores.sinUsuario",
+                "tags": [
+                    "Servidor"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Servidores sin usuario del sistema."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "cedula": {
+                                                        "type": "string"
+                                                    },
+                                                    "nombre_completo": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "cedula",
+                                                    "nombre_completo"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/basico": {
             "post": {
                 "operationId": "servidores.storeBasico",
@@ -22061,6 +22127,12 @@
                     "cedula": {
                         "type": "string",
                         "pattern": "^\\d{10}$"
+                    },
+                    "servidor_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "roles": {
                         "type": "array",

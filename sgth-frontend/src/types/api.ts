@@ -410,6 +410,7 @@ export type UsuarioFormData = {
   email: string
   cedula: string
   roles: string[]
+  servidor_id?: number | null
 }
 
 export type UsuarioUpdateData = {
