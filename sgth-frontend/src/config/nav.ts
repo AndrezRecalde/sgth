@@ -21,6 +21,17 @@ export const NAV_ADMIN: NavGroup[] = [
     ],
   },
   {
+    label: 'Administración',
+    items: [
+      {
+        label: 'Usuarios',
+        href: ROUTES.DASHBOARD.USUARIOS ?? '/usuarios',
+        icon: 'IconUsers',
+        permiso: 'gestionar-usuarios',
+      },
+    ],
+  },
+  {
     label: 'Talento Humano',
     items: [
       { label: 'Estructura', href: ROUTES.TALENTO_HUMANO.ESTRUCTURA, icon: 'IconSitemap' },

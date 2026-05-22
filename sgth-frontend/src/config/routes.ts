@@ -6,6 +6,7 @@ export const ROUTES = {
   DASHBOARD: {
     HOME: '/',
     SERVIDORES: '/servidores',
+    USUARIOS: '/usuarios',
   },
   TALENTO_HUMANO: {
     ESTRUCTURA: '/estructura',
