@@ -16,8 +16,8 @@ export function Topbar({ mobileOpened, desktopOpened, onMobileToggle, onDesktopT
   return (
     <Group h="100%" px="md" justify="space-between" align="center" style={{ borderBottom: '0.5px solid var(--mantine-color-default-border)' }}>
       <Group>
-        <Burger opened={mobileOpened} onClick={onMobileToggle} hiddenFrom="md" size="sm" />
-        <Burger opened={desktopOpened} onClick={onDesktopToggle} visibleFrom="md" size="sm" />
+        <Burger opened={mobileOpened} onClick={onMobileToggle} hiddenFrom="md" lineSize={2} size="sm" />
+        <Burger opened={desktopOpened} onClick={onDesktopToggle} visibleFrom="md" lineSize={2} size="sm" />
         <Box visibleFrom="md">
           <span style={{ fontSize: 14, color: 'var(--mantine-color-dimmed)' }}>Inicio</span>
         </Box>

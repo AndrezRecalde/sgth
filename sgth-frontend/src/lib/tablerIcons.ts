@@ -5,12 +5,12 @@ import React from 'react'
 
 type IconName = keyof typeof TablerIcons
 
-const ICON_SIZE = 18
+const ICON_SIZE = 19
 
 export function getNavIcon(name: string): React.ReactElement {
   const IconComponent = TablerIcons[name as IconName] as Icon | undefined
   if (!IconComponent) {
-    return React.createElement(IconPoint, { size: ICON_SIZE })
+    return React.createElement(IconPoint, { size: ICON_SIZE, stroke: '2' }) // Icono de error genérico
   }
-  return React.createElement(IconComponent, { size: ICON_SIZE })
+  return React.createElement(IconComponent, { size: ICON_SIZE, stroke: '2' })
 }

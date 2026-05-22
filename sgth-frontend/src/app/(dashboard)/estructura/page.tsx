@@ -1,62 +1,66 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Tabs, Box, Button, Group } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { useState } from "react";
+import { Tabs, Box, Button, Group } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconSitemap,
   IconPhone,
   IconBriefcase,
-  IconPlus,
-} from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { OrganigramaTree } from '@/features/estructura/components/OrganigramaTree'
-import { DirectorioTable } from '@/features/estructura/components/DirectorioTable'
-import { DirectorioToolbar } from '@/features/estructura/components/DirectorioToolbar'
-import { PuestosTab } from '@/features/estructura/components/PuestosTab'
-import { UnidadModal } from '@/features/estructura/components/UnidadModal'
-import { ExtensionModal } from '@/features/estructura/components/ExtensionModal'
-import { useOrganigrama } from '@/features/estructura/hooks/useOrganigrama'
-import { useDirectorio } from '@/features/estructura/hooks/useDirectorio'
-import { useExtensionMutations } from '@/features/estructura/hooks/useExtensionMutations'
-import type { UnidadConRelaciones, ExtensionConRelaciones } from '@/types/api'
+  IconCubePlus,
+} from "@tabler/icons-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { OrganigramaTree } from "@/features/estructura/components/OrganigramaTree";
+import { DirectorioTable } from "@/features/estructura/components/DirectorioTable";
+import { DirectorioToolbar } from "@/features/estructura/components/DirectorioToolbar";
+import { PuestosTab } from "@/features/estructura/components/PuestosTab";
+import { UnidadModal } from "@/features/estructura/components/UnidadModal";
+import { ExtensionModal } from "@/features/estructura/components/ExtensionModal";
+import { useOrganigrama } from "@/features/estructura/hooks/useOrganigrama";
+import { useDirectorio } from "@/features/estructura/hooks/useDirectorio";
+import { useExtensionMutations } from "@/features/estructura/hooks/useExtensionMutations";
+import type { UnidadConRelaciones, ExtensionConRelaciones } from "@/types/api";
 
 export default function EstructuraPage() {
-  const [search, setSearch]   = useState('')
-  const [unidadId, setUnidadId] = useState<string | null>(null)
+  const [search, setSearch] = useState("");
+  const [unidadId, setUnidadId] = useState<string | null>(null);
 
-  const [unidadModal, unidadModalHandlers]     = useDisclosure(false)
-  const [extensionModal, extensionModalHandlers] = useDisclosure(false)
+  const [unidadModal, unidadModalHandlers] = useDisclosure(false);
+  const [extensionModal, extensionModalHandlers] = useDisclosure(false);
 
-  const [editUnidad, setEditUnidad] =
-    useState<UnidadConRelaciones | null>(null)
+  const [editUnidad, setEditUnidad] = useState<UnidadConRelaciones | null>(
+    null,
+  );
   const [editExtension, setEditExtension] =
-    useState<ExtensionConRelaciones | null>(null)
+    useState<ExtensionConRelaciones | null>(null);
 
-  const { eliminar: eliminarExtension } = useExtensionMutations()
+  const { eliminar: eliminarExtension } = useExtensionMutations();
 
-  const { data: organigrama, isLoading: isLoadingOrg, error: errorOrg } =
-    useOrganigrama()
+  const {
+    data: organigrama,
+    isLoading: isLoadingOrg,
+    error: errorOrg,
+  } = useOrganigrama();
 
   const { data: directorio = [], isLoading: isLoadingDir } = useDirectorio({
     search: search || undefined,
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
-  })
+  });
 
   const handleEditExtension = (ext: ExtensionConRelaciones) => {
-    setEditExtension(ext)
-    extensionModalHandlers.open()
-  }
+    setEditExtension(ext);
+    extensionModalHandlers.open();
+  };
 
   const handleCloseExtension = () => {
-    setEditExtension(null)
-    extensionModalHandlers.close()
-  }
+    setEditExtension(null);
+    extensionModalHandlers.close();
+  };
 
   const handleCloseUnidad = () => {
-    setEditUnidad(null)
-    unidadModalHandlers.close()
-  }
+    setEditUnidad(null);
+    unidadModalHandlers.close();
+  };
 
   return (
     <Box>
@@ -82,8 +86,9 @@ export default function EstructuraPage() {
         <Tabs.Panel value="organigrama">
           <Group justify="flex-end" mb="md">
             <Button
-              leftSection={<IconPlus size={16} />}
               color="emerald"
+              leftSection={<IconCubePlus size={20} stroke={2} />}
+              variant="light"
               onClick={unidadModalHandlers.open}
             >
               Nueva unidad
@@ -99,8 +104,9 @@ export default function EstructuraPage() {
         <Tabs.Panel value="directorio">
           <Group justify="flex-end" mb="sm">
             <Button
-              leftSection={<IconPlus size={16} />}
               color="emerald"
+              leftSection={<IconCubePlus size={20} stroke={2} />}
+              variant="light"
               onClick={extensionModalHandlers.open}
             >
               Nueva extensión
@@ -109,15 +115,20 @@ export default function EstructuraPage() {
           <DirectorioToolbar
             onSearch={setSearch}
             onUnidadChange={setUnidadId}
-            onClear={() => { setSearch(''); setUnidadId(null) }}
+            onClear={() => {
+              setSearch("");
+              setUnidadId(null);
+            }}
           />
           <DirectorioTable
             data={directorio}
             isLoading={isLoadingDir}
             onEdit={handleEditExtension}
             onDelete={(ext) => {
-              if (confirm(`¿Eliminar la extensión ${ext.numero_extension ?? ''}?`)) {
-                eliminarExtension.mutate(ext.id)
+              if (
+                confirm(`¿Eliminar la extensión ${ext.numero_extension ?? ""}?`)
+              ) {
+                eliminarExtension.mutate(ext.id);
               }
             }}
           />
@@ -139,5 +150,5 @@ export default function EstructuraPage() {
         extension={editExtension}
       />
     </Box>
-  )
+  );
 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { UnstyledButton, Group, Text, Tooltip, Box } from '@mantine/core'
 import { getNavIcon } from '@/lib/tablerIcons'
+import classes from './Sidebar.module.css'
 
 interface Props {
   label: string
@@ -23,19 +24,12 @@ export function NavItem({ label, icon, href, collapsed, onClick }: Props) {
       component={Link}
       href={href}
       onClick={onClick}
-      style={{
-        display: 'block',
-        width: '100%',
-        padding: '10px 16px',
-        backgroundColor: isActive ? 'rgba(16,185,129,0.18)' : 'transparent',
-        borderLeft: `3px solid ${isActive ? '#10B981' : 'transparent'}`,
-        color: isActive ? '#fff' : 'rgba(255,255,255,0.85)',
-        transition: 'background-color 150ms ease',
-      }}
+      className={classes.navItem}
+      data-active={isActive || undefined}
     >
-      <Group wrap="nowrap" justify={collapsed ? 'center' : 'flex-start'} gap="sm">
-        <Box style={{ opacity: isActive ? 1 : 0.7 }}>{getNavIcon(icon)}</Box>
-        {!collapsed && <Text size="sm" fw={isActive ? 600 : 400}>{label}</Text>}
+      <Group wrap="nowrap" justify={collapsed ? 'center' : 'flex-start'} gap="md">
+        <Box style={{ display: 'flex', alignItems: 'center' }}>{getNavIcon(icon)}</Box>
+        {!collapsed && <Text size="sm" fw="inherit">{label}</Text>}
       </Group>
     </UnstyledButton>
   )

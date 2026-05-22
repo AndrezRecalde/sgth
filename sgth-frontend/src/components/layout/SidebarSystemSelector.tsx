@@ -8,8 +8,8 @@ export function SidebarSystemSelector({ collapsed }: Props) {
   return (
     <Box p="md" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
       <Group wrap="nowrap" justify={collapsed ? 'center' : 'space-between'}>
-        <Text fw={800} size="xl" c="white">SGTH</Text>
-        {!collapsed && <Text size="xs" c="rgba(255,255,255,0.45)">{version}</Text>}
+        <Text fw={800} size="xl">SGTH</Text>
+        {!collapsed && <Text size="xs">{version}</Text>}
       </Group>
     </Box>
   )

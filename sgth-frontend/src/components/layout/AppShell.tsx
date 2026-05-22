@@ -15,7 +15,7 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
     <AppShell
       header={{ height: 52 }}
       navbar={{
-        width: isTablet ? 60 : 220,
+        width: isTablet ? 60 : 230,
         breakpoint: 'md',
         collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}

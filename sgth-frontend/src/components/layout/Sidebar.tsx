@@ -4,10 +4,11 @@ import { Box, ScrollArea } from '@mantine/core'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { buildNavGroups } from '@/config/nav'
-import { SidebarSystemSelector } from './SidebarSystemSelector'
+//import { SidebarSystemSelector } from './SidebarSystemSelector'
 import { SidebarUserRow } from './SidebarUserRow'
 import { NavGroup } from './NavGroup'
 import { NavItem } from './NavItem'
+import classes from './Sidebar.module.css'
 
 interface Props {
   collapsed: boolean
@@ -27,11 +28,11 @@ export function Sidebar({ collapsed, onNavClick }: Props) {
   }
 
   return (
-    <Box bg="#0D1F2D" h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
-      <SidebarSystemSelector collapsed={collapsed} />
+    <Box className={classes.sidebar}>
+      {/* <SidebarSystemSelector collapsed={collapsed} /> */}
       <SidebarUserRow collapsed={collapsed} />
       
-      <ScrollArea style={{ flex: 1 }}>
+      <ScrollArea style={{ flex: 1 }} px="xs">
         {groups.map((g, i) => (
           <Box key={i} pb="sm">
             <NavGroup label={g.label} collapsed={collapsed} />
@@ -42,7 +43,7 @@ export function Sidebar({ collapsed, onNavClick }: Props) {
         ))}
       </ScrollArea>
 
-      <Box pt="md" pb="md" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      <Box className={classes.footer}>
         <NavItem label="Configuración" icon="IconSettings" href="/configuracion" collapsed={collapsed} onClick={onNavClick} />
         <NavItem label="Cerrar sesión" icon="IconLogout" href="#" collapsed={collapsed} onClick={handleLogout} />
       </Box>

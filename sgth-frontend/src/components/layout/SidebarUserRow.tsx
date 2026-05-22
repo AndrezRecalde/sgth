@@ -1,5 +1,6 @@
-import { Group, Avatar, Text, Box } from '@mantine/core'
+import { Avatar, Text, Box } from '@mantine/core'
 import { useAuth } from '@/hooks/useAuth'
+import classes from './Sidebar.module.css'
 
 interface Props { collapsed: boolean }
 
@@ -10,17 +11,19 @@ export function SidebarUserRow({ collapsed }: Props) {
   const initials = usuario.name.substring(0, 2).toUpperCase()
   const role = usuario.roles?.[0] || 'Usuario'
 
+  if (collapsed) {
+    return (
+      <Box className={classes.userRowCollapsed}>
+        <Avatar color="emerald" className={classes.avatarCollapsed}>{initials}</Avatar>
+      </Box>
+    )
+  }
+
   return (
-    <Box p="md" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-      <Group wrap="nowrap" justify={collapsed ? 'center' : 'flex-start'}>
-        <Avatar color="emerald" radius="xl">{initials}</Avatar>
-        {!collapsed && (
-          <Box style={{ flex: 1, overflow: 'hidden' }}>
-            <Text size="sm" fw={500} c="rgba(255,255,255,0.85)" truncate>{usuario.name}</Text>
-            <Text size="xs" c="rgba(255,255,255,0.45)" truncate>{role}</Text>
-          </Box>
-        )}
-      </Group>
+    <Box className={classes.userRow}>
+      <Avatar color="emerald" className={classes.avatar}>{initials}</Avatar>
+      <Text className={classes.title} truncate>{usuario.name}</Text>
+      <Text className={classes.subtitle} truncate>{role}</Text>
     </Box>
   )
 }
