@@ -7,56 +7,52 @@ import type { UnidadConRelaciones } from '@/types/api'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
-interface DirectorioToolbarProps {
-  onSearch: (value: string) => void
+interface Props {
+  onSearch:       (value: string) => void
   onUnidadChange: (value: string | null) => void
-  onClear: () => void
+  onClear:        () => void
 }
 
-export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: DirectorioToolbarProps) {
-  const { data: unidades = [] } = useUnidades()
-  const { isMobile } = useMobileBreakpoint()
-  const contained = useContainedInput()
+export function DirectorioToolbar({ onSearch, onUnidadChange, onClear }: Props) {
+  const { data: unidades = [] } = useUnidades({ nivel: 2 })
+  const { isMobile }            = useMobileBreakpoint()
+  const contained               = useContainedInput()
 
-  const unidadOptions = unidades.map(u => ({
-    value: u.id.toString(),
-    label: (u as unknown as UnidadConRelaciones).nombre ?? `Unidad ${u.id}`
+  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
   }))
 
   const content = (
     <>
       <TextInput
-        label="Busqueda rápida"
-        placeholder="Buscar por nombre, unidad o extensión"
+        placeholder="Buscar por responsable, extensión o unidad"
         onChange={(e) => onSearch(e.currentTarget.value)}
         {...contained}
         style={{ flex: 1 }}
       />
       <Select
-        label="Unidad Administrativa"
-        placeholder="Filtrar por unidad"
+        placeholder="Filtrar por gestión"
         data={unidadOptions}
         onChange={onUnidadChange}
         searchable
         clearable
         {...contained}
-        style={{ flex: 1 }}
+        style={{ minWidth: 240 }}
       />
-      <ActionIcon 
-        variant="light" 
-        color="gray" 
-        size="lg" 
+      <ActionIcon
+        variant="light"
+        color="gray"
+        size="lg"
         onClick={onClear}
         title="Limpiar filtros"
       >
-        <IconX size={20} />
+        <IconX size={16} />
       </ActionIcon>
     </>
   )
 
-  if (isMobile) {
-    return <Stack gap="sm" mb="md">{content}</Stack>
-  }
-
-  return <Group gap="sm" mb="md" wrap="nowrap">{content}</Group>
+  return isMobile
+    ? <Stack gap="sm" mb="md">{content}</Stack>
+    : <Group gap="sm" mb="md" wrap="nowrap">{content}</Group>
 }

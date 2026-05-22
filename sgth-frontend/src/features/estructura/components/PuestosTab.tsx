@@ -1,54 +1,79 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Box, Button, Group } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconCubePlus } from "@tabler/icons-react";
-import { SgthTable } from '@/components/ui/SgthTable';
-import { usePuestos } from "../hooks/usePuestos";
-import { usePuestoMutations } from "../hooks/usePuestoMutations";
-import { getPuestoColumns } from "./puesto.columns";
-import type { PuestoConRelaciones } from "@/types/api";
-import { PuestoModal } from "./PuestoModal";
+import { useState } from 'react'
+import { Box, Button, Group, Select } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import { IconCubePlus } from '@tabler/icons-react'
+import { SgthTable } from '@/components/ui/SgthTable'
+import { usePuestos } from '../hooks/usePuestos'
+import { usePuestoMutations } from '../hooks/usePuestoMutations'
+import { useUnidades } from '../hooks/useUnidades'
+import { getPuestoColumns } from './puesto.columns'
+import { PuestoModal } from './PuestoModal'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
 
 export function PuestosTab() {
-  const [page, setPage] = useState(1);
-  const [editPuesto, setEditPuesto] = useState<PuestoConRelaciones | null>(
-    null,
-  );
-  const [modalOpened, { open, close }] = useDisclosure(false);
-  const { eliminar } = usePuestoMutations();
+  const [page, setPage]           = useState(1)
+  const [unidadIds, setUnidadIds] = useState<string[]>([])
+  const [editPuesto, setEditPuesto] =
+    useState<PuestoConRelaciones | null>(null)
+  const [modalOpened, { open, close }] = useDisclosure(false)
 
-  const { data, isLoading } = usePuestos({ page, per_page: 15 });
-  const records = (data?.data ?? []) as PuestoConRelaciones[];
+  const contained = useContainedInput()
+  const { eliminar } = usePuestoMutations()
+  const { data: unidades = [] } = useUnidades({ nivel: 2 })
+
+  const unidadIdNum = unidadIds.length > 0
+    ? Number(unidadIds[0]) : undefined
+
+  const { data, isLoading } = usePuestos({
+    page,
+    per_page: 15,
+    unidad_administrativa_id: unidadIdNum,
+  })
+
+  const records = (data?.data ?? []) as PuestoConRelaciones[]
+
+  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
+  }))
 
   const handleEdit = (puesto: PuestoConRelaciones) => {
-    setEditPuesto(puesto);
-    open();
-  };
+    setEditPuesto(puesto)
+    open()
+  }
 
   const handleDelete = (puesto: PuestoConRelaciones) => {
     if (confirm(`¿Eliminar el puesto "${puesto.denominacion}"?`)) {
-      eliminar.mutate(Number(puesto.id));
+      eliminar.mutate(Number(puesto.id))
     }
-  };
+  }
 
   const handleClose = () => {
-    setEditPuesto(null);
-    close();
-  };
+    setEditPuesto(null)
+    close()
+  }
 
   return (
     <Box>
-      <Group justify="flex-end" mb="sm">
+      <Group justify="space-between" mb="md">
+        <Select
+          placeholder="Filtrar por gestión"
+          data={unidadOptions}
+          searchable
+          clearable
+          {...contained}
+          style={{ minWidth: 300 }}
+          value={unidadIds[0] ?? ''}
+          onChange={(v) => setUnidadIds(v ? [v] : [])}
+        />
         <Button
-          radius="lg"
-          leftSection={<IconCubePlus size={20} stroke={2} />}
+          leftSection={<IconCubePlus size={16} />}
+          color="emerald"
           variant="light"
-          onClick={() => {
-            setEditPuesto(null);
-            open();
-          }}
+          onClick={() => { setEditPuesto(null); open() }}
         >
           Nuevo puesto
         </Button>
@@ -72,5 +97,5 @@ export function PuestosTab() {
         puesto={editPuesto}
       />
     </Box>
-  );
+  )
 }
