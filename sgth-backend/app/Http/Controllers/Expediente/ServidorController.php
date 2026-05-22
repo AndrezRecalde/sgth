@@ -71,4 +71,33 @@ class ServidorController extends Controller
 
         return ApiResponse::ok(new ServidorResource($servidor), 'Expediente actualizado exitosamente.');
     }
+
+    public function sinUsuario(Request $request): JsonResponse
+    {
+        $this->authorize('verAny', Servidor::class);
+
+        $servidores = Servidor::whereNull('user_id')
+            ->when(
+                $request->filled('search'),
+                fn($q) => $q->where(function ($q) use ($request) {
+                    $q->where('cedula', 'ilike', "%{$request->search}%")
+                      ->orWhere('nombre', 'ilike', "%{$request->search}%")
+                      ->orWhere('apellido', 'ilike', "%{$request->search}%");
+                })
+            )
+            ->select('id', 'cedula', 'nombre', 'segundo_nombre',
+                     'apellido', 'segundo_apellido')
+            ->orderBy('apellido')
+            ->limit(20)
+            ->get()
+            ->map(fn($s) => [
+                'id'     => $s->id,
+                'cedula' => $s->cedula,
+                'nombre_completo' => trim(
+                    "{$s->apellido} {$s->segundo_apellido} {$s->nombre} {$s->segundo_nombre}"
+                ),
+            ]);
+
+        return ApiResponse::ok($servidores, 'Servidores sin usuario del sistema.');
+    }
 }

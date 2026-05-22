@@ -15,12 +15,13 @@ final class StoreUsuarioRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre'   => ['required', 'string', 'max:100'],
-            'apellido' => ['required', 'string', 'max:100'],
-            'email'    => ['required', 'email', 'unique:users,email'],
-            'cedula'   => ['required', 'string', 'regex:/^\d{10}$/'],
-            'roles'    => ['required', 'array'],
-            'roles.*'  => ['string', 'exists:roles,name'],
+            'nombre'      => ['required', 'string', 'max:100'],
+            'apellido'    => ['required', 'string', 'max:100'],
+            'email'       => ['required', 'email', 'unique:users,email'],
+            'cedula'      => ['required', 'string', 'regex:/^\d{10}$/'],
+            'roles'       => ['required', 'array'],
+            'roles.*'     => ['string', 'exists:roles,name'],
+            'servidor_id' => ['nullable', 'integer', 'exists:servidores,id'],
         ];
     }
 
@@ -36,6 +37,7 @@ final class StoreUsuarioRequest extends FormRequest
             'cedula.regex'      => 'La cédula debe contener exactamente 10 dígitos numéricos.',
             'roles.required'    => 'Debe asignar al menos un rol al usuario.',
             'roles.*.exists'    => 'El rol seleccionado no existe en el sistema.',
+            'servidor_id.exists' => 'El servidor seleccionado no existe.',
         ];
     }
 }

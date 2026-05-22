@@ -45,15 +45,15 @@ final class UsuarioService implements UsuarioServiceInterface
     public function crear(array $datos): User
     {
         return DB::transaction(function () use ($datos) {
-            // Extraer primer nombre y primer apellido
-            $primerNombre = explode(' ', trim($datos['nombre']))[0];
+            $primerNombre   = explode(' ', trim($datos['nombre']))[0];
             $primerApellido = explode(' ', trim($datos['apellido']))[0];
-            
-            // Generar usuario_ti
-            $nombreCorto = strtolower(substr($primerNombre, 0, 1) . $primerApellido);
-            
+
+            // Generar usuario_ti único
+            $nombreCorto = strtolower(
+                substr($primerNombre, 0, 1) . $primerApellido
+            );
             $usuarioTi = $nombreCorto;
-            $contador = 1;
+            $contador  = 1;
             while (User::where('usuario_ti', $usuarioTi)->exists()) {
                 $usuarioTi = $nombreCorto . $contador;
                 $contador++;
@@ -68,6 +68,19 @@ final class UsuarioService implements UsuarioServiceInterface
             ]);
 
             $user->assignRole($datos['roles']);
+
+            // Vincular servidor si se proporcionó
+            if (!empty($datos['servidor_id'])) {
+                $servidor = Servidor::findOrFail($datos['servidor_id']);
+
+                if ($servidor->user_id !== null) {
+                    throw new ReglaNegocioException(
+                        'Este servidor ya tiene un usuario asignado.'
+                    );
+                }
+
+                $servidor->update(['user_id' => $user->id]);
+            }
 
             return $user;
         });

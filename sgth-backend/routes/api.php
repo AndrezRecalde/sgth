@@ -68,6 +68,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     });
 
     // Módulo 02: Expediente Digital
+    Route::get('expediente/servidores/sin-usuario',
+        [\App\Http\Controllers\Expediente\ServidorController::class, 'sinUsuario'])
+        ->name('servidores.sinUsuario');
+
     Route::post('expediente/servidores/basico',
         [\App\Http\Controllers\Expediente\ServidorController::class, 'storeBasico'])
         ->name('servidores.storeBasico');
