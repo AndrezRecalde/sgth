@@ -117,7 +117,7 @@ export default function EstructuraPage() {
             onEdit={handleEditExtension}
             onDelete={(ext) => {
               if (confirm(`¿Eliminar la extensión ${ext.numero_extension ?? ''}?`)) {
-                eliminarExtension.mutate(Number((ext as unknown as { id: number }).id))
+                eliminarExtension.mutate(ext.id)
               }
             }}
           />

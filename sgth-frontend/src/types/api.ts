@@ -68,7 +68,7 @@ export type Canton = components['schemas']['Canton']
 export type UnidadAdministrativa = components['schemas']['UnidadAdministrativaResource']
 export type Puesto               = components['schemas']['PuestoResource']
 export type TipoUnidad           = components['schemas']['TipoUnidad']
-export type ExtensionTelefonica  = components['schemas']['ExtensionTelefonica']
+export type ExtensionTelefonica  = components['schemas']['ExtensionTelefonicaResource']
 
 // ── Expediente ───────────────────────────────
 export type Servidor                       = components['schemas']['ServidorResource']
@@ -217,20 +217,17 @@ export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | '
   hijos?: UnidadConRelaciones[]
 }
 
-export type ExtensionConRelaciones = ExtensionTelefonica & {
-  servidor?: {
-    id: number
-    nombres?: string
-    apellidos?: string
-    correo_institucional?: string
-    telefono_institucional?: string
-    telefono_celular?: string
-  }
+export type ExtensionConRelaciones = {
+  id: number
+  numero_extension?: string
+  responsable?: string
+  descripcion?: string
+  estado?: boolean
+  unidad_administrativa_id?: number
   unidad_administrativa?: {
     id: number
     nombre?: string
   }
-  numero_extension?: string
 }
 
 export type ContratoParams = {

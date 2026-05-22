@@ -1538,10 +1538,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Display a listing of the resource.
-         *     Directorio completo agrupado por unidad administrativa
-         */
+        /** Directorio telefónico — lista plana con filtros opcionales */
         get: operations["extensionTelefonica.index"];
         put?: never;
         post?: never;
@@ -1560,7 +1557,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Store a newly created resource in storage */
         post: operations["extensionTelefonica.store"];
         delete?: never;
         options?: never;
@@ -1576,10 +1572,8 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update the specified resource in storage */
         put: operations["extensionTelefonica.update"];
         post?: never;
-        /** Remove the specified resource from storage */
         delete: operations["extensionTelefonica.destroy"];
         options?: never;
         head?: never;
@@ -3556,20 +3550,18 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
-        /** ExtensionTelefonica */
-        ExtensionTelefonica: {
-            id: number;
-            unidad_administrativa_id: number;
+        /** ExtensionTelefonicaResource */
+        ExtensionTelefonicaResource: {
+            id: string;
             numero_extension: string;
             responsable: string;
-            descripcion: string | null;
-            estado: boolean;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
+            descripcion: string;
+            estado: string;
+            unidad_administrativa_id: string;
+            unidad_administrativa?: {
+                id: string;
+                nombre: string;
+            };
         };
         /** FacturaViatico */
         FacturaViatico: {
@@ -4574,14 +4566,18 @@ export interface components {
             id: string;
             codigo: string;
             nombre: string;
+            acronimo: string;
             descripcion: string;
             unidad_padre_id: string;
             nivel: string;
             estado: string;
-            /** @description Relaciones anidadas condicionales */
-            padre?: components["schemas"]["UnidadAdministrativaResource"];
+            tipo_unidad?: {
+                id: string;
+                acronimo: string;
+                descripcion: string;
+            };
+            puestos_count: string | 0;
             hijos?: components["schemas"]["UnidadAdministrativaResource"][];
-            puestos?: components["schemas"]["PuestoResource"][];
         };
         /** UpdateContratoServidorRequest */
         UpdateContratoServidorRequest: {
@@ -9185,8 +9181,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Directorio telefónico recuperado correctamente";
-                        datos: string;
+                        mensaje: "Directorio telefónico recuperado correctamente.";
+                        datos: components["schemas"]["ExtensionTelefonicaResource"][];
                         meta: null;
                     };
                 };
@@ -9215,8 +9211,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Extensión telefónica registrada correctamente";
-                        datos: components["schemas"]["ExtensionTelefonica"];
+                        mensaje: "Extensión telefónica registrada correctamente.";
+                        datos: components["schemas"]["ExtensionTelefonicaResource"];
                         meta: null;
                     };
                 };
@@ -9248,8 +9244,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Extensión telefónica actualizada correctamente";
-                        datos: string;
+                        mensaje: "Extensión telefónica actualizada correctamente.";
+                        datos: components["schemas"]["ExtensionTelefonicaResource"];
                         meta: null;
                     };
                 };
@@ -9277,7 +9273,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Extensión telefónica eliminada correctamente";
+                        mensaje: "Extensión telefónica eliminada correctamente.";
                         datos: null;
                         meta: null;
                     };

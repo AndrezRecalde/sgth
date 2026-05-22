@@ -4,7 +4,7 @@ import type { DataTableColumn } from 'mantine-datatable'
 import type { ExtensionConRelaciones } from '@/types/api'
 
 type Handlers = {
-  onEdit: (record: ExtensionConRelaciones) => void
+  onEdit:   (record: ExtensionConRelaciones) => void
   onDelete: (record: ExtensionConRelaciones) => void
 }
 
@@ -12,26 +12,9 @@ export const getDirectorioColumns = (
   handlers?: Handlers
 ): DataTableColumn<ExtensionConRelaciones>[] => [
   {
-    accessor: 'servidor',
-    title: 'Servidor',
-    render: ({ servidor }) => (
-      <Text size="sm">
-        {servidor
-          ? `${servidor.nombres ?? ''} ${servidor.apellidos ?? ''}`.trim()
-          : 'No asignado'}
-      </Text>
-    ),
-  },
-  {
-    accessor: 'unidad_administrativa',
-    title: 'Unidad',
-    render: ({ unidad_administrativa }) => (
-      <Text size="sm">{unidad_administrativa?.nombre ?? '-'}</Text>
-    ),
-  },
-  {
     accessor: 'numero_extension',
     title: 'Extensión',
+    width: 110,
     render: ({ numero_extension }) => (
       <Badge color="emerald" variant="light">
         Ext. {numero_extension ?? '-'}
@@ -39,21 +22,24 @@ export const getDirectorioColumns = (
     ),
   },
   {
-    accessor: 'telefono',
-    title: 'Teléfono',
-    render: ({ servidor }) => (
-      <Text size="sm">
-        {servidor?.telefono_institucional
-          ?? servidor?.telefono_celular
-          ?? '-'}
-      </Text>
+    accessor: 'responsable',
+    title: 'Responsable',
+    render: ({ responsable }) => (
+      <Text size="sm">{responsable ?? '-'}</Text>
     ),
   },
   {
-    accessor: 'email',
-    title: 'Email',
-    render: ({ servidor }) => (
-      <Text size="sm">{servidor?.correo_institucional ?? '-'}</Text>
+    accessor: 'unidad_administrativa',
+    title: 'Unidad Administrativa',
+    render: ({ unidad_administrativa }) => (
+      <Text size="sm">{unidad_administrativa?.nombre ?? '-'}</Text>
+    ),
+  },
+  {
+    accessor: 'descripcion',
+    title: 'Descripción',
+    render: ({ descripcion }) => (
+      <Text size="sm" c="dimmed">{descripcion ?? '-'}</Text>
     ),
   },
   {

@@ -20,7 +20,7 @@ export function ExtensionModal({ opened, onClose, extension }: Props) {
 
   const handleSubmit = (values: ExtensionFormData) => {
     const mutation = isEditing
-      ? editar.mutateAsync({ id: Number((extension as ExtensionConRelaciones & { id: number })!.id), data: values })
+      ? editar.mutateAsync({ id: Number(extension!.id), data: values })
       : crear.mutateAsync(values)
     mutation.then(onClose).catch(() => {})
   }

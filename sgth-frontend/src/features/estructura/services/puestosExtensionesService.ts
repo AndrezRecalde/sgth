@@ -4,6 +4,7 @@ import type { ExtensionFormData } from '../schemas/extension.schema'
 import type {
   Puesto,
   ExtensionTelefonica,
+  ExtensionConRelaciones,
   ApiResponse,
   PaginatedResponse,
   PuestoParams,
@@ -34,17 +35,17 @@ export const puestosExtensionesService = {
 
   // Directorio telefónico
   directorio: (params?: ExtensionTelefonicaParams) =>
-    api.get<ApiResponse<ExtensionTelefonica[]>>(
+    api.get<ApiResponse<ExtensionConRelaciones[]>>(
       '/estructura/directorio-telefonico', { params }
     ).then(r => r.data.datos),
 
   crearExtension: (data: ExtensionFormData) =>
-    api.post<ApiResponse<ExtensionTelefonica>>(
+    api.post<ApiResponse<ExtensionConRelaciones>>(
       '/estructura/extensiones', data
     ).then(r => r.data.datos),
 
   editarExtension: (id: number, data: ExtensionFormData) =>
-    api.put<ApiResponse<ExtensionTelefonica>>(
+    api.put<ApiResponse<ExtensionConRelaciones>>(
       `/estructura/extensiones/${id}`, data
     ).then(r => r.data.datos),
 

@@ -8654,7 +8654,7 @@
         "/v1/estructura/directorio-telefonico": {
             "get": {
                 "operationId": "extensionTelefonica.index",
-                "summary": "Display a listing of the resource.\nDirectorio completo agrupado por unidad administrativa",
+                "summary": "Directorio telef\u00f3nico \u2014 lista plana con filtros opcionales",
                 "tags": [
                     "ExtensionTelefonica"
                 ],
@@ -8671,10 +8671,13 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Directorio telef\u00f3nico recuperado correctamente"
+                                            "const": "Directorio telef\u00f3nico recuperado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ExtensionTelefonicaResource"
+                                            }
                                         },
                                         "meta": {
                                             "type": "null"
@@ -8699,7 +8702,6 @@
         "/v1/estructura/extensiones": {
             "post": {
                 "operationId": "extensionTelefonica.store",
-                "summary": "Store a newly created resource in storage",
                 "tags": [
                     "ExtensionTelefonica"
                 ],
@@ -8726,10 +8728,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Extensi\u00f3n telef\u00f3nica registrada correctamente"
+                                            "const": "Extensi\u00f3n telef\u00f3nica registrada correctamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/ExtensionTelefonica"
+                                            "$ref": "#/components/schemas/ExtensionTelefonicaResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -8757,7 +8759,6 @@
         "/v1/estructura/extensiones/{id}": {
             "put": {
                 "operationId": "extensionTelefonica.update",
-                "summary": "Update the specified resource in storage",
                 "tags": [
                     "ExtensionTelefonica"
                 ],
@@ -8793,10 +8794,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Extensi\u00f3n telef\u00f3nica actualizada correctamente"
+                                            "const": "Extensi\u00f3n telef\u00f3nica actualizada correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/ExtensionTelefonicaResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -8822,7 +8823,6 @@
             },
             "delete": {
                 "operationId": "extensionTelefonica.destroy",
-                "summary": "Remove the specified resource from storage",
                 "tags": [
                     "ExtensionTelefonica"
                 ],
@@ -8849,7 +8849,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Extensi\u00f3n telef\u00f3nica eliminada correctamente"
+                                            "const": "Extensi\u00f3n telef\u00f3nica eliminada correctamente."
                                         },
                                         "datos": {
                                             "type": "null"
@@ -18629,14 +18629,11 @@
                 ],
                 "title": "EvaluacionSeleccion"
             },
-            "ExtensionTelefonica": {
+            "ExtensionTelefonicaResource": {
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
-                    },
-                    "unidad_administrativa_id": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "numero_extension": {
                         "type": "string"
@@ -18645,48 +18642,39 @@
                         "type": "string"
                     },
                     "descripcion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "estado": {
-                        "type": "boolean"
+                        "type": "string"
                     },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                    "unidad_administrativa_id": {
+                        "type": "string"
                     },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "deleted_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                    "unidad_administrativa": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "nombre"
+                        ]
                     }
                 },
                 "required": [
                     "id",
-                    "unidad_administrativa_id",
                     "numero_extension",
                     "responsable",
                     "descripcion",
                     "estado",
-                    "created_at",
-                    "updated_at",
-                    "deleted_at"
+                    "unidad_administrativa_id"
                 ],
-                "title": "ExtensionTelefonica"
+                "title": "ExtensionTelefonicaResource"
             },
             "FacturaViatico": {
                 "type": "object",
@@ -22653,6 +22641,9 @@
                     "nombre": {
                         "type": "string"
                     },
+                    "acronimo": {
+                        "type": "string"
+                    },
                     "descripcion": {
                         "type": "string"
                     },
@@ -22665,20 +22656,42 @@
                     "estado": {
                         "type": "string"
                     },
-                    "padre": {
-                        "description": "Relaciones anidadas condicionales",
-                        "$ref": "#/components/schemas/UnidadAdministrativaResource"
+                    "tipo_unidad": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "acronimo": {
+                                "type": "string"
+                            },
+                            "descripcion": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "acronimo",
+                            "descripcion"
+                        ]
+                    },
+                    "puestos_count": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer",
+                                "enum": [
+                                    0
+                                ]
+                            }
+                        ]
                     },
                     "hijos": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/UnidadAdministrativaResource"
-                        }
-                    },
-                    "puestos": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/PuestoResource"
                         }
                     }
                 },
@@ -22686,10 +22699,12 @@
                     "id",
                     "codigo",
                     "nombre",
+                    "acronimo",
                     "descripcion",
                     "unidad_padre_id",
                     "nivel",
-                    "estado"
+                    "estado",
+                    "puestos_count"
                 ],
                 "title": "UnidadAdministrativaResource"
             },
