@@ -417,3 +417,29 @@ export type UsuarioUpdateData = {
   email?: string
   roles?: string[]
 }
+
+export type PuestoConRelaciones = Omit<Puesto, 'id' | 'codigo' | 'denominacion' | 'mision' | 'unidad_administrativa_id' | 'grupo_ocupacional_id' | 'partida_presupuestaria_id' | 'plazas' | 'rol_puesto' | 'nivel_complejidad' | 'nivel_jerarquico' | 'regimen_laboral' | 'es_jefe' | 'activo' | 'rmu' | 'unidad_administrativa' | 'grupo_ocupacional'> & {
+  id: number
+  codigo?: string
+  denominacion?: string
+  mision?: string | null
+  unidad_administrativa_id?: number
+  grupo_ocupacional_id?: number | null
+  partida_presupuestaria_id?: number | null
+  plazas?: number
+  rol_puesto?: string | null
+  nivel_complejidad?: string | null
+  nivel_jerarquico?: number | null
+  regimen_laboral?: 'losep' | 'codigo_trabajo'
+  es_jefe?: boolean
+  activo?: boolean
+  rmu?: number | null
+  unidad_administrativa?: { id: number; nombre?: string }
+  grupo_ocupacional?: {
+    id: number
+    grado_codigo?: string
+    grupo?: string
+    rmu?: number
+    regimen?: string
+  } | null
+}

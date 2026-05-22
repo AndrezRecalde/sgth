@@ -1,16 +1,7 @@
 import { Text, Group, ActionIcon } from '@mantine/core'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import type { Puesto } from '@/types/api'
-
-export type PuestoConRelaciones = Puesto & {
-  nombre?: string
-  codigo?: string
-  nivel?: string
-  remuneracion?: number | null
-  unidad_administrativa?: { nombre?: string }
-  unidad_administrativa_id?: number
-}
+import type { PuestoConRelaciones } from '@/types/api'
 
 type Handlers = {
   onEdit: (puesto: PuestoConRelaciones) => void
@@ -21,10 +12,10 @@ export const getPuestoColumns = (
   { onEdit, onDelete }: Handlers
 ): DataTableColumn<PuestoConRelaciones>[] => [
   {
-    accessor: 'nombre',
+    accessor: 'denominacion',
     title: 'Puesto',
-    render: ({ nombre }) => (
-      <Text size="sm" fw={500}>{nombre ?? '-'}</Text>
+    render: ({ denominacion }) => (
+      <Text size="sm" fw={500}>{denominacion ?? '-'}</Text>
     ),
   },
   {
@@ -42,18 +33,18 @@ export const getPuestoColumns = (
     ),
   },
   {
-    accessor: 'nivel',
+    accessor: 'nivel_jerarquico',
     title: 'Nivel',
-    render: ({ nivel }) => (
-      <Text size="sm">{nivel ?? '-'}</Text>
+    render: ({ nivel_jerarquico }) => (
+      <Text size="sm">{nivel_jerarquico ?? '-'}</Text>
     ),
   },
   {
-    accessor: 'remuneracion',
+    accessor: 'rmu',
     title: 'Remuneración',
-    render: ({ remuneracion }) => (
+    render: ({ rmu }) => (
       <Text size="sm">
-        {remuneracion ? `$${remuneracion.toFixed(2)}` : '-'}
+        {rmu ? `$${(rmu as number).toFixed(2)}` : '-'}
       </Text>
     ),
   },
