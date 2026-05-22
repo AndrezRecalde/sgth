@@ -1,5 +1,6 @@
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import 'mantine-datatable/styles.css';
 
 import { ColorSchemeScript } from '@mantine/core';
 import type { Metadata } from 'next';
