@@ -3929,7 +3929,6 @@ export interface components {
         /** PuestoResource */
         PuestoResource: {
             id: string;
-            codigo: string;
             denominacion: string;
             mision: string;
             unidad_administrativa_id: string;
@@ -3938,13 +3937,10 @@ export interface components {
             plazas: string;
             rol_puesto: string;
             nivel_complejidad: string;
-            nivel_jerarquico: string;
             regimen_laboral: string;
             es_jefe: string;
             activo: string;
-            /** @description RMU calculada desde grupo ocupacional */
             rmu: string;
-            /** @description Relaciones */
             unidad_administrativa?: components["schemas"]["UnidadAdministrativaResource"];
             grupo_ocupacional?: {
                 id: string;
@@ -4283,7 +4279,6 @@ export interface components {
         };
         /** StorePuestoRequest */
         StorePuestoRequest: {
-            codigo: string;
             denominacion: string;
             mision?: string | null;
             unidad_administrativa_id: number;
@@ -4292,7 +4287,6 @@ export interface components {
             plazas: number;
             rol_puesto?: components["schemas"]["RolPuesto"];
             nivel_complejidad?: components["schemas"]["NivelComplejidadPuesto"];
-            nivel_jerarquico?: number | null;
             /** @enum {string} */
             regimen_laboral: "losep" | "codigo_trabajo";
             es_jefe?: boolean;
@@ -4697,7 +4691,6 @@ export interface components {
         };
         /** UpdatePuestoRequest */
         UpdatePuestoRequest: {
-            codigo?: string;
             denominacion?: string;
             mision?: string | null;
             unidad_administrativa_id?: number;
@@ -4706,7 +4699,6 @@ export interface components {
             plazas?: number;
             rol_puesto?: components["schemas"]["RolPuesto"];
             nivel_complejidad?: components["schemas"]["NivelComplejidadPuesto"];
-            nivel_jerarquico?: number | null;
             /** @enum {string} */
             regimen_laboral?: "losep" | "codigo_trabajo";
             es_jefe?: boolean;

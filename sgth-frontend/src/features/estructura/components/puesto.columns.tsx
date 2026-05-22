@@ -25,20 +25,7 @@ export const getPuestoColumns = (
       <Text size="sm">{unidad_administrativa?.nombre ?? '-'}</Text>
     ),
   },
-  {
-    accessor: 'codigo',
-    title: 'Código',
-    render: ({ codigo }) => (
-      <Text size="sm" c="dimmed">{codigo ?? '-'}</Text>
-    ),
-  },
-  {
-    accessor: 'nivel_jerarquico',
-    title: 'Nivel',
-    render: ({ nivel_jerarquico }) => (
-      <Text size="sm">{nivel_jerarquico ?? '-'}</Text>
-    ),
-  },
+
   {
     accessor: 'rmu',
     title: 'Remuneración',

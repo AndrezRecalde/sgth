@@ -20093,9 +20093,6 @@
                     "id": {
                         "type": "string"
                     },
-                    "codigo": {
-                        "type": "string"
-                    },
                     "denominacion": {
                         "type": "string"
                     },
@@ -20120,9 +20117,6 @@
                     "nivel_complejidad": {
                         "type": "string"
                     },
-                    "nivel_jerarquico": {
-                        "type": "string"
-                    },
                     "regimen_laboral": {
                         "type": "string"
                     },
@@ -20133,11 +20127,9 @@
                         "type": "string"
                     },
                     "rmu": {
-                        "type": "string",
-                        "description": "RMU calculada desde grupo ocupacional"
+                        "type": "string"
                     },
                     "unidad_administrativa": {
-                        "description": "Relaciones",
                         "$ref": "#/components/schemas/UnidadAdministrativaResource"
                     },
                     "grupo_ocupacional": {
@@ -20170,7 +20162,6 @@
                 },
                 "required": [
                     "id",
-                    "codigo",
                     "denominacion",
                     "mision",
                     "unidad_administrativa_id",
@@ -20179,7 +20170,6 @@
                     "plazas",
                     "rol_puesto",
                     "nivel_complejidad",
-                    "nivel_jerarquico",
                     "regimen_laboral",
                     "es_jefe",
                     "activo",
@@ -21444,10 +21434,6 @@
             "StorePuestoRequest": {
                 "type": "object",
                 "properties": {
-                    "codigo": {
-                        "type": "string",
-                        "maxLength": 50
-                    },
                     "denominacion": {
                         "type": "string",
                         "maxLength": 255
@@ -21483,13 +21469,6 @@
                     "nivel_complejidad": {
                         "$ref": "#/components/schemas/NivelComplejidadPuesto"
                     },
-                    "nivel_jerarquico": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ],
-                        "minimum": 1
-                    },
                     "regimen_laboral": {
                         "type": "string",
                         "enum": [
@@ -21505,7 +21484,6 @@
                     }
                 },
                 "required": [
-                    "codigo",
                     "denominacion",
                     "unidad_administrativa_id",
                     "plazas",
@@ -23114,10 +23092,6 @@
             "UpdatePuestoRequest": {
                 "type": "object",
                 "properties": {
-                    "codigo": {
-                        "type": "string",
-                        "maxLength": 50
-                    },
                     "denominacion": {
                         "type": "string",
                         "maxLength": 255
@@ -23152,13 +23126,6 @@
                     },
                     "nivel_complejidad": {
                         "$ref": "#/components/schemas/NivelComplejidadPuesto"
-                    },
-                    "nivel_jerarquico": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ],
-                        "minimum": 1
                     },
                     "regimen_laboral": {
                         "type": "string",

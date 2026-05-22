@@ -39,13 +39,13 @@ export function PuestoModal({ opened, onClose, puesto }: Props) {
           initialValues={isEditing ? {
             denominacion:              puesto?.denominacion,
             unidad_administrativa_id:  puesto?.unidad_administrativa_id,
-            codigo:                    puesto?.codigo,
+
             grupo_ocupacional_id:      puesto?.grupo_ocupacional_id,
             partida_presupuestaria_id: puesto?.partida_presupuestaria_id,
             plazas:                    puesto?.plazas,
             rol_puesto:                puesto?.rol_puesto as any,
             nivel_complejidad:         puesto?.nivel_complejidad as any,
-            nivel_jerarquico:          puesto?.nivel_jerarquico,
+
             regimen_laboral:           puesto?.regimen_laboral,
             es_jefe:                   puesto?.es_jefe,
             activo:                    puesto?.activo,

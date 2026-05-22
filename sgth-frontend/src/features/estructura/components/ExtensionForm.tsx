@@ -15,7 +15,7 @@ interface Props {
 
 export function ExtensionForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput()
-  const { data: unidades = [] } = useUnidades()
+  const { data: unidades = [] } = useUnidades({ nivel: 2 })
 
   const form = useForm<ExtensionFormData>({
     initialValues: {

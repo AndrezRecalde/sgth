@@ -1,21 +1,24 @@
 'use client'
 
-import { TextInput, Select, NumberInput, Grid, Switch, Textarea } from '@mantine/core'
+import {
+  TextInput, Select, NumberInput,
+  Grid, Switch, Textarea,
+} from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zodResolver } from 'mantine-form-zod-resolver'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '../hooks/useUnidades'
 import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
 import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
-import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
+import type { UnidadConRelaciones } from '@/types/api'
 
 const ROL_OPTIONS = [
-  { value: 'dignatario',             label: 'Dignatario' },
-  { value: 'ejecucion_coordinacion', label: 'Ejecución y Coordinación' },
-  { value: 'ejecucion_procesos',     label: 'Ejecución de Procesos' },
+  { value: 'dignatario',               label: 'Dignatario' },
+  { value: 'ejecucion_coordinacion',   label: 'Ejecución y Coordinación' },
+  { value: 'ejecucion_procesos',       label: 'Ejecución de Procesos' },
   { value: 'ejecucion_procesos_apoyo', label: 'Ejecución de Procesos de Apoyo' },
-  { value: 'administrativo',         label: 'Administrativo' },
-  { value: 'codigo_trabajo',         label: 'Código del Trabajo' },
+  { value: 'administrativo',           label: 'Administrativo' },
+  { value: 'codigo_trabajo',           label: 'Código del Trabajo' },
 ]
 
 const COMPLEJIDAD_OPTIONS = [
@@ -36,12 +39,13 @@ interface Props {
 
 export function PuestoForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput()
-  const { data: unidades = [] } = useUnidades()
+
+  // Solo unidades de nivel 2 (gestiones principales)
+  const { data: unidades = [] } = useUnidades({ nivel: 2 })
   const { data: grupos = [] }   = useGruposOcupacionales()
 
   const form = useForm<PuestoFormData>({
     initialValues: {
-      codigo:                    initialValues?.codigo ?? '',
       denominacion:              initialValues?.denominacion ?? '',
       mision:                    initialValues?.mision ?? null,
       unidad_administrativa_id:  initialValues?.unidad_administrativa_id
@@ -51,7 +55,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
       plazas:                    initialValues?.plazas ?? 1,
       rol_puesto:                initialValues?.rol_puesto ?? null,
       nivel_complejidad:         initialValues?.nivel_complejidad ?? null,
-      nivel_jerarquico:          initialValues?.nivel_jerarquico ?? null,
       regimen_laboral:           initialValues?.regimen_laboral ?? 'losep',
       es_jefe:                   initialValues?.es_jefe ?? false,
       activo:                    initialValues?.activo ?? true,
@@ -81,15 +84,15 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
   return (
     <form id="puesto-form" onSubmit={form.onSubmit(onSubmit)}>
       <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Grid.Col span={{ base: 12, sm: 8 }}>
           <TextInput
-            label="Código del puesto"
-            placeholder="Ej: GADPE-TH-001"
+            label="Denominación del puesto"
+            placeholder="Ej: Analista de Talento Humano"
             {...contained}
-            {...form.getInputProps('codigo')}
+            {...form.getInputProps('denominacion')}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
           <Select
             label="Régimen laboral"
             data={REGIMEN_OPTIONS}
@@ -103,17 +106,9 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
           />
         </Grid.Col>
         <Grid.Col span={12}>
-          <TextInput
-            label="Denominación del puesto"
-            placeholder="Ej: Analista de Talento Humano"
-            {...contained}
-            {...form.getInputProps('denominacion')}
-          />
-        </Grid.Col>
-        <Grid.Col span={12}>
           <Select
             label="Unidad administrativa"
-            placeholder="Seleccionar unidad"
+            placeholder="Seleccionar gestión"
             data={unidadOptions}
             searchable
             {...contained}
@@ -159,19 +154,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 4 }}>
-          <NumberInput
-            label="Nivel jerárquico"
-            placeholder="Ej: 5"
-            min={1}
-            {...contained}
-            value={form.values.nivel_jerarquico ?? ''}
-            onChange={(v) =>
-              form.setFieldValue('nivel_jerarquico',
-                typeof v === 'number' ? v : null)
-            }
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 4 }}>
           <Select
             label="Complejidad"
             placeholder="Seleccionar"
@@ -181,11 +163,11 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             value={form.values.nivel_complejidad ?? ''}
             onChange={(v) =>
               form.setFieldValue('nivel_complejidad',
-                v as PuestoFormData['nivel_complejidad'] ?? null)
+                (v as PuestoFormData['nivel_complejidad']) ?? null)
             }
           />
         </Grid.Col>
-        <Grid.Col span={12}>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
           <Select
             label="Rol del puesto"
             placeholder="Seleccionar rol"
@@ -195,7 +177,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             value={form.values.rol_puesto ?? ''}
             onChange={(v) =>
               form.setFieldValue('rol_puesto',
-                v as PuestoFormData['rol_puesto'] ?? null)
+                (v as PuestoFormData['rol_puesto']) ?? null)
             }
           />
         </Grid.Col>

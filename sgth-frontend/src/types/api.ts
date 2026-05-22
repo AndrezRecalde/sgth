@@ -180,6 +180,7 @@ export type UnidadAdministrativaParams = {
   per_page?: number
   search?: string
   tipo_unidad_id?: number
+  nivel?: number
   con_puestos?: boolean
 }
 
@@ -418,9 +419,8 @@ export type UsuarioUpdateData = {
   roles?: string[]
 }
 
-export type PuestoConRelaciones = Omit<Puesto, 'id' | 'codigo' | 'denominacion' | 'mision' | 'unidad_administrativa_id' | 'grupo_ocupacional_id' | 'partida_presupuestaria_id' | 'plazas' | 'rol_puesto' | 'nivel_complejidad' | 'nivel_jerarquico' | 'regimen_laboral' | 'es_jefe' | 'activo' | 'rmu' | 'unidad_administrativa' | 'grupo_ocupacional'> & {
+export type PuestoConRelaciones = {
   id: number
-  codigo?: string
   denominacion?: string
   mision?: string | null
   unidad_administrativa_id?: number
@@ -429,7 +429,6 @@ export type PuestoConRelaciones = Omit<Puesto, 'id' | 'codigo' | 'denominacion' 
   plazas?: number
   rol_puesto?: string | null
   nivel_complejidad?: string | null
-  nivel_jerarquico?: number | null
   regimen_laboral?: 'losep' | 'codigo_trabajo'
   es_jefe?: boolean
   activo?: boolean
