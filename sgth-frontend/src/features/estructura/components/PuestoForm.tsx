@@ -40,9 +40,9 @@ interface Props {
 
 export function PuestoForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput();
-  const { data: unidades = [] } = useUnidades({ nivel: 2 });
-  const { data: grupos = [] } = useGruposOcupacionales();
-  const { data: cargos = [] } = useCargos();
+  const { data: unidades } = useUnidades({ nivel: 2 });
+  const { data: grupos } = useGruposOcupacionales();
+  const { data: cargos } = useCargos();
 
   const form = useForm<PuestoFormData>({
     initialValues: {
@@ -67,7 +67,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     nombre: string;
     clasificacion_personal?: string;
   };
-  const cargoOptions = (cargos as CargoItem[]).map((c) => ({
+  const cargoOptions = ((cargos || []) as CargoItem[]).map((c) => ({
     value: String(c.id),
     label: c.nombre,
     group:
@@ -78,7 +78,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
           : "Empleados",
   }));
 
-  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(
+  const unidadOptions = ((unidades || []) as unknown as UnidadConRelaciones[]).map(
     (u) => ({
       value: String(u.id),
       label: u.nombre ?? `Unidad ${u.id}`,
@@ -91,7 +91,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     grupo?: string;
     rmu?: number;
   };
-  const grupoOptions = (grupos as GrupoItem[]).map((g) => ({
+  const grupoOptions = ((grupos || []) as GrupoItem[]).map((g) => ({
     value: String(g.id),
     label: `${g.grado_codigo ?? ""} — ${g.grupo ?? ""} ($${g.rmu ?? 0})`,
   }));
