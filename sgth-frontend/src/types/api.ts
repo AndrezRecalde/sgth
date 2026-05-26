@@ -422,8 +422,7 @@ export type UsuarioUpdateData = {
 
 export type PuestoConRelaciones = {
   id: number
-  denominacion?: string
-  mision?: string | null
+  cargo_id?: number | null
   unidad_administrativa_id?: number
   grupo_ocupacional_id?: number | null
   partida_presupuestaria_id?: number | null
@@ -434,6 +433,12 @@ export type PuestoConRelaciones = {
   es_jefe?: boolean
   activo?: boolean
   rmu?: number | null
+  cargo?: {
+    id: number
+    nombre?: string
+    denominacion_generica?: string | null
+    clasificacion_personal?: ClasificacionPersonal
+  } | null
   unidad_administrativa?: { id: number; nombre?: string }
   grupo_ocupacional?: {
     id: number
@@ -443,3 +448,31 @@ export type PuestoConRelaciones = {
     regimen?: string
   } | null
 }
+
+// ── Cargos ───────────────────────────────────────
+export type ClasificacionPersonal =
+  | 'empleado'
+  | 'contratado'
+  | 'obrero'
+
+export type Cargo = {
+  id: number
+  nombre: string
+  denominacion_generica?: string | null
+  mision?: string | null
+  clasificacion_personal: ClasificacionPersonal
+  activo: boolean
+}
+
+export type CargoFormData = {
+  nombre: string
+  denominacion_generica?: string
+  mision?: string
+  clasificacion_personal: ClasificacionPersonal
+}
+
+export type CargoParams = {
+  search?: string
+  clasificacion?: ClasificacionPersonal
+}
+

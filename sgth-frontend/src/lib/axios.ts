@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ENV } from '@/config/env';
+import { useAuthStore } from '@/store/auth.store';
 
 const api = axios.create({
   baseURL: ENV.API_URL,
@@ -22,9 +23,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('sgth_token');
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+        useAuthStore.getState().clearAuth();
+        if (window.location.pathname !== '/login' || !window.location.search.includes('logout=true')) {
+          window.location.href = '/login?logout=true';
         }
       }
     }

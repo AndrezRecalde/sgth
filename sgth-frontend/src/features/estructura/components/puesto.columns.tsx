@@ -14,6 +14,12 @@ const REGIMEN_COLORS: Record<string, string> = {
   codigo_trabajo: 'blue',
 }
 
+const CLASIFICACION_COLORS: Record<string, string> = {
+  empleado:   'gray',
+  contratado: 'orange',
+  obrero:     'violet',
+}
+
 type Handlers = {
   onEdit:   (puesto: PuestoConRelaciones) => void
   onDelete: (puesto: PuestoConRelaciones) => void
@@ -23,14 +29,27 @@ export const getPuestoColumns = (
   { onEdit, onDelete }: Handlers
 ): DataTableColumn<PuestoConRelaciones>[] => [
   {
-    accessor: 'denominacion',
-    title: 'Puesto',
-    render: ({ denominacion, es_jefe }) => (
+    accessor: 'cargo',
+    title: 'Cargo',
+    render: ({ cargo, es_jefe }) => (
       <div>
-        <Text size="sm" fw={500}>{denominacion ?? '-'}</Text>
-        {es_jefe && (
-          <Text size="xs" c="emerald">Jefe de unidad</Text>
-        )}
+        <Text size="sm" fw={500}>{cargo?.nombre ?? '-'}</Text>
+        <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+          {cargo?.clasificacion_personal && (
+            <Badge
+              size="xs"
+              variant="dot"
+              color={CLASIFICACION_COLORS[cargo.clasificacion_personal] ?? 'gray'}
+            >
+              {cargo.clasificacion_personal}
+            </Badge>
+          )}
+          {es_jefe && (
+            <Badge size="xs" variant="dot" color="emerald">
+              Jefe
+            </Badge>
+          )}
+        </div>
       </div>
     ),
   },
@@ -44,7 +63,7 @@ export const getPuestoColumns = (
   {
     accessor: 'regimen_laboral',
     title: 'Régimen',
-    width: 120,
+    width: 110,
     render: ({ regimen_laboral }) => regimen_laboral ? (
       <Badge
         color={REGIMEN_COLORS[regimen_laboral] ?? 'gray'}

@@ -1,14 +1,14 @@
 'use client'
 
 import {
-  TextInput, Select, NumberInput,
-  Grid, Switch, Textarea,
+  Select, Grid, Switch, NumberInput, Textarea,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zodResolver } from 'mantine-form-zod-resolver'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '../hooks/useUnidades'
 import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
+import { useCargos } from '../hooks/useCargos'
 import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
 import type { UnidadConRelaciones } from '@/types/api'
 
@@ -39,15 +39,13 @@ interface Props {
 
 export function PuestoForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput()
-
-  // Solo unidades de nivel 2 (gestiones principales)
   const { data: unidades = [] } = useUnidades({ nivel: 2 })
   const { data: grupos = [] }   = useGruposOcupacionales()
+  const { data: cargos = [] }   = useCargos()
 
   const form = useForm<PuestoFormData>({
     initialValues: {
-      denominacion:              initialValues?.denominacion ?? '',
-      mision:                    initialValues?.mision ?? null,
+      cargo_id:                  initialValues?.cargo_id ?? ('' as unknown as number),
       unidad_administrativa_id:  initialValues?.unidad_administrativa_id
         ?? ('' as unknown as number),
       grupo_ocupacional_id:      initialValues?.grupo_ocupacional_id ?? null,
@@ -62,18 +60,23 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     validate: zodResolver(puestoSchema),
   })
 
+  type CargoItem = { id: number; nombre: string; clasificacion_personal?: string }
+  const cargoOptions = (cargos as CargoItem[]).map(c => ({
+    value: String(c.id),
+    label: c.nombre,
+    group: c.clasificacion_personal === 'obrero'
+      ? 'Obreros'
+      : c.clasificacion_personal === 'contratado'
+        ? 'Contratados'
+        : 'Empleados',
+  }))
+
   const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))
 
-  type GrupoItem = {
-    id: number
-    grado_codigo?: string
-    grupo?: string
-    rmu?: number
-    regimen?: string
-  }
+  type GrupoItem = { id: number; grado_codigo?: string; grupo?: string; rmu?: number }
   const grupoOptions = (grupos as GrupoItem[]).map(g => ({
     value: String(g.id),
     label: `${g.grado_codigo ?? ''} — ${g.grupo ?? ''} ($${g.rmu ?? 0})`,
@@ -85,11 +88,19 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     <form id="puesto-form" onSubmit={form.onSubmit(onSubmit)}>
       <Grid>
         <Grid.Col span={{ base: 12, sm: 8 }}>
-          <TextInput
-            label="Denominación del puesto"
-            placeholder="Ej: Analista de Talento Humano"
+          <Select
+            label="Cargo"
+            placeholder="Seleccionar cargo"
+            data={cargoOptions}
+            searchable
             {...contained}
-            {...form.getInputProps('denominacion')}
+            value={form.values.cargo_id
+              ? String(form.values.cargo_id) : ''}
+            onChange={(v) =>
+              form.setFieldValue('cargo_id',
+                v ? Number(v) : ('' as unknown as number))
+            }
+            error={form.errors.cargo_id}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -137,7 +148,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
               form.setFieldValue('grupo_ocupacional_id',
                 v ? Number(v) : null)
             }
-            error={form.errors.grupo_ocupacional_id}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -178,19 +188,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             onChange={(v) =>
               form.setFieldValue('rol_puesto',
                 (v as PuestoFormData['rol_puesto']) ?? null)
-            }
-          />
-        </Grid.Col>
-        <Grid.Col span={12}>
-          <Textarea
-            label="Misión del puesto"
-            placeholder="Describa la misión del puesto (opcional)"
-            rows={3}
-            {...contained}
-            value={form.values.mision ?? ''}
-            onChange={(e) =>
-              form.setFieldValue('mision',
-                e.currentTarget.value || null)
             }
           />
         </Grid.Col>

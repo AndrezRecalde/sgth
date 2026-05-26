@@ -12,15 +12,23 @@ interface Props {
   onNodeClick?: (unidad: UnidadConRelaciones) => void
 }
 
-type EChartsTreeNode = {
+type EChartsGraphNode = {
+  id: string
   name: string
-  value?: number
+  x: number
+  y: number
+  symbol?: string
+  symbolSize?: number | number[]
   itemStyle?: object
   label?: object
   emphasis?: object
-  children?: EChartsTreeNode[]
   _unidad?: UnidadConRelaciones
   _nivel?: number
+}
+
+type EChartsGraphLink = {
+  source: string
+  target: string
 }
 
 // Configuración visual por nivel
@@ -49,18 +57,6 @@ const NIVEL_CONFIG = [
     shadowColor: 'rgba(5,150,105,0.35)',
     shadowBlur: 8,
   },
-  {
-    // Nivel 2 — Subprocesos
-    bgColor: '#ffffff',
-    borderColor: '#059669',
-    textColor: '#0D1F2D',
-    fontSize: 10,
-    fontWeight: 'normal',
-    width: 138,
-    height: 40,
-    shadowColor: 'rgba(0,0,0,0.08)',
-    shadowBlur: 4,
-  },
 ]
 
 function wrapText(text: string, maxLen = 18): string {
@@ -80,54 +76,6 @@ function wrapText(text: string, maxLen = 18): string {
   return lines.slice(0, 3).join('\n')
 }
 
-function buildTreeNode(
-  unidad: UnidadConRelaciones,
-  nivel: number
-): EChartsTreeNode {
-  const hijos  = unidad.hijos ?? []
-  const config = NIVEL_CONFIG[Math.min(nivel, NIVEL_CONFIG.length - 1)]
-  const esNivel2 = nivel === 1
-  const nombre = wrapText(unidad.nombre ?? 'Sin nombre', 20)
-
-  return {
-    name: nombre,
-    value: unidad.id as unknown as number,
-    _unidad: unidad,
-    _nivel: nivel,
-    itemStyle: {
-      color: config.bgColor,
-      borderColor: config.borderColor,
-      borderWidth: esNivel2 ? 2 : 1.5,
-      borderRadius: 8,
-      shadowColor: config.shadowColor,
-      shadowBlur: config.shadowBlur,
-    },
-    label: {
-      color: config.textColor,
-      fontSize: config.fontSize,
-      fontWeight: config.fontWeight,
-      fontFamily: "'Inter', sans-serif",
-      lineHeight: 16,
-      padding: [8, 10],
-      overflow: 'break',
-      width: config.width,
-    },
-    emphasis: {
-      itemStyle: {
-        color: esNivel2 ? '#047857' : config.bgColor,
-        borderColor: '#10B981',
-        borderWidth: 2.5,
-        shadowBlur: 18,
-        shadowColor: 'rgba(16,185,129,0.5)',
-      },
-      label: {
-        color: esNivel2 ? '#ffffff' : config.textColor,
-      },
-    },
-    children: hijos.map(h => buildTreeNode(h, nivel + 1)),
-  }
-}
-
 export function OrganigramaChart({
   unidades,
   isLoading,
@@ -136,7 +84,7 @@ export function OrganigramaChart({
 }: Props) {
   const handleEvents = useCallback(
     () => ({
-      click: (params: { data: EChartsTreeNode }) => {
+      click: (params: { data: EChartsGraphNode }) => {
         if (params.data._unidad && onNodeClick) {
           onNodeClick(params.data._unidad)
         }
@@ -165,7 +113,145 @@ export function OrganigramaChart({
     )
   }
 
-  const treeData = unidades.map(u => buildTreeNode(u, 0))
+  // 1. Encontrar el nodo raíz (GADPE)
+  const root = unidades[0]
+  const nodes: EChartsGraphNode[] = []
+  const links: EChartsGraphLink[] = []
+
+  if (root) {
+    const rootConfig = NIVEL_CONFIG[0]
+    const rootName = wrapText(root.nombre ?? 'GADPE', 20)
+    
+    // Nodo Raíz al centro
+    nodes.push({
+      id: 'root',
+      name: rootName,
+      x: 600,
+      y: 50,
+      symbol: 'roundRect',
+      symbolSize: [rootConfig.width, rootConfig.height],
+      _unidad: root,
+      _nivel: 0,
+      itemStyle: {
+        color: rootConfig.bgColor,
+        borderColor: rootConfig.borderColor,
+        borderWidth: 1.5,
+        borderRadius: 8,
+        shadowColor: rootConfig.shadowColor,
+        shadowBlur: rootConfig.shadowBlur,
+      },
+      label: {
+        show: true,
+        position: 'inside',
+        color: rootConfig.textColor,
+        fontSize: rootConfig.fontSize,
+        fontWeight: rootConfig.fontWeight,
+        fontFamily: "'Inter', sans-serif",
+        lineHeight: 14,
+        overflow: 'break',
+        width: rootConfig.width - 24,
+      },
+    })
+
+    // 2. Agrupar los hijos (Gestiones) por su tipo de unidad
+    const hijos = root.hijos ?? []
+    
+    // Categorías en orden de arriba hacia abajo:
+    // 1. GOBERNANTES ('G')
+    // 2. HABILITANTES ASESORES ('HA')
+    // 3. AGREGADORES DE VALOR ('AV')
+    // 4. HABILITANTES DE APOYO ('HAP')
+    const categoriesOrder = ['G', 'HA', 'AV', 'HAP']
+    const groups: { [key: string]: UnidadConRelaciones[] } = {
+      G: [],
+      HA: [],
+      AV: [],
+      HAP: [],
+    }
+
+    hijos.forEach(h => {
+      const acro = h.tipo_unidad?.acronimo ?? 'AV'
+      if (groups[acro]) {
+        groups[acro].push(h)
+      } else {
+        groups['AV'].push(h)
+      }
+    })
+
+    // Coordenadas Y para cada categoría
+    const yCoords = {
+      G: 180,
+      HA: 300,
+      AV: 420,
+      HAP: 540,
+    }
+
+    const config = NIVEL_CONFIG[1] // Configuración visual para nivel 1
+
+    categoriesOrder.forEach(category => {
+      const categoryNodes = groups[category]
+      const N = categoryNodes.length
+      if (N === 0) return
+
+      const y = yCoords[category as keyof typeof yCoords]
+      const spacing = 190 // Espaciado horizontal constante entre nodos
+
+      categoryNodes.forEach((node, i) => {
+        // Calcular X centrado en 600
+        const x = 600 - ((N - 1) * spacing) / 2 + i * spacing
+        const nodeId = String(node.id)
+        const nodeName = wrapText(node.nombre ?? 'Sin nombre', 20)
+
+        nodes.push({
+          id: nodeId,
+          name: nodeName,
+          x: x,
+          y: y,
+          symbol: 'roundRect',
+          symbolSize: [config.width, config.height],
+          _unidad: node,
+          _nivel: 1,
+          itemStyle: {
+            color: config.bgColor,
+            borderColor: config.borderColor,
+            borderWidth: 2,
+            borderRadius: 8,
+            shadowColor: config.shadowColor,
+            shadowBlur: config.shadowBlur,
+          },
+          label: {
+            show: true,
+            position: 'inside',
+            color: config.textColor,
+            fontSize: config.fontSize,
+            fontWeight: config.fontWeight,
+            fontFamily: "'Inter', sans-serif",
+            lineHeight: 14,
+            overflow: 'break',
+            width: config.width - 24,
+          },
+          emphasis: {
+            itemStyle: {
+              color: '#047857',
+              borderColor: '#10B981',
+              borderWidth: 2.5,
+              shadowBlur: 18,
+              shadowColor: 'rgba(16,185,129,0.5)',
+            },
+            label: {
+              color: '#ffffff',
+            },
+          },
+        })
+
+        // Conexión del nodo raíz a este nodo
+        links.push({
+          source: 'root',
+          target: nodeId,
+        })
+      })
+    })
+  }
 
   const option = {
     backgroundColor: 'transparent',
@@ -181,16 +267,16 @@ export function OrganigramaChart({
         fontSize: 12,
         fontFamily: "'Inter', sans-serif",
       },
-      formatter: (params: { data: EChartsTreeNode }) => {
+      formatter: (params: { data: EChartsGraphNode }) => {
         const u = params.data._unidad
         if (!u) return params.data.name
         const nivel = params.data._nivel ?? 0
         const nivelLabel = ['Institución', 'Gestión', 'Subproceso'][
           Math.min(nivel, 2)
         ]
-        const hijos = u.hijos?.length ?? 0
+        const hijosCount = u.hijos?.length ?? 0
         const extra =
-          nivel === 1 && hijos > 0
+          nivel === 1 && hijosCount > 0
             ? `<br/><span style="color:#10B981">▶ Clic para ver detalles</span>`
             : ''
         return `
@@ -199,7 +285,7 @@ export function OrganigramaChart({
           </div>
           <div style="color:#a3e6cb;font-size:11px;">
             ${nivelLabel}
-            ${hijos > 0 ? ` · ${hijos} subunidades` : ''}
+            ${hijosCount > 0 ? ` · ${hijosCount} subunidades` : ''}
           </div>
           ${extra}
         `
@@ -207,45 +293,21 @@ export function OrganigramaChart({
     },
     series: [
       {
-        type: 'tree',
-        data: treeData,
-        top: '4%',
-        left: '2%',
-        bottom: '4%',
-        right: '2%',
-        orient: 'TB',
-        symbol: 'roundRect',
-        symbolSize: [150, 48],
-        edgeShape: 'curve',
-        edgeForkPosition: '50%',
+        type: 'graph',
+        layout: 'none',
+        data: nodes,
+        links: links,
         roam: true,
         scaleLimit: { min: 0.4, max: 2 },
-        initialTreeDepth: 2,
-        layout: 'orthogonal',
         lineStyle: {
           color: '#059669',
           width: 1.5,
           opacity: 0.6,
-          curveness: 0.4,
-        },
-        label: {
-          show: true,
-          position: 'inside',
-          verticalAlign: 'middle',
-          align: 'center',
-        },
-        leaves: {
-          label: {
-            show: true,
-            position: 'inside',
-            verticalAlign: 'middle',
-            align: 'center',
-          },
+          curveness: 0,
         },
         emphasis: {
-          focus: 'relative',
+          focus: 'adjacency',
         },
-        expandAndCollapse: true,
         animationDuration: 400,
         animationDurationUpdate: 500,
         animationEasing: 'cubicInOut',
@@ -260,7 +322,6 @@ export function OrganigramaChart({
       withBorder
       style={{
         height: 620,
-        overflow: 'hidden',
         background:
           'linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #f0fdf4 100%)',
         position: 'relative',
@@ -274,16 +335,21 @@ export function OrganigramaChart({
           fontSize: 11,
           color: '#6b7280',
           pointerEvents: 'none',
+          zIndex: 10,
         }}
       >
         Scroll para zoom · Arrastra para mover · Clic en gestión para detalles
       </div>
-      <ReactECharts
-        option={option}
-        style={{ height: '100%', width: '100%' }}
-        onEvents={handleEvents()}
-        opts={{ renderer: 'canvas' }}
-      />
+      <div style={{ overflowX: 'auto', height: '100%', width: '100%' }}>
+        <div style={{ minWidth: 1200, height: '100%' }}>
+          <ReactECharts
+            option={option}
+            style={{ height: '100%', width: '100%' }}
+            onEvents={handleEvents()}
+            opts={{ renderer: 'canvas' }}
+          />
+        </div>
+      </div>
     </Paper>
   )
 }

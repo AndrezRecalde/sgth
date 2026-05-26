@@ -729,6 +729,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/cargos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["estructura.cargos.index"];
+        put?: never;
+        post: operations["estructura.cargos.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/cargos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["estructura.cargos.update"];
+        post?: never;
+        delete: operations["estructura.cargos.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/capacitacion/certificados/{servidorId}": {
         parameters: {
             query?: never;
@@ -3193,6 +3225,21 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /** Cargo */
+        Cargo: {
+            id: number;
+            nombre: string;
+            denominacion_generica: string | null;
+            mision: string | null;
+            clasificacion_personal: components["schemas"]["ClasificacionPersonal"];
+            activo: boolean;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            /** Format: date-time */
+            deleted_at: string | null;
+        };
         /**
          * CategoriaActividadEnum
          * @enum {string}
@@ -3213,6 +3260,11 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /**
+         * ClasificacionPersonal
+         * @enum {string}
+         */
+        ClasificacionPersonal: "empleado" | "contratado" | "obrero";
         /** ComisionResource */
         ComisionResource: {
             id: string;
@@ -3944,8 +3996,7 @@ export interface components {
         /** PuestoResource */
         PuestoResource: {
             id: string;
-            denominacion: string;
-            mision: string;
+            cargo_id: string;
             unidad_administrativa_id: string;
             grupo_ocupacional_id: string;
             partida_presupuestaria_id: string;
@@ -3956,6 +4007,12 @@ export interface components {
             es_jefe: string;
             activo: string;
             rmu: string;
+            cargo?: {
+                id: string;
+                nombre: string;
+                denominacion_generica: string;
+                clasificacion_personal: string;
+            };
             unidad_administrativa?: components["schemas"]["UnidadAdministrativaResource"];
             grupo_ocupacional?: {
                 id: string;
@@ -4293,8 +4350,7 @@ export interface components {
         };
         /** StorePuestoRequest */
         StorePuestoRequest: {
-            denominacion: string;
-            mision?: string | null;
+            cargo_id: number;
             unidad_administrativa_id: number;
             grupo_ocupacional_id?: number | null;
             partida_presupuestaria_id?: number | null;
@@ -4703,8 +4759,7 @@ export interface components {
         };
         /** UpdatePuestoRequest */
         UpdatePuestoRequest: {
-            denominacion?: string;
-            mision?: string | null;
+            cargo_id?: number;
             unidad_administrativa_id?: number;
             grupo_ocupacional_id?: number | null;
             partida_presupuestaria_id?: number | null;
@@ -6937,6 +6992,151 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.cargos.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cargos institucionales.";
+                        datos: components["schemas"]["Cargo"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.cargos.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nombre: string;
+                    denominacion_generica?: string | null;
+                    mision?: string | null;
+                    /** @enum {string} */
+                    clasificacion_personal: "empleado" | "contratado" | "obrero";
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cargo creado.";
+                        datos: components["schemas"]["Cargo"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.cargos.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    nombre?: string;
+                    denominacion_generica?: string | null;
+                    mision?: string | null;
+                    /** @enum {string} */
+                    clasificacion_personal?: "empleado" | "contratado" | "obrero";
+                    activo?: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cargo actualizado.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.cargos.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cargo eliminado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No se puede eliminar el cargo porque tiene puestos asignados.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "certificadoCapacitacion.show": {

@@ -48,7 +48,7 @@ export function PuestosTab() {
   };
 
   const handleDelete = (puesto: PuestoConRelaciones) => {
-    if (confirm(`¿Eliminar el puesto "${puesto.denominacion}"?`)) {
+    if (confirm(`¿Eliminar el puesto "${puesto.cargo?.nombre ?? "-"}"?`)) {
       eliminar.mutate(Number(puesto.id));
     }
   };

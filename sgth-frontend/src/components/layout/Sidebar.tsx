@@ -1,7 +1,6 @@
 'use client'
 
 import { Box, ScrollArea } from '@mantine/core'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { buildNavGroups } from '@/config/nav'
 //import { SidebarSystemSelector } from './SidebarSystemSelector'
@@ -16,16 +15,8 @@ interface Props {
 }
 
 export function Sidebar({ collapsed, onNavClick }: Props) {
-  const router = useRouter()
-  const { clearAuth, usuario } = useAuth()
+  const { usuario } = useAuth()
   const groups = buildNavGroups(usuario?.permisos || [])
-
-  const handleLogout = (e?: React.MouseEvent) => {
-    e?.preventDefault()
-    clearAuth()
-    router.push('/login')
-    if (onNavClick) onNavClick()
-  }
 
   return (
     <Box className={classes.sidebar}>
@@ -42,11 +33,7 @@ export function Sidebar({ collapsed, onNavClick }: Props) {
           </Box>
         ))}
       </ScrollArea>
-
-      <Box className={classes.footer}>
-        <NavItem label="Configuración" icon="IconSettings" href="/configuracion" collapsed={collapsed} onClick={onNavClick} />
-        <NavItem label="Cerrar sesión" icon="IconLogout" href="#" collapsed={collapsed} onClick={handleLogout} />
-      </Box>
     </Box>
   )
 }
+
