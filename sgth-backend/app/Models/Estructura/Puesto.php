@@ -19,8 +19,7 @@ class Puesto extends Model
     protected $table = 'puestos';
 
     protected $fillable = [
-        'denominacion',
-        'mision',
+        'cargo_id',
         'unidad_administrativa_id',
         'grupo_ocupacional_id',
         'partida_presupuestaria_id',
@@ -37,11 +36,15 @@ class Puesto extends Model
         return [
             'es_jefe'           => 'boolean',
             'activo'            => 'boolean',
-            'nivel_jerarquico'  => 'integer',
             'plazas'            => 'integer',
             'nivel_complejidad' => NivelComplejidadPuesto::class,
             'rol_puesto'        => RolPuesto::class,
         ];
+    }
+
+    public function cargo(): BelongsTo
+    {
+        return $this->belongsTo(Cargo::class);
     }
 
     public function unidadAdministrativa(): BelongsTo
@@ -57,10 +60,6 @@ class Puesto extends Model
         return $this->belongsTo(GrupoOcupacional::class);
     }
 
-    /**
-     * Servidores que actualmente ocupan este puesto
-     * a través de contratos vigentes.
-     */
     public function contratosVigentes(): HasMany
     {
         return $this->hasMany(
@@ -68,42 +67,28 @@ class Puesto extends Model
         )->where('estado', 'vigente');
     }
 
-    /**
-     * Plazas ocupadas actualmente.
-     */
     public function plazasOcupadas(): int
     {
         return $this->contratosVigentes()->count();
     }
 
-    /**
-     * Plazas disponibles (vacantes).
-     */
     public function plazasDisponibles(): int
     {
         return max(0, $this->plazas - $this->plazasOcupadas());
     }
 
-    /**
-     * Indica si el puesto tiene vacantes disponibles.
-     */
     public function tieneVacantes(): bool
     {
         return $this->plazasDisponibles() > 0;
     }
 
-    /**
-     * RMU del puesto — viene del grupo ocupacional para LOSEP.
-     * Para CT devuelve el SBU referencial.
-     */
     public function getRmuAttribute(): ?float
     {
-        return $this->grupoOcupacional?->rmu;
+        return $this->grupoOcupacional?->rmu
+            ? (float) $this->grupoOcupacional->rmu
+            : null;
     }
 
-    /**
-     * Indica si es régimen LOSEP.
-     */
     public function esLosep(): bool
     {
         return $this->regimen_laboral === 'losep';

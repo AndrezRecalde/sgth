@@ -82,8 +82,10 @@ final class EstructuraService implements EstructuraServiceInterface
             'tipoUnidad',
             'hijos' => fn($q) => $q->where('estado', true)
                                     ->orderBy('nombre'),
-            'puestos' => fn($q) => $q->where('activo', true)
-                                      ->orderBy('denominacion'),
+            'puestos' => fn($q) => $q->where('puestos.activo', true)
+                                      ->leftJoin('cargos', 'puestos.cargo_id', '=', 'cargos.id')
+                                      ->orderBy('cargos.nombre', 'asc')
+                                      ->select('puestos.*'),
         ]);
 
         $unidad->hijos->each(
@@ -98,28 +100,29 @@ final class EstructuraService implements EstructuraServiceInterface
     public function listarPuestos(array $filtros): LengthAwarePaginator
     {
         return Puesto::query()
-            ->with(['unidadAdministrativa', 'grupoOcupacional'])
+            ->with(['cargo', 'unidadAdministrativa', 'grupoOcupacional'])
+            ->join('cargos', 'cargos.id', '=', 'puestos.cargo_id')
+            ->select('puestos.*')
             ->when(
                 isset($filtros['unidad_administrativa_id']),
                 fn($q) => $q->where(
-                    'unidad_administrativa_id',
+                    'puestos.unidad_administrativa_id',
                     $filtros['unidad_administrativa_id']
                 )
             )
             ->when(
                 isset($filtros['regimen_laboral']),
-                fn($q) => $q->where('regimen_laboral', $filtros['regimen_laboral'])
+                fn($q) => $q->where('puestos.regimen_laboral', $filtros['regimen_laboral'])
             )
             ->when(
                 isset($filtros['es_jefe']),
-                fn($q) => $q->where('es_jefe', $filtros['es_jefe'])
+                fn($q) => $q->where('puestos.es_jefe', $filtros['es_jefe'])
             )
             ->when(
                 isset($filtros['activo']),
-                fn($q) => $q->where('activo', $filtros['activo'])
+                fn($q) => $q->where('puestos.activo', $filtros['activo'])
             )
-            ->orderBy('denominacion')
-            ->orderBy('denominacion')
+            ->orderBy('cargos.nombre', 'asc')
             ->paginate($filtros['per_page'] ?? 15);
     }
 
@@ -137,13 +140,17 @@ final class EstructuraService implements EstructuraServiceInterface
                 }
             }
 
-            return Puesto::create($datos);
+            return Puesto::create($datos)->load('cargo');
         });
     }
 
     public function obtenerPuesto(int $id): Puesto
     {
-        return Puesto::with(['unidadAdministrativa'])->findOrFail($id);
+        return Puesto::with([
+            'cargo',
+            'unidadAdministrativa',
+            'grupoOcupacional',
+        ])->findOrFail($id);
     }
 
     public function actualizarPuesto(int $id, array $datos): Puesto

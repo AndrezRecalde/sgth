@@ -3976,6 +3976,318 @@
                 }
             }
         },
+        "/v1/estructura/cargos": {
+            "get": {
+                "operationId": "estructura.cargos.index",
+                "tags": [
+                    "Cargo"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cargos institucionales."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Cargo"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "estructura.cargos.store",
+                "tags": [
+                    "Cargo"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                    },
+                                    "denominacion_generica": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    },
+                                    "mision": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "clasificacion_personal": {
+                                        "type": "string",
+                                        "enum": [
+                                            "empleado",
+                                            "contratado",
+                                            "obrero"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "nombre",
+                                    "clasificacion_personal"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cargo creado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/Cargo"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/cargos/{id}": {
+            "put": {
+                "operationId": "estructura.cargos.update",
+                "tags": [
+                    "Cargo"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                    },
+                                    "denominacion_generica": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    },
+                                    "mision": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "clasificacion_personal": {
+                                        "type": "string",
+                                        "enum": [
+                                            "empleado",
+                                            "contratado",
+                                            "obrero"
+                                        ]
+                                    },
+                                    "activo": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cargo actualizado."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "estructura.cargos.destroy",
+                "tags": [
+                    "Cargo"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cargo eliminado."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "No se puede eliminar el cargo porque tiene puestos asignados."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/capacitacion/certificados/{servidorId}": {
             "get": {
                 "operationId": "certificadoCapacitacion.show",
@@ -17276,6 +17588,68 @@
                 ],
                 "title": "CargaFamiliar"
             },
+            "Cargo": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "denominacion_generica": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "mision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "clasificacion_personal": {
+                        "$ref": "#/components/schemas/ClasificacionPersonal"
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre",
+                    "denominacion_generica",
+                    "mision",
+                    "clasificacion_personal",
+                    "activo",
+                    "created_at",
+                    "updated_at",
+                    "deleted_at"
+                ],
+                "title": "Cargo"
+            },
             "CategoriaActividadEnum": {
                 "type": "string",
                 "enum": [
@@ -17341,6 +17715,15 @@
                     "deleted_at"
                 ],
                 "title": "CertificadoCapacitacion"
+            },
+            "ClasificacionPersonal": {
+                "type": "string",
+                "enum": [
+                    "empleado",
+                    "contratado",
+                    "obrero"
+                ],
+                "title": "ClasificacionPersonal"
             },
             "ComisionResource": {
                 "type": "object",
@@ -20189,10 +20572,7 @@
                     "id": {
                         "type": "string"
                     },
-                    "denominacion": {
-                        "type": "string"
-                    },
-                    "mision": {
+                    "cargo_id": {
                         "type": "string"
                     },
                     "unidad_administrativa_id": {
@@ -20224,6 +20604,29 @@
                     },
                     "rmu": {
                         "type": "string"
+                    },
+                    "cargo": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "denominacion_generica": {
+                                "type": "string"
+                            },
+                            "clasificacion_personal": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "nombre",
+                            "denominacion_generica",
+                            "clasificacion_personal"
+                        ]
                     },
                     "unidad_administrativa": {
                         "$ref": "#/components/schemas/UnidadAdministrativaResource"
@@ -20258,8 +20661,7 @@
                 },
                 "required": [
                     "id",
-                    "denominacion",
-                    "mision",
+                    "cargo_id",
                     "unidad_administrativa_id",
                     "grupo_ocupacional_id",
                     "partida_presupuestaria_id",
@@ -21523,15 +21925,8 @@
             "StorePuestoRequest": {
                 "type": "object",
                 "properties": {
-                    "denominacion": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "mision": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                    "cargo_id": {
+                        "type": "integer"
                     },
                     "unidad_administrativa_id": {
                         "type": "integer"
@@ -21573,7 +21968,7 @@
                     }
                 },
                 "required": [
-                    "denominacion",
+                    "cargo_id",
                     "unidad_administrativa_id",
                     "plazas",
                     "regimen_laboral"
@@ -23172,15 +23567,8 @@
             "UpdatePuestoRequest": {
                 "type": "object",
                 "properties": {
-                    "denominacion": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "mision": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                    "cargo_id": {
+                        "type": "integer"
                     },
                     "unidad_administrativa_id": {
                         "type": "integer"

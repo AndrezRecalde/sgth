@@ -52,6 +52,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('organigrama', \App\Http\Controllers\Estructura\OrganigramaController::class);
         Route::apiResource('unidades-administrativas', \App\Http\Controllers\Estructura\UnidadAdministrativaController::class);
         Route::apiResource('puestos', \App\Http\Controllers\Estructura\PuestoController::class);
+
+        Route::get('cargos', [\App\Http\Controllers\Estructura\CargoController::class, 'index'])
+            ->name('estructura.cargos.index');
+        Route::post('cargos', [\App\Http\Controllers\Estructura\CargoController::class, 'store'])
+            ->name('estructura.cargos.store');
+        Route::put('cargos/{id}', [\App\Http\Controllers\Estructura\CargoController::class, 'update'])
+            ->name('estructura.cargos.update');
+        Route::delete('cargos/{id}', [\App\Http\Controllers\Estructura\CargoController::class, 'destroy'])
+            ->name('estructura.cargos.destroy');
         
         Route::get('grupos-ocupacionales', [\App\Http\Controllers\Estructura\GrupoOcupacionalController::class, 'index'])
             ->name('estructura.grupos-ocupacionales');

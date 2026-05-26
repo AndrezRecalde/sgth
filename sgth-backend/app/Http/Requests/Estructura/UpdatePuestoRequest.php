@@ -5,7 +5,6 @@ namespace App\Http\Requests\Estructura;
 use App\Enums\NivelComplejidadPuesto;
 use App\Enums\RolPuesto;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 final class UpdatePuestoRequest extends FormRequest
@@ -18,8 +17,7 @@ final class UpdatePuestoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'denominacion'              => ['sometimes', 'string', 'max:255'],
-            'mision'                    => ['nullable', 'string'],
+            'cargo_id'                  => ['sometimes', 'integer', 'exists:cargos,id'],
             'unidad_administrativa_id'  => ['sometimes', 'integer', 'exists:unidades_administrativas,id'],
             'grupo_ocupacional_id'      => ['nullable', 'integer', 'exists:grupos_ocupacionales,id'],
             'partida_presupuestaria_id' => ['nullable', 'integer', 'exists:partidas_presupuestarias,id'],

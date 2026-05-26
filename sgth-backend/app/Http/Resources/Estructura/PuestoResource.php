@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Resources\Estructura;
 
 use Illuminate\Http\Request;
@@ -11,8 +10,7 @@ class PuestoResource extends JsonResource
     {
         return [
             'id'                        => $this->id,
-            'denominacion'              => $this->denominacion,
-            'mision'                    => $this->mision,
+            'cargo_id'                  => $this->cargo_id,
             'unidad_administrativa_id'  => $this->unidad_administrativa_id,
             'grupo_ocupacional_id'      => $this->grupo_ocupacional_id,
             'partida_presupuestaria_id' => $this->partida_presupuestaria_id,
@@ -24,9 +22,17 @@ class PuestoResource extends JsonResource
             'activo'                    => $this->activo,
             'rmu'                       => $this->rmu,
 
+            'cargo' => $this->whenLoaded('cargo', fn() => [
+                'id'                     => $this->cargo->id,
+                'nombre'                 => $this->cargo->nombre,
+                'denominacion_generica'  => $this->cargo->denominacion_generica,
+                'clasificacion_personal' => $this->cargo->clasificacion_personal,
+            ]),
+
             'unidad_administrativa' => new UnidadAdministrativaResource(
                 $this->whenLoaded('unidadAdministrativa')
             ),
+
             'grupo_ocupacional' => $this->whenLoaded(
                 'grupoOcupacional',
                 fn() => [

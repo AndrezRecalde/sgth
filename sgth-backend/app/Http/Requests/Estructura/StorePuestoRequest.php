@@ -18,8 +18,7 @@ final class StorePuestoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'denominacion'              => ['required', 'string', 'max:255'],
-            'mision'                    => ['nullable', 'string'],
+            'cargo_id'                  => ['required', 'integer', 'exists:cargos,id'],
             'unidad_administrativa_id'  => ['required', 'integer', 'exists:unidades_administrativas,id'],
             'grupo_ocupacional_id'      => ['nullable', 'integer', 'exists:grupos_ocupacionales,id'],
             'partida_presupuestaria_id' => ['nullable', 'integer', 'exists:partidas_presupuestarias,id'],
@@ -35,15 +34,13 @@ final class StorePuestoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'codigo.required'                   => 'El código del puesto es obligatorio.',
-            'codigo.unique'                     => 'Este código ya está en uso.',
-            'denominacion.required'             => 'La denominación es obligatoria.',
-            'unidad_administrativa_id.required' => 'La unidad administrativa es obligatoria.',
-            'unidad_administrativa_id.exists'   => 'La unidad administrativa no existe.',
-            'grupo_ocupacional_id.exists'       => 'El grupo ocupacional no existe.',
-            'plazas.required'                   => 'El número de plazas es obligatorio.',
-            'plazas.min'                        => 'Debe haber al menos 1 plaza.',
-            'regimen_laboral.required'          => 'El régimen laboral es obligatorio.',
+            'cargo_id.required'                  => 'Seleccione el cargo.',
+            'cargo_id.exists'                    => 'El cargo seleccionado no existe.',
+            'unidad_administrativa_id.required'  => 'La unidad administrativa es obligatoria.',
+            'unidad_administrativa_id.exists'    => 'La unidad administrativa no existe.',
+            'plazas.required'                    => 'El número de plazas es obligatorio.',
+            'plazas.min'                         => 'Debe haber al menos 1 plaza.',
+            'regimen_laboral.required'           => 'El régimen laboral es obligatorio.',
         ];
     }
 }

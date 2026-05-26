@@ -1,0 +1,81 @@
+<?php
+namespace App\Http\Controllers\Estructura;
+
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use App\Models\Estructura\Cargo;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class CargoController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $cargos = Cargo::query()
+            ->when(
+                $request->filled('search'),
+                fn($q) => $q->where('nombre', 'ilike', "%{$request->search}%")
+            )
+            ->when(
+                $request->filled('clasificacion'),
+                fn($q) => $q->where(
+                    'clasificacion_personal',
+                    $request->clasificacion
+                )
+            )
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get();
+
+        return ApiResponse::ok($cargos, 'Cargos institucionales.');
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nombre'                 => ['required', 'string', 'max:200'],
+            'denominacion_generica'  => ['nullable', 'string', 'max:100'],
+            'mision'                 => ['nullable', 'string'],
+            'clasificacion_personal' => [
+                'required', 'string',
+                'in:empleado,contratado,obrero',
+            ],
+        ]);
+
+        $cargo = Cargo::create($validated);
+        return ApiResponse::created($cargo, 'Cargo creado.');
+    }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $cargo = Cargo::findOrFail($id);
+        $validated = $request->validate([
+            'nombre'                 => ['sometimes', 'string', 'max:200'],
+            'denominacion_generica'  => ['nullable', 'string', 'max:100'],
+            'mision'                 => ['nullable', 'string'],
+            'clasificacion_personal' => [
+                'sometimes', 'string',
+                'in:empleado,contratado,obrero',
+            ],
+            'activo' => ['boolean'],
+        ]);
+
+        $cargo->update($validated);
+        return ApiResponse::ok($cargo, 'Cargo actualizado.');
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $cargo = Cargo::findOrFail($id);
+
+        if ($cargo->puestos()->exists()) {
+            return ApiResponse::error(
+                'No se puede eliminar el cargo porque tiene puestos asignados.',
+                null, 422
+            );
+        }
+
+        $cargo->delete();
+        return ApiResponse::ok(null, 'Cargo eliminado.');
+    }
+}

@@ -159,7 +159,8 @@ class ReporteriaService implements ReporteriaServiceInterface
                 'datos' => DB::table('servidores')
                     ->join('unidades_administrativas', 'servidores.unidad_administrativa_id', '=', 'unidades_administrativas.id')
                     ->join('puestos', 'servidores.puesto_id', '=', 'puestos.id')
-                    ->select('servidores.nombres', 'servidores.apellidos', 'unidades_administrativas.nombre as unidad', 'puestos.denominacion', 'servidores.rmu')
+                    ->leftJoin('cargos', 'puestos.cargo_id', '=', 'cargos.id')
+                    ->select('servidores.nombres', 'servidores.apellidos', 'unidades_administrativas.nombre as unidad', 'cargos.nombre as denominacion', 'servidores.rmu')
                     ->whereNull('servidores.deleted_at')
                     ->limit(10) // Simulado
                     ->get()->toArray()
