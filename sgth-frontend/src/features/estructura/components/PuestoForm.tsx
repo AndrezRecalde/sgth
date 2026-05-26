@@ -71,23 +71,25 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     nombre: string;
     clasificacion_personal?: string;
   };
-  const cargoOptions = (cargos as CargoItem[]).map((c) => ({
-    value: String(c.id),
-    label: c.nombre,
-    group:
-      c.clasificacion_personal === "obrero"
-        ? "Obreros"
-        : c.clasificacion_personal === "contratado"
-          ? "Contratados"
-          : "Empleados",
-  }));
+  const cargoOptions = Array.isArray(cargos)
+    ? (cargos as CargoItem[]).map((c) => ({
+        value: String(c.id),
+        label: c.nombre,
+        group:
+          c.clasificacion_personal === "obrero"
+            ? "Obreros"
+            : c.clasificacion_personal === "contratado"
+              ? "Contratados"
+              : "Empleados",
+      }))
+    : [];
 
-  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(
-    (u) => ({
-      value: String(u.id),
-      label: u.nombre ?? `Unidad ${u.id}`,
-    }),
-  );
+  const unidadOptions = Array.isArray(unidades)
+    ? (unidades as unknown as UnidadConRelaciones[]).map((u) => ({
+        value: String(u.id),
+        label: u.nombre ?? `Unidad ${u.id}`,
+      }))
+    : [];
 
   type GrupoItem = {
     id: number;
@@ -95,10 +97,12 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     grupo?: string;
     rmu?: number;
   };
-  const grupoOptions = (grupos as GrupoItem[]).map((g) => ({
-    value: String(g.id),
-    label: `${g.grado_codigo ?? ""} — ${g.grupo ?? ""} ($${g.rmu ?? 0})`,
-  }));
+  const grupoOptions = Array.isArray(grupos)
+    ? (grupos as GrupoItem[]).map((g) => ({
+        value: String(g.id),
+        label: `${g.grado_codigo ?? ""} — ${g.grupo ?? ""} ($${g.rmu ?? 0})`,
+      }))
+    : [];
 
   const regimenActual = form.values.regimen_laboral;
 
