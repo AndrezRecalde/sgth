@@ -98,6 +98,15 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
 
   const regimenActual = form.values.regimen_laboral;
 
+  console.log("DEBUG PuestoForm:", {
+    unidades,
+    unidadOptions,
+    grupos,
+    grupoOptions,
+    cargos,
+    cargoOptions,
+  });
+
   return (
     <form id="puesto-form" onSubmit={form.onSubmit(onSubmit)}>
       <Grid>
