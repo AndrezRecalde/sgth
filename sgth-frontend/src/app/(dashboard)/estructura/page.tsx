@@ -24,6 +24,9 @@ import { useUnidad } from '@/features/estructura/hooks/useUnidad'
 import { useDirectorio } from '@/features/estructura/hooks/useDirectorio'
 import { useExtensionMutations } from '@/features/estructura/hooks/useExtensionMutations'
 import type { UnidadConRelaciones, ExtensionConRelaciones } from '@/types/api'
+import { CargosTab } from '@/features/estructura/components/CargosTab'
+import { GruposOcupacionalesTab } from '@/features/estructura/components/GruposOcupacionalesTab'
+import { IconId, IconScale } from '@tabler/icons-react'
 
 export default function EstructuraPage() {
   const [search, setSearch]   = useState('')
@@ -87,6 +90,12 @@ export default function EstructuraPage() {
           </Tabs.Tab>
           <Tabs.Tab value="puestos" leftSection={<IconBriefcase size={16} />}>
             Puestos
+          </Tabs.Tab>
+          <Tabs.Tab value="cargos" leftSection={<IconId size={16} />}>
+            Cargos
+          </Tabs.Tab>
+          <Tabs.Tab value="grupos" leftSection={<IconScale size={16} />}>
+            Grupos Ocupacionales
           </Tabs.Tab>
         </Tabs.List>
 
@@ -173,6 +182,14 @@ export default function EstructuraPage() {
 
         <Tabs.Panel value="puestos">
           <PuestosTab />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="cargos">
+          <CargosTab />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="grupos">
+          <GruposOcupacionalesTab />
         </Tabs.Panel>
       </Tabs>
 

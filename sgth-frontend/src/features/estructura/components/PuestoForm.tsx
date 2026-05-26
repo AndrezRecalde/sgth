@@ -1,88 +1,102 @@
-'use client'
+"use client";
 
-import {
-  Select, Grid, Switch, NumberInput, Textarea,
-} from '@mantine/core'
-import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '../hooks/useUnidades'
-import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
-import { useCargos } from '../hooks/useCargos'
-import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
-import type { UnidadConRelaciones } from '@/types/api'
+import { Select, Grid, Switch, NumberInput } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import { useUnidades } from "../hooks/useUnidades";
+import { useGruposOcupacionales } from "../hooks/useGruposOcupacionales";
+import { useCargos } from "../hooks/useCargos";
+import { puestoSchema, type PuestoFormData } from "../schemas/puesto.schema";
+import type { UnidadConRelaciones } from "@/types/api";
 
 const ROL_OPTIONS = [
-  { value: 'dignatario',               label: 'Dignatario' },
-  { value: 'ejecucion_coordinacion',   label: 'Ejecución y Coordinación' },
-  { value: 'ejecucion_procesos',       label: 'Ejecución de Procesos' },
-  { value: 'ejecucion_procesos_apoyo', label: 'Ejecución de Procesos de Apoyo' },
-  { value: 'administrativo',           label: 'Administrativo' },
-  { value: 'codigo_trabajo',           label: 'Código del Trabajo' },
-]
+  { value: "dignatario", label: "Dignatario" },
+  { value: "ejecucion_coordinacion", label: "Ejecución y Coordinación" },
+  { value: "ejecucion_procesos", label: "Ejecución de Procesos" },
+  {
+    value: "ejecucion_procesos_apoyo",
+    label: "Ejecución de Procesos de Apoyo",
+  },
+  { value: "administrativo", label: "Administrativo" },
+  { value: "codigo_trabajo", label: "Código del Trabajo" },
+];
 
 const COMPLEJIDAD_OPTIONS = [
-  { value: 'bajo',  label: 'Nivel Bajo' },
-  { value: 'medio', label: 'Nivel Medio' },
-  { value: 'alto',  label: 'Nivel Alto' },
-]
+  { value: "bajo", label: "Nivel Bajo" },
+  { value: "medio", label: "Nivel Medio" },
+  { value: "alto", label: "Nivel Alto" },
+];
 
 const REGIMEN_OPTIONS = [
-  { value: 'losep',          label: 'LOSEP' },
-  { value: 'codigo_trabajo', label: 'Código del Trabajo' },
-]
+  { value: "losep", label: "LOSEP" },
+  { value: "codigo_trabajo", label: "Código del Trabajo" },
+];
 
 interface Props {
-  initialValues?: Partial<PuestoFormData>
-  onSubmit: (values: PuestoFormData) => void
+  initialValues?: Partial<PuestoFormData>;
+  onSubmit: (values: PuestoFormData) => void;
 }
 
 export function PuestoForm({ initialValues, onSubmit }: Props) {
-  const contained = useContainedInput()
-  const { data: unidades = [] } = useUnidades({ nivel: 2 })
-  const { data: grupos = [] }   = useGruposOcupacionales()
-  const { data: cargos = [] }   = useCargos()
+  const contained = useContainedInput();
+  const { data: unidades = [] } = useUnidades({ nivel: 2 });
+  const { data: grupos = [] } = useGruposOcupacionales();
+  const { data: cargos = [] } = useCargos();
 
   const form = useForm<PuestoFormData>({
     initialValues: {
-      cargo_id:                  initialValues?.cargo_id ?? ('' as unknown as number),
-      unidad_administrativa_id:  initialValues?.unidad_administrativa_id
-        ?? ('' as unknown as number),
-      grupo_ocupacional_id:      initialValues?.grupo_ocupacional_id ?? null,
-      partida_presupuestaria_id: initialValues?.partida_presupuestaria_id ?? null,
-      plazas:                    initialValues?.plazas ?? 1,
-      rol_puesto:                initialValues?.rol_puesto ?? null,
-      nivel_complejidad:         initialValues?.nivel_complejidad ?? null,
-      regimen_laboral:           initialValues?.regimen_laboral ?? 'losep',
-      es_jefe:                   initialValues?.es_jefe ?? false,
-      activo:                    initialValues?.activo ?? true,
+      cargo_id: initialValues?.cargo_id ?? ("" as unknown as number),
+      unidad_administrativa_id:
+        initialValues?.unidad_administrativa_id ?? ("" as unknown as number),
+      grupo_ocupacional_id: initialValues?.grupo_ocupacional_id ?? null,
+      partida_presupuestaria_id:
+        initialValues?.partida_presupuestaria_id ?? null,
+      plazas: initialValues?.plazas ?? 1,
+      rol_puesto: initialValues?.rol_puesto ?? null,
+      nivel_complejidad: initialValues?.nivel_complejidad ?? null,
+      regimen_laboral: initialValues?.regimen_laboral ?? "losep",
+      es_jefe: initialValues?.es_jefe ?? false,
+      activo: initialValues?.activo ?? true,
     },
     validate: zodResolver(puestoSchema),
-  })
+  });
 
-  type CargoItem = { id: number; nombre: string; clasificacion_personal?: string }
-  const cargoOptions = (cargos as CargoItem[]).map(c => ({
+  type CargoItem = {
+    id: number;
+    nombre: string;
+    clasificacion_personal?: string;
+  };
+  const cargoOptions = (cargos as CargoItem[]).map((c) => ({
     value: String(c.id),
     label: c.nombre,
-    group: c.clasificacion_personal === 'obrero'
-      ? 'Obreros'
-      : c.clasificacion_personal === 'contratado'
-        ? 'Contratados'
-        : 'Empleados',
-  }))
+    group:
+      c.clasificacion_personal === "obrero"
+        ? "Obreros"
+        : c.clasificacion_personal === "contratado"
+          ? "Contratados"
+          : "Empleados",
+  }));
 
-  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
-    value: String(u.id),
-    label: u.nombre ?? `Unidad ${u.id}`,
-  }))
+  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(
+    (u) => ({
+      value: String(u.id),
+      label: u.nombre ?? `Unidad ${u.id}`,
+    }),
+  );
 
-  type GrupoItem = { id: number; grado_codigo?: string; grupo?: string; rmu?: number }
-  const grupoOptions = (grupos as GrupoItem[]).map(g => ({
+  type GrupoItem = {
+    id: number;
+    grado_codigo?: string;
+    grupo?: string;
+    rmu?: number;
+  };
+  const grupoOptions = (grupos as GrupoItem[]).map((g) => ({
     value: String(g.id),
-    label: `${g.grado_codigo ?? ''} — ${g.grupo ?? ''} ($${g.rmu ?? 0})`,
-  }))
+    label: `${g.grado_codigo ?? ""} — ${g.grupo ?? ""} ($${g.rmu ?? 0})`,
+  }));
 
-  const regimenActual = form.values.regimen_laboral
+  const regimenActual = form.values.regimen_laboral;
 
   return (
     <form id="puesto-form" onSubmit={form.onSubmit(onSubmit)}>
@@ -94,11 +108,12 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             data={cargoOptions}
             searchable
             {...contained}
-            value={form.values.cargo_id
-              ? String(form.values.cargo_id) : ''}
+            value={form.values.cargo_id ? String(form.values.cargo_id) : ""}
             onChange={(v) =>
-              form.setFieldValue('cargo_id',
-                v ? Number(v) : ('' as unknown as number))
+              form.setFieldValue(
+                "cargo_id",
+                v ? Number(v) : ("" as unknown as number),
+              )
             }
             error={form.errors.cargo_id}
           />
@@ -110,8 +125,10 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             {...contained}
             value={form.values.regimen_laboral}
             onChange={(v) =>
-              form.setFieldValue('regimen_laboral',
-                (v ?? 'losep') as 'losep' | 'codigo_trabajo')
+              form.setFieldValue(
+                "regimen_laboral",
+                (v ?? "losep") as "losep" | "codigo_trabajo",
+              )
             }
             error={form.errors.regimen_laboral}
           />
@@ -123,30 +140,39 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             data={unidadOptions}
             searchable
             {...contained}
-            value={form.values.unidad_administrativa_id
-              ? String(form.values.unidad_administrativa_id) : ''}
+            value={
+              form.values.unidad_administrativa_id
+                ? String(form.values.unidad_administrativa_id)
+                : ""
+            }
             onChange={(v) =>
-              form.setFieldValue('unidad_administrativa_id',
-                v ? Number(v) : ('' as unknown as number))
+              form.setFieldValue(
+                "unidad_administrativa_id",
+                v ? Number(v) : ("" as unknown as number),
+              )
             }
             error={form.errors.unidad_administrativa_id}
           />
         </Grid.Col>
         <Grid.Col span={12}>
           <Select
-            label={regimenActual === 'losep'
-              ? 'Grupo ocupacional (LOSEP)'
-              : 'Grupo ocupacional (CT — referencial)'}
+            label={
+              regimenActual === "losep"
+                ? "Grupo ocupacional (LOSEP)"
+                : "Grupo ocupacional (CT — referencial)"
+            }
             placeholder="Seleccionar grupo"
             data={grupoOptions}
             searchable
             clearable
             {...contained}
-            value={form.values.grupo_ocupacional_id
-              ? String(form.values.grupo_ocupacional_id) : ''}
+            value={
+              form.values.grupo_ocupacional_id
+                ? String(form.values.grupo_ocupacional_id)
+                : ""
+            }
             onChange={(v) =>
-              form.setFieldValue('grupo_ocupacional_id',
-                v ? Number(v) : null)
+              form.setFieldValue("grupo_ocupacional_id", v ? Number(v) : null)
             }
           />
         </Grid.Col>
@@ -158,7 +184,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             {...contained}
             value={form.values.plazas}
             onChange={(v) =>
-              form.setFieldValue('plazas', typeof v === 'number' ? v : 1)
+              form.setFieldValue("plazas", typeof v === "number" ? v : 1)
             }
             error={form.errors.plazas}
           />
@@ -170,10 +196,12 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             data={COMPLEJIDAD_OPTIONS}
             clearable
             {...contained}
-            value={form.values.nivel_complejidad ?? ''}
+            value={form.values.nivel_complejidad ?? ""}
             onChange={(v) =>
-              form.setFieldValue('nivel_complejidad',
-                (v as PuestoFormData['nivel_complejidad']) ?? null)
+              form.setFieldValue(
+                "nivel_complejidad",
+                (v as PuestoFormData["nivel_complejidad"]) ?? null,
+              )
             }
           />
         </Grid.Col>
@@ -184,10 +212,12 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             data={ROL_OPTIONS}
             clearable
             {...contained}
-            value={form.values.rol_puesto ?? ''}
+            value={form.values.rol_puesto ?? ""}
             onChange={(v) =>
-              form.setFieldValue('rol_puesto',
-                (v as PuestoFormData['rol_puesto']) ?? null)
+              form.setFieldValue(
+                "rol_puesto",
+                (v as PuestoFormData["rol_puesto"]) ?? null,
+              )
             }
           />
         </Grid.Col>
@@ -196,7 +226,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             label="Es jefe de unidad"
             checked={form.values.es_jefe}
             onChange={(e) =>
-              form.setFieldValue('es_jefe', e.currentTarget.checked)
+              form.setFieldValue("es_jefe", e.currentTarget.checked)
             }
             color="emerald"
             mt="xs"
@@ -207,7 +237,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
             label="Puesto activo"
             checked={form.values.activo}
             onChange={(e) =>
-              form.setFieldValue('activo', e.currentTarget.checked)
+              form.setFieldValue("activo", e.currentTarget.checked)
             }
             color="emerald"
             mt="xs"
@@ -215,5 +245,5 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
         </Grid.Col>
       </Grid>
     </form>
-  )
+  );
 }
