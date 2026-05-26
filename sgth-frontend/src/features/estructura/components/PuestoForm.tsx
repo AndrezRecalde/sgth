@@ -75,12 +75,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     ? (cargos as CargoItem[]).map((c) => ({
         value: String(c.id),
         label: c.nombre,
-        group:
-          c.clasificacion_personal === "obrero"
-            ? "Obreros"
-            : c.clasificacion_personal === "contratado"
-              ? "Contratados"
-              : "Empleados",
       }))
     : [];
 
