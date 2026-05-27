@@ -155,7 +155,7 @@ export function Topbar({
                   {displayName}
                 </Text>
                 <Text className={classes.userMenuRole} truncate>
-                  {role}
+                  {usuario?.usuario_ti ?? role}
                 </Text>
               </div>
             </div>

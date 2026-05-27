@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Box } from '@mantine/core'
+import { Box, Button, Group } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconUsers } from '@tabler/icons-react'
+import { IconUsers, IconUserPlus } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { UsuarioToolbar } from '@/features/usuarios/components/UsuarioToolbar'
 import { UsuarioTable } from '@/features/usuarios/components/UsuarioTable'
 import { UsuarioModal } from '@/features/usuarios/components/UsuarioModal'
@@ -47,8 +48,14 @@ export function UsuariosView() {
   }
 
   const handleRestablecerPassword = (u: Usuario) => {
-    const displayName = u.nombre_completo || u.servidor?.nombre || '(Sin nombre)'
-    if (confirm(`¿Restablecer la contraseña de ${displayName}?\nSe establecerá la cédula del servidor como nueva contraseña.`)) {
+    const displayName = u.nombre_completo
+      || u.servidor?.nombre
+      || u.email
+      || '(Sin nombre)'
+    if (confirm(
+      `¿Restablecer la contraseña de ${displayName}?\n` +
+      `Se establecerá la cédula del servidor como nueva contraseña.`
+    )) {
       restablecerContrasena.mutate(Number(u.id))
     }
   }
@@ -57,24 +64,55 @@ export function UsuariosView() {
     <Box>
       <PageHeader
         title="Gestión de Usuarios"
-        subtitle="Administración de accesos al sistema"
+        subtitle="Administración de accesos al sistema SGTH"
         icon={<IconUsers size={28} />}
       />
+
+      <Group justify="flex-end" mb="md">
+        <Button
+          color="emerald"
+          variant="light"
+          leftSection={<IconUserPlus size={16} />}
+          onClick={handleNuevo}
+        >
+          Nuevo usuario
+        </Button>
+      </Group>
+
       <UsuarioToolbar
         onSearch={setSearch}
         onRolChange={setRol}
-        onNuevo={handleNuevo}
       />
-      <UsuarioTable
-        data={usuarios}
-        isLoading={isLoading}
-        total={data?.total ?? 0}
-        page={page}
-        onPageChange={setPage}
-        onEdit={handleEdit}
-        onToggleActivo={(u) => toggleActivo.mutate(Number(u.id))}
-        onRestablecerPassword={handleRestablecerPassword}
-      />
+
+      {!isLoading && usuarios.length === 0 ? (
+        <EmptyState
+          icon={IconUsers}
+          title="No hay usuarios registrados"
+          description="Comienza creando el primer usuario del sistema."
+          action={
+            <Button
+              color="emerald"
+              variant="light"
+              leftSection={<IconUserPlus size={14} />}
+              onClick={handleNuevo}
+            >
+              Nuevo usuario
+            </Button>
+          }
+        />
+      ) : (
+        <UsuarioTable
+          data={usuarios}
+          isLoading={isLoading}
+          total={data?.total ?? 0}
+          page={page}
+          onPageChange={setPage}
+          onEdit={handleEdit}
+          onToggleActivo={(u) => toggleActivo.mutate(Number(u.id))}
+          onRestablecerPassword={handleRestablecerPassword}
+        />
+      )}
+
       <UsuarioModal
         opened={modalOpened}
         onClose={handleClose}

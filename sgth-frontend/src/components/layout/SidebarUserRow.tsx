@@ -38,7 +38,9 @@ export function SidebarUserRow({ collapsed }: Props) {
         {initials}
       </Avatar>
       <Text className={classes.title} truncate>{displayName}</Text>
-      <Text className={classes.subtitle} truncate>{role}</Text>
+      <Text className={classes.subtitle} truncate>
+        {usuario.usuario_ti ?? role}
+      </Text>
     </Box>
   )
 }

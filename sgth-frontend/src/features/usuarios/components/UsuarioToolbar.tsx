@@ -1,7 +1,6 @@
 'use client'
 
-import { TextInput, Select, Button, Group, Stack } from '@mantine/core'
-import { IconPlus } from '@tabler/icons-react'
+import { TextInput, Select, Group, Stack } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useRoles } from '../hooks/useRoles'
@@ -9,10 +8,9 @@ import { useRoles } from '../hooks/useRoles'
 interface Props {
   onSearch:    (v: string) => void
   onRolChange: (v: string | null) => void
-  onNuevo:     () => void
 }
 
-export function UsuarioToolbar({ onSearch, onRolChange, onNuevo }: Props) {
+export function UsuarioToolbar({ onSearch, onRolChange }: Props) {
   const contained    = useContainedInput()
   const { isMobile } = useMobileBreakpoint()
   const { data: roles = [] } = useRoles()
@@ -40,13 +38,6 @@ export function UsuarioToolbar({ onSearch, onRolChange, onNuevo }: Props) {
         {...contained}
         style={{ minWidth: 200 }}
       />
-      <Button
-        leftSection={<IconPlus size={16} />}
-        color="emerald"
-        onClick={onNuevo}
-      >
-        Nuevo usuario
-      </Button>
     </>
   )
 

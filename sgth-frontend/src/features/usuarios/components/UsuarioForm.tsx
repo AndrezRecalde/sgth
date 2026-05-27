@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { TextInput, MultiSelect, Select, Grid, Text } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -56,6 +57,7 @@ export function UsuarioForm({ initialValues, onSubmit, isEditing }: Props) {
     register,
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<UsuarioFormData>({
     resolver: zodResolver(usuarioSchema) as Resolver<UsuarioFormData>,
@@ -66,6 +68,20 @@ export function UsuarioForm({ initialValues, onSubmit, isEditing }: Props) {
       cedula:      initialValues?.cedula      ?? '',
     },
   })
+
+  const emailVal = initialValues?.email
+  const rolesVal = initialValues?.roles?.join(',')
+  const servidorIdVal = initialValues?.servidor_id
+  const cedulaVal = initialValues?.cedula
+
+  useEffect(() => {
+    reset({
+      email:       emailVal       ?? '',
+      roles:       initialValues?.roles       ?? [],
+      servidor_id: servidorIdVal ?? null,
+      cedula:      cedulaVal      ?? '',
+    })
+  }, [emailVal, rolesVal, servidorIdVal, cedulaVal, reset, initialValues?.roles])
 
   return (
     <form id="usuario-form" onSubmit={handleSubmit(onSubmit)}>
