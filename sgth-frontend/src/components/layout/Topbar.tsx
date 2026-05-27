@@ -42,9 +42,17 @@ export function Topbar({
   const { usuario, clearAuth } = useAuth();
   const router = useRouter();
 
-  const initials = usuario?.name
-    ? usuario.name.substring(0, 2).toUpperCase()
-    : "US";
+  const displayName = usuario?.nombre_completo
+    || usuario?.servidor?.nombre
+    || usuario?.email
+    || 'Usuario'
+
+  const initials = displayName
+    .split(' ')
+    .slice(0, 2)
+    .map((w: string) => w[0] ?? '')
+    .join('')
+    .toUpperCase() || 'US'
   const role = usuario?.roles?.[0] || "Usuario";
 
   const handleLogout = (e?: React.MouseEvent) => {
@@ -144,7 +152,7 @@ export function Topbar({
               </Avatar>
               <div className={classes.userMenuInfo}>
                 <Text className={classes.userMenuName} truncate>
-                  {usuario?.name}
+                  {displayName}
                 </Text>
                 <Text className={classes.userMenuRole} truncate>
                   {role}

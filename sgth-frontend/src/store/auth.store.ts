@@ -2,21 +2,28 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export interface UsuarioAuth {
-  id: number
-  name: string
-  email: string
-  roles: string[]
-  permisos: string[]
+  id:              number
+  nombre_completo?: string
+  email:           string
+  usuario_ti?:     string
+  servidor_id?:    number | null
+  servidor?: {
+    id:      number
+    cedula?: string
+    nombre?: string
+  } | null
+  roles:           string[]
+  permisos:        string[]
 }
 
 interface AuthState {
-  token: string | null
-  usuario: UsuarioAuth | null
+  token:           string | null
+  usuario:         UsuarioAuth | null
   isAuthenticated: boolean
-  setAuth: (token: string, usuario: UsuarioAuth) => void
-  clearAuth: () => void
-  hasRole: (role: string) => boolean
-  hasPermiso: (permiso: string) => boolean
+  setAuth:         (token: string, usuario: UsuarioAuth) => void
+  clearAuth:       () => void
+  hasRole:         (role: string) => boolean
+  hasPermiso:      (permiso: string) => boolean
 }
 
 const setCookie = (name: string, value: string, days = 1) => {
@@ -56,11 +63,8 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      hasRole: (role) =>
-        get().usuario?.roles.includes(role) ?? false,
-
-      hasPermiso: (permiso) =>
-        get().usuario?.permisos.includes(permiso) ?? false,
+      hasRole:    (role)    => get().usuario?.roles.includes(role)      ?? false,
+      hasPermiso: (permiso) => get().usuario?.permisos.includes(permiso) ?? false,
     }),
     {
       name: 'auth-storage',
