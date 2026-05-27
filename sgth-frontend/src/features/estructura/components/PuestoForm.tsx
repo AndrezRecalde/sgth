@@ -1,258 +1,262 @@
-"use client";
+'use client'
 
-import { Select, Grid, Switch, NumberInput, Box, LoadingOverlay } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { useUnidades } from "../hooks/useUnidades";
-import { useGruposOcupacionales } from "../hooks/useGruposOcupacionales";
-import { useCargos } from "../hooks/useCargos";
-import { puestoSchema, type PuestoFormData } from "../schemas/puesto.schema";
-import type { UnidadConRelaciones } from "@/types/api";
+import {
+  Select, Grid, Switch, NumberInput,
+  Box, LoadingOverlay,
+} from '@mantine/core'
+import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { useUnidades } from '../hooks/useUnidades'
+import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
+import { useCargos } from '../hooks/useCargos'
+import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
+import type { UnidadConRelaciones, Cargo, GrupoOcupacional } from '@/types/api'
 
 const ROL_OPTIONS = [
-  { value: "dignatario", label: "Dignatario" },
-  { value: "ejecucion_coordinacion", label: "Ejecución y Coordinación" },
-  { value: "ejecucion_procesos", label: "Ejecución de Procesos" },
-  {
-    value: "ejecucion_procesos_apoyo",
-    label: "Ejecución de Procesos de Apoyo",
-  },
-  { value: "administrativo", label: "Administrativo" },
-  { value: "codigo_trabajo", label: "Código del Trabajo" },
-];
+  { value: 'dignatario',               label: 'Dignatario' },
+  { value: 'ejecucion_coordinacion',   label: 'Ejecución y Coordinación' },
+  { value: 'ejecucion_procesos',       label: 'Ejecución de Procesos' },
+  { value: 'ejecucion_procesos_apoyo', label: 'Ejecución de Procesos de Apoyo' },
+  { value: 'administrativo',           label: 'Administrativo' },
+  { value: 'codigo_trabajo',           label: 'Código del Trabajo' },
+]
 
 const COMPLEJIDAD_OPTIONS = [
-  { value: "bajo", label: "Nivel Bajo" },
-  { value: "medio", label: "Nivel Medio" },
-  { value: "alto", label: "Nivel Alto" },
-];
+  { value: 'bajo',  label: 'Nivel Bajo' },
+  { value: 'medio', label: 'Nivel Medio' },
+  { value: 'alto',  label: 'Nivel Alto' },
+]
 
 const REGIMEN_OPTIONS = [
-  { value: "losep", label: "LOSEP" },
-  { value: "codigo_trabajo", label: "Código del Trabajo" },
-];
+  { value: 'losep',          label: 'LOSEP' },
+  { value: 'codigo_trabajo', label: 'Código del Trabajo' },
+]
 
 interface Props {
-  initialValues?: Partial<PuestoFormData>;
-  onSubmit: (values: PuestoFormData) => void;
+  initialValues?: Partial<PuestoFormData>
+  onSubmit: (values: PuestoFormData) => void
 }
 
 export function PuestoForm({ initialValues, onSubmit }: Props) {
-  const contained = useContainedInput();
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 });
-  const { data: gruposRaw } = useGruposOcupacionales();
-  const { data: cargosRaw } = useCargos();
+  const contained = useContainedInput()
+  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  const { data: gruposRaw }   = useGruposOcupacionales()
+  const { data: cargosRaw }   = useCargos()
 
-  const unidades = unidadesRaw ?? [];
-  const grupos = gruposRaw ?? [];
-  const cargos = cargosRaw ?? [];
+  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
+  const grupos   = (gruposRaw   ?? []) as GrupoOcupacional[]
+  const cargos   = (cargosRaw   ?? []) as Cargo[]
 
-  const form = useForm<PuestoFormData>({
-    initialValues: {
-      cargo_id: initialValues?.cargo_id ?? ("" as unknown as number),
-      unidad_administrativa_id:
-        initialValues?.unidad_administrativa_id ?? ("" as unknown as number),
-      grupo_ocupacional_id: initialValues?.grupo_ocupacional_id ?? null,
-      partida_presupuestaria_id:
-        initialValues?.partida_presupuestaria_id ?? null,
-      plazas: initialValues?.plazas ?? 1,
-      rol_puesto: initialValues?.rol_puesto ?? null,
-      nivel_complejidad: initialValues?.nivel_complejidad ?? null,
-      regimen_laboral: initialValues?.regimen_laboral ?? "losep",
-      es_jefe: initialValues?.es_jefe ?? false,
-      activo: initialValues?.activo ?? true,
+  const isReady = Array.isArray(unidadesRaw) &&
+                  Array.isArray(gruposRaw)   &&
+                  Array.isArray(cargosRaw)
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<PuestoFormData>({
+    resolver: zodResolver(puestoSchema) as Resolver<PuestoFormData>,
+    defaultValues: {
+      cargo_id:                  initialValues?.cargo_id                  ?? undefined,
+      unidad_administrativa_id:  initialValues?.unidad_administrativa_id  ?? undefined,
+      grupo_ocupacional_id:      initialValues?.grupo_ocupacional_id      ?? null,
+      partida_presupuestaria_id: initialValues?.partida_presupuestaria_id ?? null,
+      plazas:                    initialValues?.plazas                    ?? 1,
+      rol_puesto:                initialValues?.rol_puesto                ?? null,
+      nivel_complejidad:         initialValues?.nivel_complejidad         ?? null,
+      regimen_laboral:           initialValues?.regimen_laboral           ?? 'losep',
+      es_jefe:                   initialValues?.es_jefe                   ?? false,
+      activo:                    initialValues?.activo                    ?? true,
     },
-    validate: zodResolver(puestoSchema),
-  });
+  })
 
-  type CargoItem = {
-    id: number;
-    nombre: string;
-    clasificacion_personal?: string;
-  };
-  const cargoOptions = Array.isArray(cargos)
-    ? (cargos as CargoItem[]).map((c) => ({
-        value: String(c.id),
-        label: c.nombre,
-      }))
-    : [];
+  const regimenActual = watch('regimen_laboral')
 
-  const unidadOptions = Array.isArray(unidades)
-    ? (unidades as unknown as UnidadConRelaciones[]).map((u) => ({
-        value: String(u.id),
-        label: u.nombre ?? `Unidad ${u.id}`,
-      }))
-    : [];
+  const cargoOptions = cargos.map(c => ({
+    value: String(c.id),
+    label: c.nombre ?? '',
+  }))
 
-  type GrupoItem = {
-    id: number;
-    grado_codigo?: string;
-    grupo?: string;
-    rmu?: number;
-  };
-  const grupoOptions = Array.isArray(grupos)
-    ? (grupos as GrupoItem[]).map((g) => ({
-        value: String(g.id),
-        label: `${g.grado_codigo ?? ""} — ${g.grupo ?? ""} ($${g.rmu ?? 0})`,
-      }))
-    : [];
+  const unidadOptions = unidades.map(u => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
+  }))
 
-  const regimenActual = form.values.regimen_laboral;
-
-  const isReady = Array.isArray(cargos) &&
-                  Array.isArray(unidades) &&
-                  Array.isArray(grupos);
+  type GrupoItem = { id: number; grado_codigo?: string; grupo?: string; rmu?: string | number }
+  const grupoOptions = (grupos as unknown as GrupoItem[]).map(g => ({
+    value: String(g.id),
+    label: `${g.grado_codigo ?? ''} — ${g.grupo ?? ''} ($${g.rmu ?? 0})`,
+  }))
 
   return (
     <Box style={{ position: 'relative' }}>
-      <LoadingOverlay visible={!isReady} />
-      <form id="puesto-form" onSubmit={form.onSubmit(onSubmit)}>
+      <LoadingOverlay visible={!isReady} zIndex={10} />
+      <form id="puesto-form" onSubmit={handleSubmit(onSubmit)}>
         <Grid>
           <Grid.Col span={{ base: 12, sm: 8 }}>
-            <Select
-              label="Cargo"
-              placeholder="Seleccionar cargo"
-              data={cargoOptions}
-              searchable
-              {...contained}
-              value={form.values.cargo_id ? String(form.values.cargo_id) : ""}
-              onChange={(v) =>
-                form.setFieldValue(
-                  "cargo_id",
-                  v ? Number(v) : ("" as unknown as number),
-                )
-              }
-              error={form.errors.cargo_id}
+            <Controller
+              name="cargo_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Cargo"
+                  placeholder="Seleccionar cargo"
+                  data={cargoOptions}
+                  searchable
+                  {...contained}
+                  value={field.value ? String(field.value) : ''}
+                  onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                  error={errors.cargo_id?.message}
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Select
-              label="Régimen laboral"
-              data={REGIMEN_OPTIONS}
-              {...contained}
-              value={form.values.regimen_laboral}
-              onChange={(v) =>
-                form.setFieldValue(
-                  "regimen_laboral",
-                  (v ?? "losep") as "losep" | "codigo_trabajo",
-                )
-              }
-              error={form.errors.regimen_laboral}
+            <Controller
+              name="regimen_laboral"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Régimen laboral"
+                  data={REGIMEN_OPTIONS}
+                  {...contained}
+                  value={field.value ?? 'losep'}
+                  onChange={(v) =>
+                    field.onChange((v ?? 'losep') as 'losep' | 'codigo_trabajo')
+                  }
+                  error={errors.regimen_laboral?.message}
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={12}>
-            <Select
-              label="Unidad administrativa"
-              placeholder="Seleccionar gestión"
-              data={unidadOptions}
-              searchable
-              {...contained}
-              value={
-                form.values.unidad_administrativa_id
-                  ? String(form.values.unidad_administrativa_id)
-                  : ""
-              }
-              onChange={(v) =>
-                form.setFieldValue(
-                  "unidad_administrativa_id",
-                  v ? Number(v) : ("" as unknown as number),
-                )
-              }
-              error={form.errors.unidad_administrativa_id}
+            <Controller
+              name="unidad_administrativa_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Unidad administrativa"
+                  placeholder="Seleccionar gestión"
+                  data={unidadOptions}
+                  searchable
+                  {...contained}
+                  value={field.value ? String(field.value) : ''}
+                  onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                  error={errors.unidad_administrativa_id?.message}
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={12}>
-            <Select
-              label={
-                regimenActual === "losep"
-                  ? "Grupo ocupacional (LOSEP)"
-                  : "Grupo ocupacional (CT — referencial)"
-              }
-              placeholder="Seleccionar grupo"
-              data={grupoOptions}
-              searchable
-              clearable
-              {...contained}
-              value={
-                form.values.grupo_ocupacional_id
-                  ? String(form.values.grupo_ocupacional_id)
-                  : ""
-              }
-              onChange={(v) =>
-                form.setFieldValue("grupo_ocupacional_id", v ? Number(v) : null)
-              }
+            <Controller
+              name="grupo_ocupacional_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label={regimenActual === 'losep'
+                    ? 'Grupo ocupacional (LOSEP)'
+                    : 'Grupo ocupacional (CT — referencial)'}
+                  placeholder="Seleccionar grupo"
+                  data={grupoOptions}
+                  searchable
+                  clearable
+                  {...contained}
+                  value={field.value ? String(field.value) : ''}
+                  onChange={(v) => field.onChange(v ? Number(v) : null)}
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <NumberInput
-              label="Plazas"
-              placeholder="1"
-              min={1}
-              {...contained}
-              value={form.values.plazas}
-              onChange={(v) =>
-                form.setFieldValue("plazas", typeof v === "number" ? v : 1)
-              }
-              error={form.errors.plazas}
+            <Controller
+              name="plazas"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Plazas"
+                  placeholder="1"
+                  min={1}
+                  {...contained}
+                  value={field.value ?? 1}
+                  onChange={(v) => field.onChange(typeof v === 'number' ? v : 1)}
+                  error={errors.plazas?.message}
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Select
-              label="Complejidad"
-              placeholder="Seleccionar"
-              data={COMPLEJIDAD_OPTIONS}
-              clearable
-              {...contained}
-              value={form.values.nivel_complejidad ?? ""}
-              onChange={(v) =>
-                form.setFieldValue(
-                  "nivel_complejidad",
-                  (v as PuestoFormData["nivel_complejidad"]) ?? null,
-                )
-              }
+            <Controller
+              name="nivel_complejidad"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Complejidad"
+                  placeholder="Seleccionar"
+                  data={COMPLEJIDAD_OPTIONS}
+                  clearable
+                  {...contained}
+                  value={field.value ?? ''}
+                  onChange={(v) =>
+                    field.onChange((v as PuestoFormData['nivel_complejidad']) ?? null)
+                  }
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Select
-              label="Rol del puesto"
-              placeholder="Seleccionar rol"
-              data={ROL_OPTIONS}
-              clearable
-              {...contained}
-              value={form.values.rol_puesto ?? ""}
-              onChange={(v) =>
-                form.setFieldValue(
-                  "rol_puesto",
-                  (v as PuestoFormData["rol_puesto"]) ?? null,
-                )
-              }
+            <Controller
+              name="rol_puesto"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Rol del puesto"
+                  placeholder="Seleccionar rol"
+                  data={ROL_OPTIONS}
+                  clearable
+                  {...contained}
+                  value={field.value ?? ''}
+                  onChange={(v) =>
+                    field.onChange((v as PuestoFormData['rol_puesto']) ?? null)
+                  }
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Switch
-              label="Es jefe de unidad"
-              checked={form.values.es_jefe}
-              onChange={(e) =>
-                form.setFieldValue("es_jefe", e.currentTarget.checked)
-              }
-              color="emerald"
-              mt="xs"
+            <Controller
+              name="es_jefe"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Es jefe de unidad"
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.currentTarget.checked)}
+                  color="emerald"
+                  mt="xs"
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Switch
-              label="Puesto activo"
-              checked={form.values.activo}
-              onChange={(e) =>
-                form.setFieldValue("activo", e.currentTarget.checked)
-              }
-              color="emerald"
-              mt="xs"
+            <Controller
+              name="activo"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Puesto activo"
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.currentTarget.checked)}
+                  color="emerald"
+                  mt="xs"
+                />
+              )}
             />
           </Grid.Col>
         </Grid>
       </form>
     </Box>
-  );
+  )
 }

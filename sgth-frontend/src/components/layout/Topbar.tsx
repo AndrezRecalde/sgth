@@ -11,8 +11,8 @@ import {
   Text,
   UnstyledButton,
   Switch,
-  ThemeIcon,
   Tooltip,
+  Image,
 } from "@mantine/core";
 import {
   IconSun,
@@ -20,7 +20,6 @@ import {
   IconBell,
   IconSettings,
   IconLogout,
-  IconUsers,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -86,11 +85,23 @@ export function Topbar({
           style={{ cursor: "pointer" }}
           onClick={() => router.push("/")}
         >
-          <ThemeIcon variant="filled" color="emerald" size="md" radius="sm">
+          {/* <ThemeIcon variant="light" color="emerald" size="md" radius="lg">
             <IconUsers size={16} />
-          </ThemeIcon>
+          </ThemeIcon> */}
+          <Image
+            radius="lg"
+            mx="auto"
+            h={40}
+            w={60}
+            fit="contain"
+            alt="logo"
+            src={
+              "https://prefecturadeesmeraldas.gob.ec/wp-content/uploads/2026/05/LogoCompleto-2.png"
+            }
+            fallbackSrc="https://placehold.co/600x400?text=Placeholder"
+          />
           <Text fw={800} size="lg" style={{ letterSpacing: "-0.5px" }}>
-            SGTH
+            GADPE
           </Text>
         </Group>
       </Group>
@@ -128,11 +139,7 @@ export function Topbar({
           <Menu.Dropdown>
             {/* Cabecera de perfil */}
             <div className={classes.userMenuHeader}>
-              <Avatar
-                color="emerald"
-                size="md"
-                style={{ fontWeight: 600 }}
-              >
+              <Avatar color="emerald" size="md" style={{ fontWeight: 600 }}>
                 {initials}
               </Avatar>
               <div className={classes.userMenuInfo}>

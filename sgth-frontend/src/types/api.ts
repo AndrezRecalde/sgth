@@ -65,7 +65,20 @@ export type Provincia = {
 export type Canton = components['schemas']['Canton']
 
 // ── Estructura ───────────────────────────────
-export type UnidadAdministrativa = components['schemas']['UnidadAdministrativaResource']
+export type UnidadAdministrativa = Omit<
+  components['schemas']['UnidadAdministrativaResource'],
+  'id' | 'codigo' | 'nombre' | 'acronimo' | 'descripcion' | 'nivel' | 'estado' | 'unidad_padre_id' | 'puestos_count'
+> & {
+  id: number
+  codigo?: string
+  nombre?: string
+  acronimo?: string
+  descripcion?: string
+  nivel?: number
+  estado?: boolean
+  unidad_padre_id?: number | null
+  puestos_count?: number
+}
 export type Puesto               = components['schemas']['PuestoResource']
 export type TipoUnidad           = components['schemas']['TipoUnidad']
 export type ExtensionTelefonica  = components['schemas']['ExtensionTelefonicaResource']
@@ -475,4 +488,18 @@ export type CargoParams = {
   search?: string
   clasificacion?: ClasificacionPersonal
 }
+
+export type GrupoOcupacional = {
+  id: number
+  grado_codigo?: string
+  grado_numerico?: number | null
+  grupo?: string
+  denominacion_generica?: string | null
+  rmu?: string | number
+  regimen?: 'losep' | 'codigo_trabajo'
+  nivel_complejidad?: string | null
+  rol_puesto?: string | null
+  activo?: boolean
+}
+
 

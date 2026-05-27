@@ -1,66 +1,62 @@
-"use client";
+'use client'
 
-import { TextInput, Select, Switch, Grid } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { useUnidades } from "../hooks/useUnidades";
-import {
-  extensionSchema,
-  type ExtensionFormData,
-} from "../schemas/extension.schema";
-import type { UnidadConRelaciones } from "@/types/api";
+import { TextInput, Select, Switch, Grid } from '@mantine/core'
+import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { useUnidades } from '../hooks/useUnidades'
+import { extensionSchema, type ExtensionFormData } from '../schemas/extension.schema'
+import type { UnidadConRelaciones } from '@/types/api'
 
 interface Props {
-  initialValues?: Partial<ExtensionFormData>;
-  onSubmit: (values: ExtensionFormData) => void;
+  initialValues?: Partial<ExtensionFormData>
+  onSubmit: (values: ExtensionFormData) => void
 }
 
 export function ExtensionForm({ initialValues, onSubmit }: Props) {
-  const contained = useContainedInput();
-  const { data: unidades = [] } = useUnidades({ nivel: 2 });
+  const contained = useContainedInput()
+  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
 
-  const form = useForm<ExtensionFormData>({
-    initialValues: {
-      unidad_administrativa_id:
-        initialValues?.unidad_administrativa_id ?? ("" as unknown as number),
-      numero_extension: initialValues?.numero_extension ?? "",
-      responsable: initialValues?.responsable ?? "",
-
-      estado: initialValues?.estado ?? true,
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ExtensionFormData>({
+    resolver: zodResolver(extensionSchema) as Resolver<ExtensionFormData>,
+    defaultValues: {
+      unidad_administrativa_id: initialValues?.unidad_administrativa_id ?? undefined,
+      numero_extension:         initialValues?.numero_extension ?? '',
+      responsable:              initialValues?.responsable ?? '',
+      estado:                   initialValues?.estado ?? true,
     },
-    validate: zodResolver(extensionSchema),
-  });
+  })
 
-  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(
-    (u) => ({
-      value: String(u.id),
-      label: u.nombre ?? `Unidad ${u.id}`,
-    }),
-  );
+  const unidadOptions = unidades.map(u => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
+  }))
 
   return (
-    <form id="extension-form" onSubmit={form.onSubmit(onSubmit)}>
+    <form id="extension-form" onSubmit={handleSubmit(onSubmit)}>
       <Grid>
         <Grid.Col span={12}>
-          <Select
-            label="Unidad administrativa"
-            placeholder="Seleccionar unidad"
-            data={unidadOptions}
-            searchable
-            {...contained}
-            value={
-              form.values.unidad_administrativa_id
-                ? String(form.values.unidad_administrativa_id)
-                : ""
-            }
-            onChange={(v) =>
-              form.setFieldValue(
-                "unidad_administrativa_id",
-                v ? Number(v) : ("" as unknown as number),
-              )
-            }
-            error={form.errors.unidad_administrativa_id}
+          <Controller
+            name="unidad_administrativa_id"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Unidad administrativa"
+                placeholder="Seleccionar unidad"
+                data={unidadOptions}
+                searchable
+                {...contained}
+                value={field.value ? String(field.value) : ''}
+                onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                error={errors.unidad_administrativa_id?.message}
+              />
+            )}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -69,7 +65,8 @@ export function ExtensionForm({ initialValues, onSubmit }: Props) {
             placeholder="Ej: 1234"
             maxLength={10}
             {...contained}
-            {...form.getInputProps("numero_extension")}
+            {...register('numero_extension')}
+            error={errors.numero_extension?.message}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -77,21 +74,25 @@ export function ExtensionForm({ initialValues, onSubmit }: Props) {
             label="Responsable"
             placeholder="Nombre del responsable"
             {...contained}
-            {...form.getInputProps("responsable")}
+            {...register('responsable')}
+            error={errors.responsable?.message}
           />
         </Grid.Col>
-
         <Grid.Col span={12}>
-          <Switch
-            label="Extensión activa"
-            checked={form.values.estado}
-            onChange={(e) =>
-              form.setFieldValue("estado", e.currentTarget.checked)
-            }
-            color="emerald"
+          <Controller
+            name="estado"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Extensión activa"
+                checked={field.value}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
+                color="emerald"
+              />
+            )}
           />
         </Grid.Col>
       </Grid>
     </form>
-  );
+  )
 }

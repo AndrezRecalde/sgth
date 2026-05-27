@@ -1,4 +1,4 @@
-import classes from '@/styles/inputs.contained.module.css'
+import classes from "@/styles/inputs.contained.module.css";
 
 /**
  * Retorna classNames para el patrón "contained"
@@ -13,12 +13,12 @@ import classes from '@/styles/inputs.contained.module.css'
 export function useContainedInput() {
   return {
     classNames: {
-      root:       classes.root,
-      wrapper:    classes.wrapper,
-      label:      classes.label,
-      input:      classes.input,
+      root: classes.root,
+      wrapper: classes.wrapper,
+      label: classes.label,
+      input: classes.input,
       innerInput: classes.innerInput,
     },
-    variant: 'filled' as const,
-  }
+    //variant: "filled" as const,
+  };
 }

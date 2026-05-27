@@ -1,8 +1,11 @@
 'use client'
 
-import { Modal, Button, Group, Stack, TextInput, Select, Textarea } from '@mantine/core'
-import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import {
+  Modal, Button, Group, Stack,
+  TextInput, Select, Textarea,
+} from '@mantine/core'
+import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCargoMutations } from '../hooks/useCargoMutations'
@@ -22,27 +25,37 @@ interface Props {
 }
 
 export function CargoModal({ opened, onClose, cargo }: Props) {
-  const { isMobile }  = useMobileBreakpoint()
-  const contained     = useContainedInput()
+  const { isMobile }      = useMobileBreakpoint()
+  const contained         = useContainedInput()
   const { crear, editar } = useCargoMutations()
-  const isEditing = !!cargo
+  const isEditing         = !!cargo
 
-  const form = useForm<CargoFormData>({
-    initialValues: {
-      nombre:                cargo?.nombre                ?? '',
-      denominacion_generica: cargo?.denominacion_generica ?? '',
-      mision:                cargo?.mision                ?? '',
-      clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal'])
-        ?? 'empleado',
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CargoFormData>({
+    resolver: zodResolver(cargoSchema) as Resolver<CargoFormData>,
+    defaultValues: {
+      nombre:                 cargo?.nombre                ?? '',
+      denominacion_generica:  cargo?.denominacion_generica ?? '',
+      mision:                 cargo?.mision                ?? '',
+      clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal']) ?? 'empleado',
     },
-    validate: zodResolver(cargoSchema),
   })
 
-  const handleSubmit = (values: CargoFormData) => {
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
+
+  const onSubmit = (values: CargoFormData) => {
     const mutation = isEditing
       ? editar.mutateAsync({ id: cargo!.id, data: values })
       : crear.mutateAsync(values)
-    mutation.then(() => { form.reset(); onClose() }).catch(() => {})
+    mutation.then(handleClose).catch(() => {})
   }
 
   const isPending = crear.isPending || editar.isPending
@@ -50,46 +63,54 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title={isEditing ? 'Editar cargo' : 'Nuevo cargo'}
       size="md"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <TextInput
             label="Nombre del cargo"
             placeholder="Ej: Analista de Seguridad Informática"
             {...contained}
-            {...form.getInputProps('nombre')}
+            {...register('nombre')}
+            error={errors.nombre?.message}
           />
           <TextInput
             label="Denominación genérica"
             placeholder="Ej: Analista"
             {...contained}
-            {...form.getInputProps('denominacion_generica')}
+            {...register('denominacion_generica')}
+            error={errors.denominacion_generica?.message}
           />
-          <Select
-            label="Clasificación de personal"
-            data={CLASIFICACION_OPTIONS}
-            {...contained}
-            value={form.values.clasificacion_personal}
-            onChange={(v) =>
-              form.setFieldValue('clasificacion_personal',
-                (v ?? 'empleado') as CargoFormData['clasificacion_personal'])
-            }
-            error={form.errors.clasificacion_personal}
+          <Controller
+            name="clasificacion_personal"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Clasificación de personal"
+                data={CLASIFICACION_OPTIONS}
+                {...contained}
+                value={field.value}
+                onChange={(v) =>
+                  field.onChange((v ?? 'empleado') as CargoFormData['clasificacion_personal'])
+                }
+                error={errors.clasificacion_personal?.message}
+              />
+            )}
           />
           <Textarea
             label="Misión del cargo"
             placeholder="Describa la misión del cargo (opcional)"
             rows={3}
             {...contained}
-            {...form.getInputProps('mision')}
+            {...register('mision')}
+            error={errors.mision?.message}
           />
           <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>
+            <Button variant="default" onClick={handleClose}>
               Cancelar
             </Button>
             <Button type="submit" loading={isPending} color="emerald">
