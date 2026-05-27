@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import {
   Modal, Button, Group, Stack,
   TextInput, Select, Textarea,
@@ -45,6 +46,15 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
       clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal']) ?? 'empleado',
     },
   })
+
+  useEffect(() => {
+    reset({
+      nombre:                cargo?.nombre                ?? '',
+      denominacion_generica: cargo?.denominacion_generica ?? '',
+      mision:                cargo?.mision                ?? '',
+      clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal']) ?? 'empleado',
+    })
+  }, [cargo, reset])
 
   const handleClose = () => {
     reset()
