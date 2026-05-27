@@ -189,45 +189,37 @@ El sidebar usa `var(--mantine-color-body)` para adaptarse al dark mode:
 
 ### 4.2 Dark Mode — implementación obligatoria
 
-```tsx
-// src/app/layout.tsx
-import { ColorSchemeScript, MantineProvider } from '@mantine/core'
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="es" suppressHydrationWarning>
-      <head>
-        <ColorSchemeScript defaultColorScheme="auto" />
-      </head>
-      <body>
-        <MantineProvider theme={theme} defaultColorScheme="auto">
-          {children}
-        </MantineProvider>
-      </body>
-    </html>
-  )
-}
-```
+El toggle de dark mode vive DENTRO del menú de usuario
+en el Topbar, no como botón independiente.
 
 ```tsx
-// Toggle en Topbar
-import { useComputedColorScheme, useMantineColorScheme } from '@mantine/core'
+// src/components/layout/Topbar.tsx — toggle dentro del menú de usuario
+import { useMantineColorScheme } from '@mantine/core'
 import { IconSun, IconMoon } from '@tabler/icons-react'
 
-function DarkModeToggle() {
-  const { setColorScheme } = useMantineColorScheme()
-  const scheme = useComputedColorScheme('light')
-
-  return (
-    <ActionIcon
-      variant="subtle"
-      onClick={() => setColorScheme(scheme === 'light' ? 'dark' : 'light')}
-    >
-      {scheme === 'light' ? <IconMoon size={18} /> : <IconSun size={18} />}
-    </ActionIcon>
-  )
-}
+// Dentro de Menu.Dropdown:
+<Box px="md" py="xs">
+  <Group justify="space-between">
+    <Group gap="sm">
+      {colorScheme === 'dark'
+        ? <IconSun size={16} />
+        : <IconMoon size={16} />}
+      <Text size="sm">Modo oscuro</Text>
+    </Group>
+    <Switch
+      checked={colorScheme === 'dark'}
+      onChange={toggleColorScheme}
+      size="xs"
+      color="emerald"
+      aria-label="Toggle modo oscuro"
+    />
+  </Group>
+</Box>
 ```
+
+El topbar NO tiene botón de toggle independiente.
+Esto mantiene el topbar limpio y agrupa las
+preferencias del usuario en un solo lugar.
 
 ### 4.3 Reglas de dark mode
 
