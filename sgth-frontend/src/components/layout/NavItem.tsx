@@ -24,8 +24,7 @@ export function NavItem({ label, icon, href, collapsed, onClick }: Props) {
       component={Link}
       href={href}
       onClick={onClick}
-      className={classes.navItem}
-      data-active={isActive || undefined}
+      className={`${classes.navItem} ${isActive ? classes.navItemActive : ''}`}
     >
       <Group wrap="nowrap" justify={collapsed ? 'center' : 'flex-start'} gap="md">
         <Box style={{ display: 'flex', alignItems: 'center' }}>{getNavIcon(icon)}</Box>

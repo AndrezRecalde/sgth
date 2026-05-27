@@ -7,8 +7,11 @@ import type { Metadata } from 'next';
 import { Providers } from './Providers';
 
 export const metadata: Metadata = {
-  title: 'SGTH | GAD Esmeraldas',
-  description: 'Sistema de Gestión de Talento Humano - GAD Provincial de Esmeraldas',
+  title: {
+    default:  'GADPE — Sistema de Gestión de Talento Humano',
+    template: 'GADPE — %s',
+  },
+  description: 'Sistema Integral de Gestión de Talento Humano — GAD Provincial de Esmeraldas',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

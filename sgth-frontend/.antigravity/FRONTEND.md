@@ -362,6 +362,37 @@ export const servidorSchema = z.object({
 export type ServidorFormData = z.infer<typeof servidorSchema>
 ```
 
+## 5.7 Botones de acción — patrón estándar
+
+Los botones para crear nuevos registros usan siempre
+este patrón: variant="light", color="emerald",
+con ícono relevante a la izquierda.
+
+```tsx
+// ✅ PATRÓN ESTÁNDAR — botón de acción principal
+<Button
+  color="emerald"
+  variant="light"
+  leftSection={<IconPlus size={16} />}
+  onClick={handleNuevo}
+>
+  Nuevo servidor
+</Button>
+
+// Ejemplos con íconos específicos por contexto:
+<Button color="emerald" variant="light" leftSection={<IconCubePlus size={16} />}>
+  Nueva unidad
+</Button>
+<Button color="emerald" variant="light" leftSection={<IconPlus size={16} />}>
+  Nuevo usuario
+</Button>
+
+// ❌ NUNCA usar variant="filled" para botones de crear
+// ❌ NUNCA usar color diferente a "emerald" para acción principal
+// ✅ variant="default" para botones secundarios (Cancelar, Volver)
+// ✅ variant="subtle" para acciones terciarias (enlaces, acciones de tabla)
+```
+
 ---
 
 ## 6. TABLAS — SGTH TABLE
