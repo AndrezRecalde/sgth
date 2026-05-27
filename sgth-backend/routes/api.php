@@ -88,7 +88,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('expediente')->group(function () {
         Route::apiResource('servidores', \App\Http\Controllers\Expediente\ServidorController::class);
         
-        Route::post('servidores/{servidor}/documentos', [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'store']);
+        Route::prefix('servidores/{servidorId}')->group(function () {
+            Route::get('documentos',
+                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'index'])
+                ->name('documentos.index');
+            Route::post('documentos',
+                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'store'])
+                ->name('documentos.store');
+            Route::delete('documentos/{documentoId}',
+                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'destroy'])
+                ->name('documentos.destroy');
+            Route::get('documentos/{documentoId}/descargar',
+                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'descargar'])
+                ->name('documentos.descargar');
+        });
         Route::get('servidores/{servidor}/movimientos', [\App\Http\Controllers\Expediente\MovimientoPersonalController::class, 'index']);
 
         Route::get('servidores/{id}/certificado-laboral', [\App\Http\Controllers\Expediente\CertificadoLaboralController::class, 'generar']);

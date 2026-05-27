@@ -4,24 +4,29 @@ namespace App\Http\Resources\Expediente;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\URL;
 
 class DocumentoServidorResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $datos = parent::toArray($request);
-
-        // Proveer URL firmada para descarga
-        if (!empty($this->ruta_archivo)) {
-            $datos['url_descarga'] = URL::temporarySignedRoute(
-                'documentos.descargar', now()->addMinutes(30), ['ruta' => basename($this->ruta_archivo)]
-            );
-            unset($datos['ruta_archivo']); // Ocultar la ruta física real
-        }
-
-        $datos['subido_por_usuario'] = $this->whenLoaded('subidoPor');
-
-        return $datos;
+        return [
+            'id'                => $this->id,
+            'tipo_documento'    => $this->tipo_documento,
+            'nombre_archivo'    => $this->nombre_archivo,
+            'tamanio_bytes'     => $this->tamanio_bytes,
+            'mime_type'         => $this->mime_type,
+            'fecha_vencimiento' => $this->fecha_vencimiento?->format('Y-m-d'),
+            'descripcion'       => $this->descripcion,
+            'estado'            => $this->estado,
+            'subido_por'        => $this->whenLoaded('subidoPor', fn() => [
+                'id'         => $this->subidoPor?->id,
+                'usuario_ti' => $this->subidoPor?->usuario_ti,
+            ]),
+            'created_at'        => $this->created_at?->format('Y-m-d H:i'),
+            'url_descarga'      => route('documentos.descargar',
+                ['servidorId' => $this->servidor_id, 'documentoId' => $this->id],
+                absolute: false
+            ),
+        ];
     }
 }
