@@ -1,159 +1,311 @@
 'use client'
 
 import { Modal, Button, Group, Stack, Select,
-  TextInput, NumberInput, Grid } from '@mantine/core'
-import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+         TextInput, Grid, Badge } from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '@/features/estructura/hooks/useUnidades'
 import { usePuestos } from '@/features/estructura/hooks/usePuestos'
 import { useContratoMutations } from '../hooks/useContratoMutations'
-import { contratoSchema, type ContratoFormData } from '../schemas/contrato.schema'
-import type { UnidadConRelaciones, Puesto } from '@/types/api'
+import { contratoSchema, type ContratoFormData }
+  from '../schemas/contrato.schema'
+import type { UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
+import { useState } from 'react'
 
 const TIPO_OPTIONS = [
-  { value: 'nombramiento_permanente',       label: 'Nombramiento permanente' },
-  { value: 'nombramiento_provisional',      label: 'Nombramiento provisional' },
-  { value: 'servicios_ocasionales',         label: 'Servicios ocasionales' },
-  { value: 'libre_nombramiento_remocion',   label: 'Libre nombramiento y remoción' },
-  { value: 'codigo_trabajo',                label: 'Código del trabajo' },
-  { value: 'servicios_profesionales',       label: 'Servicios profesionales' },
+  { value: 'nombramiento_permanente',     label: 'Nombramiento permanente' },
+  { value: 'nombramiento_provisional',    label: 'Nombramiento provisional' },
+  { value: 'servicios_ocasionales',       label: 'Servicios ocasionales' },
+  { value: 'libre_nombramiento_remocion', label: 'Libre nombramiento y remoción' },
+  { value: 'codigo_trabajo',              label: 'Código del Trabajo' },
+  { value: 'servicios_profesionales',     label: 'Servicios profesionales' },
+]
+
+const ESTADO_OPTIONS = [
+  { value: 'vigente',   label: 'Vigente' },
+  { value: 'terminado', label: 'Terminado' },
+  { value: 'cancelado', label: 'Cancelado' },
 ]
 
 interface Props {
-  opened: boolean
-  onClose: () => void
+  opened:     boolean
+  onClose:    () => void
   servidorId: number
 }
 
 export function ContratoModal({ opened, onClose, servidorId }: Props) {
-  const { isMobile } = useMobileBreakpoint()
-  const contained = useContainedInput()
-  const { crear } = useContratoMutations(servidorId)
-  const { data: unidades = [] } = useUnidades()
-  const { data: puestosData } = usePuestos()
+  const { isMobile }  = useMobileBreakpoint()
+  const contained     = useContainedInput()
+  const { crear }     = useContratoMutations(servidorId)
 
-  const form = useForm<ContratoFormData>({
-    initialValues: {
-      tipo_nombramiento:        '',
-      unidad_administrativa_id: '' as unknown as number,
-      puesto_id:                '' as unknown as number,
-      fecha_ingreso:            '',
-      fecha_fin:                null,
-      remuneracion:             '' as unknown as number,
-    },
-    validate: zodResolver(contratoSchema),
-  })
+  // Unidades solo nivel 2
+  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
 
-  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
+  // ID de unidad seleccionada para filtrar puestos
+  const [unidadSelId, setUnidadSelId] = useState<number | null>(null)
+
+  // Puestos filtrados por unidad seleccionada
+  const { data: puestosData } = usePuestos(
+    unidadSelId
+      ? { unidad_administrativa_id: unidadSelId, per_page: 100 }
+      : undefined
+  )
+  const puestos = (puestosData?.data ?? []) as PuestoConRelaciones[]
+
+  const unidadOptions = unidades.map(u => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))
 
-  const puestoOptions = (puestosData?.data ?? [])
-    .map((p: any) => ({
-      value: String(p.id),
-      label: p.denominacion ?? p.nombre ?? `Puesto ${p.id}`,
-    }))
+  const puestoOptions = puestos.map(p => ({
+    value: String(p.id),
+    label: p.cargo?.nombre ?? `Puesto ${p.id}`,
+    description: p.rmu ? `RMU: $${Number(p.rmu).toFixed(2)}` : undefined,
+  }))
 
-  const handleSubmit = (values: ContratoFormData) => {
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<ContratoFormData>({
+    resolver: zodResolver(contratoSchema),
+    defaultValues: {
+      tipo_nombramiento:        '',
+      numero_contrato:          '',
+      unidad_administrativa_id: undefined,
+      puesto_id:                undefined,
+      fecha_inicio:             '',
+      fecha_fin:                null,
+      resolucion_numero:        '',
+      codigo_marcacion:         '',
+      estado:                   'vigente',
+    },
+  })
+
+  const handleClose = () => {
+    reset()
+    setUnidadSelId(null)
+    onClose()
+  }
+
+  const toDate = (v?: string | null) =>
+    v ? new Date(v) : null
+
+  const fromDate = (d: Date | string | null) => {
+    if (!d) return null
+    if (typeof d === 'string') return d
+    return d.toISOString().split('T')[0]
+  }
+
+  const onSubmit = (values: ContratoFormData) => {
     crear.mutateAsync(values)
-      .then(() => { form.reset(); onClose() })
+      .then(handleClose)
       .catch(() => {})
   }
 
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
-      title="Nuevo contrato"
+      onClose={handleClose}
+      title="Registrar contrato"
       size="lg"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Grid>
-          <Grid.Col span={12}>
-            <Select
-              label="Tipo de nombramiento"
-              data={TIPO_OPTIONS}
-              searchable
-              {...contained}
-              value={form.values.tipo_nombramiento}
-              onChange={(v) =>
-                form.setFieldValue('tipo_nombramiento', v ?? '')}
-              error={form.errors.tipo_nombramiento}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Select
-              label="Unidad administrativa"
-              data={unidadOptions}
-              searchable
-              {...contained}
-              value={form.values.unidad_administrativa_id
-                ? String(form.values.unidad_administrativa_id) : ''}
-              onChange={(v) =>
-                form.setFieldValue('unidad_administrativa_id',
-                  v ? Number(v) : '' as unknown as number)}
-              error={form.errors.unidad_administrativa_id}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Select
-              label="Puesto"
-              data={puestoOptions}
-              searchable
-              {...contained}
-              value={form.values.puesto_id
-                ? String(form.values.puesto_id) : ''}
-              onChange={(v) =>
-                form.setFieldValue('puesto_id',
-                  v ? Number(v) : '' as unknown as number)}
-              error={form.errors.puesto_id}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <TextInput
-              label="Fecha de ingreso"
-              placeholder="YYYY-MM-DD"
-              {...contained}
-              {...form.getInputProps('fecha_ingreso')}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <TextInput
-              label="Fecha de fin"
-              placeholder="YYYY-MM-DD (opcional)"
-              {...contained}
-              value={form.values.fecha_fin ?? ''}
-              onChange={(e) =>
-                form.setFieldValue('fecha_fin',
-                  e.currentTarget.value || null)}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <NumberInput
-              label="Remuneración"
-              placeholder="0.00"
-              decimalScale={2}
-              prefix="$"
-              {...contained}
-              value={form.values.remuneracion ?? ''}
-              onChange={(v) =>
-                form.setFieldValue('remuneracion',
-                  typeof v === 'number' ? v : '' as unknown as number)}
-              error={form.errors.remuneracion}
-            />
-          </Grid.Col>
-        </Grid>
-        <Group justify="flex-end" mt="xl">
-          <Button variant="default" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={crear.isPending} color="emerald">
-            Registrar contrato
-          </Button>
-        </Group>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Stack gap="sm">
+          <Grid>
+            {/* Tipo de nombramiento */}
+            <Grid.Col span={12}>
+              <Controller
+                name="tipo_nombramiento"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Tipo de nombramiento"
+                    placeholder="Seleccionar tipo"
+                    data={TIPO_OPTIONS}
+                    searchable
+                    {...contained}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v ?? '')}
+                    error={errors.tipo_nombramiento?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+
+            {/* Unidad administrativa — solo nivel 2 */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="unidad_administrativa_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Unidad administrativa"
+                    placeholder="Seleccionar gestión"
+                    data={unidadOptions}
+                    searchable
+                    {...contained}
+                    value={field.value ? String(field.value) : ''}
+                    onChange={(v) => {
+                      const id = v ? Number(v) : undefined
+                      field.onChange(id)
+                      setUnidadSelId(id ?? null)
+                      // Limpiar puesto al cambiar unidad
+                      setValue('puesto_id', undefined as unknown as number)
+                    }}
+                    error={errors.unidad_administrativa_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+
+            {/* Puesto — filtrado por unidad */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="puesto_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Puesto"
+                    placeholder={
+                      unidadSelId
+                        ? puestoOptions.length === 0
+                          ? 'Sin puestos disponibles'
+                          : 'Seleccionar puesto'
+                        : 'Seleccione primero la unidad'
+                    }
+                    data={puestoOptions}
+                    searchable
+                    disabled={!unidadSelId}
+                    {...contained}
+                    value={field.value ? String(field.value) : ''}
+                    onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                    error={errors.puesto_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+
+            {/* Número de contrato */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <TextInput
+                label="Número de contrato"
+                placeholder="Ej: CONT-2024-001 (opcional)"
+                {...contained}
+                {...register('numero_contrato')}
+                error={errors.numero_contrato?.message}
+              />
+            </Grid.Col>
+
+            {/* Número de resolución */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <TextInput
+                label="Número de resolución"
+                placeholder="Ej: RES-2024-001 (opcional)"
+                {...contained}
+                {...register('resolucion_numero')}
+                error={errors.resolucion_numero?.message}
+              />
+            </Grid.Col>
+
+            {/* Fecha de inicio */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="fecha_inicio"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerInput
+                    label="Fecha de inicio"
+                    placeholder="Seleccionar fecha"
+                    valueFormat="YYYY-MM-DD"
+                    {...contained}
+                    value={toDate(field.value)}
+                    onChange={(d) => field.onChange(fromDate(d) ?? '')}
+                    error={errors.fecha_inicio?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+
+            {/* Fecha de fin */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="fecha_fin"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerInput
+                    label="Fecha de fin"
+                    placeholder="Opcional — se puede definir después"
+                    valueFormat="YYYY-MM-DD"
+                    clearable
+                    {...contained}
+                    value={toDate(field.value)}
+                    onChange={(d) => field.onChange(fromDate(d))}
+                    error={errors.fecha_fin?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+
+            {/* Código de marcación */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <TextInput
+                label="Código de marcación biométrica"
+                placeholder="Código del biométrico (opcional)"
+                maxLength={10}
+                {...contained}
+                {...register('codigo_marcacion')}
+                error={errors.codigo_marcacion?.message}
+              />
+            </Grid.Col>
+
+            {/* Estado del contrato */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="estado"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Estado del contrato"
+                    data={ESTADO_OPTIONS}
+                    {...contained}
+                    value={field.value}
+                    onChange={(v) =>
+                      field.onChange(
+                        (v ?? 'vigente') as ContratoFormData['estado']
+                      )
+                    }
+                    error={errors.estado?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+          </Grid>
+
+          <Group justify="flex-end" mt="md">
+            <Button variant="default" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              color="emerald"
+              variant="light"
+              loading={crear.isPending}
+            >
+              Registrar contrato
+            </Button>
+          </Group>
+        </Stack>
       </form>
     </Modal>
   )

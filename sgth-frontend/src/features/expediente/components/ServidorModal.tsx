@@ -3,12 +3,11 @@
 import { Modal, Tabs, Button, Group } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
-import { IconUser, IconPhone, IconBriefcase } from '@tabler/icons-react'
+import { IconUser, IconPhone } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useServidorMutations } from '../hooks/useServidorMutations'
 import { ServidorFormPersonal } from './ServidorFormPersonal'
 import { ServidorFormContacto } from './ServidorFormContacto'
-import { ServidorFormLaboral } from './ServidorFormLaboral'
 import { servidorSchema, type ServidorFormData } from '../schemas/servidor.schema'
 import type { ServidorConRelaciones } from '@/types/api'
 
@@ -77,7 +76,7 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
     <Modal
       opened={opened}
       onClose={onClose}
-      title={isEditing ? 'Editar servidor' : 'Nuevo servidor'}
+      title={isEditing ? 'Editar datos del servidor' : 'Registrar servidor'}
       size="xl"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
@@ -93,19 +92,12 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
               leftSection={<IconPhone size={14} />}>
               Contacto
             </Tabs.Tab>
-            <Tabs.Tab value="laboral"
-              leftSection={<IconBriefcase size={14} />}>
-              Laboral
-            </Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="personal" pt="md">
             <ServidorFormPersonal form={form} />
           </Tabs.Panel>
           <Tabs.Panel value="contacto" pt="md">
             <ServidorFormContacto form={form} />
-          </Tabs.Panel>
-          <Tabs.Panel value="laboral" pt="md">
-            <ServidorFormLaboral form={form} />
           </Tabs.Panel>
         </Tabs>
         <Group justify="flex-end" mt="xl">
