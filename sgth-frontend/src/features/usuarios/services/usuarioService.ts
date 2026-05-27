@@ -6,6 +6,8 @@ import type {
   UsuarioParams,
   UsuarioFormData,
   UsuarioUpdateData,
+  PermisoGrupo,
+  PermisoItem,
 } from '@/types/api'
 
 export const usuarioService = {
@@ -54,4 +56,26 @@ export const usuarioService = {
     api.get<ApiResponse<string[]>>(
       '/admin/usuarios-roles'
     ).then(r => r.data.datos),
+
+  sugerirUsuarioTi: (servidor_id: number) =>
+    api.get<ApiResponse<{ usuario_ti_sugerido: string }>>(
+      '/admin/usuarios/sugerir-usuario-ti',
+      { params: { servidor_id } }
+    ).then(r => r.data.datos),
+
+  listarPermisos: () =>
+    api.get<ApiResponse<PermisoGrupo[]>>(
+      '/admin/permisos'
+    ).then(r => r.data.datos),
+
+  permisosUsuario: (id: number) =>
+    api.get<ApiResponse<PermisoItem[]>>(
+      `/admin/usuarios/${id}/permisos`
+    ).then(r => r.data.datos),
+
+  sincronizarPermisos: (id: number, permisos: string[]) =>
+    api.post<ApiResponse<void>>(
+      `/admin/usuarios/${id}/permisos`,
+      { permisos }
+    ).then(r => r.data),
 }

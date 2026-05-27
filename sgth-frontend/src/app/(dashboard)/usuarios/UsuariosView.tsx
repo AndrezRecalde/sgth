@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { UsuarioToolbar } from '@/features/usuarios/components/UsuarioToolbar'
 import { UsuarioTable } from '@/features/usuarios/components/UsuarioTable'
+import { UsuarioDrawer } from '@/features/usuarios/components/UsuarioDrawer'
 import { UsuarioModal } from '@/features/usuarios/components/UsuarioModal'
 import { useUsuarios } from '@/features/usuarios/hooks/useUsuarios'
 import { useUsuarioMutations } from '@/features/usuarios/hooks/useUsuarioMutations'
@@ -18,8 +19,14 @@ export function UsuariosView() {
   const [search, setSearch] = useState('')
   const [rol, setRol]       = useState<string | null>(null)
 
-  const [modalOpened, { open, close }] = useDisclosure(false)
-  const [editUsuario, setEditUsuario]  = useState<Usuario | null>(null)
+  // Drawer — crear nuevo usuario
+  const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
+    useDisclosure(false)
+
+  // Modal — editar usuario existente
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false)
+  const [editUsuario, setEditUsuario] = useState<Usuario | null>(null)
 
   const { data, isLoading } = useUsuarios({
     page,
@@ -34,17 +41,12 @@ export function UsuariosView() {
 
   const handleEdit = (u: Usuario) => {
     setEditUsuario(u)
-    open()
+    openModal()
   }
 
-  const handleNuevo = () => {
+  const handleCloseModal = () => {
     setEditUsuario(null)
-    open()
-  }
-
-  const handleClose = () => {
-    setEditUsuario(null)
-    close()
+    closeModal()
   }
 
   const handleRestablecerPassword = (u: Usuario) => {
@@ -73,7 +75,7 @@ export function UsuariosView() {
           color="emerald"
           variant="light"
           leftSection={<IconUserPlus size={16} />}
-          onClick={handleNuevo}
+          onClick={openDrawer}
         >
           Nuevo usuario
         </Button>
@@ -94,7 +96,7 @@ export function UsuariosView() {
               color="emerald"
               variant="light"
               leftSection={<IconUserPlus size={14} />}
-              onClick={handleNuevo}
+              onClick={openDrawer}
             >
               Nuevo usuario
             </Button>
@@ -113,9 +115,16 @@ export function UsuariosView() {
         />
       )}
 
+      {/* Drawer para crear nuevo usuario */}
+      <UsuarioDrawer
+        opened={drawerOpened}
+        onClose={closeDrawer}
+      />
+
+      {/* Modal para editar usuario existente */}
       <UsuarioModal
         opened={modalOpened}
-        onClose={handleClose}
+        onClose={handleCloseModal}
         usuario={editUsuario}
       />
     </Box>

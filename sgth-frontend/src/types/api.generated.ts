@@ -2009,6 +2009,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/permisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retorna todos los permisos del sistema agrupados
+         *     por módulo, con sus roles asociados
+         */
+        get: operations["admin.permisos.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/usuarios/{id}/permisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retorna los permisos directos de un usuario
+         *     (no los heredados por rol)
+         */
+        get: operations["admin.usuarios.permisos"];
+        put?: never;
+        /** Sincroniza los permisos directos de un usuario */
+        post: operations["admin.usuarios.permisos.sincronizar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/asistencia/permisos": {
         parameters: {
             query?: never;
@@ -2821,6 +2862,22 @@ export interface paths {
         put: operations["unidades-administrativas.update"];
         post?: never;
         delete: operations["unidades-administrativas.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/usuarios/sugerir-usuario-ti": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["usuarios.sugerirUsuarioTi"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4490,9 +4547,11 @@ export interface components {
         StoreUsuarioRequest: {
             /** Format: email */
             email: string;
+            usuario_ti: string;
             servidor_id?: number | null;
             cedula?: string | null;
             roles: string[];
+            permisos?: string[] | null;
         };
         /** StoreVacacionRequest */
         StoreVacacionRequest: {
@@ -10527,6 +10586,95 @@ export interface operations {
             403: components["responses"]["AuthorizationException"];
         };
     };
+    "admin.permisos.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Permisos del sistema.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "admin.usuarios.permisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Permisos directos del usuario.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "admin.usuarios.permisos.sincronizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    permisos?: string[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Permisos directos actualizados.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "permisoServidor.index": {
         parameters: {
             query?: never;
@@ -12837,6 +12985,36 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "usuarios.sugerirUsuarioTi": {
+        parameters: {
+            query?: {
+                servidor_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Usuario TI sugerido generado.";
+                        datos: {
+                            usuario_ti_sugerido: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "usuarios.sinServidor": {

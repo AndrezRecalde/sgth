@@ -513,4 +513,27 @@ export type GrupoOcupacional = {
   activo?: boolean
 }
 
+// ── Permisos ─────────────────────────────────────
+export type PermisoItem = {
+  id:     number
+  nombre: string
+  modulo: string
+  roles:  string[]
+}
+
+export type PermisoGrupo = {
+  modulo:   string
+  permisos: PermisoItem[]
+}
+
+export type UsuarioCreateData = {
+  email:       string
+  usuario_ti:  string
+  roles:       string[]
+  servidor_id?: number | null
+  cedula?:     string | null
+  permisos?:   string[]
+}
+
+
 
