@@ -32,11 +32,13 @@ export const getUsuarioColumns = (
   { onEdit, onToggleActivo, onRestablecerPassword }: Handlers
 ): DataTableColumn<Usuario>[] => [
   {
-    accessor: 'name',
+    accessor: 'nombre_completo',
     title: 'Nombre',
-    render: ({ name, usuario_ti }) => (
+    render: ({ nombre_completo, usuario_ti, servidor }) => (
       <div>
-        <Text size="sm" fw={500}>{name}</Text>
+        <Text size="sm" fw={500}>
+          {nombre_completo || servidor?.nombre || '(Sin servidor vinculado)'}
+        </Text>
         <Text size="xs" c="dimmed">{usuario_ti}</Text>
       </div>
     ),

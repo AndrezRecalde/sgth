@@ -1,17 +1,12 @@
 'use client'
 
-import {
-  TextInput, MultiSelect, Select, Grid, Text,
-} from '@mantine/core'
-import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import { TextInput, MultiSelect, Select, Grid, Text } from '@mantine/core'
+import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRoles } from '../hooks/useRoles'
 import { useServidoresSinUsuario } from '../hooks/useServidoresSinUsuario'
-import {
-  usuarioSchema,
-  type UsuarioFormData,
-} from '../schemas/usuario.schema'
+import { usuarioSchema, type UsuarioFormData } from '../schemas/usuario.schema'
 
 const ROL_LABELS: Record<string, string> = {
   'admin-ti':          'Admin TI',
@@ -57,91 +52,89 @@ export function UsuarioForm({ initialValues, onSubmit, isEditing }: Props) {
     label: `${s.cedula} — ${s.nombre_completo}`,
   }))
 
-  const form = useForm<UsuarioFormData>({
-    initialValues: {
-      nombre:      initialValues?.nombre      ?? '',
-      apellido:    initialValues?.apellido    ?? '',
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UsuarioFormData>({
+    resolver: zodResolver(usuarioSchema) as Resolver<UsuarioFormData>,
+    defaultValues: {
       email:       initialValues?.email       ?? '',
-      cedula:      initialValues?.cedula      ?? '',
       roles:       initialValues?.roles       ?? [],
       servidor_id: initialValues?.servidor_id ?? null,
+      cedula:      initialValues?.cedula      ?? '',
     },
-    validate: zodResolver(usuarioSchema),
   })
 
   return (
-    <form id="usuario-form" onSubmit={form.onSubmit(onSubmit)}>
+    <form id="usuario-form" onSubmit={handleSubmit(onSubmit)}>
       <Grid>
         {!isEditing && (
           <Grid.Col span={12}>
-            <Select
-              label="Vincular a servidor (expediente)"
-              placeholder="Buscar por cédula o nombre"
-              data={servidorOptions}
-              searchable
-              clearable
-              {...contained}
-              value={form.values.servidor_id
-                ? String(form.values.servidor_id) : ''}
-              onChange={(v) =>
-                form.setFieldValue('servidor_id',
-                  v ? Number(v) : null)
-              }
-              error={form.errors.servidor_id}
+            <Controller
+              name="servidor_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Vincular a servidor (expediente)"
+                  placeholder="Buscar por cédula o nombre"
+                  data={servidorOptions}
+                  searchable
+                  clearable
+                  {...contained}
+                  value={field.value ? String(field.value) : ''}
+                  onChange={(v) => field.onChange(v ? Number(v) : null)}
+                  error={errors.servidor_id?.message}
+                />
+              )}
             />
           </Grid.Col>
         )}
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Nombre"
-            placeholder="Primer nombre"
-            {...contained}
-            {...form.getInputProps('nombre')}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Apellido"
-            placeholder="Primer apellido"
-            {...contained}
-            {...form.getInputProps('apellido')}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Grid.Col span={12}>
           <TextInput
             label="Correo institucional"
             placeholder="usuario@gad-esmeraldas.gob.ec"
             {...contained}
-            {...form.getInputProps('email')}
+            {...register('email')}
+            error={errors.email?.message}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Cédula de identidad"
-            placeholder="0000000000"
-            maxLength={10}
-            disabled={isEditing}
-            {...contained}
-            {...form.getInputProps('cedula')}
-          />
-        </Grid.Col>
+        {!isEditing && (
+          <Grid.Col span={12}>
+            <TextInput
+              label="Cédula de identidad"
+              placeholder="0000000000 (contraseña inicial)"
+              maxLength={10}
+              {...contained}
+              {...register('cedula')}
+              error={errors.cedula?.message}
+            />
+          </Grid.Col>
+        )}
         <Grid.Col span={12}>
-          <MultiSelect
-            label="Roles del sistema"
-            placeholder="Seleccione uno o más roles"
-            data={rolOptions}
-            searchable
-            {...contained}
-            value={form.values.roles}
-            onChange={(v) => form.setFieldValue('roles', v)}
-            error={form.errors.roles}
+          <Controller
+            name="roles"
+            control={control}
+            render={({ field }) => (
+              <MultiSelect
+                label="Roles del sistema"
+                placeholder="Seleccione uno o más roles"
+                data={rolOptions}
+                searchable
+                {...contained}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.roles?.message}
+              />
+            )}
           />
         </Grid.Col>
         {!isEditing && (
           <Grid.Col span={12}>
             <Text size="xs" c="dimmed">
-              La contraseña inicial será la cédula del usuario.
-              Se solicitará cambio en el primer inicio de sesión.
+              La contraseña inicial será la cédula del usuario o la cédula
+              del servidor vinculado. Se solicitará cambio en el primer inicio.
             </Text>
           </Grid.Col>
         )}

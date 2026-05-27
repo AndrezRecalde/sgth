@@ -47,7 +47,8 @@ export function UsuariosView() {
   }
 
   const handleRestablecerPassword = (u: Usuario) => {
-    if (confirm(`¿Restablecer la contraseña de ${u.name}?\nSe establecerá la cédula del servidor como nueva contraseña.`)) {
+    const displayName = u.nombre_completo || u.servidor?.nombre || '(Sin nombre)'
+    if (confirm(`¿Restablecer la contraseña de ${displayName}?\nSe establecerá la cédula del servidor como nueva contraseña.`)) {
       restablecerContrasena.mutate(Number(u.id))
     }
   }

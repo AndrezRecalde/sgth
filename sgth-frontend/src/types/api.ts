@@ -406,7 +406,22 @@ export type DeclaracionExportParams = {
 }
 
 // ── Usuario del sistema ───────────────────────
-export type Usuario = components['schemas']['UsuarioResource']
+export type Usuario = {
+  id: number
+  nombre_completo?: string
+  email: string
+  usuario_ti?: string
+  activo?: boolean
+  primer_login?: boolean
+  servidor_id?: number | null
+  roles?: string[]
+  servidor?: {
+    id: number
+    cedula?: string
+    nombre?: string
+  } | null
+  created_at?: string
+}
 
 export type UsuarioParams = {
   page?: number
@@ -418,17 +433,13 @@ export type UsuarioParams = {
 }
 
 export type UsuarioFormData = {
-  nombre: string
-  apellido: string
   email: string
-  cedula: string
   roles: string[]
   servidor_id?: number | null
+  cedula?: string | null
 }
 
 export type UsuarioUpdateData = {
-  nombre?: string
-  apellido?: string
   email?: string
   roles?: string[]
 }

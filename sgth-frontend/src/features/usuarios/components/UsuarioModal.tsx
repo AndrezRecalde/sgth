@@ -23,8 +23,6 @@ export function UsuarioModal({ opened, onClose, usuario }: Props) {
       ? actualizar.mutateAsync({
           id: Number(usuario!.id),
           data: {
-            nombre:   values.nombre,
-            apellido: values.apellido,
             email:    values.email,
             roles:    values.roles,
           },
@@ -37,11 +35,10 @@ export function UsuarioModal({ opened, onClose, usuario }: Props) {
   const isPending = crear.isPending || actualizar.isPending
 
   const initialValues = usuario ? {
-    nombre:   (usuario.name ?? '').split(' ')[0] ?? '',
-    apellido: (usuario.name ?? '').split(' ')[1] ?? '',
-    email:    usuario.email ?? '',
-    cedula:   '',
-    roles:    (usuario.roles as unknown as string[]) ?? [],
+    email:       usuario.email ?? '',
+    roles:       (usuario.roles as unknown as string[]) ?? [],
+    servidor_id: usuario.servidor_id ?? null,
+    cedula:      '',
   } : undefined
 
   return (

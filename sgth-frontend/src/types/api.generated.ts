@@ -4488,12 +4488,10 @@ export interface components {
         };
         /** StoreUsuarioRequest */
         StoreUsuarioRequest: {
-            nombre: string;
-            apellido: string;
             /** Format: email */
             email: string;
-            cedula: string;
             servidor_id?: number | null;
+            cedula?: string | null;
             roles: string[];
         };
         /** StoreVacacionRequest */
@@ -4858,7 +4856,6 @@ export interface components {
         /** User */
         User: {
             id: number;
-            name: string;
             email: string;
             /** Format: date-time */
             email_verified_at: string | null;
@@ -4866,18 +4863,20 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
-            usuario_ti: boolean | null;
+            usuario_ti: string | null;
             primer_login: boolean;
             activo: boolean;
+            servidor_id: number | null;
         };
         /** UsuarioResource */
         UsuarioResource: {
             id: string;
-            name: string;
+            nombre_completo: string;
             email: string;
             usuario_ti: string;
             activo: string;
             primer_login: string;
+            servidor_id: string;
             roles: string;
             servidor?: {
                 id: string;

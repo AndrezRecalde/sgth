@@ -22541,27 +22541,22 @@
             "StoreUsuarioRequest": {
                 "type": "object",
                 "properties": {
-                    "nombre": {
-                        "type": "string",
-                        "maxLength": 100
-                    },
-                    "apellido": {
-                        "type": "string",
-                        "maxLength": 100
-                    },
                     "email": {
                         "type": "string",
                         "format": "email"
-                    },
-                    "cedula": {
-                        "type": "string",
-                        "pattern": "^\\d{10}$"
                     },
                     "servidor_id": {
                         "type": [
                             "integer",
                             "null"
                         ]
+                    },
+                    "cedula": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "pattern": "^\\d{10}$"
                     },
                     "roles": {
                         "type": "array",
@@ -22572,10 +22567,7 @@
                     }
                 },
                 "required": [
-                    "nombre",
-                    "apellido",
                     "email",
-                    "cedula",
                     "roles"
                 ],
                 "title": "StoreUsuarioRequest"
@@ -23926,9 +23918,6 @@
                     "id": {
                         "type": "integer"
                     },
-                    "name": {
-                        "type": "string"
-                    },
                     "email": {
                         "type": "string"
                     },
@@ -23955,7 +23944,7 @@
                     },
                     "usuario_ti": {
                         "type": [
-                            "boolean",
+                            "string",
                             "null"
                         ]
                     },
@@ -23964,18 +23953,24 @@
                     },
                     "activo": {
                         "type": "boolean"
+                    },
+                    "servidor_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
                     "id",
-                    "name",
                     "email",
                     "email_verified_at",
                     "created_at",
                     "updated_at",
                     "usuario_ti",
                     "primer_login",
-                    "activo"
+                    "activo",
+                    "servidor_id"
                 ],
                 "title": "User"
             },
@@ -23985,7 +23980,7 @@
                     "id": {
                         "type": "string"
                     },
-                    "name": {
+                    "nombre_completo": {
                         "type": "string"
                     },
                     "email": {
@@ -23998,6 +23993,9 @@
                         "type": "string"
                     },
                     "primer_login": {
+                        "type": "string"
+                    },
+                    "servidor_id": {
                         "type": "string"
                     },
                     "roles": {
@@ -24028,11 +24026,12 @@
                 },
                 "required": [
                     "id",
-                    "name",
+                    "nombre_completo",
                     "email",
                     "usuario_ti",
                     "activo",
                     "primer_login",
+                    "servidor_id",
                     "roles",
                     "created_at"
                 ],
