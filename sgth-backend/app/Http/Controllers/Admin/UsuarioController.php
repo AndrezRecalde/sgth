@@ -103,7 +103,7 @@ final class UsuarioController extends Controller
         $usuarios = User::whereDoesntHave('servidor')
             ->where('activo', true)
             ->with('roles')
-            ->orderBy('name')
+            ->orderBy('email')
             ->get();
         return ApiResponse::ok(
             UsuarioResource::collection($usuarios),

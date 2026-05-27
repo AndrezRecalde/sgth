@@ -76,7 +76,7 @@ class ServidorController extends Controller
     {
         $this->authorize('verAny', Servidor::class);
 
-        $servidores = Servidor::whereNull('user_id')
+        $servidores = Servidor::whereDoesntHave('usuario')
             ->when(
                 $request->filled('search'),
                 fn($q) => $q->where(function ($q) use ($request) {

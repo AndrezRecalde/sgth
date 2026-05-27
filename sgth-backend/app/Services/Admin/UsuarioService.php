@@ -19,9 +19,13 @@ final class UsuarioService implements UsuarioServiceInterface
             ->when(
                 !empty($filtros['search']),
                 fn($q) => $q->where(function ($q) use ($filtros) {
-                    $q->where('name', 'ilike', "%{$filtros['search']}%")
-                      ->orWhere('email', 'ilike', "%{$filtros['search']}%")
-                      ->orWhere('usuario_ti', 'ilike', "%{$filtros['search']}%");
+                    $q->where('email', 'ilike', "%{$filtros['search']}%")
+                      ->orWhere('usuario_ti', 'ilike', "%{$filtros['search']}%")
+                      ->orWhereHas('servidor', fn($sq) => $sq
+                          ->where('nombre',   'ilike', "%{$filtros['search']}%")
+                          ->orWhere('apellido', 'ilike', "%{$filtros['search']}%")
+                          ->orWhere('cedula',   'ilike', "%{$filtros['search']}%")
+                      );
                 })
             )
             ->when(
@@ -36,22 +40,34 @@ final class UsuarioService implements UsuarioServiceInterface
             )
             ->when(
                 !empty($filtros['sin_servidor']),
-                fn($q) => $q->whereDoesntHave('servidor')
+                fn($q) => $q->whereNull('servidor_id')
             )
-            ->orderBy('name')
+            ->orderBy('email')
             ->paginate($filtros['per_page'] ?? 15);
     }
 
     public function crear(array $datos): User
     {
         return DB::transaction(function () use ($datos) {
-            $primerNombre   = explode(' ', trim($datos['nombre']))[0];
-            $primerApellido = explode(' ', trim($datos['apellido']))[0];
+            $servidor = null;
 
-            // Generar usuario_ti único
-            $nombreCorto = strtolower(
-                substr($primerNombre, 0, 1) . $primerApellido
-            );
+            if (!empty($datos['servidor_id'])) {
+                $servidor = Servidor::findOrFail($datos['servidor_id']);
+
+                if (User::where('servidor_id', $servidor->id)->exists()) {
+                    throw new ReglaNegocioException(
+                        'Este servidor ya tiene un usuario asignado.'
+                    );
+                }
+            }
+
+            $nombre   = $servidor?->nombre   ?? 'usuario';
+            $apellido = $servidor?->apellido ?? 'sistema';
+
+            $primerNombre   = explode(' ', trim($nombre))[0];
+            $primerApellido = explode(' ', trim($apellido))[0];
+            $nombreCorto    = strtolower(substr($primerNombre, 0, 1) . $primerApellido);
+
             $usuarioTi = $nombreCorto;
             $contador  = 1;
             while (User::where('usuario_ti', $usuarioTi)->exists()) {
@@ -59,28 +75,17 @@ final class UsuarioService implements UsuarioServiceInterface
                 $contador++;
             }
 
+            $cedula = $servidor?->cedula ?? $datos['cedula'] ?? '0000000000';
+
             $user = User::create([
-                'name'         => $datos['nombre'] . ' ' . $datos['apellido'],
                 'email'        => $datos['email'],
                 'usuario_ti'   => $usuarioTi,
-                'password'     => Hash::make($datos['cedula']),
+                'password'     => Hash::make($cedula),
                 'primer_login' => true,
+                'servidor_id'  => $servidor?->id,
             ]);
 
             $user->assignRole($datos['roles']);
-
-            // Vincular servidor si se proporcionó
-            if (!empty($datos['servidor_id'])) {
-                $servidor = Servidor::findOrFail($datos['servidor_id']);
-
-                if ($servidor->user_id !== null) {
-                    throw new ReglaNegocioException(
-                        'Este servidor ya tiene un usuario asignado.'
-                    );
-                }
-
-                $servidor->update(['user_id' => $user->id]);
-            }
 
             return $user;
         });
@@ -88,7 +93,7 @@ final class UsuarioService implements UsuarioServiceInterface
 
     public function obtener(int $id): User
     {
-        return User::with('roles')->findOrFail($id);
+        return User::with(['roles', 'servidor'])->findOrFail($id);
     }
 
     public function actualizar(int $id, array $datos): User
@@ -97,14 +102,9 @@ final class UsuarioService implements UsuarioServiceInterface
             $user = $this->obtener($id);
 
             $updateData = [];
-            
+
             if (isset($datos['email'])) {
                 $updateData['email'] = $datos['email'];
-            }
-            
-            // Actualizar nombre completo si mandaron ambos campos
-            if (isset($datos['nombre']) && isset($datos['apellido'])) {
-                $updateData['name'] = $datos['nombre'] . ' ' . $datos['apellido'];
             }
 
             if (!empty($updateData)) {
@@ -115,30 +115,28 @@ final class UsuarioService implements UsuarioServiceInterface
                 $user->syncRoles($datos['roles']);
             }
 
-            return $user->fresh('roles');
+            return $user->fresh(['roles', 'servidor']);
         });
     }
 
     public function eliminar(int $id): void
     {
-        $user = $this->obtener($id);
-        $user->delete();
+        $this->obtener($id)->delete();
     }
 
     public function restablecerContrasena(int $id): void
     {
-        $user = $this->obtener($id);
-        
-        $servidor = Servidor::where('user_id', $user->id)->first();
-        if (!$servidor) {
-            throw new ReglaNegocioException('El usuario no tiene un servidor asociado para extraer la cédula como contraseña.');
+        $user = User::with('servidor')->findOrFail($id);
+
+        if (!$user->servidor) {
+            throw new ReglaNegocioException(
+                'El usuario no tiene un servidor vinculado. No se puede restablecer la contraseña automáticamente.'
+            );
         }
 
-        $user->password = Hash::make($servidor->cedula);
+        $user->password     = Hash::make($user->servidor->cedula);
         $user->primer_login = true;
         $user->save();
-
-        // Expulsar al usuario cerrando todas sus sesiones
         $user->tokens()->delete();
     }
 }

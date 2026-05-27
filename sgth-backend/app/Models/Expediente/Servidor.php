@@ -33,7 +33,6 @@ class Servidor extends Model
     protected $table = 'servidores';
 
     protected $fillable = [
-        'user_id',
         'cedula',
         'nombre',
         'segundo_nombre',
@@ -82,9 +81,9 @@ class Servidor extends Model
     /**
      * Cuenta de usuario del servidor
      */
-    public function user(): BelongsTo
+    public function usuario(): HasOne
     {
-        return $this->belongsTo(User::class);
+        return $this->hasOne(\App\Models\User::class, 'servidor_id');
     }
 
     public function unidadAdministrativa(): BelongsTo
