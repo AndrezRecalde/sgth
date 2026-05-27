@@ -4,7 +4,7 @@ import {
   Select, Grid, Switch, NumberInput,
   Box, LoadingOverlay,
 } from '@mantine/core'
-import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { useForm, Controller, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '../hooks/useUnidades'
@@ -55,7 +55,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
   const {
     control,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<PuestoFormData>({
     resolver: zodResolver(puestoSchema) as Resolver<PuestoFormData>,
@@ -73,7 +72,11 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
     },
   })
 
-  const regimenActual = watch('regimen_laboral')
+  const regimenActual = useWatch({
+    control,
+    name: 'regimen_laboral',
+    defaultValue: 'losep',
+  })
 
   const cargoOptions = cargos.map(c => ({
     value: String(c.id),
