@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Drawer,
   Stack,
@@ -131,16 +131,14 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
     defaultValue: [],
   });
 
-  // Reset al abrir/cerrar
-  useEffect(() => {
-    if (!opened) {
-      reset();
-      setPaso("buscar");
-      setBusqueda("");
-      setServidorSel(null);
-      setPermisosActivos([]);
-    }
-  }, [opened, reset]);
+  const handleClose = () => {
+    reset()
+    setPaso('buscar')
+    setBusqueda('')
+    setServidorSel(null)
+    setPermisosActivos([])
+    onClose()
+  }
 
   // Servidores filtrados por búsqueda
   const servidoresFiltrados = (servidores as ServidorItem[]).filter(
@@ -194,7 +192,7 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
         permisos: permisosActivos,
       } as never)
       .then(() => {
-        onClose();
+        handleClose();
       })
       .catch(() => {});
   };
@@ -202,7 +200,7 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
   return (
     <Drawer
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title={
         <Group gap="xs">
           <ThemeIcon color="emerald" variant="light" size="md" radius="md">
@@ -476,7 +474,7 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
                 <Group justify="flex-end" mt="md">
                   <Button
                     variant="default"
-                    onClick={onClose}
+                    onClick={handleClose}
                     leftSection={<IconX size={14} />}
                   >
                     Cancelar
