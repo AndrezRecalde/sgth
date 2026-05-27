@@ -61,25 +61,18 @@ final class UsuarioService implements UsuarioServiceInterface
                 }
             }
 
-            $nombre   = $servidor?->nombre   ?? 'usuario';
-            $apellido = $servidor?->apellido ?? 'sistema';
-
-            $primerNombre   = explode(' ', trim($nombre))[0];
-            $primerApellido = explode(' ', trim($apellido))[0];
-            $nombreCorto    = strtolower(substr($primerNombre, 0, 1) . $primerApellido);
-
-            $usuarioTi = $nombreCorto;
-            $contador  = 1;
-            while (User::where('usuario_ti', $usuarioTi)->exists()) {
-                $usuarioTi = $nombreCorto . $contador;
-                $contador++;
+            // Verificar unicidad del usuario_ti
+            if (User::where('usuario_ti', $datos['usuario_ti'])->exists()) {
+                throw new ReglaNegocioException(
+                    'El usuario TI ya está en uso. Elija otro.'
+                );
             }
 
             $cedula = $servidor?->cedula ?? $datos['cedula'] ?? '0000000000';
 
             $user = User::create([
                 'email'        => $datos['email'],
-                'usuario_ti'   => $usuarioTi,
+                'usuario_ti'   => $datos['usuario_ti'],
                 'password'     => Hash::make($cedula),
                 'primer_login' => true,
                 'servidor_id'  => $servidor?->id,
@@ -87,7 +80,12 @@ final class UsuarioService implements UsuarioServiceInterface
 
             $user->assignRole($datos['roles']);
 
-            return $user;
+            // Permisos directos adicionales
+            if (!empty($datos['permisos'])) {
+                $user->givePermissionTo($datos['permisos']);
+            }
+
+            return $user->load(['roles', 'servidor']);
         });
     }
 

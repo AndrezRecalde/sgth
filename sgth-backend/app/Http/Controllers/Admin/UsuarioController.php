@@ -111,6 +111,39 @@ final class UsuarioController extends Controller
         );
     }
 
+    public function sugerirUsuarioTi(Request $request): JsonResponse
+    {
+        $servidorId = $request->integer('servidor_id');
+        $servidor   = null;
+
+        if ($servidorId) {
+            $servidor = \App\Models\Expediente\Servidor::find($servidorId);
+        }
+
+        $nombre   = $servidor?->nombre   ?? $request->string('nombre')->value()  ?? 'usuario';
+        $apellido = $servidor?->apellido ?? $request->string('apellido')->value() ?? 'sistema';
+
+        $primerNombre   = explode(' ', trim($nombre))[0];
+        $primerApellido = explode(' ', trim($apellido))[0];
+        $base           = strtolower(substr($primerNombre, 0, 1) . $primerApellido);
+
+        // Eliminar caracteres no ASCII (tildes, ñ, etc.)
+        $base = iconv('UTF-8', 'ASCII//TRANSLIT', $base);
+        $base = preg_replace('/[^a-z0-9]/', '', $base);
+
+        $usuarioTi = $base;
+        $contador  = 1;
+        while (\App\Models\User::where('usuario_ti', $usuarioTi)->exists()) {
+            $usuarioTi = $base . $contador;
+            $contador++;
+        }
+
+        return ApiResponse::ok(
+            ['usuario_ti_sugerido' => $usuarioTi],
+            'Usuario TI sugerido generado.'
+        );
+    }
+
     /**
      * Lista todos los roles disponibles del sistema.
      * Usado por el frontend para el Select de roles.

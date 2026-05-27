@@ -488,6 +488,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('admin')
         ->middleware('role:admin-ti')
         ->group(function () {
+            Route::get('usuarios/sugerir-usuario-ti',
+                [\App\Http\Controllers\Admin\UsuarioController::class, 'sugerirUsuarioTi'])
+                ->name('usuarios.sugerirUsuarioTi');
+
             Route::get('usuarios/sin-servidor',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'sinServidor'])
                 ->name('usuarios.sinServidor');
@@ -502,6 +506,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::post('usuarios/{usuario}/restablecer-contrasena',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'restablecerContrasena']
             );
+
+            Route::get('permisos',
+                [\App\Http\Controllers\Admin\PermisoController::class, 'index'])
+                ->name('admin.permisos.index');
+
+            Route::get('usuarios/{id}/permisos',
+                [\App\Http\Controllers\Admin\PermisoController::class, 'permisosUsuario'])
+                ->name('admin.usuarios.permisos');
+
+            Route::post('usuarios/{id}/permisos',
+                [\App\Http\Controllers\Admin\PermisoController::class, 'sincronizarPermisosUsuario'])
+                ->name('admin.usuarios.permisos.sincronizar');
         });
 
     // Módulo 15 — Capacitación

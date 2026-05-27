@@ -11157,6 +11157,179 @@
                 }
             }
         },
+        "/v1/admin/permisos": {
+            "get": {
+                "operationId": "admin.permisos.index",
+                "summary": "Retorna todos los permisos del sistema agrupados\npor m\u00f3dulo, con sus roles asociados",
+                "tags": [
+                    "Permiso"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Permisos del sistema."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/admin/usuarios/{id}/permisos": {
+            "get": {
+                "operationId": "admin.usuarios.permisos",
+                "summary": "Retorna los permisos directos de un usuario\n(no los heredados por rol)",
+                "tags": [
+                    "Permiso"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Permisos directos del usuario."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin.usuarios.permisos.sincronizar",
+                "summary": "Sincroniza los permisos directos de un usuario",
+                "tags": [
+                    "Permiso"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "permisos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Permisos directos actualizados."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/asistencia/permisos": {
             "get": {
                 "operationId": "permisoServidor.index",
@@ -15809,6 +15982,68 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/admin/usuarios/sugerir-usuario-ti": {
+            "get": {
+                "operationId": "usuarios.sugerirUsuarioTi",
+                "tags": [
+                    "Usuario"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Usuario TI sugerido generado."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "usuario_ti_sugerido": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "usuario_ti_sugerido"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -22545,6 +22780,11 @@
                         "type": "string",
                         "format": "email"
                     },
+                    "usuario_ti": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9]+$",
+                        "maxLength": 50
+                    },
                     "servidor_id": {
                         "type": [
                             "integer",
@@ -22564,10 +22804,20 @@
                             "type": "string"
                         },
                         "minItems": 1
+                    },
+                    "permisos": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
                     "email",
+                    "usuario_ti",
                     "roles"
                 ],
                 "title": "StoreUsuarioRequest"
