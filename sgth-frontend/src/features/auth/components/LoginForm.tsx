@@ -1,8 +1,8 @@
 'use client'
 
 import { TextInput, PasswordInput, Button, Stack } from '@mantine/core'
-import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { IconLogin } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { loginSchema, type LoginFormData } from '../schemas/login.schema'
@@ -12,25 +12,31 @@ export function LoginForm() {
   const { mutate, isPending } = useLogin()
   const contained = useContainedInput()
 
-  const form = useForm<LoginFormData>({
-    initialValues: { usuario: '', contrasena: '' },
-    validate: zodResolver(loginSchema),
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { usuario: '', contrasena: '' },
   })
 
   return (
-    <form onSubmit={form.onSubmit((v) => mutate(v))}>
+    <form onSubmit={handleSubmit((v) => mutate(v))}>
       <Stack gap="sm">
         <TextInput
           label="Usuario"
           placeholder="Ingrese su usuario"
           {...contained}
-          {...form.getInputProps('usuario')}
+          {...register('usuario')}
+          error={errors.usuario?.message}
         />
         <PasswordInput
           label="Contraseña"
           placeholder="Ingrese su contraseña"
           {...contained}
-          {...form.getInputProps('contrasena')}
+          {...register('contrasena')}
+          error={errors.contrasena?.message}
         />
         <Button
           type="submit"
