@@ -1346,9 +1346,41 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get: operations["documentos.index"];
+        put?: never;
+        post: operations["documentos.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/documentos/{documentoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get?: never;
         put?: never;
-        post: operations["documentoServidor.store"];
+        post?: never;
+        delete: operations["documentos.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/documentos/{documentoId}/descargar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documentos.descargar"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3571,7 +3603,22 @@ export interface components {
             deleted_at: string | null;
         };
         /** DocumentoServidorResource */
-        DocumentoServidorResource: unknown[];
+        DocumentoServidorResource: {
+            id: string;
+            tipo_documento: string;
+            nombre_archivo: string;
+            tamanio_bytes: string;
+            mime_type: string;
+            fecha_vencimiento: string;
+            descripcion: string;
+            estado: string;
+            subido_por?: {
+                id: string;
+                usuario_ti: string;
+            };
+            created_at: string;
+            url_descarga: string;
+        };
         /** EncuestaClima */
         EncuestaClima: {
             id: number;
@@ -8895,7 +8942,36 @@ export interface operations {
             403: components["responses"]["AuthorizationException"];
         };
     };
-    "documentoServidor.store": {
+    "documentos.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Documentos del servidor.";
+                        datos: components["schemas"]["DocumentoServidorResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "documentos.store": {
         parameters: {
             query?: never;
             header?: never;
@@ -8927,6 +9003,73 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "documentos.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                documentoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Documento eliminado del expediente.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "documentos.descargar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                documentoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Archivo no encontrado.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "encuestaClima.index": {

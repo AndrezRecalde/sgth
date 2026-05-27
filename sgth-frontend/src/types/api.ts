@@ -285,6 +285,13 @@ export type ServidorConRelaciones = Servidor & {
   tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones
   unidad_administrativa?: { id: number; nombre?: string }
+  regimen_laboral?: 'losep' | 'codigo_trabajo'
+  numero_papeleta_votacion?: string | null
+  nacionalidad?: string | null
+  pais_origen?: string | null
+  pasaporte_numero?: string | null
+  provincia_domicilio?: string | null
+  ciudad_domicilio?: string | null
 }
 
 export type ContratoConRelaciones = ContratoServidor & {
@@ -534,6 +541,59 @@ export type UsuarioCreateData = {
   cedula?:     string | null
   permisos?:   string[]
 }
+
+// ── Documentos del servidor ──────────────────────
+export type DocumentoServidor = {
+  id:                number
+  servidor_id:       number
+  tipo_documento:    string
+  nombre_archivo:    string
+  tamanio_bytes?:    number
+  mime_type?:        string
+  fecha_vencimiento?: string | null
+  descripcion?:      string | null
+  estado?:           boolean
+  subido_por?: {
+    id:         number
+    usuario_ti?: string
+  } | null
+  created_at?:    string
+  url_descarga?:  string
+}
+
+export type TipoDocumentoServidor =
+  | 'cedula'
+  | 'papeleta_votacion'
+  | 'pasaporte'
+  | 'titulo_academico'
+  | 'certificado'
+  | 'contrato'
+  | 'nombramiento'
+  | 'resolucion'
+  | 'declaracion'
+  | 'otro'
+
+// ── Discapacidades ───────────────────────────────
+export type DiscapacidadDetalle = {
+  id:              number
+  servidor_id:     number
+  tipo_discapacidad: string
+  porcentaje:      number
+  numero_carnet?:  string | null
+  created_at?:     string
+}
+
+// ── Enfermedades catastróficas ───────────────────
+export type EnfermedadDetalle = {
+  id:                  number
+  servidor_id:         number
+  nombre_enfermedad:   string
+  codigo_cie10?:       string | null
+  fecha_diagnostico?:  string | null
+  observaciones?:      string | null
+  created_at?:         string
+}
+
 
 
 
