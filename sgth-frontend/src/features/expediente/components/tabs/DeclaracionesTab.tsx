@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Stack, Group, Text, Badge, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -7,6 +8,7 @@ import {
   IconDownload,
   IconTrash,
   IconFileDescription,
+  IconEdit,
 } from "@tabler/icons-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SgthTable } from "@/components/ui/SgthTable";
@@ -35,6 +37,7 @@ interface Props {
 
 export function DeclaracionesTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false);
+  const [editItem, setEditItem] = useState<DeclaracionJuramentada | null>(null);
   const { data: declaraciones = [], isLoading } = useDeclaraciones(servidorId);
   const { eliminar, exportar } = useDeclaracionMutations(servidorId);
 
@@ -93,6 +96,15 @@ export function DeclaracionesTab({ servidorId }: Props) {
               onClick: () => {},
             },
             {
+              label: "Editar",
+              icon: <IconEdit size={14} />,
+              color: "blue",
+              onClick: () => {
+                setEditItem(item);
+                open();
+              },
+            },
+            {
               label: "Eliminar",
               icon: <IconTrash size={14} />,
               color: "red",
@@ -147,8 +159,12 @@ export function DeclaracionesTab({ servidorId }: Props) {
       )}
       <DeclaracionModal
         opened={opened}
-        onClose={close}
+        onClose={() => {
+          setEditItem(null);
+          close();
+        }}
         servidorId={servidorId}
+        initialValues={editItem}
       />
     </Stack>
   );

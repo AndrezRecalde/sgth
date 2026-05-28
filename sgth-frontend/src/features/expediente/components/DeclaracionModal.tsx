@@ -20,6 +20,11 @@ import {
 } from "../schemas/declaracion.schema";
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
+import { useQueryClient } from "@tanstack/react-query";
+import { notifications } from "@mantine/notifications";
+import { IconCheck } from "@tabler/icons-react";
+import React, { useEffect } from "react";
+import { expedienteService } from "../services/expedienteService";
 
 const TIPO_OPTIONS = [
   { value: "inicio_gestion", label: "Inicio de gestión" },
@@ -31,6 +36,13 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   servidorId: number;
+  initialValues?: {
+    id:               number;
+    tipo_declaracion: string;
+    fecha_declaracion: string;
+    codigo_barras:     string;
+    observaciones?:   string | null;
+  } | null;
 }
 
 const toDate = (v?: string | null): Date | null => {
@@ -49,10 +61,11 @@ const fromDate = (d: Date | string | null): string | null => {
   return `${year}-${month}-${day}`;
 };
 
-export function DeclaracionModal({ opened, onClose, servidorId }: Props) {
+export function DeclaracionModal({ opened, onClose, servidorId, initialValues }: Props) {
   const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { crear } = useDeclaracionMutations(servidorId);
+  const qc = useQueryClient();
 
   const {
     register,
@@ -70,21 +83,60 @@ export function DeclaracionModal({ opened, onClose, servidorId }: Props) {
     },
   });
 
+  useEffect(() => {
+    if (initialValues) {
+      reset({
+        tipo_declaracion:  initialValues.tipo_declaracion as DeclaracionFormData["tipo_declaracion"],
+        fecha_declaracion: initialValues.fecha_declaracion
+          ? initialValues.fecha_declaracion.split("T")[0] : "",
+        codigo_barras:     initialValues.codigo_barras ?? "",
+        observaciones:     initialValues.observaciones ?? "",
+      });
+    } else {
+      reset({
+        tipo_declaracion:  "inicio_gestion",
+        fecha_declaracion: "",
+        codigo_barras:     "",
+        observaciones:     "",
+      });
+    }
+  }, [initialValues, reset]);
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
+  const isEditing = !!initialValues;
+
   const onSubmit = (values: DeclaracionFormData) => {
-    crear
-      .mutateAsync(values as Record<string, unknown>)
-      .then(() => {
-        reset();
-        onClose();
-      })
-      .catch(() => {});
+    const mutation = isEditing
+      ? expedienteService.editarDeclaracion(
+          servidorId, initialValues!.id,
+          values as Record<string, unknown>
+        ).then(() => {
+          qc.invalidateQueries({
+            queryKey: ["declaraciones", servidorId]
+          });
+          notifications.show({
+            title:   "Declaración actualizada",
+            message: "La declaración fue actualizada correctamente.",
+            color:   "emerald",
+            icon:    React.createElement(IconCheck, { size: 16 }),
+          });
+          handleClose();
+        })
+      : crear.mutateAsync(values as Record<string, unknown>)
+          .then(() => { reset(); onClose(); });
+
+    mutation.catch(() => {});
   };
 
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
-      title="Registrar declaración juramentada"
+      onClose={handleClose}
+      title={initialValues ? "Editar declaración" : "Registrar declaración juramentada"}
       size="md"
       fullScreen={isMobile}
       radius={isMobile ? 0 : "xl"}
@@ -137,7 +189,7 @@ export function DeclaracionModal({ opened, onClose, servidorId }: Props) {
             error={errors.observaciones?.message}
           />
           <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>
+            <Button variant="default" onClick={handleClose}>
               Cancelar
             </Button>
             <Button
@@ -146,7 +198,7 @@ export function DeclaracionModal({ opened, onClose, servidorId }: Props) {
               variant="light"
               loading={crear.isPending}
             >
-              Registrar declaración
+              {initialValues ? "Actualizar" : "Registrar declaración"}
             </Button>
           </Group>
         </Stack>
@@ -154,3 +206,4 @@ export function DeclaracionModal({ opened, onClose, servidorId }: Props) {
     </Modal>
   );
 }
+
