@@ -23,34 +23,42 @@ import "@mantine/dates/styles.css";
 
 const TIPO_OPTIONS = [
   {
-    group: "Identificación",
+    group: 'Identificación',
     items: [
-      { value: "cedula", label: "Cédula de identidad" },
-      { value: "papeleta_votacion", label: "Papeleta de votación" },
-      { value: "pasaporte", label: "Pasaporte" },
+      { value: 'cedula_identidad',    label: 'Cédula de identidad' },
+      { value: 'papeleta_votacion',   label: 'Papeleta de votación' },
+      { value: 'carnet_conadis',      label: 'Carnet CONADIS' },
     ],
   },
   {
-    group: "Académico",
+    group: 'Académico',
     items: [
-      { value: "titulo_academico", label: "Título académico" },
-      { value: "certificado", label: "Certificado" },
+      { value: 'titulo_tercer_nivel', label: 'Título de tercer nivel' },
+      { value: 'titulo_cuarto_nivel', label: 'Título de cuarto nivel (posgrado)' },
     ],
   },
   {
-    group: "Laboral",
+    group: 'Laboral',
     items: [
-      { value: "contrato", label: "Contrato" },
-      { value: "nombramiento", label: "Nombramiento" },
-      { value: "resolucion", label: "Resolución" },
+      { value: 'contrato_laboral',    label: 'Contrato laboral' },
+      { value: 'nombramiento',        label: 'Nombramiento' },
+      { value: 'certificado_trabajo_anterior', label: 'Certificado trabajo anterior' },
     ],
   },
   {
-    group: "Declaraciones",
-    items: [{ value: "declaracion", label: "Declaración juramentada" }],
+    group: 'Médico',
+    items: [
+      { value: 'certificado_medico',              label: 'Certificado médico' },
+      { value: 'certificado_enfermedad_catastrofica', label: 'Certificado enfermedad catastrófica' },
+    ],
   },
-  { group: "Otros", items: [{ value: "otro", label: "Otro documento" }] },
-];
+  {
+    group: 'Otros',
+    items: [
+      { value: 'otro', label: 'Otro documento' },
+    ],
+  },
+]
 
 const schema = z.object({
   tipo_documento: z.string().min(1, "Seleccione el tipo"),
@@ -162,7 +170,7 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
               setArchivoError("");
             }}
             onReject={() => setArchivoError("Archivo no válido")}
-            maxSize={10 * 1024 * 1024}
+            maxSize={5 * 1024 * 1024}
             accept={[
               "application/pdf",
               "image/jpeg",
@@ -192,7 +200,7 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
                       Arrastra el archivo aquí o haz clic para seleccionar
                     </Text>
                     <Text size="xs" c="dimmed" mt={4}>
-                      PDF, JPG, PNG, DOC, DOCX — máx. 10MB
+                      PDF, JPG, PNG — máx. 5MB
                     </Text>
                   </>
                 )}

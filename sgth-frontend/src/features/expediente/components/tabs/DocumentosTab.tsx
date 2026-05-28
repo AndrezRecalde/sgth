@@ -13,24 +13,39 @@ import { expedienteService } from '../../services/expedienteService'
 import type { DocumentoServidor } from '@/types/api'
 
 const TIPO_LABELS: Record<string, string> = {
-  cedula:            'Cédula de identidad',
-  papeleta_votacion: 'Papeleta de votación',
-  pasaporte:         'Pasaporte',
-  titulo_academico:  'Título académico',
-  certificado:       'Certificado',
-  contrato:          'Contrato',
-  nombramiento:      'Nombramiento',
-  resolucion:        'Resolución',
-  declaracion:       'Declaración juramentada',
-  otro:              'Otro',
+  cedula_identidad:                  'Cédula de identidad',
+  papeleta_votacion:                 'Papeleta de votación',
+  carnet_conadis:                    'Carnet CONADIS',
+  titulo_tercer_nivel:               'Título de tercer nivel',
+  titulo_cuarto_nivel:               'Título de cuarto nivel',
+  certificado_trabajo_anterior:      'Certificado trabajo anterior',
+  contrato_laboral:                  'Contrato laboral',
+  nombramiento:                      'Nombramiento',
+  certificado_medico:                'Certificado médico',
+  certificado_enfermedad_catastrofica: 'Certificado enfermedad catastrófica',
+  otro:                              'Otro documento',
 }
 
 const GRUPOS: Record<string, string[]> = {
-  'Identificación': ['cedula', 'papeleta_votacion', 'pasaporte'],
-  'Académico':      ['titulo_academico', 'certificado'],
-  'Laboral':        ['contrato', 'nombramiento', 'resolucion'],
-  'Declaraciones':  ['declaracion'],
-  'Otros':          ['otro'],
+  'Identificación': [
+    'cedula_identidad',
+    'papeleta_votacion',
+    'carnet_conadis',
+  ],
+  'Académico': [
+    'titulo_tercer_nivel',
+    'titulo_cuarto_nivel',
+  ],
+  'Laboral': [
+    'contrato_laboral',
+    'nombramiento',
+    'certificado_trabajo_anterior',
+  ],
+  'Médico': [
+    'certificado_medico',
+    'certificado_enfermedad_catastrofica',
+  ],
+  'Otros': ['otro'],
 }
 
 function formatBytes(bytes?: number): string {
