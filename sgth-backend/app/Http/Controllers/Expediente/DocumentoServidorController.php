@@ -23,7 +23,7 @@ class DocumentoServidorController extends Controller
     public function index(int $servidorId): JsonResponse
     {
         $servidor = Servidor::findOrFail($servidorId);
-        $this->authorize('view', $servidor);
+        $this->authorize('ver', $servidor);
 
         $documentos = DocumentoServidor::where('servidor_id', $servidorId)
             ->with('subidoPor:id,usuario_ti,servidor_id')
