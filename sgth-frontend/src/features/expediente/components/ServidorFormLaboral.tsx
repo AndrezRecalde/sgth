@@ -1,65 +1,69 @@
-'use client'
+"use client";
 
-import { TextInput, Select, Grid } from '@mantine/core'
-import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '@/features/estructura/hooks/useUnidades'
-import { usePuestos } from '@/features/estructura/hooks/usePuestos'
-import type { UseFormReturnType } from '@mantine/form'
-import type { ServidorFormData } from '../schemas/servidor.schema'
-import type { UnidadConRelaciones, Puesto } from '@/types/api'
+import { TextInput, Select, Grid } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import "@mantine/dates/styles.css";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import { useUnidades } from "@/features/estructura/hooks/useUnidades";
+import { usePuestos } from "@/features/estructura/hooks/usePuestos";
+import type { UseFormReturnType } from "@mantine/form";
+import type { ServidorFormData } from "../schemas/servidor.schema";
+import type { PuestoConRelaciones } from "@/types/api";
 
 const REGIMEN_OPTIONS = [
-  { value: 'losep',          label: 'LOSEP' },
-  { value: 'codigo_trabajo', label: 'Código del Trabajo' },
-]
+  { value: "losep", label: "LOSEP" },
+  { value: "codigo_trabajo", label: "Código del Trabajo" },
+];
 
 const TIPO_NOMBRAMIENTO_OPTIONS = [
-  { value: 'nombramiento_permanente',     label: 'Nombramiento Permanente' },
-  { value: 'nombramiento_provisional',    label: 'Nombramiento Provisional' },
-  { value: 'servicios_ocasionales',       label: 'Servicios Ocasionales' },
-  { value: 'libre_nombramiento_remocion', label: 'Libre Nombramiento y Remoción' },
-  { value: 'codigo_trabajo',              label: 'Código del Trabajo' },
-  { value: 'servicios_profesionales',     label: 'Servicios Profesionales' },
-]
+  { value: "nombramiento_permanente", label: "Nombramiento Permanente" },
+  { value: "nombramiento_provisional", label: "Nombramiento Provisional" },
+  { value: "servicios_ocasionales", label: "Servicios Ocasionales" },
+  {
+    value: "libre_nombramiento_remocion",
+    label: "Libre Nombramiento y Remoción",
+  },
+  { value: "codigo_trabajo", label: "Código del Trabajo" },
+  { value: "servicios_profesionales", label: "Servicios Profesionales" },
+];
 
 interface Props {
-  form: UseFormReturnType<ServidorFormData>
+  form: UseFormReturnType<ServidorFormData>;
 }
 
 export function ServidorFormLaboral({ form }: Props) {
-  const contained = useContainedInput()
-  const { data: unidades = [] } = useUnidades()
-  const { data: puestosData }   = usePuestos()
+  const contained = useContainedInput();
+  const { data: unidades = [] } = useUnidades();
+  const { data: puestosData } = usePuestos();
 
-  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(u => ({
+  const unidadOptions = unidades.map((u) => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
-  }))
+  }));
 
-  const puestoOptions = (puestosData?.data ?? [])
-    .map((p: any) => ({
+  const puestoOptions = (puestosData?.data ?? []).map(
+    (p: PuestoConRelaciones) => ({
       value: String(p.id),
-      label: p.denominacion ?? p.nombre ?? `Puesto ${p.id}`,
-    }))
+      label: p.cargo?.nombre ?? `Puesto ${p.id}`,
+    }),
+  );
 
   const toDate = (v?: string | null): Date | null => {
-    if (!v) return null
-    const datePart = v.split('T')[0]
-    const [year, month, day] = datePart.split('-').map(Number)
-    return new Date(year, month - 1, day)
-  }
+    if (!v) return null;
+    const datePart = v.split("T")[0];
+    const [year, month, day] = datePart.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   const fromDate = (d: Date | string | null): string | null => {
-    if (!d) return null
-    const date = typeof d === 'string' ? toDate(d) : d
-    if (!date || isNaN(date.getTime())) return null
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+    if (!d) return null;
+    const date = typeof d === "string" ? toDate(d) : d;
+    if (!date || isNaN(date.getTime())) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   return (
     <Grid>
@@ -69,9 +73,13 @@ export function ServidorFormLaboral({ form }: Props) {
           placeholder="Seleccionar régimen"
           data={REGIMEN_OPTIONS}
           {...contained}
-          value={form.values.regimen_laboral ?? ''}
-          onChange={(v) => form.setFieldValue('regimen_laboral',
-            v as ServidorFormData['regimen_laboral'])}
+          value={form.values.regimen_laboral ?? ""}
+          onChange={(v) =>
+            form.setFieldValue(
+              "regimen_laboral",
+              v as ServidorFormData["regimen_laboral"],
+            )
+          }
           error={form.errors.regimen_laboral}
         />
       </Grid.Col>
@@ -82,9 +90,13 @@ export function ServidorFormLaboral({ form }: Props) {
           data={TIPO_NOMBRAMIENTO_OPTIONS}
           searchable
           {...contained}
-          value={form.values.tipo_nombramiento ?? ''}
-          onChange={(v) => form.setFieldValue('tipo_nombramiento',
-            v as ServidorFormData['tipo_nombramiento'])}
+          value={form.values.tipo_nombramiento ?? ""}
+          onChange={(v) =>
+            form.setFieldValue(
+              "tipo_nombramiento",
+              v as ServidorFormData["tipo_nombramiento"],
+            )
+          }
           error={form.errors.tipo_nombramiento}
         />
       </Grid.Col>
@@ -95,11 +107,17 @@ export function ServidorFormLaboral({ form }: Props) {
           data={unidadOptions}
           searchable
           {...contained}
-          value={form.values.unidad_administrativa_id
-            ? String(form.values.unidad_administrativa_id) : ''}
+          value={
+            form.values.unidad_administrativa_id
+              ? String(form.values.unidad_administrativa_id)
+              : ""
+          }
           onChange={(v) =>
-            form.setFieldValue('unidad_administrativa_id',
-              v ? Number(v) : '' as unknown as number)}
+            form.setFieldValue(
+              "unidad_administrativa_id",
+              v ? Number(v) : ("" as unknown as number),
+            )
+          }
           error={form.errors.unidad_administrativa_id}
         />
       </Grid.Col>
@@ -110,11 +128,13 @@ export function ServidorFormLaboral({ form }: Props) {
           data={puestoOptions}
           searchable
           {...contained}
-          value={form.values.puesto_id
-            ? String(form.values.puesto_id) : ''}
+          value={form.values.puesto_id ? String(form.values.puesto_id) : ""}
           onChange={(v) =>
-            form.setFieldValue('puesto_id',
-              v ? Number(v) : '' as unknown as number)}
+            form.setFieldValue(
+              "puesto_id",
+              v ? Number(v) : ("" as unknown as number),
+            )
+          }
           error={form.errors.puesto_id}
         />
       </Grid.Col>
@@ -126,8 +146,7 @@ export function ServidorFormLaboral({ form }: Props) {
           {...contained}
           value={toDate(form.values.fecha_ingreso_institucion)}
           onChange={(d) =>
-            form.setFieldValue('fecha_ingreso_institucion',
-              fromDate(d) ?? '')
+            form.setFieldValue("fecha_ingreso_institucion", fromDate(d) ?? "")
           }
           error={form.errors.fecha_ingreso_institucion}
         />
@@ -141,7 +160,7 @@ export function ServidorFormLaboral({ form }: Props) {
           {...contained}
           value={toDate(form.values.fecha_ingreso_sector_publico)}
           onChange={(d) =>
-            form.setFieldValue('fecha_ingreso_sector_publico', fromDate(d))
+            form.setFieldValue("fecha_ingreso_sector_publico", fromDate(d))
           }
         />
       </Grid.Col>
@@ -154,7 +173,7 @@ export function ServidorFormLaboral({ form }: Props) {
           {...contained}
           value={toDate(form.values.fecha_nombramiento)}
           onChange={(d) =>
-            form.setFieldValue('fecha_nombramiento', fromDate(d))
+            form.setFieldValue("fecha_nombramiento", fromDate(d))
           }
         />
       </Grid.Col>
@@ -163,7 +182,7 @@ export function ServidorFormLaboral({ form }: Props) {
           label="Número de contrato"
           placeholder="Opcional"
           {...contained}
-          {...form.getInputProps('numero_contrato')}
+          {...form.getInputProps("numero_contrato")}
         />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -175,7 +194,7 @@ export function ServidorFormLaboral({ form }: Props) {
           {...contained}
           value={toDate(form.values.fecha_inicio_ultimo_contrato)}
           onChange={(d) =>
-            form.setFieldValue('fecha_inicio_ultimo_contrato', fromDate(d))
+            form.setFieldValue("fecha_inicio_ultimo_contrato", fromDate(d))
           }
         />
       </Grid.Col>
@@ -188,10 +207,10 @@ export function ServidorFormLaboral({ form }: Props) {
           {...contained}
           value={toDate(form.values.fecha_fin_ultimo_contrato)}
           onChange={(d) =>
-            form.setFieldValue('fecha_fin_ultimo_contrato', fromDate(d))
+            form.setFieldValue("fecha_fin_ultimo_contrato", fromDate(d))
           }
         />
       </Grid.Col>
     </Grid>
-  )
+  );
 }
