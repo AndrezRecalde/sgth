@@ -16,7 +16,8 @@ import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 export const expedienteService = {
   // ── Servidores ──────────────────────────────────
   listar: (params?: ServidorParams) =>
-    api.get<ApiResponse<{
+    api.get<{
+      exito: boolean
       datos: ServidorConRelaciones[]
       meta: {
         pagina_actual: number
@@ -24,11 +25,11 @@ export const expedienteService = {
         total: number
         ultima_pagina: number
       }
-    }>>('/expediente/servidores', { params })
+    }>('/expediente/servidores', { params })
     .then(r => ({
-      data:  r.data.datos.datos,
-      total: r.data.datos.meta?.total ?? 0,
-      current_page: r.data.datos.meta?.pagina_actual ?? 1,
+      data:         r.data.datos ?? [],
+      total:        r.data.meta?.total ?? 0,
+      current_page: r.data.meta?.pagina_actual ?? 1,
     })),
 
   obtener: (id: number) =>
