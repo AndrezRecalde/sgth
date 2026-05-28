@@ -85,6 +85,26 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         [\App\Http\Controllers\Expediente\ServidorController::class, 'storeBasico'])
         ->name('servidores.storeBasico');
 
+    Route::post(
+        'expediente/cargas-familiares/{cargaId}/discapacidades',
+        [\App\Http\Controllers\Expediente\DiscapacidadCargaFamiliarController::class, 'store']
+    )->name('carga.discapacidades.store');
+
+    Route::delete(
+        'expediente/cargas-familiares/{cargaId}/discapacidades/{id}',
+        [\App\Http\Controllers\Expediente\DiscapacidadCargaFamiliarController::class, 'destroy']
+    )->name('carga.discapacidades.destroy');
+
+    Route::post(
+        'expediente/cargas-familiares/{cargaId}/enfermedades',
+        [\App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController::class, 'store']
+    )->name('carga.enfermedades.store');
+
+    Route::delete(
+        'expediente/cargas-familiares/{cargaId}/enfermedades/{id}',
+        [\App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController::class, 'destroy']
+    )->name('carga.enfermedades.destroy');
+
     Route::prefix('expediente')->group(function () {
         Route::apiResource('servidores', \App\Http\Controllers\Expediente\ServidorController::class);
         
