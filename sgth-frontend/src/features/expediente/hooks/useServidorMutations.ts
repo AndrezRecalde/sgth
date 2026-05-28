@@ -5,6 +5,7 @@ import React from 'react'
 import type { AxiosError } from 'axios'
 import { expedienteService } from '../services/expedienteService'
 import type { ServidorFormData } from '../schemas/servidor.schema'
+import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { ApiResponse } from '@/types/api'
 
 export function useServidorMutations() {
@@ -23,7 +24,7 @@ export function useServidorMutations() {
   }
 
   const crear = useMutation({
-    mutationFn: (data: ServidorFormData) =>
+    mutationFn: (data: ServidorBasicoFormData) =>
       expedienteService.crear(data),
     onSuccess: () => {
       notifications.show({
@@ -38,8 +39,8 @@ export function useServidorMutations() {
   })
 
   const editar = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ServidorFormData }) =>
-      expedienteService.editar(id, data),
+    mutationFn: ({ id, data }: { id: number; data: ServidorBasicoFormData }) =>
+      expedienteService.editar(id, data as any),
     onSuccess: (_, { id }) => {
       notifications.show({
         title: 'Expediente actualizado',

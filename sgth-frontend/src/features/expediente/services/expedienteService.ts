@@ -10,6 +10,7 @@ import type {
   DocumentoServidor,
 } from '@/types/api'
 import type { ServidorFormData } from '../schemas/servidor.schema'
+import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 
 export const expedienteService = {
   // ── Servidores ──────────────────────────────────
@@ -28,9 +29,9 @@ export const expedienteService = {
       '/expediente/servidores/basico', data
     ).then(r => r.data.datos),
 
-  crear: (data: ServidorFormData) =>
+  crear: (data: ServidorBasicoFormData | Record<string, unknown>) =>
     api.post<ApiResponse<Servidor>>(
-      '/expediente/servidores', data
+      '/expediente/servidores/basico', data
     ).then(r => r.data.datos),
 
   editar: (id: number, data: Partial<ServidorFormData>) =>
