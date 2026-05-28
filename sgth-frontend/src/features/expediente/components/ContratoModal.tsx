@@ -26,16 +26,31 @@ import type { UnidadConRelaciones, PuestoConRelaciones, ContratoConRelaciones } 
 import { useState, useEffect } from "react";
 
 const TIPO_OPTIONS = [
-  { value: "nombramiento_permanente", label: "Nombramiento permanente" },
-  { value: "nombramiento_provisional", label: "Nombramiento provisional" },
-  { value: "servicios_ocasionales", label: "Servicios ocasionales" },
   {
-    value: "libre_nombramiento_remocion",
-    label: "Libre nombramiento y remoción",
+    value: 'nombramiento_permanente',
+    label: 'Nombramiento Permanente',
   },
-  { value: "codigo_trabajo", label: "Código del Trabajo" },
-  { value: "servicios_profesionales", label: "Servicios profesionales" },
-];
+  {
+    value: 'nombramiento_provisional',
+    label: 'Nombramiento Provisional',
+  },
+  {
+    value: 'servicios_ocasionales',
+    label: 'Contrato de Servicios Ocasionales',
+  },
+  {
+    value: 'libre_nombramiento_remocion',
+    label: 'Libre Nombramiento y Remoción',
+  },
+  {
+    value: 'codigo_trabajo',
+    label: 'Código del Trabajo',
+  },
+  {
+    value: 'servicios_profesionales',
+    label: 'Servicios Profesionales',
+  },
+]
 
 const ESTADO_OPTIONS = [
   { value: "vigente", label: "Vigente" },

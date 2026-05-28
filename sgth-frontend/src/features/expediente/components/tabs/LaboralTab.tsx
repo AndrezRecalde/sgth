@@ -27,12 +27,12 @@ const ESTADO_LABELS: Record<EstadoContrato, string> = {
 }
 
 const NOMBRAMIENTO_LABELS: Record<string, string> = {
-  nombramiento_permanente:     'Nombramiento permanente',
-  nombramiento_provisional:    'Nombramiento provisional',
-  servicios_ocasionales:       'Servicios ocasionales',
-  libre_nombramiento_remocion: 'Libre nombramiento',
+  nombramiento_permanente:     'Nombramiento Permanente',
+  nombramiento_provisional:    'Nombramiento Provisional',
+  servicios_ocasionales:       'Servicios Ocasionales',
+  libre_nombramiento_remocion: 'Libre Nombramiento y Remoción',
   codigo_trabajo:              'Código del Trabajo',
-  servicios_profesionales:     'Servicios profesionales',
+  servicios_profesionales:     'Servicios Profesionales',
 }
 
 function formatFecha(fecha?: string | null): string {

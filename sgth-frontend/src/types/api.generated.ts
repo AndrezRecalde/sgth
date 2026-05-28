@@ -1122,7 +1122,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        put: operations["declaraciones.update"];
         post?: never;
         delete: operations["declaracionJuramentada.destroy"];
         options?: never;
@@ -7676,7 +7676,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["ContratoServidor"][];
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contratos del servidor.";
+                        datos: components["schemas"]["ContratoServidor"][];
+                        meta: null;
                     };
                 };
             };
@@ -7704,9 +7708,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Contrato registrado con éxito.";
-                        data: components["schemas"]["ContratoServidor"];
+                        mensaje: "Contrato registrado con éxito.";
+                        datos: components["schemas"]["ContratoServidor"];
+                        meta: null;
                     };
                 };
             };
@@ -7764,9 +7770,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Contrato actualizado con éxito.";
-                        data: components["schemas"]["ContratoServidor"];
+                        mensaje: "Contrato actualizado con éxito.";
+                        datos: components["schemas"]["ContratoServidor"];
+                        meta: null;
                     };
                 };
             };
@@ -7794,8 +7802,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Contrato eliminado con éxito.";
+                        mensaje: "Contrato eliminado con éxito.";
+                        datos: null;
+                        meta: null;
                     };
                 };
             };
@@ -8313,6 +8324,40 @@ export interface operations {
                         /** @constant */
                         mensaje: "Declaración juramentada registrada.";
                         datos: components["schemas"]["DeclaracionJuramentada"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "declaraciones.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreDeclaracionJuramentadaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Declaración actualizada.";
+                        datos: string;
                         meta: null;
                     };
                 };
@@ -9670,7 +9715,13 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EntidadFinanciera"][];
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Entidades financieras.";
+                        datos: components["schemas"]["EntidadFinanciera"][];
+                        meta: null;
+                    };
                 };
             };
             401: components["responses"]["AuthenticationException"];
