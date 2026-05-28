@@ -114,6 +114,12 @@ export const expedienteService = {
       `/expediente/servidores/${servidorId}/declaraciones-juramentadas`, data
     ).then(r => r.data.datos),
 
+  editarDeclaracion: (servidorId: number, id: number, data: Record<string, unknown>) =>
+    api.put<ApiResponse<DeclaracionJuramentada>>(
+      `/expediente/servidores/${servidorId}/declaraciones-juramentadas/${id}`,
+      data
+    ).then(r => r.data.datos),
+
   eliminarDeclaracion: (servidorId: number, id: number) =>
     api.delete<ApiResponse<void>>(
       `/expediente/servidores/${servidorId}/declaraciones-juramentadas/${id}`

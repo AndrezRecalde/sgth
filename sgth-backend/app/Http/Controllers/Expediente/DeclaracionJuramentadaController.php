@@ -48,6 +48,38 @@ class DeclaracionJuramentadaController extends Controller
         return ApiResponse::created($declaracion, 'Declaración juramentada registrada.');
     }
 
+    public function update(
+        StoreDeclaracionJuramentadaRequest $request,
+        int $servidorId,
+        int $id
+    ): JsonResponse {
+        $declaracion = DeclaracionJuramentada::where('servidor_id', $servidorId)
+            ->findOrFail($id);
+
+        $datos = $request->validated();
+
+        if ($request->hasFile('documento')) {
+            // Eliminar documento anterior si existe
+            if ($declaracion->documento_ruta) {
+                Storage::disk('local')->delete($declaracion->documento_ruta);
+            }
+            $servidor = Servidor::findOrFail($servidorId);
+            $archivo  = $request->file('documento');
+            $ruta = $archivo->storeAs(
+                "expedientes/{$servidor->cedula}/declaraciones",
+                time() . '_' . $archivo->getClientOriginalName(),
+                'local'
+            );
+            $datos['documento_ruta']           = $ruta;
+            $datos['documento_nombre_archivo'] = $archivo->getClientOriginalName();
+        }
+
+        unset($datos['documento']);
+        $declaracion->update($datos);
+
+        return ApiResponse::ok($declaracion->fresh(), 'Declaración actualizada.');
+    }
+
     public function destroy(int $servidorId, int $id): JsonResponse
     {
         $declaracion = DeclaracionJuramentada::where('servidor_id', $servidorId)

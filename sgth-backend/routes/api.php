@@ -155,6 +155,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::delete('declaraciones-juramentadas/{id}', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'destroy']);
                 Route::get('declaraciones-juramentadas/exportar', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'exportar']);
                 Route::get('declaraciones-juramentadas/{id}/documento', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'verDocumento']);
+                Route::put('declaraciones-juramentadas/{id}', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'update'])->name('declaraciones.update');
 
                 // Beneficiarios (Dispensario) gestionados por UATH
                 Route::prefix('beneficiarios')->group(function () {
