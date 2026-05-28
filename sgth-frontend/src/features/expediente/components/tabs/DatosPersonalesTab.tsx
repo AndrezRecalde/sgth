@@ -102,8 +102,6 @@ export function DatosPersonalesTab({ servidor }: Props) {
 
       <Divider label="Domicilio" labelPosition="left" my="xs" />
       <Campo label="Dirección" value={servidor.direccion_domicilio} />
-      <Campo label="Provincia" value={servidor.provincia_domicilio} />
-      <Campo label="Ciudad" value={servidor.ciudad_domicilio} />
 
       <Divider label="Condición" labelPosition="left" my="xs" />
       <Group>

@@ -3,13 +3,11 @@
 import { useState } from 'react'
 import {
   Stack, Group, Text, Badge, Button,
-  Skeleton, Grid, Divider, ThemeIcon,
+  Skeleton, Grid,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconEdit, IconTrash, IconBriefcase,
-  IconBuilding, IconId, IconCalendar,
-  IconHash, IconShieldCheck,
 } from '@tabler/icons-react'
 import { DataTable } from 'mantine-datatable'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -53,15 +51,11 @@ interface DetalleProps {
 }
 
 function ContratoDetalle({ contrato }: DetalleProps) {
-  const cargo  = (contrato.puesto as {
+  const cargo = (contrato.puesto as {
     cargo?: {
-      nombre?:               string
+      nombre?:                string
       denominacion_generica?: string
-      clasificacion_personal?: string
     } | null
-    es_jefe?:        boolean
-    rol_puesto?:     string
-    regimen_laboral?: string
   })?.cargo
 
   const unidad = (contrato.unidad_administrativa as {
@@ -70,121 +64,59 @@ function ContratoDetalle({ contrato }: DetalleProps) {
 
   return (
     <Stack
-      gap="sm"
+      gap={0}
       p="md"
       style={{
         background: 'var(--mantine-color-default-hover)',
         borderTop:  '1px solid var(--mantine-color-default-border)',
       }}
     >
-      <Divider
-        label="Información del puesto y contrato"
-        labelPosition="left"
-      />
       <Grid>
-        {/* Cargo */}
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Group gap="xs" align="flex-start">
-            <ThemeIcon size="sm" variant="light" color="emerald" radius="md">
-              <IconId size={12} />
-            </ThemeIcon>
-            <div>
-              <Text size="xs" c="dimmed">Cargo</Text>
-              <Text size="sm" fw={600}>
-                {cargo?.nombre ?? '—'}
-              </Text>
-              {cargo?.denominacion_generica && (
-                <Text size="xs" c="dimmed">
-                  {cargo.denominacion_generica}
-                </Text>
-              )}
-            </div>
-          </Group>
+          <Text size="xs" c="dimmed" mb={2}>Cargo</Text>
+          <Text size="sm" fw={500}>{cargo?.nombre ?? '—'}</Text>
+          {cargo?.denominacion_generica && (
+            <Text size="xs" c="dimmed">{cargo.denominacion_generica}</Text>
+          )}
         </Grid.Col>
 
-        {/* Unidad */}
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Group gap="xs" align="flex-start">
-            <ThemeIcon size="sm" variant="light" color="blue" radius="md">
-              <IconBuilding size={12} />
-            </ThemeIcon>
-            <div>
-              <Text size="xs" c="dimmed">Unidad administrativa</Text>
-              <Text size="sm" fw={600}>{unidad ?? '—'}</Text>
-            </div>
-          </Group>
+          <Text size="xs" c="dimmed" mb={2}>Unidad administrativa</Text>
+          <Text size="sm" fw={500}>{unidad ?? '—'}</Text>
         </Grid.Col>
 
-        {/* Periodo */}
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Group gap="xs" align="flex-start">
-            <ThemeIcon size="sm" variant="light" color="orange" radius="md">
-              <IconCalendar size={12} />
-            </ThemeIcon>
-            <div>
-              <Text size="xs" c="dimmed">Período</Text>
-              <Text size="sm" fw={600}>
-                {formatFecha(contrato.fecha_inicio)}
-                {' → '}
-                {contrato.fecha_fin
-                  ? formatFecha(contrato.fecha_fin)
-                  : 'Indefinido'
-                }
-              </Text>
-            </div>
-          </Group>
+          <Text size="xs" c="dimmed" mb={2}>Período</Text>
+          <Text size="sm" fw={500}>
+            {formatFecha(contrato.fecha_inicio)}
+            {' → '}
+            {contrato.fecha_fin
+              ? formatFecha(contrato.fecha_fin)
+              : 'Indefinido'
+            }
+          </Text>
         </Grid.Col>
 
-        {/* Número contrato */}
-        {contrato.numero_contrato && (
-          <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Group gap="xs" align="flex-start">
-              <ThemeIcon size="sm" variant="light" color="gray" radius="md">
-                <IconHash size={12} />
-              </ThemeIcon>
-              <div>
-                <Text size="xs" c="dimmed">Número de contrato</Text>
-                <Text size="sm" fw={600} ff="monospace">
-                  {contrato.numero_contrato}
-                </Text>
-              </div>
-            </Group>
-          </Grid.Col>
-        )}
+        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+          <Text size="xs" c="dimmed" mb={2}>Número de contrato</Text>
+          <Text size="sm" fw={500} ff="monospace">
+            {contrato.numero_contrato ?? '—'}
+          </Text>
+        </Grid.Col>
 
-        {/* Resolución */}
-        {contrato.resolucion_numero && (
-          <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Group gap="xs" align="flex-start">
-              <ThemeIcon size="sm" variant="light" color="violet" radius="md">
-                <IconShieldCheck size={12} />
-              </ThemeIcon>
-              <div>
-                <Text size="xs" c="dimmed">Número de resolución</Text>
-                <Text size="sm" fw={600} ff="monospace">
-                  {contrato.resolucion_numero}
-                </Text>
-              </div>
-            </Group>
-          </Grid.Col>
-        )}
+        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+          <Text size="xs" c="dimmed" mb={2}>Número de resolución</Text>
+          <Text size="sm" fw={500} ff="monospace">
+            {contrato.resolucion_numero ?? '—'}
+          </Text>
+        </Grid.Col>
 
-        {/* Código biométrico */}
-        {contrato.codigo_marcacion && (
-          <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Group gap="xs" align="flex-start">
-              <ThemeIcon size="sm" variant="light" color="grape" radius="md">
-                <IconId size={12} />
-              </ThemeIcon>
-              <div>
-                <Text size="xs" c="dimmed">Código biométrico</Text>
-                <Text size="sm" fw={600} ff="monospace">
-                  {contrato.codigo_marcacion}
-                </Text>
-              </div>
-            </Group>
-          </Grid.Col>
-        )}
+        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+          <Text size="xs" c="dimmed" mb={2}>Código biométrico</Text>
+          <Text size="sm" fw={500} ff="monospace">
+            {contrato.codigo_marcacion ?? '—'}
+          </Text>
+        </Grid.Col>
       </Grid>
     </Stack>
   )
