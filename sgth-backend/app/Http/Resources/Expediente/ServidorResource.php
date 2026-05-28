@@ -28,6 +28,7 @@ class ServidorResource extends JsonResource
         // Incorporar relaciones si fueron cargadas
         $datos['unidad_administrativa'] = $this->whenLoaded('unidadAdministrativa');
         $datos['puesto'] = $this->whenLoaded('puesto');
+        $datos['contrato_vigente'] = $this->whenLoaded('contratoVigente');
         $datos['user'] = $this->whenLoaded('user');
         $datos['documentos'] = DocumentoServidorResource::collection($this->whenLoaded('documentos'));
         $datos['movimientos'] = $this->whenLoaded('movimientos'); // Resource genérico o matriz directa

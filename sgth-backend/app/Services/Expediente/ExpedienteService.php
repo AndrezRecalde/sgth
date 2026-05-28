@@ -125,7 +125,7 @@ class ExpedienteService implements ExpedienteServiceInterface
     public function listarServidores(array $filtros): mixed
     {
         $query = Servidor::query()
-            ->with(['unidadAdministrativa', 'puesto.cargo']);
+            ->with(['unidadAdministrativa', 'puesto.cargo', 'contratoVigente']);
 
         // Búsqueda por nombre o cédula
         if (!empty($filtros['search'])) {

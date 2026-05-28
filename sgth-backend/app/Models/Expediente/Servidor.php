@@ -171,18 +171,13 @@ class Servidor extends Model
         return $this->hasMany(DeclaracionJuramentada::class);
     }
 
-    public function contratoVigente()
+    public function contratoVigente(): HasOne
     {
-        return $this->hasOne(ContratoServidor::class)->ofMany(
-            ['fecha_inicio' => 'max', 'id' => 'max'],
-            function ($query) {
-                $query->where('estado', 'vigente')
-                      ->where(function ($q) {
-                          $q->whereNull('fecha_fin')
-                            ->orWhere('fecha_fin', '>=', now()->toDateString());
-                      });
-            }
-        );
+        return $this->hasOne(ContratoServidor::class)
+            ->where('estado', 'vigente')
+            ->orderByDesc('fecha_inicio')
+            ->with(['puesto.cargo', 'unidadAdministrativa'])
+            ->limit(1);
     }
 
     public function codigoMarcacionVigente(): ?string
