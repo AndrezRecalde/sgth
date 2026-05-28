@@ -62,7 +62,7 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
     if (initialValues) {
       reset({
         tipo_estudio:         initialValues.tipo_estudio ?? 'estudio',
-        nivel_estudio:        (initialValues.nivel_estudio as any) ?? 'tercer_nivel',
+        nivel_estudio:        initialValues.nivel_estudio,
         nacionalidad_estudio: initialValues.nacionalidad_estudio ?? 'nacional',
         institucion:          initialValues.institucion ?? '',
         fecha_inicio:         initialValues.fecha_inicio ? initialValues.fecha_inicio.split('T')[0] : '',
