@@ -1,8 +1,7 @@
-'use client'
-
+import { useState } from 'react'
 import { Stack, Group, Text, Badge, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconTrash, IconUsers } from '@tabler/icons-react'
+import { IconPlus, IconTrash, IconUsers, IconEdit } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -21,6 +20,7 @@ interface Props { servidorId: number }
 
 export function FamiliaTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
+  const [editItem, setEditItem] = useState<CargaFamiliar | null>(null)
   const { data: cargas = [], isLoading } = useCargasFamiliares(servidorId)
   const { eliminar } = useCargaFamiliarMutations(servidorId)
 
@@ -77,6 +77,12 @@ export function FamiliaTab({ servidorId }: Props) {
       render: (item) => (
         <TableActions actions={[
           {
+            label: 'Editar',
+            icon: <IconEdit size={14} />,
+            color: 'blue',
+            onClick: () => { setEditItem(item); open() },
+          },
+          {
             label: 'Eliminar',
             icon: <IconTrash size={14} />,
             color: 'red',
@@ -114,8 +120,9 @@ export function FamiliaTab({ servidorId }: Props) {
       )}
       <CargaFamiliarModal
         opened={opened}
-        onClose={close}
+        onClose={() => { setEditItem(null); close() }}
         servidorId={servidorId}
+        initialValues={editItem}
       />
     </Stack>
   )

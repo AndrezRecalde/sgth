@@ -4,6 +4,7 @@ import { Modal, Tabs, Button, Group } from '@mantine/core'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconUser, IconPhone } from '@tabler/icons-react'
+import { useEffect } from 'react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useServidorMutations } from '../hooks/useServidorMutations'
 import { ServidorFormPersonal } from './ServidorFormPersonal'
@@ -56,6 +57,42 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
       ciudad_domicilio:      servidor?.ciudad_domicilio ?? '',
     },
   })
+
+  useEffect(() => {
+    if (servidor) {
+      form.reset({
+        nombre:           servidor.nombre  ?? '',
+        segundo_nombre:   servidor.segundo_nombre  ?? '',
+        apellido:         servidor.apellido ?? '',
+        segundo_apellido: servidor.segundo_apellido ?? '',
+        cedula:           servidor.cedula ?? '',
+        fecha_nacimiento: servidor.fecha_nacimiento
+          ? servidor.fecha_nacimiento.split('T')[0] : '',
+        genero:           (servidor.genero as ServidorBasicoFormData['genero'])
+          ?? 'masculino',
+        estado_civil: (servidor.estado_civil as ServidorBasicoFormData['estado_civil'])
+          ?? 'soltero',
+        tipo_sangre:             (servidor.tipo_sangre as ServidorBasicoFormData['tipo_sangre']) ?? null,
+        es_extranjero:           servidor.es_extranjero ?? false,
+        provincia_nacimiento_id: servidor.provincia_nacimiento_id ?? null,
+        canton_nacimiento_id:    servidor.canton_nacimiento_id ?? null,
+        nacionalidad:            servidor.nacionalidad ?? '',
+        pais_origen:             servidor.pais_origen ?? '',
+        numero_papeleta_votacion: servidor.numero_papeleta_votacion ?? '',
+        pasaporte_numero:        servidor.pasaporte_numero ?? '',
+        tiene_discapacidad:            servidor.tiene_discapacidad ?? false,
+        tiene_enfermedad_catastrofica: servidor.tiene_enfermedad_catastrofica ?? false,
+        telefono_celular:      servidor.telefono_celular ?? '',
+        telefono_convencional: servidor.telefono_convencional ?? '',
+        correo_personal:       servidor.correo_personal ?? '',
+        direccion_domicilio:   servidor.direccion_domicilio ?? '',
+        provincia_domicilio:   servidor.provincia_domicilio ?? '',
+        ciudad_domicilio:      servidor.ciudad_domicilio ?? '',
+      })
+    } else {
+      form.reset()
+    }
+  }, [servidor])
 
   const handleClose = () => {
     form.reset()

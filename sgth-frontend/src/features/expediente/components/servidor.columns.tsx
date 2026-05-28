@@ -33,13 +33,21 @@ export const getServidorColumns = (
     ),
   },
   {
-    accessor: 'nombres',
+    accessor: 'nombre',
     title: 'Nombre completo',
-    render: (row) => (
-      <Text size="sm" fw={500}>
-        {`${row.apellidos ?? ''} ${row.nombres ?? ''}`.trim() || '-'}
-      </Text>
-    ),
+    render: (row) => {
+      const nombre = [
+        row.apellido,
+        row.segundo_apellido,
+        row.nombre,
+        row.segundo_nombre,
+      ].filter(Boolean).join(' ')
+      return (
+        <Text size="sm" fw={500}>
+          {nombre || '-'}
+        </Text>
+      )
+    },
   },
   {
     accessor: 'unidad_administrativa',

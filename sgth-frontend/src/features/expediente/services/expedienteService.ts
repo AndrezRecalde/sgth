@@ -56,7 +56,7 @@ export const expedienteService = {
   listarHistorialAcademico: (servidorId: number) =>
     api.get<ApiResponse<HistorialAcademicoServidor[]>>(
       `/expediente/servidores/${servidorId}/historial-academico`
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   crearHistorialAcademico: (
     servidorId: number,
@@ -64,6 +64,15 @@ export const expedienteService = {
   ) =>
     api.post<ApiResponse<HistorialAcademicoServidor>>(
       `/expediente/servidores/${servidorId}/historial-academico`, data
+    ).then(r => r.data.datos),
+
+  editarHistorialAcademico: (
+    servidorId: number,
+    id: number,
+    data: Record<string, unknown>
+  ) =>
+    api.put<ApiResponse<HistorialAcademicoServidor>>(
+      `/expediente/servidores/${servidorId}/historial-academico/${id}`, data
     ).then(r => r.data.datos),
 
   eliminarHistorialAcademico: (servidorId: number, id: number) =>
@@ -75,11 +84,16 @@ export const expedienteService = {
   listarCargasFamiliares: (servidorId: number) =>
     api.get<ApiResponse<CargaFamiliar[]>>(
       `/expediente/servidores/${servidorId}/cargas-familiares`
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   crearCargaFamiliar: (servidorId: number, data: Record<string, unknown>) =>
     api.post<ApiResponse<CargaFamiliar>>(
       `/expediente/servidores/${servidorId}/cargas-familiares`, data
+    ).then(r => r.data.datos),
+
+  editarCargaFamiliar: (servidorId: number, id: number, data: Record<string, unknown>) =>
+    api.put<ApiResponse<CargaFamiliar>>(
+      `/expediente/servidores/${servidorId}/cargas-familiares/${id}`, data
     ).then(r => r.data.datos),
 
   eliminarCargaFamiliar: (servidorId: number, id: number) =>
@@ -91,7 +105,7 @@ export const expedienteService = {
   listarDeclaraciones: (servidorId: number) =>
     api.get<ApiResponse<DeclaracionJuramentada[]>>(
       `/expediente/servidores/${servidorId}/declaraciones-juramentadas`
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   crearDeclaracion: (servidorId: number, data: Record<string, unknown>) =>
     api.post<ApiResponse<DeclaracionJuramentada>>(
@@ -113,7 +127,7 @@ export const expedienteService = {
   listarDiscapacidades: (servidorId: number) =>
     api.get<ApiResponse<DiscapacidadServidor[]>>(
       `/expediente/servidores/${servidorId}/discapacidades`
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   crearDiscapacidad: (servidorId: number, data: Record<string, unknown>) =>
     api.post<ApiResponse<DiscapacidadServidor>>(
@@ -129,7 +143,7 @@ export const expedienteService = {
   listarEnfermedades: (servidorId: number) =>
     api.get<ApiResponse<EnfermedadCatastroficaServidor[]>>(
       `/expediente/servidores/${servidorId}/enfermedades`
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   crearEnfermedad: (servidorId: number, data: Record<string, unknown>) =>
     api.post<ApiResponse<EnfermedadCatastroficaServidor>>(
@@ -145,7 +159,7 @@ export const expedienteService = {
   listarDocumentos: (servidorId: number) =>
     api.get<ApiResponse<DocumentoServidor[]>>(
       `/expediente/servidores/${servidorId}/documentos`
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   subirDocumento: (servidorId: number, formData: FormData) =>
     api.post<ApiResponse<DocumentoServidor>>(

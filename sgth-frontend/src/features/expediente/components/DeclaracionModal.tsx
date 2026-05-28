@@ -9,6 +9,8 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDeclaracionMutations } from '../hooks/useDeclaracionMutations'
 import { declaracionSchema, type DeclaracionFormData }
   from '../schemas/declaracion.schema'
+import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
 
 const TIPO_OPTIONS = [
   { value: 'ingreso',       label: 'Ingreso' },
@@ -20,6 +22,14 @@ interface Props {
   opened:     boolean
   onClose:    () => void
   servidorId: number
+}
+
+const toDate = (v?: string | null): Date | null =>
+  v ? new Date(v) : null
+const fromDate = (d: Date | string | null): string | null => {
+  if (!d) return null
+  const date = new Date(d)
+  return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
 }
 
 export function DeclaracionModal({ opened, onClose, servidorId }: Props) {
@@ -59,10 +69,22 @@ export function DeclaracionModal({ opened, onClose, servidorId }: Props) {
                 onChange={(v) => field.onChange(v ?? 'ingreso')}
                 error={errors.tipo_declaracion?.message} />
             )} />
-          <TextInput label="Fecha de declaración"
-            type="date" {...contained}
-            {...register('fecha_declaracion')}
-            error={errors.fecha_declaracion?.message} />
+          <Controller
+            name="fecha_declaracion"
+            control={control}
+            render={({ field }) => (
+              <DatePickerInput
+                label="Fecha de declaración"
+                placeholder="Seleccionar fecha"
+                valueFormat="YYYY-MM-DD"
+                clearable
+                {...contained}
+                value={toDate(field.value)}
+                onChange={(d) => field.onChange(fromDate(d))}
+                error={errors.fecha_declaracion?.message}
+              />
+            )}
+          />
           <TextInput label="Código de barras / Número"
             placeholder="Número de la declaración"
             {...contained} {...register('codigo_barras')}

@@ -10,7 +10,7 @@ export const cuentaBancariaService = {
   listar: (servidorId: number) =>
     api.get<ApiResponse<CuentaBancariaServidor[]>>(
       `/expediente/servidores/${servidorId}/cuentas-bancarias`
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   crear: (servidorId: number, data: CuentaBancariaFormData) =>
     api.post<ApiResponse<CuentaBancariaServidor>>(
@@ -30,5 +30,5 @@ export const cuentaBancariaService = {
   entidadesFinancieras: () =>
     api.get<ApiResponse<EntidadFinanciera[]>>(
       '/catalogos/entidades-financieras'
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 }

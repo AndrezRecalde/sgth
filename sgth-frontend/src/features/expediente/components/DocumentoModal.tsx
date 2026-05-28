@@ -11,6 +11,8 @@ import { IconUpload, IconX, IconFile } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDocumentoMutations } from '../hooks/useDocumentoMutations'
+import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
 
 const TIPO_OPTIONS = [
   { group: 'Identificación', items: [
@@ -47,6 +49,14 @@ interface Props {
   opened:     boolean
   onClose:    () => void
   servidorId: number
+}
+
+const toDate = (v?: string | null): Date | null =>
+  v ? new Date(v) : null
+const fromDate = (d: Date | string | null): string | null => {
+  if (!d) return null
+  const date = new Date(d)
+  return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
 }
 
 export function DocumentoModal({ opened, onClose, servidorId }: Props) {
@@ -156,11 +166,23 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
             {...contained} {...register('descripcion')}
             error={errors.descripcion?.message} />
 
-          <TextInput label="Fecha de vencimiento"
-            type="date" {...contained}
-            {...register('fecha_vencimiento')}
-            description="Útil para pasaportes y documentos con caducidad"
-            error={errors.fecha_vencimiento?.message} />
+          <Controller
+            name="fecha_vencimiento"
+            control={control}
+            render={({ field }) => (
+              <DatePickerInput
+                label="Fecha de vencimiento"
+                placeholder="Seleccionar fecha"
+                valueFormat="YYYY-MM-DD"
+                clearable
+                {...contained}
+                value={toDate(field.value)}
+                onChange={(d) => field.onChange(fromDate(d))}
+                description="Útil para pasaportes y documentos con caducidad"
+                error={errors.fecha_vencimiento?.message}
+              />
+            )}
+          />
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose}>Cancelar</Button>

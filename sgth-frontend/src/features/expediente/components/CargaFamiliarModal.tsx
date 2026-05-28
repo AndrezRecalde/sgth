@@ -3,11 +3,15 @@
 import { Modal, Button, Group, Stack, TextInput, Select, Switch, Textarea } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCargaFamiliarMutations } from '../hooks/useCargaFamiliarMutations'
 import { cargaFamiliarSchema, type CargaFamiliarFormData }
   from '../schemas/cargaFamiliar.schema'
+import type { CargaFamiliar } from '@/types/api'
+import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
 
 const PARENTESCO_OPTIONS = [
   { value: 'conyugue', label: 'Cónyuge / Conviviente' },
@@ -18,12 +22,22 @@ interface Props {
   opened:     boolean
   onClose:    () => void
   servidorId: number
+  initialValues?: CargaFamiliar | null
 }
 
-export function CargaFamiliarModal({ opened, onClose, servidorId }: Props) {
+const toDate = (v?: string | null): Date | null =>
+  v ? new Date(v) : null
+const fromDate = (d: Date | string | null): string | null => {
+  if (!d) return null
+  const date = new Date(d)
+  return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
+}
+
+export function CargaFamiliarModal({ opened, onClose, servidorId, initialValues }: Props) {
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
-  const { crear }  = useCargaFamiliarMutations(servidorId)
+  const { crear, editar }  = useCargaFamiliarMutations(servidorId)
+  const isEditing = !!initialValues
 
   const { register, control, handleSubmit, reset, formState: { errors } } =
     useForm<CargaFamiliarFormData>({
@@ -39,19 +53,47 @@ export function CargaFamiliarModal({ opened, onClose, servidorId }: Props) {
       },
     })
 
+  useEffect(() => {
+    if (initialValues) {
+      reset({
+        nombres:                       initialValues.nombres ?? '',
+        apellidos:                     initialValues.apellidos ?? '',
+        parentesco:                    initialValues.parentesco ?? 'hijo',
+        fecha_nacimiento:              initialValues.fecha_nacimiento ? initialValues.fecha_nacimiento.split('T')[0] : '',
+        persona_con_discapacidad:      initialValues.persona_con_discapacidad ?? false,
+        posee_enfermedad_catastrofica: initialValues.posee_enfermedad_catastrofica ?? false,
+        observaciones:                 initialValues.observaciones ?? '',
+      })
+    } else {
+      reset({
+        nombres:                       '',
+        apellidos:                     '',
+        parentesco:                    'hijo',
+        fecha_nacimiento:              '',
+        persona_con_discapacidad:      false,
+        posee_enfermedad_catastrofica: false,
+        observaciones:                 '',
+      })
+    }
+  }, [initialValues, reset])
+
   const onSubmit = (values: CargaFamiliarFormData) => {
     const payload = {
       ...values,
       observaciones: values.observaciones || null,
     }
-    crear.mutateAsync(payload as Record<string, unknown>)
+    const promise = initialValues
+      ? editar.mutateAsync({ id: initialValues.id, data: payload as Record<string, unknown> })
+      : crear.mutateAsync(payload as Record<string, unknown>)
+
+    promise
       .then(() => { reset(); onClose() })
       .catch(() => {})
   }
 
   return (
     <Modal opened={opened} onClose={onClose}
-      title="Agregar carga familiar"
+      title={isEditing ? "Editar carga familiar" : "Agregar carga familiar"}
       size="md" fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -74,10 +116,22 @@ export function CargaFamiliarModal({ opened, onClose, servidorId }: Props) {
                 error={errors.parentesco?.message} />
             )} />
 
-          <TextInput label="Fecha de nacimiento"
-            type="date" {...contained}
-            {...register('fecha_nacimiento')}
-            error={errors.fecha_nacimiento?.message} />
+          <Controller
+            name="fecha_nacimiento"
+            control={control}
+            render={({ field }) => (
+              <DatePickerInput
+                label="Fecha de nacimiento"
+                placeholder="Seleccionar fecha"
+                valueFormat="YYYY-MM-DD"
+                clearable
+                {...contained}
+                value={toDate(field.value)}
+                onChange={(d) => field.onChange(fromDate(d))}
+                error={errors.fecha_nacimiento?.message}
+              />
+            )}
+          />
 
           <Controller name="persona_con_discapacidad" control={control}
             render={({ field }) => (
@@ -104,8 +158,8 @@ export function CargaFamiliarModal({ opened, onClose, servidorId }: Props) {
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>Cancelar</Button>
             <Button type="submit" color="emerald" variant="light"
-              loading={crear.isPending}>
-              Agregar familiar
+              loading={initialValues ? editar.isPending : crear.isPending}>
+              {isEditing ? "Guardar cambios" : "Agregar familiar"}
             </Button>
           </Group>
         </Stack>

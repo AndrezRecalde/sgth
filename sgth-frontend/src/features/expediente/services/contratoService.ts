@@ -6,7 +6,7 @@ export const contratoService = {
   listar: (servidorId: number, params?: ContratoParams) =>
     api.get<ApiResponse<ContratoServidor[]>>(
       `/expediente/servidores/${servidorId}/contratos`, { params }
-    ).then(r => r.data.datos),
+    ).then(r => r.data.datos ?? []),
 
   crear: (servidorId: number, data: ContratoFormData) =>
     api.post<ApiResponse<ContratoServidor>>(

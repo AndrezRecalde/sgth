@@ -31,6 +31,20 @@ export function useCargaFamiliarMutations(servidorId: number) {
     onError,
   })
 
+  const editar = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      expedienteService.editarCargaFamiliar(servidorId, id, data),
+    onSuccess: () => {
+      notifications.show({
+        title: 'Carga familiar actualizada', color: 'emerald',
+        message: 'La carga familiar fue actualizada.',
+        icon: React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
   const eliminar = useMutation({
     mutationFn: (id: number) =>
       expedienteService.eliminarCargaFamiliar(servidorId, id),
@@ -45,5 +59,5 @@ export function useCargaFamiliarMutations(servidorId: number) {
     onError,
   })
 
-  return { crear, eliminar }
+  return { crear, editar, eliminar }
 }

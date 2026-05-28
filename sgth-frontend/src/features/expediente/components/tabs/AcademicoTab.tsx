@@ -1,8 +1,7 @@
-'use client'
-
+import { useState } from 'react'
 import { Stack, Group, Text, Badge, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconTrash, IconSchool } from '@tabler/icons-react'
+import { IconPlus, IconTrash, IconSchool, IconEdit } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -16,6 +15,7 @@ interface Props { servidorId: number }
 
 export function AcademicoTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
+  const [editItem, setEditItem] = useState<HistorialAcademicoServidor | null>(null)
   const { data: historial = [], isLoading } = useHistorialAcademico(servidorId)
   const { eliminar } = useHistorialAcademicoMutations(servidorId)
 
@@ -88,6 +88,12 @@ export function AcademicoTab({ servidorId }: Props) {
       render: (item) => (
         <TableActions actions={[
           {
+            label: 'Editar',
+            icon: <IconEdit size={14} />,
+            color: 'blue',
+            onClick: () => { setEditItem(item); open() },
+          },
+          {
             label: 'Eliminar',
             icon: <IconTrash size={14} />,
             color: 'red',
@@ -125,8 +131,9 @@ export function AcademicoTab({ servidorId }: Props) {
       )}
       <HistorialAcademicoModal
         opened={opened}
-        onClose={close}
+        onClose={() => { setEditItem(null); close() }}
         servidorId={servidorId}
+        initialValues={editItem}
       />
     </Stack>
   )

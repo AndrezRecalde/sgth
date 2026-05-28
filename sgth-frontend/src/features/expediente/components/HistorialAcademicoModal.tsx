@@ -3,11 +3,13 @@
 import { Modal, Button, Group, Stack, TextInput, Select } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useHistorialAcademicoMutations } from '../hooks/useHistorialAcademicoMutations'
 import { historialAcademicoSchema, type HistorialAcademicoFormData }
   from '../schemas/historialAcademico.schema'
+import type { HistorialAcademicoServidor } from '@/types/api'
 
 const TIPO_OPTIONS = [
   { value: 'estudio',      label: 'Título Académico' },
@@ -30,12 +32,14 @@ interface Props {
   opened:     boolean
   onClose:    () => void
   servidorId: number
+  initialValues?: HistorialAcademicoServidor | null
 }
 
-export function HistorialAcademicoModal({ opened, onClose, servidorId }: Props) {
+export function HistorialAcademicoModal({ opened, onClose, servidorId, initialValues }: Props) {
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
-  const { crear }  = useHistorialAcademicoMutations(servidorId)
+  const { crear, editar }  = useHistorialAcademicoMutations(servidorId)
+  const isEditing = !!initialValues
 
   const { register, control, handleSubmit, watch, reset, formState: { errors } } =
     useForm<HistorialAcademicoFormData>({
@@ -54,6 +58,32 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId }: Props) 
 
   const tipoEstudio = watch('tipo_estudio')
 
+  useEffect(() => {
+    if (initialValues) {
+      reset({
+        tipo_estudio:         initialValues.tipo_estudio ?? 'estudio',
+        nivel_estudio:        (initialValues.nivel_estudio as any) ?? 'tercer_nivel',
+        nacionalidad_estudio: initialValues.nacionalidad_estudio ?? 'nacional',
+        institucion:          initialValues.institucion ?? '',
+        fecha_inicio:         initialValues.fecha_inicio ? initialValues.fecha_inicio.split('T')[0] : '',
+        fecha_fin:            initialValues.fecha_fin ? initialValues.fecha_fin.split('T')[0] : '',
+        titulo_capacitacion:  initialValues.titulo_capacitacion ?? '',
+        codigo_senescyt:      initialValues.codigo_senescyt ?? '',
+      })
+    } else {
+      reset({
+        tipo_estudio:         'estudio',
+        nivel_estudio:        'tercer_nivel',
+        nacionalidad_estudio: 'nacional',
+        institucion:          '',
+        fecha_inicio:         '',
+        fecha_fin:            '',
+        titulo_capacitacion:  '',
+        codigo_senescyt:      '',
+      })
+    }
+  }, [initialValues, reset])
+
   const onSubmit = (values: HistorialAcademicoFormData) => {
     const payload = {
       ...values,
@@ -61,14 +91,18 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId }: Props) 
       fecha_fin: values.fecha_fin || null,
       codigo_senescyt: values.codigo_senescyt || null,
     }
-    crear.mutateAsync(payload as Record<string, unknown>)
+    const promise = initialValues
+      ? editar.mutateAsync({ id: initialValues.id, data: payload as Record<string, unknown> })
+      : crear.mutateAsync(payload as Record<string, unknown>)
+
+    promise
       .then(() => { reset(); onClose() })
       .catch(() => {})
   }
 
   return (
     <Modal opened={opened} onClose={onClose}
-      title="Registrar título o capacitación"
+      title={isEditing ? "Editar título o capacitación" : "Registrar título o capacitación"}
       size="md" fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -130,8 +164,8 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId }: Props) 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>Cancelar</Button>
             <Button type="submit" color="emerald" variant="light"
-              loading={crear.isPending}>
-              Registrar
+              loading={initialValues ? editar.isPending : crear.isPending}>
+              {isEditing ? "Guardar cambios" : "Registrar"}
             </Button>
           </Group>
         </Stack>

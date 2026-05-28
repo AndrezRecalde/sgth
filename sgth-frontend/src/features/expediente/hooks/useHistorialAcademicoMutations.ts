@@ -31,6 +31,20 @@ export function useHistorialAcademicoMutations(servidorId: number) {
     onError,
   })
 
+  const editar = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      expedienteService.editarHistorialAcademico(servidorId, id, data),
+    onSuccess: () => {
+      notifications.show({
+        title: 'Título actualizado', color: 'emerald',
+        message: 'El título académico fue actualizado.',
+        icon: React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
   const eliminar = useMutation({
     mutationFn: (id: number) =>
       expedienteService.eliminarHistorialAcademico(servidorId, id),
@@ -45,5 +59,5 @@ export function useHistorialAcademicoMutations(servidorId: number) {
     onError,
   })
 
-  return { crear, eliminar }
+  return { crear, editar, eliminar }
 }
