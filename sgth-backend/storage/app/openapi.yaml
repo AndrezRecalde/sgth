@@ -4956,15 +4956,28 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Contratos del servidor."
+                                        },
+                                        "datos": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/ContratoServidor"
                                             }
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -5008,17 +5021,25 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
                                             "type": "string",
                                             "const": "Contrato registrado con \u00e9xito."
                                         },
-                                        "data": {
+                                        "datos": {
                                             "$ref": "#/components/schemas/ContratoServidor"
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "message",
-                                        "data"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -5126,17 +5147,25 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
                                             "type": "string",
                                             "const": "Contrato actualizado con \u00e9xito."
                                         },
-                                        "data": {
+                                        "datos": {
                                             "$ref": "#/components/schemas/ContratoServidor"
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "message",
-                                        "data"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -5185,13 +5214,25 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
                                             "type": "string",
                                             "const": "Contrato eliminado con \u00e9xito."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "message"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
