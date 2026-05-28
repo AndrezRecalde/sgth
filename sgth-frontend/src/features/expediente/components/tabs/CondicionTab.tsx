@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Group, Text, Badge, Button, Divider } from '@mantine/core'
+import { Stack, Group, Text, Badge, Button, Divider, Skeleton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash, IconHeart, IconCheck, IconX } from '@tabler/icons-react'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
@@ -182,17 +182,19 @@ export function CondicionTab({
             Registrar
           </Button>
         </Group>
-        {!ldDisc && (discapacidades as DiscapacidadServidor[]).length === 0 ? (
-          <EmptyState
-            icon={IconHeart}
-            title="Sin discapacidades registradas"
-          />
-        ) : (
+        {ldDisc ? (
+          <Skeleton height={80} radius="md" />
+        ) : Array.isArray(discapacidades) && discapacidades.length > 0 ? (
           <SgthTable
             records={discapacidades as DiscapacidadServidor[]}
             columns={discColumns}
-            fetching={ldDisc}
+            fetching={false}
             minHeight={80}
+          />
+        ) : (
+          <EmptyState
+            icon={IconHeart}
+            title="Sin discapacidades registradas"
           />
         )}
       </div>
@@ -209,17 +211,19 @@ export function CondicionTab({
             Registrar
           </Button>
         </Group>
-        {!ldEnf && (enfermedades as EnfermedadCatastroficaServidor[]).length === 0 ? (
-          <EmptyState
-            icon={IconHeart}
-            title="Sin enfermedades registradas"
-          />
-        ) : (
+        {ldEnf ? (
+          <Skeleton height={80} radius="md" />
+        ) : Array.isArray(enfermedades) && enfermedades.length > 0 ? (
           <SgthTable
             records={enfermedades as EnfermedadCatastroficaServidor[]}
             columns={enfColumns}
-            fetching={ldEnf}
+            fetching={false}
             minHeight={80}
+          />
+        ) : (
+          <EmptyState
+            icon={IconHeart}
+            title="Sin enfermedades registradas"
           />
         )}
       </div>
