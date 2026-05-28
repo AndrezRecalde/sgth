@@ -17,6 +17,11 @@ export const cuentaBancariaService = {
       `/expediente/servidores/${servidorId}/cuentas-bancarias`, data
     ).then(r => r.data.datos),
 
+  editar: (servidorId: number, id: number, data: Record<string, unknown>) =>
+    api.put<ApiResponse<CuentaBancariaServidor>>(
+      `/expediente/servidores/${servidorId}/cuentas-bancarias/${id}`, data
+    ).then(r => r.data.datos),
+
   setPrincipal: (servidorId: number, id: number, proposito: 'sueldo' | 'viatico') =>
     api.post<ApiResponse<void>>(
       `/expediente/servidores/${servidorId}/cuentas-bancarias/${id}/set-principal`,

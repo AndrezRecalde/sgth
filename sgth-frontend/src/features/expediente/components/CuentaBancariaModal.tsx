@@ -13,6 +13,10 @@ import {
   cuentaBancariaSchema,
   type CuentaBancariaFormData,
 } from '../schemas/cuentaBancaria.schema'
+import type { EntidadFinanciera, CuentaBancariaConRelaciones } from '@/types/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { cuentaBancariaService } from '../services/cuentaBancariaService'
 
 const TIPO_CUENTA_OPTIONS = [
   { value: 'ahorros',   label: 'Cuenta de ahorros' },
@@ -29,12 +33,14 @@ interface Props {
   opened:     boolean
   onClose:    () => void
   servidorId: number
+  initialValues?: CuentaBancariaConRelaciones | null
 }
 
-export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
+export function CuentaBancariaModal({ opened, onClose, servidorId, initialValues }: Props) {
   const { isMobile }  = useMobileBreakpoint()
   const contained     = useContainedInput()
   const { crear }     = useCuentaBancariaMutations(servidorId)
+  const qc            = useQueryClient()
   const { data: rawEntidades = [], isLoading: loadingEntidades } =
     useEntidadesFinancieras()
 
@@ -83,22 +89,62 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
     }
   }, [esPrincipalSueldo, esPrincipalViatico, setValue])
 
+  useEffect(() => {
+    if (initialValues) {
+      reset({
+        entidad_financiera_id: initialValues.entidad_financiera_id
+          ? Number(initialValues.entidad_financiera_id) : undefined,
+        numero_cuenta:        initialValues.numero_cuenta ?? '',
+        tipo_cuenta:          (initialValues.tipo_cuenta ?? 'ahorros') as 'ahorros' | 'corriente',
+        proposito:            (initialValues.proposito ?? 'sueldo') as CuentaBancariaFormData['proposito'],
+        es_principal_sueldo:  initialValues.es_principal_sueldo ?? false,
+        es_principal_viatico: initialValues.es_principal_viatico ?? false,
+        estado:               initialValues.estado ?? true,
+      })
+    } else {
+      reset({
+        entidad_financiera_id: undefined,
+        numero_cuenta:         '',
+        tipo_cuenta:           'ahorros',
+        proposito:             'sueldo',
+        es_principal_sueldo:   false,
+        es_principal_viatico:  false,
+        estado:                true,
+      })
+    }
+  }, [initialValues, reset])
+
   const handleClose = () => {
     reset()
     onClose()
   }
 
+  const isEditing = !!initialValues
+
   const onSubmit = (values: CuentaBancariaFormData) => {
-    crear.mutateAsync(values)
-      .then(handleClose)
-      .catch(() => {})
+    const mutation = isEditing
+      ? cuentaBancariaService.editar(
+          servidorId, Number(initialValues!.id),
+          values as Record<string, unknown>
+        ).then(() => {
+          qc.invalidateQueries({ queryKey: ['cuentas-bancarias', servidorId] })
+          notifications.show({
+            title: 'Cuenta actualizada',
+            message: 'La cuenta bancaria fue actualizada.',
+            color: 'emerald',
+          })
+          handleClose()
+        })
+      : crear.mutateAsync(values).then(handleClose)
+
+    mutation.catch(() => {})
   }
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
-      title="Nueva cuenta bancaria"
+      title={initialValues ? 'Editar cuenta bancaria' : 'Nueva cuenta bancaria'}
       size="md"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}

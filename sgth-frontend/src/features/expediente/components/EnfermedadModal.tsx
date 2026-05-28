@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useEffect } from 'react'
 import { Modal, Button, Group, Stack, TextInput } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,6 +8,8 @@ import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { expedienteService } from '../services/expedienteService'
 import { useQueryClient } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { IconCheck, IconX } from '@tabler/icons-react'
 import { enfermedadSchema, type EnfermedadFormData }
   from '../schemas/enfermedad.schema'
 import { DatePickerInput } from '@mantine/dates'
@@ -16,6 +19,12 @@ interface Props {
   opened:     boolean
   onClose:    () => void
   servidorId: number
+  initialValues?: {
+    id:                  number
+    tipo_enfermedad:     string
+    codigo_cie10?:       string | null
+    fecha_diagnostico?:  string | null
+  } | null
 }
 
 const toDate = (v?: string | null): Date | null => {
@@ -34,7 +43,7 @@ const fromDate = (d: Date | string | null): string | null => {
   return `${year}-${month}-${day}`
 }
 
-export function EnfermedadModal({ opened, onClose, servidorId }: Props) {
+export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: Props) {
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const qc = useQueryClient()
@@ -49,21 +58,68 @@ export function EnfermedadModal({ opened, onClose, servidorId }: Props) {
       },
     })
 
+  useEffect(() => {
+    if (initialValues) {
+      reset({
+        tipo_enfermedad:   initialValues.tipo_enfermedad,
+        codigo_cie10:      initialValues.codigo_cie10 ?? '',
+        fecha_diagnostico: initialValues.fecha_diagnostico
+          ? initialValues.fecha_diagnostico.split('T')[0] : '',
+      })
+    } else {
+      reset({
+        tipo_enfermedad:   '',
+        codigo_cie10:      '',
+        fecha_diagnostico: '',
+      })
+    }
+  }, [initialValues, reset])
+
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
+
+  const isEditing = !!initialValues
+
   const onSubmit = async (values: EnfermedadFormData) => {
     const payload = {
       ...values,
       codigo_cie10: values.codigo_cie10 || null,
       fecha_diagnostico: values.fecha_diagnostico || null,
     }
-    await expedienteService.crearEnfermedad(servidorId, payload as Record<string, unknown>)
-    qc.invalidateQueries({ queryKey: ['enfermedades', servidorId] })
-    reset()
-    onClose()
+    try {
+      if (isEditing) {
+        await expedienteService.editarEnfermedad(
+          servidorId, initialValues!.id,
+          payload as Record<string, unknown>
+        )
+      } else {
+        await expedienteService.crearEnfermedad(
+          servidorId, payload as Record<string, unknown>
+        )
+      }
+      qc.invalidateQueries({ queryKey: ['enfermedades', servidorId] })
+      notifications.show({
+        title:   isEditing ? 'Enfermedad actualizada' : 'Enfermedad registrada',
+        message: 'El registro fue procesado correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      handleClose()
+    } catch {
+      notifications.show({
+        title:   'Error',
+        message: 'No se pudo procesar el registro.',
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      })
+    }
   }
 
   return (
-    <Modal opened={opened} onClose={onClose}
-      title="Registrar enfermedad catastrófica"
+    <Modal opened={opened} onClose={handleClose}
+      title={initialValues ? 'Editar enfermedad catastrófica' : 'Registrar enfermedad catastrófica'}
       size="sm" fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -93,10 +149,10 @@ export function EnfermedadModal({ opened, onClose, servidorId }: Props) {
             )}
           />
           <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>Cancelar</Button>
+            <Button variant="default" onClick={handleClose}>Cancelar</Button>
             <Button type="submit" color="emerald" variant="light"
               loading={isSubmitting}>
-              Registrar enfermedad
+              {initialValues ? 'Actualizar' : 'Registrar enfermedad'}
             </Button>
           </Group>
         </Stack>

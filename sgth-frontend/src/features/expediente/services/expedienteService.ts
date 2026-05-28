@@ -136,6 +136,11 @@ export const expedienteService = {
       `/expediente/servidores/${servidorId}/discapacidades`, data
     ).then(r => r.data.datos),
 
+  editarDiscapacidad: (servidorId: number, id: number, data: Record<string, unknown>) =>
+    api.put<ApiResponse<DiscapacidadServidor>>(
+      `/expediente/servidores/${servidorId}/discapacidades/${id}`, data
+    ).then(r => r.data.datos),
+
   eliminarDiscapacidad: (servidorId: number, id: number) =>
     api.delete<ApiResponse<void>>(
       `/expediente/servidores/${servidorId}/discapacidades/${id}`
@@ -150,6 +155,11 @@ export const expedienteService = {
   crearEnfermedad: (servidorId: number, data: Record<string, unknown>) =>
     api.post<ApiResponse<EnfermedadCatastroficaServidor>>(
       `/expediente/servidores/${servidorId}/enfermedades`, data
+    ).then(r => r.data.datos),
+
+  editarEnfermedad: (servidorId: number, id: number, data: Record<string, unknown>) =>
+    api.put<ApiResponse<EnfermedadCatastroficaServidor>>(
+      `/expediente/servidores/${servidorId}/enfermedades/${id}`, data
     ).then(r => r.data.datos),
 
   eliminarEnfermedad: (servidorId: number, id: number) =>

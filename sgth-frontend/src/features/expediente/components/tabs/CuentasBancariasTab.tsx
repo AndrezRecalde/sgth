@@ -1,9 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Stack, Text, Badge, Group, Button,
          ActionIcon, Tooltip, Skeleton, Menu } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconTrash, IconStar,
+import { IconPlus, IconTrash, IconStar, IconEdit,
          IconCreditCard, IconStarFilled } from '@tabler/icons-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useCuentasBancarias } from '../../hooks/useCuentasBancarias'
@@ -15,6 +16,9 @@ interface Props { servidorId: number }
 
 export function CuentasBancariasTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
+  const [editCuenta, setEditCuenta] = useState<CuentaBancariaConRelaciones | null>(null)
+  const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false)
+
   const { data: cuentas = [], isLoading } = useCuentasBancarias(servidorId)
   const { setPrincipal, eliminar } = useCuentaBancariaMutations(servidorId)
 
@@ -130,6 +134,14 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                     </Menu.Dropdown>
                   </Menu>
                 )}
+                <Tooltip label="Editar cuenta" withArrow>
+                  <ActionIcon
+                    variant="subtle" color="blue" size="sm"
+                    onClick={() => { setEditCuenta(c); openEdit() }}
+                  >
+                    <IconEdit size={14} />
+                  </ActionIcon>
+                </Tooltip>
                 <Tooltip label="Eliminar cuenta" withArrow>
                   <ActionIcon
                     variant="subtle"
@@ -153,6 +165,12 @@ export function CuentasBancariasTab({ servidorId }: Props) {
         opened={opened}
         onClose={close}
         servidorId={servidorId}
+      />
+      <CuentaBancariaModal
+        opened={editOpened}
+        onClose={() => { setEditCuenta(null); closeEdit() }}
+        servidorId={servidorId}
+        initialValues={editCuenta}
       />
     </Stack>
   )

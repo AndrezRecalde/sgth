@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react'
 import {
   Stack,
   Group,
@@ -16,6 +17,7 @@ import {
   IconHeart,
   IconCheck,
   IconX,
+  IconEdit,
 } from "@tabler/icons-react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
@@ -42,6 +44,9 @@ export function CondicionTab({ servidorId }: Props) {
   const [discOpened, { open: openDisc, close: closeDisc }] =
     useDisclosure(false);
   const [enfOpened, { open: openEnf, close: closeEnf }] = useDisclosure(false);
+
+  const [editDisc, setEditDisc] = useState<DiscapacidadServidor | null>(null)
+  const [editEnf,  setEditEnf]  = useState<EnfermedadCatastroficaServidor | null>(null)
 
   const qc = useQueryClient();
 
@@ -129,6 +134,15 @@ export function CondicionTab({ servidorId }: Props) {
         <TableActions
           actions={[
             {
+              label: "Editar",
+              icon: <IconEdit size={14} />,
+              color: "blue",
+              onClick: () => {
+                setEditDisc(item);
+                openDisc();
+              },
+            },
+            {
               label: "Eliminar",
               icon: <IconTrash size={14} />,
               color: "red",
@@ -187,6 +201,15 @@ export function CondicionTab({ servidorId }: Props) {
       render: (item) => (
         <TableActions
           actions={[
+            {
+              label: "Editar",
+              icon: <IconEdit size={14} />,
+              color: "blue",
+              onClick: () => {
+                setEditEnf(item);
+                openEnf();
+              },
+            },
             {
               label: "Eliminar",
               icon: <IconTrash size={14} />,
@@ -278,13 +301,15 @@ export function CondicionTab({ servidorId }: Props) {
 
       <DiscapacidadModal
         opened={discOpened}
-        onClose={closeDisc}
+        onClose={() => { setEditDisc(null); closeDisc(); }}
         servidorId={servidorId}
+        initialValues={editDisc}
       />
       <EnfermedadModal
         opened={enfOpened}
-        onClose={closeEnf}
+        onClose={() => { setEditEnf(null); closeEnf(); }}
         servidorId={servidorId}
+        initialValues={editEnf}
       />
     </Stack>
   );

@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useEffect } from 'react'
 import { Modal, Button, Group, Stack, TextInput,
          NumberInput, Select } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
@@ -8,6 +9,8 @@ import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { expedienteService } from '../services/expedienteService'
 import { useQueryClient } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { IconCheck, IconX } from '@tabler/icons-react'
 import { discapacidadSchema, type DiscapacidadFormData }
   from '../schemas/discapacidad.schema'
 
@@ -24,9 +27,15 @@ interface Props {
   opened:     boolean
   onClose:    () => void
   servidorId: number
+  initialValues?: {
+    id:                    number
+    tipo_discapacidad:     string
+    porcentaje:            string | number
+    numero_carnet_conadis?: string | null
+  } | null
 }
 
-export function DiscapacidadModal({ opened, onClose, servidorId }: Props) {
+export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }: Props) {
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const qc = useQueryClient()
@@ -41,16 +50,64 @@ export function DiscapacidadModal({ opened, onClose, servidorId }: Props) {
       },
     })
 
-  const onSubmit = async (values: DiscapacidadFormData) => {
-    await expedienteService.crearDiscapacidad(servidorId, values as Record<string, unknown>)
-    qc.invalidateQueries({ queryKey: ['discapacidades', servidorId] })
+  useEffect(() => {
+    if (initialValues) {
+      reset({
+        tipo_discapacidad: initialValues.tipo_discapacidad as DiscapacidadFormData['tipo_discapacidad'],
+        porcentaje:        Number(initialValues.porcentaje),
+        numero_carnet_conadis: initialValues.numero_carnet_conadis ?? '',
+      })
+    } else {
+      reset({
+        tipo_discapacidad:     'fisica',
+        porcentaje:            1,
+        numero_carnet_conadis: '',
+      })
+    }
+  }, [initialValues, reset])
+
+  const handleClose = () => {
     reset()
     onClose()
   }
 
+  const isEditing = !!initialValues
+
+  const onSubmit = async (values: DiscapacidadFormData) => {
+    try {
+      if (isEditing) {
+        await expedienteService.editarDiscapacidad(
+          servidorId, initialValues!.id,
+          values as Record<string, unknown>
+        )
+      } else {
+        await expedienteService.crearDiscapacidad(
+          servidorId, values as Record<string, unknown>
+        )
+      }
+      qc.invalidateQueries({ queryKey: ['discapacidades', servidorId] })
+      notifications.show({
+        title:   isEditing ? 'Discapacidad actualizada' : 'Discapacidad registrada',
+        message: isEditing
+          ? 'El registro fue actualizado correctamente.'
+          : 'La discapacidad fue registrada correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      handleClose()
+    } catch {
+      notifications.show({
+        title:   'Error',
+        message: 'No se pudo procesar el registro.',
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      })
+    }
+  }
+
   return (
-    <Modal opened={opened} onClose={onClose}
-      title="Registrar discapacidad"
+    <Modal opened={opened} onClose={handleClose}
+      title={initialValues ? 'Editar discapacidad' : 'Registrar discapacidad'}
       size="sm" fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -77,10 +134,10 @@ export function DiscapacidadModal({ opened, onClose, servidorId }: Props) {
             {...contained} {...register('numero_carnet_conadis')}
             error={errors.numero_carnet_conadis?.message} />
           <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>Cancelar</Button>
+            <Button variant="default" onClick={handleClose}>Cancelar</Button>
             <Button type="submit" color="emerald" variant="light"
               loading={isSubmitting}>
-              Registrar discapacidad
+              {initialValues ? 'Actualizar' : 'Registrar discapacidad'}
             </Button>
           </Group>
         </Stack>
