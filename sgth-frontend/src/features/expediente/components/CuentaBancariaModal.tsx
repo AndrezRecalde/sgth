@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Modal, Button, Group, Select, TextInput,
-         Grid, Switch, Text, Stack, Alert } from '@mantine/core'
+         Grid, Switch, Stack, Text, Badge } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconInfoCircle } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useEntidadesFinancieras } from '../hooks/useEntidadesFinancieras'
@@ -20,11 +19,11 @@ const TIPO_CUENTA_OPTIONS = [
   { value: 'corriente', label: 'Cuenta corriente' },
 ]
 
-const PROPOSITO_OPTIONS = [
-  { value: 'sueldo',   label: 'Nómina / Sueldo' },
-  { value: 'viaticos', label: 'Viáticos' },
-  { value: 'ambos',    label: 'Sueldo y Viáticos' },
-]
+const PROPOSITO_LABEL: Record<string, string> = {
+  sueldo:   'Nómina / Sueldo',
+  viaticos: 'Viáticos',
+  ambos:    'Nómina y Viáticos',
+}
 
 interface Props {
   opened:     boolean
@@ -36,12 +35,11 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
   const { isMobile }  = useMobileBreakpoint()
   const contained     = useContainedInput()
   const { crear }     = useCuentaBancariaMutations(servidorId)
-  const { data: rawEntidades, isLoading: loadingEntidades } =
+  const { data: rawEntidades = [], isLoading: loadingEntidades } =
     useEntidadesFinancieras()
 
-  // Mapear entidades de forma segura sin depender del tipo generado
   const entidadOptions = Array.isArray(rawEntidades)
-    ? rawEntidades.map((e: Record<string, unknown>) => ({
+    ? (rawEntidades as Record<string, unknown>[]).map(e => ({
         value: String(e.id),
         label: String(e.nombre ?? `Entidad ${e.id}`),
       }))
@@ -70,15 +68,18 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
 
   const esPrincipalSueldo  = watch('es_principal_sueldo')
   const esPrincipalViatico = watch('es_principal_viatico')
+  const propositoActual    = watch('proposito')
 
-  // Asignar propósito automáticamente según los switches
+  // Auto-asignar propósito según switches
   useEffect(() => {
     if (esPrincipalSueldo && esPrincipalViatico) {
-      setValue('proposito', 'ambos')
+      setValue('proposito', 'ambos', { shouldValidate: true })
     } else if (esPrincipalSueldo) {
-      setValue('proposito', 'sueldo')
+      setValue('proposito', 'sueldo', { shouldValidate: true })
     } else if (esPrincipalViatico) {
-      setValue('proposito', 'viaticos')
+      setValue('proposito', 'viaticos', { shouldValidate: true })
+    } else {
+      setValue('proposito', 'sueldo', { shouldValidate: true })
     }
   }, [esPrincipalSueldo, esPrincipalViatico, setValue])
 
@@ -116,13 +117,12 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
                     placeholder={
                       loadingEntidades
                         ? 'Cargando entidades...'
-                        : entidadOptions.length === 0
-                          ? 'Sin entidades disponibles'
-                          : 'Buscar banco o cooperativa'
+                        : 'Buscar banco o cooperativa'
                     }
                     data={entidadOptions}
                     searchable
                     disabled={loadingEntidades}
+                    nothingFoundMessage="No se encontró la entidad"
                     {...contained}
                     value={field.value ? String(field.value) : null}
                     onChange={(v) =>
@@ -167,80 +167,68 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
               />
             </Grid.Col>
 
-            {/* Switches de cuenta principal */}
+            {/* Switch nómina */}
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Controller
                 name="es_principal_sueldo"
                 control={control}
                 render={({ field }) => (
                   <Switch
-                    label="Cuenta principal de nómina"
+                    label="Cuenta para nómina"
+                    description="Pago de sueldo mensual"
                     checked={field.value ?? false}
                     onChange={(e) =>
                       field.onChange(e.currentTarget.checked)
                     }
                     color="emerald"
-                    mt="xs"
                   />
                 )}
               />
             </Grid.Col>
+
+            {/* Switch viáticos */}
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Controller
                 name="es_principal_viatico"
                 control={control}
                 render={({ field }) => (
                   <Switch
-                    label="Cuenta principal de viáticos"
+                    label="Cuenta para viáticos"
+                    description="Pago de viáticos y comisiones"
                     checked={field.value ?? false}
                     onChange={(e) =>
                       field.onChange(e.currentTarget.checked)
                     }
-                    color="emerald"
-                    mt="xs"
+                    color="blue"
                   />
                 )}
               />
             </Grid.Col>
 
-            {/* Propósito — auto-asignado pero editable */}
-            <Grid.Col span={12}>
-              <Controller
-                name="proposito"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Propósito de la cuenta"
-                    description="Se asigna automáticamente según los switches anteriores"
-                    data={PROPOSITO_OPTIONS}
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) =>
-                      field.onChange(
-                        (v ?? 'sueldo') as CuentaBancariaFormData['proposito']
-                      )
+            {/* Propósito auto-asignado — solo visual */}
+            {(esPrincipalSueldo || esPrincipalViatico) && (
+              <Grid.Col span={12}>
+                <Group gap="xs">
+                  <Text size="xs" c="dimmed">
+                    Propósito asignado:
+                  </Text>
+                  <Badge
+                    color={
+                      propositoActual === 'ambos' ? 'violet'
+                      : propositoActual === 'sueldo' ? 'emerald'
+                      : 'blue'
                     }
-                    error={errors.proposito?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
+                    variant="light"
+                    size="sm"
+                  >
+                    {PROPOSITO_LABEL[propositoActual ?? 'sueldo']}
+                  </Badge>
+                </Group>
+              </Grid.Col>
+            )}
           </Grid>
 
-          <Alert
-            icon={<IconInfoCircle size={16} />}
-            color="blue"
-            variant="light"
-            radius="md"
-          >
-            <Text size="xs">
-              Marque los switches para indicar si esta cuenta
-              recibirá pagos de nómina, viáticos o ambos.
-              El propósito se asignará automáticamente.
-            </Text>
-          </Alert>
-
-          <Group justify="flex-end" mt="xs">
+          <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose}>
               Cancelar
             </Button>
