@@ -2,18 +2,16 @@ import { Text, Badge } from '@mantine/core'
 import { IconEye, IconEdit } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
-import type { ServidorConRelaciones, EstadoContrato } from '@/types/api'
+import type { ServidorConRelaciones } from '@/types/api'
 
-const ESTADO_COLORS: Record<EstadoContrato, string> = {
-  vigente:   'emerald',
-  terminado: 'gray',
-  cancelado: 'red',
+const REGIMEN_LABELS: Record<string, string> = {
+  losep:          'LOSEP',
+  codigo_trabajo: 'Cód. Trabajo',
 }
 
-const ESTADO_LABELS: Record<EstadoContrato, string> = {
-  vigente:   'Vigente',
-  terminado: 'Terminado',
-  cancelado: 'Cancelado',
+const REGIMEN_COLORS: Record<string, string> = {
+  losep:          'emerald',
+  codigo_trabajo: 'blue',
 }
 
 type Handlers = {
@@ -26,16 +24,16 @@ export const getServidorColumns = (
 ): DataTableColumn<ServidorConRelaciones>[] => [
   {
     accessor: 'cedula',
-    title: 'Cédula',
-    width: 110,
-    render: ({ cedula }) => (
+    title:    'Cédula',
+    width:    115,
+    render:   ({ cedula }) => (
       <Text size="sm" ff="monospace">{cedula ?? '-'}</Text>
     ),
   },
   {
     accessor: 'nombre',
-    title: 'Nombre completo',
-    render: (row) => {
+    title:    'Nombre completo',
+    render:   (row) => {
       const nombre = [
         row.apellido,
         row.segundo_apellido,
@@ -50,59 +48,68 @@ export const getServidorColumns = (
     },
   },
   {
-    accessor: 'unidad_administrativa',
-    title: 'Unidad',
-    render: ({ unidad_administrativa }) => (
-      <Text size="sm">{unidad_administrativa?.nombre ?? '-'}</Text>
-    ),
-  },
-  {
-    accessor: 'puesto',
-    title: 'Cargo',
-    render: (row) => {
-      const cargoNombre = (row as ServidorConRelaciones & {
-        puesto?: { cargo?: { nombre?: string } | null } | null
-      }).puesto?.cargo?.nombre
+    accessor: 'cargo',
+    title:    'Cargo',
+    render:   (row) => {
+      // Primero intenta desde contrato_vigente, luego desde puesto directo
+      const cargoContrato = row.contrato_vigente?.puesto?.cargo?.nombre
+      const cargoPuesto   = row.puesto?.cargo?.nombre
+      const cargo         = cargoContrato ?? cargoPuesto
+
       return (
         <Text size="sm" c="dimmed">
-          {cargoNombre ?? '-'}
+          {cargo ?? '-'}
         </Text>
       )
     },
   },
   {
-    accessor: 'estado',
-    title: 'Estado',
-    width: 100,
-    render: ({ estado }) => {
-      if (!estado) return <Text size="sm" c="dimmed">-</Text>
+    accessor: 'regimen_laboral',
+    title:    'Régimen',
+    width:    110,
+    render:   ({ regimen_laboral }) => {
+      if (!regimen_laboral) return <Text size="sm" c="dimmed">-</Text>
       return (
         <Badge
-          color={estado ? 'emerald' : 'gray'}
+          color={REGIMEN_COLORS[regimen_laboral] ?? 'gray'}
           variant="light"
           size="sm"
         >
-          {estado ? 'Activo' : 'Inactivo'}
+          {REGIMEN_LABELS[regimen_laboral] ?? regimen_laboral}
         </Badge>
       )
     },
   },
   {
+    accessor: 'estado',
+    title:    'Estado',
+    width:    90,
+    render:   ({ estado }) => (
+      <Badge
+        color={estado ? 'emerald' : 'gray'}
+        variant="light"
+        size="sm"
+      >
+        {estado ? 'Activo' : 'Inactivo'}
+      </Badge>
+    ),
+  },
+  {
     accessor: 'acciones',
-    title: '',
-    width: 50,
-    render: (servidor) => (
+    title:    '',
+    width:    50,
+    render:   (servidor) => (
       <TableActions actions={[
         {
-          label: 'Ver expediente',
-          icon: <IconEye size={14} />,
-          color: 'blue',
+          label:   'Ver expediente',
+          icon:    <IconEye size={14} />,
+          color:   'blue',
           onClick: () => onView(servidor),
         },
         {
-          label: 'Editar datos',
-          icon: <IconEdit size={14} />,
-          color: 'gray',
+          label:   'Editar datos',
+          icon:    <IconEdit size={14} />,
+          color:   'gray',
           onClick: () => onEdit(servidor),
         },
       ]} />
