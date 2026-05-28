@@ -40,7 +40,7 @@ export function useServidorMutations() {
 
   const editar = useMutation({
     mutationFn: ({ id, data }: { id: number; data: ServidorBasicoFormData }) =>
-      expedienteService.editar(id, data as any),
+      expedienteService.editar(id, data),
     onSuccess: (_, { id }) => {
       notifications.show({
         title: 'Expediente actualizado',

@@ -34,7 +34,7 @@ export const expedienteService = {
       '/expediente/servidores/basico', data
     ).then(r => r.data.datos),
 
-  editar: (id: number, data: Partial<ServidorFormData>) =>
+  editar: (id: number, data: Partial<ServidorBasicoFormData> | Partial<ServidorFormData>) =>
     api.put<ApiResponse<Servidor>>(
       `/expediente/servidores/${id}`, data
     ).then(r => r.data.datos),
