@@ -4468,7 +4468,6 @@ export interface components {
         };
         /** StoreServidorBasicoRequest */
         StoreServidorBasicoRequest: {
-            user_id: number;
             cedula: string;
             nombre: string;
             segundo_nombre?: string | null;
@@ -4480,13 +4479,25 @@ export interface components {
             genero: "masculino" | "femenino" | "otro";
             /** @enum {string} */
             estado_civil: "soltero" | "casado" | "union_libre" | "divorciado" | "viudo";
+            /** @enum {string|null} */
+            tipo_sangre?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | null;
             es_extranjero: boolean;
             provincia_nacimiento_id?: number | null;
             canton_nacimiento_id?: number | null;
             nacionalidad?: string | null;
             pais_origen?: string | null;
+            numero_papeleta_votacion?: string | null;
+            pasaporte_numero?: string | null;
             tiene_discapacidad: boolean;
             tiene_enfermedad_catastrofica: boolean;
+            /** @description Contacto opcional */
+            telefono_celular?: string | null;
+            telefono_convencional?: string | null;
+            /** Format: email */
+            correo_personal?: string | null;
+            direccion_domicilio?: string | null;
+            provincia_domicilio?: string | null;
+            ciudad_domicilio?: string | null;
         };
         /** StoreServidorRequest */
         StoreServidorRequest: {
@@ -11945,9 +11956,14 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Listado de servidores";
+                        mensaje: "Listado de servidores.";
                         datos: components["schemas"]["ServidorResource"][];
-                        meta: null;
+                        meta: {
+                            pagina_actual: string;
+                            por_pagina: string;
+                            total: string;
+                            ultima_pagina: string;
+                        };
                     };
                 };
             };

@@ -13764,7 +13764,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Listado de servidores"
+                                            "const": "Listado de servidores."
                                         },
                                         "datos": {
                                             "type": "array",
@@ -13773,7 +13773,27 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "string"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "string"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina"
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -22466,9 +22486,6 @@
             "StoreServidorBasicoRequest": {
                 "type": "object",
                 "properties": {
-                    "user_id": {
-                        "type": "integer"
-                    },
                     "cedula": {
                         "type": "string",
                         "pattern": "^\\d{10}$"
@@ -22517,6 +22534,22 @@
                             "viudo"
                         ]
                     },
+                    "tipo_sangre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "A+",
+                            "A-",
+                            "B+",
+                            "B-",
+                            "AB+",
+                            "AB-",
+                            "O+",
+                            "O-"
+                        ]
+                    },
                     "es_extranjero": {
                         "type": "boolean"
                     },
@@ -22546,15 +22579,72 @@
                         ],
                         "maxLength": 100
                     },
+                    "numero_papeleta_votacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    },
+                    "pasaporte_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
                     "tiene_discapacidad": {
                         "type": "boolean"
                     },
                     "tiene_enfermedad_catastrofica": {
                         "type": "boolean"
+                    },
+                    "telefono_celular": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Contacto opcional",
+                        "maxLength": 20
+                    },
+                    "telefono_convencional": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    },
+                    "correo_personal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "email",
+                        "maxLength": 150
+                    },
+                    "direccion_domicilio": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "provincia_domicilio": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "ciudad_domicilio": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
                     }
                 },
                 "required": [
-                    "user_id",
                     "cedula",
                     "nombre",
                     "apellido",

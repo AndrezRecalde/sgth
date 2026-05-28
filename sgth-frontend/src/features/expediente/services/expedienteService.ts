@@ -8,6 +8,7 @@ import type {
   DiscapacidadServidor,
   EnfermedadCatastroficaServidor,
   DocumentoServidor,
+  ServidorConRelaciones,
 } from '@/types/api'
 import type { ServidorFormData } from '../schemas/servidor.schema'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
@@ -15,9 +16,20 @@ import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 export const expedienteService = {
   // ── Servidores ──────────────────────────────────
   listar: (params?: ServidorParams) =>
-    api.get<ApiResponse<PaginatedResponse<Servidor>>>(
-      '/expediente/servidores', { params }
-    ).then(r => r.data.datos),
+    api.get<ApiResponse<{
+      datos: ServidorConRelaciones[]
+      meta: {
+        pagina_actual: number
+        por_pagina: number
+        total: number
+        ultima_pagina: number
+      }
+    }>>('/expediente/servidores', { params })
+    .then(r => ({
+      data:  r.data.datos.datos,
+      total: r.data.datos.meta?.total ?? 0,
+      current_page: r.data.datos.meta?.pagina_actual ?? 1,
+    })),
 
   obtener: (id: number) =>
     api.get<ApiResponse<Servidor>>(
