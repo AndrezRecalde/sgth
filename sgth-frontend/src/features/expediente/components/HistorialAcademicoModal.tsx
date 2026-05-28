@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal, Button, Group, Stack, TextInput, Select } from '@mantine/core'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
@@ -41,7 +41,7 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
   const { crear, editar }  = useHistorialAcademicoMutations(servidorId)
   const isEditing = !!initialValues
 
-  const { register, control, handleSubmit, watch, reset, formState: { errors } } =
+  const { register, control, handleSubmit, reset, formState: { errors } } =
     useForm<HistorialAcademicoFormData>({
       resolver: zodResolver(historialAcademicoSchema),
       defaultValues: {
@@ -56,7 +56,10 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
       },
     })
 
-  const tipoEstudio = watch('tipo_estudio')
+  const tipoEstudio = useWatch({
+    control,
+    name: 'tipo_estudio',
+  })
 
   useEffect(() => {
     if (initialValues) {
