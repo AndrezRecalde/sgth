@@ -15,15 +15,15 @@ import type { DeclaracionJuramentada } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 
 const TIPO_COLORS: Record<string, string> = {
-  ingreso:        'blue',
-  salida:         'red',
-  actualizacion:  'orange',
+  inicio_gestion: 'blue',
+  periodica:      'orange',
+  fin_gestion:    'red',
 }
 
 const TIPO_LABELS: Record<string, string> = {
-  ingreso:        'Ingreso',
-  salida:         'Salida',
-  actualizacion:  'Actualización',
+  inicio_gestion: 'Inicio de gestión',
+  periodica:      'Periódica',
+  fin_gestion:    'Fin de gestión',
 }
 
 interface Props { servidorId: number }
@@ -53,7 +53,15 @@ export function DeclaracionesTab({ servidorId }: Props) {
       title: 'Fecha',
       width: 110,
       render: ({ fecha_declaracion }) => (
-        <Text size="sm">{fecha_declaracion ?? '-'}</Text>
+        <Text size="sm">
+          {fecha_declaracion
+            ? new Date(fecha_declaracion).toLocaleDateString('es-EC', {
+                day:   '2-digit',
+                month: '2-digit',
+                year:  'numeric',
+              })
+            : '-'}
+        </Text>
       ),
     },
     {
