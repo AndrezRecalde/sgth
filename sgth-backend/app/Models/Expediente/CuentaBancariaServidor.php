@@ -17,7 +17,6 @@ class CuentaBancariaServidor extends Model
     protected $fillable = [
         'servidor_id',
         'entidad_financiera_id',
-        'nombre_banco_otro',
         'tipo_cuenta',
         'numero_cuenta',
         'proposito',
