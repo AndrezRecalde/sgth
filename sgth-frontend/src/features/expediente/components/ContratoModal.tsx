@@ -22,8 +22,8 @@ import {
   contratoSchema,
   type ContratoFormData,
 } from "../schemas/contrato.schema";
-import type { UnidadConRelaciones, PuestoConRelaciones } from "@/types/api";
-import { useState } from "react";
+import type { UnidadConRelaciones, PuestoConRelaciones, ContratoConRelaciones } from "@/types/api";
+import { useState, useEffect } from "react";
 
 const TIPO_OPTIONS = [
   { value: "nombramiento_permanente", label: "Nombramiento permanente" },
@@ -47,12 +47,13 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   servidorId: number;
+  contrato?: ContratoConRelaciones | null;
 }
 
-export function ContratoModal({ opened, onClose, servidorId }: Props) {
+export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) {
   const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
-  const { crear } = useContratoMutations(servidorId);
+  const { crear, editar } = useContratoMutations(servidorId);
 
   // Unidades solo nivel 2
   const { data: unidadesRaw } = useUnidades({ nivel: 2 });
@@ -80,6 +81,8 @@ export function ContratoModal({ opened, onClose, servidorId }: Props) {
     description: p.rmu ? `RMU: $${Number(p.rmu).toFixed(2)}` : undefined,
   }));
 
+  const isEditing = !!contrato;
+
   const {
     register,
     control,
@@ -101,6 +104,42 @@ export function ContratoModal({ opened, onClose, servidorId }: Props) {
       estado: "vigente",
     },
   });
+
+  useEffect(() => {
+    if (contrato) {
+      reset({
+        tipo_nombramiento: contrato.tipo_nombramiento ?? '',
+        numero_contrato:   contrato.numero_contrato ?? '',
+        unidad_administrativa_id: contrato.unidad_administrativa_id
+          ? Number(contrato.unidad_administrativa_id) : undefined,
+        puesto_id: contrato.puesto_id
+          ? Number(contrato.puesto_id) : undefined,
+        fecha_inicio:      contrato.fecha_inicio
+          ? contrato.fecha_inicio.split('T')[0] : '',
+        fecha_fin:         contrato.fecha_fin
+          ? contrato.fecha_fin.split('T')[0] : null,
+        resolucion_numero: contrato.resolucion_numero ?? '',
+        codigo_marcacion:  contrato.codigo_marcacion ?? '',
+        estado: (contrato.estado ?? 'vigente') as ContratoFormData['estado'],
+      })
+      if (contrato.unidad_administrativa_id) {
+        setUnidadSelId(Number(contrato.unidad_administrativa_id))
+      }
+    } else {
+      reset({
+        tipo_nombramiento: '',
+        numero_contrato:   '',
+        unidad_administrativa_id: undefined,
+        puesto_id:         undefined,
+        fecha_inicio:      '',
+        fecha_fin:         null,
+        resolucion_numero: '',
+        codigo_marcacion:  '',
+        estado:            'vigente',
+      })
+      setUnidadSelId(null)
+    }
+  }, [contrato, reset])
 
   const handleClose = () => {
     reset();
@@ -126,17 +165,17 @@ export function ContratoModal({ opened, onClose, servidorId }: Props) {
   };
 
   const onSubmit = (values: ContratoFormData) => {
-    crear
-      .mutateAsync(values)
-      .then(handleClose)
-      .catch(() => {});
+    const mutation = isEditing
+      ? editar.mutateAsync({ id: Number(contrato!.id), data: values })
+      : crear.mutateAsync(values)
+    mutation.then(handleClose).catch(() => {})
   };
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
-      title="Registrar contrato"
+      title={isEditing ? "Editar contrato" : "Registrar contrato"}
       size="lg"
       fullScreen={isMobile}
       radius={isMobile ? 0 : "xl"}
@@ -321,9 +360,9 @@ export function ContratoModal({ opened, onClose, servidorId }: Props) {
               type="submit"
               color="emerald"
               variant="light"
-              loading={crear.isPending}
+              loading={crear.isPending || editar.isPending}
             >
-              Registrar contrato
+              {isEditing ? "Actualizar contrato" : "Registrar contrato"}
             </Button>
           </Group>
         </Stack>

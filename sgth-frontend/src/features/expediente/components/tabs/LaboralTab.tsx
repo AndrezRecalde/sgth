@@ -1,11 +1,13 @@
 'use client'
 
-import { Stack, Group, Text, Badge, Button, Divider } from '@mantine/core'
+import { useState } from 'react'
+import { Stack, Group, Text, Badge, Button, Skeleton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus } from '@tabler/icons-react'
+import { IconPlus, IconEdit, IconTrash,
+         IconBriefcase } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
-import { IconEdit, IconTrash } from '@tabler/icons-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { useContratos } from '../../hooks/useContratos'
 import { useContratoMutations } from '../../hooks/useContratoMutations'
 import { ContratoModal } from '../ContratoModal'
@@ -18,60 +20,94 @@ const ESTADO_COLORS: Record<EstadoContrato, string> = {
   cancelado: 'red',
 }
 
-const NOMBRAMIENTO_LABELS: Record<string, string> = {
-  nombramiento_permanente:       'Nombramiento permanente',
-  nombramiento_provisional:      'Nombramiento provisional',
-  servicios_ocasionales:         'Servicios ocasionales',
-  libre_nombramiento_remocion:   'Libre nombramiento',
-  codigo_trabajo:                'Código del Trabajo',
-  servicios_profesionales:       'Servicios profesionales',
+const ESTADO_LABELS: Record<EstadoContrato, string> = {
+  vigente:   'Vigente',
+  terminado: 'Terminado',
+  cancelado: 'Cancelado',
 }
 
-interface Props {
-  servidorId: number
+const NOMBRAMIENTO_LABELS: Record<string, string> = {
+  nombramiento_permanente:     'Nombramiento permanente',
+  nombramiento_provisional:    'Nombramiento provisional',
+  servicios_ocasionales:       'Servicios ocasionales',
+  libre_nombramiento_remocion: 'Libre nombramiento',
+  codigo_trabajo:              'Código del Trabajo',
+  servicios_profesionales:     'Servicios profesionales',
 }
+
+function formatFecha(fecha?: string | null): string {
+  if (!fecha) return '-'
+  return new Date(fecha).toLocaleDateString('es-EC', {
+    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC'
+  })
+}
+
+interface Props { servidorId: number }
 
 export function LaboralTab({ servidorId }: Props) {
   const [modalOpened, { open, close }] = useDisclosure(false)
+  const [editContrato, setEditContrato] =
+    useState<ContratoConRelaciones | null>(null)
+
   const { data: contratos = [], isLoading } = useContratos(servidorId)
   const { eliminar } = useContratoMutations(servidorId)
+
+  const handleClose = () => {
+    setEditContrato(null)
+    close()
+  }
 
   const columns: DataTableColumn<ContratoConRelaciones>[] = [
     {
       accessor: 'tipo_nombramiento',
-      title: 'Tipo',
+      title: 'Tipo de nombramiento',
       render: ({ tipo_nombramiento }) => (
-        <Text size="sm">
-          {NOMBRAMIENTO_LABELS[tipo_nombramiento ?? ''] ?? tipo_nombramiento ?? '-'}
-        </Text>
+        <div>
+          <Text size="sm" fw={500}>
+            {NOMBRAMIENTO_LABELS[tipo_nombramiento ?? '']
+              ?? tipo_nombramiento ?? '-'}
+          </Text>
+        </div>
       ),
     },
     {
       accessor: 'unidad_administrativa',
       title: 'Unidad',
       render: ({ unidad_administrativa }) => (
-        <Text size="sm">{(unidad_administrativa as { nombre?: string })?.nombre ?? '-'}</Text>
+        <Text size="sm" c="dimmed">
+          {(unidad_administrativa as { nombre?: string })?.nombre ?? '-'}
+        </Text>
       ),
     },
     {
       accessor: 'fecha_inicio',
       title: 'Inicio',
-      width: 100,
+      width: 110,
       render: ({ fecha_inicio }) => (
-        <Text size="sm">{fecha_inicio ?? '-'}</Text>
+        <Text size="sm">{formatFecha(fecha_inicio)}</Text>
+      ),
+    },
+    {
+      accessor: 'fecha_fin',
+      title: 'Fin',
+      width: 110,
+      render: ({ fecha_fin }) => (
+        <Text size="sm" c={fecha_fin ? undefined : 'dimmed'}>
+          {fecha_fin ? formatFecha(fecha_fin) : 'Indefinido'}
+        </Text>
       ),
     },
     {
       accessor: 'estado',
       title: 'Estado',
-      width: 90,
+      width: 100,
       render: ({ estado }) => (
         <Badge
           color={ESTADO_COLORS[estado as EstadoContrato] ?? 'gray'}
           variant="light"
           size="sm"
         >
-          {estado ?? '-'}
+          {ESTADO_LABELS[estado as EstadoContrato] ?? estado ?? '-'}
         </Badge>
       ),
     },
@@ -85,14 +121,17 @@ export function LaboralTab({ servidorId }: Props) {
             label: 'Editar contrato',
             icon: <IconEdit size={14} />,
             color: 'blue',
-            onClick: () => {},
+            onClick: () => {
+              setEditContrato(contrato)
+              open()
+            },
           },
           {
             label: 'Eliminar contrato',
             icon: <IconTrash size={14} />,
             color: 'red',
             onClick: () => {
-              if (confirm('¿Eliminar este contrato?'))
+              if (confirm('¿Eliminar este contrato? Esta acción no se puede deshacer.'))
                 eliminar.mutate(Number(contrato.id))
             },
           },
@@ -109,23 +148,34 @@ export function LaboralTab({ servidorId }: Props) {
           color="emerald"
           variant="light"
           leftSection={<IconPlus size={14} />}
-          onClick={open}
+          onClick={() => { setEditContrato(null); open() }}
         >
           Nuevo contrato
         </Button>
       </Group>
 
-      <SgthTable
-        records={(contratos as ContratoConRelaciones[])}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={120}
-      />
+      {isLoading ? (
+        <Skeleton height={120} radius="md" />
+      ) : Array.isArray(contratos) && contratos.length > 0 ? (
+        <SgthTable
+          records={contratos as ContratoConRelaciones[]}
+          columns={columns}
+          fetching={false}
+          minHeight={120}
+        />
+      ) : (
+        <EmptyState
+          icon={IconBriefcase}
+          title="Sin contratos registrados"
+          description="Registra el primer contrato o nombramiento del servidor."
+        />
+      )}
 
       <ContratoModal
         opened={modalOpened}
-        onClose={close}
+        onClose={handleClose}
         servidorId={servidorId}
+        contrato={editContrato}
       />
     </Stack>
   )

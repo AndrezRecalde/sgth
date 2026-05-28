@@ -1,8 +1,9 @@
 'use client'
 
-import { Modal, Button, Group, Select, TextInput, Grid } from '@mantine/core'
-import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import { Modal, Button, Group, Select,
+         TextInput, Grid } from '@mantine/core'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useEntidadesFinancieras } from '../hooks/useEntidadesFinancieras'
@@ -14,29 +15,35 @@ import {
 import type { EntidadFinanciera } from '@/types/api'
 
 const TIPO_CUENTA_OPTIONS = [
-  { value: 'ahorros',   label: 'Ahorros' },
-  { value: 'corriente', label: 'Corriente' },
+  { value: 'ahorros',   label: 'Cuenta de ahorros' },
+  { value: 'corriente', label: 'Cuenta corriente' },
 ]
 
 interface Props {
-  opened: boolean
-  onClose: () => void
+  opened:     boolean
+  onClose:    () => void
   servidorId: number
 }
 
 export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
   const { isMobile } = useMobileBreakpoint()
-  const contained = useContainedInput()
-  const { crear } = useCuentaBancariaMutations(servidorId)
+  const contained    = useContainedInput()
+  const { crear }    = useCuentaBancariaMutations(servidorId)
   const { data: entidades = [] } = useEntidadesFinancieras()
 
-  const form = useForm<CuentaBancariaFormData>({
-    initialValues: {
-      entidad_financiera_id: '' as unknown as number,
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CuentaBancariaFormData>({
+    resolver: zodResolver(cuentaBancariaSchema),
+    defaultValues: {
+      entidad_financiera_id: undefined,
       numero_cuenta:         '',
       tipo_cuenta:           'ahorros',
     },
-    validate: zodResolver(cuentaBancariaSchema),
   })
 
   const entidadOptions = (entidades as EntidadFinanciera[]).map(e => ({
@@ -45,35 +52,44 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
       ?? `Entidad ${e.id}`,
   }))
 
-  const handleSubmit = (values: CuentaBancariaFormData) => {
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
+
+  const onSubmit = (values: CuentaBancariaFormData) => {
     crear.mutateAsync(values)
-      .then(() => { form.reset(); onClose() })
+      .then(handleClose)
       .catch(() => {})
   }
 
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title="Nueva cuenta bancaria"
       size="md"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Grid>
           <Grid.Col span={12}>
-            <Select
-              label="Entidad financiera"
-              data={entidadOptions}
-              searchable
-              {...contained}
-              value={form.values.entidad_financiera_id
-                ? String(form.values.entidad_financiera_id) : ''}
-              onChange={(v) =>
-                form.setFieldValue('entidad_financiera_id',
-                  v ? Number(v) : '' as unknown as number)}
-              error={form.errors.entidad_financiera_id}
+            <Controller
+              name="entidad_financiera_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Entidad financiera"
+                  placeholder="Seleccionar banco o cooperativa"
+                  data={entidadOptions}
+                  searchable
+                  {...contained}
+                  value={field.value ? String(field.value) : ''}
+                  onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                  error={errors.entidad_financiera_id?.message}
+                />
+              )}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 8 }}>
@@ -81,24 +97,40 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
               label="Número de cuenta"
               placeholder="Número de cuenta bancaria"
               {...contained}
-              {...form.getInputProps('numero_cuenta')}
+              {...register('numero_cuenta')}
+              error={errors.numero_cuenta?.message}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Select
-              label="Tipo de cuenta"
-              data={TIPO_CUENTA_OPTIONS}
-              {...contained}
-              value={form.values.tipo_cuenta}
-              onChange={(v) =>
-                form.setFieldValue('tipo_cuenta',
-                  (v ?? 'ahorros') as 'ahorros' | 'corriente')}
+            <Controller
+              name="tipo_cuenta"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Tipo de cuenta"
+                  data={TIPO_CUENTA_OPTIONS}
+                  {...contained}
+                  value={field.value}
+                  onChange={(v) =>
+                    field.onChange((v ?? 'ahorros') as 'ahorros' | 'corriente')
+                  }
+                  error={errors.tipo_cuenta?.message}
+                />
+              )}
             />
           </Grid.Col>
         </Grid>
+
         <Group justify="flex-end" mt="xl">
-          <Button variant="default" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={crear.isPending} color="emerald">
+          <Button variant="default" onClick={handleClose}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            color="emerald"
+            variant="light"
+            loading={crear.isPending}
+          >
             Registrar cuenta
           </Button>
         </Group>

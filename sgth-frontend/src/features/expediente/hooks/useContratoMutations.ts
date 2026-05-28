@@ -37,6 +37,21 @@ export function useContratoMutations(servidorId: number) {
     onError,
   })
 
+  const editar = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ContratoFormData }) =>
+      contratoService.editar(servidorId, id, data),
+    onSuccess: () => {
+      notifications.show({
+        title: 'Contrato actualizado',
+        message: 'El contrato fue actualizado correctamente.',
+        color: 'emerald',
+        icon: React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
   const eliminar = useMutation({
     mutationFn: (id: number) =>
       contratoService.eliminar(servidorId, id),
@@ -52,5 +67,5 @@ export function useContratoMutations(servidorId: number) {
     onError,
   })
 
-  return { crear, eliminar }
+  return { crear, editar, eliminar }
 }
