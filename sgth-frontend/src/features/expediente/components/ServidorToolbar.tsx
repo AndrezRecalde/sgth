@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useDebouncedValue } from '@mantine/hooks'
 import { TextInput, Select, Group, Stack } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
@@ -19,12 +21,20 @@ export function ServidorToolbar({ onSearch, onEstadoChange }: Props) {
   const contained    = useContainedInput()
   const { isMobile } = useMobileBreakpoint()
 
+  const [localSearch, setLocalSearch] = useState('')
+  const [debounced] = useDebouncedValue(localSearch, 400)
+
+  useEffect(() => {
+    onSearch(debounced)
+  }, [debounced, onSearch])
+
   const fields = (
     <>
       <TextInput
         label="Buscar servidor"
         placeholder="Nombre o cédula"
-        onChange={(e) => onSearch(e.currentTarget.value)}
+        value={localSearch}
+        onChange={(e) => setLocalSearch(e.currentTarget.value)}
         {...contained}
         style={{ flex: 1 }}
       />
