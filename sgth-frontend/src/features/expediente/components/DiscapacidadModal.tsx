@@ -12,12 +12,12 @@ import { discapacidadSchema, type DiscapacidadFormData }
   from '../schemas/discapacidad.schema'
 
 const TIPO_OPTIONS = [
-  { value: 'fisica',          label: 'Física' },
-  { value: 'visual',          label: 'Visual' },
-  { value: 'auditiva',        label: 'Auditiva' },
-  { value: 'intelectual',     label: 'Intelectual' },
-  { value: 'psicosocial',     label: 'Psicosocial' },
-  { value: 'multiple',        label: 'Múltiple' },
+  { value: 'fisica',       label: 'Física' },
+  { value: 'sensorial',    label: 'Sensorial (Visual / Auditiva)' },
+  { value: 'intelectual',  label: 'Intelectual' },
+  { value: 'psicosocial',  label: 'Psicosocial o Mental' },
+  { value: 'visceral',     label: 'Visceral u Orgánica' },
+  { value: 'multiple',     label: 'Múltiple' },
 ]
 
 interface Props {
@@ -35,7 +35,7 @@ export function DiscapacidadModal({ opened, onClose, servidorId }: Props) {
     useForm<DiscapacidadFormData>({
       resolver: zodResolver(discapacidadSchema),
       defaultValues: {
-        tipo_discapacidad:     '',
+        tipo_discapacidad:     'fisica',
         porcentaje:            1,
         numero_carnet_conadis: '',
       },
