@@ -7201,15 +7201,28 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Discapacidades del servidor."
+                                        },
+                                        "datos": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/DiscapacidadServidor"
                                             }
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -8541,15 +8554,28 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Enfermedades catastr\u00f3ficas del servidor."
+                                        },
+                                        "datos": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/EnfermedadCatastroficaServidor"
                                             }
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }

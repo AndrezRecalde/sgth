@@ -8,6 +8,7 @@ use App\Http\Requests\Expediente\UpdateDiscapacidadServidorRequest;
 use App\Models\Expediente\DiscapacidadServidor;
 use App\Services\Expediente\DiscapacidadServidorService;
 use Illuminate\Http\JsonResponse;
+use App\Http\Responses\ApiResponse;
 
 class DiscapacidadServidorController extends Controller
 {
@@ -18,7 +19,7 @@ class DiscapacidadServidorController extends Controller
     public function index(int $servidorId): JsonResponse
     {
         $discapacidades = $this->discapacidadService->listar($servidorId);
-        return response()->json(['data' => $discapacidades]);
+        return ApiResponse::ok($discapacidades, 'Discapacidades del servidor.');
     }
 
     public function store(StoreDiscapacidadServidorRequest $request, int $servidorId): JsonResponse

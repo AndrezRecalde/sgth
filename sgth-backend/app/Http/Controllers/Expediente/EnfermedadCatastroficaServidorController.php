@@ -8,6 +8,7 @@ use App\Http\Requests\Expediente\UpdateEnfermedadCatastroficaRequest;
 use App\Models\Expediente\EnfermedadCatastroficaServidor;
 use App\Services\Expediente\EnfermedadCatastroficaServidorService;
 use Illuminate\Http\JsonResponse;
+use App\Http\Responses\ApiResponse;
 
 class EnfermedadCatastroficaServidorController extends Controller
 {
@@ -18,7 +19,7 @@ class EnfermedadCatastroficaServidorController extends Controller
     public function index(int $servidorId): JsonResponse
     {
         $enfermedades = $this->enfermedadService->listar($servidorId);
-        return response()->json(['data' => $enfermedades]);
+        return ApiResponse::ok($enfermedades, 'Enfermedades catastróficas del servidor.');
     }
 
     public function store(StoreEnfermedadCatastroficaRequest $request, int $servidorId): JsonResponse
