@@ -89,7 +89,13 @@ export type ContratoServidor               = components['schemas']['ContratoServ
 export type DiscapacidadServidor           = components['schemas']['DiscapacidadServidor']
 export type EnfermedadCatastroficaServidor = components['schemas']['EnfermedadCatastroficaServidor']
 export type CuentaBancariaServidor         = components['schemas']['CuentaBancariaServidor']
-export type EntidadFinanciera              = components['schemas']['EntidadFinanciera']
+export type EntidadFinanciera = {
+  id:         number
+  nombre:     string
+  tipo?:      string
+  codigo_bce?: string | null
+  estado?:    boolean
+}
 
 // ── Viáticos ─────────────────────────────────
 export type Viatico           = components['schemas']['Viatico']
@@ -316,10 +322,14 @@ export type DocumentoServidorConRelaciones = {
 }
 
 export type CuentaBancariaConRelaciones = CuentaBancariaServidor & {
-  entidad_financiera?: { id: number; nombre?: string }
-  numero_cuenta?: string
-  tipo_cuenta?: 'ahorros' | 'corriente'
-  es_principal?: boolean
+  entidad_financiera?: EntidadFinanciera | null
+  numero_cuenta?:      string
+  tipo_cuenta?:        'ahorros' | 'corriente'
+  proposito?:          'sueldo' | 'viaticos' | 'ambos'
+  es_principal_sueldo?:  boolean
+  es_principal_viatico?: boolean
+  es_principal?:         boolean
+  estado?:               boolean
 }
 
 export type MovimientoPersonalConRelaciones = {

@@ -17,9 +17,10 @@ export const cuentaBancariaService = {
       `/expediente/servidores/${servidorId}/cuentas-bancarias`, data
     ).then(r => r.data.datos),
 
-  setPrincipal: (servidorId: number, id: number) =>
+  setPrincipal: (servidorId: number, id: number, proposito: 'sueldo' | 'viatico') =>
     api.post<ApiResponse<void>>(
-      `/expediente/servidores/${servidorId}/cuentas-bancarias/${id}/set-principal`
+      `/expediente/servidores/${servidorId}/cuentas-bancarias/${id}/set-principal`,
+      { proposito }
     ).then(r => r.data),
 
   eliminar: (servidorId: number, id: number) =>

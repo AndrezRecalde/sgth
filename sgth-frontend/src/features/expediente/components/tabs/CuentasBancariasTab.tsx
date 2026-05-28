@@ -1,7 +1,7 @@
 'use client'
 
 import { Stack, Text, Badge, Group, Button,
-         ActionIcon, Tooltip, Skeleton } from '@mantine/core'
+         ActionIcon, Tooltip, Skeleton, Menu } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash, IconStar,
          IconCreditCard, IconStarFilled } from '@tabler/icons-react'
@@ -54,20 +54,20 @@ export function CuentasBancariasTab({ servidorId }: Props) {
               p="sm"
               style={{
                 borderRadius: 8,
-                border: c.es_principal
+                border: (c.es_principal_sueldo || c.es_principal_viatico)
                   ? '1.5px solid var(--mantine-color-emerald-6)'
                   : '1px solid var(--mantine-color-default-border)',
-                background: c.es_principal
+                background: (c.es_principal_sueldo || c.es_principal_viatico)
                   ? 'var(--mantine-color-emerald-light)'
                   : undefined,
               }}
             >
               <Stack gap={2}>
                 <Group gap="xs">
-                  {c.es_principal && (
+                  {(c.es_principal_sueldo || c.es_principal_viatico) && (
                     <IconStarFilled
                       size={14}
-                      color="var(--mantine-color-emerald-6)"
+                      color={c.es_principal_sueldo ? 'var(--mantine-color-emerald-6)' : 'var(--mantine-color-blue-6)'}
                     />
                   )}
                   <Text size="sm" fw={600}>
@@ -75,33 +75,60 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                       ?? c.entidad_financiera_id
                       ?? '-'}
                   </Text>
-                  {c.es_principal && (
+                  {c.es_principal_sueldo && (
                     <Badge size="xs" color="emerald" variant="light">
-                      Principal
+                      Principal nómina
+                    </Badge>
+                  )}
+                  {c.es_principal_viatico && (
+                    <Badge size="xs" color="blue" variant="light">
+                      Principal viáticos
                     </Badge>
                   )}
                 </Group>
                 <Text size="xs" c="dimmed">
                   {c.tipo_cuenta === 'ahorros' ? 'Cuenta de ahorros' : 'Cuenta corriente'}
-                  {' · '}
-                  <Text span ff="monospace" size="xs">
-                    {c.numero_cuenta ?? '-'}
-                  </Text>
+                  {c.proposito ? ` · ${
+                    c.proposito === 'sueldo' ? 'Nómina'
+                    : c.proposito === 'viaticos' ? 'Viáticos'
+                    : 'Nómina y Viáticos'
+                  }` : ''}
+                </Text>
+                <Text size="xs" ff="monospace" c="dimmed">
+                  {c.numero_cuenta ?? '-'}
                 </Text>
               </Stack>
 
               <Group gap="xs">
-                {!c.es_principal && (
-                  <Tooltip label="Establecer como principal" withArrow>
-                    <ActionIcon
-                      variant="subtle"
-                      color="emerald"
-                      size="sm"
-                      onClick={() => setPrincipal.mutate(Number(c.id))}
-                    >
-                      <IconStar size={14} />
-                    </ActionIcon>
-                  </Tooltip>
+                {!(c.es_principal_sueldo && c.es_principal_viatico) && (
+                  <Menu position="bottom-end" shadow="md" width={200}>
+                    <Menu.Target>
+                      <Tooltip label="Establecer como principal" withArrow>
+                        <ActionIcon variant="subtle" color="emerald" size="sm">
+                          <IconStar size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Label>Establecer principal para:</Menu.Label>
+                      {!c.es_principal_sueldo && (
+                        <Menu.Item
+                          leftSection={<IconStarFilled size={14} color="var(--mantine-color-emerald-6)" />}
+                          onClick={() => setPrincipal.mutate({ id: Number(c.id), proposito: 'sueldo' })}
+                        >
+                          Nómina / Sueldo
+                        </Menu.Item>
+                      )}
+                      {!c.es_principal_viatico && (
+                        <Menu.Item
+                          leftSection={<IconStarFilled size={14} color="var(--mantine-color-blue-6)" />}
+                          onClick={() => setPrincipal.mutate({ id: Number(c.id), proposito: 'viatico' })}
+                        >
+                          Viáticos
+                        </Menu.Item>
+                      )}
+                    </Menu.Dropdown>
+                  </Menu>
                 )}
                 <Tooltip label="Eliminar cuenta" withArrow>
                   <ActionIcon

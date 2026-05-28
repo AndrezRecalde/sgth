@@ -18920,12 +18920,6 @@
                     "entidad_financiera_id": {
                         "type": "integer"
                     },
-                    "nombre_banco_otro": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
                     "tipo_cuenta": {
                         "type": "string"
                     },
@@ -18970,7 +18964,6 @@
                     "id",
                     "servidor_id",
                     "entidad_financiera_id",
-                    "nombre_banco_otro",
                     "tipo_cuenta",
                     "numero_cuenta",
                     "proposito",
@@ -22291,12 +22284,8 @@
                     "es_principal_viatico": {
                         "type": "boolean"
                     },
-                    "nombre_banco_otro": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
+                    "estado": {
+                        "type": "boolean"
                     }
                 },
                 "required": [

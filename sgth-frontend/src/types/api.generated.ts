@@ -3520,7 +3520,6 @@ export interface components {
             id: number;
             servidor_id: number;
             entidad_financiera_id: number;
-            nombre_banco_otro: string | null;
             tipo_cuenta: string;
             numero_cuenta: string;
             proposito: string;
@@ -4392,7 +4391,7 @@ export interface components {
             proposito: "sueldo" | "viaticos" | "ambos";
             es_principal_sueldo?: boolean;
             es_principal_viatico?: boolean;
-            nombre_banco_otro?: string | null;
+            estado?: boolean;
         };
         /** StoreDeclaracionJuramentadaRequest */
         StoreDeclaracionJuramentadaRequest: {

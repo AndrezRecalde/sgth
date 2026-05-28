@@ -38,8 +38,8 @@ export function useCuentaBancariaMutations(servidorId: number) {
   })
 
   const setPrincipal = useMutation({
-    mutationFn: (id: number) =>
-      cuentaBancariaService.setPrincipal(servidorId, id),
+    mutationFn: ({ id, proposito }: { id: number; proposito: 'sueldo' | 'viatico' }) =>
+      cuentaBancariaService.setPrincipal(servidorId, id, proposito),
     onSuccess: () => {
       notifications.show({
         title: 'Cuenta principal actualizada',
