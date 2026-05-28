@@ -38,6 +38,7 @@ export function ServidorFormLaboral() {
           color="blue"
           variant="light"
           radius="md"
+          mb="xs"
         >
           <Text size="xs">
             Estos datos provienen de la resolución oficial de nombramiento.
@@ -53,9 +54,8 @@ export function ServidorFormLaboral() {
           control={control}
           render={({ field }) => (
             <DatePickerInput
-              label="Fecha de ingreso a la institución"
+              label="Fecha de ingreso al GAD"
               placeholder="Seleccionar fecha"
-              description="Fecha en que ingresó al GAD Esmeraldas"
               valueFormat="YYYY-MM-DD"
               maxDate={new Date()}
               {...contained}
@@ -73,9 +73,8 @@ export function ServidorFormLaboral() {
           control={control}
           render={({ field }) => (
             <DatePickerInput
-              label="Fecha de ingreso al sector público"
+              label="Fecha ingreso sector público"
               placeholder="Seleccionar fecha (opcional)"
-              description="Puede ser en otra institución anterior al GAD"
               valueFormat="YYYY-MM-DD"
               clearable
               maxDate={new Date()}
@@ -94,9 +93,8 @@ export function ServidorFormLaboral() {
           control={control}
           render={({ field }) => (
             <DatePickerInput
-              label="Fecha de nombramiento"
+              label="Fecha de nombramiento oficial"
               placeholder="Seleccionar fecha (opcional)"
-              description="Fecha de la resolución de nombramiento oficial"
               valueFormat="YYYY-MM-DD"
               clearable
               maxDate={new Date()}
