@@ -72,9 +72,7 @@ class ContratoServidorService
         int $servidorId,
         array $data
     ): void {
-        // Determinar régimen según tipo de nombramiento
         $tipoNombramiento = $data['tipo_nombramiento'] ?? null;
-
         if (!$tipoNombramiento) return;
 
         $tipoNombramientoVal = $tipoNombramiento instanceof \UnitEnum
@@ -87,7 +85,18 @@ class ContratoServidorService
             default                   => 'losep',
         };
 
+        $update = ['regimen_laboral' => $regimen];
+
+        // Sincronizar puesto y unidad si vienen en el contrato
+        if (!empty($data['puesto_id'])) {
+            $update['puesto_id'] = $data['puesto_id'];
+        }
+        if (!empty($data['unidad_administrativa_id'])) {
+            $update['unidad_administrativa_id'] =
+                $data['unidad_administrativa_id'];
+        }
+
         \App\Models\Expediente\Servidor::where('id', $servidorId)
-            ->update(['regimen_laboral' => $regimen]);
+            ->update($update);
     }
 }
