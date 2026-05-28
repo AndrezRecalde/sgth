@@ -124,10 +124,24 @@ class ExpedienteService implements ExpedienteServiceInterface
 
     public function listarServidores(array $filtros): mixed
     {
-        $query = Servidor::query()->with(['unidadAdministrativa', 'puesto']);
+        $query = Servidor::query()
+            ->with(['unidadAdministrativa', 'puesto']);
+
+        // Búsqueda por nombre o cédula
+        if (!empty($filtros['search'])) {
+            $search = $filtros['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('cedula', 'ilike', "%{$search}%")
+                  ->orWhere('nombre', 'ilike', "%{$search}%")
+                  ->orWhere('apellido', 'ilike', "%{$search}%")
+                  ->orWhere('segundo_nombre', 'ilike', "%{$search}%")
+                  ->orWhere('segundo_apellido', 'ilike', "%{$search}%");
+            });
+        }
 
         if (!empty($filtros['unidad_administrativa_id'])) {
-            $query->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']);
+            $query->where('unidad_administrativa_id',
+                $filtros['unidad_administrativa_id']);
         }
 
         if (isset($filtros['estado'])) {
@@ -135,13 +149,19 @@ class ExpedienteService implements ExpedienteServiceInterface
         }
 
         if (!empty($filtros['tipo_nombramiento'])) {
-            $query->where('tipo_nombramiento', $filtros['tipo_nombramiento']);
+            $query->where('tipo_nombramiento',
+                $filtros['tipo_nombramiento']);
         }
 
-        if (isset($filtros['tiene_discapacidad']) && $filtros['tiene_discapacidad']) {
+        if (isset($filtros['tiene_discapacidad'])
+            && $filtros['tiene_discapacidad']) {
             $query->conDiscapacidad();
         }
 
-        return $query->paginate(15);
+        $perPage = isset($filtros['per_page'])
+            ? (int) $filtros['per_page'] : 15;
+
+        return $query->orderBy('apellido')->orderBy('nombre')
+                     ->paginate($perPage);
     }
 }
