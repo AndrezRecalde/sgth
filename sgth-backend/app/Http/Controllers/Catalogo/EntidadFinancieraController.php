@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Catalogo;
 
 use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
 use App\Models\Catalogo\EntidadFinanciera;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,8 +12,10 @@ class EntidadFinancieraController extends Controller
 {
     public function index(): JsonResponse
     {
-        $entidades = EntidadFinanciera::where('estado', true)->get();
-        return response()->json($entidades);
+        $entidades = EntidadFinanciera::where('estado', true)
+            ->orderBy('nombre')
+            ->get();
+        return ApiResponse::ok($entidades, 'Entidades financieras.');
     }
 
     public function store(Request $request): JsonResponse
