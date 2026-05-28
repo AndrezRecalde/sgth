@@ -6,6 +6,6 @@ export function useServidores(params?: ServidorParams) {
   return useQuery({
     queryKey: ['servidores', params],
     queryFn: () => expedienteService.listar(params),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
   })
 }

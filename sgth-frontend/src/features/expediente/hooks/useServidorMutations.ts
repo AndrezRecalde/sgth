@@ -11,8 +11,10 @@ import type { ApiResponse } from '@/types/api'
 export function useServidorMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () =>
+  const invalidar = () => {
     qc.invalidateQueries({ queryKey: ['servidores'] })
+    qc.refetchQueries({ queryKey: ['servidores'] })
+  }
 
   const onError = (error: AxiosError<ApiResponse>) => {
     notifications.show({
