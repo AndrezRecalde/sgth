@@ -13764,7 +13764,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Listado de servidores"
+                                            "const": "Listado de servidores."
                                         },
                                         "datos": {
                                             "type": "array",
@@ -13773,7 +13773,27 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "string"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "string"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina"
+                                            ]
                                         }
                                     },
                                     "required": [

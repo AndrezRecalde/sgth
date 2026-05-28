@@ -38,10 +38,21 @@ class ServidorController extends Controller
     {
         $this->authorize('verAny', Servidor::class);
 
-        $filtros = $request->only(['unidad_administrativa_id', 'estado', 'tipo_nombramiento', 'tiene_discapacidad']);
-        $servidores = $this->expedienteService->listarServidores($filtros);
+        $paginador = $this->expedienteService->listarServidores(
+            $request->all()
+        );
 
-        return ApiResponse::ok(ServidorResource::collection($servidores), 'Listado de servidores');
+        return response()->json([
+            'exito'   => true,
+            'mensaje' => 'Listado de servidores.',
+            'datos'   => ServidorResource::collection($paginador->items()),
+            'meta'    => [
+                'pagina_actual' => $paginador->currentPage(),
+                'por_pagina'    => $paginador->perPage(),
+                'total'         => $paginador->total(),
+                'ultima_pagina' => $paginador->lastPage(),
+            ],
+        ]);
     }
 
     public function store(StoreServidorRequest $request): JsonResponse
