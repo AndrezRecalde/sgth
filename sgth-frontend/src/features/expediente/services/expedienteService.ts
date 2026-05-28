@@ -9,6 +9,8 @@ import type {
   EnfermedadCatastroficaServidor,
   DocumentoServidor,
   ServidorConRelaciones,
+  DiscapacidadCargaFamiliar,
+  EnfermedadCatastroficaCargaFamiliar,
 } from '@/types/api'
 import type { ServidorFormData } from '../schemas/servidor.schema'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
@@ -177,5 +179,34 @@ export const expedienteService = {
     api.get(
       `/expediente/servidores/${servidorId}/documentos/${documentoId}/descargar`,
       { responseType: 'blob' }
+    ).then(r => r.data),
+
+  // ── Sub-condiciones de carga familiar ──────────
+  crearDiscapacidadCarga: (
+    cargaId: number,
+    data: Record<string, unknown>
+  ) =>
+    api.post<ApiResponse<DiscapacidadCargaFamiliar>>(
+      `/expediente/cargas-familiares/${cargaId}/discapacidades`,
+      data
+    ).then(r => r.data.datos),
+
+  eliminarDiscapacidadCarga: (cargaId: number, id: number) =>
+    api.delete<ApiResponse<void>>(
+      `/expediente/cargas-familiares/${cargaId}/discapacidades/${id}`
+    ).then(r => r.data),
+
+  crearEnfermedadCarga: (
+    cargaId: number,
+    data: Record<string, unknown>
+  ) =>
+    api.post<ApiResponse<EnfermedadCatastroficaCargaFamiliar>>(
+      `/expediente/cargas-familiares/${cargaId}/enfermedades`,
+      data
+    ).then(r => r.data.datos),
+
+  eliminarEnfermedadCarga: (cargaId: number, id: number) =>
+    api.delete<ApiResponse<void>>(
+      `/expediente/cargas-familiares/${cargaId}/enfermedades/${id}`
     ).then(r => r.data),
 }

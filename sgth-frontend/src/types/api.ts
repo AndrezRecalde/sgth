@@ -367,26 +367,27 @@ export type CargaFamiliar = {
   persona_con_discapacidad: boolean
   posee_enfermedad_catastrofica: boolean
   observaciones: string | null
-  discapacidades?: DiscapacidadCargaFamiliar[]
-  enfermedades_catastroficas?: EnfermedadCatastroficaCargaFamiliar[]
+  discapacidades?:              DiscapacidadCargaFamiliar[]
+  enfermedades_catastroficas?:  EnfermedadCatastroficaCargaFamiliar[]
   created_at?: string
 }
 
 export type DiscapacidadCargaFamiliar = {
-  id: number
-  carga_familiar_id: number
-  tipo_discapacidad: string
-  porcentaje: number | null
-  numero_carnet_conadis: string | null
-  carnet_vencimiento: string | null
+  id:                    number
+  carga_familiar_id:     number
+  tipo_discapacidad:     string
+  porcentaje:            number
+  numero_carnet_conadis?: string | null
+  created_at?:           string
 }
 
 export type EnfermedadCatastroficaCargaFamiliar = {
-  id: number
-  carga_familiar_id: number
-  tipo_enfermedad: string
-  codigo_cie10: string | null
-  fecha_diagnostico: string | null
+  id:                   number
+  carga_familiar_id:    number
+  tipo_enfermedad:      string
+  codigo_cie10?:        string | null
+  fecha_diagnostico?:   string | null
+  created_at?:          string
 }
 
 // ── Declaraciones Juramentadas ────────────────

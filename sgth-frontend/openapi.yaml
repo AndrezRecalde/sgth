@@ -7177,6 +7177,156 @@
                 }
             }
         },
+        "/v1/expediente/cargas-familiares/{cargaId}/discapacidades": {
+            "post": {
+                "operationId": "carga.discapacidades.store",
+                "tags": [
+                    "DiscapacidadCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "cargaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "tipo_discapacidad": {
+                                        "type": "string"
+                                    },
+                                    "porcentaje": {
+                                        "type": "number",
+                                        "minimum": 0.01,
+                                        "maximum": 100
+                                    },
+                                    "numero_carnet_conadis": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 50
+                                    }
+                                },
+                                "required": [
+                                    "tipo_discapacidad",
+                                    "porcentaje"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Discapacidad registrada en la carga familiar."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/cargas-familiares/{cargaId}/discapacidades/{id}": {
+            "delete": {
+                "operationId": "carga.discapacidades.destroy",
+                "tags": [
+                    "DiscapacidadCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "cargaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Discapacidad eliminada."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/{servidorId}/discapacidades": {
             "get": {
                 "operationId": "discapacidades.index",
@@ -7201,15 +7351,28 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Discapacidades del servidor."
+                                        },
+                                        "datos": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/DiscapacidadServidor"
                                             }
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -8517,6 +8680,158 @@
                 }
             }
         },
+        "/v1/expediente/cargas-familiares/{cargaId}/enfermedades": {
+            "post": {
+                "operationId": "carga.enfermedades.store",
+                "tags": [
+                    "EnfermedadCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "cargaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "tipo_enfermedad": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "codigo_cie10": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 20
+                                    },
+                                    "fecha_diagnostico": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "tipo_enfermedad"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Enfermedad catastr\u00f3fica registrada en la carga familiar."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/cargas-familiares/{cargaId}/enfermedades/{id}": {
+            "delete": {
+                "operationId": "carga.enfermedades.destroy",
+                "tags": [
+                    "EnfermedadCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "cargaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Enfermedad catastr\u00f3fica eliminada."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/{servidorId}/enfermedades": {
             "get": {
                 "operationId": "enfermedades.index",
@@ -8541,15 +8856,28 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Enfermedades catastr\u00f3ficas del servidor."
+                                        },
+                                        "datos": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/EnfermedadCatastroficaServidor"
                                             }
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }

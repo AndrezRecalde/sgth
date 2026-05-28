@@ -1243,6 +1243,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/cargas-familiares/{cargaId}/discapacidades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["carga.discapacidades.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/cargas-familiares/{cargaId}/discapacidades/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["carga.discapacidades.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/{servidorId}/discapacidades": {
         parameters: {
             query?: never;
@@ -1478,6 +1510,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/cargas-familiares/{cargaId}/enfermedades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["carga.enfermedades.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/cargas-familiares/{cargaId}/enfermedades/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["carga.enfermedades.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -8664,6 +8728,72 @@ export interface operations {
             };
         };
     };
+    "carga.discapacidades.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cargaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tipo_discapacidad: string;
+                    porcentaje: number;
+                    numero_carnet_conadis?: string | null;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Discapacidad registrada en la carga familiar.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "carga.discapacidades.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cargaId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Discapacidad eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "discapacidades.index": {
         parameters: {
             query?: never;
@@ -8681,7 +8811,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["DiscapacidadServidor"][];
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Discapacidades del servidor.";
+                        datos: components["schemas"]["DiscapacidadServidor"][];
+                        meta: null;
                     };
                 };
             };
@@ -9308,6 +9442,73 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "carga.enfermedades.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cargaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tipo_enfermedad: string;
+                    codigo_cie10?: string | null;
+                    /** Format: date-time */
+                    fecha_diagnostico?: string | null;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Enfermedad catastrófica registrada en la carga familiar.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "carga.enfermedades.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cargaId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Enfermedad catastrófica eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "enfermedades.index": {
         parameters: {
             query?: never;
@@ -9325,7 +9526,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["EnfermedadCatastroficaServidor"][];
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Enfermedades catastróficas del servidor.";
+                        datos: components["schemas"]["EnfermedadCatastroficaServidor"][];
+                        meta: null;
                     };
                 };
             };
