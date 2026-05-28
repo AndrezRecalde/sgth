@@ -14,6 +14,10 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useCargasFamiliares } from '../../hooks/useCargasFamiliares'
 import { useCargaFamiliarMutations } from '../../hooks/useCargaFamiliarMutations'
 import { CargaFamiliarModal } from '../CargaFamiliarModal'
+import { DiscapacidadCargaFamiliarModal }
+  from '../DiscapacidadCargaFamiliarModal'
+import { EnfermedadCargaFamiliarModal }
+  from '../EnfermedadCargaFamiliarModal'
 import { expedienteService } from '../../services/expedienteService'
 import { useQueryClient } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
@@ -55,6 +59,14 @@ interface CargaRowProps {
 function CargaRow({ carga, servidorId, onEdit, onDelete }: CargaRowProps) {
   const [expanded, setExpanded] = useState(false)
   const qc = useQueryClient()
+
+  const [discModalOpened, {
+    open: openDiscModal, close: closeDiscModal
+  }] = useDisclosure(false)
+
+  const [enfModalOpened, {
+    open: openEnfModal, close: closeEnfModal
+  }] = useDisclosure(false)
 
   const discapacidades = (carga.discapacidades ?? []) as DiscapacidadCargaFamiliar[]
   const enfermedades   = (carga.enfermedades_catastroficas ?? []) as EnfermedadCatastroficaCargaFamiliar[]
@@ -189,37 +201,7 @@ function CargaRow({ carga, servidorId, onEdit, onDelete }: CargaRowProps) {
                 <Button
                   size="xs" variant="subtle" color="orange"
                   leftSection={<IconPlus size={12} />}
-                  onClick={async () => {
-                    const tipo = prompt('Tipo de discapacidad\n(fisica, sensorial, intelectual, psicosocial, visceral, multiple):')
-                    if (!tipo) return
-                    const pct = prompt('Porcentaje (1-100):')
-                    if (!pct) return
-                    const carnet = prompt('Número carnet CONADIS (opcional):')
-                    try {
-                      await expedienteService.crearDiscapacidadCarga(
-                        Number(carga.id),
-                        {
-                          tipo_discapacidad:     tipo,
-                          porcentaje:            Number(pct),
-                          numero_carnet_conadis: carnet || null,
-                        }
-                      )
-                      notifications.show({
-                        title: 'Registrado', color: 'emerald',
-                        message: 'Discapacidad registrada.',
-                        icon: React.createElement(IconCheck, { size: 16 }),
-                      })
-                      qc.invalidateQueries({
-                        queryKey: ['cargas-familiares', servidorId]
-                      })
-                    } catch {
-                      notifications.show({
-                        title: 'Error', color: 'red',
-                        message: 'No se pudo registrar.',
-                        icon: React.createElement(IconX, { size: 16 }),
-                      })
-                    }
-                  }}
+                  onClick={(e) => { e.stopPropagation(); openDiscModal() }}
                 >
                   Agregar
                 </Button>
@@ -273,36 +255,7 @@ function CargaRow({ carga, servidorId, onEdit, onDelete }: CargaRowProps) {
                 <Button
                   size="xs" variant="subtle" color="red"
                   leftSection={<IconPlus size={12} />}
-                  onClick={async () => {
-                    const tipo = prompt('Tipo de enfermedad:')
-                    if (!tipo) return
-                    const cie = prompt('Código CIE-10 (opcional):')
-                    const fecha = prompt('Fecha diagnóstico YYYY-MM-DD (opcional):')
-                    try {
-                      await expedienteService.crearEnfermedadCarga(
-                        Number(carga.id),
-                        {
-                          tipo_enfermedad:   tipo,
-                          codigo_cie10:      cie || null,
-                          fecha_diagnostico: fecha || null,
-                        }
-                      )
-                      notifications.show({
-                        title: 'Registrado', color: 'emerald',
-                        message: 'Enfermedad registrada.',
-                        icon: React.createElement(IconCheck, { size: 16 }),
-                      })
-                      qc.invalidateQueries({
-                        queryKey: ['cargas-familiares', servidorId]
-                      })
-                    } catch {
-                      notifications.show({
-                        title: 'Error', color: 'red',
-                        message: 'No se pudo registrar.',
-                        icon: React.createElement(IconX, { size: 16 }),
-                      })
-                    }
-                  }}
+                  onClick={(e) => { e.stopPropagation(); openEnfModal() }}
                 >
                   Agregar
                 </Button>
@@ -348,6 +301,20 @@ function CargaRow({ carga, servidorId, onEdit, onDelete }: CargaRowProps) {
           )}
         </Stack>
       </Collapse>
+
+      <DiscapacidadCargaFamiliarModal
+        opened={discModalOpened}
+        onClose={closeDiscModal}
+        cargaId={Number(carga.id)}
+        servidorId={servidorId}
+      />
+
+      <EnfermedadCargaFamiliarModal
+        opened={enfModalOpened}
+        onClose={closeEnfModal}
+        cargaId={Number(carga.id)}
+        servidorId={servidorId}
+      />
     </Stack>
   )
 }
