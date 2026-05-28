@@ -11,7 +11,7 @@ class ContratoServidorService
     public function listar(int $servidorId)
     {
         return ContratoServidor::where('servidor_id', $servidorId)
-            ->with(['unidadAdministrativa', 'puesto'])
+            ->with(['unidadAdministrativa', 'puesto.cargo'])
             ->orderBy('fecha_inicio', 'desc')
             ->get();
     }
