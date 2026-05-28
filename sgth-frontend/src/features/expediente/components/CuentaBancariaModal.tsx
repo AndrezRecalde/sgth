@@ -1,9 +1,11 @@
 'use client'
 
-import { Modal, Button, Group, Select,
-         TextInput, Grid, Switch, Text } from '@mantine/core'
+import { useState, useEffect } from 'react'
+import { Modal, Button, Group, Select, TextInput,
+         Grid, Switch, Text, Stack, Alert } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { IconInfoCircle } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useEntidadesFinancieras } from '../hooks/useEntidadesFinancieras'
@@ -12,7 +14,6 @@ import {
   cuentaBancariaSchema,
   type CuentaBancariaFormData,
 } from '../schemas/cuentaBancaria.schema'
-import type { EntidadFinanciera } from '@/types/api'
 
 const TIPO_CUENTA_OPTIONS = [
   { value: 'ahorros',   label: 'Cuenta de ahorros' },
@@ -35,14 +36,24 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
   const { isMobile }  = useMobileBreakpoint()
   const contained     = useContainedInput()
   const { crear }     = useCuentaBancariaMutations(servidorId)
-  const { data: entidades = [], isLoading: loadingEntidades } =
+  const { data: rawEntidades, isLoading: loadingEntidades } =
     useEntidadesFinancieras()
+
+  // Mapear entidades de forma segura sin depender del tipo generado
+  const entidadOptions = Array.isArray(rawEntidades)
+    ? rawEntidades.map((e: Record<string, unknown>) => ({
+        value: String(e.id),
+        label: String(e.nombre ?? `Entidad ${e.id}`),
+      }))
+    : []
 
   const {
     register,
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<CuentaBancariaFormData>({
     resolver: zodResolver(cuentaBancariaSchema),
@@ -57,10 +68,19 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
     },
   })
 
-  const entidadOptions = (entidades as EntidadFinanciera[]).map(e => ({
-    value: String(e.id),
-    label: e.nombre ?? `Entidad ${e.id}`,
-  }))
+  const esPrincipalSueldo  = watch('es_principal_sueldo')
+  const esPrincipalViatico = watch('es_principal_viatico')
+
+  // Asignar propósito automáticamente según los switches
+  useEffect(() => {
+    if (esPrincipalSueldo && esPrincipalViatico) {
+      setValue('proposito', 'ambos')
+    } else if (esPrincipalSueldo) {
+      setValue('proposito', 'sueldo')
+    } else if (esPrincipalViatico) {
+      setValue('proposito', 'viaticos')
+    }
+  }, [esPrincipalSueldo, esPrincipalViatico, setValue])
 
   const handleClose = () => {
     reset()
@@ -83,132 +103,157 @@ export function CuentaBancariaModal({ opened, onClose, servidorId }: Props) {
       radius={isMobile ? 0 : 'xl'}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid>
-          {/* Entidad financiera */}
-          <Grid.Col span={12}>
-            <Controller
-              name="entidad_financiera_id"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Entidad financiera"
-                  placeholder={
-                    loadingEntidades
-                      ? 'Cargando entidades...'
-                      : 'Buscar banco o cooperativa'
-                  }
-                  data={entidadOptions}
-                  searchable
-                  disabled={loadingEntidades}
-                  {...contained}
-                  value={field.value ? String(field.value) : ''}
-                  onChange={(v) => field.onChange(v ? Number(v) : undefined)}
-                  error={errors.entidad_financiera_id?.message}
-                />
-              )}
-            />
-          </Grid.Col>
+        <Stack gap="sm">
+          <Grid>
+            {/* Entidad financiera */}
+            <Grid.Col span={12}>
+              <Controller
+                name="entidad_financiera_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Entidad financiera"
+                    placeholder={
+                      loadingEntidades
+                        ? 'Cargando entidades...'
+                        : entidadOptions.length === 0
+                          ? 'Sin entidades disponibles'
+                          : 'Buscar banco o cooperativa'
+                    }
+                    data={entidadOptions}
+                    searchable
+                    disabled={loadingEntidades}
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) =>
+                      field.onChange(v ? Number(v) : undefined)
+                    }
+                    error={errors.entidad_financiera_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
 
-          {/* Número de cuenta */}
-          <Grid.Col span={{ base: 12, sm: 7 }}>
-            <TextInput
-              label="Número de cuenta"
-              placeholder="Número completo de la cuenta"
-              {...contained}
-              {...register('numero_cuenta')}
-              error={errors.numero_cuenta?.message}
-            />
-          </Grid.Col>
+            {/* Número de cuenta */}
+            <Grid.Col span={{ base: 12, sm: 7 }}>
+              <TextInput
+                label="Número de cuenta"
+                placeholder="Número completo de la cuenta"
+                {...contained}
+                {...register('numero_cuenta')}
+                error={errors.numero_cuenta?.message}
+              />
+            </Grid.Col>
 
-          {/* Tipo de cuenta */}
-          <Grid.Col span={{ base: 12, sm: 5 }}>
-            <Controller
-              name="tipo_cuenta"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Tipo de cuenta"
-                  data={TIPO_CUENTA_OPTIONS}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) =>
-                    field.onChange((v ?? 'ahorros') as 'ahorros' | 'corriente')
-                  }
-                  error={errors.tipo_cuenta?.message}
-                />
-              )}
-            />
-          </Grid.Col>
+            {/* Tipo de cuenta */}
+            <Grid.Col span={{ base: 12, sm: 5 }}>
+              <Controller
+                name="tipo_cuenta"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Tipo de cuenta"
+                    data={TIPO_CUENTA_OPTIONS}
+                    {...contained}
+                    value={field.value}
+                    onChange={(v) =>
+                      field.onChange(
+                        (v ?? 'ahorros') as 'ahorros' | 'corriente'
+                      )
+                    }
+                    error={errors.tipo_cuenta?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
 
-          {/* Propósito */}
-          <Grid.Col span={12}>
-            <Controller
-              name="proposito"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Propósito de la cuenta"
-                  placeholder="Seleccionar propósito"
-                  data={PROPOSITO_OPTIONS}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) =>
-                    field.onChange(
-                      (v ?? 'sueldo') as CuentaBancariaFormData['proposito']
-                    )
-                  }
-                  error={errors.proposito?.message}
-                />
-              )}
-            />
-          </Grid.Col>
+            {/* Switches de cuenta principal */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="es_principal_sueldo"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    label="Cuenta principal de nómina"
+                    checked={field.value ?? false}
+                    onChange={(e) =>
+                      field.onChange(e.currentTarget.checked)
+                    }
+                    color="emerald"
+                    mt="xs"
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="es_principal_viatico"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    label="Cuenta principal de viáticos"
+                    checked={field.value ?? false}
+                    onChange={(e) =>
+                      field.onChange(e.currentTarget.checked)
+                    }
+                    color="emerald"
+                    mt="xs"
+                  />
+                )}
+              />
+            </Grid.Col>
 
-          {/* Switches */}
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="es_principal_sueldo"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Cuenta principal de nómina"
-                  checked={field.value ?? false}
-                  onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  color="emerald"
-                  mt="xs"
-                />
-              )}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="es_principal_viatico"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Cuenta principal de viáticos"
-                  checked={field.value ?? false}
-                  onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  color="emerald"
-                  mt="xs"
-                />
-              )}
-            />
-          </Grid.Col>
-        </Grid>
+            {/* Propósito — auto-asignado pero editable */}
+            <Grid.Col span={12}>
+              <Controller
+                name="proposito"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Propósito de la cuenta"
+                    description="Se asigna automáticamente según los switches anteriores"
+                    data={PROPOSITO_OPTIONS}
+                    {...contained}
+                    value={field.value}
+                    onChange={(v) =>
+                      field.onChange(
+                        (v ?? 'sueldo') as CuentaBancariaFormData['proposito']
+                      )
+                    }
+                    error={errors.proposito?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+          </Grid>
 
-        <Group justify="flex-end" mt="xl">
-          <Button variant="default" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            color="emerald"
+          <Alert
+            icon={<IconInfoCircle size={16} />}
+            color="blue"
             variant="light"
-            loading={crear.isPending}
+            radius="md"
           >
-            Registrar cuenta
-          </Button>
-        </Group>
+            <Text size="xs">
+              Marque los switches para indicar si esta cuenta
+              recibirá pagos de nómina, viáticos o ambos.
+              El propósito se asignará automáticamente.
+            </Text>
+          </Alert>
+
+          <Group justify="flex-end" mt="xs">
+            <Button variant="default" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              color="emerald"
+              variant="light"
+              loading={crear.isPending}
+            >
+              Registrar cuenta
+            </Button>
+          </Group>
+        </Stack>
       </form>
     </Modal>
   )
