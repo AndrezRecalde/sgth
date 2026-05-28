@@ -56,13 +56,21 @@ export function ServidorFormPersonal({ form }: Props) {
     label: (c as Canton & { nombre?: string }).nombre ?? `Cantón ${c.id}`,
   }))
 
-  const toDate = (v?: string | null) =>
-    v ? new Date(v) : null
+  const toDate = (v?: string | null): Date | null => {
+    if (!v) return null
+    const datePart = v.split('T')[0]
+    const [year, month, day] = datePart.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  }
 
-  const fromDate = (d: Date | string | null) => {
+  const fromDate = (d: Date | string | null): string | null => {
     if (!d) return null
-    if (typeof d === 'string') return d
-    return d.toISOString().split('T')[0]
+    const date = typeof d === 'string' ? toDate(d) : d
+    if (!date || isNaN(date.getTime())) return null
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   return (
