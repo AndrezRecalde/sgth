@@ -105,7 +105,7 @@ export function CondicionTab({ servidorId }: Props) {
     {
       accessor: "porcentaje",
       title: "%",
-      width: 60,
+      width: 80,
       render: ({ porcentaje }) => (
         <Badge color="orange" variant="light" size="sm">
           {porcentaje ?? "-"}%
@@ -168,7 +168,15 @@ export function CondicionTab({ servidorId }: Props) {
       title: "Diagnóstico",
       width: 110,
       render: ({ fecha_diagnostico }) => (
-        <Text size="sm">{fecha_diagnostico ?? "—"}</Text>
+        <Text size="sm">
+          {fecha_diagnostico
+            ? new Date(fecha_diagnostico).toLocaleDateString("es-EC", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
+            : "—"}
+        </Text>
       ),
     },
     {
