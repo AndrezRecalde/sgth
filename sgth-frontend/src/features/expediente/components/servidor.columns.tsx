@@ -60,7 +60,7 @@ export const getServidorColumns = (
     accessor: 'contrato_vigente',
     title: 'Cargo',
     render: ({ contrato_vigente }) => (
-      <Text size="sm">{contrato_vigente?.puesto?.nombre ?? '-'}</Text>
+      <Text size="sm">{contrato_vigente?.puesto?.cargo?.nombre ?? '-'}</Text>
     ),
   },
   {

@@ -34,7 +34,7 @@ export function ContratosTab({ servidorId }: Props) {
             <Stack gap={2}>
               <Group gap="xs">
                 <Text size="sm" fw={600}>
-                  {c.puesto?.nombre ?? 'Sin cargo'}
+                  {c.puesto?.cargo?.nombre ?? 'Sin cargo'}
                 </Text>
                 {c.estado && (
                   <Badge size="xs" color={ESTADO_COLORS[c.estado]}>
@@ -47,11 +47,11 @@ export function ContratosTab({ servidorId }: Props) {
               </Text>
               <Text size="xs" c="dimmed">
                 {c.tipo_nombramiento ?? '-'} ·{' '}
-                Desde {c.fecha_ingreso ?? '-'}
+                Desde {c.fecha_inicio ?? '-'}
                 {c.fecha_fin ? ` hasta ${c.fecha_fin}` : ''}
               </Text>
               <Text size="xs" fw={500}>
-                ${c.remuneracion?.toFixed(2) ?? '-'}
+                ${(c as any).remuneracion?.toFixed(2) ?? '-'}
               </Text>
             </Stack>
             <ActionIcon variant="subtle" color="red"

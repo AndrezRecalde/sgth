@@ -301,13 +301,30 @@ export type ServidorConRelaciones = Servidor & {
 }
 
 export type ContratoConRelaciones = ContratoServidor & {
-  tipo_nombramiento?: string
-  fecha_ingreso?: string
-  fecha_fin?: string | null
-  remuneracion?: number
-  estado?: EstadoContrato
-  unidad_administrativa?: { id: number; nombre?: string }
-  puesto?: { id: number; nombre?: string }
+  unidad_administrativa?: {
+    id:     number
+    nombre?: string
+    codigo?: string
+  } | null
+  puesto?: {
+    id:              number
+    es_jefe?:        boolean
+    rol_puesto?:     string
+    regimen_laboral?: string
+    cargo?: {
+      id:                    number
+      nombre?:               string
+      denominacion_generica?: string
+      clasificacion_personal?: string
+    } | null
+  } | null
+  estado?:         string
+  fecha_inicio?:   string
+  fecha_fin?:      string | null
+  numero_contrato?: string | null
+  resolucion_numero?: string | null
+  codigo_marcacion?: string | null
+  documento_ruta?: string | null
 }
 
 export type DocumentoServidorConRelaciones = {
