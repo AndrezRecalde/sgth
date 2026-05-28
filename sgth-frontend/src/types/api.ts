@@ -290,6 +290,16 @@ export type ServidorConRelaciones = Servidor & {
   tiene_discapacidad?: boolean
   tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones
+  estado?: boolean
+  puesto?: {
+    id:     number
+    es_jefe?: boolean
+    cargo?: {
+      id:     number
+      nombre?: string
+      denominacion_generica?: string
+    } | null
+  } | null
   unidad_administrativa?: { id: number; nombre?: string }
   regimen_laboral?: 'losep' | 'codigo_trabajo'
   numero_papeleta_votacion?: string | null

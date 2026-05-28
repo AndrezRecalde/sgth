@@ -57,26 +57,32 @@ export const getServidorColumns = (
     ),
   },
   {
-    accessor: 'contrato_vigente',
+    accessor: 'puesto',
     title: 'Cargo',
-    render: ({ contrato_vigente }) => (
-      <Text size="sm">{contrato_vigente?.puesto?.cargo?.nombre ?? '-'}</Text>
-    ),
+    render: (row) => {
+      const cargoNombre = (row as ServidorConRelaciones & {
+        puesto?: { cargo?: { nombre?: string } | null } | null
+      }).puesto?.cargo?.nombre
+      return (
+        <Text size="sm" c="dimmed">
+          {cargoNombre ?? '-'}
+        </Text>
+      )
+    },
   },
   {
     accessor: 'estado',
     title: 'Estado',
     width: 100,
-    render: ({ contrato_vigente }) => {
-      const estado = contrato_vigente?.estado
-      if (!estado) return <Text size="sm" c="dimmed">Sin contrato</Text>
+    render: ({ estado }) => {
+      if (!estado) return <Text size="sm" c="dimmed">-</Text>
       return (
         <Badge
-          color={ESTADO_COLORS[estado] ?? 'gray'}
+          color={estado ? 'emerald' : 'gray'}
           variant="light"
           size="sm"
         >
-          {ESTADO_LABELS[estado] ?? estado}
+          {estado ? 'Activo' : 'Inactivo'}
         </Badge>
       )
     },
