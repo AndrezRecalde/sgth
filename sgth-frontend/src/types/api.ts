@@ -291,6 +291,10 @@ export type ServidorConRelaciones = Servidor & {
   tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones
   estado?: boolean
+  fecha_ingreso_institucion?:    string | null
+  fecha_ingreso_sector_publico?: string | null
+  fecha_nombramiento?:           string | null
+  numero_contrato?:              string | null
   puesto?: {
     id:     number
     es_jefe?: boolean

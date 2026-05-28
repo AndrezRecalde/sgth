@@ -1,216 +1,113 @@
-"use client";
+'use client'
 
-import { TextInput, Select, Grid } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { useUnidades } from "@/features/estructura/hooks/useUnidades";
-import { usePuestos } from "@/features/estructura/hooks/usePuestos";
-import type { UseFormReturnType } from "@mantine/form";
-import type { ServidorFormData } from "../schemas/servidor.schema";
-import type { PuestoConRelaciones } from "@/types/api";
+import { Grid, Text, Alert } from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
+import { Controller, useFormContext } from 'react-hook-form'
+import { IconInfoCircle } from '@tabler/icons-react'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import type { ServidorLaboralFormData } from '../schemas/servidorLaboral.schema'
 
-const REGIMEN_OPTIONS = [
-  { value: "losep", label: "LOSEP" },
-  { value: "codigo_trabajo", label: "Código del Trabajo" },
-];
-
-const TIPO_NOMBRAMIENTO_OPTIONS = [
-  { value: "nombramiento_permanente", label: "Nombramiento Permanente" },
-  { value: "nombramiento_provisional", label: "Nombramiento Provisional" },
-  { value: "servicios_ocasionales", label: "Servicios Ocasionales" },
-  {
-    value: "libre_nombramiento_remocion",
-    label: "Libre Nombramiento y Remoción",
-  },
-  { value: "codigo_trabajo", label: "Código del Trabajo" },
-  { value: "servicios_profesionales", label: "Servicios Profesionales" },
-];
-
-interface Props {
-  form: UseFormReturnType<ServidorFormData>;
+const toDate = (v?: string | null): Date | null => {
+  if (!v) return null
+  const datePart = v.split('T')[0]
+  const [year, month, day] = datePart.split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
-export function ServidorFormLaboral({ form }: Props) {
-  const contained = useContainedInput();
-  const { data: unidades = [] } = useUnidades();
-  const { data: puestosData } = usePuestos();
+const fromDate = (d: Date | string | null): string | null => {
+  if (!d) return null
+  const date = typeof d === 'string' ? toDate(d) : d
+  if (!date || isNaN(date.getTime())) return null
+  const year  = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day   = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
-  const unidadOptions = unidades.map((u) => ({
-    value: String(u.id),
-    label: u.nombre ?? `Unidad ${u.id}`,
-  }));
-
-  const puestoOptions = (puestosData?.data ?? []).map(
-    (p: PuestoConRelaciones) => ({
-      value: String(p.id),
-      label: p.cargo?.nombre ?? `Puesto ${p.id}`,
-    }),
-  );
-
-  const toDate = (v?: string | null): Date | null => {
-    if (!v) return null;
-    const datePart = v.split("T")[0];
-    const [year, month, day] = datePart.split("-").map(Number);
-    return new Date(year, month - 1, day);
-  };
-
-  const fromDate = (d: Date | string | null): string | null => {
-    if (!d) return null;
-    const date = typeof d === "string" ? toDate(d) : d;
-    if (!date || isNaN(date.getTime())) return null;
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+export function ServidorFormLaboral() {
+  const contained = useContainedInput()
+  const { control, formState: { errors } } =
+    useFormContext<ServidorLaboralFormData>()
 
   return (
     <Grid>
+      <Grid.Col span={12}>
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="blue"
+          variant="light"
+          radius="md"
+        >
+          <Text size="xs">
+            Estos datos provienen de la resolución oficial de nombramiento.
+            La fecha de ingreso a la institución es obligatoria para
+            el cálculo de antigüedad y beneficios LOSEP.
+          </Text>
+        </Alert>
+      </Grid.Col>
+
       <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Select
-          label="Régimen laboral"
-          placeholder="Seleccionar régimen"
-          data={REGIMEN_OPTIONS}
-          {...contained}
-          value={form.values.regimen_laboral ?? ""}
-          onChange={(v) =>
-            form.setFieldValue(
-              "regimen_laboral",
-              v as ServidorFormData["regimen_laboral"],
-            )
-          }
-          error={form.errors.regimen_laboral}
+        <Controller
+          name="fecha_ingreso_institucion"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Fecha de ingreso a la institución"
+              placeholder="Seleccionar fecha"
+              description="Fecha en que ingresó al GAD Esmeraldas"
+              valueFormat="YYYY-MM-DD"
+              maxDate={new Date()}
+              {...contained}
+              value={toDate(field.value)}
+              onChange={(d) => field.onChange(fromDate(d) ?? '')}
+              error={errors.fecha_ingreso_institucion?.message}
+            />
+          )}
         />
       </Grid.Col>
+
       <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Select
-          label="Tipo de nombramiento"
-          placeholder="Seleccionar tipo"
-          data={TIPO_NOMBRAMIENTO_OPTIONS}
-          searchable
-          {...contained}
-          value={form.values.tipo_nombramiento ?? ""}
-          onChange={(v) =>
-            form.setFieldValue(
-              "tipo_nombramiento",
-              v as ServidorFormData["tipo_nombramiento"],
-            )
-          }
-          error={form.errors.tipo_nombramiento}
+        <Controller
+          name="fecha_ingreso_sector_publico"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Fecha de ingreso al sector público"
+              placeholder="Seleccionar fecha (opcional)"
+              description="Puede ser en otra institución anterior al GAD"
+              valueFormat="YYYY-MM-DD"
+              clearable
+              maxDate={new Date()}
+              {...contained}
+              value={toDate(field.value)}
+              onChange={(d) => field.onChange(fromDate(d))}
+              error={errors.fecha_ingreso_sector_publico?.message}
+            />
+          )}
         />
       </Grid.Col>
+
       <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Select
-          label="Unidad administrativa"
-          placeholder="Seleccionar unidad"
-          data={unidadOptions}
-          searchable
-          {...contained}
-          value={
-            form.values.unidad_administrativa_id
-              ? String(form.values.unidad_administrativa_id)
-              : ""
-          }
-          onChange={(v) =>
-            form.setFieldValue(
-              "unidad_administrativa_id",
-              v ? Number(v) : ("" as unknown as number),
-            )
-          }
-          error={form.errors.unidad_administrativa_id}
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Select
-          label="Puesto"
-          placeholder="Seleccionar puesto"
-          data={puestoOptions}
-          searchable
-          {...contained}
-          value={form.values.puesto_id ? String(form.values.puesto_id) : ""}
-          onChange={(v) =>
-            form.setFieldValue(
-              "puesto_id",
-              v ? Number(v) : ("" as unknown as number),
-            )
-          }
-          error={form.errors.puesto_id}
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <DatePickerInput
-          label="Fecha de ingreso a la institución"
-          placeholder="Seleccionar fecha"
-          valueFormat="YYYY-MM-DD"
-          {...contained}
-          value={toDate(form.values.fecha_ingreso_institucion)}
-          onChange={(d) =>
-            form.setFieldValue("fecha_ingreso_institucion", fromDate(d) ?? "")
-          }
-          error={form.errors.fecha_ingreso_institucion}
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <DatePickerInput
-          label="Fecha ingreso sector público"
-          placeholder="Seleccionar fecha (opcional)"
-          valueFormat="YYYY-MM-DD"
-          clearable
-          {...contained}
-          value={toDate(form.values.fecha_ingreso_sector_publico)}
-          onChange={(d) =>
-            form.setFieldValue("fecha_ingreso_sector_publico", fromDate(d))
-          }
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <DatePickerInput
-          label="Fecha de nombramiento"
-          placeholder="Seleccionar fecha (opcional)"
-          valueFormat="YYYY-MM-DD"
-          clearable
-          {...contained}
-          value={toDate(form.values.fecha_nombramiento)}
-          onChange={(d) =>
-            form.setFieldValue("fecha_nombramiento", fromDate(d))
-          }
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <TextInput
-          label="Número de contrato"
-          placeholder="Opcional"
-          {...contained}
-          {...form.getInputProps("numero_contrato")}
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <DatePickerInput
-          label="Inicio último contrato"
-          placeholder="Seleccionar fecha (opcional)"
-          valueFormat="YYYY-MM-DD"
-          clearable
-          {...contained}
-          value={toDate(form.values.fecha_inicio_ultimo_contrato)}
-          onChange={(d) =>
-            form.setFieldValue("fecha_inicio_ultimo_contrato", fromDate(d))
-          }
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <DatePickerInput
-          label="Fin último contrato"
-          placeholder="Seleccionar fecha (opcional)"
-          valueFormat="YYYY-MM-DD"
-          clearable
-          {...contained}
-          value={toDate(form.values.fecha_fin_ultimo_contrato)}
-          onChange={(d) =>
-            form.setFieldValue("fecha_fin_ultimo_contrato", fromDate(d))
-          }
+        <Controller
+          name="fecha_nombramiento"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Fecha de nombramiento"
+              placeholder="Seleccionar fecha (opcional)"
+              description="Fecha de la resolución de nombramiento oficial"
+              valueFormat="YYYY-MM-DD"
+              clearable
+              maxDate={new Date()}
+              {...contained}
+              value={toDate(field.value)}
+              onChange={(d) => field.onChange(fromDate(d))}
+              error={errors.fecha_nombramiento?.message}
+            />
+          )}
         />
       </Grid.Col>
     </Grid>
-  );
+  )
 }

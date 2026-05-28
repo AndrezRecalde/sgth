@@ -1,18 +1,23 @@
 'use client'
 
 import { Modal, Tabs, Button, Group } from '@mantine/core'
-import { useForm } from 'react-hook-form'
+import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconUser, IconPhone } from '@tabler/icons-react'
+import { IconUser, IconPhone, IconBriefcase } from '@tabler/icons-react'
 import { useEffect } from 'react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useServidorMutations } from '../hooks/useServidorMutations'
 import { ServidorFormPersonal } from './ServidorFormPersonal'
 import { ServidorFormContacto } from './ServidorFormContacto'
+import { ServidorFormLaboral } from './ServidorFormLaboral'
 import {
   servidorBasicoSchema,
   type ServidorBasicoFormData,
 } from '../schemas/servidorBasico.schema'
+import {
+  servidorLaboralSchema,
+  type ServidorLaboralFormData,
+} from '../schemas/servidorLaboral.schema'
 import type { ServidorConRelaciones } from '@/types/api'
 
 interface Props {
@@ -53,8 +58,19 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
       telefono_convencional: servidor?.telefono_convencional ?? '',
       correo_personal:       servidor?.correo_personal ?? '',
       direccion_domicilio:   servidor?.direccion_domicilio ?? '',
-      provincia_domicilio:   servidor?.provincia_domicilio ?? '',
-      ciudad_domicilio:      servidor?.ciudad_domicilio ?? '',
+    },
+  })
+
+  const laboralForm = useForm<ServidorLaboralFormData>({
+    resolver: zodResolver(servidorLaboralSchema),
+    defaultValues: {
+      fecha_ingreso_institucion:    servidor?.fecha_ingreso_institucion
+        ? servidor.fecha_ingreso_institucion.split('T')[0] : '',
+      fecha_ingreso_sector_publico: servidor?.fecha_ingreso_sector_publico
+        ? servidor.fecha_ingreso_sector_publico.split('T')[0] : null,
+      fecha_nombramiento: servidor?.fecha_nombramiento
+        ? servidor.fecha_nombramiento.split('T')[0] : null,
+      numero_contrato:    servidor?.numero_contrato ?? null,
     },
   })
 
@@ -86,24 +102,50 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
         telefono_convencional: servidor.telefono_convencional ?? '',
         correo_personal:       servidor.correo_personal ?? '',
         direccion_domicilio:   servidor.direccion_domicilio ?? '',
-        provincia_domicilio:   servidor.provincia_domicilio ?? '',
-        ciudad_domicilio:      servidor.ciudad_domicilio ?? '',
+      })
+      laboralForm.reset({
+        fecha_ingreso_institucion: servidor.fecha_ingreso_institucion
+          ? servidor.fecha_ingreso_institucion.split('T')[0] : '',
+        fecha_ingreso_sector_publico: servidor.fecha_ingreso_sector_publico
+          ? servidor.fecha_ingreso_sector_publico.split('T')[0] : null,
+        fecha_nombramiento: servidor.fecha_nombramiento
+          ? servidor.fecha_nombramiento.split('T')[0] : null,
+        numero_contrato: servidor.numero_contrato ?? null,
       })
     } else {
       form.reset()
+      laboralForm.reset()
     }
-  }, [servidor])
+  }, [servidor, form, laboralForm])
 
   const handleClose = () => {
     form.reset()
+    laboralForm.reset()
     onClose()
   }
 
-  const onSubmit = (values: ServidorBasicoFormData) => {
-    const mutation = isEditing
-      ? editar.mutateAsync({ id: Number(servidor!.id), data: values })
-      : crear.mutateAsync(values)
-    mutation.then(handleClose).catch(() => {})
+  const onSubmit = async (values: ServidorBasicoFormData) => {
+    try {
+      if (isEditing) {
+        await editar.mutateAsync({
+          id: Number(servidor!.id),
+          data: values as never,
+        })
+        // Guardar datos laborales si hay fecha ingreso
+        const laboralValues = laboralForm.getValues()
+        if (laboralValues.fecha_ingreso_institucion) {
+          await editar.mutateAsync({
+            id: Number(servidor!.id),
+            data: laboralValues as never,
+          })
+        }
+      } else {
+        await crear.mutateAsync(values as never)
+      }
+      handleClose()
+    } catch {
+      // error manejado por el hook
+    }
   }
 
   const isPending = crear.isPending || editar.isPending
@@ -132,6 +174,14 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
             >
               Contacto
             </Tabs.Tab>
+            {isEditing && (
+              <Tabs.Tab
+                value="laboral"
+                leftSection={<IconBriefcase size={14} />}
+              >
+                Laboral
+              </Tabs.Tab>
+            )}
           </Tabs.List>
 
           <Tabs.Panel value="personal" pt="md">
@@ -141,6 +191,14 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
           <Tabs.Panel value="contacto" pt="md">
             <ServidorFormContacto form={form} />
           </Tabs.Panel>
+
+          {isEditing && (
+            <Tabs.Panel value="laboral" pt="md">
+              <FormProvider {...laboralForm}>
+                <ServidorFormLaboral />
+              </FormProvider>
+            </Tabs.Panel>
+          )}
         </Tabs>
 
         <Group justify="flex-end" mt="xl">

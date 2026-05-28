@@ -7773,7 +7773,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Contrato actualizado con éxito.";
-                        datos: components["schemas"]["ContratoServidor"];
+                        datos: components["schemas"]["ContratoServidor"] | null;
                         meta: null;
                     };
                 };

@@ -39,8 +39,6 @@ export const servidorBasicoSchema = z.object({
   correo_personal:       z.string().email('Email inválido')
     .optional().or(z.literal('')),
   direccion_domicilio:   z.string().optional(),
-  provincia_domicilio:   z.string().optional(),
-  ciudad_domicilio:      z.string().optional(),
 }).superRefine((data, ctx) => {
   if (!data.es_extranjero) {
     if (!data.provincia_nacimiento_id) {

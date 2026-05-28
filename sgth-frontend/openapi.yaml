@@ -5155,7 +5155,14 @@
                                             "const": "Contrato actualizado con \u00e9xito."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/ContratoServidor"
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/ContratoServidor"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
