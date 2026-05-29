@@ -22,6 +22,7 @@ class StorePermisoServidorRequest extends FormRequest
             'hora_inicio' => ['required', 'date_format:H:i'],
             'hora_fin'    => ['required', 'date_format:H:i', 'after:hora_inicio'],
             'observacion' => ['nullable', 'string', 'max:1000'],
+            'unidad_administrativa_id' => 'nullable|exists:unidades_administrativas,id',
         ];
     }
 

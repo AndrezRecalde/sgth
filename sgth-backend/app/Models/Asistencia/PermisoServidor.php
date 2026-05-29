@@ -10,6 +10,7 @@ use App\Observers\Asistencia\PermisoServidorObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Estructura\UnidadAdministrativa;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -37,6 +38,7 @@ class PermisoServidor extends Model
         'anulado_en',
         'vence_en',
         'qr_ruta',
+        'unidad_administrativa_id',
     ];
 
     protected function casts(): array
@@ -75,5 +77,11 @@ class PermisoServidor extends Model
         return $this->belongsTo(User::class, 'anulado_por');
     }
 
-
+    public function unidadAdministrativa(): BelongsTo
+    {
+        return $this->belongsTo(
+            UnidadAdministrativa::class,
+            'unidad_administrativa_id'
+        );
+    }
 }

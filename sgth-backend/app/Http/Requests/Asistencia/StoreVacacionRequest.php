@@ -21,6 +21,7 @@ class StoreVacacionRequest extends FormRequest
             'dias_solicitados' => 'required|integer|min:1',
             'tipo_dias'        => 'required|in:habiles,calendario',
             'observacion'      => 'nullable|string|max:500',
+            'unidad_administrativa_id' => 'nullable|exists:unidades_administrativas,id',
         ];
     }
 }

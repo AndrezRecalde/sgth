@@ -6,6 +6,7 @@ use App\Contracts\Asistencia\PermisoServiceInterface;
 use App\Enums\EstadoPermiso;
 use App\Enums\TipoPermiso;
 use App\Models\Asistencia\PermisoServidor;
+use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,6 +16,7 @@ class PermisoService implements PermisoServiceInterface
     public function crear(array $datos, int $servidorId): PermisoServidor
     {
         return DB::transaction(function () use ($datos, $servidorId) {
+            $servidor = Servidor::findOrFail($servidorId);
             $tipo = TipoPermiso::tryFrom($datos['tipo']);
             $horaInicio = Carbon::parse($datos['hora_inicio']);
             $horaFin = Carbon::parse($datos['hora_fin']);
@@ -51,16 +53,21 @@ class PermisoService implements PermisoServiceInterface
             }
             $venceEn = $vencimiento->startOfDay(); // Vence al iniciar el 4to día hábil
 
+            $unidadId = $datos['unidad_administrativa_id']
+                ?? $servidor->unidad_administrativa_id
+                ?? null;
+
             // 5. Crear el registro del permiso
             $permiso = PermisoServidor::create([
-                'servidor_id' => $servidorId,
-                'tipo'        => $tipo->value,
-                'fecha'       => $datos['fecha'],
-                'hora_inicio' => $datos['hora_inicio'],
-                'hora_fin'    => $datos['hora_fin'],
-                'observacion' => $observacion,
-                'estado'      => EstadoPermiso::PENDIENTE->value,
-                'vence_en'    => $venceEn,
+                'servidor_id'              => $servidorId,
+                'unidad_administrativa_id' => $unidadId,
+                'tipo'                     => $tipo->value,
+                'fecha'                    => $datos['fecha'],
+                'hora_inicio'              => $datos['hora_inicio'],
+                'hora_fin'                 => $datos['hora_fin'],
+                'observacion'              => $observacion,
+                'estado'                   => EstadoPermiso::PENDIENTE->value,
+                'vence_en'                 => $venceEn,
             ]);
 
             // 6. Generar Folio Único secuencial (ej: PER-2026-00045)

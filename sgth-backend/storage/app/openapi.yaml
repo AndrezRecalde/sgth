@@ -21477,6 +21477,12 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -21501,7 +21507,8 @@
                     "deleted_at",
                     "jefe_id",
                     "creado_por",
-                    "qr_ruta"
+                    "qr_ruta",
+                    "unidad_administrativa_id"
                 ],
                 "title": "PermisoServidor"
             },
@@ -23059,6 +23066,12 @@
                             "null"
                         ],
                         "maxLength": 1000
+                    },
+                    "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -23854,6 +23867,12 @@
                             "null"
                         ],
                         "maxLength": 500
+                    },
+                    "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -25420,6 +25439,12 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -25440,7 +25465,8 @@
                     "motivo",
                     "fecha_retorno",
                     "fecha_emision",
-                    "creado_por"
+                    "creado_por",
+                    "unidad_administrativa_id"
                 ],
                 "title": "Vacacion"
             },

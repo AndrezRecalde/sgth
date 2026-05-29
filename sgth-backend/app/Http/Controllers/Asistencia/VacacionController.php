@@ -18,8 +18,12 @@ class VacacionController extends Controller
 
     public function index(Request $request)
     {
-        $query = Vacacion::with(['servidor', 'jefe', 'creadoPor'])
-            ->orderBy('created_at', 'desc');
+        $query = Vacacion::with([
+            'servidor',
+            'jefe',
+            'creadoPor',
+            'unidadAdministrativa',
+        ])->orderBy('created_at', 'desc');
 
         if ($request->filled('servidor_id')) {
             $query->where('servidor_id', $request->servidor_id);

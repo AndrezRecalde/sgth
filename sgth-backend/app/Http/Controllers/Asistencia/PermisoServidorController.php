@@ -18,7 +18,11 @@ class PermisoServidorController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = PermisoServidor::with('servidor')->orderBy('created_at', 'desc');
+        $query = PermisoServidor::with([
+            'servidor',
+            'jefe',
+            'unidadAdministrativa',
+        ])->orderBy('created_at', 'desc');
 
         // Si no es admin/asistente de UATH, restringir vista
         if (!($user->hasRole(['admin-uath', 'asistente-uath']))) {

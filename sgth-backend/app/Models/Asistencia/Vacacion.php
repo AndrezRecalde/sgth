@@ -5,6 +5,7 @@ namespace App\Models\Asistencia;
 use App\Enums\MotivoVacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
+use App\Models\Estructura\UnidadAdministrativa;
 use App\Observers\Asistencia\VacacionObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,7 @@ class Vacacion extends Model
         'fecha_retorno',
         'fecha_emision',
         'creado_por',
+        'unidad_administrativa_id',
     ];
 
     protected function casts(): array
@@ -67,5 +69,13 @@ class Vacacion extends Model
     public function creadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    public function unidadAdministrativa(): BelongsTo
+    {
+        return $this->belongsTo(
+            UnidadAdministrativa::class,
+            'unidad_administrativa_id'
+        );
     }
 }

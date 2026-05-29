@@ -104,10 +104,11 @@ class VacacionService implements VacacionServiceInterface
 
             // Crear solicitud
             $vacacion = Vacacion::create([
-                'servidor_id'      => $servidorId,
-                'jefe_id'          => $datos['jefe_id'] ?? null,
-                'motivo'           => $datos['motivo'] ?? null,
-                'fecha_inicio'     => $fechaInicio,
+                'servidor_id'              => $servidorId,
+                'unidad_administrativa_id' => $datos['unidad_administrativa_id'] ?? $servidor->unidad_administrativa_id ?? null,
+                'jefe_id'                  => $datos['jefe_id'] ?? null,
+                'motivo'                   => $datos['motivo'] ?? null,
+                'fecha_inicio'             => $fechaInicio,
                 'fecha_fin'        => $fechaFin,
                 'fecha_retorno'    => $datos['fecha_retorno'] ?? null,
                 'fecha_emision'    => $datos['fecha_emision'] ?? now()->toDateString(),
