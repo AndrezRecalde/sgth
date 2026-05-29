@@ -119,7 +119,7 @@ export type AntecedentePaciente = components['schemas']['AntecedentePaciente']
 export type InventarioMedicina = components['schemas']['InventarioMedicina']
 
 // ── Nómina ───────────────────────────────────
-export type RolPago      = components['schemas']['RolPago']
+// export type RolPago      = components['schemas']['RolPago']
 export type DetalleNomina = {
   id: number
   nomina_id: number
@@ -131,8 +131,8 @@ export type DetalleNomina = {
 }
 
 // ── Asistencia ───────────────────────────────
-export type Permiso  = components['schemas']['PermisoServidor']
-export type Vacacion = components['schemas']['Vacacion']
+// export type Permiso  = components['schemas']['PermisoServidor']
+// export type Vacacion = components['schemas']['Vacacion']
 
 // ── Enums de conveniencia ────────────────────
 export type EstadoViatico =
@@ -638,5 +638,148 @@ export type EnfermedadDetalle = {
 }
 
 
+// ── Nómina ───────────────────────────────────────
+export type EstadoNomina =
+  'borrador' | 'en_proceso' | 'cerrada' | 'contabilizada' | 'pagada'
 
+export type Nomina = {
+  id:                number
+  periodo:           string
+  fecha_inicio:      string
+  fecha_fin:         string
+  estado:            EstadoNomina
+  total_ingresos?:   number | string | null
+  total_descuentos?: number | string | null
+  total_neto?:       number | string | null
+  cerrado_por?:      number | null
+  cerrado_en?:       string | null
+  created_at?:       string
+}
+
+export type ConceptoNomina = {
+  id:          number
+  codigo:      string
+  nombre:      string
+  tipo:        'ingreso' | 'descuento'
+  formula?:    string | null
+  porcentaje?: number | null
+  activo:      boolean
+}
+
+export type RolPago = {
+  id:                  number
+  nomina_id:           number
+  servidor_id:         number
+  total_ingresos?:     number | string | null
+  total_descuentos?:   number | string | null
+  total_neto?:         number | string | null
+  enviado_por_correo?: boolean
+  enviado_en?:         string | null
+  servidor?:           ServidorConRelaciones
+  nomina?:             Nomina & {
+    detalles?: {
+      id:          number
+      servidor_id: number
+      concepto?:   ConceptoNomina
+      valor?:      number | string
+    }[]
+  }
+}
+
+export type DescuentoRecurrente = {
+  id:                     number
+  servidor_id:            number
+  concepto_nomina_id:     number
+  valor_cuota:            number | string
+  numero_cuotas_total:    number
+  numero_cuotas_pagadas:  number
+  fecha_inicio:           string
+  fecha_fin?:             string | null
+  referencia_externa?:    string | null
+  estado:                 'activo' | 'completado' | 'suspendido'
+  observacion?:           string | null
+  concepto?:              ConceptoNomina
+  servidor?:              ServidorConRelaciones
+}
+
+// ── Asistencia ───────────────────────────────────
+export type MarcacionBiometrica = {
+  Fecha:                          string
+  BADGENUMBER:                    string
+  Nombre:                         string
+  HoraEntradaProgramada:          string | null
+  HoraAlmuerzoSalidaProgramada:   string | null
+  HoraAlmuerzoRetornoProgramada:  string | null
+  HoraSalidaProgramada:           string | null
+  Entrada:                        string | null
+  AlmuerzoSalida:                 string | null
+  AlmuerzoRetorno:                string | null
+  Salida:                         string | null
+  TipoPermiso:                    string | null
+  PermisoDesde:                   string | null
+  PermisoHasta:                   string | null
+}
+
+export type EstadoPermiso =
+  'pendiente' | 'activo' | 'validado_trabajo_social' | 'anulado'
+
+export type TipoPermiso = 'personal' | 'oficial' | 'enfermedad' | 'calamidad'
+
+export type PermisoServidor = {
+  id:               number
+  servidor_id:      number
+  jefe_id?:         number | null
+  creado_por?:      number | null
+  tipo:             TipoPermiso
+  fecha:            string
+  hora_inicio:      string
+  hora_fin:         string
+  observacion?:     string | null
+  estado:           EstadoPermiso
+  folio?:           string | null
+  vence_en?:        string | null
+  confirmado_por?:  number | null
+  confirmado_en?:   string | null
+  validado_ts_por?: number | null
+  validado_ts_en?:  string | null
+  anulado_por?:     number | null
+  anulado_en?:      string | null
+  servidor?:        ServidorConRelaciones
+}
+
+export type MotivoVacacion =
+  | 'vacaciones_anuales'
+  | 'permiso_cargo_vacaciones'
+  | 'licencia_sin_goce'
+  | 'matrimonio'
+  | 'capacitacion'
+  | 'enfermedad'
+  | 'maternidad'
+  | 'paternidad'
+  | 'estudios_sin_remuneracion'
+  | 'calamidad_domestica'
+  | 'licencia_con_goce'
+
+export type EstadoVacacion =
+  'pendiente' | 'aprobada' | 'rechazada' | 'gozada'
+
+export type Vacacion = {
+  id:               number
+  servidor_id:      number
+  jefe_id?:         number | null
+  creado_por?:      number | null
+  folio?:           string | null
+  codigo_qr?:       string | null
+  motivo:           MotivoVacacion
+  fecha_inicio:     string
+  fecha_fin:        string
+  fecha_retorno?:   string | null
+  fecha_emision?:   string | null
+  dias_solicitados: number
+  tipo_dias:        'habiles' | 'calendario'
+  estado:           EstadoVacacion
+  aprobado_por?:    number | null
+  servidor?:        ServidorConRelaciones
+  jefe?:            ServidorConRelaciones | null
+}
 

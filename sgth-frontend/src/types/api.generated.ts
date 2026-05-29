@@ -2013,10 +2013,47 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Módulo de solo lectura para listar la asistencia transaccional importada del biométrico.
-         *     No hay métodos store/update/delete para garantizar inmutabilidad
+         * Consulta marcaciones desde SQLSERVER usando SP.
+         *     Parámetros: servidor_id, fecha_inicio, fecha_fin
          */
         get: operations["marcacion.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/marcaciones/online": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registra una marcación online en SQLSERVER.
+         *     Para servidores en campo/territorio
+         */
+        post: operations["asistencia.marcaciones.online"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/marcaciones/estado-hoy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verifica si el servidor ya marcó hoy */
+        get: operations["asistencia.marcaciones.estado-hoy"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4001,24 +4038,16 @@ export interface components {
             usuario: string;
             contrasena: string;
         };
-        /** Marcacion */
-        Marcacion: {
-            id: number;
-            servidor_id: number;
-            /** Format: date-time */
-            fecha_hora: string;
-            tipo: string;
-            dispositivo_id: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-        };
         /**
          * MotivoSubrogacion
          * @enum {string}
          */
         MotivoSubrogacion: "vacaciones" | "comision_servicios" | "enfermedad" | "licencia" | "encargo_vacante" | "otro";
+        /**
+         * MotivoVacacion
+         * @enum {string}
+         */
+        MotivoVacacion: "vacaciones_anuales" | "permiso_cargo_vacaciones" | "licencia_sin_goce" | "matrimonio" | "capacitacion" | "enfermedad" | "maternidad" | "paternidad" | "estudios_sin_remuneracion" | "calamidad_domestica" | "licencia_con_goce";
         /** MovimientoPersonal */
         MovimientoPersonal: {
             id: number;
@@ -4108,6 +4137,8 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            jefe_id: number | null;
+            creado_por: number | null;
         };
         /** PlanBienestar */
         PlanBienestar: {
@@ -4678,10 +4709,19 @@ export interface components {
         };
         /** StoreVacacionRequest */
         StoreVacacionRequest: {
+            servidor_id?: number | null;
+            jefe_id?: number | null;
+            motivo: components["schemas"]["MotivoVacacion"];
             /** Format: date-time */
             fecha_inicio: string;
             /** Format: date-time */
             fecha_fin: string;
+            /** Format: date-time */
+            fecha_retorno?: string | null;
+            dias_solicitados: number;
+            /** @enum {string} */
+            tipo_dias: "habiles" | "calendario";
+            observacion?: string | null;
         };
         /** Subrogacion */
         Subrogacion: {
@@ -4902,6 +4942,7 @@ export interface components {
             estado?: components["schemas"]["EstadoContrato"];
             /** Format: binary */
             archivo_contrato?: string | null;
+            remuneracion?: number | null;
         };
         /** UpdateDescuentoRecurrenteRequest */
         UpdateDescuentoRecurrenteRequest: {
@@ -5085,6 +5126,15 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            folio: string | null;
+            codigo_qr: string | null;
+            jefe_id: number | null;
+            motivo: components["schemas"]["MotivoVacacion"] | null;
+            /** Format: date-time */
+            fecha_retorno: string | null;
+            /** Format: date-time */
+            fecha_emision: string | null;
+            creado_por: number | null;
         };
         /** Viatico */
         Viatico: {
@@ -10775,7 +10825,11 @@ export interface operations {
     };
     "marcacion.index": {
         parameters: {
-            query?: never;
+            query: {
+                codigo_marcacion: string;
+                fecha_inicio: string;
+                fecha_fin: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -10790,36 +10844,80 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Listado histórico de marcaciones biométricas";
-                        datos: {
-                            current_page: number;
-                            data: components["schemas"]["Marcacion"][];
-                            first_page_url: string | null;
-                            from: number | null;
-                            last_page_url: string | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            next_page_url: string | null;
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            prev_page_url: string | null;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
+                        mensaje: "Marcaciones consultadas correctamente.";
+                        datos: string;
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.marcaciones.online": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    codigo_marcacion: string;
+                    /** @enum {string} */
+                    checktype: "I" | "O";
+                    latitud?: number | null;
+                    longitud?: number | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Marcación registrada correctamente.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.marcaciones.estado-hoy": {
+        parameters: {
+            query: {
+                codigo_marcacion: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Estado de marcación del día.";
+                        datos: string | null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "movimientoPersonal.index": {
@@ -13720,7 +13818,30 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Listado de solicitudes de vacaciones";
-                        datos: components["schemas"]["Vacacion"][];
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["Vacacion"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
                         meta: null;
                     };
                 };
@@ -13778,7 +13899,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Saldo de vacaciones calculado exitosamente.";
+                        mensaje: "Saldo de vacaciones calculado.";
                         datos: {
                             saldo_dias: number;
                         };

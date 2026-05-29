@@ -11329,11 +11329,42 @@
         "/v1/asistencia/marcaciones": {
             "get": {
                 "operationId": "marcacion.index",
-                "summary": "M\u00f3dulo de solo lectura para listar la asistencia transaccional importada del biom\u00e9trico.\nNo hay m\u00e9todos store/update/delete para garantizar inmutabilidad",
+                "summary": "Consulta marcaciones desde SQLSERVER usando SP.\nPar\u00e1metros: servidor_id, fecha_inicio, fecha_fin",
                 "tags": [
                     "Marcacion"
                 ],
+                "parameters": [
+                    {
+                        "name": "codigo_marcacion",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fecha_inicio",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_fin",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    }
+                ],
                 "responses": {
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -11346,122 +11377,156 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Listado hist\u00f3rico de marcaciones biom\u00e9tricas"
+                                            "const": "Marcaciones consultadas correctamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "minimum": 1
-                                                },
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/Marcacion"
-                                                    }
-                                                },
-                                                "first_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "from": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ],
-                                                    "minimum": 1
-                                                },
-                                                "last_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "minimum": 1
-                                                },
-                                                "links": {
-                                                    "type": "array",
-                                                    "description": "Generated paginator links.",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "url": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "label": {
-                                                                "type": "string"
-                                                            },
-                                                            "active": {
-                                                                "type": "boolean"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "url",
-                                                            "label",
-                                                            "active"
-                                                        ]
-                                                    }
-                                                },
-                                                "next_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "path": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
-                                                    "description": "Base path for paginator generated URLs."
-                                                },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "description": "Number of items shown per page.",
-                                                    "minimum": 0
-                                                },
-                                                "prev_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "to": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ],
-                                                    "description": "Number of the last item in the slice.",
-                                                    "minimum": 1
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "description": "Total number of items being paginated.",
-                                                    "minimum": 0
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "data",
-                                                "first_page_url",
-                                                "from",
-                                                "last_page_url",
-                                                "last_page",
-                                                "links",
-                                                "next_page_url",
-                                                "path",
-                                                "per_page",
-                                                "prev_page_url",
-                                                "to",
-                                                "total"
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/marcaciones/online": {
+            "post": {
+                "operationId": "asistencia.marcaciones.online",
+                "summary": "Registra una marcaci\u00f3n online en SQLSERVER.\nPara servidores en campo/territorio",
+                "tags": [
+                    "Marcacion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "codigo_marcacion": {
+                                        "type": "string"
+                                    },
+                                    "checktype": {
+                                        "type": "string",
+                                        "enum": [
+                                            "I",
+                                            "O"
+                                        ]
+                                    },
+                                    "latitud": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ]
+                                    },
+                                    "longitud": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "codigo_marcacion",
+                                    "checktype"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Marcaci\u00f3n registrada correctamente."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/marcaciones/estado-hoy": {
+            "get": {
+                "operationId": "asistencia.marcaciones.estado-hoy",
+                "summary": "Verifica si el servidor ya marc\u00f3 hoy",
+                "tags": [
+                    "Marcacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "codigo_marcacion",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Estado de marcaci\u00f3n del d\u00eda."
+                                        },
+                                        "datos": {
+                                            "type": [
+                                                "string",
+                                                "null"
                                             ]
                                         },
                                         "meta": {
@@ -17291,10 +17356,120 @@
                                             "const": "Listado de solicitudes de vacaciones"
                                         },
                                         "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Vacacion"
-                                            }
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Vacacion"
+                                                    }
+                                                },
+                                                "first_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "next_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "prev_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "data",
+                                                "first_page_url",
+                                                "from",
+                                                "last_page_url",
+                                                "last_page",
+                                                "links",
+                                                "next_page_url",
+                                                "path",
+                                                "per_page",
+                                                "prev_page_url",
+                                                "to",
+                                                "total"
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
@@ -17362,11 +17537,11 @@
                             }
                         }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -17400,7 +17575,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Saldo de vacaciones calculado exitosamente."
+                                            "const": "Saldo de vacaciones calculado."
                                         },
                                         "datos": {
                                             "type": "object",
@@ -20947,54 +21122,6 @@
                 ],
                 "title": "LoginRequest"
             },
-            "Marcacion": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "servidor_id": {
-                        "type": "integer"
-                    },
-                    "fecha_hora": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "tipo": {
-                        "type": "string"
-                    },
-                    "dispositivo_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "id",
-                    "servidor_id",
-                    "fecha_hora",
-                    "tipo",
-                    "dispositivo_id",
-                    "created_at",
-                    "updated_at"
-                ],
-                "title": "Marcacion"
-            },
             "MotivoSubrogacion": {
                 "type": "string",
                 "enum": [
@@ -21006,6 +21133,23 @@
                     "otro"
                 ],
                 "title": "MotivoSubrogacion"
+            },
+            "MotivoVacacion": {
+                "type": "string",
+                "enum": [
+                    "vacaciones_anuales",
+                    "permiso_cargo_vacaciones",
+                    "licencia_sin_goce",
+                    "matrimonio",
+                    "capacitacion",
+                    "enfermedad",
+                    "maternidad",
+                    "paternidad",
+                    "estudios_sin_remuneracion",
+                    "calamidad_domestica",
+                    "licencia_con_goce"
+                ],
+                "title": "MotivoVacacion"
             },
             "MovimientoPersonal": {
                 "type": "object",
@@ -21315,6 +21459,18 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "jefe_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "creado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -21336,7 +21492,9 @@
                     "vence_en",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "jefe_id",
+                    "creado_por"
                 ],
                 "title": "PermisoServidor"
             },
@@ -23642,6 +23800,21 @@
             "StoreVacacionRequest": {
                 "type": "object",
                 "properties": {
+                    "servidor_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "jefe_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "motivo": {
+                        "$ref": "#/components/schemas/MotivoVacacion"
+                    },
                     "fecha_inicio": {
                         "type": "string",
                         "format": "date-time"
@@ -23649,11 +23822,39 @@
                     "fecha_fin": {
                         "type": "string",
                         "format": "date-time"
+                    },
+                    "fecha_retorno": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "dias_solicitados": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "tipo_dias": {
+                        "type": "string",
+                        "enum": [
+                            "habiles",
+                            "calendario"
+                        ]
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
                     }
                 },
                 "required": [
+                    "motivo",
                     "fecha_inicio",
-                    "fecha_fin"
+                    "fecha_fin",
+                    "dias_solicitados",
+                    "tipo_dias"
                 ],
                 "title": "StoreVacacionRequest"
             },
@@ -24504,6 +24705,14 @@
                         "format": "binary",
                         "contentMediaType": "application/octet-stream",
                         "maxLength": 5120
+                    },
+                    "remuneracion": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 99999.99
                     }
                 },
                 "title": "UpdateContratoServidorRequest"
@@ -25156,6 +25365,54 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "folio": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "codigo_qr": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "jefe_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "motivo": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MotivoVacacion"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "fecha_retorno": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "fecha_emision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "creado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -25169,7 +25426,14 @@
                     "aprobado_por",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "folio",
+                    "codigo_qr",
+                    "jefe_id",
+                    "motivo",
+                    "fecha_retorno",
+                    "fecha_emision",
+                    "creado_por"
                 ],
                 "title": "Vacacion"
             },
