@@ -15,7 +15,7 @@ class FolioPermisoController extends Controller
      */
     public function verificar(string $folio)
     {
-        $permiso = PermisoServidor::with(['servidor', 'folioPermiso'])
+        $permiso = PermisoServidor::with(['servidor'])
             ->where('folio', $folio)
             ->first();
 

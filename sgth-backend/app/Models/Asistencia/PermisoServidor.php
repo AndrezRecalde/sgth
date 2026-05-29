@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy(PermisoServidorObserver::class)]
@@ -37,6 +36,7 @@ class PermisoServidor extends Model
         'anulado_por',
         'anulado_en',
         'vence_en',
+        'qr_ruta',
     ];
 
     protected function casts(): array
@@ -75,8 +75,5 @@ class PermisoServidor extends Model
         return $this->belongsTo(User::class, 'anulado_por');
     }
 
-    public function folioPermiso(): HasOne
-    {
-        return $this->hasOne(FolioPermiso::class, 'permiso_id');
-    }
+
 }

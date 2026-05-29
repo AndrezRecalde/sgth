@@ -51,7 +51,7 @@ class PermisoServidorController extends Controller
 
     public function show(int $id, Request $request)
     {
-        $permiso = PermisoServidor::with(['servidor', 'folioPermiso'])->findOrFail($id);
+        $permiso = PermisoServidor::with(['servidor'])->findOrFail($id);
         
         $user = $request->user();
         

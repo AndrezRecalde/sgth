@@ -5,7 +5,6 @@ namespace App\Services\Asistencia;
 use App\Contracts\Asistencia\PermisoServiceInterface;
 use App\Enums\EstadoPermiso;
 use App\Enums\TipoPermiso;
-use App\Models\Asistencia\FolioPermiso;
 use App\Models\Asistencia\PermisoServidor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -79,11 +78,8 @@ class PermisoService implements PermisoServiceInterface
             // Por simplicidad, guardamos la URL directa o el path simulado.
             $qrRuta = "qrs/{$folioStr}.png";
 
-            FolioPermiso::create([
-                'permiso_id' => $permiso->id,
-                'folio'      => $folioStr,
-                'qr_ruta'    => $qrRuta,
-            ]);
+            $permiso->qr_ruta = $qrRuta;
+            $permiso->save();
 
             return $permiso;
         });

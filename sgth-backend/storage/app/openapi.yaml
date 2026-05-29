@@ -21471,6 +21471,12 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "qr_ruta": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -21494,7 +21500,8 @@
                     "updated_at",
                     "deleted_at",
                     "jefe_id",
-                    "creado_por"
+                    "creado_por",
+                    "qr_ruta"
                 ],
                 "title": "PermisoServidor"
             },
