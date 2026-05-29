@@ -3514,6 +3514,7 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            remuneracion: string | null;
         };
         /** CuentaBancariaServidor */
         CuentaBancariaServidor: {
@@ -4380,6 +4381,7 @@ export interface components {
             estado: components["schemas"]["EstadoContrato"];
             /** Format: binary */
             archivo_contrato?: string | null;
+            remuneracion?: number | null;
         };
         /** StoreCuentaBancariaServidorRequest */
         StoreCuentaBancariaServidorRequest: {

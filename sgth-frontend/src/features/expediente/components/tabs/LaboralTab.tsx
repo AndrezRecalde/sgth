@@ -117,6 +117,19 @@ function ContratoDetalle({ contrato }: DetalleProps) {
             {contrato.codigo_marcacion ?? '—'}
           </Text>
         </Grid.Col>
+
+        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+          <Text size="xs" c="dimmed" mb={2}>Remuneración mensual</Text>
+          <Text size="sm" fw={600}>
+            {contrato.remuneracion
+              ? `$ ${Number(contrato.remuneracion).toLocaleString('es-EC', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}`
+              : '—'
+            }
+          </Text>
+        </Grid.Col>
       </Grid>
     </Stack>
   )
@@ -203,6 +216,19 @@ export function LaboralTab({ servidorId }: Props) {
               width:    110,
               render: ({ fecha_inicio }) => (
                 <Text size="sm">{formatFecha(fecha_inicio)}</Text>
+              ),
+            },
+            {
+              accessor: 'remuneracion',
+              title:    'RMU',
+              width:    100,
+              render: ({ remuneracion }) => (
+                <Text size="sm" ff="monospace">
+                  {remuneracion
+                    ? `$${Number(remuneracion).toFixed(2)}`
+                    : '—'
+                  }
+                </Text>
               ),
             },
             {

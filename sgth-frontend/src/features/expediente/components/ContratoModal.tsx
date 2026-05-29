@@ -8,6 +8,7 @@ import {
   Select,
   TextInput,
   Grid,
+  NumberInput,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
@@ -76,6 +77,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
 
   // ID de unidad seleccionada para filtrar puestos
   const [unidadSelId, setUnidadSelId] = useState<number | null>(null);
+  const [rmuPuesto, setRmuPuesto] = useState<number | null>(null);
 
   // Puestos filtrados por unidad seleccionada
   const { data: puestosData } = usePuestos(
@@ -117,6 +119,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
       resolucion_numero: "",
       codigo_marcacion: "",
       estado: "vigente",
+      remuneracion: null,
     },
   });
 
@@ -136,6 +139,8 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
         resolucion_numero: contrato.resolucion_numero ?? '',
         codigo_marcacion:  contrato.codigo_marcacion ?? '',
         estado: (contrato.estado ?? 'vigente') as ContratoFormData['estado'],
+        remuneracion: contrato.remuneracion
+          ? Number(contrato.remuneracion) : null,
       })
       if (contrato.unidad_administrativa_id) {
         setUnidadSelId(Number(contrato.unidad_administrativa_id))
@@ -151,14 +156,27 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
         resolucion_numero: '',
         codigo_marcacion:  '',
         estado:            'vigente',
+        remuneracion:      null,
       })
       setUnidadSelId(null)
     }
   }, [contrato, reset])
 
+  useEffect(() => {
+    if (contrato && puestos.length > 0) {
+      const puestoSel = puestos.find(p => p.id === contrato.puesto_id)
+      if (puestoSel?.rmu) {
+        setRmuPuesto(Number(puestoSel.rmu))
+      }
+    } else if (!contrato) {
+      setRmuPuesto(null)
+    }
+  }, [contrato, puestos])
+
   const handleClose = () => {
     reset();
     setUnidadSelId(null);
+    setRmuPuesto(null);
     onClose();
   };
 
@@ -237,6 +255,8 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                       setUnidadSelId(id ?? null);
                       // Limpiar puesto al cambiar unidad
                       setValue("puesto_id", undefined as unknown as number);
+                      setRmuPuesto(null);
+                      setValue("remuneracion", null);
                     }}
                     error={errors.unidad_administrativa_id?.message}
                   />
@@ -264,7 +284,14 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                     disabled={!unidadSelId}
                     {...contained}
                     value={field.value ? String(field.value) : ""}
-                    onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                    onChange={(v) => {
+                      field.onChange(v ? Number(v) : undefined)
+                      // Buscar el rmu del puesto seleccionado
+                      const puestoSel = puestos.find(p => String(p.id) === v)
+                      const rmu = puestoSel?.rmu ? Number(puestoSel.rmu) : null
+                      setRmuPuesto(rmu)
+                      setValue('remuneracion', rmu)
+                    }}
                     error={errors.puesto_id?.message}
                   />
                 )}
@@ -341,6 +368,35 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                 {...contained}
                 {...register("codigo_marcacion")}
                 error={errors.codigo_marcacion?.message}
+              />
+            </Grid.Col>
+
+            {/* Remuneración */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="remuneracion"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label="Remuneración mensual unificada"
+                    placeholder="0.00"
+                    decimalScale={2}
+                    fixedDecimalScale
+                    prefix="$ "
+                    min={0}
+                    max={99999}
+                    {...contained}
+                    value={field.value ?? ''}
+                    onChange={(v) =>
+                      field.onChange(typeof v === 'number' ? v : null)
+                    }
+                    error={errors.remuneracion?.message}
+                    description={rmuPuesto
+                      ? `RMU del puesto: $${rmuPuesto.toFixed(2)}`
+                      : undefined
+                    }
+                  />
+                )}
               />
             </Grid.Col>
 

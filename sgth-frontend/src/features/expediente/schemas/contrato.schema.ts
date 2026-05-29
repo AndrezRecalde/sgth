@@ -10,6 +10,7 @@ export const contratoSchema = z.object({
   resolucion_numero:        z.string().optional().nullable(),
   codigo_marcacion:         z.string().optional().nullable(),
   estado:                   z.enum(['vigente', 'terminado', 'cancelado']),
+  remuneracion:             z.number().min(0).optional().nullable(),
 })
 
 export type ContratoFormData = z.infer<typeof contratoSchema>

@@ -339,6 +339,7 @@ export type ContratoConRelaciones = ContratoServidor & {
   resolucion_numero?: string | null
   codigo_marcacion?: string | null
   documento_ruta?: string | null
+  remuneracion?: string | number | null
 }
 
 export type DocumentoServidorConRelaciones = {
