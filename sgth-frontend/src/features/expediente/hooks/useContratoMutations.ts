@@ -65,6 +65,7 @@ export function useContratoMutations(servidorId: number) {
         icon: React.createElement(IconCheck, { size: 16 }),
       })
       invalidar()
+      qc.invalidateQueries({ queryKey: ['servidores'] })
     },
     onError,
   })
