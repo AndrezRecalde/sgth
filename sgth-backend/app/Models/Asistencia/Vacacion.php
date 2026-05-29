@@ -2,6 +2,7 @@
 
 namespace App\Models\Asistencia;
 
+use App\Enums\MotivoVacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Observers\Asistencia\VacacionObserver;
@@ -26,6 +27,13 @@ class Vacacion extends Model
         'tipo_dias',
         'estado',
         'aprobado_por',
+        'folio',
+        'codigo_qr',
+        'jefe_id',
+        'motivo',
+        'fecha_retorno',
+        'fecha_emision',
+        'creado_por',
     ];
 
     protected function casts(): array
@@ -34,7 +42,9 @@ class Vacacion extends Model
             'fecha_inicio'     => 'date',
             'fecha_fin'        => 'date',
             'dias_solicitados' => 'float',
-            // tipo_dias y estado se manejarán como strings nativos por ahora
+            'motivo'           => MotivoVacacion::class,
+            'fecha_retorno'    => 'date',
+            'fecha_emision'    => 'date',
         ];
     }
 
@@ -47,5 +57,15 @@ class Vacacion extends Model
     public function aprobadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'aprobado_por');
+    }
+
+    public function jefe(): BelongsTo
+    {
+        return $this->belongsTo(Servidor::class, 'jefe_id');
+    }
+
+    public function creadoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creado_por');
     }
 }

@@ -205,6 +205,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         // Biométrico (Solo lectura)
         Route::get('marcaciones', [\App\Http\Controllers\Asistencia\MarcacionController::class, 'index']);
 
+        Route::post(
+            'marcaciones/online',
+            [\App\Http\Controllers\Asistencia\MarcacionController::class,
+             'registrarOnline']
+        )->name('asistencia.marcaciones.online');
+
+        Route::get(
+            'marcaciones/estado-hoy',
+            [\App\Http\Controllers\Asistencia\MarcacionController::class,
+             'estadoHoy']
+        )->name('asistencia.marcaciones.estado-hoy');
+
         // Vacaciones
         Route::prefix('vacaciones')->group(function () {
             Route::get('/', [\App\Http\Controllers\Asistencia\VacacionController::class, 'index']);

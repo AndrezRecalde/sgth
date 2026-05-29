@@ -6,6 +6,7 @@ use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Enums\RegimenLaboral;
 use App\Models\Asistencia\Vacacion;
+use App\Models\Asistencia\PermisoServidor;
 use App\Models\Expediente\Servidor;
 use App\Services\Asistencia\Motores\VacacionCodigoTrabajoService;
 use App\Services\Asistencia\Motores\VacacionLosepService;
@@ -28,70 +29,108 @@ class VacacionService implements VacacionServiceInterface
     public function calcularSaldoActual(int $servidorId): float
     {
         $servidor = Servidor::findOrFail($servidorId);
-        $motor = $this->obtenerMotor($servidor);
+        $motor    = $this->obtenerMotor($servidor);
 
-        // Lógica simplificada: (Días Ganados Históricos) - (Días Gozados/Aprobados)
-        // En una app real, aquí se sumarían todos los periodos anuales.
-        // Para este entregable, simularemos el saldo base asumiendo que no ha gastado nada
-        // y usando la función de ganancia anual multiplicada por años de servicio.
-        
-        $fechaIngreso = $servidor->fecha_ingreso_institucion ?? now();
+        $fechaIngreso   = $servidor->fecha_ingreso_institucion
+            ? Carbon::parse($servidor->fecha_ingreso_institucion)
+            : now();
+
         $aniosCompletos = max(1, $fechaIngreso->diffInYears(now()));
-        
-        $diasGanadosPorAnio = $motor->calcularDiasGanadosAnuales($servidor);
+        $diasGanadosPorAnio   = $motor->calcularDiasGanadosAnuales($servidor);
         $diasAcumuladosTotales = $diasGanadosPorAnio * $aniosCompletos;
 
-        // Restar las ya gozadas o aprobadas (para no sobregirar el saldo)
-        $diasGastados = Vacacion::where('servidor_id', $servidor->id)
+        // Vacaciones aprobadas o gozadas
+        $diasVacaciones = Vacacion::where('servidor_id', $servidor->id)
             ->whereIn('estado', ['aprobada', 'gozada'])
             ->sum('dias_solicitados');
 
-        return max(0, $diasAcumuladosTotales - $diasGastados);
+        // Permisos personales aprobados (en horas ÷ 8 = días)
+        $horasPermisoPersonal = PermisoServidor::where('servidor_id', $servidor->id)
+            ->where('tipo', 'personal')
+            ->whereNotIn('estado', ['anulado', 'pendiente'])
+            ->get()
+            ->sum(function ($permiso) {
+                $inicio = Carbon::parse($permiso->hora_inicio);
+                $fin    = Carbon::parse($permiso->hora_fin);
+                return $inicio->diffInMinutes($fin) / 60;
+            });
+
+        $diasPermisoPersonal = round($horasPermisoPersonal / 8, 2);
+
+        $totalDescontado = $diasVacaciones + $diasPermisoPersonal;
+
+        return max(0, $diasAcumuladosTotales - $totalDescontado);
     }
 
     public function solicitar(array $datos, int $servidorId): Vacacion
     {
         return DB::transaction(function () use ($datos, $servidorId) {
             $servidor = Servidor::findOrFail($servidorId);
-            $motor = $this->obtenerMotor($servidor);
+            $motor    = $this->obtenerMotor($servidor);
 
             $fechaInicio = Carbon::parse($datos['fecha_inicio']);
-            $fechaFin = Carbon::parse($datos['fecha_fin']);
+            $fechaFin    = Carbon::parse($datos['fecha_fin']);
 
             if ($fechaFin->lessThan($fechaInicio)) {
-                throw new \Exception("La fecha de fin no puede ser menor a la fecha de inicio.");
+                throw new \Exception(
+                    'La fecha de fin no puede ser menor a la fecha de inicio.'
+                );
             }
 
-            // 1. Calcular exactamente cuántos días le costará esta vacación
             $diasADescontar = $motor->calcularDiasDescuento($fechaInicio, $fechaFin);
 
             if ($diasADescontar <= 0) {
-                throw new \Exception("Las fechas seleccionadas no representan días laborables descontables.");
+                throw new \Exception(
+                    'Las fechas seleccionadas no representan días laborables descontables.'
+                );
             }
 
-            // 2. Verificar saldo disponible
-            $saldoActual = $this->calcularSaldoActual($servidorId);
+            $motivo = \App\Enums\MotivoVacacion::tryFrom($datos['motivo'] ?? '');
 
-            if ($diasADescontar > $saldoActual) {
-                throw new \Exception("Saldo insuficiente. Intentas solicitar {$diasADescontar} días, pero tu saldo es de {$saldoActual} días.");
+            // Solo verificar saldo si el motivo descuenta vacaciones
+            if ($motivo?->descuentaVacaciones()) {
+                $saldoActual = $this->calcularSaldoActual($servidorId);
+                if ($diasADescontar > $saldoActual) {
+                    throw new \Exception(
+                        "Saldo insuficiente. Intentas solicitar {$diasADescontar} días, ".
+                        "pero tu saldo es de {$saldoActual} días."
+                    );
+                }
             }
 
-            // 3. Validar límites legales (Alerta / Bloqueo)
-            $diasGanadosPorAnio = $motor->calcularDiasGanadosAnuales($servidor);
-            $limites = $motor->validarLimitesAcumulacion($saldoActual, $diasGanadosPorAnio);
+            // Determinar tipo_dias según régimen
+            $tipoDias = ($servidor->regimen_laboral?->value ?? $servidor->regimen_laboral)
+                === 'codigo_trabajo' ? 'calendario' : 'habiles';
 
-            // Si supera el límite de 60 días LOSEP o 3 años CT, se le fuerza a salir pero no bloqueamos
-            // la SOLICITUD (al revés, es obligatorio que solicite). Si quisiéramos bloquear se haría aquí.
-            
-            // 4. Crear la solicitud en estado PENDIENTE
-            return Vacacion::create([
+            // Crear solicitud
+            $vacacion = Vacacion::create([
                 'servidor_id'      => $servidorId,
+                'jefe_id'          => $datos['jefe_id'] ?? null,
+                'motivo'           => $datos['motivo'] ?? null,
                 'fecha_inicio'     => $fechaInicio,
                 'fecha_fin'        => $fechaFin,
+                'fecha_retorno'    => $datos['fecha_retorno'] ?? null,
+                'fecha_emision'    => $datos['fecha_emision'] ?? now()->toDateString(),
                 'dias_solicitados' => $diasADescontar,
-                'tipo_dias'        => $servidor->regimen_laboral === RegimenLaboral::CODIGO_TRABAJO ? 'calendario' : 'habiles',
+                'tipo_dias'        => $tipoDias,
                 'estado'           => 'pendiente',
+                'creado_por'       => $datos['creado_por'] ?? null,
             ]);
+
+            // Generar folio secuencial: VAC-2026-00001
+            $anio        = now()->year;
+            $cantidad    = Vacacion::whereYear('created_at', $anio)->count();
+            $secuencial  = str_pad($cantidad, 5, '0', STR_PAD_LEFT);
+            $folio       = "VAC-{$anio}-{$secuencial}";
+
+            // Generar URL de verificación para QR
+            $urlVerificacion = url("/api/v1/asistencia/vacaciones/verificar/{$folio}");
+
+            $vacacion->folio    = $folio;
+            $vacacion->codigo_qr = $urlVerificacion;
+            $vacacion->save();
+
+            return $vacacion->fresh(['servidor', 'jefe', 'creadoPor']);
         });
     }
 }
