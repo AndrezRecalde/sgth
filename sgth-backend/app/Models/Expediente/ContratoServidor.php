@@ -32,7 +32,8 @@ class ContratoServidor extends Model
         'resolucion_numero',
         'documento_ruta',
         'codigo_marcacion',
-        'estado'
+        'estado',
+        'remuneracion'
     ];
 
     protected function casts(): array
@@ -42,6 +43,7 @@ class ContratoServidor extends Model
             'estado'            => EstadoContrato::class,
             'fecha_inicio'      => 'date',
             'fecha_fin'         => 'date',
+            'remuneracion'      => 'decimal:2',
         ];
     }
 

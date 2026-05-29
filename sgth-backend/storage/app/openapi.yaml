@@ -19029,6 +19029,12 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "remuneracion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -19046,7 +19052,8 @@
                     "estado",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "remuneracion"
                 ],
                 "title": "ContratoServidor"
             },
@@ -22384,6 +22391,14 @@
                         "format": "binary",
                         "contentMediaType": "application/octet-stream",
                         "maxLength": 5120
+                    },
+                    "remuneracion": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 99999.99
                     }
                 },
                 "required": [

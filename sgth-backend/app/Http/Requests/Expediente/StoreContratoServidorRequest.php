@@ -27,6 +27,7 @@ class StoreContratoServidorRequest extends FormRequest
             'codigo_marcacion'         => 'nullable|string|max:10',
             'estado'                   => ['required', new Enum(EstadoContrato::class)],
             'archivo_contrato'         => 'nullable|file|mimes:pdf|max:5120',
+            'remuneracion'             => ['nullable', 'numeric', 'min:0', 'max:99999.99'],
         ];
     }
 }
