@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -77,7 +77,6 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ContratoFormData>({
     resolver: zodResolver(contratoSchema),
@@ -95,8 +94,14 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
     },
   });
 
-  const selectedUnidadId = watch("unidad_administrativa_id");
-  const selectedPuestoId = watch("puesto_id");
+  const selectedUnidadId = useWatch({
+    control,
+    name: "unidad_administrativa_id",
+  });
+  const selectedPuestoId = useWatch({
+    control,
+    name: "puesto_id",
+  });
 
   // Unidades solo nivel 2
   const { data: unidadesRaw } = useUnidades({ nivel: 2 });
