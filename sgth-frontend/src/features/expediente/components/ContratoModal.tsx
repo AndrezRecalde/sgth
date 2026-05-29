@@ -24,7 +24,7 @@ import {
   type ContratoFormData,
 } from "../schemas/contrato.schema";
 import type { UnidadConRelaciones, PuestoConRelaciones, ContratoConRelaciones } from "@/types/api";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 
 const TIPO_OPTIONS = [
   {
@@ -71,41 +71,13 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
   const contained = useContainedInput();
   const { crear, editar } = useContratoMutations(servidorId);
 
-  // Unidades solo nivel 2
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 });
-  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[];
-
-  // ID de unidad seleccionada para filtrar puestos
-  const [unidadSelId, setUnidadSelId] = useState<number | null>(null);
-  const [rmuPuesto, setRmuPuesto] = useState<number | null>(null);
-
-  // Puestos filtrados por unidad seleccionada
-  const { data: puestosData } = usePuestos(
-    unidadSelId
-      ? { unidad_administrativa_id: unidadSelId, per_page: 100 }
-      : undefined,
-  );
-  const puestos = (puestosData?.data ?? []) as PuestoConRelaciones[];
-
-  const unidadOptions = unidades.map((u) => ({
-    value: String(u.id),
-    label: u.nombre ?? `Unidad ${u.id}`,
-  }));
-
-  const puestoOptions = puestos.map((p) => ({
-    value: String(p.id),
-    label: p.cargo?.nombre ?? `Puesto ${p.id}`,
-    description: p.rmu ? `RMU: $${Number(p.rmu).toFixed(2)}` : undefined,
-  }));
-
-  const isEditing = !!contrato;
-
   const {
     register,
     control,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ContratoFormData>({
     resolver: zodResolver(contratoSchema),
@@ -122,6 +94,37 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
       remuneracion: null,
     },
   });
+
+  const selectedUnidadId = watch("unidad_administrativa_id");
+  const selectedPuestoId = watch("puesto_id");
+
+  // Unidades solo nivel 2
+  const { data: unidadesRaw } = useUnidades({ nivel: 2 });
+  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[];
+
+  // Puestos filtrados por unidad seleccionada
+  const { data: puestosData } = usePuestos(
+    selectedUnidadId
+      ? { unidad_administrativa_id: Number(selectedUnidadId), per_page: 100 }
+      : undefined,
+  );
+  const puestos = (puestosData?.data ?? []) as PuestoConRelaciones[];
+
+  const puestoSel = puestos.find((p) => p.id === Number(selectedPuestoId));
+  const rmuPuesto = puestoSel?.rmu ? Number(puestoSel.rmu) : null;
+
+  const unidadOptions = unidades.map((u) => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
+  }));
+
+  const puestoOptions = puestos.map((p) => ({
+    value: String(p.id),
+    label: p.cargo?.nombre ?? `Puesto ${p.id}`,
+    description: p.rmu ? `RMU: $${Number(p.rmu).toFixed(2)}` : undefined,
+  }));
+
+  const isEditing = !!contrato;
 
   useEffect(() => {
     if (contrato) {
@@ -142,9 +145,6 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
         remuneracion: contrato.remuneracion
           ? Number(contrato.remuneracion) : null,
       })
-      if (contrato.unidad_administrativa_id) {
-        setUnidadSelId(Number(contrato.unidad_administrativa_id))
-      }
     } else {
       reset({
         tipo_nombramiento: '',
@@ -158,25 +158,11 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
         estado:            'vigente',
         remuneracion:      null,
       })
-      setUnidadSelId(null)
     }
   }, [contrato, reset])
 
-  useEffect(() => {
-    if (contrato && puestos.length > 0) {
-      const puestoSel = puestos.find(p => p.id === contrato.puesto_id)
-      if (puestoSel?.rmu) {
-        setRmuPuesto(Number(puestoSel.rmu))
-      }
-    } else if (!contrato) {
-      setRmuPuesto(null)
-    }
-  }, [contrato, puestos])
-
   const handleClose = () => {
     reset();
-    setUnidadSelId(null);
-    setRmuPuesto(null);
     onClose();
   };
 
@@ -252,10 +238,8 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                     onChange={(v) => {
                       const id = v ? Number(v) : undefined;
                       field.onChange(id);
-                      setUnidadSelId(id ?? null);
                       // Limpiar puesto al cambiar unidad
                       setValue("puesto_id", undefined as unknown as number);
-                      setRmuPuesto(null);
                       setValue("remuneracion", null);
                     }}
                     error={errors.unidad_administrativa_id?.message}
@@ -273,7 +257,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                   <Select
                     label="Puesto"
                     placeholder={
-                      unidadSelId
+                      selectedUnidadId
                         ? puestoOptions.length === 0
                           ? "Sin puestos disponibles"
                           : "Seleccionar puesto"
@@ -281,7 +265,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                     }
                     data={puestoOptions}
                     searchable
-                    disabled={!unidadSelId}
+                    disabled={!selectedUnidadId}
                     {...contained}
                     value={field.value ? String(field.value) : ""}
                     onChange={(v) => {
@@ -289,7 +273,6 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                       // Buscar el rmu del puesto seleccionado
                       const puestoSel = puestos.find(p => String(p.id) === v)
                       const rmu = puestoSel?.rmu ? Number(puestoSel.rmu) : null
-                      setRmuPuesto(rmu)
                       setValue('remuneracion', rmu)
                     }}
                     error={errors.puesto_id?.message}
