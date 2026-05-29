@@ -745,6 +745,8 @@ export type PermisoServidor = {
   anulado_por?:     number | null
   anulado_en?:      string | null
   servidor?:        ServidorConRelaciones
+  unidad_administrativa_id?: number | null
+  unidad_administrativa?:    { id: number; nombre?: string } | null
 }
 
 export type MotivoVacacion =
@@ -781,5 +783,7 @@ export type Vacacion = {
   aprobado_por?:    number | null
   servidor?:        ServidorConRelaciones
   jefe?:            ServidorConRelaciones | null
+  unidad_administrativa_id?: number | null
+  unidad_administrativa?:    { id: number; nombre?: string } | null
 }
 

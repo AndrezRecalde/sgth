@@ -68,6 +68,20 @@ export function PermisosTab() {
       },
     },
     {
+      accessor: 'unidad_administrativa',
+      title:    'Unidad',
+      render: (p) => {
+        const nombre = (p.unidad_administrativa as {
+          nombre?: string
+        } | null)?.nombre
+        return (
+          <Text size="sm" c="dimmed">
+            {nombre ?? '—'}
+          </Text>
+        )
+      },
+    },
+    {
       accessor: 'tipo',
       title:    'Tipo',
       width:    100,

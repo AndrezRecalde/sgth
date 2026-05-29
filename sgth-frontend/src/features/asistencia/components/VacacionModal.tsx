@@ -10,6 +10,8 @@ import { z } from 'zod/v4'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useVacacionMutations } from '../hooks/useVacacionMutations'
+import { useUnidades } from '@/features/estructura/hooks/useUnidades'
+import type { UnidadConRelaciones } from '@/types/api'
 
 const MOTIVO_OPTIONS = [
   { value: 'vacaciones_anuales',       label: 'Vacaciones Anuales (mayor a 5 días)' },
@@ -33,6 +35,7 @@ const schema = z.object({
   dias_solicitados:  z.number().min(1, 'Mínimo 1 día'),
   tipo_dias:         z.enum(['habiles', 'calendario']),
   observacion:       z.string().optional().nullable(),
+  unidad_administrativa_id: z.number().optional().nullable(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -59,6 +62,13 @@ export function VacacionModal({ opened, onClose, servidorId }: Props) {
   const contained    = useContainedInput()
   const { crear }    = useVacacionMutations()
 
+  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  const unidadOptions = ((unidadesRaw ?? []) as UnidadConRelaciones[])
+    .map(u => ({
+      value: String(u.id),
+      label: u.nombre ?? `Unidad ${u.id}`,
+    }))
+
   const {
     control, handleSubmit, reset, register,
     formState: { errors, isSubmitting },
@@ -72,6 +82,7 @@ export function VacacionModal({ opened, onClose, servidorId }: Props) {
       dias_solicitados: 1,
       tipo_dias:        'habiles',
       observacion:      '',
+      unidad_administrativa_id: null,
     },
   })
 
@@ -94,6 +105,23 @@ export function VacacionModal({ opened, onClose, servidorId }: Props) {
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
+          <Controller
+            name="unidad_administrativa_id"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Unidad administrativa"
+                placeholder="Seleccionar unidad (opcional)"
+                data={unidadOptions}
+                searchable
+                clearable
+                {...contained}
+                value={field.value ? String(field.value) : null}
+                onChange={(v) => field.onChange(v ? Number(v) : null)}
+                error={errors.unidad_administrativa_id?.message}
+              />
+            )}
+          />
           <Controller name="motivo" control={control}
             render={({ field }) => (
               <Select

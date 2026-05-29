@@ -76,6 +76,20 @@ export function VacacionesTab() {
       },
     },
     {
+      accessor: 'unidad_administrativa',
+      title:    'Unidad',
+      render: (v) => {
+        const nombre = (v.unidad_administrativa as {
+          nombre?: string
+        } | null)?.nombre
+        return (
+          <Text size="sm" c="dimmed">
+            {nombre ?? '—'}
+          </Text>
+        )
+      },
+    },
+    {
       accessor: 'motivo',
       title:    'Motivo',
       render: ({ motivo }) => (

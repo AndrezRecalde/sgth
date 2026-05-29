@@ -4139,6 +4139,8 @@ export interface components {
             deleted_at: string | null;
             jefe_id: number | null;
             creado_por: number | null;
+            qr_ruta: string | null;
+            unidad_administrativa_id: number | null;
         };
         /** PlanBienestar */
         PlanBienestar: {
@@ -4547,6 +4549,7 @@ export interface components {
             hora_inicio: string;
             hora_fin: string;
             observacion?: string | null;
+            unidad_administrativa_id?: number | null;
         };
         /** StorePuestoRequest */
         StorePuestoRequest: {
@@ -4722,6 +4725,7 @@ export interface components {
             /** @enum {string} */
             tipo_dias: "habiles" | "calendario";
             observacion?: string | null;
+            unidad_administrativa_id?: number | null;
         };
         /** Subrogacion */
         Subrogacion: {
@@ -5135,6 +5139,7 @@ export interface components {
             /** Format: date-time */
             fecha_emision: string | null;
             creado_por: number | null;
+            unidad_administrativa_id: number | null;
         };
         /** Viatico */
         Viatico: {
