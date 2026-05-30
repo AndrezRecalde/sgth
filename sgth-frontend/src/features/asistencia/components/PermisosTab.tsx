@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PermisoModal } from './PermisoModal'
 import { usePermisos } from '../hooks/usePermisos'
 import { usePermisoMutations } from '../hooks/usePermisoMutations'
-import type { PermisoServidor } from '@/types/api'
+import type { PermisoServidor, ServidorConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 
 const ESTADO_COLORS: Record<string, string> = {
@@ -63,6 +63,19 @@ export function PermisosTab() {
         return (
           <Text size="sm">
             {[s.apellido, s.nombre].filter(Boolean).join(' ')}
+          </Text>
+        )
+      },
+    },
+    {
+      accessor: 'jefe',
+      title:    'Jefe inmediato',
+      render: (p) => {
+        const j = p.jefe as ServidorConRelaciones | null
+        if (!j) return <Text size="sm" c="dimmed">—</Text>
+        return (
+          <Text size="sm">
+            {[j.apellido, j.nombre].filter(Boolean).join(' ')}
           </Text>
         )
       },
@@ -190,7 +203,11 @@ export function PermisosTab() {
         />
       )}
 
-      <PermisoModal opened={opened} onClose={close} />
+      <PermisoModal
+        opened={opened}
+        onClose={close}
+        isAdmin={true}
+      />
     </Stack>
   )
 }

@@ -56,6 +56,11 @@ export const asistenciaService = {
       api.post<ApiResponse<PermisoServidor>>(
         `/asistencia/permisos/${id}/validar-ts`
       ).then(r => r.data.datos),
+
+    exportar: (id: number) =>
+      api.get(`/asistencia/permisos/${id}/exportar`, {
+        responseType: 'blob',
+      }).then(r => r.data),
   },
 
   vacaciones: {

@@ -747,6 +747,8 @@ export type PermisoServidor = {
   servidor?:        ServidorConRelaciones
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null
+  jefe?:            ServidorConRelaciones | null
+  creadoPor?:       { id: number; name?: string } | null
 }
 
 export type MotivoVacacion =

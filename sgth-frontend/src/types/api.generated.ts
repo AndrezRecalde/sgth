@@ -2215,6 +2215,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/asistencia/permisos/{id}/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.permisos.exportar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/asistencia/permisos/{id}/anular": {
         parameters: {
             query?: never;
@@ -4550,6 +4566,9 @@ export interface components {
             hora_fin: string;
             observacion?: string | null;
             unidad_administrativa_id?: number | null;
+            servidor_id?: number | null;
+            jefe_id?: number | null;
+            creado_por?: number | null;
         };
         /** StorePuestoRequest */
         StorePuestoRequest: {
@@ -11269,6 +11288,29 @@ export interface operations {
                         datos: string;
                         meta: null;
                     };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "asistencia.permisos.exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             401: components["responses"]["AuthenticationException"];
