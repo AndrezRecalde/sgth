@@ -61,6 +61,8 @@ class PermisoService implements PermisoServiceInterface
             $permiso = PermisoServidor::create([
                 'servidor_id'              => $servidorId,
                 'unidad_administrativa_id' => $unidadId,
+                'jefe_id'                  => $datos['jefe_id'] ?? null,
+                'creado_por'               => $datos['creado_por'] ?? null,
                 'tipo'                     => $tipo->value,
                 'fecha'                    => $datos['fecha'],
                 'hora_inicio'              => $datos['hora_inicio'],

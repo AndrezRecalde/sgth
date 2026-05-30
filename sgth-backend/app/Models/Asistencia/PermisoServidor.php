@@ -39,6 +39,8 @@ class PermisoServidor extends Model
         'vence_en',
         'qr_ruta',
         'unidad_administrativa_id',
+        'jefe_id',
+        'creado_por',
     ];
 
     protected function casts(): array
@@ -83,5 +85,15 @@ class PermisoServidor extends Model
             UnidadAdministrativa::class,
             'unidad_administrativa_id'
         );
+    }
+
+    public function jefe(): BelongsTo
+    {
+        return $this->belongsTo(Servidor::class, 'jefe_id');
+    }
+
+    public function creadoPor(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'creado_por');
     }
 }

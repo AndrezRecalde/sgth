@@ -12153,11 +12153,11 @@
                             }
                         }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -12207,6 +12207,40 @@
                                         "meta"
                                     ]
                                 }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/permisos/{id}/exportar": {
+            "get": {
+                "operationId": "asistencia.permisos.exportar",
+                "tags": [
+                    "PermisoServidor"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
                             }
                         }
                     },
@@ -23068,6 +23102,24 @@
                         "maxLength": 1000
                     },
                     "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "servidor_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "jefe_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "creado_por": {
                         "type": [
                             "integer",
                             "null"

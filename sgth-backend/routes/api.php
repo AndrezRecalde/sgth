@@ -230,6 +230,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::get('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'store']);
             Route::get('{id}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'show']);
+            Route::get('{id}/exportar', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'exportar'])
+                ->name('asistencia.permisos.exportar');
             Route::put('{id}/anular', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'anular'])
                 ->middleware('role:admin-uath|asistente-uath');
             

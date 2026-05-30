@@ -21,6 +21,7 @@ class PermisoServidorController extends Controller
         $query = PermisoServidor::with([
             'servidor',
             'jefe',
+            'creadoPor',
             'unidadAdministrativa',
         ])->orderBy('created_at', 'desc');
 
@@ -45,12 +46,24 @@ class PermisoServidorController extends Controller
 
     public function store(StorePermisoServidorRequest $request)
     {
-        // Se asume envío de servidor_id por UATH, o si no se envía, asume el autenticado
-        $servidorId = $request->input('servidor_id') ?? ($request->user()->servidor->id ?? 1);
+        $servidorId = $request->input('servidor_id')
+            ?? ($request->user()->servidor->id ?? null);
 
-        $permiso = $this->permisoService->crear($request->validated(), $servidorId);
-        
-        return ApiResponse::created($permiso, 'Permiso solicitado correctamente.');
+        if (!$servidorId) {
+            return ApiResponse::error(
+                'No se identificó el servidor.', 422
+            );
+        }
+
+        $datos = array_merge($request->validated(), [
+            'creado_por' => $request->user()->id,
+        ]);
+
+        $permiso = $this->permisoService->crear($datos, $servidorId);
+
+        return ApiResponse::created(
+            $permiso, 'Permiso solicitado correctamente.'
+        );
     }
 
     public function show(int $id, Request $request)
@@ -95,5 +108,22 @@ class PermisoServidorController extends Controller
         $permiso->save();
 
         return ApiResponse::ok($permiso, 'Permiso anulado correctamente.');
+    }
+
+    public function exportar(int $id): mixed
+    {
+        $permiso = PermisoServidor::with([
+            'servidor.puesto.cargo',
+            'jefe',
+            'unidadAdministrativa',
+            'creadoPor',
+        ])->findOrFail($id);
+
+        $pdf = app('dompdf.wrapper')
+            ->loadView('permisos.permiso-pdf', compact('permiso'));
+
+        $nombreArchivo = "permiso_{$permiso->folio}.pdf";
+
+        return $pdf->download($nombreArchivo);
     }
 }
