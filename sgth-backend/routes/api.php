@@ -236,9 +236,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 ->middleware('role:admin-uath|asistente-uath');
             
             Route::post('confirmar/{folio}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'confirmar'])
-                ->middleware('role:recepcion');
+                ->middleware('role:recepcion|admin-uath|asistente-uath');
             Route::post('{id}/validar-ts', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'validar'])
-                ->middleware('role:trabajo-social');
+                ->middleware('role:trabajo-social|admin-uath');
         });
     });
 
