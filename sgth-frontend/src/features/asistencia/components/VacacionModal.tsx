@@ -180,31 +180,40 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
   useEffect(() => {
     if (!fechaInicioWatch || !fechaFinWatch) return
 
-    const inicio = new Date(fechaInicioWatch)
-    const fin    = new Date(fechaFinWatch)
+    // Parsear fechas en hora local (evita desfase UTC)
+    const [iy, im, id] = fechaInicioWatch.split('-').map(Number)
+    const [fy, fm, fd] = fechaFinWatch.split('-').map(Number)
+
+    const inicio = new Date(iy, im - 1, id)
+    const fin    = new Date(fy, fm - 1, fd)
 
     if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) return
-    if (fin < inicio) return
+    if (fin < inicio) {
+      setValue('dias_solicitados', 0, { shouldValidate: true })
+      return
+    }
 
     let dias = 0
 
     if (tipoDiasWatch === 'calendario') {
-      // Días calendario incluyendo fines de semana
+      // Incluye ambos extremos: del 1 al 3 = 3 días
       const diffMs = fin.getTime() - inicio.getTime()
       dias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1
     } else {
-      // Días hábiles: solo lunes a viernes
-      const cursor = new Date(inicio)
+      // Hábiles: solo lunes a viernes, incluye ambos extremos
+      const cursor = new Date(inicio.getTime())
       while (cursor <= fin) {
-        const dow = cursor.getDay()
+        const dow = cursor.getDay() // 0=Dom, 6=Sab
         if (dow !== 0 && dow !== 6) dias++
         cursor.setDate(cursor.getDate() + 1)
       }
     }
 
-    if (dias > 0) {
-      setValue('dias_solicitados', dias, { shouldValidate: true })
-    }
+    setValue(
+      'dias_solicitados',
+      dias > 0 ? dias : 0,
+      { shouldValidate: true }
+    )
   }, [fechaInicioWatch, fechaFinWatch, tipoDiasWatch, setValue])
 
   const handleClose = () => {
@@ -509,20 +518,32 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                   name="dias_solicitados"
                   control={control}
                   render={({ field }) => (
-                    <NumberInput
-                      label="Días solicitados"
-                      description="Calculado automáticamente según las fechas"
-                      min={1} max={365}
-                      readOnly
-                      styles={{ input: { background: 'var(--mantine-color-default-hover)',
-                                          cursor: 'not-allowed' } }}
-                      {...contained}
-                      value={field.value}
-                      onChange={(v) =>
-                        field.onChange(typeof v === 'number' ? v : 1)
-                      }
-                      error={errors.dias_solicitados?.message}
-                    />
+                    <Stack gap={4}>
+                      <NumberInput
+                        label="Días solicitados"
+                        min={0} max={365}
+                        readOnly
+                        styles={{
+                          input: {
+                            backgroundColor: 'var(--mantine-color-default-hover)',
+                            cursor: 'not-allowed',
+                            fontWeight: 600,
+                          }
+                        }}
+                        {...contained}
+                        value={field.value}
+                        onChange={(v) =>
+                          field.onChange(typeof v === 'number' ? v : 0)
+                        }
+                        error={errors.dias_solicitados?.message}
+                      />
+                      <Text size="xs" c="dimmed">
+                        Calculado automáticamente según las fechas
+                        {tipoDiasWatch === 'habiles'
+                          ? ' (días hábiles: lun-vie)'
+                          : ' (días calendario)'}
+                      </Text>
+                    </Stack>
                   )}
                 />
               </Grid.Col>
