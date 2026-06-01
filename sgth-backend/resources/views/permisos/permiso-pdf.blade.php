@@ -3,200 +3,386 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
-  .header { text-align: center; margin-bottom: 20px; }
-  .header h2 { margin: 0; font-size: 16px; }
-  .header p  { margin: 2px 0; font-size: 11px; }
-  .folio { text-align: right; font-size: 11px; color: #555; }
-  table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-  td, th { border: 1px solid #ccc; padding: 6px 10px; }
-  th { background: #f0f0f0; font-weight: bold; width: 35%; }
-  .section-title {
-    background: #2d6a4f; color: white;
-    padding: 5px 10px; font-weight: bold;
-    margin-top: 15px; font-size: 12px;
-  }
-  .firmas { margin-top: 40px; }
-  .firma-col {
-    display: inline-block; width: 45%;
-    text-align: center; margin: 0 2%;
-  }
-  .firma-linea {
-    border-top: 1px solid #000;
-    margin-top: 50px; padding-top: 5px;
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
     font-size: 10px;
+    color: #222;
   }
+
+  /* ── COPIA ── */
+  .copia {
+    width: 100%;
+    padding: 10px 14px;
+    page-break-inside: avoid;
+  }
+
+  /* ── SEPARADOR ── */
+  .separador {
+    border-top: 2px dashed #555;
+    margin: 6px 0;
+    text-align: center;
+    font-size: 8px;
+    color: #777;
+    letter-spacing: 2px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: table;
+    width: 100%;
+    margin-bottom: 6px;
+  }
+  .header-logo {
+    display: table-cell;
+    width: 60px;
+    vertical-align: middle;
+    text-align: center;
+  }
+  .header-text {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .header-folio {
+    display: table-cell;
+    width: 120px;
+    vertical-align: middle;
+    text-align: right;
+    font-size: 9px;
+  }
+  .institucion {
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  .subtitulo {
+    font-size: 8px;
+    color: #444;
+  }
+  .titulo-doc {
+    font-size: 11px;
+    font-weight: bold;
+    color: #1a5c38;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .folio-box {
+    border: 1.5px solid #1a5c38;
+    padding: 3px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    font-size: 9px;
+    font-weight: bold;
+    color: #1a5c38;
+  }
+  .copy-label {
+    font-size: 7px;
+    color: #888;
+    margin-top: 2px;
+    text-align: right;
+  }
+
+  /* ── CONTENIDO ── */
+  .content {
+    display: table;
+    width: 100%;
+    margin-top: 5px;
+  }
+  .col-left {
+    display: table-cell;
+    width: 55%;
+    padding-right: 8px;
+    vertical-align: top;
+  }
+  .col-right {
+    display: table-cell;
+    width: 45%;
+    vertical-align: top;
+  }
+
+  /* ── SECCIÓN ── */
+  .section-title {
+    background: #1a5c38;
+    color: #fff;
+    font-size: 8px;
+    font-weight: bold;
+    padding: 2px 5px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+    margin-top: 5px;
+  }
+  .field-row {
+    display: table;
+    width: 100%;
+    margin-bottom: 2px;
+  }
+  .field-label {
+    display: table-cell;
+    width: 38%;
+    font-size: 8.5px;
+    color: #555;
+    font-weight: bold;
+    padding: 1px 0;
+  }
+  .field-value {
+    display: table-cell;
+    font-size: 8.5px;
+    border-bottom: 1px solid #ccc;
+    padding: 1px 3px;
+  }
+
+  /* ── BADGE ── */
   .badge {
-    display: inline-block; padding: 2px 8px;
-    border-radius: 3px; font-size: 10px;
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 8px;
     font-weight: bold;
   }
-  .badge-pendiente  { background: #fff3cd; color: #856404; }
-  .badge-activo     { background: #cce5ff; color: #004085; }
-  .badge-validado   { background: #d4edda; color: #155724; }
+  .badge-pendiente { background: #fff3cd; color: #856404; }
+  .badge-activo    { background: #cce5ff; color: #004085; }
+  .badge-validado  { background: #d4edda; color: #155724; }
+
+  /* ── FIRMAS ── */
+  .firmas {
+    display: table;
+    width: 100%;
+    margin-top: 10px;
+  }
+  .firma-cell {
+    display: table-cell;
+    width: 33%;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .firma-linea {
+    border-top: 1px solid #333;
+    padding-top: 3px;
+    margin-top: 28px;
+    font-size: 7.5px;
+  }
+  .firma-nombre {
+    font-size: 7px;
+    color: #555;
+    margin-top: 1px;
+  }
+
+  /* ── PIE ── */
+  .pie {
+    text-align: center;
+    font-size: 7px;
+    color: #aaa;
+    margin-top: 6px;
+    border-top: 1px solid #eee;
+    padding-top: 3px;
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h2>GOBIERNO AUTÓNOMO DESCENTRALIZADO PROVINCIAL DE ESMERALDAS</h2>
-  <p>UNIDAD DE ADMINISTRACIÓN DEL TALENTO HUMANO</p>
-  <p><strong>PERMISO DE AUSENCIA TEMPORAL</strong></p>
-</div>
+@php
+  $tipoLabels = [
+    'personal'   => 'Personal',
+    'oficial'    => 'Oficial',
+    'enfermedad' => 'Por Enfermedad',
+    'calamidad'  => 'Calamidad Doméstica',
+  ];
+  $tipoVal = $permiso->tipo instanceof \App\Enums\TipoPermiso
+    ? $permiso->tipo->value : (string)$permiso->tipo;
 
-<div class="folio">
-  <strong>Folio:</strong> {{ $permiso->folio ?? 'S/N' }}<br>
-  <strong>Fecha emisión:</strong> {{ now()->format('d/m/Y H:i') }}
-</div>
+  $estadoVal = $permiso->estado instanceof \App\Enums\EstadoPermiso
+    ? $permiso->estado->value : (string)$permiso->estado;
 
-<div class="section-title">DATOS DEL SERVIDOR</div>
-<table>
-  <tr>
-    <th>Nombre completo</th>
-    <td>
-      {{ strtoupper(implode(' ', array_filter([
-        $permiso->servidor->apellido ?? null,
-        $permiso->servidor->segundo_apellido ?? null,
-        $permiso->servidor->nombre ?? null,
-        $permiso->servidor->segundo_nombre ?? null,
-      ]))) }}
-    </td>
-  </tr>
-  <tr>
-    <th>Cédula de identidad</th>
-    <td>{{ $permiso->servidor->cedula ?? '—' }}</td>
-  </tr>
-  <tr>
-    <th>Unidad administrativa</th>
-    <td>
-      {{ $permiso->unidadAdministrativa->nombre ?? '—' }}
-    </td>
-  </tr>
-  <tr>
-    <th>Cargo</th>
-    <td>
-      {{ $permiso->servidor->puesto?->cargo?->nombre ?? '—' }}
-    </td>
-  </tr>
-</table>
+  $estadoClases = [
+    'pendiente'               => 'badge-pendiente',
+    'activo'                  => 'badge-activo',
+    'validado_trabajo_social' => 'badge-validado',
+  ];
 
-<div class="section-title">DATOS DEL PERMISO</div>
-<table>
-  <tr>
-    <th>Tipo de permiso</th>
-    <td>
-      @php
-        $tipos = [
-          'personal'   => 'Personal',
-          'oficial'    => 'Oficial',
-          'enfermedad' => 'Por Enfermedad',
-          'calamidad'  => 'Calamidad Doméstica',
-        ];
-        $tipoVal = $permiso->tipo instanceof \App\Enums\TipoPermiso
-          ? $permiso->tipo->value : (string)$permiso->tipo;
-      @endphp
-      {{ $tipos[$tipoVal] ?? $tipoVal }}
-    </td>
-  </tr>
-  <tr>
-    <th>Fecha del permiso</th>
-    <td>
-      @php
-        $fecha = $permiso->fecha instanceof \Carbon\Carbon
-          ? $permiso->fecha
-          : \Carbon\Carbon::parse($permiso->fecha);
-      @endphp
-      {{ $fecha->format('d/m/Y') }}
-    </td>
-  </tr>
-  <tr>
-    <th>Hora inicio</th>
-    <td>{{ \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i') }}</td>
-  </tr>
-  <tr>
-    <th>Hora fin</th>
-    <td>{{ \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i') }}</td>
-  </tr>
-  <tr>
-    <th>Duración</th>
-    <td>
-      @php
-        $inicio = \Carbon\Carbon::parse($permiso->hora_inicio);
-        $fin    = \Carbon\Carbon::parse($permiso->hora_fin);
-        $horas  = $inicio->diffInHours($fin);
-        $mins   = $inicio->copy()->addHours($horas)->diffInMinutes($fin);
-      @endphp
-      {{ $horas }}h {{ $mins > 0 ? $mins . 'min' : '' }}
-    </td>
-  </tr>
-  @if($permiso->observacion)
-  <tr>
-    <th>Observación</th>
-    <td>{{ $permiso->observacion }}</td>
-  </tr>
-  @endif
-  <tr>
-    <th>Estado</th>
-    <td>
-      @php
-        $estadoVal = $permiso->estado instanceof \App\Enums\EstadoPermiso
-          ? $permiso->estado->value : (string)$permiso->estado;
-        $clases = [
-          'pendiente'               => 'badge-pendiente',
-          'activo'                  => 'badge-activo',
-          'validado_trabajo_social' => 'badge-validado',
-        ];
-      @endphp
-      <span class="badge {{ $clases[$estadoVal] ?? '' }}">
-        {{ strtoupper($estadoVal) }}
-      </span>
-    </td>
-  </tr>
-  <tr>
-    <th>Vence el</th>
-    <td>
-      {{ $permiso->vence_en
-          ? \Carbon\Carbon::parse($permiso->vence_en)->format('d/m/Y')
-          : '—' }}
-    </td>
-  </tr>
-</table>
+  $nombreServidor = strtoupper(implode(' ', array_filter([
+    $permiso->servidor->apellido ?? null,
+    $permiso->servidor->segundo_apellido ?? null,
+    $permiso->servidor->nombre ?? null,
+    $permiso->servidor->segundo_nombre ?? null,
+  ])));
 
-<div class="firmas">
-  <table style="border: none; width: 100%;">
-    <tr>
-      <td style="border: none; text-align: center; width: 33%;">
-        <div style="margin-top: 50px; border-top: 1px solid #000; padding-top: 5px; font-size: 10px;">
-          <strong>SERVIDOR</strong><br>
+  $nombreJefe = $permiso->jefe
+    ? strtoupper(implode(' ', array_filter([
+        $permiso->jefe->apellido ?? null,
+        $permiso->jefe->nombre   ?? null,
+      ])))
+    : '____________________________';
+
+  $fechaPermiso = $permiso->fecha instanceof \Carbon\Carbon
+    ? $permiso->fecha->format('d/m/Y')
+    : \Carbon\Carbon::parse($permiso->fecha)->format('d/m/Y');
+
+  $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i');
+  $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i');
+  $inicio     = \Carbon\Carbon::parse($permiso->hora_inicio);
+  $fin        = \Carbon\Carbon::parse($permiso->hora_fin);
+  $horas      = $inicio->diffInHours($fin);
+  $mins       = $inicio->copy()->addHours($horas)->diffInMinutes($fin);
+  $duracion   = $horas . 'h' . ($mins > 0 ? ' ' . $mins . 'min' : '');
+
+  $copies = [
+    ['label' => 'COPIA SERVIDOR',         'tag' => '1 de 2'],
+    ['label' => 'COPIA TALENTO HUMANO',   'tag' => '2 de 2'],
+  ];
+@endphp
+
+@foreach($copies as $i => $copy)
+
+{{-- ══════════════════════════════════════════ --}}
+<div class="copia">
+
+  {{-- Header --}}
+  <div class="header">
+    <div class="header-text">
+      <div class="institucion">
+        Gobierno Autónomo Descentralizado Provincial de Esmeraldas
+      </div>
+      <div class="subtitulo">
+        Unidad de Administración del Talento Humano
+      </div>
+      <div class="titulo-doc">Permiso de Ausencia Temporal</div>
+    </div>
+    <div class="header-folio">
+      <div class="folio-box">{{ $permiso->folio ?? 'S/N' }}</div>
+      <div class="copy-label">{{ $copy['label'] }}</div>
+      <div class="copy-label">Emisión: {{ now()->format('d/m/Y H:i') }}</div>
+    </div>
+  </div>
+
+  {{-- Contenido en 2 columnas --}}
+  <div class="content">
+
+    {{-- COLUMNA IZQUIERDA: Datos del servidor --}}
+    <div class="col-left">
+      <div class="section-title">Datos del servidor</div>
+
+      <div class="field-row">
+        <div class="field-label">Nombre:</div>
+        <div class="field-value">{{ $nombreServidor }}</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Cédula:</div>
+        <div class="field-value">
+          {{ $permiso->servidor->cedula ?? '—' }}
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Unidad:</div>
+        <div class="field-value">
+          {{ $permiso->unidadAdministrativa->nombre ?? '—' }}
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Cargo:</div>
+        <div class="field-value">
+          {{ $permiso->servidor->puesto?->cargo?->nombre ?? '—' }}
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Jefe inmediato:</div>
+        <div class="field-value">{{ $nombreJefe }}</div>
+      </div>
+    </div>
+
+    {{-- COLUMNA DERECHA: Datos del permiso --}}
+    <div class="col-right">
+      <div class="section-title">Datos del permiso</div>
+
+      <div class="field-row">
+        <div class="field-label">Tipo:</div>
+        <div class="field-value">
+          {{ $tipoLabels[$tipoVal] ?? $tipoVal }}
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Fecha:</div>
+        <div class="field-value">{{ $fechaPermiso }}</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Hora inicio:</div>
+        <div class="field-value">{{ $horaInicio }}</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Hora fin:</div>
+        <div class="field-value">{{ $horaFin }}</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Duración:</div>
+        <div class="field-value">{{ $duracion }}</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Estado:</div>
+        <div class="field-value">
+          <span class="badge {{ $estadoClases[$estadoVal] ?? '' }}">
+            {{ strtoupper($estadoVal) }}
+          </span>
+        </div>
+      </div>
+      @if($permiso->observacion)
+      <div class="field-row">
+        <div class="field-label">Observación:</div>
+        <div class="field-value">{{ $permiso->observacion }}</div>
+      </div>
+      @endif
+      <div class="field-row">
+        <div class="field-label">Vence el:</div>
+        <div class="field-value">
+          {{ $permiso->vence_en
+            ? \Carbon\Carbon::parse($permiso->vence_en)->format('d/m/Y')
+            : '—' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Firmas --}}
+  <div class="firmas">
+    <div class="firma-cell">
+      <div class="firma-linea">
+        <strong>SERVIDOR</strong>
+        <div class="firma-nombre">
           {{ strtoupper(implode(' ', array_filter([
             $permiso->servidor->apellido ?? null,
             $permiso->servidor->nombre   ?? null,
           ]))) }}
         </div>
-      </td>
-      <td style="border: none; text-align: center; width: 33%;">
-        <div style="margin-top: 50px; border-top: 1px solid #000; padding-top: 5px; font-size: 10px;">
-          <strong>JEFE INMEDIATO</strong><br>
-          {{ strtoupper(implode(' ', array_filter([
-            $permiso->jefe->apellido ?? null,
-            $permiso->jefe->nombre   ?? null,
-          ]))) ?: '____________________' }}
-        </div>
-      </td>
-      <td style="border: none; text-align: center; width: 33%;">
-        <div style="margin-top: 50px; border-top: 1px solid #000; padding-top: 5px; font-size: 10px;">
-          <strong>TALENTO HUMANO</strong><br>
-          Director/a UATH
-        </div>
-      </td>
-    </tr>
-  </table>
-</div>
+      </div>
+    </div>
+    <div class="firma-cell">
+      <div class="firma-linea">
+        <strong>JEFE INMEDIATO</strong>
+        <div class="firma-nombre">{{ $nombreJefe }}</div>
+      </div>
+    </div>
+    <div class="firma-cell">
+      <div class="firma-linea">
+        <strong>TALENTO HUMANO</strong>
+        <div class="firma-nombre">Director/a UATH</div>
+      </div>
+    </div>
+  </div>
 
-<div style="margin-top: 20px; font-size: 9px; color: #888; text-align: center;">
-  Documento generado electrónicamente — SGTH GAD Esmeraldas<br>
-  Verificar en: /api/v1/permisos/verificar/{{ $permiso->folio ?? '' }}
+  {{-- Pie --}}
+  <div class="pie">
+    Documento generado electrónicamente — SGTH GAD Esmeraldas &nbsp;|&nbsp;
+    Verificar en: /api/v1/permisos/verificar/{{ $permiso->folio ?? '' }}
+  </div>
+
 </div>
+{{-- ══════════════════════════════════════════ --}}
+
+@if(!$loop->last)
+<div class="separador">✂ &nbsp; CORTAR AQUÍ &nbsp; ✂</div>
+@endif
+
+@endforeach
 
 </body>
 </html>
