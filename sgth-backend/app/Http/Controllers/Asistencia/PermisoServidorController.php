@@ -98,7 +98,11 @@ class PermisoServidorController extends Controller
     {
         $permiso = PermisoServidor::findOrFail($id);
         
-        if ($permiso->estado !== EstadoPermiso::PENDIENTE) {
+        $estadoActual = $permiso->estado instanceof EstadoPermiso
+            ? $permiso->estado->value
+            : (string) $permiso->estado;
+
+        if ($estadoActual !== EstadoPermiso::PENDIENTE->value) {
             return ApiResponse::error('Solo se pueden anular permisos en estado PENDIENTE.', 400);
         }
 

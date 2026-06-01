@@ -98,8 +98,15 @@ class PermisoService implements PermisoServiceInterface
     {
         $permiso = PermisoServidor::where('folio', $folio)->firstOrFail();
 
-        if ($permiso->estado !== EstadoPermiso::PENDIENTE) {
-            throw new \App\Exceptions\ReglaNegocioException("Solo se pueden confirmar permisos en estado PENDIENTE. Estado actual: {$permiso->estado->value}");
+        $estadoActual = $permiso->estado instanceof EstadoPermiso
+            ? $permiso->estado->value
+            : (string) $permiso->estado;
+
+        if ($estadoActual !== EstadoPermiso::PENDIENTE->value) {
+            throw new \App\Exceptions\ReglaNegocioException(
+                "Solo se pueden confirmar permisos en estado PENDIENTE. " .
+                "Estado actual: {$estadoActual}"
+            );
         }
 
         $permiso->estado = EstadoPermiso::ACTIVO->value;
@@ -114,13 +121,23 @@ class PermisoService implements PermisoServiceInterface
     {
         $permiso = PermisoServidor::findOrFail($permisoId);
 
-        // Solo aplica para Enfermedad y Calamidad
-        if (!in_array($permiso->tipo, [TipoPermiso::ENFERMEDAD, TipoPermiso::CALAMIDAD])) {
+        $tipoActual = $permiso->tipo instanceof TipoPermiso
+            ? $permiso->tipo->value
+            : (string) $permiso->tipo;
+
+        if (!in_array($tipoActual, [
+            TipoPermiso::ENFERMEDAD->value,
+            TipoPermiso::CALAMIDAD->value,
+        ])) {
             throw new \App\Exceptions\ReglaNegocioException("La validación de Trabajo Social solo aplica para permisos por Enfermedad o Calamidad Doméstica.");
         }
 
         // Debe estar ACTIVO (ya confirmado por recepción)
-        if ($permiso->estado !== EstadoPermiso::ACTIVO) {
+        $estadoActual = $permiso->estado instanceof EstadoPermiso
+            ? $permiso->estado->value
+            : (string) $permiso->estado;
+
+        if ($estadoActual !== EstadoPermiso::ACTIVO->value) {
             throw new \App\Exceptions\ReglaNegocioException("El permiso debe estar ACTIVO para ser validado por Trabajo Social.");
         }
 
