@@ -10,32 +10,23 @@
     color: #000;
   }
 
-  /* ══ COPIA: ocupa exactamente 40% de la hoja ══ */
   .copia {
     width: 100%;
-    height: 380px;
     padding: 6px 10px;
-    overflow: hidden;
   }
 
-  /* ══ SEPARADOR: 20% de la hoja ══ */
   .separador {
     width: 100%;
-    height: 76px;
-    display: table;
-    border-top: 1.5px dashed #555;
-    border-bottom: 1.5px dashed #555;
-  }
-  .separador-inner {
-    display: table-cell;
-    vertical-align: middle;
+    border-top: 2px dashed #555;
+    border-bottom: 2px dashed #555;
+    padding: 8px 0;
     text-align: center;
     font-size: 8px;
     color: #777;
     letter-spacing: 3px;
+    margin: 4px 0;
   }
 
-  /* ══ HEADER ══ */
   .header-table {
     width: 100%;
     border-collapse: collapse;
@@ -69,13 +60,11 @@
     margin-top: 2px;
   }
 
-  /* ══ DATOS ══ */
   .datos-table {
     width: 100%;
     border-collapse: collapse;
     border-left: 1.5px solid #000;
     border-right: 1.5px solid #000;
-    border-bottom: 0;
   }
   .datos-table td {
     border: 1px solid #ccc;
@@ -89,34 +78,55 @@
     text-transform: uppercase;
     font-size: 8.5px;
   }
-  .val-bold { font-weight: bold; font-size: 10px; }
+  .val-bold  { font-weight: bold; font-size: 10px; }
   .val-italic { font-style: italic; }
 
-  /* ══ OBSERVACIÓN con fondo imagen ══ */
-  .obs-row {
-    position: relative;
-    height: 55px;
-    border: 1px solid #ccc;
+  /* OBSERVACIÓN — altura fija 100px */
+  .obs-table {
+    width: 100%;
+    border-collapse: collapse;
     border-left: 1.5px solid #000;
     border-right: 1.5px solid #000;
-    overflow: hidden;
+    border-bottom: 0;
   }
-  .obs-bg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    opacity: 0.08;
-    object-fit: cover;
-  }
-  .obs-text {
-    position: relative;
+  .obs-table td {
+    border: 1px solid #ccc;
+    height: 100px;
     padding: 5px 8px;
+    vertical-align: top;
     font-size: 9px;
     font-style: italic;
     color: #333;
   }
 
-  /* ══ FIRMAS ══ */
+  /* IMAGEN DE FONDO en observación */
+  .obs-bg-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-left: 1.5px solid #000;
+    border-right: 1.5px solid #000;
+    border-bottom: 0;
+  }
+  .obs-bg-table td {
+    height: 100px;
+    border: 1px solid #ccc;
+    padding: 0;
+    vertical-align: top;
+  }
+  .obs-inner {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+  }
+  .obs-inner td {
+    border: none;
+    padding: 5px 8px;
+    vertical-align: top;
+    font-size: 9px;
+    font-style: italic;
+    color: #333;
+  }
+
   .firmas-table {
     width: 100%;
     border-collapse: collapse;
@@ -148,20 +158,22 @@
     font-weight: bold;
     text-transform: uppercase;
   }
-  .f-cargo {
-    font-size: 7px;
-    color: #555;
-  }
+  .f-cargo { font-size: 7px; color: #555; }
   .barcode-lines {
     font-size: 26px;
     letter-spacing: -4px;
     line-height: 1;
-    color: #000;
     font-family: 'Courier New', monospace;
   }
   .barcode-num {
     font-size: 8.5px;
     font-weight: bold;
+  }
+  .copy-label {
+    text-align: right;
+    font-size: 7px;
+    color: #aaa;
+    margin-top: 2px;
   }
 </style>
 </head>
@@ -220,7 +232,7 @@
     ? 'CONCESIÓN DE PERMISO HASTA 4 HORAS'
     : 'CONCESIÓN DE PERMISO — ' . ($tipoLabels[$tipoVal] ?? strtoupper($tipoVal));
 
-  // Base64 de imágenes
+  // Base64 imágenes
   $logoB64  = base64_encode(file_get_contents(public_path('images/logo-gadpe.png')));
   $recepB64 = base64_encode(file_get_contents(public_path('images/recepcion-bg.png')));
   $servB64  = base64_encode(file_get_contents(public_path('images/servidor-bg.png')));
@@ -284,14 +296,26 @@
     </tr>
   </table>
 
-  {{-- OBSERVACIÓN con fondo imagen --}}
-  <div class="obs-row">
-    <img class="obs-bg" src="{{ $copy['bg'] }}" alt="">
-    <div class="obs-text">{{ $observacion }}</div>
-  </div>
-
-  {{-- LÍNEA INFERIOR DATOS --}}
-  <div style="border-left:1.5px solid #000;border-right:1.5px solid #000;height:0;"></div>
+  {{-- OBSERVACIÓN con imagen de fondo (100px) --}}
+  {{-- DomPDF soporta background en atributo HTML de tabla --}}
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="border-left:1.5px solid #000;
+           border-right:1.5px solid #000;
+           border-bottom:0;
+           border-collapse:collapse;">
+    <tr>
+      <td background="{{ $copy['bg'] }}"
+          style="height:100px;
+                 border:1px solid #ccc;
+                 padding:6px 8px;
+                 vertical-align:top;
+                 font-size:9px;
+                 font-style:italic;
+                 color:#333;">
+        {{ $observacion }}
+      </td>
+    </tr>
+  </table>
 
   {{-- FIRMAS --}}
   <table class="firmas-table">
@@ -330,18 +354,12 @@
     </tr>
   </table>
 
-  <div style="text-align:right; font-size:7px; color:#aaa; margin-top:2px;">
-    {{ $copy['label'] }} — SGTH GADPE
-  </div>
+  <div class="copy-label">{{ $copy['label'] }} — SGTH GADPE</div>
 
 </div>
 
 @if(!$loop->last)
-<div class="separador">
-  <div class="separador-inner">
-    ✂ &nbsp;&nbsp;&nbsp; CORTAR AQUÍ &nbsp;&nbsp;&nbsp; ✂
-  </div>
-</div>
+<div class="separador">✂ &nbsp;&nbsp; CORTAR AQUÍ &nbsp;&nbsp; ✂</div>
 @endif
 
 @endforeach
