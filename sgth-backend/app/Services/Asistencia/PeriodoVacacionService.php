@@ -44,7 +44,7 @@ class PeriodoVacacionService
 
         if (!$fechaRef) return 0;
 
-        return Carbon::parse($fechaRef)
+        return (int) Carbon::parse($fechaRef)
             ->diffInYears(Carbon::create($anio, 12, 31));
     }
 

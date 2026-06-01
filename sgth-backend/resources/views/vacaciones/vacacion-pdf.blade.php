@@ -4,6 +4,14 @@
     ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
     : null;
 
+  // Grid de motivos 3 columnas
+  $motivosGrid = [
+    ['vacaciones_anuales', 'permiso_cargo_vacaciones', 'licencia_sin_goce'],
+    ['matrimonio',         'capacitacion',             'enfermedad'],
+    ['paternidad',         'maternidad',               'estudios_sin_remuneracion'],
+    ['calamidad_domestica','licencia_con_goce',        null],
+  ];
+
   $motivoLabels = [
     'vacaciones_anuales'        => 'VACACIONES ANUALES (MAYOR 5 DIAS)',
     'permiso_cargo_vacaciones'  => 'PERMISO CON CARGO A VACACIONES (MAX 5 DIAS)',
@@ -16,14 +24,6 @@
     'estudios_sin_remuneracion' => 'PERMISO PARA REALIZAR ESTUDIOS SIN REMUNERACION',
     'calamidad_domestica'       => 'CALAMIDAD DOMESTICA',
     'licencia_con_goce'         => 'LICENCIA CON GOCE DE SUELDO',
-  ];
-
-  // Grid de 3 columnas para los motivos
-  $motivosGrid = [
-    ['vacaciones_anuales', 'permiso_cargo_vacaciones', 'licencia_sin_goce'],
-    ['matrimonio', 'capacitacion', 'enfermedad'],
-    ['paternidad', 'maternidad', 'estudios_sin_remuneracion'],
-    ['calamidad_domestica', 'licencia_con_goce', null],
   ];
 
   $motivoVal = $vacacion->motivo instanceof \App\Enums\MotivoVacacion
@@ -56,24 +56,24 @@
   $folio = $vacacion->folio ?? 'S/N';
 
   $fechaInicio  = $vacacion->fecha_inicio
-    ? \Carbon\Carbon::parse($vacacion->fecha_inicio)->format('Y-m-d') : '';
+    ? \Carbon\Carbon::parse($vacacion->fecha_inicio)->format('d/m/Y') : '';
   $fechaFin     = $vacacion->fecha_fin
-    ? \Carbon\Carbon::parse($vacacion->fecha_fin)->format('Y-m-d') : '';
+    ? \Carbon\Carbon::parse($vacacion->fecha_fin)->format('d/m/Y') : '';
   $fechaRetorno = $vacacion->fecha_retorno
-    ? \Carbon\Carbon::parse($vacacion->fecha_retorno)->format('Y-m-d') : '';
+    ? \Carbon\Carbon::parse($vacacion->fecha_retorno)->format('d/m/Y') : '';
   $fechaEmision = $vacacion->fecha_emision
-    ? \Carbon\Carbon::parse($vacacion->fecha_emision)->format('Y-m-d')
-    : now()->format('Y-m-d');
+    ? \Carbon\Carbon::parse($vacacion->fecha_emision)->format('d/m/Y')
+    : now()->format('d/m/Y');
 
   $fechaIngreso = null;
   if ($vacacion->fecha_ingreso_institucion_informe) {
     $fechaIngreso = \Carbon\Carbon::parse(
       $vacacion->fecha_ingreso_institucion_informe
-    )->format('Y-m-d');
+    )->format('d/m/Y');
   } elseif ($vacacion->servidor->fecha_ingreso_institucion ?? null) {
     $fechaIngreso = \Carbon\Carbon::parse(
       $vacacion->servidor->fecha_ingreso_institucion
-    )->format('Y-m-d');
+    )->format('d/m/Y');
   }
 
   $diasDerecho = $vacacion->dias_derecho ?? '';
@@ -86,13 +86,16 @@
     $urlQr = config('app.url') .
       "/api/v1/asistencia/vacaciones/verificar/{$folio}";
     $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-        ->size(75)->margin(1)->generate($urlQr);
+        ->size(90)->margin(1)->generate($urlQr);
     if (!empty($qrSvg)) {
         $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
     }
   } catch(\Exception $e) {
     $qrSrc = null;
   }
+
+  $tipoDiasLabel = ($vacacion->tipo_dias === 'habiles')
+    ? 'dias habiles' : 'dias calendario';
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -102,150 +105,188 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: Arial, sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     color: #000;
-    margin: 12px 15px;
+    margin: 10px 14px;
   }
 
   /* ── HEADER ── */
   .header-table {
     width: 100%;
     border-collapse: collapse;
-    border: 1.5px solid #000;
-    margin-bottom: 4px;
+    border: 2px solid #000;
+    margin-bottom: 5px;
   }
   .logo-cell {
-    width: 110px;
-    border-right: 1.5px solid #000;
+    width: 120px;
+    border-right: 2px solid #000;
     text-align: center;
-    padding: 4px;
+    padding: 5px;
     vertical-align: middle;
   }
-  .logo-cell img { width: 100px; height: auto; }
+  .logo-cell img { width: 108px; height: auto; }
   .title-wrap {
     text-align: center;
     vertical-align: middle;
-    padding: 5px 10px;
+    padding: 6px 12px;
   }
   .inst-name {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: bold;
     text-transform: uppercase;
   }
   .doc-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: bold;
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 4px;
     border-top: 1px solid #ccc;
-    padding-top: 3px;
+    padding-top: 4px;
   }
 
-  /* ── TABLAS GENERALES ── */
+  /* ── TABLA FUNCIONARIO ── */
   .t {
     width: 100%;
     border-collapse: collapse;
-    border: 1.5px solid #000;
-    margin-bottom: 4px;
+    border: 2px solid #000;
+    margin-bottom: 5px;
   }
   .t td {
-    border: 1px solid #bbb;
-    padding: 3px 6px;
-    font-size: 11px;
+    border: 1px solid #aaa;
+    padding: 5px 7px;
+    font-size: 12px;
     vertical-align: middle;
   }
   .lbl {
     font-weight: bold;
-    background: #f0f0f0;
-    font-size: 10px;
+    background: #ececec;
+    font-size: 11px;
     text-transform: uppercase;
     white-space: nowrap;
   }
-  .val-bold { font-weight: bold; font-size: 12px; }
+  .val-bold {
+    font-weight: bold;
+    font-size: 13px;
+  }
 
   /* ── MOTIVOS ── */
   .motivos-table {
     width: 100%;
     border-collapse: collapse;
-    border: 1.5px solid #000;
-    margin-bottom: 4px;
+    border: 2px solid #000;
+    margin-bottom: 5px;
   }
   .motivos-table td {
-    border: 1px solid #ccc;
-    padding: 3px 5px;
-    font-size: 10px;
+    border: 1px solid #bbb;
+    padding: 5px 7px;
+    font-size: 11px;
     vertical-align: middle;
     width: 33.33%;
   }
-  .radio-sel   { color: #1a5c38; font-size: 14px; font-weight: bold; }
-  .radio-empty { color: #bbb; font-size: 14px; }
+  /* Celda seleccionada */
+  .motivo-sel {
+    background: #e8f5e9;
+    font-weight: bold;
+    border: 1.5px solid #1a5c38 !important;
+  }
+  .radio-box-sel {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #1a5c38;
+    border-radius: 50%;
+    background: #1a5c38;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .radio-box-empty {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid #999;
+    border-radius: 50%;
+    background: #fff;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
 
-  /* ── FIRMAS ── */
+  /* ── FIRMA ── */
   .firma-table {
     width: 100%;
     border-collapse: collapse;
-    border: 1.5px solid #000;
-    margin-bottom: 4px;
+    border: 2px solid #000;
+    margin-bottom: 5px;
   }
   .firma-table td {
-    border: 1px solid #bbb;
-    padding: 4px 6px;
+    border: 1px solid #aaa;
+    padding: 5px 7px;
     vertical-align: top;
-    font-size: 11px;
+    font-size: 12px;
   }
   .f-lbl {
-    font-size: 9px;
-    font-weight: bold;
-    text-transform: uppercase;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 2px;
-    margin-bottom: 2px;
-  }
-  .f-space { height: 38px; }
-  .f-name {
     font-size: 10px;
     font-weight: bold;
     text-transform: uppercase;
-    border-top: 1px solid #666;
-    padding-top: 2px;
-    margin-top: 2px;
+    color: #fff;
+    background: #2d6a4f;
+    padding: 2px 5px;
+    margin-bottom: 3px;
+  }
+  .f-space { height: 45px; }
+  .f-name {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-top: 1.5px solid #444;
+    padding-top: 3px;
+    margin-top: 3px;
   }
   .aceptado {
-    font-size: 10px;
-    margin-top: 3px;
-    line-height: 1.8;
+    font-size: 11px;
+    margin-top: 5px;
+    line-height: 2;
+  }
+  .check-box {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border: 1.5px solid #666;
+    margin-right: 5px;
+    vertical-align: middle;
   }
 
-  /* ── SECCIÓN INFORME ── */
+  /* ── INFORME ── */
   .informe-header {
     background: #1a5c38;
     color: #fff;
     text-align: center;
     font-weight: bold;
-    font-size: 11px;
-    padding: 3px;
+    font-size: 12px;
+    padding: 4px;
     text-transform: uppercase;
+    border: 2px solid #000;
+    border-bottom: 0;
   }
 
   /* ── FIRMAS FINALES ── */
   .firmas-finales {
     width: 100%;
     border-collapse: collapse;
-    border: 1.5px solid #000;
-    margin-bottom: 4px;
+    border: 2px solid #000;
+    margin-bottom: 5px;
   }
   .firmas-finales td {
-    border: 1px solid #bbb;
-    padding: 4px 6px;
+    border: 1px solid #aaa;
+    padding: 5px 7px;
     width: 50%;
-    text-align: center;
     vertical-align: top;
   }
+
   .pie {
     text-align: right;
     font-size: 8px;
     color: #aaa;
-    margin-top: 5px;
+    margin-top: 4px;
   }
 </style>
 </head>
@@ -258,9 +299,7 @@
       @if($logoSrc)
         <img src="{{ $logoSrc }}" alt="Logo GADPE">
       @else
-        <div style="font-size:9px; font-weight:bold; color:#1a5c38;">
-          GADPE
-        </div>
+        <div style="font-size:10px;font-weight:bold;color:#1a5c38;">GADPE</div>
       @endif
     </td>
     <td class="title-wrap">
@@ -274,25 +313,24 @@
   </tr>
 </table>
 
-{{-- ══ DATOS FUNCIONARIO + QR ══ --}}
+{{-- ══ DATOS FUNCIONARIO ══ --}}
 <table class="t">
   <tr>
-    <td class="lbl" width="30%">Apellidos y Nombres del Funcionario:</td>
-    <td class="val-bold" width="45%">{{ $nombreServidor }}</td>
+    <td class="lbl" width="32%">
+      Apellidos y Nombres del Funcionario:
+    </td>
+    <td class="val-bold" width="43%">{{ $nombreServidor }}</td>
     <td class="lbl" width="12%" style="text-align:center;">
       Codigo de Solicitud:
     </td>
-    <td width="13%" style="text-align:center; padding:3px;">
+    <td width="13%" style="text-align:center; padding:4px;">
       @if($qrSrc)
-        <img src="{{ $qrSrc }}" width="60" height="60" alt="QR">
-        <br>
-        <span style="font-size:8px; font-weight:bold;">
+        <img src="{{ $qrSrc }}" width="70" height="70" alt="QR">
+        <div style="font-size:8px;font-weight:bold;margin-top:2px;">
           {{ $folio }}
-        </span>
+        </div>
       @else
-        <span style="font-size:10px; font-weight:bold;">
-          {{ $folio }}
-        </span>
+        <div style="font-size:10px;font-weight:bold;">{{ $folio }}</div>
       @endif
     </td>
   </tr>
@@ -306,13 +344,10 @@
       @if($m === null)
         <td></td>
       @else
-        <td>
-          @if($m === $motivoVal)
-            <span class="radio-sel">&#9679;</span>
-          @else
-            <span class="radio-empty">&#9675;</span>
-          @endif
-          &nbsp;{{ $motivoLabels[$m] ?? $m }}
+        <td class="{{ $m === $motivoVal ? 'motivo-sel' : '' }}">
+          <span class="{{ $m === $motivoVal
+            ? 'radio-box-sel' : 'radio-box-empty' }}"></span>
+          {{ $motivoLabels[$m] ?? $m }}
         </td>
       @endif
     @endforeach
@@ -323,11 +358,11 @@
 {{-- ══ FECHAS ══ --}}
 <table class="t">
   <tr>
-    <td class="lbl" width="30%">Numero de Dias que Solicita:</td>
-    <td class="val-bold" width="15%">
+    <td class="lbl" width="32%">Numero de Dias que Solicita:</td>
+    <td class="val-bold" width="13%">
       {{ $vacacion->dias_solicitados }}
-      <span style="font-size:9px; font-weight:normal;">
-        ({{ $vacacion->tipo_dias === 'habiles' ? 'habiles' : 'calendario' }})
+      <span style="font-size:10px;font-weight:normal;">
+        ({{ $tipoDiasLabel }})
       </span>
     </td>
     <td class="lbl" width="10%">Desde:</td>
@@ -337,7 +372,9 @@
   </tr>
   <tr>
     <td class="lbl" colspan="2">Dia de Ingreso a sus Labores:</td>
-    <td colspan="4">{{ $fechaRetorno ?: '—' }}</td>
+    <td colspan="4" style="font-size:13px; font-weight:bold;">
+      {{ $fechaRetorno ?: '—' }}
+    </td>
   </tr>
 </table>
 
@@ -349,10 +386,10 @@
       <div class="f-space"></div>
       <div class="f-name">{{ $nombreServidor }}</div>
     </td>
-    <td width="45%" style="text-align:center;">
+    <td width="45%" style="text-align:center; vertical-align:middle;">
       <div class="f-lbl">Fecha de Emision</div>
-      <div style="font-size:14px; font-weight:bold;
-                  padding:8px 0; text-align:center;">
+      <div style="font-size:18px; font-weight:bold;
+                  padding:10px 0; text-align:center;">
         {{ $fechaEmision }}
       </div>
     </td>
@@ -368,12 +405,10 @@
     </td>
     <td width="45%">
       <div class="f-lbl">Jefe Departamental:</div>
-      <div style="min-height:20px; font-weight:bold; font-size:11px;">
-        &nbsp;
-      </div>
+      <div style="height:22px;">&nbsp;</div>
       <div class="aceptado">
-        &#9675; &nbsp;ACEPTADO<br>
-        &#9675; &nbsp;NEGADO
+        <span class="check-box"></span>ACEPTADO<br>
+        <span class="check-box"></span>NEGADO
       </div>
     </td>
   </tr>
@@ -388,12 +423,12 @@
     </td>
     <td width="45%">
       <div class="f-lbl">Jefe Departamental:</div>
-      <div style="font-weight:bold; font-size:11px; margin:3px 0;">
-        {{ $nombreJefe ?: '____________________________' }}
+      <div style="font-weight:bold; font-size:12px; margin:5px 0;">
+        {{ $nombreJefe ?: '________________________________' }}
       </div>
       <div class="aceptado">
-        &#9675; &nbsp;ACEPTADO<br>
-        &#9675; &nbsp;NEGADO
+        <span class="check-box"></span>ACEPTADO<br>
+        <span class="check-box"></span>NEGADO
       </div>
     </td>
   </tr>
@@ -405,7 +440,7 @@
     <td class="lbl" width="28%" style="vertical-align:top;">
       Observaciones:
     </td>
-    <td style="height:50px; vertical-align:top;">
+    <td style="height:60px; vertical-align:top;">
       {{ $observacion ?: '—' }}
     </td>
   </tr>
@@ -415,25 +450,25 @@
 <table class="t">
   <tr>
     <td class="lbl" width="28%">Persona que me Reemplazara:</td>
-    <td>{{ $nombreReemplaza ?: '—' }}</td>
+    <td style="font-weight:bold;">
+      {{ $nombreReemplaza ?: '—' }}
+    </td>
   </tr>
 </table>
 
 {{-- ══ INFORME DE VACACIONES ══ --}}
 <div class="informe-header">Informe de Vacaciones</div>
-<table class="t" style="margin-top:0; border-top:0;">
+<table class="t" style="border-top:0; margin-top:0; margin-bottom:5px;">
   <tr>
-    <td class="lbl" width="22%">Fecha de Ingreso:</td>
-    <td width="28%">{{ $fechaIngreso ?: '—' }}</td>
-    <td class="lbl" width="22%">Tiene Derecho a:</td>
-    <td width="28%">
+    <td class="lbl" width="24%">Fecha de Ingreso:</td>
+    <td width="26%">{{ $fechaIngreso ?: '—' }}</td>
+    <td class="lbl" width="24%">Tiene Derecho a:</td>
+    <td width="26%">
       {{ $diasDerecho ? $diasDerecho . ' dias' : '—' }}
     </td>
   </tr>
   <tr>
-    <td class="lbl" width="22%">
-      Vacaciones Corresponden al Periodo de:
-    </td>
+    <td class="lbl">Vacaciones Corresponden al Periodo de:</td>
     <td colspan="3">{{ $periodo ?: '—' }}</td>
   </tr>
 </table>
@@ -441,30 +476,30 @@
 {{-- ══ FIRMAS FINALES ══ --}}
 <table class="firmas-finales">
   <tr>
-    <td>
+    <td style="text-align:center;">
       <div class="f-lbl">f: Direccion de Talento Humano</div>
-      <div class="f-space"></div>
+      <div style="height:50px;"></div>
       <table width="100%" style="border:none;">
         <tr>
-          <td style="border:none; width:50%; font-size:10px;">
-            &#9675; &nbsp;ACEPTADO
+          <td style="border:none;width:50%;font-size:11px;">
+            <span class="check-box"></span>ACEPTADO
           </td>
-          <td style="border:none; width:50%; font-size:10px;">
-            &#9675; &nbsp;NEGADO
+          <td style="border:none;width:50%;font-size:11px;">
+            <span class="check-box"></span>NEGADO
           </td>
         </tr>
       </table>
     </td>
-    <td>
+    <td style="text-align:center;">
       <div class="f-lbl">f: Prefectura</div>
-      <div class="f-space"></div>
+      <div style="height:50px;"></div>
       <table width="100%" style="border:none;">
         <tr>
-          <td style="border:none; width:50%; font-size:10px;">
-            &#9675; &nbsp;ACEPTADO
+          <td style="border:none;width:50%;font-size:11px;">
+            <span class="check-box"></span>ACEPTADO
           </td>
-          <td style="border:none; width:50%; font-size:10px;">
-            &#9675; &nbsp;NEGADO
+          <td style="border:none;width:50%;font-size:11px;">
+            <span class="check-box"></span>NEGADO
           </td>
         </tr>
       </table>
@@ -475,7 +510,7 @@
 <div class="pie">
   SGTH GADPE &nbsp;|&nbsp;
   Folio: {{ $folio }} &nbsp;|&nbsp;
-  Generado: {{ now()->format('Y-m-d H:i') }}
+  Generado: {{ now()->format('d/m/Y H:i') }}
 </div>
 
 </body>
