@@ -2,7 +2,7 @@ import api from '@/lib/axios'
 import type {
   ApiResponse, MarcacionBiometrica,
   PermisoServidor, Vacacion,
-  PeriodoVacacion, ResumenPeriodos,
+  PeriodoVacacion, ResumenPeriodos, ConsolidadoPermisoResponse
 } from '@/types/api'
 
 export const asistenciaService = {
@@ -81,6 +81,38 @@ export const asistenciaService = {
         '/asistencia/periodos-vacaciones/generar-todos',
         { anio: anio ?? new Date().getFullYear() }
       ).then(r => r.data.datos),
+  },
+
+  consolidado: {
+    obtener: (params: {
+      fecha_inicio: string
+      fecha_fin:    string
+      tipo?:        string
+    }) =>
+      api.get<ApiResponse<ConsolidadoPermisoResponse>>(
+        '/asistencia/consolidado-permisos',
+        { params }
+      ).then(r => r.data.datos),
+
+    exportarExcel: (params: {
+      fecha_inicio: string
+      fecha_fin:    string
+      tipo?:        string
+    }) =>
+      api.get('/asistencia/consolidado-permisos/exportar-excel', {
+        params,
+        responseType: 'blob',
+      }).then(r => r.data),
+
+    exportarPdf: (params: {
+      fecha_inicio: string
+      fecha_fin:    string
+      tipo?:        string
+    }) =>
+      api.get('/asistencia/consolidado-permisos/exportar-pdf', {
+        params,
+        responseType: 'blob',
+      }).then(r => r.data),
   },
 
   vacaciones: {

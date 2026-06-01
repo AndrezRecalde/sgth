@@ -816,3 +816,28 @@ export type ResumenPeriodos = {
   saldo_total:   number
   alerta_limite: boolean
 }
+
+export type ConsolidadoPermiso = {
+  servidor_id:     number
+  servidor_nombre: string
+  cedula:          string
+  unidad:          string
+  total_permisos:  number
+  total_minutos:   number
+  tiempo_total:    string
+  total_dias:      number
+}
+
+export type ConsolidadoPermisoResponse = {
+  consolidado: ConsolidadoPermiso[]
+  totales: {
+    total_permisos: number
+    total_minutos:  number
+    total_dias:     number
+  }
+  filtros: {
+    fecha_inicio: string
+    fecha_fin:    string
+    tipo:         string
+  }
+}

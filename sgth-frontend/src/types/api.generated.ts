@@ -889,6 +889,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/asistencia/consolidado-permisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.consolidado"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/consolidado-permisos/exportar-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.consolidado.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/consolidado-permisos/exportar-pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.consolidado.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/consultas": {
         parameters: {
             query?: never;
@@ -7744,6 +7792,100 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "asistencia.consolidado": {
+        parameters: {
+            query: {
+                fecha_inicio: string;
+                fecha_fin: string;
+                tipo?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Consolidado de permisos";
+                        datos: {
+                            consolidado: string;
+                            totales: {
+                                total_permisos: string;
+                                total_minutos: string;
+                                total_dias: number;
+                            };
+                            filtros: {
+                                fecha_inicio: string;
+                                fecha_fin: string;
+                                tipo: string | "personal";
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.consolidado.excel": {
+        parameters: {
+            query: {
+                fecha_inicio: string;
+                fecha_fin: string;
+                tipo?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Transfer-Encoding": "chunked";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv; charset=UTF-8": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.consolidado.pdf": {
+        parameters: {
+            query: {
+                fecha_inicio: string;
+                fecha_fin: string;
+                tipo?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "consultaMedica.index": {
