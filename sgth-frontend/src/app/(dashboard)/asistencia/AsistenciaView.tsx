@@ -7,12 +7,14 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import {
   IconClock, IconClipboardList,
   IconBeach, IconFingerprint,
+  IconCalendarStats,
 } from '@tabler/icons-react'
 import { IconCalendarTime } from '@tabler/icons-react'
 import { PermisosTab } from '@/features/asistencia/components/PermisosTab'
 import { VacacionesTab } from '@/features/asistencia/components/VacacionesTab'
 import { MarcacionesTab } from '@/features/asistencia/components/MarcacionesTab'
 import { MarcacionOnlineTab } from '@/features/asistencia/components/MarcacionOnlineTab'
+import { PeriodosVacacionesTab } from '@/features/asistencia/components/PeriodosVacacionesTab'
 
 export function AsistenciaView() {
   return (
@@ -36,6 +38,12 @@ export function AsistenciaView() {
             leftSection={<IconBeach size={16} />}>
             Vacaciones
           </Tabs.Tab>
+          <Tabs.Tab
+            value="periodos"
+            leftSection={<IconCalendarStats size={16} />}
+          >
+            Períodos
+          </Tabs.Tab>
           <Tabs.Tab value="online"
             leftSection={<IconFingerprint size={16} />}>
             Marcación Online
@@ -50,6 +58,9 @@ export function AsistenciaView() {
         </Tabs.Panel>
         <Tabs.Panel value="vacaciones">
           <VacacionesTab />
+        </Tabs.Panel>
+        <Tabs.Panel value="periodos">
+          <PeriodosVacacionesTab />
         </Tabs.Panel>
         <Tabs.Panel value="online">
           <MarcacionOnlineTab />
