@@ -55,6 +55,19 @@ class PermisoServidorController extends Controller
             );
         }
 
+        // Verificar que el servidor no sea CT
+        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
+        $regimen = $servidor->regimen_laboral instanceof \App\Enums\RegimenLaboral
+            ? $servidor->regimen_laboral->value
+            : (string)($servidor->regimen_laboral ?? 'losep');
+
+        if ($regimen === 'codigo_trabajo') {
+            return ApiResponse::error(
+                'Los servidores con Código del Trabajo no tienen acceso al módulo de permisos.',
+                422
+            );
+        }
+
         $datos = array_merge($request->validated(), [
             'creado_por' => $request->user()->id,
         ]);

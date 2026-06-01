@@ -4778,6 +4778,262 @@
                 }
             }
         },
+        "/v1/asistencia/consolidado-permisos": {
+            "get": {
+                "operationId": "asistencia.consolidado",
+                "tags": [
+                    "ConsolidadoPermiso"
+                ],
+                "parameters": [
+                    {
+                        "name": "fecha_inicio",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_fin",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Consolidado de permisos"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "consolidado": {
+                                                    "type": "string"
+                                                },
+                                                "totales": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "total_permisos": {
+                                                            "type": "string"
+                                                        },
+                                                        "total_minutos": {
+                                                            "type": "string"
+                                                        },
+                                                        "total_dias": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "total_permisos",
+                                                        "total_minutos",
+                                                        "total_dias"
+                                                    ]
+                                                },
+                                                "filtros": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "fecha_inicio": {
+                                                            "type": "string"
+                                                        },
+                                                        "fecha_fin": {
+                                                            "type": "string"
+                                                        },
+                                                        "tipo": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "personal"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "fecha_inicio",
+                                                        "fecha_fin",
+                                                        "tipo"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "consolidado",
+                                                "totales",
+                                                "filtros"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/consolidado-permisos/exportar-excel": {
+            "get": {
+                "operationId": "asistencia.consolidado.excel",
+                "tags": [
+                    "ConsolidadoPermiso"
+                ],
+                "parameters": [
+                    {
+                        "name": "fecha_inicio",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_fin",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/consolidado-permisos/exportar-pdf": {
+            "get": {
+                "operationId": "asistencia.consolidado.pdf",
+                "tags": [
+                    "ConsolidadoPermiso"
+                ],
+                "parameters": [
+                    {
+                        "name": "fecha_inicio",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_fin",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/consultas": {
             "get": {
                 "operationId": "consultaMedica.index",

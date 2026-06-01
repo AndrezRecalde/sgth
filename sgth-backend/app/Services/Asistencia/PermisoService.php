@@ -10,9 +10,14 @@ use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Services\Asistencia\PeriodoVacacionService;
 
 class PermisoService implements PermisoServiceInterface
 {
+    public function __construct(
+        private PeriodoVacacionService $periodoService
+    ) {}
+
     public function crear(array $datos, int $servidorId): PermisoServidor
     {
         return DB::transaction(function () use ($datos, $servidorId) {
@@ -94,9 +99,13 @@ class PermisoService implements PermisoServiceInterface
         });
     }
 
-    public function confirmarRecepcion(string $folio, int $recepcionUserId): PermisoServidor
-    {
-        $permiso = PermisoServidor::where('folio', $folio)->firstOrFail();
+    public function confirmarRecepcion(
+        string $folio,
+        int $recepcionUserId
+    ): PermisoServidor {
+        $permiso = PermisoServidor::where('folio', $folio)
+            ->with('servidor')
+            ->firstOrFail();
 
         $estadoActual = $permiso->estado instanceof EstadoPermiso
             ? $permiso->estado->value
@@ -109,10 +118,44 @@ class PermisoService implements PermisoServiceInterface
             );
         }
 
-        $permiso->estado = EstadoPermiso::ACTIVO->value;
+        $permiso->estado        = EstadoPermiso::ACTIVO->value;
         $permiso->confirmado_por = $recepcionUserId;
-        $permiso->confirmado_en = now();
+        $permiso->confirmado_en  = now();
         $permiso->save();
+
+        // ── Descuento automático para permisos PERSONAL en LOSEP ──
+        $tipoActual = $permiso->tipo instanceof TipoPermiso
+            ? $permiso->tipo->value
+            : (string) $permiso->tipo;
+
+        if ($tipoActual === TipoPermiso::PERSONAL->value) {
+            $servidor = $permiso->servidor;
+
+            if ($servidor) {
+                $regimen = $servidor->regimen_laboral instanceof \App\Enums\RegimenLaboral
+                    ? $servidor->regimen_laboral->value
+                    : (string)($servidor->regimen_laboral ?? 'losep');
+
+                // Solo LOSEP descuenta permisos personales del saldo vacacional
+                if ($regimen === 'losep') {
+                    $inicio = \Carbon\Carbon::parse($permiso->hora_inicio);
+                    $fin    = \Carbon\Carbon::parse($permiso->hora_fin);
+
+                    // Calcular horas y convertir a días (8h = 1 día)
+                    $minutos    = $inicio->diffInMinutes($fin);
+                    $diasDescontar = round($minutos / 480, 4); // 480 min = 8h
+
+                    if ($diasDescontar > 0) {
+                        $anio = \Carbon\Carbon::parse($permiso->fecha)->year;
+                        $this->periodoService->descontarDias(
+                            $servidor->id,
+                            $diasDescontar,
+                            $anio
+                        );
+                    }
+                }
+            }
+        }
 
         return $permiso;
     }

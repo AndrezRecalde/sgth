@@ -265,6 +265,27 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             )->name('periodos.generar-todos');
         });
 
+    Route::prefix('asistencia/consolidado-permisos')
+        ->group(function () {
+            Route::get(
+                '/',
+                [\App\Http\Controllers\Asistencia\ConsolidadoPermisoController::class,
+                 'consolidado']
+            )->name('asistencia.consolidado');
+
+            Route::get(
+                'exportar-excel',
+                [\App\Http\Controllers\Asistencia\ConsolidadoPermisoController::class,
+                 'exportarExcel']
+            )->name('asistencia.consolidado.excel');
+
+            Route::get(
+                'exportar-pdf',
+                [\App\Http\Controllers\Asistencia\ConsolidadoPermisoController::class,
+                 'exportarPdf']
+            )->name('asistencia.consolidado.pdf');
+        });
+
     // Módulo 05: Sistema de Gestión Documental (SGD)
     Route::prefix('sgd')->group(function () {
         Route::post('documentos', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'store']);
