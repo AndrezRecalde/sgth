@@ -68,7 +68,7 @@ const schema = z.object({
   motivo:              z.string().min(1, 'Seleccione el motivo'),
   fecha_inicio:        z.string().min(1, 'Requerido'),
   fecha_fin:           z.string().min(1, 'Requerido'),
-  fecha_retorno:       z.string().optional().nullable(),
+  fecha_retorno:       z.string().min(1, 'La fecha de retorno es requerida'),
   dias_solicitados:    z.number().min(1, 'Mínimo 1 día'),
   tipo_dias:           z.enum(['habiles', 'calendario']),
   observacion:         z.string().optional().nullable(),
@@ -162,7 +162,7 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
       motivo:                   '',
       fecha_inicio:             '',
       fecha_fin:                '',
-      fecha_retorno:            null,
+      fecha_retorno:            '',
       dias_solicitados:         1,
       tipo_dias:                'habiles',
       observacion:              '',
@@ -336,12 +336,14 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                         const servidorSel = todosServidores.find(
                           s => Number(s.id) === id
                         )
-                        const regimen = servidorSel?.regimen_laboral as string | null
-                        if (regimen === 'codigo_trabajo') {
-                          setValue('tipo_dias', 'calendario')
-                        } else {
-                          setValue('tipo_dias', 'habiles')
-                        }
+                        const regimen = (servidorSel as {
+                          regimen_laboral?: string
+                        } | null)?.regimen_laboral ?? 'losep'
+
+                        setValue(
+                          'tipo_dias',
+                          regimen === 'codigo_trabajo' ? 'calendario' : 'habiles'
+                        )
                       }}
                       error={errors.servidor_id?.message}
                     />
@@ -500,14 +502,14 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                   render={({ field }) => (
                     <DatePickerInput
                       label="Fecha de retorno"
-                      placeholder="Opcional"
+                      placeholder="Seleccionar"
                       valueFormat="YYYY-MM-DD"
-                      clearable
                       {...contained}
                       value={toDate(field.value)}
                       onChange={(d: any) =>
-                        field.onChange(fromDate(d))
+                        field.onChange(fromDate(d) ?? '')
                       }
+                      error={errors.fecha_retorno?.message}
                     />
                   )}
                 />
@@ -552,20 +554,32 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                   name="tipo_dias"
                   control={control}
                   render={({ field }) => (
-                    <Select
-                      label="Tipo de días"
-                      data={[
-                        { value: 'habiles',    label: 'Hábiles' },
-                        { value: 'calendario', label: 'Calendario' },
-                      ]}
-                      {...contained}
-                      value={field.value}
-                      onChange={(v) =>
-                        field.onChange(
-                          (v ?? 'habiles') as FormData['tipo_dias']
-                        )
-                      }
-                    />
+                    <Stack gap={4}>
+                      <Select
+                        label="Tipo de días"
+                        data={[
+                          { value: 'habiles',    label: 'Hábiles (LOSEP)' },
+                          { value: 'calendario', label: 'Calendario (Código del Trabajo)' },
+                        ]}
+                        readOnly
+                        styles={{
+                          input: {
+                            backgroundColor: 'var(--mantine-color-default-hover)',
+                            cursor: 'not-allowed',
+                          }
+                        }}
+                        {...contained}
+                        value={field.value}
+                        onChange={(v) =>
+                          field.onChange(
+                            (v ?? 'habiles') as FormData['tipo_dias']
+                          )
+                        }
+                      />
+                      <Text size="xs" c="dimmed">
+                        Asignado automáticamente según el régimen del servidor
+                      </Text>
+                    </Stack>
                   )}
                 />
               </Grid.Col>
