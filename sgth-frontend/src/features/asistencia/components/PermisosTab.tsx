@@ -1,10 +1,13 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Stack, Group, Button, Text, Badge } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconCheck, IconX,
   IconShieldCheck, IconClipboardList,
+  IconPrinter,
 } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
@@ -12,6 +15,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PermisoModal } from './PermisoModal'
 import { usePermisos } from '../hooks/usePermisos'
 import { usePermisoMutations } from '../hooks/usePermisoMutations'
+import { notifications } from '@mantine/notifications'
+import { asistenciaService } from '../services/asistenciaService'
 import type { PermisoServidor, ServidorConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 
@@ -40,6 +45,34 @@ export function PermisosTab() {
   const [opened, { open, close }] = useDisclosure(false)
   const { data: permisos = [], isLoading } = usePermisos()
   const { confirmar, anular, validarTs } = usePermisoMutations()
+
+  const [exportandoId, setExportandoId] = useState<number | null>(null)
+
+  const handleExportar = async (id: number) => {
+    setExportandoId(id)
+    try {
+      const blob = await asistenciaService.permisos.exportar(id)
+      const url  = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href  = url
+      link.download = `permiso_${id}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+      notifications.show({
+        title:   'PDF descargado',
+        message: 'El permiso fue exportado correctamente.',
+        color:   'emerald',
+      })
+    } catch {
+      notifications.show({
+        title:   'Error',
+        message: 'No se pudo exportar el permiso.',
+        color:   'red',
+      })
+    } finally {
+      setExportandoId(null)
+    }
+  }
 
   const lista = permisos as PermisoServidor[]
 
@@ -148,6 +181,12 @@ export function PermisosTab() {
       width:    50,
       render: (p) => (
         <TableActions actions={[
+          {
+            label:   'Imprimir permiso',
+            icon:    <IconPrinter size={14} />,
+            color:   'blue',
+            onClick: () => handleExportar(p.id),
+          },
           {
             label:    'Confirmar recepción',
             icon:     <IconCheck size={14} />,
