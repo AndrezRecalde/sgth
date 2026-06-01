@@ -2142,6 +2142,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/asistencia/periodos-vacaciones/servidores/{servidorId}/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resumen de períodos y saldo de un servidor */
+        get: operations["periodos.resumen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/periodos-vacaciones/servidores/{servidorId}/generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generar período del año actual para un servidor */
+        post: operations["periodos.generar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/periodos-vacaciones/generar-todos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generar períodos para todos los servidores (admin) */
+        post: operations["periodos.generar-todos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/permisos": {
         parameters: {
             query?: never;
@@ -4122,6 +4173,28 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /** PeriodoVacacion */
+        PeriodoVacacion: {
+            id: number;
+            servidor_id: number;
+            anio: number;
+            /** Format: date-time */
+            fecha_inicio_periodo: string;
+            /** Format: date-time */
+            fecha_fin_periodo: string;
+            regimen: string;
+            anios_antiguedad: number;
+            dias_generados: string;
+            dias_utilizados: string;
+            dias_saldo: string;
+            saldo_acumulado: string;
+            estado: string;
+            alerta_enviada: boolean;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** PermisoServidor */
         PermisoServidor: {
             id: number;
@@ -4745,6 +4818,8 @@ export interface components {
             tipo_dias: "habiles" | "calendario";
             observacion?: string | null;
             unidad_administrativa_id?: number | null;
+            persona_reemplaza_id?: number | null;
+            periodo_vacacion_id?: number | null;
         };
         /** Subrogacion */
         Subrogacion: {
@@ -5159,6 +5234,8 @@ export interface components {
             fecha_emision: string | null;
             creado_por: number | null;
             unidad_administrativa_id: number | null;
+            persona_reemplaza_id: number | null;
+            periodo_vacacion_id: number | null;
         };
         /** Viatico */
         Viatico: {
@@ -11117,6 +11194,104 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "periodos.resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resumen de períodos de vacaciones.";
+                        datos: {
+                            periodos: components["schemas"]["PeriodoVacacion"][];
+                            saldo_total: number;
+                            alerta_limite: boolean;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "periodos.generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    anio?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: components["schemas"]["PeriodoVacacion"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "periodos.generar-todos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    anio?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            generados: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "admin.permisos.index": {

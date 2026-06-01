@@ -787,5 +787,32 @@ export type Vacacion = {
   jefe?:            ServidorConRelaciones | null
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null
+  persona_reemplaza_id?: number | null
+  periodo_vacacion_id?:  number | null
+  persona_reemplaza?:    ServidorConRelaciones | null
+  periodo_vacacion?:     PeriodoVacacion | null
 }
 
+// ── Períodos de vacaciones ───────────────────────
+export type PeriodoVacacion = {
+  id:                   number
+  servidor_id:          number
+  anio:                 number
+  fecha_inicio_periodo: string
+  fecha_fin_periodo:    string
+  regimen:              'losep' | 'codigo_trabajo'
+  anios_antiguedad:     number
+  dias_generados:       number | string
+  dias_utilizados:      number | string
+  dias_saldo:           number | string
+  saldo_acumulado:      number | string
+  estado:               'abierto' | 'cerrado' | 'vencido'
+  alerta_enviada:       boolean
+  servidor?:            ServidorConRelaciones
+}
+
+export type ResumenPeriodos = {
+  periodos:      PeriodoVacacion[]
+  saldo_total:   number
+  alerta_limite: boolean
+}

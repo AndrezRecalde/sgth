@@ -2,6 +2,7 @@ import api from '@/lib/axios'
 import type {
   ApiResponse, MarcacionBiometrica,
   PermisoServidor, Vacacion,
+  PeriodoVacacion, ResumenPeriodos,
 } from '@/types/api'
 
 export const asistenciaService = {
@@ -63,6 +64,25 @@ export const asistenciaService = {
       }).then(r => r.data),
   },
 
+  periodos: {
+    resumen: (servidorId: number) =>
+      api.get<ApiResponse<ResumenPeriodos>>(
+        `/asistencia/periodos-vacaciones/servidores/${servidorId}/resumen`
+      ).then(r => r.data.datos),
+
+    generar: (servidorId: number, anio?: number) =>
+      api.post<ApiResponse<PeriodoVacacion>>(
+        `/asistencia/periodos-vacaciones/servidores/${servidorId}/generar`,
+        { anio: anio ?? new Date().getFullYear() }
+      ).then(r => r.data.datos),
+
+    generarTodos: (anio?: number) =>
+      api.post<ApiResponse<{ generados: number }>>(
+        '/asistencia/periodos-vacaciones/generar-todos',
+        { anio: anio ?? new Date().getFullYear() }
+      ).then(r => r.data.datos),
+  },
+
   vacaciones: {
     listar: (params?: Record<string, string>) =>
       api.get<ApiResponse<{ data: Vacacion[]; meta: unknown }>>(
@@ -83,5 +103,10 @@ export const asistenciaService = {
       api.put<ApiResponse<Vacacion>>(
         `/asistencia/vacaciones/${id}`, data
       ).then(r => r.data.datos),
+
+    exportar: (id: number) =>
+      api.get(`/asistencia/vacaciones/${id}/exportar`, {
+        responseType: 'blob',
+      }).then(r => r.data),
   },
 }

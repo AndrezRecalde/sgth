@@ -1,14 +1,18 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Stack, Group, Button, Text, Badge } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconBeach, IconCheck, IconX } from '@tabler/icons-react'
+import { IconPlus, IconBeach, IconCheck, IconX, IconPrinter } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { VacacionModal } from './VacacionModal'
 import { useVacaciones } from '../hooks/useVacaciones'
 import { useVacacionMutations } from '../hooks/useVacacionMutations'
+import { notifications } from '@mantine/notifications'
+import { asistenciaService } from '../services/asistenciaService'
 import type { Vacacion, EstadoVacacion, MotivoVacacion } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 
@@ -44,6 +48,34 @@ export function VacacionesTab() {
   const [opened, { open, close }] = useDisclosure(false)
   const { data, isLoading } = useVacaciones()
   const { actualizar } = useVacacionMutations()
+
+  const [exportandoId, setExportandoId] = useState<number | null>(null)
+
+  const handleExportar = async (id: number) => {
+    setExportandoId(id)
+    try {
+      const blob = await asistenciaService.vacaciones.exportar(id)
+      const url  = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href  = url
+      link.download = `vacacion_${id}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+      notifications.show({
+        title:   'PDF descargado',
+        message: 'La solicitud fue exportada.',
+        color:   'emerald',
+      })
+    } catch {
+      notifications.show({
+        title:   'Error',
+        message: 'No se pudo exportar.',
+        color:   'red',
+      })
+    } finally {
+      setExportandoId(null)
+    }
+  }
 
   const lista = (
     Array.isArray(data)
@@ -140,6 +172,12 @@ export function VacacionesTab() {
       width:    50,
       render: (v) => (
         <TableActions actions={[
+          {
+            label:   'Imprimir solicitud',
+            icon:    <IconPrinter size={14} />,
+            color:   'blue',
+            onClick: () => handleExportar(v.id),
+          },
           {
             label:    'Aprobar',
             icon:     <IconCheck size={14} />,
