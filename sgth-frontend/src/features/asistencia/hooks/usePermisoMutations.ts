@@ -42,7 +42,15 @@ export function usePermisoMutations() {
       })
       invalidar()
     },
-    onError,
+    onError: (error: any) => {
+      console.error('Error confirmar:', error)
+      console.error('Response:', error?.response?.data)
+      notifications.show({
+        title: 'Error', message: 'Operación fallida.',
+        color: 'red',
+        icon: React.createElement(IconX, { size: 16 }),
+      })
+    },
   })
 
   const anular = useMutation({

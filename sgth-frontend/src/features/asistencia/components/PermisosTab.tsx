@@ -199,7 +199,8 @@ export function PermisosTab() {
             icon:     <IconShieldCheck size={14} />,
             color:    'emerald',
             onClick:  () => validarTs.mutate(p.id),
-            hidden: (p.estado as string) !== 'activo',
+            hidden: (p.estado as string) !== 'activo' ||
+              !['enfermedad', 'calamidad'].includes(p.tipo as string),
           },
           {
             label:    'Anular',
