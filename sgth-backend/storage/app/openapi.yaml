@@ -17851,6 +17851,40 @@
                 }
             }
         },
+        "/v1/asistencia/vacaciones/{id}/exportar": {
+            "get": {
+                "operationId": "asistencia.vacaciones.exportar",
+                "tags": [
+                    "Vacacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/asistencia/vacaciones/{id}": {
             "put": {
                 "operationId": "vacacion.update",

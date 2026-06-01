@@ -80,4 +80,26 @@ class VacacionController extends Controller
             "Solicitud resuelta como {$vacacion->estado}."
         );
     }
+
+    public function exportar(int $id): mixed
+    {
+        $vacacion = \App\Models\Asistencia\Vacacion::with([
+            'servidor.puesto.cargo',
+            'servidor',
+            'jefe',
+            'personaReemplaza',
+            'unidadAdministrativa',
+            'creadoPor',
+            'aprobadoPor',
+        ])->findOrFail($id);
+
+        $pdf = app('dompdf.wrapper')
+            ->setPaper('letter', 'portrait')
+            ->loadView('vacaciones.vacacion-pdf', [
+                'vacacion' => $vacacion,
+            ]);
+
+        $folio = $vacacion->folio ?? $vacacion->id;
+        return $pdf->download("vacacion_{$folio}.pdf");
+    }
 }

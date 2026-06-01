@@ -222,6 +222,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::get('/', [\App\Http\Controllers\Asistencia\VacacionController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Asistencia\VacacionController::class, 'store']);
             Route::get('saldo/{servidorId}', [\App\Http\Controllers\Asistencia\VacacionController::class, 'saldo']);
+            Route::get('{id}/exportar', [\App\Http\Controllers\Asistencia\VacacionController::class, 'exportar'])
+                ->name('asistencia.vacaciones.exportar');
             Route::put('{id}', [\App\Http\Controllers\Asistencia\VacacionController::class, 'update']);
         });
 
