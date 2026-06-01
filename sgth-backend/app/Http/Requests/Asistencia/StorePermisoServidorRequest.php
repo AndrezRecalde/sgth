@@ -18,7 +18,7 @@ class StorePermisoServidorRequest extends FormRequest
     {
         return [
             'tipo'        => ['required', 'string', Rule::in(array_column(TipoPermiso::cases(), 'value'))],
-            'fecha'       => ['required', 'date', 'after_or_equal:today'],
+            'fecha'       => ['required', 'date'],
             'hora_inicio' => ['required', 'date_format:H:i'],
             'hora_fin'    => ['required', 'date_format:H:i', 'after:hora_inicio'],
             'observacion' => ['nullable', 'string', 'max:1000'],
