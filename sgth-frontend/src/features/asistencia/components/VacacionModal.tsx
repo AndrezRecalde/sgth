@@ -172,6 +172,41 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
   const motivoWatch = watch('motivo')
   const descuentaVacaciones = MOTIVOS_DESCUENTO.includes(motivoWatch)
 
+  const fechaInicioWatch = watch('fecha_inicio')
+  const fechaFinWatch    = watch('fecha_fin')
+  const tipoDiasWatch    = watch('tipo_dias')
+
+  // Auto-calcular días solicitados
+  useEffect(() => {
+    if (!fechaInicioWatch || !fechaFinWatch) return
+
+    const inicio = new Date(fechaInicioWatch)
+    const fin    = new Date(fechaFinWatch)
+
+    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) return
+    if (fin < inicio) return
+
+    let dias = 0
+
+    if (tipoDiasWatch === 'calendario') {
+      // Días calendario incluyendo fines de semana
+      const diffMs = fin.getTime() - inicio.getTime()
+      dias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1
+    } else {
+      // Días hábiles: solo lunes a viernes
+      const cursor = new Date(inicio)
+      while (cursor <= fin) {
+        const dow = cursor.getDay()
+        if (dow !== 0 && dow !== 6) dias++
+        cursor.setDate(cursor.getDate() + 1)
+      }
+    }
+
+    if (dias > 0) {
+      setValue('dias_solicitados', dias, { shouldValidate: true })
+    }
+  }, [fechaInicioWatch, fechaFinWatch, tipoDiasWatch, setValue])
+
   const handleClose = () => {
     reset()
     setUnidadSelId(null)
@@ -287,6 +322,17 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                         const id = v ? Number(v) : undefined
                         field.onChange(id)
                         setServidorSelId(id ?? null)
+
+                        // Auto-asignar tipo_dias según régimen del servidor
+                        const servidorSel = todosServidores.find(
+                          s => Number(s.id) === id
+                        )
+                        const regimen = servidorSel?.regimen_laboral as string | null
+                        if (regimen === 'codigo_trabajo') {
+                          setValue('tipo_dias', 'calendario')
+                        } else {
+                          setValue('tipo_dias', 'habiles')
+                        }
                       }}
                       error={errors.servidor_id?.message}
                     />
@@ -465,7 +511,11 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                   render={({ field }) => (
                     <NumberInput
                       label="Días solicitados"
+                      description="Calculado automáticamente según las fechas"
                       min={1} max={365}
+                      readOnly
+                      styles={{ input: { background: 'var(--mantine-color-default-hover)',
+                                          cursor: 'not-allowed' } }}
                       {...contained}
                       value={field.value}
                       onChange={(v) =>
