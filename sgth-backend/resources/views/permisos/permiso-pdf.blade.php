@@ -1,3 +1,8 @@
+@php
+  $servPath  = public_path('images/servidor-bg.png');
+  $recepPath = public_path('images/recepcion-bg.png');
+  $logoPath  = public_path('images/logo-gadpe.png');
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,11 +16,6 @@
     margin: 0 18px;
   }
 
-  .copia {
-    width: 100%;
-    padding: 10px 0;
-  }
-
   .separador {
     width: 100%;
     border-top: 2px dashed #555;
@@ -26,6 +26,20 @@
     color: #666;
     letter-spacing: 4px;
     margin: 4px 0;
+  }
+
+  /* ── TABLAS PRINCIPALES con fondo por copia ── */
+  .bg-servidor {
+    background-image: url('{{ $servPath }}');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .bg-recepcion {
+    background-image: url('{{ $recepPath }}');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   /* ── HEADER ── */
@@ -75,19 +89,20 @@
     border: 1px solid #bbb;
     padding: 5px 8px;
     font-size: 12px;
+    background-color: rgba(255,255,255,0.82);
   }
   .lbl {
     font-weight: bold;
-    background: #efefef;
+    background-color: rgba(239,239,239,0.9) !important;
     width: 28%;
     font-size: 11px;
     text-transform: uppercase;
   }
-  .val-bold   { font-weight: bold; font-size: 13px; text-transform: uppercase; }
+  .val-bold  { font-weight: bold; font-size: 13px; text-transform: uppercase; }
   .val-italic { font-style: italic; font-size: 12px; }
-  .val-upper  { font-size: 12px; text-transform: uppercase; }
+  .val-upper { font-size: 12px; text-transform: uppercase; }
 
-  /* ── OBSERVACIÓN 130px ── */
+  /* ── OBSERVACIÓN ── */
   .obs-table {
     width: 100%;
     border-collapse: collapse;
@@ -103,6 +118,7 @@
     font-size: 12px;
     text-transform: uppercase;
     color: #333;
+    background-color: rgba(255,255,255,0.82);
   }
 
   /* ── FIRMAS ── */
@@ -117,6 +133,7 @@
     width: 25%;
     text-align: center;
     vertical-align: top;
+    background-color: rgba(255,255,255,0.82);
   }
   .f-header {
     font-size: 10px;
@@ -150,13 +167,11 @@
     margin-top: 3px;
     font-weight: bold;
   }
-
   .copy-label {
     text-align: right;
     font-size: 9px;
     color: #888;
     margin-top: 4px;
-    padding-right: 2px;
   }
 </style>
 </head>
@@ -212,163 +227,133 @@
 
   $tituloDoc = $tipoVal === 'personal'
     ? 'CONCESION DE PERMISO HASTA 4 HORAS'
-    : 'CONCESION DE PERMISO - ' . ($tipoLabels[$tipoVal] ?? mb_strtoupper($tipoVal, 'UTF-8'));
+    : 'CONCESION DE PERMISO - ' .
+      ($tipoLabels[$tipoVal] ?? mb_strtoupper($tipoVal, 'UTF-8'));
 
-  // ── QR como base64 SVG ──
+  // QR
   $qrSrc = null;
   try {
-      $urlVerificacion = config('app.url') . "/api/v1/asistencia/permisos/verificar/{$folio}";
-      $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-          ->size(100)
-          ->margin(1)
-          ->generate($urlVerificacion);
-      if (!empty($qrSvg)) {
-          $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
-      }
+    $urlQr = config('app.url') .
+      "/api/v1/asistencia/permisos/verificar/{$folio}";
+    $qrPng = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')
+      ->size(100)->margin(1)->generate($urlQr);
+    if (!empty($qrPng)) {
+      $qrSrc = 'data:image/png;base64,' . base64_encode($qrPng);
+    }
   } catch(\Exception $e) {
-      $qrSrc = null;
+    $qrSrc = null;
   }
 
-  // ── Imágenes base64 (método más compatible con DomPDF) ──
+  // Logo base64
   $logoSrc = 'data:image/png;base64,' .
-      base64_encode(file_get_contents(public_path('images/logo-gadpe.png')));
-
-  $servSrc  = 'data:image/png;base64,' .
-      base64_encode(file_get_contents(public_path('images/servidor-bg.png')));
-
-  $recepSrc = 'data:image/png;base64,' .
-      base64_encode(file_get_contents(public_path('images/recepcion-bg.png')));
+    base64_encode(file_get_contents($logoPath));
 
   $copies = [
-    ['bgSrc' => $servSrc,  'label' => 'COPIA SERVIDOR'],
-    ['bgSrc' => $recepSrc, 'label' => 'COPIA TALENTO HUMANO'],
+    ['bgClass' => 'bg-servidor',  'label' => 'COPIA SERVIDOR'],
+    ['bgClass' => 'bg-recepcion', 'label' => 'COPIA TALENTO HUMANO'],
   ];
 @endphp
 
-@foreach($copies as $copy)
+@foreach($copies as $i => $copy)
 
-<div class="copia">
+{{-- HEADER --}}
+<table class="header-table {{ $copy['bgClass'] }}">
+  <tr>
+    <td class="logo-cell">
+      <img src="{{ $logoSrc }}" alt="Logo GADPE">
+    </td>
+    <td class="title-cell">
+      <div class="inst-name">
+        Gobierno Autonomo Descentralizado de la Provincia de Esmeraldas
+      </div>
+      <div class="doc-title">{{ $tituloDoc }}</div>
+    </td>
+  </tr>
+</table>
 
-  {{-- ══ HEADER ══ --}}
-  {{--
-    DomPDF NO soporta background-image en CSS ni
-    el atributo background con data: URI.
-    La única forma de simular el fondo es usando
-    una tabla de 2 filas superpuestas o colocando
-    la imagen como elemento img dentro de la celda.
-    Usamos img con opacity para efecto de fondo.
-  --}}
-  <table class="header-table">
-    <tr>
-      <td class="logo-cell">
-        <img src="{{ $logoSrc }}" alt="Logo GADPE">
-      </td>
-      <td style="text-align:center; vertical-align:middle;
-                 padding:8px 12px; position:relative;">
-        {{-- Imagen de fondo como img con opacidad --}}
-        <img src="{{ $copy['bgSrc'] }}"
-             style="position:absolute; top:0; left:0;
-                    width:100%; height:100%;
-                    opacity:0.12; object-fit:cover;"
-             alt="">
-        <div style="position:relative;">
-          <div class="inst-name">
-            Gobierno Autonomo Descentralizado de la Provincia de Esmeraldas
-          </div>
-          <div class="doc-title">{{ $tituloDoc }}</div>
+{{-- DATOS --}}
+<table class="datos-table {{ $copy['bgClass'] }}">
+  <tr>
+    <td class="lbl">DEPARTAMENTO:</td>
+    <td class="val-upper" colspan="3">{{ $unidad }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">SERVIDOR:</td>
+    <td class="val-bold" colspan="3">{{ $nombreServidor }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">MOTIVO DEL PERMISO:</td>
+    <td class="val-bold" colspan="3">
+      {{ $tipoLabels[$tipoVal] ?? mb_strtoupper($tipoVal, 'UTF-8') }}
+    </td>
+  </tr>
+  <tr>
+    <td class="lbl">FECHA DEL PERMISO:</td>
+    <td class="val-bold">{{ $fechaPermiso }}</td>
+    <td class="lbl">FECHA DE CREACION:</td>
+    <td class="val-italic">{{ $fechaCreacion }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">HORA DE INICIO:</td>
+    <td class="val-bold">{{ $horaInicio }}</td>
+    <td class="lbl">HORA DE FINALIZACION:</td>
+    <td class="val-bold">{{ $horaFin }}</td>
+  </tr>
+</table>
+
+{{-- OBSERVACIÓN --}}
+<table class="obs-table {{ $copy['bgClass'] }}">
+  <tr>
+    <td>{{ $observacion }}</td>
+  </tr>
+</table>
+
+{{-- FIRMAS --}}
+<table class="firmas-table {{ $copy['bgClass'] }}">
+  <tr>
+    <td>
+      <div class="f-header">F: Jefe Inmediato</div>
+      <div class="f-espacio"></div>
+      <div class="f-linea">
+        <div class="f-nombre">
+          {{ $nombreJefe ?: '__________________' }}
         </div>
-      </td>
-    </tr>
-  </table>
-
-  {{-- ══ DATOS ══ --}}
-  <table class="datos-table">
-    <tr>
-      <td class="lbl">DEPARTAMENTO:</td>
-      <td class="val-upper" colspan="3">{{ $unidad }}</td>
-    </tr>
-    <tr>
-      <td class="lbl">SERVIDOR:</td>
-      <td class="val-bold" colspan="3">{{ $nombreServidor }}</td>
-    </tr>
-    <tr>
-      <td class="lbl">MOTIVO DEL PERMISO:</td>
-      <td class="val-bold" colspan="3">
-        {{ $tipoLabels[$tipoVal] ?? mb_strtoupper($tipoVal, 'UTF-8') }}
-      </td>
-    </tr>
-    <tr>
-      <td class="lbl">FECHA DEL PERMISO:</td>
-      <td class="val-bold">{{ $fechaPermiso }}</td>
-      <td class="lbl">FECHA DE CREACION:</td>
-      <td class="val-italic">{{ $fechaCreacion }}</td>
-    </tr>
-    <tr>
-      <td class="lbl">HORA DE INICIO:</td>
-      <td class="val-bold">{{ $horaInicio }}</td>
-      <td class="lbl">HORA DE FINALIZACION:</td>
-      <td class="val-bold">{{ $horaFin }}</td>
-    </tr>
-  </table>
-
-  {{-- ══ OBSERVACIÓN ══ --}}
-  <table class="obs-table">
-    <tr>
-      <td>{{ $observacion }}</td>
-    </tr>
-  </table>
-
-  {{-- ══ FIRMAS ══ --}}
-  <table class="firmas-table">
-    <tr>
-      <td>
-        <div class="f-header">F: Jefe Inmediato</div>
-        <div class="f-espacio"></div>
-        <div class="f-linea">
-          <div class="f-nombre">
-            {{ $nombreJefe ?: '__________________' }}
-          </div>
-          <div class="f-cargo">JEFE INMEDIATO</div>
+        <div class="f-cargo">JEFE INMEDIATO</div>
+      </div>
+    </td>
+    <td>
+      <div class="f-header">F: Servidor</div>
+      <div class="f-espacio"></div>
+      <div class="f-linea">
+        <div class="f-nombre">{{ $nombreServidor }}</div>
+        <div class="f-cargo">SERVIDOR</div>
+      </div>
+    </td>
+    <td>
+      <div class="f-header">F: Recibido Por</div>
+      <div class="f-espacio"></div>
+      <div class="f-linea">
+        <div class="f-nombre">PERSONAL TTHH</div>
+        <div class="f-cargo">TALENTO HUMANO</div>
+      </div>
+    </td>
+    <td class="qr-cell">
+      <div class="f-header">Codigo QR</div>
+      @if($qrSrc)
+        <img src="{{ $qrSrc }}"
+             width="95" height="95" alt="QR {{ $folio }}">
+        <div class="qr-label">{{ $folio }}</div>
+      @else
+        <div style="font-size:11px; font-weight:bold;
+                    margin-top:20px;">
+          {{ $folio }}
         </div>
-      </td>
-      <td>
-        <div class="f-header">F: Servidor</div>
-        <div class="f-espacio"></div>
-        <div class="f-linea">
-          <div class="f-nombre">{{ $nombreServidor }}</div>
-          <div class="f-cargo">SERVIDOR</div>
-        </div>
-      </td>
-      <td>
-        <div class="f-header">F: Recibido Por</div>
-        <div class="f-espacio"></div>
-        <div class="f-linea">
-          <div class="f-nombre">PERSONAL TTHH</div>
-          <div class="f-cargo">TALENTO HUMANO</div>
-        </div>
-      </td>
-      <td class="qr-cell">
-        <div class="f-header">Codigo QR</div>
-        @if($qrSrc)
-          <img src="{{ $qrSrc }}"
-               width="95" height="95" alt="QR {{ $folio }}">
-          <div class="qr-label">{{ $folio }}</div>
-        @else
-          <div style="font-size:11px; font-weight:bold;
-                      margin-top:20px; color:#333;">
-            {{ $folio }}
-          </div>
-          <div style="font-size:9px; color:#999; margin-top:4px;">
-            (QR no disponible)
-          </div>
-        @endif
-      </td>
-    </tr>
-  </table>
+      @endif
+    </td>
+  </tr>
+</table>
 
-  <div class="copy-label">{{ $copy['label'] }} — SGTH GADPE</div>
-
-</div>
+<div class="copy-label">{{ $copy['label'] }} — SGTH GADPE</div>
 
 @if(!$loop->last)
 <div class="separador">
