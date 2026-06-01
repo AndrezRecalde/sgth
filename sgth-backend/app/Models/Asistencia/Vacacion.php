@@ -36,6 +36,8 @@ class Vacacion extends Model
         'fecha_emision',
         'creado_por',
         'unidad_administrativa_id',
+        'persona_reemplaza_id',
+        'periodo_vacacion_id',
     ];
 
     protected function casts(): array
@@ -77,5 +79,15 @@ class Vacacion extends Model
             UnidadAdministrativa::class,
             'unidad_administrativa_id'
         );
+    }
+
+    public function personaReemplaza(): BelongsTo
+    {
+        return $this->belongsTo(Servidor::class, 'persona_reemplaza_id');
+    }
+
+    public function periodoVacacion(): BelongsTo
+    {
+        return $this->belongsTo(PeriodoVacacion::class, 'periodo_vacacion_id');
     }
 }

@@ -28,38 +28,44 @@ class VacacionService implements VacacionServiceInterface
 
     public function calcularSaldoActual(int $servidorId): float
     {
-        $servidor = Servidor::findOrFail($servidorId);
+        $periodoService = app(PeriodoVacacionService::class);
+
+        // Si no hay períodos generados aún, usar cálculo legacy
+        $saldoPeriodos = $periodoService->saldoTotal($servidorId);
+
+        if ($saldoPeriodos > 0) {
+            return $saldoPeriodos;
+        }
+
+        // Fallback al cálculo anterior
+        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
         $motor    = $this->obtenerMotor($servidor);
 
-        $fechaIngreso   = $servidor->fecha_ingreso_institucion
-            ? Carbon::parse($servidor->fecha_ingreso_institucion)
+        $fechaIngreso = $servidor->fecha_ingreso_institucion
+            ? \Carbon\Carbon::parse($servidor->fecha_ingreso_institucion)
             : now();
 
         $aniosCompletos = max(1, $fechaIngreso->diffInYears(now()));
-        $diasGanadosPorAnio   = $motor->calcularDiasGanadosAnuales($servidor);
-        $diasAcumuladosTotales = $diasGanadosPorAnio * $aniosCompletos;
+        $diasGanadosPorAnio = $motor->calcularDiasGanadosAnuales($servidor);
+        $diasAcumulados     = $diasGanadosPorAnio * $aniosCompletos;
 
-        // Vacaciones aprobadas o gozadas
-        $diasVacaciones = Vacacion::where('servidor_id', $servidor->id)
+        $diasVacaciones = \App\Models\Asistencia\Vacacion::where('servidor_id', $servidorId)
             ->whereIn('estado', ['aprobada', 'gozada'])
             ->sum('dias_solicitados');
 
-        // Permisos personales aprobados (en horas ÷ 8 = días)
-        $horasPermisoPersonal = PermisoServidor::where('servidor_id', $servidor->id)
+        $horasPermisoPersonal = \App\Models\Asistencia\PermisoServidor::where('servidor_id', $servidorId)
             ->where('tipo', 'personal')
             ->whereNotIn('estado', ['anulado', 'pendiente'])
             ->get()
-            ->sum(function ($permiso) {
-                $inicio = Carbon::parse($permiso->hora_inicio);
-                $fin    = Carbon::parse($permiso->hora_fin);
+            ->sum(function ($p) {
+                $inicio = \Carbon\Carbon::parse($p->hora_inicio);
+                $fin    = \Carbon\Carbon::parse($p->hora_fin);
                 return $inicio->diffInMinutes($fin) / 60;
             });
 
-        $diasPermisoPersonal = round($horasPermisoPersonal / 8, 2);
+        $diasPermiso = round($horasPermisoPersonal / 8, 2);
 
-        $totalDescontado = $diasVacaciones + $diasPermisoPersonal;
-
-        return max(0, $diasAcumuladosTotales - $totalDescontado);
+        return max(0, $diasAcumulados - $diasVacaciones - $diasPermiso);
     }
 
     public function solicitar(array $datos, int $servidorId): Vacacion
@@ -130,6 +136,13 @@ class VacacionService implements VacacionServiceInterface
             $vacacion->folio    = $folio;
             $vacacion->codigo_qr = $urlVerificacion;
             $vacacion->save();
+
+            // Descontar del período correspondiente si el motivo descuenta vacaciones
+            if ($motivo?->descuentaVacaciones()) {
+                $anio = \Carbon\Carbon::parse($datos['fecha_inicio'])->year;
+                app(\App\Services\Asistencia\PeriodoVacacionService::class)
+                    ->descontarDias($servidorId, $diasADescontar, $anio);
+            }
 
             return $vacacion->fresh(['servidor', 'jefe', 'creadoPor']);
         });

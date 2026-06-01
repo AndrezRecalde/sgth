@@ -25,3 +25,12 @@ Schedule::command('lotaip:generar-reportes')->dailyAt('01:00');
 Schedule::command('backup:base-datos')
     ->dailyAt('02:00')
     ->onOneServer();
+
+use App\Jobs\GenerarPeriodosAnualesJob;
+
+Schedule::call(function () {
+    GenerarPeriodosAnualesJob::dispatch(now()->year);
+})->yearlyOn(1, 1, '00:00')
+  ->name('generar-periodos-vacaciones')
+  ->withoutOverlapping();
+

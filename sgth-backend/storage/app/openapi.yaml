@@ -11887,6 +11887,215 @@
                 }
             }
         },
+        "/v1/asistencia/periodos-vacaciones/servidores/{servidorId}/resumen": {
+            "get": {
+                "operationId": "periodos.resumen",
+                "summary": "Resumen de per\u00edodos y saldo de un servidor",
+                "tags": [
+                    "PeriodoVacacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resumen de per\u00edodos de vacaciones."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "periodos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PeriodoVacacion"
+                                                    }
+                                                },
+                                                "saldo_total": {
+                                                    "type": "number"
+                                                },
+                                                "alerta_limite": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "periodos",
+                                                "saldo_total",
+                                                "alerta_limite"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/periodos-vacaciones/servidores/{servidorId}/generar": {
+            "post": {
+                "operationId": "periodos.generar",
+                "summary": "Generar per\u00edodo del a\u00f1o actual para un servidor",
+                "tags": [
+                    "PeriodoVacacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "anio": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/PeriodoVacacion"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/periodos-vacaciones/generar-todos": {
+            "post": {
+                "operationId": "periodos.generar-todos",
+                "summary": "Generar per\u00edodos para todos los servidores (admin)",
+                "tags": [
+                    "PeriodoVacacion"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "anio": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "generados": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "generados"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/admin/permisos": {
             "get": {
                 "operationId": "admin.permisos.index",
@@ -21391,6 +21600,84 @@
                 ],
                 "title": "Nomina"
             },
+            "PeriodoVacacion": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "anio": {
+                        "type": "integer"
+                    },
+                    "fecha_inicio_periodo": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin_periodo": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "regimen": {
+                        "type": "string"
+                    },
+                    "anios_antiguedad": {
+                        "type": "integer"
+                    },
+                    "dias_generados": {
+                        "type": "string"
+                    },
+                    "dias_utilizados": {
+                        "type": "string"
+                    },
+                    "dias_saldo": {
+                        "type": "string"
+                    },
+                    "saldo_acumulado": {
+                        "type": "string"
+                    },
+                    "estado": {
+                        "type": "string"
+                    },
+                    "alerta_enviada": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "servidor_id",
+                    "anio",
+                    "fecha_inicio_periodo",
+                    "fecha_fin_periodo",
+                    "regimen",
+                    "anios_antiguedad",
+                    "dias_generados",
+                    "dias_utilizados",
+                    "dias_saldo",
+                    "saldo_acumulado",
+                    "estado",
+                    "alerta_enviada",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "PeriodoVacacion"
+            },
             "PermisoServidor": {
                 "type": "object",
                 "properties": {
@@ -23925,6 +24212,18 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "persona_reemplaza_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "periodo_vacacion_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -25497,6 +25796,18 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "persona_reemplaza_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "periodo_vacacion_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -25518,7 +25829,9 @@
                     "fecha_retorno",
                     "fecha_emision",
                     "creado_por",
-                    "unidad_administrativa_id"
+                    "unidad_administrativa_id",
+                    "persona_reemplaza_id",
+                    "periodo_vacacion_id"
                 ],
                 "title": "Vacacion"
             },

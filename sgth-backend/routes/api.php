@@ -242,6 +242,27 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         });
     });
 
+    Route::prefix('asistencia/periodos-vacaciones')
+        ->group(function () {
+            Route::get(
+                'servidores/{servidorId}/resumen',
+                [\App\Http\Controllers\Asistencia\PeriodoVacacionController::class,
+                 'resumen']
+            )->name('periodos.resumen');
+
+            Route::post(
+                'servidores/{servidorId}/generar',
+                [\App\Http\Controllers\Asistencia\PeriodoVacacionController::class,
+                 'generar']
+            )->name('periodos.generar');
+
+            Route::post(
+                'generar-todos',
+                [\App\Http\Controllers\Asistencia\PeriodoVacacionController::class,
+                 'generarTodos']
+            )->name('periodos.generar-todos');
+        });
+
     // Módulo 05: Sistema de Gestión Documental (SGD)
     Route::prefix('sgd')->group(function () {
         Route::post('documentos', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'store']);
