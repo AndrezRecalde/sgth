@@ -26,10 +26,11 @@ const TIPO_OPTIONS = [
   { value: 'calamidad',  label: 'Calamidad Doméstica' },
 ]
 
-const fromDate = (d: Date | null): string =>
-  d
-    ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-    : ''
+const fromDate = (d: any): string => {
+  if (!d) return ''
+  if (typeof d === 'string') return d.substring(0, 10)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
 
 export function ConsolidadoPermisosTab() {
   const contained = useContainedInput()
