@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { Stack, Group, Button, Text, Badge } from '@mantine/core'
+import { Stack, Group, Button, Text, Badge, Chip, ActionIcon, Tooltip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconCheck, IconX,
@@ -47,6 +47,7 @@ export function PermisosTab() {
   const { confirmar, anular, validarTs } = usePermisoMutations()
 
   const [exportandoId, setExportandoId] = useState<number | null>(null)
+  const [filtroEstado, setFiltroEstado] = useState<string>('pendiente')
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
@@ -74,7 +75,11 @@ export function PermisosTab() {
     }
   }
 
-  const lista = permisos as PermisoServidor[]
+  const lista = (permisos as PermisoServidor[]).filter(p =>
+    filtroEstado === 'todos'
+      ? true
+      : (p.estado as string) === filtroEstado
+  )
 
   const columns: DataTableColumn<PermisoServidor>[] = [
     {
@@ -100,19 +105,7 @@ export function PermisosTab() {
         )
       },
     },
-    {
-      accessor: 'jefe',
-      title:    'Jefe inmediato',
-      render: (p) => {
-        const j = p.jefe as ServidorConRelaciones | null
-        if (!j) return <Text size="sm" c="dimmed">—</Text>
-        return (
-          <Text size="sm">
-            {[j.apellido, j.nombre].filter(Boolean).join(' ')}
-          </Text>
-        )
-      },
-    },
+
     {
       accessor: 'unidad_administrativa',
       title:    'Unidad',
@@ -152,15 +145,37 @@ export function PermisosTab() {
     },
     {
       accessor: 'hora_inicio',
-      title:    'Horario',
-      width:    110,
-      render: ({ hora_inicio, hora_fin }) => (
-        <Text size="sm" ff="monospace">
-          {hora_inicio?.substring(0,5) ?? '—'}
-          {' — '}
-          {hora_fin?.substring(0,5) ?? '—'}
-        </Text>
-      ),
+      title:    'Horario / Tiempo',
+      width:    140,
+      render: ({ hora_inicio, hora_fin }) => {
+        if (!hora_inicio || !hora_fin) {
+          return <Text size="sm" c="dimmed">—</Text>
+        }
+
+        const hi = (hora_inicio as string).substring(0, 5)
+        const hf = (hora_fin as string).substring(0, 5)
+
+        const [hI, mI] = hi.split(':').map(Number)
+        const [hF, mF] = hf.split(':').map(Number)
+        const minutos  = (hF * 60 + mF) - (hI * 60 + mI)
+        const horas    = Math.floor(minutos / 60)
+        const mins     = minutos % 60
+
+        const duracion = horas > 0
+          ? `${horas}h${mins > 0 ? ` ${mins}m` : ''}`
+          : `${mins}m`
+
+        return (
+          <Stack gap={2}>
+            <Text size="sm" ff="monospace">
+              {hi} — {hf}
+            </Text>
+            <Badge size="xs" color="blue" variant="light">
+              {duracion}
+            </Badge>
+          </Stack>
+        )
+      },
     },
     {
       accessor: 'estado',
@@ -180,13 +195,19 @@ export function PermisosTab() {
       title:    '',
       width:    50,
       render: (p) => (
-        <TableActions actions={[
-          {
-            label:   'Imprimir permiso',
-            icon:    <IconPrinter size={14} />,
-            color:   'blue',
-            onClick: () => handleExportar(p.id),
-          },
+        <Group gap={4} justify="center">
+          <Tooltip label="Imprimir permiso">
+            <ActionIcon
+              size="sm"
+              variant="light"
+              color="blue"
+              loading={exportandoId === p.id}
+              onClick={() => handleExportar(p.id)}
+            >
+              <IconPrinter size={14} />
+            </ActionIcon>
+          </Tooltip>
+          <TableActions actions={[
           {
             label:    'Confirmar recepción',
             icon:     <IconCheck size={14} />,
@@ -213,6 +234,7 @@ export function PermisosTab() {
             hidden: (p.estado as string) !== 'pendiente',
           },
         ]} />
+        </Group>
       ),
     },
   ]
@@ -227,6 +249,27 @@ export function PermisosTab() {
         >
           Nuevo permiso
         </Button>
+      </Group>
+
+      <Group gap="xs" mb="sm">
+        <Text size="sm" fw={500} c="dimmed">Estado:</Text>
+        {[
+          { value: 'todos',                  label: 'Todos',        color: 'gray'    },
+          { value: 'pendiente',              label: 'Pendiente',    color: 'orange'  },
+          { value: 'activo',                 label: 'Activo',       color: 'blue'    },
+          { value: 'validado_trabajo_social',label: 'Validado TS',  color: 'emerald' },
+          { value: 'anulado',                label: 'Anulado',      color: 'red'     },
+        ].map(op => (
+          <Chip
+            key={op.value}
+            size="sm"
+            color={op.color}
+            checked={filtroEstado === op.value}
+            onChange={() => setFiltroEstado(op.value)}
+          >
+            {op.label}
+          </Chip>
+        ))}
       </Group>
 
       {lista.length === 0 && !isLoading ? (

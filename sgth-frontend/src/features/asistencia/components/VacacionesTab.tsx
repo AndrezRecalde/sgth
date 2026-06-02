@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { Stack, Group, Button, Text, Badge } from '@mantine/core'
+import { Stack, Group, Button, Text, Badge, Chip, ActionIcon, Tooltip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconBeach, IconCheck, IconX, IconPrinter } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -50,6 +50,7 @@ export function VacacionesTab() {
   const { actualizar } = useVacacionMutations()
 
   const [exportandoId, setExportandoId] = useState<number | null>(null)
+  const [filtroEstado, setFiltroEstado] = useState<string>('pendiente')
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
@@ -81,6 +82,10 @@ export function VacacionesTab() {
     Array.isArray(data)
       ? data
       : (data as { data?: Vacacion[] } | null)?.data ?? []
+  ).filter((v: Vacacion) =>
+    filtroEstado === 'todos'
+      ? true
+      : (v.estado as string) === filtroEstado
   ) as Vacacion[]
 
   const columns: DataTableColumn<Vacacion>[] = [
@@ -146,6 +151,21 @@ export function VacacionesTab() {
       ),
     },
     {
+      accessor: 'fecha_fin',
+      title:    'Fecha fin',
+      width:    110,
+      render: ({ fecha_fin }) => (
+        <Text size="sm">
+          {fecha_fin
+            ? new Date(fecha_fin).toLocaleDateString('es-EC', {
+                timeZone: 'UTC',
+                day: '2-digit', month: '2-digit', year: 'numeric',
+              })
+            : '—'}
+        </Text>
+      ),
+    },
+    {
       accessor: 'dias_solicitados',
       title:    'Días',
       width:    70,
@@ -171,13 +191,19 @@ export function VacacionesTab() {
       title:    '',
       width:    50,
       render: (v) => (
-        <TableActions actions={[
-          {
-            label:   'Imprimir solicitud',
-            icon:    <IconPrinter size={14} />,
-            color:   'blue',
-            onClick: () => handleExportar(v.id),
-          },
+        <Group gap={4} justify="center">
+          <Tooltip label="Imprimir solicitud">
+            <ActionIcon
+              size="sm"
+              variant="light"
+              color="blue"
+              loading={exportandoId === v.id}
+              onClick={() => handleExportar(v.id)}
+            >
+              <IconPrinter size={14} />
+            </ActionIcon>
+          </Tooltip>
+          <TableActions actions={[
           {
             label:    'Aprobar',
             icon:     <IconCheck size={14} />,
@@ -200,6 +226,7 @@ export function VacacionesTab() {
             hidden: v.estado !== 'pendiente',
           },
         ]} />
+        </Group>
       ),
     },
   ]
@@ -214,6 +241,27 @@ export function VacacionesTab() {
         >
           Nueva solicitud
         </Button>
+      </Group>
+
+      <Group gap="xs" mb="sm">
+        <Text size="sm" fw={500} c="dimmed">Estado:</Text>
+        {[
+          { value: 'todos',     label: 'Todos',     color: 'gray'    },
+          { value: 'pendiente', label: 'Pendiente', color: 'orange'  },
+          { value: 'aprobada',  label: 'Aprobada',  color: 'emerald' },
+          { value: 'rechazada', label: 'Rechazada', color: 'red'     },
+          { value: 'gozada',    label: 'Gozada',    color: 'gray'    },
+        ].map(op => (
+          <Chip
+            key={op.value}
+            size="sm"
+            color={op.color}
+            checked={filtroEstado === op.value}
+            onChange={() => setFiltroEstado(op.value)}
+          >
+            {op.label}
+          </Chip>
+        ))}
       </Group>
 
       {lista.length === 0 && !isLoading ? (
