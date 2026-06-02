@@ -10,11 +10,11 @@ import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useNominaMutations } from '../hooks/useNominaMutations'
 
 const ESTADO_OPTIONS = [
-  { value: 'borrador',       label: 'Borrador' },
-  { value: 'en_proceso',     label: 'En proceso' },
-  { value: 'cerrada',        label: 'Cerrada' },
-  { value: 'contabilizada',  label: 'Contabilizada' },
-  { value: 'pagada',         label: 'Pagada' },
+  { value: 'borrador',      label: 'Borrador'      },
+  { value: 'en_proceso',    label: 'En proceso'    },
+  { value: 'cerrada',       label: 'Cerrada'       },
+  { value: 'contabilizada', label: 'Contabilizada' },
+  { value: 'pagada',        label: 'Pagada'        },
 ]
 
 interface Props {
@@ -29,8 +29,26 @@ export function NominaToolbar({ onEstadoChange }: Props) {
 
   const handleCalcular = () => {
     if (!mes) return
-    const periodo = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}`
+
+    // Forzar conversión segura a Date nativo
+    const fecha = mes instanceof Date ? mes : new Date(mes)
+    if (isNaN(fecha.getTime())) return
+
+    const anio    = fecha.getFullYear()
+    const mesNum  = String(fecha.getMonth() + 1).padStart(2, '0')
+    const periodo = `${anio}-${mesNum}`
+
     calcular.mutate(periodo)
+  }
+
+  const handleMesChange = (val: any) => {
+    if (!val) {
+      setMes(null)
+      return
+    }
+    // Asegurar que sea Date nativo
+    const fecha = val instanceof Date ? val : new Date(val)
+    setMes(isNaN(fecha.getTime()) ? null : fecha)
   }
 
   const fields = (
@@ -41,7 +59,7 @@ export function NominaToolbar({ onEstadoChange }: Props) {
         valueFormat="YYYY-MM"
         {...contained}
         value={mes}
-        onChange={(val: any) => setMes(val)}
+        onChange={handleMesChange}
         style={{ minWidth: 180 }}
       />
       <Select
