@@ -35,9 +35,14 @@ class NominaController extends Controller
     {
         $this->authorize('create', Nomina::class);
         
-        $nomina = $this->nominaService->calcularNomina($request->validated('periodo'));
-        
-        return ApiResponse::ok($nomina, 'Nómina calculada exitosamente en borrador.');
+        try {
+            $nomina = $this->nominaService->calcularNomina($request->validated('periodo'));
+            return ApiResponse::ok($nomina, 'Nómina calculada exitosamente en borrador.');
+        } catch (\App\Exceptions\ReglaNegocioException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        } catch (\Exception $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
     }
 
     public function cerrar(CerrarNominaRequest $request, int $id)
