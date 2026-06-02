@@ -108,16 +108,6 @@ class ContratoServidorService
                 $data['unidad_administrativa_id'];
         }
 
-        // Sync codigo_marcacion desde el contrato
-        if (!empty($data['codigo_marcacion'])) {
-            $update['codigo_marcacion'] = $data['codigo_marcacion'];
-        } elseif ($contrato?->codigo_marcacion) {
-            $update['codigo_marcacion'] = $contrato->codigo_marcacion;
-        }
-
-        // puede_marcar: true por defecto al tener contrato vigente
-        $update['puede_marcar'] = true;
-
         \App\Models\Expediente\Servidor::where('id', $servidorId)
             ->update($update);
     }

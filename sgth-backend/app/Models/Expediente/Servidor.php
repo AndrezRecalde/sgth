@@ -57,7 +57,7 @@ class Servidor extends Model
         // Sección F
         'tipo_nombramiento', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
         'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato',
-        'puede_marcar', 'codigo_marcacion'
+        'puede_marcar'
     ];
 
     protected function casts(): array
@@ -184,7 +184,7 @@ class Servidor extends Model
 
     public function codigoMarcacionVigente(): ?string
     {
-        return $this->contratoVigente?->codigo_marcacion;
+        return $this->cedula;
     }
 
     /**
@@ -221,10 +221,8 @@ class Servidor extends Model
         return $query->where('tiene_enfermedad_catastrofica', true);
     }
 
-    public function scopePorCodigo(Builder $query, string $codigo): Builder
+    public function scopePorCedula(Builder $query, string $cedula): Builder
     {
-        return $query->whereHas('contratos', function (Builder $q) use ($codigo) {
-            $q->where('codigo_marcacion', $codigo)->where('estado', 'vigente');
-        });
+        return $query->where('cedula', $cedula);
     }
 }

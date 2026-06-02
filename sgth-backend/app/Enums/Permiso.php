@@ -40,6 +40,7 @@ enum Permiso: string
     case GESTIONAR_VACACIONES        = 'gestionar-vacaciones';
     case APROBAR_VACACIONES          = 'aprobar-vacaciones';
     case VER_VACACIONES_UNIDAD       = 'ver-vacaciones-unidad';
+    case PUEDE_MARCAR_ONLINE         = 'puede-marcar-online';
 
     // ── MÓDULO 05: SGD ───────────────────────────────────────────
     case VER_DOCUMENTOS              = 'ver-documentos';

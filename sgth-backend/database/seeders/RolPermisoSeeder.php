@@ -106,6 +106,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::EXPORTAR_REPORTES,
             Permiso::VER_AUDITORIA,
             Permiso::VER_ACTIVIDADES_UNIDAD,
+            Permiso::PUEDE_MARCAR_ONLINE,
         ]));
 
         // ASISTENTE_UATH
@@ -125,6 +126,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::GENERAR_REPORTES,
+            Permiso::PUEDE_MARCAR_ONLINE,
         ]));
 
         // MAXIMA_AUTORIDAD
@@ -172,7 +174,9 @@ class RolPermisoSeeder extends Seeder
         ]));
 
         // SERVIDOR
-        $this->crearRol(Rol::SERVIDOR, $permisosBase);
+        $this->crearRol(Rol::SERVIDOR, array_merge($permisosBase, [
+            Permiso::PUEDE_MARCAR_ONLINE,
+        ]));
 
         // RECEPCION
         $this->crearRol(Rol::RECEPCION, array_merge($permisosBase, [

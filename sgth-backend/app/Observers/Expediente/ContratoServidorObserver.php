@@ -36,6 +36,26 @@ class ContratoServidorObserver
         }
     }
 
+    /**
+     * Después de crear — sincronizar puede_marcar.
+     */
+    public function created(ContratoServidor $contrato): void
+    {
+        if ($this->esVigente($contrato)) {
+            $this->sincronizarPuedeMarcar($contrato);
+        }
+    }
+
+    /**
+     * Después de actualizar — sincronizar puede_marcar.
+     */
+    public function updated(ContratoServidor $contrato): void
+    {
+        if ($this->esVigente($contrato)) {
+            $this->sincronizarPuedeMarcar($contrato);
+        }
+    }
+
     // ── Helpers ──────────────────────────────────────────
 
     private function esVigente(ContratoServidor $contrato): bool
@@ -67,5 +87,21 @@ class ContratoServidorObserver
                 "del servidor {$servidorId} al activar nuevo contrato."
             );
         }
+    }
+
+    private function sincronizarPuedeMarcar(
+        ContratoServidor $contrato
+    ): void {
+        $puedeMarcar = (bool)($contrato->puede_marcar ?? true);
+
+        \App\Models\Expediente\Servidor::where(
+            'id', $contrato->servidor_id
+        )->update(['puede_marcar' => $puedeMarcar]);
+
+        Log::info(
+            "Servidor {$contrato->servidor_id}: " .
+            "puede_marcar sincronizado a " .
+            ($puedeMarcar ? 'true' : 'false')
+        );
     }
 }

@@ -43,12 +43,8 @@ class BiometricoService implements BiometricoServiceInterface
             throw new \Exception("No hay conexión disponible con el sistema biométrico SQL Server.");
         }
 
-        // 1. Obtener servidores con contrato vigente y código asignado
-        // Para esto necesitamos traer la relación contratoVigente
-        $servidores = Servidor::whereHas('contratos', function ($q) {
-                $q->vigente()->whereNotNull('codigo_marcacion');
-            })
-            ->with('contratoVigente')
+        // 1. Obtener servidores autorizados para marcar
+        $servidores = Servidor::where('puede_marcar', true)
             ->where('estado', true)
             ->get();
 

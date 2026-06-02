@@ -31,9 +31,9 @@ class ContratoServidor extends Model
         'fecha_fin',
         'resolucion_numero',
         'documento_ruta',
-        'codigo_marcacion',
         'estado',
-        'remuneracion'
+        'remuneracion',
+        'puede_marcar'
     ];
 
     protected function casts(): array
@@ -44,6 +44,7 @@ class ContratoServidor extends Model
             'fecha_inicio'      => 'date',
             'fecha_fin'         => 'date',
             'remuneracion'      => 'decimal:2',
+            'puede_marcar'      => 'boolean',
         ];
     }
 
