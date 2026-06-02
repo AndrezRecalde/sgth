@@ -1,20 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { useDisclosure } from '@mantine/hooks'
 import { Stack } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { NominaToolbar } from '@/features/nomina/components/NominaToolbar'
 import { getNominaColumns } from '@/features/nomina/components/nomina.columns'
+import { NominaDetalleModal } from '@/features/nomina/components/NominaDetalleModal'
 import { useNominas } from '@/features/nomina/hooks/useNominas'
 import { useNominaMutations } from '@/features/nomina/hooks/useNominaMutations'
 import { IconReportMoney } from '@tabler/icons-react'
 import type { Nomina } from '@/types/api'
 
 export function NominaView() {
-  const [filtroEstado, setFiltroEstado] = useState<string | null>(null)
+  const [filtroEstado, setFiltroEstado] =
+    useState<string | null>(null)
+  const [nominaSel, setNominaSel] =
+    useState<Nomina | null>(null)
+
+  const [modalAbierto, { open: abrirModal, close: cerrarModal }] =
+    useDisclosure(false)
+
   const { data: nominas = [], isLoading } = useNominas()
   const { cerrar } = useNominaMutations()
 
@@ -22,9 +30,23 @@ export function NominaView() {
     filtroEstado ? n.estado === filtroEstado : true
   )
 
+  const handleVer = (n: Nomina) => {
+    setNominaSel(n)
+    abrirModal()
+  }
+
+  const handleCerrar = (n: Nomina) => {
+    if (confirm(
+      `¿Cerrar la nómina ${n.periodo}? ` +
+      `Esta acción no se puede deshacer.`
+    )) {
+      cerrar.mutate(n.id)
+    }
+  }
+
   const columns = getNominaColumns({
-    onVer:    (n) => console.log('ver', n.id),
-    onCerrar: (n) => cerrar.mutate(n.id),
+    onVer:    handleVer,
+    onCerrar: handleCerrar,
   })
 
   return (
@@ -49,6 +71,12 @@ export function NominaView() {
           minHeight={200}
         />
       )}
+
+      <NominaDetalleModal
+        opened={modalAbierto}
+        onClose={cerrarModal}
+        nomina={nominaSel}
+      />
     </Stack>
   )
 }
