@@ -121,14 +121,83 @@ export function PeriodosVacacionesTab() {
       ),
     },
     {
+      accessor: 'detalle_descuento',
+      title:    'Descuentos',
+      width:    150,
+      render: ({ dias_utilizados, dias_generados, regimen }) => {
+        const usado    = Number(dias_utilizados)
+        const generado = Number(dias_generados)
+
+        if (usado === 0) {
+          return <Text size="xs" c="dimmed">Sin descuentos</Text>
+        }
+
+        const horas = Math.round(usado * 8 * 10) / 10
+
+        return (
+          <Stack gap={2}>
+            <Text size="xs" fw={500} c="orange">
+              {usado.toFixed(3)} días
+            </Text>
+            <Text size="xs" c="dimmed">
+              ≈ {horas} horas de permisos
+            </Text>
+            {regimen === 'losep' && (
+              <Badge size="xs" color="blue" variant="dot">
+                Permisos personales
+              </Badge>
+            )}
+          </Stack>
+        )
+      },
+    },
+    {
       accessor: 'dias_saldo',
       title:    'Saldo',
-      width:    90,
-      render: ({ dias_saldo }) => (
-        <Text size="sm" ta="center" fw={600} c="emerald">
-          {formatDias(dias_saldo)}
-        </Text>
-      ),
+      width:    130,
+      render: ({ dias_saldo, dias_generados, regimen }) => {
+        const saldo    = Number(dias_saldo)
+        const generado = Number(dias_generados)
+        const usado    = generado - saldo
+        const pct      = generado > 0
+          ? Math.min(100, Math.round((usado / generado) * 100))
+          : 0
+        const color = pct >= 80
+          ? 'red'
+          : pct >= 50 ? 'orange' : 'emerald'
+
+        return (
+          <Stack gap={3}>
+            <Group gap={4} justify="space-between">
+              <Text size="xs" fw={600} c="emerald">
+                {saldo.toFixed(1)} días
+              </Text>
+              <Text size="xs" c="dimmed">
+                {pct}% usado
+              </Text>
+            </Group>
+            <div style={{
+              width: '100%',
+              height: 6,
+              background: 'var(--mantine-color-gray-2)',
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                width: `${pct}%`,
+                height: '100%',
+                background: color === 'red'
+                  ? 'var(--mantine-color-red-5)'
+                  : color === 'orange'
+                    ? 'var(--mantine-color-orange-5)'
+                    : 'var(--mantine-color-green-5)',
+                borderRadius: 3,
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+          </Stack>
+        )
+      },
     },
     {
       accessor: 'saldo_acumulado',
@@ -310,12 +379,72 @@ export function PeriodosVacacionesTab() {
           </Text>
         </Alert>
       ) : (
-        <SgthTable
-          records={periodos}
-          columns={columns}
-          fetching={isLoading}
-          minHeight={150}
-        />
+        <>
+          <SgthTable
+            records={periodos}
+            columns={columns}
+            fetching={isLoading}
+            minHeight={150}
+          />
+          {periodos.length > 0 && (
+            <Card withBorder radius="md" p="md">
+              <Text fw={600} size="sm" mb="sm">
+                Resumen del servidor
+              </Text>
+              <Grid>
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <Stack gap={2} align="center">
+                    <Text size="xl" fw={700} c="blue">
+                      {periodos.length}
+                    </Text>
+                    <Text size="xs" c="dimmed" ta="center">
+                      Períodos registrados
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <Stack gap={2} align="center">
+                    <Text size="xl" fw={700} c="emerald">
+                      {Number(saldoTotal).toFixed(1)}
+                    </Text>
+                    <Text size="xs" c="dimmed" ta="center">
+                      Días saldo total
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <Stack gap={2} align="center">
+                    <Text size="xl" fw={700} c="orange">
+                      {periodos
+                        .reduce((acc, p) =>
+                          acc + Number(p.dias_utilizados), 0
+                        ).toFixed(1)}
+                    </Text>
+                    <Text size="xs" c="dimmed" ta="center">
+                      Días utilizados total
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <Stack gap={2} align="center">
+                    <Text
+                      size="xl" fw={700}
+                      c={alertaLimite ? 'orange' : 'gray'}
+                    >
+                      {periodos
+                        .reduce((acc, p) =>
+                          acc + Number(p.dias_generados), 0
+                        ).toFixed(1)}
+                    </Text>
+                    <Text size="xs" c="dimmed" ta="center">
+                      Días generados total
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+              </Grid>
+            </Card>
+          )}
+        </>
       )}
     </Stack>
   )
