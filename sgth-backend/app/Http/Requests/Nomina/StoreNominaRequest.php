@@ -20,9 +20,11 @@ class StoreNominaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'periodo'      => ['required', 'string', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
-            'fecha_inicio' => ['required', 'date'],
-            'fecha_fin'    => ['required', 'date', 'after_or_equal:fecha_inicio'],
+            'periodo' => [
+                'required',
+                'string',
+                'regex:/^\d{4}-(0[1-9]|1[0-2])$/',
+            ],
         ];
     }
 
