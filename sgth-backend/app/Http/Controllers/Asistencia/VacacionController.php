@@ -25,8 +25,9 @@ class VacacionController extends Controller
             'unidadAdministrativa',
         ])->orderBy('created_at', 'desc');
 
-        if ($request->filled('servidor_id')) {
-            $query->where('servidor_id', $request->servidor_id);
+        // ── Filtros ──────────────────────────────────────
+        if ($request->filled('folio')) {
+            $query->where('folio', 'ilike', '%' . $request->folio . '%');
         }
 
         if ($request->filled('estado')) {
@@ -37,7 +38,28 @@ class VacacionController extends Controller
             $query->where('motivo', $request->motivo);
         }
 
-        $vacaciones = $query->paginate(20);
+        if ($request->filled('servidor_id')) {
+            $query->where('servidor_id', $request->servidor_id);
+        }
+
+        if ($request->filled('unidad_administrativa_id')) {
+            $query->where(
+                'unidad_administrativa_id',
+                $request->unidad_administrativa_id
+            );
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha_inicio', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha_inicio', '<=', $request->fecha_hasta);
+        }
+
+        $perPage    = $request->integer('per_page', 20);
+        $vacaciones = $query->paginate($perPage);
+
         return ApiResponse::ok($vacaciones, 'Listado de solicitudes de vacaciones');
     }
 

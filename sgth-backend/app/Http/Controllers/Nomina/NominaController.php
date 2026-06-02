@@ -25,7 +25,11 @@ class NominaController extends Controller
 
     public function show(int $id)
     {
-        $nomina = Nomina::with(['detalles', 'cerradoPor'])->findOrFail($id);
+        $nomina = Nomina::with([
+            'detalles.concepto',
+            'rolesPago.servidor',
+            'cerradoPor'
+        ])->findOrFail($id);
         $this->authorize('view', $nomina);
 
         return ApiResponse::ok($nomina, 'Detalle de nómina');

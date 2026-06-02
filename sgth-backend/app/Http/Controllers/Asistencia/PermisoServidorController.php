@@ -17,7 +17,7 @@ class PermisoServidorController extends Controller
 
     public function index(Request $request)
     {
-        $user = $request->user();
+        $user  = $request->user();
         $query = PermisoServidor::with([
             'servidor',
             'jefe',
@@ -25,22 +25,58 @@ class PermisoServidorController extends Controller
             'unidadAdministrativa',
         ])->orderBy('created_at', 'desc');
 
-        // Si no es admin/asistente de UATH, restringir vista
-        if (!($user->hasRole(['admin-uath', 'asistente-uath']))) {
-            if ($user->servidor && $user->servidor->puesto && $user->servidor->puesto->es_jefe) {
-                // Jefe ve los de su unidad
+        // ── Filtros ──────────────────────────────────────
+        if ($request->filled('folio')) {
+            $query->where('folio', 'ilike', '%' . $request->folio . '%');
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        if ($request->filled('tipo')) {
+            $query->where('tipo', $request->tipo);
+        }
+
+        if ($request->filled('servidor_id')) {
+            $query->where('servidor_id', $request->servidor_id);
+        }
+
+        if ($request->filled('unidad_administrativa_id')) {
+            $query->where(
+                'unidad_administrativa_id',
+                $request->unidad_administrativa_id
+            );
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
+
+        // ── Control de acceso ────────────────────────────
+        if (!$user->hasRole(['admin-uath', 'asistente-uath'])) {
+            if (
+                $user->servidor &&
+                $user->servidor->puesto &&
+                $user->servidor->puesto->es_jefe
+            ) {
                 $unidadId = $user->servidor->unidad_administrativa_id;
                 $query->whereHas('servidor', function ($q) use ($unidadId) {
                     $q->where('unidad_administrativa_id', $unidadId);
                 });
             } else {
-                // Empleado normal ve solo los suyos
                 $servidorId = $user->servidor->id ?? 0;
                 $query->where('servidor_id', $servidorId);
             }
         }
 
-        $permisos = $query->get();
+        $perPage  = $request->integer('per_page', 20);
+        $permisos = $query->paginate($perPage);
+
         return ApiResponse::ok($permisos, 'Listado de permisos');
     }
 
