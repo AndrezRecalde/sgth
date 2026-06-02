@@ -809,12 +809,16 @@ export type PeriodoVacacion = {
   estado:               'abierto' | 'cerrado' | 'vencido'
   alerta_enviada:       boolean
   servidor?:            ServidorConRelaciones
+  dias_vacaciones_aprobadas?: number | null
+  dias_permisos_personales?:  number | null
 }
 
 export type ResumenPeriodos = {
   periodos:      PeriodoVacacion[]
   saldo_total:   number
   alerta_limite: boolean
+  total_vacaciones_aprobadas?: number
+  total_permisos_personales?:  number
 }
 
 export type ConsolidadoPermiso = {

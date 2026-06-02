@@ -111,40 +111,44 @@ export function PeriodosVacacionesTab() {
       ),
     },
     {
-      accessor: 'dias_utilizados',
-      title:    'Utilizados',
-      width:    90,
-      render: ({ dias_utilizados }) => (
-        <Text size="sm" ta="center" c="orange">
-          {formatDias(dias_utilizados)}
-        </Text>
-      ),
-    },
-    {
-      accessor: 'detalle_descuento',
-      title:    'Descuentos',
-      width:    150,
-      render: ({ dias_utilizados, dias_generados, regimen }) => {
-        const usado    = Number(dias_utilizados)
-        const generado = Number(dias_generados)
-
-        if (usado === 0) {
-          return <Text size="xs" c="dimmed">Sin descuentos</Text>
-        }
-
-        const horas = Math.round(usado * 8 * 10) / 10
-
+      accessor: 'dias_vacaciones_aprobadas',
+      title:    'Días Vacaciones',
+      width:    120,
+      render: ({ dias_vacaciones_aprobadas }) => {
+        const val = Number(dias_vacaciones_aprobadas ?? 0)
         return (
           <Stack gap={2}>
-            <Text size="xs" fw={500} c="orange">
-              {usado.toFixed(3)} días
+            <Text size="sm" ta="center" c="blue" fw={500}>
+              {val.toFixed(2)}
+            </Text>
+            <Text size="xs" c="dimmed" ta="center">días</Text>
+          </Stack>
+        )
+      },
+    },
+    {
+      accessor: 'dias_permisos_personales',
+      title:    'Permisos Pers.',
+      width:    110,
+      render: ({ dias_permisos_personales, regimen }) => {
+        const val   = Number(dias_permisos_personales ?? 0)
+        const horas = Math.round(val * 8 * 100) / 100
+
+        if (val === 0) {
+          return <Text size="xs" c="dimmed" ta="center">—</Text>
+        }
+
+        return (
+          <Stack gap={2} align="center">
+            <Text size="sm" fw={500} c="orange">
+              {val.toFixed(3)} días
             </Text>
             <Text size="xs" c="dimmed">
-              ≈ {horas} horas de permisos
+              {horas}h descontadas
             </Text>
-            {regimen === 'losep' && (
-              <Badge size="xs" color="blue" variant="dot">
-                Permisos personales
+            {(regimen as string) === 'losep' && (
+              <Badge size="xs" color="orange" variant="dot">
+                LOSEP
               </Badge>
             )}
           </Stack>
@@ -392,7 +396,7 @@ export function PeriodosVacacionesTab() {
                 Resumen del servidor
               </Text>
               <Grid>
-                <Grid.Col span={{ base: 6, sm: 3 }}>
+                <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
                     <Text size="xl" fw={700} c="blue">
                       {periodos.length}
@@ -402,7 +406,7 @@ export function PeriodosVacacionesTab() {
                     </Text>
                   </Stack>
                 </Grid.Col>
-                <Grid.Col span={{ base: 6, sm: 3 }}>
+                <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
                     <Text size="xl" fw={700} c="emerald">
                       {Number(saldoTotal).toFixed(1)}
@@ -412,7 +416,7 @@ export function PeriodosVacacionesTab() {
                     </Text>
                   </Stack>
                 </Grid.Col>
-                <Grid.Col span={{ base: 6, sm: 3 }}>
+                <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
                     <Text size="xl" fw={700} c="orange">
                       {periodos
@@ -425,7 +429,31 @@ export function PeriodosVacacionesTab() {
                     </Text>
                   </Stack>
                 </Grid.Col>
-                <Grid.Col span={{ base: 6, sm: 3 }}>
+                <Grid.Col span={{ base: 6, sm: 2 }}>
+                  <Stack gap={2} align="center">
+                    <Text size="xl" fw={700} c="blue">
+                      {Number(
+                        resumen?.total_vacaciones_aprobadas ?? 0
+                      ).toFixed(1)}
+                    </Text>
+                    <Text size="xs" c="dimmed" ta="center">
+                      Días por vacaciones
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 2 }}>
+                  <Stack gap={2} align="center">
+                    <Text size="xl" fw={700} c="orange">
+                      {Number(
+                        resumen?.total_permisos_personales ?? 0
+                      ).toFixed(3)}
+                    </Text>
+                    <Text size="xs" c="dimmed" ta="center">
+                      Días por permisos
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
                     <Text
                       size="xl" fw={700}
