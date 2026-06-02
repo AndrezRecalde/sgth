@@ -67,17 +67,44 @@ class VacacionController extends Controller
 
     public function update(UpdateVacacionRequest $request, int $id)
     {
-        $vacacion = Vacacion::findOrFail($id);
-        $vacacion->estado = $request->validated('estado');
+        $vacacion = Vacacion::with(['servidor'])->findOrFail($id);
 
-        if ($vacacion->estado === 'aprobada') {
+        $estadoAnterior = $vacacion->estado instanceof \App\Enums\EstadoVacacion
+            ? $vacacion->estado->value
+            : (string) $vacacion->estado;
+
+        $nuevoEstado = $request->validated('estado');
+        $vacacion->estado = $nuevoEstado;
+
+        if ($nuevoEstado === 'aprobada') {
             $vacacion->aprobado_por = $request->user()->id;
+            $vacacion->save();
+
+            // Descontar del período solo si:
+            // 1. El estado anterior NO era aprobada (evitar doble descuento)
+            // 2. El motivo descuenta vacaciones
+            if ($estadoAnterior !== 'aprobada') {
+                $motivo = $vacacion->motivo instanceof \App\Enums\MotivoVacacion
+                    ? $vacacion->motivo
+                    : \App\Enums\MotivoVacacion::tryFrom((string)$vacacion->motivo);
+
+                if ($motivo?->descuentaVacaciones() && $vacacion->servidor_id) {
+                    $anio = \Carbon\Carbon::parse($vacacion->fecha_inicio)->year;
+                    app(\App\Services\Asistencia\PeriodoVacacionService::class)
+                        ->descontarDias(
+                            $vacacion->servidor_id,
+                            (float) $vacacion->dias_solicitados,
+                            $anio
+                        );
+                }
+            }
+        } else {
+            $vacacion->save();
         }
 
-        $vacacion->save();
         return ApiResponse::ok(
             $vacacion->fresh(['servidor', 'jefe', 'creadoPor']),
-            "Solicitud resuelta como {$vacacion->estado}."
+            "Solicitud resuelta como {$nuevoEstado}."
         );
     }
 

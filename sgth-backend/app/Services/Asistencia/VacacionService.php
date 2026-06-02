@@ -137,13 +137,6 @@ class VacacionService implements VacacionServiceInterface
             $vacacion->codigo_qr = $urlVerificacion;
             $vacacion->save();
 
-            // Descontar del período correspondiente si el motivo descuenta vacaciones
-            if ($motivo?->descuentaVacaciones()) {
-                $anio = \Carbon\Carbon::parse($datos['fecha_inicio'])->year;
-                app(\App\Services\Asistencia\PeriodoVacacionService::class)
-                    ->descontarDias($servidorId, $diasADescontar, $anio);
-            }
-
             return $vacacion->fresh(['servidor', 'jefe', 'creadoPor']);
         });
     }
