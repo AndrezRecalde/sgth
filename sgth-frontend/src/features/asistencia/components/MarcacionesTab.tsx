@@ -42,18 +42,19 @@ export function MarcacionesTab() {
   const servidores = (servidoresData?.data ?? []) as ServidorConRelaciones[]
 
   const servidorOptions = servidores
-    .filter(s => s.contrato_vigente?.codigo_marcacion)
+    .filter(s => s.puede_marcar !== false)
     .map(s => ({
-      value: s.contrato_vigente!.codigo_marcacion!,
+      value: s.cedula ?? '',
       label: `${s.cedula} — ${[s.apellido, s.nombre].filter(Boolean).join(' ')}`,
     }))
+    .filter(s => s.value)
 
   const { data: marcaciones = [], isLoading, refetch } = useQuery({
     queryKey: ['marcaciones', servidorSel, fromDate(fechaInicio), fromDate(fechaFin)],
     queryFn:  () => asistenciaService.marcaciones.listar({
-      codigo_marcacion: servidorSel!,
-      fecha_inicio:     fromDate(fechaInicio),
-      fecha_fin:        fromDate(fechaFin),
+      cedula:       servidorSel!,
+      fecha_inicio: fromDate(fechaInicio),
+      fecha_fin:    fromDate(fechaFin),
     }),
     enabled:  buscar && !!servidorSel && !!fechaInicio && !!fechaFin,
     staleTime: 0,
@@ -131,7 +132,7 @@ export function MarcacionesTab() {
       <Grid>
         <Grid.Col span={{ base: 12, sm: 4 }}>
           <Select
-            label="Servidor"
+            label="Servidor (solo con marcación habilitada)"
             placeholder="Buscar servidor"
             data={servidorOptions}
             searchable

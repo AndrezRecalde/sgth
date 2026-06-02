@@ -9,6 +9,7 @@ import {
   TextInput,
   Grid,
   NumberInput,
+  Switch,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
@@ -88,7 +89,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
       fecha_inicio: "",
       fecha_fin: null,
       resolucion_numero: "",
-      codigo_marcacion: "",
+      puede_marcar: true,
       estado: "vigente",
       remuneracion: null,
     },
@@ -145,7 +146,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
         fecha_fin:         contrato.fecha_fin
           ? contrato.fecha_fin.split('T')[0] : null,
         resolucion_numero: contrato.resolucion_numero ?? '',
-        codigo_marcacion:  contrato.codigo_marcacion ?? '',
+        puede_marcar:  contrato.puede_marcar ?? true,
         estado: (contrato.estado ?? 'vigente') as ContratoFormData['estado'],
         remuneracion: contrato.remuneracion
           ? Number(contrato.remuneracion) : null,
@@ -159,7 +160,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
         fecha_inicio:      '',
         fecha_fin:         null,
         resolucion_numero: '',
-        codigo_marcacion:  '',
+        puede_marcar:      true,
         estado:            'vigente',
         remuneracion:      null,
       })
@@ -347,15 +348,21 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
               />
             </Grid.Col>
 
-            {/* Código de marcación */}
+            {/* Puede Marcar */}
             <Grid.Col span={{ base: 12, sm: 6 }}>
-              <TextInput
-                label="Código de marcación biométrica"
-                placeholder="Código del biométrico (opcional)"
-                maxLength={10}
-                {...contained}
-                {...register("codigo_marcacion")}
-                error={errors.codigo_marcacion?.message}
+              <Controller
+                name="puede_marcar"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    label="Puede registrar marcación biométrica"
+                    description="Habilita al servidor para registrar asistencia en el sistema biométrico"
+                    checked={field.value ?? true}
+                    onChange={(e) => field.onChange(e.currentTarget.checked)}
+                    mt="md"
+                    color="blue"
+                  />
+                )}
               />
             </Grid.Col>
 

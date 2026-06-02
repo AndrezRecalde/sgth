@@ -2061,8 +2061,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Consulta marcaciones desde SQLSERVER usando SP.
-         *     Parámetros: servidor_id, fecha_inicio, fecha_fin
+         * Consultar marcaciones de un servidor por cédula.
+         *     Solo servidores con puede_marcar = true
          */
         get: operations["marcacion.index"];
         put?: never;
@@ -2083,8 +2083,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Registra una marcación online en SQLSERVER.
-         *     Para servidores en campo/territorio
+         * Registrar marcación online.
+         *     Usa la cédula del usuario autenticado.
+         *     Solo si puede_marcar = true
          */
         post: operations["asistencia.marcaciones.online"];
         delete?: never;
@@ -2100,7 +2101,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Verifica si el servidor ya marcó hoy */
+        /**
+         * Estado de marcación del día para el usuario autenticado.
+         *     Usa la cédula del servidor vinculado al usuario
+         */
         get: operations["asistencia.marcaciones.estado-hoy"];
         put?: never;
         post?: never;
@@ -3674,7 +3678,6 @@ export interface components {
             fecha_fin: string | null;
             resolucion_numero: string | null;
             documento_ruta: string | null;
-            codigo_marcacion: string | null;
             estado: components["schemas"]["EstadoContrato"];
             /** Format: date-time */
             created_at: string | null;
@@ -3683,6 +3686,7 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
             remuneracion: string | null;
+            puede_marcar: boolean;
         };
         /** CuentaBancariaServidor */
         CuentaBancariaServidor: {
@@ -4266,9 +4270,7 @@ export interface components {
             tipo: components["schemas"]["TipoPermiso"];
             /** Format: date-time */
             fecha: string;
-            /** Format: date-time */
             hora_inicio: string;
-            /** Format: date-time */
             hora_fin: string;
             observacion: string | null;
             estado: components["schemas"]["EstadoPermiso"];
@@ -4563,7 +4565,7 @@ export interface components {
             /** Format: date-time */
             fecha_fin?: string | null;
             resolucion_numero?: string | null;
-            codigo_marcacion?: string | null;
+            puede_marcar?: boolean | null;
             estado: components["schemas"]["EstadoContrato"];
             /** Format: binary */
             archivo_contrato?: string | null;
@@ -5100,7 +5102,7 @@ export interface components {
             /** Format: date-time */
             fecha_fin?: string | null;
             resolucion_numero?: string | null;
-            codigo_marcacion?: string | null;
+            puede_marcar?: boolean | null;
             estado?: components["schemas"]["EstadoContrato"];
             /** Format: binary */
             archivo_contrato?: string | null;
@@ -11085,7 +11087,7 @@ export interface operations {
     "marcacion.index": {
         parameters: {
             query: {
-                codigo_marcacion: string;
+                cedula: string;
                 fecha_inicio: string;
                 fecha_fin: string;
             };
@@ -11103,7 +11105,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Marcaciones consultadas correctamente.";
+                        mensaje: "Marcaciones obtenidas correctamente.";
                         datos: string;
                         meta: null;
                     };
@@ -11123,7 +11125,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    codigo_marcacion: string;
                     /** @enum {string} */
                     checktype: "I" | "O";
                     latitud?: number | null;
@@ -11152,9 +11153,7 @@ export interface operations {
     };
     "asistencia.marcaciones.estado-hoy": {
         parameters: {
-            query: {
-                codigo_marcacion: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -11176,7 +11175,35 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No se pudo obtener el estado del día.";
+                        datos: null;
+                        /** @constant */
+                        errores: 503;
+                    } | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tu perfil no tiene habilitada la marcación biométrica.";
+                        datos: null;
+                        /** @constant */
+                        errores: 403;
+                    } | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tu usuario no tiene un servidor vinculado.";
+                        datos: null;
+                        /** @constant */
+                        errores: 404;
+                    };
+                };
+            };
         };
     };
     "movimientoPersonal.index": {
@@ -11378,6 +11405,8 @@ export interface operations {
                             periodos: components["schemas"]["PeriodoVacacion"][];
                             saldo_total: number;
                             alerta_limite: boolean;
+                            total_vacaciones_aprobadas: number;
+                            total_permisos_personales: number;
                         };
                         meta: null;
                     };
@@ -14342,6 +14371,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };

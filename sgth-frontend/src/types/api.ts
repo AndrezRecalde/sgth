@@ -312,6 +312,7 @@ export type ServidorConRelaciones = Servidor & {
   pasaporte_numero?: string | null
   provincia_domicilio?: string | null
   ciudad_domicilio?: string | null
+  puede_marcar?: boolean | null
 }
 
 export type ContratoConRelaciones = ContratoServidor & {
@@ -337,7 +338,7 @@ export type ContratoConRelaciones = ContratoServidor & {
   fecha_fin?:      string | null
   numero_contrato?: string | null
   resolucion_numero?: string | null
-  codigo_marcacion?: string | null
+  puede_marcar?: boolean | null
   documento_ruta?: string | null
   remuneracion?: string | number | null
 }

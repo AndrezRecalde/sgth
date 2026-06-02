@@ -112,9 +112,9 @@ function ContratoDetalle({ contrato }: DetalleProps) {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Código biométrico</Text>
+          <Text size="xs" c="dimmed" mb={2}>Marcación biométrica</Text>
           <Text size="sm" fw={500} ff="monospace">
-            {contrato.codigo_marcacion ?? '—'}
+            {contrato.puede_marcar === false ? 'No' : 'Sí'}
           </Text>
         </Grid.Col>
 

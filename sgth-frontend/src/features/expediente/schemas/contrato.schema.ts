@@ -8,7 +8,7 @@ export const contratoSchema = z.object({
   fecha_inicio:             z.string().min(1, 'La fecha de inicio es requerida'),
   fecha_fin:                z.string().optional().nullable(),
   resolucion_numero:        z.string().optional().nullable(),
-  codigo_marcacion:         z.string().optional().nullable(),
+  puede_marcar:             z.boolean(),
   estado:                   z.enum(['vigente', 'terminado', 'cancelado']),
   remuneracion:             z.number().min(0).optional().nullable(),
 })

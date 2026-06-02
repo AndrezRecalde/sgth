@@ -11585,13 +11585,13 @@
         "/v1/asistencia/marcaciones": {
             "get": {
                 "operationId": "marcacion.index",
-                "summary": "Consulta marcaciones desde SQLSERVER usando SP.\nPar\u00e1metros: servidor_id, fecha_inicio, fecha_fin",
+                "summary": "Consultar marcaciones de un servidor por c\u00e9dula.\nSolo servidores con puede_marcar = true",
                 "tags": [
                     "Marcacion"
                 ],
                 "parameters": [
                     {
-                        "name": "codigo_marcacion",
+                        "name": "cedula",
                         "in": "query",
                         "required": true,
                         "schema": {
@@ -11633,7 +11633,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Marcaciones consultadas correctamente."
+                                            "const": "Marcaciones obtenidas correctamente."
                                         },
                                         "datos": {
                                             "type": "string"
@@ -11661,7 +11661,7 @@
         "/v1/asistencia/marcaciones/online": {
             "post": {
                 "operationId": "asistencia.marcaciones.online",
-                "summary": "Registra una marcaci\u00f3n online en SQLSERVER.\nPara servidores en campo/territorio",
+                "summary": "Registrar marcaci\u00f3n online.\nUsa la c\u00e9dula del usuario autenticado.\nSolo si puede_marcar = true",
                 "tags": [
                     "Marcacion"
                 ],
@@ -11672,9 +11672,6 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "codigo_marcacion": {
-                                        "type": "string"
-                                    },
                                     "checktype": {
                                         "type": "string",
                                         "enum": [
@@ -11696,7 +11693,6 @@
                                     }
                                 },
                                 "required": [
-                                    "codigo_marcacion",
                                     "checktype"
                                 ]
                             }
@@ -11747,23 +11743,96 @@
         "/v1/asistencia/marcaciones/estado-hoy": {
             "get": {
                 "operationId": "asistencia.marcaciones.estado-hoy",
-                "summary": "Verifica si el servidor ya marc\u00f3 hoy",
+                "summary": "Estado de marcaci\u00f3n del d\u00eda para el usuario autenticado.\nUsa la c\u00e9dula del servidor vinculado al usuario",
                 "tags": [
                     "Marcacion"
                 ],
-                "parameters": [
-                    {
-                        "name": "codigo_marcacion",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
                 "responses": {
                     "422": {
-                        "$ref": "#/components/responses/ValidationException"
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "exito": {
+                                                    "type": "boolean"
+                                                },
+                                                "mensaje": {
+                                                    "type": "string",
+                                                    "const": "No se pudo obtener el estado del d\u00eda."
+                                                },
+                                                "datos": {
+                                                    "type": "null"
+                                                },
+                                                "errores": {
+                                                    "type": "integer",
+                                                    "const": 503
+                                                }
+                                            },
+                                            "required": [
+                                                "exito",
+                                                "mensaje",
+                                                "datos",
+                                                "errores"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "exito": {
+                                                    "type": "boolean"
+                                                },
+                                                "mensaje": {
+                                                    "type": "string",
+                                                    "const": "Tu perfil no tiene habilitada la marcaci\u00f3n biom\u00e9trica."
+                                                },
+                                                "datos": {
+                                                    "type": "null"
+                                                },
+                                                "errores": {
+                                                    "type": "integer",
+                                                    "const": 403
+                                                }
+                                            },
+                                            "required": [
+                                                "exito",
+                                                "mensaje",
+                                                "datos",
+                                                "errores"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "exito": {
+                                                    "type": "boolean"
+                                                },
+                                                "mensaje": {
+                                                    "type": "string",
+                                                    "const": "Tu usuario no tiene un servidor vinculado."
+                                                },
+                                                "datos": {
+                                                    "type": "null"
+                                                },
+                                                "errores": {
+                                                    "type": "integer",
+                                                    "const": 404
+                                                }
+                                            },
+                                            "required": [
+                                                "exito",
+                                                "mensaje",
+                                                "datos",
+                                                "errores"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "200": {
                         "description": "",
@@ -12189,12 +12258,20 @@
                                                 },
                                                 "alerta_limite": {
                                                     "type": "boolean"
+                                                },
+                                                "total_vacaciones_aprobadas": {
+                                                    "type": "number"
+                                                },
+                                                "total_permisos_personales": {
+                                                    "type": "number"
                                                 }
                                             },
                                             "required": [
                                                 "periodos",
                                                 "saldo_total",
-                                                "alerta_limite"
+                                                "alerta_limite",
+                                                "total_vacaciones_aprobadas",
+                                                "total_permisos_personales"
                                             ]
                                         },
                                         "meta": {
@@ -18198,6 +18275,9 @@
                             }
                         }
                     },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
@@ -19708,12 +19788,6 @@
                             "null"
                         ]
                     },
-                    "codigo_marcacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
                     "estado": {
                         "$ref": "#/components/schemas/EstadoContrato"
                     },
@@ -19743,6 +19817,9 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "puede_marcar": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -19756,12 +19833,12 @@
                     "fecha_fin",
                     "resolucion_numero",
                     "documento_ruta",
-                    "codigo_marcacion",
                     "estado",
                     "created_at",
                     "updated_at",
                     "deleted_at",
-                    "remuneracion"
+                    "remuneracion",
+                    "puede_marcar"
                 ],
                 "title": "ContratoServidor"
             },
@@ -21985,12 +22062,10 @@
                         "format": "date-time"
                     },
                     "hora_inicio": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "hora_fin": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "observacion": {
                         "type": [
@@ -23156,12 +23231,11 @@
                         ],
                         "maxLength": 100
                     },
-                    "codigo_marcacion": {
+                    "puede_marcar": {
                         "type": [
-                            "string",
+                            "boolean",
                             "null"
-                        ],
-                        "maxLength": 10
+                        ]
                     },
                     "estado": {
                         "$ref": "#/components/schemas/EstadoContrato"
@@ -25354,12 +25428,11 @@
                         ],
                         "maxLength": 100
                     },
-                    "codigo_marcacion": {
+                    "puede_marcar": {
                         "type": [
-                            "string",
+                            "boolean",
                             "null"
-                        ],
-                        "maxLength": 10
+                        ]
                     },
                     "estado": {
                         "$ref": "#/components/schemas/EstadoContrato"

@@ -19,15 +19,22 @@ export function MarcacionOnlineTab() {
   const [cargandoUbicacion, setCargandoUbicacion] = useState(false)
   const [registrando, setRegistrando] = useState(false)
 
-  const codigoMarcacion =
-    usuario && 'codigo_marcacion' in usuario
-      ? (usuario.codigo_marcacion as string)
-      : null
+  const cedula = (usuario as unknown as Record<string, unknown>)
+    ?.cedula as string | null
+    ?? ((usuario as unknown as Record<string, unknown>)
+      ?.servidor as Record<string, unknown>)?.cedula as string | null
+    ?? null
+
+  const puedeMarcar = (usuario as unknown as Record<string, unknown>)
+    ?.puede_marcar as boolean | null
+    ?? ((usuario as unknown as Record<string, unknown>)
+      ?.servidor as Record<string, unknown>)?.puede_marcar as boolean | null
+    ?? false
 
   const { data: estadoHoy, isLoading: cargandoEstado, refetch } = useQuery({
-    queryKey: ['marcacion-hoy', codigoMarcacion],
-    queryFn:  () => asistenciaService.marcaciones.estadoHoy(codigoMarcacion!),
-    enabled:  !!codigoMarcacion,
+    queryKey: ['marcacion-hoy', cedula],
+    queryFn:  () => asistenciaService.marcaciones.estadoHoy(),
+    enabled:  !!cedula && puedeMarcar,
     staleTime: 0,
     refetchInterval: 60_000,
   })
@@ -48,11 +55,10 @@ export function MarcacionOnlineTab() {
   }, [])
 
   const registrar = async (checktype: 'I' | 'O', label: string) => {
-    if (!codigoMarcacion) return
+    if (!cedula || !puedeMarcar) return
     setRegistrando(true)
     try {
       await asistenciaService.marcaciones.registrarOnline({
-        codigo_marcacion: codigoMarcacion,
         checktype,
         latitud:  ubicacion?.lat,
         longitud: ubicacion?.lon,
@@ -74,15 +80,15 @@ export function MarcacionOnlineTab() {
     }
   }
 
-  if (!codigoMarcacion) {
+  if (!cedula || !puedeMarcar) {
     return (
       <Alert
         icon={<IconInfoCircle size={16} />}
         color="orange" variant="light"
       >
         <Text size="sm">
-          Tu usuario no tiene un código de marcación biométrica asignado.
-          Contacta a Talento Humano para configurarlo en tu contrato vigente.
+          Tu usuario no tiene habilitada la marcación biométrica.
+          Contacta a Talento Humano para habilitarla en tu contrato.
         </Text>
       </Alert>
     )

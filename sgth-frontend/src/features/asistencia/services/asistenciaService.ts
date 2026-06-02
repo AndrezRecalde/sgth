@@ -8,24 +8,22 @@ import type {
 export const asistenciaService = {
   marcaciones: {
     listar: (params: {
-      codigo_marcacion: string
+      cedula:       string
       fecha_inicio: string
-      fecha_fin: string
+      fecha_fin:    string
     }) =>
       api.get<ApiResponse<MarcacionBiometrica[]>>(
         '/asistencia/marcaciones', { params }
       ).then(r => r.data.datos ?? []),
 
-    estadoHoy: (codigo_marcacion: string) =>
+    estadoHoy: () =>
       api.get<ApiResponse<MarcacionBiometrica | null>>(
-        '/asistencia/marcaciones/estado-hoy',
-        { params: { codigo_marcacion } }
+        '/asistencia/marcaciones/estado-hoy'
       ).then(r => r.data.datos),
 
     registrarOnline: (data: {
-      codigo_marcacion: string
       checktype: 'I' | 'O'
-      latitud?: number
+      latitud?:  number
       longitud?: number
     }) =>
       api.post<ApiResponse<null>>(
