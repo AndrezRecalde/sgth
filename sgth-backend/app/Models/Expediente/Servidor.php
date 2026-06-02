@@ -55,8 +55,9 @@ class Servidor extends Model
         // Sección E
         'tiene_enfermedad_catastrofica',
         // Sección F
-        'tipo_nombramiento', 'numero_contrato', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
-        'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato'
+        'tipo_nombramiento', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
+        'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato',
+        'puede_marcar', 'codigo_marcacion'
     ];
 
     protected function casts(): array
@@ -68,6 +69,7 @@ class Servidor extends Model
             'es_extranjero'                 => 'boolean',
             'tiene_discapacidad'            => 'boolean',
             'tiene_enfermedad_catastrofica' => 'boolean',
+            'puede_marcar'                  => 'boolean',
             'fecha_nacimiento'              => 'date',
             'pasaporte_vencimiento'         => 'date',
             'fecha_ingreso_institucion'     => 'date',
