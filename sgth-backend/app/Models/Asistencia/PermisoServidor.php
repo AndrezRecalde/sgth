@@ -49,8 +49,8 @@ class PermisoServidor extends Model
             'tipo'           => TipoPermiso::class,
             'estado'         => EstadoPermiso::class,
             'fecha'          => 'date',
-            'hora_inicio'    => 'datetime:H:i:s', // Casting a datetime for easier time manipulation
-            'hora_fin'       => 'datetime:H:i:s',
+            'hora_inicio'    => 'string',
+            'hora_fin'       => 'string',
             'confirmado_en'  => 'datetime',
             'validado_ts_en' => 'datetime',
             'anulado_en'     => 'datetime',

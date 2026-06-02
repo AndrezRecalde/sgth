@@ -23,16 +23,22 @@ class PermisoService implements PermisoServiceInterface
         return DB::transaction(function () use ($datos, $servidorId) {
             $servidor = Servidor::findOrFail($servidorId);
             $tipo = TipoPermiso::tryFrom($datos['tipo']);
-            $horaInicio = Carbon::parse($datos['hora_inicio']);
-            $horaFin = Carbon::parse($datos['hora_fin']);
             $observacion = $datos['observacion'] ?? null;
 
+            [$hI, $mI] = array_map('intval',
+                explode(':', substr($datos['hora_inicio'], 0, 5)));
+            [$hF, $mF] = array_map('intval',
+                explode(':', substr($datos['hora_fin'], 0, 5)));
+            
+            $minutosInicio = $hI * 60 + $mI;
+            $minutosFin    = $hF * 60 + $mF;
+
             // 1. Validar horas (fecha_fin debe ser mayor a fecha_inicio)
-            if ($horaFin->lessThanOrEqualTo($horaInicio)) {
+            if ($minutosFin <= $minutosInicio) {
                 throw new \Exception("La hora de fin debe ser mayor a la hora de inicio.");
             }
 
-            $diferenciaHoras = $horaInicio->diffInHours($horaFin);
+            $diferenciaHoras = ($minutosFin - $minutosInicio) / 60;
 
             // 2. REGLA: PERSONAL máximo 4 horas por día
             if ($tipo === TipoPermiso::PERSONAL && $diferenciaHoras > 4) {
@@ -138,12 +144,16 @@ class PermisoService implements PermisoServiceInterface
 
                 // Solo LOSEP descuenta permisos personales del saldo vacacional
                 if ($regimen === 'losep') {
-                    $inicio = \Carbon\Carbon::parse($permiso->hora_inicio);
-                    $fin    = \Carbon\Carbon::parse($permiso->hora_fin);
+                    // Parsear solo la parte de hora (HH:MM:SS)
+                    // para evitar desfase por fecha en Carbon
+                    $horaInicio = substr((string)$permiso->getRawOriginal('hora_inicio'), 0, 5);
+                    $horaFin    = substr((string)$permiso->getRawOriginal('hora_fin'), 0, 5);
 
-                    // Calcular horas y convertir a días (8h = 1 día)
-                    $minutos    = $inicio->diffInMinutes($fin);
-                    $diasDescontar = round($minutos / 480, 4); // 480 min = 8h
+                    [$hI, $mI] = array_map('intval', explode(':', $horaInicio));
+                    [$hF, $mF] = array_map('intval', explode(':', $horaFin));
+
+                    $minutos       = ($hF * 60 + $mF) - ($hI * 60 + $mI);
+                    $diasDescontar = $minutos > 0 ? round($minutos / 480, 4) : 0;
 
                     if ($diasDescontar > 0) {
                         $anio = \Carbon\Carbon::parse($permiso->fecha)->year;

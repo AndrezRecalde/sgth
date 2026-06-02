@@ -21985,12 +21985,10 @@
                         "format": "date-time"
                     },
                     "hora_inicio": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "hora_fin": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "observacion": {
                         "type": [
