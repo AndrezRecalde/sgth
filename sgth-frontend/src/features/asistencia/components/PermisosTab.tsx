@@ -1,23 +1,27 @@
 'use client'
 
-import React, { useState } from 'react'
-
-import { Stack, Group, Button, Text, Badge, Chip, TextInput } from '@mantine/core'
+import { useState } from 'react'
+import {
+  Stack, Group, Button, Text, Badge,
+  TextInput, Chip,
+} from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconCheck, IconX,
   IconShieldCheck, IconClipboardList,
-  IconPrinter, IconSearch,
+  IconSearch, IconPrinter,
 } from '@tabler/icons-react'
+import { notifications } from '@mantine/notifications'
+import React from 'react'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PermisoModal } from './PermisoModal'
 import { usePermisos } from '../hooks/usePermisos'
 import { usePermisoMutations } from '../hooks/usePermisoMutations'
-import { notifications } from '@mantine/notifications'
 import { asistenciaService } from '../services/asistenciaService'
-import type { PermisoServidor, ServidorConRelaciones } from '@/types/api'
+import type { PermisoServidor } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 
 const ESTADO_COLORS: Record<string, string> = {
@@ -26,14 +30,12 @@ const ESTADO_COLORS: Record<string, string> = {
   validado_trabajo_social: 'emerald',
   anulado:                 'red',
 }
-
 const ESTADO_LABELS: Record<string, string> = {
   pendiente:               'Pendiente',
   activo:                  'Activo',
   validado_trabajo_social: 'Validado TS',
   anulado:                 'Anulado',
 }
-
 const TIPO_LABELS: Record<string, string> = {
   personal:   'Personal',
   oficial:    'Oficial',
@@ -42,17 +44,34 @@ const TIPO_LABELS: Record<string, string> = {
 }
 
 export function PermisosTab() {
+  const contained = useContainedInput()
   const [opened, { open, close }] = useDisclosure(false)
-  const { data: permisos = [], isLoading } = usePermisos()
-  const { confirmar, anular, validarTs } = usePermisoMutations()
 
-  const [exportandoId, setExportandoId] = useState<number | null>(null)
-  const [filtroEstado, setFiltroEstado] = useState<string>('pendiente')
-  const [busquedaFolio, setBusquedaFolio] = useState<string>('')
+  // ── Filtros ──────────────────────────────────────
+  const [filtroEstado, setFiltroEstado] =
+    useState<string>('pendiente')
+  const [busquedaFolio, setBusquedaFolio] =
+    useState<string>('')
+  const [folioQuery, setFolioQuery] =
+    useState<string>('')
+
+  // Construir params para el backend
+  const filtros = {
+    estado:   filtroEstado === 'todos' ? undefined : filtroEstado,
+    folio:    folioQuery || undefined,
+    per_page: 50,
+  }
+
+  const { data, isLoading } = usePermisos(filtros)
+  const lista = (data?.data ?? []) as PermisoServidor[]
+
+  const { confirmar, anular, validarTs } = usePermisoMutations()
+  const [exportandoId, setExportandoId] =
+    useState<number | null>(null)
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
-    const notifId = notifications.show({
+    notifications.show({
       id:      `export-permiso-${id}`,
       title:   'Exportando permiso...',
       message: 'Generando el documento PDF, espere.',
@@ -65,7 +84,7 @@ export function PermisosTab() {
       const blob = await asistenciaService.permisos.exportar(id)
       const url  = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href  = url
+      link.href     = url
       link.download = `permiso_${id}.pdf`
       link.click()
       URL.revokeObjectURL(url)
@@ -94,25 +113,11 @@ export function PermisosTab() {
     }
   }
 
-  const lista = (permisos as PermisoServidor[]).filter(p => {
-    const coincideEstado = filtroEstado === 'todos'
-      ? true
-      : (p.estado as string) === filtroEstado
-
-    const coincideFolio = busquedaFolio.trim() === ''
-      ? true
-      : (p.folio ?? '').toLowerCase().includes(
-          busquedaFolio.trim().toLowerCase()
-        )
-
-    return coincideEstado && coincideFolio
-  })
-
   const columns: DataTableColumn<PermisoServidor>[] = [
     {
       accessor: 'folio',
       title:    'Folio',
-      width:    140,
+      width:    145,
       render: ({ folio }) => (
         <Text size="sm" ff="monospace" fw={500}>
           {folio ?? '—'}
@@ -132,28 +137,13 @@ export function PermisosTab() {
         )
       },
     },
-
-    {
-      accessor: 'unidad_administrativa',
-      title:    'Unidad',
-      render: (p) => {
-        const nombre = (p.unidad_administrativa as {
-          nombre?: string
-        } | null)?.nombre
-        return (
-          <Text size="sm" c="dimmed">
-            {nombre ?? '—'}
-          </Text>
-        )
-      },
-    },
     {
       accessor: 'tipo',
       title:    'Tipo',
       width:    100,
       render: ({ tipo }) => (
         <Badge size="sm" variant="light" color="blue">
-          {TIPO_LABELS[tipo] ?? tipo}
+          {TIPO_LABELS[tipo as string] ?? tipo}
         </Badge>
       ),
     },
@@ -163,10 +153,12 @@ export function PermisosTab() {
       width:    110,
       render: ({ fecha }) => (
         <Text size="sm">
-          {fecha ? new Date(fecha).toLocaleDateString('es-EC', {
-            timeZone: 'UTC',
-            day: '2-digit', month: '2-digit', year: 'numeric',
-          }) : '—'}
+          {fecha
+            ? new Date(fecha).toLocaleDateString('es-EC', {
+                timeZone: 'UTC',
+                day: '2-digit', month: '2-digit', year: 'numeric',
+              })
+            : '—'}
         </Text>
       ),
     },
@@ -178,20 +170,16 @@ export function PermisosTab() {
         if (!hora_inicio || !hora_fin) {
           return <Text size="sm" c="dimmed">—</Text>
         }
-
         const hi = (hora_inicio as string).substring(0, 5)
         const hf = (hora_fin as string).substring(0, 5)
-
         const [hI, mI] = hi.split(':').map(Number)
         const [hF, mF] = hf.split(':').map(Number)
         const minutos  = (hF * 60 + mF) - (hI * 60 + mI)
         const horas    = Math.floor(minutos / 60)
         const mins     = minutos % 60
-
         const duracion = horas > 0
           ? `${horas}h${mins > 0 ? ` ${mins}m` : ''}`
           : `${mins}m`
-
         return (
           <Stack gap={2}>
             <Text size="sm" ff="monospace">
@@ -232,29 +220,30 @@ export function PermisosTab() {
             onClick: () => handleExportar(p.id),
           },
           {
-            label:    'Confirmar recepción',
-            icon:     <IconCheck size={14} />,
-            color:    'blue',
-            onClick:  () => p.folio && confirmar.mutate(p.folio),
-            hidden:   (p.estado as string) !== 'pendiente',
+            label:   'Confirmar recepción',
+            icon:    <IconCheck size={14} />,
+            color:   'blue',
+            onClick: () => p.folio && confirmar.mutate(p.folio),
+            hidden:  (p.estado as string) !== 'pendiente',
           },
           {
-            label:    'Validar Trabajo Social',
-            icon:     <IconShieldCheck size={14} />,
-            color:    'emerald',
-            onClick:  () => validarTs.mutate(p.id),
-            hidden:   (p.estado as string) !== 'activo' ||
-              !['enfermedad', 'calamidad'].includes(p.tipo as string),
+            label:   'Validar Trabajo Social',
+            icon:    <IconShieldCheck size={14} />,
+            color:   'emerald',
+            onClick: () => validarTs.mutate(p.id),
+            hidden:  (p.estado as string) !== 'activo' ||
+              !['enfermedad', 'calamidad']
+                .includes(p.tipo as string),
           },
           {
-            label:    'Anular',
-            icon:     <IconX size={14} />,
-            color:    'red',
-            onClick:  () => {
+            label:   'Anular',
+            icon:    <IconX size={14} />,
+            color:   'red',
+            onClick: () => {
               if (confirm('¿Anular este permiso?'))
                 anular.mutate(p.id)
             },
-            hidden:   (p.estado as string) !== 'pendiente',
+            hidden:  (p.estado as string) !== 'pendiente',
           },
         ]} />
       ),
@@ -263,33 +252,55 @@ export function PermisosTab() {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end">
+
+      {/* ── Búsqueda por folio ── */}
+      <Group gap="sm" align="flex-end">
+        <TextInput
+          placeholder="Buscar por folio (ej: PER-2026-00001)"
+          leftSection={<IconSearch size={14} />}
+          value={busquedaFolio}
+          onChange={(e) =>
+            setBusquedaFolio(e.currentTarget.value)
+          }
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') setFolioQuery(busquedaFolio)
+          }}
+          style={{ maxWidth: 320 }}
+          {...contained}
+        />
         <Button
-          size="xs" color="emerald" variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={open}
+          size="sm"
+          variant="light"
+          color="blue"
+          leftSection={<IconSearch size={14} />}
+          onClick={() => setFolioQuery(busquedaFolio)}
         >
-          Nuevo permiso
+          Buscar
         </Button>
+        {folioQuery && (
+          <Button
+            size="sm"
+            variant="subtle"
+            color="gray"
+            onClick={() => {
+              setBusquedaFolio('')
+              setFolioQuery('')
+            }}
+          >
+            Limpiar
+          </Button>
+        )}
       </Group>
 
-      <TextInput
-        placeholder="Buscar por folio (ej: PER-2026-00001)"
-        leftSection={<IconSearch size={14} />}
-        value={busquedaFolio}
-        onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
-        style={{ maxWidth: 320 }}
-        mb="xs"
-      />
-
-      <Group gap="xs" mb="sm">
+      {/* ── Chips de estado ── */}
+      <Group gap="xs">
         <Text size="sm" fw={500} c="dimmed">Estado:</Text>
         {[
-          { value: 'todos',                  label: 'Todos',        color: 'gray'    },
-          { value: 'pendiente',              label: 'Pendiente',    color: 'orange'  },
-          { value: 'activo',                 label: 'Activo',       color: 'blue'    },
-          { value: 'validado_trabajo_social',label: 'Validado TS',  color: 'emerald' },
-          { value: 'anulado',                label: 'Anulado',      color: 'red'     },
+          { value: 'todos',                   label: 'Todos',       color: 'gray'    },
+          { value: 'pendiente',               label: 'Pendiente',   color: 'orange'  },
+          { value: 'activo',                  label: 'Activo',      color: 'blue'    },
+          { value: 'validado_trabajo_social', label: 'Validado TS', color: 'emerald' },
+          { value: 'anulado',                 label: 'Anulado',     color: 'red'     },
         ].map(op => (
           <Chip
             key={op.value}
@@ -303,10 +314,26 @@ export function PermisosTab() {
         ))}
       </Group>
 
+      {/* ── Botón nuevo permiso ── */}
+      <Group justify="flex-end">
+        <Button
+          size="xs" color="emerald" variant="light"
+          leftSection={<IconPlus size={14} />}
+          onClick={open}
+        >
+          Nuevo permiso
+        </Button>
+      </Group>
+
       {lista.length === 0 && !isLoading ? (
         <EmptyState
           icon={IconClipboardList}
           title="Sin permisos registrados"
+          description={
+            folioQuery
+              ? `No se encontraron permisos con folio "${folioQuery}"`
+              : 'No hay permisos en este estado.'
+          }
         />
       ) : (
         <SgthTable
@@ -317,11 +344,7 @@ export function PermisosTab() {
         />
       )}
 
-      <PermisoModal
-        opened={opened}
-        onClose={close}
-        isAdmin={true}
-      />
+      <PermisoModal opened={opened} onClose={close} isAdmin={true} />
     </Stack>
   )
 }

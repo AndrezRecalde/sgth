@@ -4690,10 +4690,6 @@ export interface components {
         /** StoreNominaRequest */
         StoreNominaRequest: {
             periodo: string;
-            /** Format: date-time */
-            fecha_inicio: string;
-            /** Format: date-time */
-            fecha_fin: string;
         };
         /** StorePermisoServidorRequest */
         StorePermisoServidorRequest: {
@@ -11572,7 +11568,9 @@ export interface operations {
     };
     "permisoServidor.index": {
         parameters: {
-            query?: never;
+            query?: {
+                per_page?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -11588,7 +11586,30 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Listado de permisos";
-                        datos: components["schemas"]["PermisoServidor"][];
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["PermisoServidor"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
                         meta: null;
                     };
                 };
@@ -14211,7 +14232,9 @@ export interface operations {
     };
     "vacacion.index": {
         parameters: {
-            query?: never;
+            query?: {
+                per_page?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;

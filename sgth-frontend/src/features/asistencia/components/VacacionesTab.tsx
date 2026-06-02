@@ -1,17 +1,24 @@
 'use client'
 
-import React, { useState } from 'react'
-
-import { Stack, Group, Button, Text, Badge, Chip, TextInput } from '@mantine/core'
+import { useState } from 'react'
+import {
+  Stack, Group, Button, Text, Badge,
+  TextInput, Chip,
+} from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconBeach, IconCheck, IconX, IconPrinter, IconSearch } from '@tabler/icons-react'
+import {
+  IconPlus, IconBeach, IconCheck, IconX,
+  IconSearch, IconPrinter,
+} from '@tabler/icons-react'
+import { notifications } from '@mantine/notifications'
+import React from 'react'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { VacacionModal } from './VacacionModal'
 import { useVacaciones } from '../hooks/useVacaciones'
 import { useVacacionMutations } from '../hooks/useVacacionMutations'
-import { notifications } from '@mantine/notifications'
 import { asistenciaService } from '../services/asistenciaService'
 import type { Vacacion, EstadoVacacion, MotivoVacacion } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -22,14 +29,12 @@ const ESTADO_COLORS: Record<EstadoVacacion, string> = {
   rechazada: 'red',
   gozada:    'gray',
 }
-
 const ESTADO_LABELS: Record<EstadoVacacion, string> = {
   pendiente: 'Pendiente',
   aprobada:  'Aprobada',
   rechazada: 'Rechazada',
   gozada:    'Gozada',
 }
-
 const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
   vacaciones_anuales:        'Vacaciones Anuales',
   permiso_cargo_vacaciones:  'Cargo a Vacaciones',
@@ -45,13 +50,33 @@ const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
 }
 
 export function VacacionesTab() {
+  const contained = useContainedInput()
   const [opened, { open, close }] = useDisclosure(false)
-  const { data, isLoading } = useVacaciones()
-  const { actualizar } = useVacacionMutations()
 
-  const [exportandoId, setExportandoId] = useState<number | null>(null)
-  const [filtroEstado, setFiltroEstado] = useState<string>('pendiente')
-  const [busquedaFolio, setBusquedaFolio] = useState<string>('')
+  // ── Filtros ──────────────────────────────────────
+  const [filtroEstado, setFiltroEstado] =
+    useState<string>('pendiente')
+  const [busquedaFolio, setBusquedaFolio] =
+    useState<string>('')
+  const [folioQuery, setFolioQuery] =
+    useState<string>('')
+
+  const filtros = {
+    estado:   filtroEstado === 'todos' ? undefined : filtroEstado,
+    folio:    folioQuery || undefined,
+    per_page: 50,
+  }
+
+  const { data, isLoading } = useVacaciones(filtros)
+  const lista = (
+    Array.isArray(data)
+      ? data
+      : (data as { data?: Vacacion[] } | null)?.data ?? []
+  ) as Vacacion[]
+
+  const { actualizar } = useVacacionMutations()
+  const [exportandoId, setExportandoId] =
+    useState<number | null>(null)
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
@@ -68,7 +93,7 @@ export function VacacionesTab() {
       const blob = await asistenciaService.vacaciones.exportar(id)
       const url  = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href  = url
+      link.href     = url
       link.download = `vacacion_${id}.pdf`
       link.click()
       URL.revokeObjectURL(url)
@@ -97,29 +122,11 @@ export function VacacionesTab() {
     }
   }
 
-  const lista = (
-    Array.isArray(data)
-      ? data
-      : (data as { data?: Vacacion[] } | null)?.data ?? []
-  ).filter((v: Vacacion) => {
-    const coincideEstado = filtroEstado === 'todos'
-      ? true
-      : (v.estado as string) === filtroEstado
-
-    const coincideFolio = busquedaFolio.trim() === ''
-      ? true
-      : (v.folio ?? '').toLowerCase().includes(
-          busquedaFolio.trim().toLowerCase()
-        )
-
-    return coincideEstado && coincideFolio
-  }) as Vacacion[]
-
   const columns: DataTableColumn<Vacacion>[] = [
     {
       accessor: 'folio',
       title:    'Folio',
-      width:    140,
+      width:    145,
       render: ({ folio }) => (
         <Text size="sm" ff="monospace" fw={500}>
           {folio ?? '—'}
@@ -135,20 +142,6 @@ export function VacacionesTab() {
         return (
           <Text size="sm">
             {[s.apellido, s.nombre].filter(Boolean).join(' ')}
-          </Text>
-        )
-      },
-    },
-    {
-      accessor: 'unidad_administrativa',
-      title:    'Unidad',
-      render: (v) => {
-        const nombre = (v.unidad_administrativa as {
-          nombre?: string
-        } | null)?.nombre
-        return (
-          <Text size="sm" c="dimmed">
-            {nombre ?? '—'}
           </Text>
         )
       },
@@ -179,7 +172,7 @@ export function VacacionesTab() {
     },
     {
       accessor: 'fecha_fin',
-      title:    'Fecha fin',
+      title:    'Hasta',
       width:    110,
       render: ({ fecha_fin }) => (
         <Text size="sm">
@@ -228,25 +221,25 @@ export function VacacionesTab() {
             onClick: () => handleExportar(v.id),
           },
           {
-            label:    'Aprobar',
-            icon:     <IconCheck size={14} />,
-            color:    'emerald',
-            onClick:  () => actualizar.mutate({
+            label:   'Aprobar',
+            icon:    <IconCheck size={14} />,
+            color:   'emerald',
+            onClick: () => actualizar.mutate({
               id: v.id, data: { estado: 'aprobada' },
             }),
-            hidden:   v.estado !== 'pendiente',
+            hidden:  v.estado !== 'pendiente',
           },
           {
-            label:    'Rechazar',
-            icon:     <IconX size={14} />,
-            color:    'red',
-            onClick:  () => {
+            label:   'Rechazar',
+            icon:    <IconX size={14} />,
+            color:   'red',
+            onClick: () => {
               if (confirm('¿Rechazar esta solicitud?'))
                 actualizar.mutate({
                   id: v.id, data: { estado: 'rechazada' },
                 })
             },
-            hidden:   v.estado !== 'pendiente',
+            hidden:  v.estado !== 'pendiente',
           },
         ]} />
       ),
@@ -255,26 +248,48 @@ export function VacacionesTab() {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end">
+
+      {/* ── Búsqueda por folio ── */}
+      <Group gap="sm" align="flex-end">
+        <TextInput
+          placeholder="Buscar por folio (ej: VAC-2026-00001)"
+          leftSection={<IconSearch size={14} />}
+          value={busquedaFolio}
+          onChange={(e) =>
+            setBusquedaFolio(e.currentTarget.value)
+          }
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') setFolioQuery(busquedaFolio)
+          }}
+          style={{ maxWidth: 320 }}
+          {...contained}
+        />
         <Button
-          size="xs" color="emerald" variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={open}
+          size="sm"
+          variant="light"
+          color="blue"
+          leftSection={<IconSearch size={14} />}
+          onClick={() => setFolioQuery(busquedaFolio)}
         >
-          Nueva solicitud
+          Buscar
         </Button>
+        {folioQuery && (
+          <Button
+            size="sm"
+            variant="subtle"
+            color="gray"
+            onClick={() => {
+              setBusquedaFolio('')
+              setFolioQuery('')
+            }}
+          >
+            Limpiar
+          </Button>
+        )}
       </Group>
 
-      <TextInput
-        placeholder="Buscar por folio (ej: VAC-2026-00001)"
-        leftSection={<IconSearch size={14} />}
-        value={busquedaFolio}
-        onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
-        style={{ maxWidth: 320 }}
-        mb="xs"
-      />
-
-      <Group gap="xs" mb="sm">
+      {/* ── Chips de estado ── */}
+      <Group gap="xs">
         <Text size="sm" fw={500} c="dimmed">Estado:</Text>
         {[
           { value: 'todos',     label: 'Todos',     color: 'gray'    },
@@ -295,10 +310,26 @@ export function VacacionesTab() {
         ))}
       </Group>
 
+      {/* ── Botón nueva solicitud ── */}
+      <Group justify="flex-end">
+        <Button
+          size="xs" color="emerald" variant="light"
+          leftSection={<IconPlus size={14} />}
+          onClick={open}
+        >
+          Nueva solicitud
+        </Button>
+      </Group>
+
       {lista.length === 0 && !isLoading ? (
         <EmptyState
           icon={IconBeach}
           title="Sin solicitudes de vacaciones"
+          description={
+            folioQuery
+              ? `No se encontraron solicitudes con folio "${folioQuery}"`
+              : 'No hay solicitudes en este estado.'
+          }
         />
       ) : (
         <SgthTable
@@ -309,7 +340,7 @@ export function VacacionesTab() {
         />
       )}
 
-      <VacacionModal opened={opened} onClose={close} />
+      <VacacionModal opened={opened} onClose={close} isAdmin={true} />
     </Stack>
   )
 }

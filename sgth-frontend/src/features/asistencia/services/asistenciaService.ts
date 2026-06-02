@@ -32,9 +32,21 @@ export const asistenciaService = {
   },
 
   permisos: {
-    listar: () =>
-      api.get<ApiResponse<PermisoServidor[]>>('/asistencia/permisos')
-        .then(r => r.data.datos ?? []),
+    listar: (params?: {
+      folio?:                    string
+      estado?:                   string
+      tipo?:                     string
+      servidor_id?:              number
+      unidad_administrativa_id?: number
+      fecha_desde?:              string
+      fecha_hasta?:              string
+      per_page?:                 number
+    }) =>
+      api.get<ApiResponse<{
+        data: PermisoServidor[]
+        meta: unknown
+      }>>('/asistencia/permisos', { params })
+        .then(r => r.data.datos),
 
     crear: (data: Record<string, unknown>) =>
       api.post<ApiResponse<PermisoServidor>>(
@@ -114,10 +126,21 @@ export const asistenciaService = {
   },
 
   vacaciones: {
-    listar: (params?: Record<string, string>) =>
-      api.get<ApiResponse<{ data: Vacacion[]; meta: unknown }>>(
-        '/asistencia/vacaciones', { params }
-      ).then(r => r.data.datos),
+    listar: (params?: {
+      folio?:                    string
+      estado?:                   string
+      motivo?:                   string
+      servidor_id?:              number
+      unidad_administrativa_id?: number
+      fecha_desde?:              string
+      fecha_hasta?:              string
+      per_page?:                 number
+    }) =>
+      api.get<ApiResponse<{
+        data: Vacacion[]
+        meta: unknown
+      }>>('/asistencia/vacaciones', { params })
+        .then(r => r.data.datos),
 
     saldo: (servidorId: number) =>
       api.get<ApiResponse<{ saldo_dias: number }>>(
