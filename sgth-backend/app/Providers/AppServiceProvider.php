@@ -52,6 +52,18 @@ use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Services\Asistencia\VacacionService;
 use App\Contracts\Nomina\NominaServiceInterface;
 use App\Services\Nomina\NominaService;
+use App\Contracts\Autoservicio\AutoservicioServiceInterface;
+use App\Services\Autoservicio\AutoservicioService;
+use App\Contracts\Biometrico\BiometricoServiceInterface;
+use App\Services\Biometrico\BiometricoService;
+use App\Contracts\Disciplinario\DisciplinarioServiceInterface;
+use App\Services\Disciplinario\DisciplinarioService;
+use App\Contracts\Evaluacion\EvaluacionServiceInterface;
+use App\Services\Evaluacion\EvaluacionService;
+use App\Contracts\Seleccion\SeleccionServiceInterface;
+use App\Services\Seleccion\SeleccionService;
+use App\Contracts\Sgd\SgdServiceInterface;
+use App\Services\Sgd\SgdService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -151,6 +163,30 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             NominaServiceInterface::class,
             NominaService::class
+        );
+        $this->app->bind(
+            AutoservicioServiceInterface::class,
+            AutoservicioService::class
+        );
+        $this->app->bind(
+            BiometricoServiceInterface::class,
+            BiometricoService::class
+        );
+        $this->app->bind(
+            DisciplinarioServiceInterface::class,
+            DisciplinarioService::class
+        );
+        $this->app->bind(
+            EvaluacionServiceInterface::class,
+            EvaluacionService::class
+        );
+        $this->app->bind(
+            SeleccionServiceInterface::class,
+            SeleccionService::class
+        );
+        $this->app->bind(
+            SgdServiceInterface::class,
+            SgdService::class
         );
     }
 
