@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react'
 
-import { Stack, Group, Button, Text, Badge, Chip } from '@mantine/core'
+import { Stack, Group, Button, Text, Badge, Chip, TextInput } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconBeach, IconCheck, IconX, IconPrinter } from '@tabler/icons-react'
+import { IconPlus, IconBeach, IconCheck, IconX, IconPrinter, IconSearch } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -51,6 +51,7 @@ export function VacacionesTab() {
 
   const [exportandoId, setExportandoId] = useState<number | null>(null)
   const [filtroEstado, setFiltroEstado] = useState<string>('pendiente')
+  const [busquedaFolio, setBusquedaFolio] = useState<string>('')
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
@@ -100,11 +101,19 @@ export function VacacionesTab() {
     Array.isArray(data)
       ? data
       : (data as { data?: Vacacion[] } | null)?.data ?? []
-  ).filter((v: Vacacion) =>
-    filtroEstado === 'todos'
+  ).filter((v: Vacacion) => {
+    const coincideEstado = filtroEstado === 'todos'
       ? true
       : (v.estado as string) === filtroEstado
-  ) as Vacacion[]
+
+    const coincideFolio = busquedaFolio.trim() === ''
+      ? true
+      : (v.folio ?? '').toLowerCase().includes(
+          busquedaFolio.trim().toLowerCase()
+        )
+
+    return coincideEstado && coincideFolio
+  }) as Vacacion[]
 
   const columns: DataTableColumn<Vacacion>[] = [
     {
@@ -255,6 +264,15 @@ export function VacacionesTab() {
           Nueva solicitud
         </Button>
       </Group>
+
+      <TextInput
+        placeholder="Buscar por folio (ej: VAC-2026-00001)"
+        leftSection={<IconSearch size={14} />}
+        value={busquedaFolio}
+        onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
+        style={{ maxWidth: 320 }}
+        mb="xs"
+      />
 
       <Group gap="xs" mb="sm">
         <Text size="sm" fw={500} c="dimmed">Estado:</Text>

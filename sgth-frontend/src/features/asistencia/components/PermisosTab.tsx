@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react'
 
-import { Stack, Group, Button, Text, Badge, Chip } from '@mantine/core'
+import { Stack, Group, Button, Text, Badge, Chip, TextInput } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconCheck, IconX,
   IconShieldCheck, IconClipboardList,
-  IconPrinter,
+  IconPrinter, IconSearch,
 } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
@@ -48,6 +48,7 @@ export function PermisosTab() {
 
   const [exportandoId, setExportandoId] = useState<number | null>(null)
   const [filtroEstado, setFiltroEstado] = useState<string>('pendiente')
+  const [busquedaFolio, setBusquedaFolio] = useState<string>('')
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
@@ -93,11 +94,19 @@ export function PermisosTab() {
     }
   }
 
-  const lista = (permisos as PermisoServidor[]).filter(p =>
-    filtroEstado === 'todos'
+  const lista = (permisos as PermisoServidor[]).filter(p => {
+    const coincideEstado = filtroEstado === 'todos'
       ? true
       : (p.estado as string) === filtroEstado
-  )
+
+    const coincideFolio = busquedaFolio.trim() === ''
+      ? true
+      : (p.folio ?? '').toLowerCase().includes(
+          busquedaFolio.trim().toLowerCase()
+        )
+
+    return coincideEstado && coincideFolio
+  })
 
   const columns: DataTableColumn<PermisoServidor>[] = [
     {
@@ -263,6 +272,15 @@ export function PermisosTab() {
           Nuevo permiso
         </Button>
       </Group>
+
+      <TextInput
+        placeholder="Buscar por folio (ej: PER-2026-00001)"
+        leftSection={<IconSearch size={14} />}
+        value={busquedaFolio}
+        onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
+        style={{ maxWidth: 320 }}
+        mb="xs"
+      />
 
       <Group gap="xs" mb="sm">
         <Text size="sm" fw={500} c="dimmed">Estado:</Text>
