@@ -50,6 +50,8 @@ use App\Contracts\Asistencia\PermisoServiceInterface;
 use App\Services\Asistencia\PermisoService;
 use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Services\Asistencia\VacacionService;
+use App\Contracts\Nomina\NominaServiceInterface;
+use App\Services\Nomina\NominaService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -145,6 +147,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             \App\Contracts\Viatico\ViaticoServiceInterface::class,
             \App\Services\Viatico\ViaticoService::class
+        );
+        $this->app->bind(
+            NominaServiceInterface::class,
+            NominaService::class
         );
     }
 
