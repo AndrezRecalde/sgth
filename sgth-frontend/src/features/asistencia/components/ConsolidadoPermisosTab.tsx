@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   Stack, Group, Button, Text, Badge,
   Select, Grid, Card, Divider,
@@ -11,7 +11,7 @@ import '@mantine/dates/styles.css'
 import {
   IconSearch, IconFileDownload,
   IconFileTypeCsv, IconClipboardList,
-  IconInfoCircle,
+  IconInfoCircle, IconCheck,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useQuery } from '@tanstack/react-query'
@@ -63,6 +63,18 @@ export function ConsolidadoPermisosTab() {
   const handleExportar = async (formato: 'excel' | 'pdf') => {
     if (!canSearch) return
     setExportando(formato)
+
+    const notifId = `export-consolidado-${formato}-${Date.now()}`
+    notifications.show({
+      id:      notifId,
+      title:   `Exportando ${formato.toUpperCase()}...`,
+      message: 'Generando el archivo, espere un momento.',
+      color:   'blue',
+      loading:  true,
+      autoClose: false,
+      withCloseButton: false,
+    })
+
     try {
       const blob = formato === 'excel'
         ? await asistenciaService.consolidado.exportarExcel(params)
@@ -77,16 +89,25 @@ export function ConsolidadoPermisosTab() {
       link.click()
       URL.revokeObjectURL(url)
 
-      notifications.show({
-        title:   'Archivo descargado',
-        message: `Consolidado exportado como ${ext.toUpperCase()}.`,
-        color:   'emerald',
+      notifications.update({
+        id:       notifId,
+        title:    'Archivo descargado',
+        message:  `Consolidado exportado como ${ext.toUpperCase()}.`,
+        color:    'emerald',
+        loading:   false,
+        autoClose: 3000,
+        withCloseButton: true,
+        icon: React.createElement(IconCheck, { size: 16 }),
       })
     } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo exportar el consolidado.',
-        color:   'red',
+      notifications.update({
+        id:       notifId,
+        title:    'Error',
+        message:  'No se pudo exportar el consolidado.',
+        color:    'red',
+        loading:   false,
+        autoClose: 3000,
+        withCloseButton: true,
       })
     } finally {
       setExportando(null)

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 
-import { Stack, Group, Button, Text, Badge, Chip, ActionIcon, Tooltip } from '@mantine/core'
+import { Stack, Group, Button, Text, Badge, Chip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconBeach, IconCheck, IconX, IconPrinter } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -54,6 +54,15 @@ export function VacacionesTab() {
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
+    notifications.show({
+      id:      `export-vacacion-${id}`,
+      title:   'Exportando solicitud...',
+      message: 'Generando el documento PDF, espere.',
+      color:   'blue',
+      loading:  true,
+      autoClose: false,
+      withCloseButton: false,
+    })
     try {
       const blob = await asistenciaService.vacaciones.exportar(id)
       const url  = URL.createObjectURL(blob)
@@ -62,16 +71,25 @@ export function VacacionesTab() {
       link.download = `vacacion_${id}.pdf`
       link.click()
       URL.revokeObjectURL(url)
-      notifications.show({
-        title:   'PDF descargado',
-        message: 'La solicitud fue exportada.',
-        color:   'emerald',
+      notifications.update({
+        id:       `export-vacacion-${id}`,
+        title:    'PDF descargado',
+        message:  'La solicitud fue exportada correctamente.',
+        color:    'emerald',
+        loading:   false,
+        autoClose: 3000,
+        withCloseButton: true,
+        icon: React.createElement(IconCheck, { size: 16 }),
       })
     } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo exportar.',
-        color:   'red',
+      notifications.update({
+        id:       `export-vacacion-${id}`,
+        title:    'Error',
+        message:  'No se pudo exportar la solicitud.',
+        color:    'red',
+        loading:   false,
+        autoClose: 3000,
+        withCloseButton: true,
       })
     } finally {
       setExportandoId(null)
@@ -191,19 +209,15 @@ export function VacacionesTab() {
       title:    '',
       width:    50,
       render: (v) => (
-        <Group gap={4} justify="center">
-          <Tooltip label="Imprimir solicitud">
-            <ActionIcon
-              size="sm"
-              variant="light"
-              color="blue"
-              loading={exportandoId === v.id}
-              onClick={() => handleExportar(v.id)}
-            >
-              <IconPrinter size={14} />
-            </ActionIcon>
-          </Tooltip>
-          <TableActions actions={[
+        <TableActions actions={[
+          {
+            label:   exportandoId === v.id
+              ? 'Exportando...'
+              : 'Imprimir solicitud',
+            icon:    <IconPrinter size={14} />,
+            color:   'blue',
+            onClick: () => handleExportar(v.id),
+          },
           {
             label:    'Aprobar',
             icon:     <IconCheck size={14} />,
@@ -211,7 +225,7 @@ export function VacacionesTab() {
             onClick:  () => actualizar.mutate({
               id: v.id, data: { estado: 'aprobada' },
             }),
-            hidden: v.estado !== 'pendiente',
+            hidden:   v.estado !== 'pendiente',
           },
           {
             label:    'Rechazar',
@@ -223,10 +237,9 @@ export function VacacionesTab() {
                   id: v.id, data: { estado: 'rechazada' },
                 })
             },
-            hidden: v.estado !== 'pendiente',
+            hidden:   v.estado !== 'pendiente',
           },
         ]} />
-        </Group>
       ),
     },
   ]

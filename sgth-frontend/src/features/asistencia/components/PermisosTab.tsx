@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 
-import { Stack, Group, Button, Text, Badge, Chip, ActionIcon, Tooltip } from '@mantine/core'
+import { Stack, Group, Button, Text, Badge, Chip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconCheck, IconX,
@@ -51,6 +51,15 @@ export function PermisosTab() {
 
   const handleExportar = async (id: number) => {
     setExportandoId(id)
+    const notifId = notifications.show({
+      id:      `export-permiso-${id}`,
+      title:   'Exportando permiso...',
+      message: 'Generando el documento PDF, espere.',
+      color:   'blue',
+      loading:  true,
+      autoClose: false,
+      withCloseButton: false,
+    })
     try {
       const blob = await asistenciaService.permisos.exportar(id)
       const url  = URL.createObjectURL(blob)
@@ -59,16 +68,25 @@ export function PermisosTab() {
       link.download = `permiso_${id}.pdf`
       link.click()
       URL.revokeObjectURL(url)
-      notifications.show({
-        title:   'PDF descargado',
-        message: 'El permiso fue exportado correctamente.',
-        color:   'emerald',
+      notifications.update({
+        id:       `export-permiso-${id}`,
+        title:    'PDF descargado',
+        message:  'El permiso fue exportado correctamente.',
+        color:    'emerald',
+        loading:   false,
+        autoClose: 3000,
+        withCloseButton: true,
+        icon: React.createElement(IconCheck, { size: 16 }),
       })
     } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo exportar el permiso.',
-        color:   'red',
+      notifications.update({
+        id:       `export-permiso-${id}`,
+        title:    'Error',
+        message:  'No se pudo exportar el permiso.',
+        color:    'red',
+        loading:   false,
+        autoClose: 3000,
+        withCloseButton: true,
       })
     } finally {
       setExportandoId(null)
@@ -195,32 +213,28 @@ export function PermisosTab() {
       title:    '',
       width:    50,
       render: (p) => (
-        <Group gap={4} justify="center">
-          <Tooltip label="Imprimir permiso">
-            <ActionIcon
-              size="sm"
-              variant="light"
-              color="blue"
-              loading={exportandoId === p.id}
-              onClick={() => handleExportar(p.id)}
-            >
-              <IconPrinter size={14} />
-            </ActionIcon>
-          </Tooltip>
-          <TableActions actions={[
+        <TableActions actions={[
+          {
+            label:   exportandoId === p.id
+              ? 'Exportando...'
+              : 'Imprimir permiso',
+            icon:    <IconPrinter size={14} />,
+            color:   'blue',
+            onClick: () => handleExportar(p.id),
+          },
           {
             label:    'Confirmar recepción',
             icon:     <IconCheck size={14} />,
             color:    'blue',
             onClick:  () => p.folio && confirmar.mutate(p.folio),
-            hidden: (p.estado as string) !== 'pendiente',
+            hidden:   (p.estado as string) !== 'pendiente',
           },
           {
             label:    'Validar Trabajo Social',
             icon:     <IconShieldCheck size={14} />,
             color:    'emerald',
             onClick:  () => validarTs.mutate(p.id),
-            hidden: (p.estado as string) !== 'activo' ||
+            hidden:   (p.estado as string) !== 'activo' ||
               !['enfermedad', 'calamidad'].includes(p.tipo as string),
           },
           {
@@ -231,10 +245,9 @@ export function PermisosTab() {
               if (confirm('¿Anular este permiso?'))
                 anular.mutate(p.id)
             },
-            hidden: (p.estado as string) !== 'pendiente',
+            hidden:   (p.estado as string) !== 'pendiente',
           },
         ]} />
-        </Group>
       ),
     },
   ]
