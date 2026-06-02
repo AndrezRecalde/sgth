@@ -164,10 +164,60 @@ class PeriodoVacacionService
             ->orderByDesc('anio')
             ->get();
 
+        // Calcular desglose por período
+        $periodos->each(function ($periodo) use ($servidorId) {
+            $anioInicio = \Carbon\Carbon::parse(
+                $periodo->fecha_inicio_periodo
+            )->startOfDay();
+            $anioFin = \Carbon\Carbon::parse(
+                $periodo->fecha_fin_periodo
+            )->endOfDay();
+
+            // Días por vacaciones aprobadas en ese período
+            $diasVacaciones = \App\Models\Asistencia\Vacacion
+                ::where('servidor_id', $servidorId)
+                ->whereIn('estado', ['aprobada', 'gozada'])
+                ->whereBetween('fecha_inicio', [$anioInicio, $anioFin])
+                ->whereIn('motivo', [
+                    'vacaciones_anuales',
+                    'permiso_cargo_vacaciones',
+                ])
+                ->sum('dias_solicitados');
+
+            // Días por permisos personales en ese período (horas/8)
+            $minutosPermisos = \App\Models\Asistencia\PermisoServidor
+                ::where('servidor_id', $servidorId)
+                ->where('tipo', 'personal')
+                ->whereNotIn('estado', ['anulado', 'pendiente'])
+                ->whereBetween('fecha', [$anioInicio, $anioFin])
+                ->get()
+                ->sum(function ($p) {
+                    $hi = substr((string)$p->getRawOriginal('hora_inicio'), 0, 5);
+                    $hf = substr((string)$p->getRawOriginal('hora_fin'), 0, 5);
+                    [$hI, $mI] = array_map('intval', explode(':', $hi));
+                    [$hF, $mF] = array_map('intval', explode(':', $hf));
+                    return ($hF * 60 + $mF) - ($hI * 60 + $mI);
+                });
+
+            $diasPermisos = round($minutosPermisos / 480, 4);
+
+            // Asignar atributos dinámicos al período
+            $periodo->dias_vacaciones_aprobadas = round((float)$diasVacaciones, 2);
+            $periodo->dias_permisos_personales  = $diasPermisos;
+        });
+
+        $saldoTotal = $this->saldoTotal($servidorId);
+
         return [
-            'periodos'        => $periodos,
-            'saldo_total'     => $this->saldoTotal($servidorId),
-            'alerta_limite'   => $this->saldoTotal($servidorId) >= 45,
+            'periodos'                   => $periodos,
+            'saldo_total'                => $saldoTotal,
+            'alerta_limite'              => $saldoTotal >= 45,
+            'total_vacaciones_aprobadas' => round(
+                $periodos->sum('dias_vacaciones_aprobadas'), 2
+            ),
+            'total_permisos_personales'  => round(
+                $periodos->sum('dias_permisos_personales'), 4
+            ),
         ];
     }
 }

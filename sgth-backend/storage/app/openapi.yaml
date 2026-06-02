@@ -12189,12 +12189,20 @@
                                                 },
                                                 "alerta_limite": {
                                                     "type": "boolean"
+                                                },
+                                                "total_vacaciones_aprobadas": {
+                                                    "type": "number"
+                                                },
+                                                "total_permisos_personales": {
+                                                    "type": "number"
                                                 }
                                             },
                                             "required": [
                                                 "periodos",
                                                 "saldo_total",
-                                                "alerta_limite"
+                                                "alerta_limite",
+                                                "total_vacaciones_aprobadas",
+                                                "total_permisos_personales"
                                             ]
                                         },
                                         "meta": {
