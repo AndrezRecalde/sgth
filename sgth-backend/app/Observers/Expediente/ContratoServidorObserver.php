@@ -2,32 +2,33 @@
 namespace App\Observers\Expediente;
 
 use App\Models\Expediente\ContratoServidor;
-use App\Models\Expediente\Servidor;
 use Illuminate\Support\Facades\Log;
 
 class ContratoServidorObserver
 {
     /**
-     * Al crear un contrato nuevo.
+     * Antes de crear: terminar contratos vigentes anteriores.
      */
     public function creating(ContratoServidor $contrato): void
     {
-        // Si el nuevo contrato es vigente, terminar el anterior
         if ($this->esVigente($contrato)) {
             $this->terminarContratosVigentes(
                 $contrato->servidor_id,
-                $contrato->id ?? null
+                null
             );
         }
     }
 
     /**
-     * Al actualizar un contrato existente.
+     * Antes de actualizar: si cambia a vigente,
+     * terminar los demás.
      */
     public function updating(ContratoServidor $contrato): void
     {
-        // Si cambió a vigente, terminar los demás
-        if ($contrato->isDirty('estado') && $this->esVigente($contrato)) {
+        if (
+            $contrato->isDirty('estado') &&
+            $this->esVigente($contrato)
+        ) {
             $this->terminarContratosVigentes(
                 $contrato->servidor_id,
                 $contrato->id
@@ -35,59 +36,7 @@ class ContratoServidorObserver
         }
     }
 
-    /**
-     * Después de crear — sincronizar servidor.
-     */
-    public function created(ContratoServidor $contrato): void
-    {
-        if ($this->esVigente($contrato)) {
-            $this->sincronizarServidor($contrato);
-        }
-    }
-
-    /**
-     * Después de actualizar — sincronizar servidor.
-     */
-    public function updated(ContratoServidor $contrato): void
-    {
-        if ($this->esVigente($contrato)) {
-            $this->sincronizarServidor($contrato);
-        }
-    }
-
-    /**
-     * Al eliminar el contrato vigente buscar el
-     * siguiente contrato más reciente y actualizar.
-     */
-    public function deleted(ContratoServidor $contrato): void
-    {
-        $contratoAnterior = ContratoServidor::where('servidor_id', $contrato->servidor_id)
-            ->where('id', '!=', $contrato->id)
-            ->whereNull('deleted_at')
-            ->orderBy('fecha_inicio', 'desc')
-            ->first();
-
-        if ($contratoAnterior) {
-            $this->sincronizarServidor($contratoAnterior);
-        } else {
-            try {
-                $servidor = Servidor::find($contrato->servidor_id);
-                if ($servidor) {
-                    $servidor->update([
-                        'unidad_administrativa_id' => null,
-                        'puesto_id'                => null,
-                        'codigo_marcacion'         => null,
-                        'puede_marcar'             => false,
-                        'tipo_nombramiento'        => null,
-                    ]);
-                }
-            } catch (\Exception $e) {
-                Log::error("Error limpiando servidor tras eliminar contrato: " . $e->getMessage());
-            }
-        }
-    }
-
-    // ── Helpers ─────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────
 
     private function esVigente(ContratoServidor $contrato): bool
     {
@@ -109,48 +58,13 @@ class ContratoServidorObserver
             $query->where('id', '!=', $excluirId);
         }
 
-        $query->update(['estado' => 'terminado']);
-    }
+        $count = $query->count();
 
-    private function sincronizarServidor(
-        ContratoServidor $contrato
-    ): void {
-        try {
-            $servidor = Servidor::find($contrato->servidor_id);
-            if (!$servidor) return;
-
-            $contrato->loadMissing('puesto');
-
-            $datos = [
-                'unidad_administrativa_id' => $contrato->unidad_administrativa_id,
-                'puesto_id'                => $contrato->puesto_id,
-                'codigo_marcacion'         => $contrato->codigo_marcacion ?? null,
-                'puede_marcar'             => true,
-            ];
-
-            // Sync tipo_nombramiento desde el puesto del contrato
-            if ($contrato->puesto) {
-                $tipoNombramiento =
-                    $contrato->puesto->tipo_nombramiento
-                    ?? $contrato->puesto->nombre
-                    ?? null;
-
-                if ($tipoNombramiento) {
-                    $datos['tipo_nombramiento'] = $tipoNombramiento;
-                }
-            }
-
-            $servidor->update($datos);
-
+        if ($count > 0) {
+            $query->update(['estado' => 'terminado']);
             Log::info(
-                "Servidor {$servidor->id} sincronizado " .
-                "desde contrato {$contrato->id}",
-                $datos
-            );
-        } catch (\Exception $e) {
-            Log::error(
-                "Error sincronizando servidor desde contrato: " .
-                $e->getMessage()
+                "Terminados {$count} contratos vigentes " .
+                "del servidor {$servidorId} al activar nuevo contrato."
             );
         }
     }

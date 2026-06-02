@@ -29,8 +29,12 @@ class ContratoServidorService
 
         $contrato = ContratoServidor::create($data);
 
-        // Sincronizar régimen laboral en el servidor
-        $this->sincronizarRegimenServidor($servidorId, $data);
+        // Sincronizar régimen laboral en el servidor si es vigente
+        $estado = $data['estado'] ?? $contrato->estado;
+        $estadoVal = $estado instanceof \App\Enums\EstadoContrato ? $estado->value : (string)$estado;
+        if ($estadoVal === 'vigente') {
+            $this->sincronizarRegimenServidor($servidorId, $data, $contrato);
+        }
 
         return $contrato->load(['puesto.cargo', 'unidadAdministrativa']);
     }
@@ -50,9 +54,13 @@ class ContratoServidorService
         $contrato->update($data);
 
         // Sincronizar régimen laboral si el contrato es vigente
-        if (($data['estado'] ?? $contrato->estado) === 'vigente') {
+        $estado = $data['estado'] ?? $contrato->estado;
+        $estadoVal = $estado instanceof \App\Enums\EstadoContrato ? $estado->value : (string)$estado;
+        if ($estadoVal === 'vigente') {
             $this->sincronizarRegimenServidor(
-                $contrato->servidor_id, $data
+                $contrato->servidor_id,
+                array_merge($contrato->toArray(), $data),
+                $contrato
             );
         }
 
@@ -70,14 +78,15 @@ class ContratoServidorService
 
     private function sincronizarRegimenServidor(
         int $servidorId,
-        array $data
+        array $data,
+        ?ContratoServidor $contrato = null
     ): void {
         $tipoNombramiento = $data['tipo_nombramiento'] ?? null;
         if (!$tipoNombramiento) return;
 
         $tipoNombramientoVal = $tipoNombramiento instanceof \UnitEnum
             ? $tipoNombramiento->value
-            : $tipoNombramiento;
+            : (string)$tipoNombramiento;
 
         $regimen = match($tipoNombramientoVal) {
             'codigo_trabajo',
@@ -85,9 +94,12 @@ class ContratoServidorService
             default                   => 'losep',
         };
 
-        $update = ['regimen_laboral' => $regimen];
+        $update = [
+            'regimen_laboral'   => $regimen,
+            'tipo_nombramiento' => $tipoNombramientoVal,
+        ];
 
-        // Sincronizar puesto y unidad si vienen en el contrato
+        // Sync puesto y unidad
         if (!empty($data['puesto_id'])) {
             $update['puesto_id'] = $data['puesto_id'];
         }
@@ -95,6 +107,16 @@ class ContratoServidorService
             $update['unidad_administrativa_id'] =
                 $data['unidad_administrativa_id'];
         }
+
+        // Sync codigo_marcacion desde el contrato
+        if (!empty($data['codigo_marcacion'])) {
+            $update['codigo_marcacion'] = $data['codigo_marcacion'];
+        } elseif ($contrato?->codigo_marcacion) {
+            $update['codigo_marcacion'] = $contrato->codigo_marcacion;
+        }
+
+        // puede_marcar: true por defecto al tener contrato vigente
+        $update['puede_marcar'] = true;
 
         \App\Models\Expediente\Servidor::where('id', $servidorId)
             ->update($update);
