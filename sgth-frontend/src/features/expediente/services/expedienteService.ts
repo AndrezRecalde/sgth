@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import type { CargaFamiliarFormData } from '../schemas/cargaFamiliar.schema'
 import type {
   ApiResponse,
   Servidor,
@@ -103,7 +104,7 @@ export const expedienteService = {
       >(`/expediente/servidores/${servidorId}/cargas-familiares`)
       .then((r) => r.data.datos ?? []),
 
-  crearCargaFamiliar: (servidorId: number, data: Record<string, unknown>) =>
+  crearCargaFamiliar: (servidorId: number, data: CargaFamiliarFormData) =>
     api
       .post<
         ApiResponse<CargaFamiliar>
@@ -113,7 +114,7 @@ export const expedienteService = {
   editarCargaFamiliar: (
     servidorId: number,
     id: number,
-    data: Record<string, unknown>,
+    data: CargaFamiliarFormData,
   ) =>
     api
       .put<

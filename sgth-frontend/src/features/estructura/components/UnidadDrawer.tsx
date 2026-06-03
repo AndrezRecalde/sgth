@@ -83,7 +83,7 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
                   <Stack gap="xs">
                     {hijos.map(hijo => (
                       <Group
-                        key={hijo.id as unknown as number}
+                        key={Number(hijo.id)}
                         gap="xs"
                         p="xs"
                         style={{

@@ -18,7 +18,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
     })
 
   const crear = useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
+    mutationFn: (data: Parameters<typeof expedienteService.crearCargaFamiliar>[1]) =>
       expedienteService.crearCargaFamiliar(servidorId, data),
     onSuccess: () => {
       notifications.show({
@@ -32,7 +32,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
   })
 
   const editar = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof expedienteService.editarCargaFamiliar>[2] }) =>
       expedienteService.editarCargaFamiliar(servidorId, id, data),
     onSuccess: () => {
       notifications.show({

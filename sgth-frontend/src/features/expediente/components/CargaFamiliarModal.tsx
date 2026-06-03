@@ -118,9 +118,9 @@ export function CargaFamiliarModal({
     const promise = initialValues
       ? editar.mutateAsync({
           id: initialValues.id,
-          data: payload as Record<string, unknown>,
+          data: payload,
         })
-      : crear.mutateAsync(payload as Record<string, unknown>);
+      : crear.mutateAsync(payload);
 
     promise
       .then(() => {
