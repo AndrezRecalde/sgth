@@ -3,7 +3,6 @@
   flex-direction: column;
   height: 100%;
   background-color: var(--mantine-color-body);
-  border-right: 1px solid var(--mantine-color-default-border);
 }
 
 .userRow {
