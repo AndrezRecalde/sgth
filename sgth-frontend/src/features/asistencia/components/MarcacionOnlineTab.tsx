@@ -56,7 +56,6 @@ export function MarcacionOnlineTab() {
   });
 
   const obtenerUbicacion = () => {
-    setCargandoUbicacion(true);
     if (!navigator.geolocation) {
       setTimeout(() => setCargandoUbicacion(false), 0);
       return;
@@ -72,6 +71,11 @@ export function MarcacionOnlineTab() {
       () => setCargandoUbicacion(false),
       { enableHighAccuracy: true }
     );
+  };
+
+  const handleReintentar = () => {
+    setCargandoUbicacion(true);
+    obtenerUbicacion();
   };
 
   useEffect(() => {
@@ -172,7 +176,7 @@ export function MarcacionOnlineTab() {
                   size="compact-xs"
                   variant="subtle"
                   color="blue"
-                  onClick={obtenerUbicacion}
+                  onClick={handleReintentar}
                 >
                   Reintentar
                 </Button>
