@@ -203,6 +203,7 @@ export function Topbar({
               p={4}
             >
               <Menu.Item
+                closeMenuOnClick={false}
                 leftSection={
                   colorScheme === "dark" ? (
                     <IconSun size={20} />
