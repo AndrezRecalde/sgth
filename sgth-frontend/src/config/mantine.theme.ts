@@ -1,11 +1,17 @@
 import { createTheme, rem } from "@mantine/core";
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
 
 export const theme = createTheme({
   primaryColor: "emerald",
   primaryShade: 6,
-  fontFamily: "var(--font-poppins), sans-serif",
+  fontFamily: poppins.style.fontFamily,
   headings: {
-    fontFamily: "var(--font-poppins), sans-serif",
+    fontFamily: poppins.style.fontFamily,
   },
   defaultRadius: "md",
   colors: {
