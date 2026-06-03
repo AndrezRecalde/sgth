@@ -5,7 +5,6 @@ import {
   Burger,
   ActionIcon,
   useMantineColorScheme,
-  Box,
   Avatar,
   Menu,
   Text,
@@ -22,7 +21,6 @@ import {
   IconSun,
   IconMoon,
   IconBell,
-  IconSettings,
   IconLogout,
   IconCamera,
 } from "@tabler/icons-react";
@@ -59,7 +57,6 @@ export function Topbar({
       .map((w: string) => w[0] ?? "")
       .join("")
       .toUpperCase() || "US";
-  const role = usuario?.roles?.[0] || "Usuario";
 
   const handleLogout = (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -164,7 +161,9 @@ export function Topbar({
                 position="bottom-end"
                 color="var(--mantine-color-body)"
                 withBorder
-                label={<IconCamera size={14} color="var(--mantine-color-text)" />}
+                label={
+                  <IconCamera size={14} color="var(--mantine-color-text)" />
+                }
               >
                 <Avatar
                   color="emerald"
