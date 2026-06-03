@@ -92,11 +92,11 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
       if (isEditing) {
         await expedienteService.editarEnfermedad(
           servidorId, initialValues!.id,
-          payload as Record<string, unknown>
+          payload
         )
       } else {
         await expedienteService.crearEnfermedad(
-          servidorId, payload as Record<string, unknown>
+          servidorId, payload
         )
       }
       qc.invalidateQueries({ queryKey: ['enfermedades', servidorId] })
@@ -160,3 +160,4 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
     </Modal>
   )
 }
+

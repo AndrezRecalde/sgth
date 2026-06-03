@@ -78,11 +78,11 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
       if (isEditing) {
         await expedienteService.editarDiscapacidad(
           servidorId, initialValues!.id,
-          values as Record<string, unknown>
+          values
         )
       } else {
         await expedienteService.crearDiscapacidad(
-          servidorId, values as Record<string, unknown>
+          servidorId, values
         )
       }
       qc.invalidateQueries({ queryKey: ['discapacidades', servidorId] })
@@ -145,3 +145,4 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
     </Modal>
   )
 }
+

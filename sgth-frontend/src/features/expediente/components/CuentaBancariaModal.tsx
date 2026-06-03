@@ -146,7 +146,7 @@ export function CuentaBancariaModal({
           .editar(
             servidorId,
             Number(initialValues!.id),
-            values as Record<string, unknown>,
+            values,
           )
           .then(() => {
             qc.invalidateQueries({
@@ -312,3 +312,4 @@ export function CuentaBancariaModal({
     </Modal>
   );
 }
+

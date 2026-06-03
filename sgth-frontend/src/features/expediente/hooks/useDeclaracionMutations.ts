@@ -18,7 +18,7 @@ export function useDeclaracionMutations(servidorId: number) {
     })
 
   const crear = useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
+    mutationFn: (data: Parameters<typeof expedienteService.crearDeclaracion>[1]) =>
       expedienteService.crearDeclaracion(servidorId, data),
     onSuccess: () => {
       notifications.show({

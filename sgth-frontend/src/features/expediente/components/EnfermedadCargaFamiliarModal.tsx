@@ -69,7 +69,7 @@ export function EnfermedadCargaFamiliarModal({
     try {
       await expedienteService.crearEnfermedadCarga(
         cargaId,
-        values as Record<string, unknown>
+        values
       )
       notifications.show({
         title:   'Enfermedad registrada',
@@ -149,3 +149,4 @@ export function EnfermedadCargaFamiliarModal({
     </Modal>
   )
 }
+

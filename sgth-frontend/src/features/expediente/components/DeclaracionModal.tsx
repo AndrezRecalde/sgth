@@ -113,7 +113,7 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
     const mutation = isEditing
       ? expedienteService.editarDeclaracion(
           servidorId, initialValues!.id,
-          values as Record<string, unknown>
+          values
         ).then(() => {
           qc.invalidateQueries({
             queryKey: ["declaraciones", servidorId]
@@ -126,7 +126,7 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
           });
           handleClose();
         })
-      : crear.mutateAsync(values as Record<string, unknown>)
+      : crear.mutateAsync(values)
           .then(() => { reset(); onClose(); });
 
     mutation.catch(() => {});
@@ -206,4 +206,5 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
     </Modal>
   );
 }
+
 

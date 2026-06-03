@@ -71,7 +71,7 @@ export function DiscapacidadCargaFamiliarModal({
     try {
       await expedienteService.crearDiscapacidadCarga(
         cargaId,
-        values as Record<string, unknown>
+        values
       )
       notifications.show({
         title:   'Discapacidad registrada',
@@ -161,3 +161,4 @@ export function DiscapacidadCargaFamiliarModal({
     </Modal>
   )
 }
+

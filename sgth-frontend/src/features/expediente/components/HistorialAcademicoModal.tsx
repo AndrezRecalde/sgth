@@ -95,8 +95,8 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
       codigo_senescyt: values.codigo_senescyt || null,
     }
     const promise = initialValues
-      ? editar.mutateAsync({ id: initialValues.id, data: payload as Record<string, unknown> })
-      : crear.mutateAsync(payload as Record<string, unknown>)
+      ? editar.mutateAsync({ id: initialValues.id, data: payload })
+      : crear.mutateAsync(payload)
 
     promise
       .then(() => { reset(); onClose() })
@@ -176,3 +176,4 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
     </Modal>
   )
 }
+

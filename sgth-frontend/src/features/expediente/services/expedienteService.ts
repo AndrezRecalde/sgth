@@ -1,5 +1,9 @@
 import api from "@/lib/axios";
 import type { CargaFamiliarFormData } from '../schemas/cargaFamiliar.schema'
+import type { DeclaracionFormData } from '../schemas/declaracion.schema'
+import type { DiscapacidadFormData } from '../schemas/discapacidad.schema'
+import type { EnfermedadFormData } from '../schemas/enfermedad.schema'
+import type { HistorialAcademicoFormData } from '../schemas/historialAcademico.schema'
 import type {
   ApiResponse,
   Servidor,
@@ -47,7 +51,7 @@ export const expedienteService = {
       .post<ApiResponse<Servidor>>("/expediente/servidores/basico", data)
       .then((r) => r.data.datos),
 
-  crear: (data: ServidorBasicoFormData | Record<string, unknown>) =>
+  crear: (data: ServidorBasicoFormData) =>
     api
       .post<ApiResponse<Servidor>>("/expediente/servidores/basico", data)
       .then((r) => r.data.datos),
@@ -70,7 +74,7 @@ export const expedienteService = {
 
   crearHistorialAcademico: (
     servidorId: number,
-    data: FormData | Record<string, unknown>,
+    data: FormData | HistorialAcademicoFormData,
   ) =>
     api
       .post<
@@ -81,7 +85,7 @@ export const expedienteService = {
   editarHistorialAcademico: (
     servidorId: number,
     id: number,
-    data: Record<string, unknown>,
+    data: FormData | HistorialAcademicoFormData,
   ) =>
     api
       .put<
@@ -137,7 +141,7 @@ export const expedienteService = {
       >(`/expediente/servidores/${servidorId}/declaraciones-juramentadas`)
       .then((r) => r.data.datos ?? []),
 
-  crearDeclaracion: (servidorId: number, data: Record<string, unknown>) =>
+  crearDeclaracion: (servidorId: number, data: DeclaracionFormData) =>
     api
       .post<
         ApiResponse<DeclaracionJuramentada>
@@ -147,7 +151,7 @@ export const expedienteService = {
   editarDeclaracion: (
     servidorId: number,
     id: number,
-    data: Record<string, unknown>,
+    data: DeclaracionFormData,
   ) =>
     api
       .put<
@@ -178,7 +182,7 @@ export const expedienteService = {
       >(`/expediente/servidores/${servidorId}/discapacidades`)
       .then((r) => r.data.datos ?? []),
 
-  crearDiscapacidad: (servidorId: number, data: Record<string, unknown>) =>
+  crearDiscapacidad: (servidorId: number, data: DiscapacidadFormData) =>
     api
       .post<
         ApiResponse<DiscapacidadServidor>
@@ -188,7 +192,7 @@ export const expedienteService = {
   editarDiscapacidad: (
     servidorId: number,
     id: number,
-    data: Record<string, unknown>,
+    data: DiscapacidadFormData,
   ) =>
     api
       .put<
@@ -211,7 +215,7 @@ export const expedienteService = {
       >(`/expediente/servidores/${servidorId}/enfermedades`)
       .then((r) => r.data.datos ?? []),
 
-  crearEnfermedad: (servidorId: number, data: Record<string, unknown>) =>
+  crearEnfermedad: (servidorId: number, data: EnfermedadFormData) =>
     api
       .post<
         ApiResponse<EnfermedadCatastroficaServidor>
@@ -221,7 +225,7 @@ export const expedienteService = {
   editarEnfermedad: (
     servidorId: number,
     id: number,
-    data: Record<string, unknown>,
+    data: EnfermedadFormData,
   ) =>
     api
       .put<
@@ -267,7 +271,7 @@ export const expedienteService = {
       .then((r) => r.data),
 
   // ── Sub-condiciones de carga familiar ──────────
-  crearDiscapacidadCarga: (cargaId: number, data: Record<string, unknown>) =>
+  crearDiscapacidadCarga: (cargaId: number, data: Omit<DiscapacidadFormData, 'numero_carnet_conadis'> & { numero_carnet_conadis?: string | null }) =>
     api
       .post<
         ApiResponse<DiscapacidadCargaFamiliar>
@@ -281,7 +285,7 @@ export const expedienteService = {
       >(`/expediente/cargas-familiares/${cargaId}/discapacidades/${id}`)
       .then((r) => r.data),
 
-  crearEnfermedadCarga: (cargaId: number, data: Record<string, unknown>) =>
+  crearEnfermedadCarga: (cargaId: number, data: Omit<EnfermedadFormData, 'codigo_cie10'> & { codigo_cie10?: string | null }) =>
     api
       .post<
         ApiResponse<EnfermedadCatastroficaCargaFamiliar>

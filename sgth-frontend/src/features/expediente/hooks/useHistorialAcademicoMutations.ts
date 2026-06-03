@@ -18,7 +18,7 @@ export function useHistorialAcademicoMutations(servidorId: number) {
     })
 
   const crear = useMutation({
-    mutationFn: (data: FormData | Record<string, unknown>) =>
+    mutationFn: (data: Parameters<typeof expedienteService.crearHistorialAcademico>[1]) =>
       expedienteService.crearHistorialAcademico(servidorId, data),
     onSuccess: () => {
       notifications.show({
@@ -32,7 +32,7 @@ export function useHistorialAcademicoMutations(servidorId: number) {
   })
 
   const editar = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof expedienteService.editarHistorialAcademico>[2] }) =>
       expedienteService.editarHistorialAcademico(servidorId, id, data),
     onSuccess: () => {
       notifications.show({
