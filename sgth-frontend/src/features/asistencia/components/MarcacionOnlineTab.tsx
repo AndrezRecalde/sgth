@@ -33,7 +33,10 @@ import { useAuthStore } from "@/store/auth.store";
 
 export function MarcacionOnlineTab() {
   const { usuario } = useAuthStore();
-  const [ubicacion, setUbicacion] = useState<{ lat: number; lon: number } | null>(null);
+  const [ubicacion, setUbicacion] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
   const [cargandoUbicacion, setCargandoUbicacion] = useState(true);
   const [registrando, setRegistrando] = useState(false);
 
@@ -52,7 +55,8 @@ export function MarcacionOnlineTab() {
     refetchInterval: 60_000,
   });
 
-  useEffect(() => {
+  const obtenerUbicacion = () => {
+    setCargandoUbicacion(true);
     if (!navigator.geolocation) {
       setTimeout(() => setCargandoUbicacion(false), 0);
       return;
@@ -66,7 +70,12 @@ export function MarcacionOnlineTab() {
         setCargandoUbicacion(false);
       },
       () => setCargandoUbicacion(false),
+      { enableHighAccuracy: true }
     );
+  };
+
+  useEffect(() => {
+    obtenerUbicacion();
   }, []);
 
   const registrar = async (checktype: "I" | "O", label: string) => {
@@ -98,9 +107,15 @@ export function MarcacionOnlineTab() {
 
   if (!cedula || !puedeMarcar) {
     return (
-      <Alert icon={<IconInfoCircle size={16} />} color="orange" variant="light" radius="md">
+      <Alert
+        icon={<IconInfoCircle size={16} />}
+        color="orange"
+        variant="light"
+        radius="md"
+      >
         <Text size="sm">
-          Tu usuario no tiene habilitada la marcación biométrica. Contacta a Talento Humano para habilitarla en tu contrato.
+          Tu usuario no tiene habilitada la marcación biométrica. Contacta a
+          Talento Humano para habilitarla en tu contrato.
         </Text>
       </Alert>
     );
@@ -125,16 +140,26 @@ export function MarcacionOnlineTab() {
               <IconInfoCircle size={18} />
             </ThemeIcon>
             <Text size="xs" c="dimmed" lh={1.3} maw={250}>
-              Registra tu asistencia desde territorio con conexión a internet y GPS activo.
+              Registra tu asistencia desde territorio con conexión a internet y
+              GPS activo.
             </Text>
           </Group>
-          
+
           <Stack gap={4} align="flex-end">
             {cargandoUbicacion ? (
-              <Badge variant="dot" color="gray" size="sm">Ubicando...</Badge>
+              <Badge variant="dot" color="gray" size="sm">
+                Ubicando...
+              </Badge>
             ) : ubicacion ? (
               <>
-                <Badge variant="dot" color="emerald" size="sm" leftSection={<IconMapPin size={10} style={{ marginLeft: 6 }} />}>
+                <Badge
+                  variant="light"
+                  color="emerald"
+                  size="sm"
+                  leftSection={
+                    <IconMapPin size={10} style={{ marginLeft: 6 }} />
+                  }
+                >
                   GPS Activo
                 </Badge>
                 <Text size="10px" c="dimmed" fw={500}>
@@ -142,9 +167,26 @@ export function MarcacionOnlineTab() {
                 </Text>
               </>
             ) : (
-              <Badge variant="dot" color="red" size="sm" leftSection={<IconMapPinOff size={10} style={{ marginLeft: 6 }} />}>
-                GPS Inactivo
-              </Badge>
+              <Group gap="xs">
+                <Button
+                  size="compact-xs"
+                  variant="subtle"
+                  color="blue"
+                  onClick={obtenerUbicacion}
+                >
+                  Reintentar
+                </Button>
+                <Badge
+                  variant="dot"
+                  color="red"
+                  size="sm"
+                  leftSection={
+                    <IconMapPinOff size={10} style={{ marginLeft: 6 }} />
+                  }
+                >
+                  GPS Inactivo
+                </Badge>
+              </Group>
             )}
           </Stack>
         </Group>
@@ -155,49 +197,93 @@ export function MarcacionOnlineTab() {
         <Grid gap="xl">
           {/* Columna Izquierda: Línea de tiempo (Timeline) */}
           <Grid.Col span={{ base: 12, sm: 5 }}>
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: 0.5 }} mb="xl">
+            <Text
+              size="xs"
+              fw={600}
+              c="dimmed"
+              tt="uppercase"
+              style={{ letterSpacing: 0.5 }}
+              mb="xl"
+            >
               Progreso de hoy
             </Text>
-            
+
             {cargandoEstado ? (
               <Center py="xl">
                 <Loader size="sm" color="emerald" />
               </Center>
             ) : (
-              <Timeline active={activeStep} bulletSize={24} lineWidth={2} color="emerald">
-                <Timeline.Item 
-                  bullet={estadoHoy?.Entrada ? <IconCheck size={14} /> : <IconClock size={14} />} 
+              <Timeline
+                active={activeStep}
+                bulletSize={24}
+                lineWidth={2}
+                color="emerald"
+              >
+                <Timeline.Item
+                  bullet={
+                    estadoHoy?.Entrada ? (
+                      <IconCheck size={14} />
+                    ) : (
+                      <IconClock size={14} />
+                    )
+                  }
                   title="Entrada"
                 >
                   <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.Entrada ? estadoHoy.Entrada.substring(0, 5) : "--:--"}
+                    {estadoHoy?.Entrada
+                      ? estadoHoy.Entrada.substring(0, 5)
+                      : "--:--"}
                   </Text>
                 </Timeline.Item>
 
-                <Timeline.Item 
-                  bullet={estadoHoy?.AlmuerzoSalida ? <IconCheck size={14} /> : <IconClock size={14} />} 
+                <Timeline.Item
+                  bullet={
+                    estadoHoy?.AlmuerzoSalida ? (
+                      <IconCheck size={14} />
+                    ) : (
+                      <IconClock size={14} />
+                    )
+                  }
                   title="Salida almuerzo"
                 >
                   <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.AlmuerzoSalida ? estadoHoy.AlmuerzoSalida.substring(0, 5) : "--:--"}
+                    {estadoHoy?.AlmuerzoSalida
+                      ? estadoHoy.AlmuerzoSalida.substring(0, 5)
+                      : "--:--"}
                   </Text>
                 </Timeline.Item>
 
-                <Timeline.Item 
-                  bullet={estadoHoy?.AlmuerzoRetorno ? <IconCheck size={14} /> : <IconClock size={14} />} 
+                <Timeline.Item
+                  bullet={
+                    estadoHoy?.AlmuerzoRetorno ? (
+                      <IconCheck size={14} />
+                    ) : (
+                      <IconClock size={14} />
+                    )
+                  }
                   title="Retorno almuerzo"
                 >
                   <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.AlmuerzoRetorno ? estadoHoy.AlmuerzoRetorno.substring(0, 5) : "--:--"}
+                    {estadoHoy?.AlmuerzoRetorno
+                      ? estadoHoy.AlmuerzoRetorno.substring(0, 5)
+                      : "--:--"}
                   </Text>
                 </Timeline.Item>
 
-                <Timeline.Item 
-                  bullet={estadoHoy?.Salida ? <IconCheck size={14} /> : <IconClock size={14} />} 
+                <Timeline.Item
+                  bullet={
+                    estadoHoy?.Salida ? (
+                      <IconCheck size={14} />
+                    ) : (
+                      <IconClock size={14} />
+                    )
+                  }
                   title="Salida final"
                 >
                   <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.Salida ? estadoHoy.Salida.substring(0, 5) : "--:--"}
+                    {estadoHoy?.Salida
+                      ? estadoHoy.Salida.substring(0, 5)
+                      : "--:--"}
                   </Text>
                 </Timeline.Item>
               </Timeline>
@@ -206,7 +292,14 @@ export function MarcacionOnlineTab() {
 
           {/* Columna Derecha: Botones de Acción */}
           <Grid.Col span={{ base: 12, sm: 7 }}>
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: 0.5 }} mb="md">
+            <Text
+              size="xs"
+              fw={600}
+              c="dimmed"
+              tt="uppercase"
+              style={{ letterSpacing: 0.5 }}
+              mb="md"
+            >
               Registrar Acción
             </Text>
 
@@ -225,11 +318,13 @@ export function MarcacionOnlineTab() {
                 >
                   <Stack gap={4} align="center" justify="center">
                     <IconLogin size={28} stroke={1.5} />
-                    <Text size="xs" fw={600}>Entrada</Text>
+                    <Text size="xs" fw={600}>
+                      Entrada
+                    </Text>
                   </Stack>
                 </Button>
               </Grid.Col>
-              
+
               <Grid.Col span={6}>
                 <Button
                   h={100}
@@ -244,7 +339,9 @@ export function MarcacionOnlineTab() {
                 >
                   <Stack gap={4} align="center" justify="center">
                     <IconLogout size={28} stroke={1.5} />
-                    <Text size="xs" fw={600}>Salida</Text>
+                    <Text size="xs" fw={600}>
+                      Salida
+                    </Text>
                   </Stack>
                 </Button>
               </Grid.Col>
@@ -263,7 +360,11 @@ export function MarcacionOnlineTab() {
                 >
                   <Stack gap={4} align="center" justify="center">
                     <IconSoup size={28} stroke={1.5} />
-                    <Text size="xs" fw={600} ta="center" lh={1.1}>Salida<br/>Almuerzo</Text>
+                    <Text size="xs" fw={600} ta="center" lh={1.1}>
+                      Salida
+                      <br />
+                      Almuerzo
+                    </Text>
                   </Stack>
                 </Button>
               </Grid.Col>
@@ -282,7 +383,11 @@ export function MarcacionOnlineTab() {
                 >
                   <Stack gap={4} align="center" justify="center">
                     <IconSoup size={28} stroke={1.5} />
-                    <Text size="xs" fw={600} ta="center" lh={1.1}>Retorno<br/>Almuerzo</Text>
+                    <Text size="xs" fw={600} ta="center" lh={1.1}>
+                      Retorno
+                      <br />
+                      Almuerzo
+                    </Text>
                   </Stack>
                 </Button>
               </Grid.Col>
