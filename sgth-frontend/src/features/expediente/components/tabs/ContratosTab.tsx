@@ -51,7 +51,7 @@ export function ContratosTab({ servidorId }: Props) {
                 {c.fecha_fin ? ` hasta ${c.fecha_fin}` : ''}
               </Text>
               <Text size="xs" fw={500}>
-                ${(c as any).remuneracion?.toFixed(2) ?? '-'}
+                ${Number(c.remuneracion ?? 0).toFixed(2)}
               </Text>
             </Stack>
             <ActionIcon variant="subtle" color="red"

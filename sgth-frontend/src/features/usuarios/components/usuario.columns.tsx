@@ -55,7 +55,7 @@ export const getUsuarioColumns = (
     title: 'Roles',
     render: ({ roles }) => (
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-        {((roles as unknown as string[]) || []).map(r => (
+        {(Array.isArray(roles) ? roles : []).map(r => (
           <Badge key={r} size="xs" variant="light" color="blue">
             {ROL_LABELS[r] ?? r}
           </Badge>

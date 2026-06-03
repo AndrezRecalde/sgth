@@ -245,7 +245,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                       const id = v ? Number(v) : undefined;
                       field.onChange(id);
                       // Limpiar puesto al cambiar unidad
-                      setValue("puesto_id", undefined as unknown as number);
+                      setValue("puesto_id", 0);
                       setValue("remuneracion", null);
                     }}
                     error={errors.unidad_administrativa_id?.message}

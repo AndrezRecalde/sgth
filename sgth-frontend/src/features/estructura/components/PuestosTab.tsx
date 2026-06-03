@@ -35,7 +35,7 @@ export function PuestosTab() {
 
   const records = (data?.data ?? []) as PuestoConRelaciones[];
 
-  const unidadOptions = (unidades as unknown as UnidadConRelaciones[]).map(
+  const unidadOptions = ((unidades ?? []) as UnidadConRelaciones[]).map(
     (u) => ({
       value: String(u.id),
       label: u.nombre ?? `Unidad ${u.id}`,

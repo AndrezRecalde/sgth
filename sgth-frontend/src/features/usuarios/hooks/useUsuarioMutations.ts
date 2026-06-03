@@ -58,8 +58,7 @@ export function useUsuarioMutations() {
   const toggleActivo = useMutation({
     mutationFn: (id: number) => usuarioService.toggleActivo(id),
     onSuccess: (data) => {
-      const estado = (data as unknown as { activo: boolean })
-        .activo ? 'activado' : 'desactivado'
+      const estado = data?.activo ? 'activado' : 'desactivado'
       notifications.show({
         title: `Usuario ${estado}`,
         message: `El usuario fue ${estado} correctamente.`,

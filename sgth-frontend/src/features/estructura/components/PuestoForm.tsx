@@ -89,7 +89,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
   }))
 
   type GrupoItem = { id: number; grado_codigo?: string; grupo?: string; rmu?: string | number }
-  const grupoOptions = (grupos as unknown as GrupoItem[]).map(g => ({
+  const grupoOptions = ((grupos ?? []) as GrupoItem[]).map(g => ({
     value: String(g.id),
     label: `${g.grado_codigo ?? ''} — ${g.grupo ?? ''} ($${g.rmu ?? 0})`,
   }))

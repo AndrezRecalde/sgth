@@ -15,13 +15,13 @@ import type {
 export const puestosExtensionesService = {
   // Puestos
   listarPuestos: (params?: PuestoParams) =>
-    api.get<ApiResponse<any>>('/estructura/puestos', { params })
+    api.get<ApiResponse<PaginatedResponse<PuestoConRelaciones>>>('/estructura/puestos', { params })
     .then(r => {
-      const data = r.data as any;
+      const data = r.data.datos;
       return {
-        data: data.datos as PuestoConRelaciones[],
-        total: data.meta?.total ?? 0,
-        current_page: data.meta?.pagina_actual ?? 1,
+        data: data.data,
+        total: data.total ?? 0,
+        current_page: data.current_page ?? 1,
       };
     }),
 

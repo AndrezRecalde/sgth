@@ -233,7 +233,7 @@ export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | '
     descripcion?: string
   }
   puestos_count?: number
-  puestos?: Puesto[]
+  puestos?: PuestoConRelaciones[]
   hijos?: UnidadConRelaciones[]
 }
 
@@ -498,6 +498,7 @@ export type UsuarioUpdateData = {
 export type PuestoConRelaciones = {
   id: number
   cargo_id?: number | null
+  denominacion?: string | null
   unidad_administrativa_id?: number
   grupo_ocupacional_id?: number | null
   partida_presupuestaria_id?: number | null
@@ -649,6 +650,18 @@ export type Nomina = {
   fecha_inicio:      string
   fecha_fin:         string
   estado:            EstadoNomina
+  roles_pago?: {
+    id:                number
+    servidor_id:       number
+    total_ingresos?:   number | string | null
+    total_descuentos?: number | string | null
+    total_neto?:       number | string | null
+    servidor?: {
+      cedula?:   string
+      nombre?:   string
+      apellido?: string
+    }
+  }[]
   total_ingresos?:   number | string | null
   total_descuentos?: number | string | null
   total_neto?:       number | string | null

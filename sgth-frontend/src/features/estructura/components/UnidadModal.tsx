@@ -40,9 +40,9 @@ export function UnidadModal({ opened, onClose, unidad }: Props) {
       <Stack>
         <UnidadForm
           initialValues={isEditing ? {
-            nombre:            (unidad as unknown as UnidadConRelaciones).nombre,
-            tipo_unidad_id:    (unidad as unknown as UnidadConRelaciones & { tipo_unidad_id?: number }).tipo_unidad_id as number,
-            unidad_padre_id:   (unidad as unknown as UnidadConRelaciones & { unidad_padre_id?: number }).unidad_padre_id as number | null,
+            nombre:         (unidad as UnidadConRelaciones).nombre,
+            tipo_unidad_id: (unidad as UnidadConRelaciones & { tipo_unidad_id?: number }).tipo_unidad_id ?? 0,
+            unidad_padre_id: (unidad as UnidadConRelaciones & { unidad_padre_id?: number }).unidad_padre_id ?? null,
           } : undefined}
           onSubmit={handleSubmit}
           isPending={isPending}

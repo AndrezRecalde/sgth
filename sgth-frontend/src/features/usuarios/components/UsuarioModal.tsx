@@ -36,7 +36,7 @@ export function UsuarioModal({ opened, onClose, usuario }: Props) {
 
   const initialValues = usuario ? {
     email:       usuario.email ?? '',
-    roles:       (usuario.roles as unknown as string[]) ?? [],
+    roles:       Array.isArray(usuario.roles) ? usuario.roles : [],
     servidor_id: usuario.servidor_id ?? null,
     cedula:      '',
   } : undefined

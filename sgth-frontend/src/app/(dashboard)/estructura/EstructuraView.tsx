@@ -206,7 +206,7 @@ export function EstructuraView() {
       <UnidadDrawer
         opened={drawerOpened}
         onClose={handleCloseDrawer}
-        unidad={(unidadDetalle as unknown as UnidadConRelaciones) ?? null}
+        unidad={(unidadDetalle as UnidadConRelaciones) ?? null}
         isLoading={isLoadingDrawer}
       />
     </Box>

@@ -8,7 +8,7 @@ import {
   IconBuilding, IconBriefcase, IconSitemap,
 } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import type { UnidadConRelaciones } from '@/types/api'
+import type { UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
 
 interface Props {
   opened: boolean
@@ -117,12 +117,7 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
                   />
                   <Stack gap="xs">
                     {puestos.map((puesto, i) => {
-                      const p = puesto as unknown as {
-                        id: number
-                        denominacion?: string
-                        regimen_laboral?: string
-                        plazas?: number
-                      }
+                      const p = puesto as PuestoConRelaciones
                       return (
                         <Group
                           key={p.id ?? i}

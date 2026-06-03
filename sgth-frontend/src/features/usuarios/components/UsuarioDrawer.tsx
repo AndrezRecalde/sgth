@@ -154,8 +154,7 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
     setCargandoTi(true);
     try {
       const res = await usuarioService.sugerirUsuarioTi(s.id);
-      const sugerido = (res as unknown as { usuario_ti_sugerido: string })
-        .usuario_ti_sugerido;
+      const sugerido = res?.usuario_ti_sugerido ?? '';
       setValue("usuario_ti", sugerido);
     } catch {
       setValue("usuario_ti", "");

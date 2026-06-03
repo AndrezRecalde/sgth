@@ -50,23 +50,7 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
   });
 
   // roles de pago del detalle
-  const roles =
-    (
-      detalle as unknown as {
-        roles_pago?: {
-          id: number;
-          servidor_id: number;
-          total_ingresos: number | string;
-          total_descuentos: number | string;
-          total_neto: number | string;
-          servidor?: {
-            apellido?: string;
-            nombre?: string;
-            cedula?: string;
-          };
-        }[];
-      }
-    )?.roles_pago ?? [];
+  const roles = (detalle as Nomina)?.roles_pago ?? [];
 
   return (
     <Modal
