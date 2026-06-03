@@ -477,8 +477,7 @@ export function VacacionModal({ opened, onClose }: Props) {
                       valueFormat="YYYY-MM-DD"
                       {...contained}
                       value={toDate(field.value)}
-                      onChange={(d: Date | string | null) =>
-                        field.onChange(fromDate(d instanceof Date ? d : null) ?? '')
+                      onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')
                       }
                       error={errors.fecha_inicio?.message}
                     />
@@ -496,8 +495,7 @@ export function VacacionModal({ opened, onClose }: Props) {
                       valueFormat="YYYY-MM-DD"
                       {...contained}
                       value={toDate(field.value)}
-                      onChange={(d: Date | string | null) =>
-                        field.onChange(fromDate(d instanceof Date ? d : null) ?? '')
+                      onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')
                       }
                       error={errors.fecha_fin?.message}
                     />
@@ -515,8 +513,7 @@ export function VacacionModal({ opened, onClose }: Props) {
                       valueFormat="YYYY-MM-DD"
                       {...contained}
                       value={toDate(field.value)}
-                      onChange={(d: Date | string | null) =>
-                        field.onChange(fromDate(d instanceof Date ? d : null) ?? '')
+                      onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')
                       }
                       error={errors.fecha_retorno?.message}
                     />
@@ -655,3 +652,4 @@ export function VacacionModal({ opened, onClose }: Props) {
     </Modal>
   )
 }
+

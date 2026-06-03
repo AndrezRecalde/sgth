@@ -3,6 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import React from 'react'
 import { nominaService } from '../services/nominaService'
+import { getApiErrorMessage } from '@/types/api'
 
 export function useNominaMutations() {
   const qc = useQueryClient()
@@ -10,8 +11,8 @@ export function useNominaMutations() {
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['nominas'] })
 
-  const onError = () => notifications.show({
-    title: 'Error', message: 'Operación fallida.',
+  const onError = (error: unknown) => notifications.show({
+    title: 'Error', message: getApiErrorMessage(error),
     color: 'red',
     icon: React.createElement(IconX, { size: 16 }),
   })

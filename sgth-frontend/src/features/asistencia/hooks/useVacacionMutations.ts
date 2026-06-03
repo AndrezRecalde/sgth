@@ -3,14 +3,15 @@ import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import React from 'react'
 import { asistenciaService } from '../services/asistenciaService'
+import { getApiErrorMessage } from '@/types/api'
 
 export function useVacacionMutations() {
   const qc = useQueryClient()
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['vacaciones'] })
 
-  const onError = () => notifications.show({
-    title: 'Error', message: 'Operación fallida.',
+  const onError = (error: unknown) => notifications.show({
+    title: 'Error', message: getApiErrorMessage(error),
     color: 'red',
     icon: React.createElement(IconX, { size: 16 }),
   })

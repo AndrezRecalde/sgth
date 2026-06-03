@@ -22,11 +22,6 @@ import { IconSearch, IconClock } from "@tabler/icons-react";
 import type { MarcacionBiometrica, ServidorConRelaciones } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
 
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null;
-  const [y, m, d] = v.split("-").map(Number);
-  return new Date(y, m - 1, d);
-};
 const fromDate = (d: Date | string | null): string => {
   if (!d) return "";
   if (typeof d === "string") return d.substring(0, 10);
@@ -159,28 +154,29 @@ export function MarcacionesTab() {
             onChange={setServidorSel}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 3 }}>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
           <DatePickerInput
             label="Fecha inicio"
             placeholder="Desde"
             valueFormat="YYYY-MM-DD"
             {...contained}
             value={fechaInicio}
-            onChange={(val: Date | string | null) => setFechaInicio(val instanceof Date ? val : null)}
+            onChange={(val: any) => setFechaInicio(val ?? null)}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 3 }}>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
           <DatePickerInput
             label="Fecha fin"
             placeholder="Hasta"
             valueFormat="YYYY-MM-DD"
             {...contained}
             value={fechaFin}
-            onChange={(val: Date | string | null) => setFechaFin(val instanceof Date ? val : null)}
+            onChange={(val: any) => setFechaFin(val ?? null)}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 2 }}>
+        <Grid.Col span={{ base: 12 }}>
           <Button
+            fullWidth
             size="sm"
             color="emerald"
             variant="light"
@@ -190,7 +186,6 @@ export function MarcacionesTab() {
               setBuscar(true);
               refetch();
             }}
-            mt="lg"
           >
             Consultar
           </Button>

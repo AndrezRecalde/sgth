@@ -3,15 +3,16 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import React from "react";
 import { asistenciaService } from "../services/asistenciaService";
+import { getApiErrorMessage } from "@/types/api";
 
 export function usePermisoMutations() {
   const qc = useQueryClient();
   const invalidar = () => qc.invalidateQueries({ queryKey: ["permisos"] });
 
-  const onError = () =>
+  const onError = (error: unknown) =>
     notifications.show({
       title: "Error",
-      message: "Operación fallida.",
+      message: getApiErrorMessage(error),
       color: "red",
       icon: React.createElement(IconX, { size: 16 }),
     });
@@ -28,7 +29,14 @@ export function usePermisoMutations() {
       });
       invalidar();
     },
-    onError,
+    onError: (error: unknown) => {
+      notifications.show({
+        title: "Error",
+        message: getApiErrorMessage(error),
+        color: "red",
+        icon: React.createElement(IconX, { size: 16 }),
+      });
+    },
   });
 
   const confirmar = useMutation({
@@ -43,11 +51,9 @@ export function usePermisoMutations() {
       invalidar();
     },
     onError: (error: unknown) => {
-      // console.error('Error confirmar:', error)
-      // console.error('Response:', (error as { response?: { data?: unknown } })?.response?.data)
       notifications.show({
         title: "Error",
-        message: (error as { response?: { data?: { error?: string } } })?.response?.data?.error || "Operación fallida.",
+        message: getApiErrorMessage(error),
         color: "red",
         icon: React.createElement(IconX, { size: 16 }),
       });

@@ -859,3 +859,29 @@ export type ConsolidadoPermisoResponse = {
     tipo:         string
   }
 }
+
+// -- Error de Axios tipado -------------------------
+export type ApiError = {
+  response?: {
+    data?: {
+      mensaje?:  string
+      error?:    string
+      errores?:  Record<string, string[]>
+    }
+    status?: number
+  }
+  message?: string
+}
+
+export function getApiErrorMessage(
+  error: unknown,
+  fallback = 'Operación fallida.'
+): string {
+  const e = error as ApiError
+  return (
+    e?.response?.data?.mensaje ??
+    e?.response?.data?.error ??
+    e?.message ??
+    fallback
+  )
+}

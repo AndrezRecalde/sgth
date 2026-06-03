@@ -139,9 +139,7 @@ export function ConsolidadoPermisosTab() {
               valueFormat="YYYY-MM-DD"
               {...contained}
               value={fechaInicio}
-              onChange={(v: Date | string | null) =>
-                setFechaInicio(v instanceof Date ? v : null)
-              }
+              onChange={(v: any) => setFechaInicio(v ?? null)}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -151,9 +149,7 @@ export function ConsolidadoPermisosTab() {
               valueFormat="YYYY-MM-DD"
               {...contained}
               value={fechaFin}
-              onChange={(v: Date | string | null) =>
-                setFechaFin(v instanceof Date ? v : null)
-              }
+              onChange={(v: any) => setFechaFin(v ?? null)}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
