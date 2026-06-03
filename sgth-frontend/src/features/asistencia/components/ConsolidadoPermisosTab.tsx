@@ -46,8 +46,8 @@ const fromDate = (d: Date | string | null): string => {
 export function ConsolidadoPermisosTab() {
   const contained = useContainedInput();
 
-  const [fechaInicio, setFechaInicio] = useState<Date | null>(null);
-  const [fechaFin, setFechaFin] = useState<Date | null>(null);
+  const [fechaInicio, setFechaInicio] = useState<Date | string | null>(null);
+  const [fechaFin, setFechaFin] = useState<Date | string | null>(null);
   const [tipo, setTipo] = useState<string>("personal");
   const [buscar, setBuscar] = useState(false);
   const [exportando, setExportando] = useState<"excel" | "pdf" | null>(null);
@@ -139,7 +139,7 @@ export function ConsolidadoPermisosTab() {
               valueFormat="YYYY-MM-DD"
               {...contained}
               value={fechaInicio}
-              onChange={(v: any) => setFechaInicio(v ?? null)}
+              onChange={(v) => setFechaInicio(v)}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -149,7 +149,7 @@ export function ConsolidadoPermisosTab() {
               valueFormat="YYYY-MM-DD"
               {...contained}
               value={fechaFin}
-              onChange={(v: any) => setFechaFin(v ?? null)}
+              onChange={(v) => setFechaFin(v)}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -326,3 +326,8 @@ export function ConsolidadoPermisosTab() {
     </Stack>
   );
 }
+
+
+
+
+

@@ -36,8 +36,8 @@ function formatHora(h?: string | null): string {
 export function MarcacionesTab() {
   const contained = useContainedInput();
   const [servidorSel, setServidorSel] = useState<string | null>(null);
-  const [fechaInicio, setFechaInicio] = useState<Date | null>(null);
-  const [fechaFin, setFechaFin] = useState<Date | null>(null);
+  const [fechaInicio, setFechaInicio] = useState<Date | string | null>(null);
+  const [fechaFin, setFechaFin] = useState<Date | string | null>(null);
   const [buscar, setBuscar] = useState(false);
 
   const { data: servidoresData } = useServidores();
@@ -161,7 +161,7 @@ export function MarcacionesTab() {
             valueFormat="YYYY-MM-DD"
             {...contained}
             value={fechaInicio}
-            onChange={(val: any) => setFechaInicio(val ?? null)}
+            onChange={(val) => setFechaInicio(val)}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -171,7 +171,7 @@ export function MarcacionesTab() {
             valueFormat="YYYY-MM-DD"
             {...contained}
             value={fechaFin}
-            onChange={(val: any) => setFechaFin(val ?? null)}
+            onChange={(val) => setFechaFin(val)}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12 }}>
@@ -213,3 +213,6 @@ export function MarcacionesTab() {
     </Stack>
   );
 }
+
+
+
