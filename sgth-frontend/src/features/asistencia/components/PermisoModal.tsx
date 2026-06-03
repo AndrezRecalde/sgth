@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { DatePickerInput, TimeInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { notifications } from "@mantine/notifications";
@@ -131,7 +131,6 @@ export function PermisoModal({ opened, onClose }: Props) {
     reset,
     register,
     setValue,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -147,7 +146,7 @@ export function PermisoModal({ opened, onClose }: Props) {
     },
   });
 
-  const tipoWatch = watch("tipo");
+  const tipoWatch = useWatch({ control, name: "tipo" });
 
   const handleClose = () => {
     reset();
@@ -158,7 +157,16 @@ export function PermisoModal({ opened, onClose }: Props) {
   };
 
   const onSubmit = async (values: FormData) => {
-    const result = await crear.mutateAsync(values);
+    const result = await crear.mutateAsync({
+      unidad_administrativa_id: values.unidad_administrativa_id,
+      servidor_id:              values.servidor_id,
+      jefe_id:                  values.jefe_id ?? null,
+      tipo:                     values.tipo,
+      fecha:                    values.fecha,
+      hora_inicio:              values.hora_inicio,
+      hora_fin:                 values.hora_fin,
+      observacion:              values.observacion ?? null,
+    });
     setPermisoCreado(result ?? null);
     setPaso(1);
   };

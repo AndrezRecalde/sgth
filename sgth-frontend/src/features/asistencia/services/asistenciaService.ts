@@ -2,7 +2,8 @@ import api from '@/lib/axios'
 import type {
   ApiResponse, MarcacionBiometrica,
   PermisoServidor, Vacacion,
-  PeriodoVacacion, ResumenPeriodos, ConsolidadoPermisoResponse
+  PeriodoVacacion, ResumenPeriodos, ConsolidadoPermisoResponse,
+  PaginatedResponse
 } from '@/types/api'
 
 export const asistenciaService = {
@@ -42,13 +43,19 @@ export const asistenciaService = {
       fecha_hasta?:              string
       per_page?:                 number
     }) =>
-      api.get<ApiResponse<{
-        data: PermisoServidor[]
-        meta: unknown
-      }>>('/asistencia/permisos', { params })
+      api.get<ApiResponse<PaginatedResponse<PermisoServidor>>>('/asistencia/permisos', { params })
         .then(r => r.data.datos),
 
-    crear: <T>(data: T) =>
+    crear: (data: {
+      unidad_administrativa_id: number
+      servidor_id:              number
+      jefe_id?:                 number | null
+      tipo:                     string
+      fecha:                    string
+      hora_inicio:              string
+      hora_fin:                 string
+      observacion?:             string | null
+    }) =>
       api.post<ApiResponse<PermisoServidor>>(
         '/asistencia/permisos', data
       ).then(r => r.data.datos),
@@ -136,10 +143,7 @@ export const asistenciaService = {
       fecha_hasta?:              string
       per_page?:                 number
     }) =>
-      api.get<ApiResponse<{
-        data: Vacacion[]
-        meta: unknown
-      }>>('/asistencia/vacaciones', { params })
+      api.get<ApiResponse<PaginatedResponse<Vacacion>>>('/asistencia/vacaciones', { params })
         .then(r => r.data.datos),
 
     saldo: (servidorId: number) =>
@@ -147,12 +151,27 @@ export const asistenciaService = {
         `/asistencia/vacaciones/saldo/${servidorId}`
       ).then(r => r.data.datos),
 
-    crear: <T>(data: T) =>
+    crear: (data: {
+      unidad_administrativa_id?:  number | null
+      servidor_id:                number
+      jefe_id?:                   number | null
+      persona_reemplaza_id?:      number | null
+      motivo:                     string
+      fecha_inicio:               string
+      fecha_fin:                  string
+      fecha_retorno?:             string | null
+      dias_solicitados:           number
+      tipo_dias:                  'habiles' | 'calendario'
+      observacion?:               string | null
+    }) =>
       api.post<ApiResponse<Vacacion>>(
         '/asistencia/vacaciones', data
       ).then(r => r.data.datos),
 
-    actualizar: <T>(id: number, data: T) =>
+    actualizar: (id: number, data: {
+      estado: string
+      aprobado_por?: number | null
+    }) =>
       api.put<ApiResponse<Vacacion>>(
         `/asistencia/vacaciones/${id}`, data
       ).then(r => r.data.datos),

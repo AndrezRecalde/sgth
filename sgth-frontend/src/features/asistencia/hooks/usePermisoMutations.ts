@@ -17,16 +17,8 @@ export function usePermisoMutations() {
     });
 
   const crear = useMutation({
-    mutationFn: (data: {
-      unidad_administrativa_id: number
-      servidor_id:              number
-      jefe_id?:                 number | null
-      tipo:                     string
-      fecha:                    string
-      hora_inicio:              string
-      hora_fin:                 string
-      observacion?:             string | null
-    }) => asistenciaService.permisos.crear(data),
+    mutationFn: (data: Parameters<typeof asistenciaService.permisos.crear>[0]) =>
+      asistenciaService.permisos.crear(data),
     onSuccess: () => {
       notifications.show({
         title: "Permiso registrado",

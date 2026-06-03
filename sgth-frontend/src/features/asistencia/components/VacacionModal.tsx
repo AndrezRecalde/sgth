@@ -8,7 +8,7 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { notifications } from '@mantine/notifications'
@@ -149,7 +149,7 @@ export function VacacionModal({ opened, onClose }: Props) {
 
   const {
     control, handleSubmit, reset, register,
-    watch, setValue,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -168,12 +168,12 @@ export function VacacionModal({ opened, onClose }: Props) {
     },
   })
 
-  const motivoWatch = watch('motivo')
+  const motivoWatch = useWatch({ control, name: 'motivo' })
   const descuentaVacaciones = MOTIVOS_DESCUENTO.includes(motivoWatch)
 
-  const fechaInicioWatch = watch('fecha_inicio')
-  const fechaFinWatch    = watch('fecha_fin')
-  const tipoDiasWatch    = watch('tipo_dias')
+  const fechaInicioWatch = useWatch({ control, name: 'fecha_inicio' })
+  const fechaFinWatch    = useWatch({ control, name: 'fecha_fin' })
+  const tipoDiasWatch    = useWatch({ control, name: 'tipo_dias' })
 
   // Auto-calcular días solicitados
   useEffect(() => {
@@ -225,7 +225,19 @@ export function VacacionModal({ opened, onClose }: Props) {
   }
 
   const onSubmit = async (values: FormData) => {
-    const result = await crear.mutateAsync(values)
+    const result = await crear.mutateAsync({
+      unidad_administrativa_id: values.unidad_administrativa_id,
+      servidor_id:              values.servidor_id,
+      jefe_id:                  values.jefe_id ?? null,
+      persona_reemplaza_id:     values.persona_reemplaza_id ?? null,
+      motivo:                   values.motivo,
+      fecha_inicio:             values.fecha_inicio,
+      fecha_fin:                values.fecha_fin,
+      fecha_retorno:            values.fecha_retorno ?? null,
+      dias_solicitados:         values.dias_solicitados,
+      tipo_dias:                values.tipo_dias as 'habiles' | 'calendario',
+      observacion:              values.observacion ?? null,
+    })
     setVacacionCreada(result ?? null)
     setPaso(1)
   }
