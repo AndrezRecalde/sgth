@@ -1,4 +1,5 @@
 import api from '@/lib/axios'
+import type { DescuentoRecurrenteFormData } from '../schemas/descuentoRecurrente.schema'
 import type { ApiResponse, Nomina, RolPago, DescuentoRecurrente, ConceptoNomina } from '@/types/api'
 
 export const nominaService = {
@@ -33,12 +34,12 @@ export const nominaService = {
         '/nomina/descuentos-recurrentes'
       ).then(r => r.data.datos ?? []),
 
-    crear: (data: Record<string, unknown>) =>
+    crear: (data: DescuentoRecurrenteFormData) =>
       api.post<ApiResponse<DescuentoRecurrente>>(
         '/nomina/descuentos-recurrentes', data
       ).then(r => r.data.datos),
 
-    editar: (id: number, data: Record<string, unknown>) =>
+    editar: (id: number, data: DescuentoRecurrenteFormData) =>
       api.put<ApiResponse<DescuentoRecurrente>>(
         `/nomina/descuentos-recurrentes/${id}`, data
       ).then(r => r.data.datos),
