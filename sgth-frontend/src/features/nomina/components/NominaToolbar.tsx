@@ -41,13 +41,13 @@ export function NominaToolbar({ onEstadoChange }: Props) {
     calcular.mutate(periodo)
   }
 
-  const handleMesChange = (val: any) => {
+  const handleMesChange = (val: unknown) => {
     if (!val) {
       setMes(null)
       return
     }
     // Asegurar que sea Date nativo
-    const fecha = val instanceof Date ? val : new Date(val)
+    const fecha = val instanceof Date ? val : new Date(val as string | number | Date)
     setMes(isNaN(fecha.getTime()) ? null : fecha)
   }
 

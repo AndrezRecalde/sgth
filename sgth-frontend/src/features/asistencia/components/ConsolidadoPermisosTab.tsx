@@ -26,7 +26,7 @@ const TIPO_OPTIONS = [
   { value: 'calamidad',  label: 'Calamidad Doméstica' },
 ]
 
-const fromDate = (d: any): string => {
+const fromDate = (d: Date | string | null): string => {
   if (!d) return ''
   if (typeof d === 'string') return d.substring(0, 10)
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
@@ -130,7 +130,7 @@ export function ConsolidadoPermisosTab() {
               valueFormat="YYYY-MM-DD"
               {...contained}
               value={fechaInicio}
-              onChange={(v: any) => setFechaInicio(v)}
+              onChange={(v: unknown) => setFechaInicio(v as Date)}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 3 }}>
@@ -140,7 +140,7 @@ export function ConsolidadoPermisosTab() {
               valueFormat="YYYY-MM-DD"
               {...contained}
               value={fechaFin}
-              onChange={(v: any) => setFechaFin(v)}
+              onChange={(v: unknown) => setFechaFin(v as Date)}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 3 }}>

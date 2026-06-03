@@ -339,7 +339,7 @@ export function VacacionesTab() {
         />
       )}
 
-      <VacacionModal opened={opened} onClose={close} isAdmin={true} />
+      <VacacionModal opened={opened} onClose={close} />
     </Stack>
   )
 }

@@ -2,18 +2,35 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export interface UsuarioAuth {
-  id:              number
+  id:               number
   nombre_completo?: string
-  email:           string
-  usuario_ti?:     string
-  servidor_id?:    number | null
+  email:            string
+  usuario_ti?:      string
+  servidor_id?:     number | null
   servidor?: {
-    id:      number
-    cedula?: string
-    nombre?: string
+    id:             number
+    cedula?:        string
+    nombre?:        string
+    apellido?:      string
+    puede_marcar?:  boolean
+    regimen_laboral?: string
+    unidad_administrativa_id?: number | null
+    unidad_administrativa?: {
+      id:     number
+      nombre?: string
+    } | null
+    puesto?: {
+      id:      number
+      nombre?: string
+      es_jefe?: boolean
+    } | null
+    contrato_vigente?: {
+      id:      number
+      estado?: string
+    } | null
   } | null
-  roles:           string[]
-  permisos:        string[]
+  roles:    string[]
+  permisos: string[]
 }
 
 interface AuthState {

@@ -81,7 +81,7 @@ const toDate = (v?: string | null): Date | null => {
   const [y, m, d] = v.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
-const fromDate = (d: any): string | null => {
+const fromDate = (d: Date | string | null): string | null => {
   if (!d) return null
   if (typeof d === 'string') return d.substring(0, 10)
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
@@ -90,10 +90,9 @@ const fromDate = (d: any): string | null => {
 interface Props {
   opened:    boolean
   onClose:   () => void
-  isAdmin?:  boolean
 }
 
-export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
+export function VacacionModal({ opened, onClose }: Props) {
   const { isMobile } = useMobileBreakpoint()
   const contained    = useContainedInput()
   const { crear }    = useVacacionMutations()
@@ -468,8 +467,8 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                       valueFormat="YYYY-MM-DD"
                       {...contained}
                       value={toDate(field.value)}
-                      onChange={(d: any) =>
-                        field.onChange(fromDate(d) ?? '')
+                      onChange={(d: unknown) =>
+                        field.onChange(fromDate(d as Date) ?? '')
                       }
                       error={errors.fecha_inicio?.message}
                     />
@@ -487,8 +486,8 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                       valueFormat="YYYY-MM-DD"
                       {...contained}
                       value={toDate(field.value)}
-                      onChange={(d: any) =>
-                        field.onChange(fromDate(d) ?? '')
+                      onChange={(d: unknown) =>
+                        field.onChange(fromDate(d as Date) ?? '')
                       }
                       error={errors.fecha_fin?.message}
                     />
@@ -506,8 +505,8 @@ export function VacacionModal({ opened, onClose, isAdmin = true }: Props) {
                       valueFormat="YYYY-MM-DD"
                       {...contained}
                       value={toDate(field.value)}
-                      onChange={(d: any) =>
-                        field.onChange(fromDate(d) ?? '')
+                      onChange={(d: unknown) =>
+                        field.onChange(fromDate(d as Date) ?? '')
                       }
                       error={errors.fecha_retorno?.message}
                     />

@@ -1,22 +1,22 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Stack, Tabs } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
-import { PageHeader } from '@/components/ui/PageHeader'
+import { Stack, Tabs } from "@mantine/core";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
-  IconClock, IconClipboardList,
-  IconBeach, IconFingerprint,
+  IconClock,
+  IconClipboardList,
+  IconBeach,
+  IconFingerprint,
   IconCalendarStats,
   IconReportAnalytics,
-} from '@tabler/icons-react'
-import { IconCalendarTime } from '@tabler/icons-react'
-import { PermisosTab } from '@/features/asistencia/components/PermisosTab'
-import { VacacionesTab } from '@/features/asistencia/components/VacacionesTab'
-import { MarcacionesTab } from '@/features/asistencia/components/MarcacionesTab'
-import { MarcacionOnlineTab } from '@/features/asistencia/components/MarcacionOnlineTab'
-import { PeriodosVacacionesTab } from '@/features/asistencia/components/PeriodosVacacionesTab'
-import { ConsolidadoPermisosTab } from '@/features/asistencia/components/ConsolidadoPermisosTab'
+} from "@tabler/icons-react";
+import { IconCalendarTime } from "@tabler/icons-react";
+import { PermisosTab } from "@/features/asistencia/components/PermisosTab";
+import { VacacionesTab } from "@/features/asistencia/components/VacacionesTab";
+import { MarcacionesTab } from "@/features/asistencia/components/MarcacionesTab";
+import { MarcacionOnlineTab } from "@/features/asistencia/components/MarcacionOnlineTab";
+import { PeriodosVacacionesTab } from "@/features/asistencia/components/PeriodosVacacionesTab";
+import { ConsolidadoPermisosTab } from "@/features/asistencia/components/ConsolidadoPermisosTab";
 
 export function AsistenciaView() {
   return (
@@ -28,16 +28,16 @@ export function AsistenciaView() {
       />
       <Tabs defaultValue="marcaciones" keepMounted={false}>
         <Tabs.List mb="md">
-          <Tabs.Tab value="marcaciones"
-            leftSection={<IconClock size={16} />}>
+          <Tabs.Tab value="marcaciones" leftSection={<IconClock size={16} />}>
             Marcaciones
           </Tabs.Tab>
-          <Tabs.Tab value="permisos"
-            leftSection={<IconClipboardList size={16} />}>
+          <Tabs.Tab
+            value="permisos"
+            leftSection={<IconClipboardList size={16} />}
+          >
             Permisos
           </Tabs.Tab>
-          <Tabs.Tab value="vacaciones"
-            leftSection={<IconBeach size={16} />}>
+          <Tabs.Tab value="vacaciones" leftSection={<IconBeach size={16} />}>
             Vacaciones
           </Tabs.Tab>
           <Tabs.Tab
@@ -52,8 +52,7 @@ export function AsistenciaView() {
           >
             Consolidado
           </Tabs.Tab>
-          <Tabs.Tab value="online"
-            leftSection={<IconFingerprint size={16} />}>
+          <Tabs.Tab value="online" leftSection={<IconFingerprint size={16} />}>
             Marcación Online
           </Tabs.Tab>
         </Tabs.List>
@@ -78,5 +77,5 @@ export function AsistenciaView() {
         </Tabs.Panel>
       </Tabs>
     </Stack>
-  )
+  );
 }

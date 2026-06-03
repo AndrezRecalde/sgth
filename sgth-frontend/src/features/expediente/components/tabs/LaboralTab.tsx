@@ -1,156 +1,190 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
-  Stack, Group, Text, Badge, Button,
-  Skeleton, Grid,
-} from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+  Stack,
+  Group,
+  Text,
+  Badge,
+  Button,
+  Skeleton,
+  Grid,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
-  IconPlus, IconEdit, IconTrash, IconBriefcase,
-} from '@tabler/icons-react'
-import { DataTable } from 'mantine-datatable'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { TableActions } from '@/components/ui/TableActions'
-import { useContratos } from '../../hooks/useContratos'
-import { useContratoMutations } from '../../hooks/useContratoMutations'
-import { ContratoModal } from '../ContratoModal'
-import type { ContratoConRelaciones, EstadoContrato } from '@/types/api'
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconBriefcase,
+} from "@tabler/icons-react";
+import { DataTable } from "mantine-datatable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableActions } from "@/components/ui/TableActions";
+import { useContratos } from "../../hooks/useContratos";
+import { useContratoMutations } from "../../hooks/useContratoMutations";
+import { ContratoModal } from "../ContratoModal";
+import type { ContratoConRelaciones, EstadoContrato } from "@/types/api";
 
 const ESTADO_COLORS: Record<EstadoContrato, string> = {
-  vigente:   'green',
-  terminado: 'gray',
-  cancelado: 'red',
-}
+  vigente: "green",
+  terminado: "gray",
+  cancelado: "red",
+};
 
 const ESTADO_LABELS: Record<EstadoContrato, string> = {
-  vigente:   'Vigente',
-  terminado: 'Terminado',
-  cancelado: 'Cancelado',
-}
+  vigente: "Vigente",
+  terminado: "Terminado",
+  cancelado: "Cancelado",
+};
 
 const NOMBRAMIENTO_LABELS: Record<string, string> = {
-  nombramiento_permanente:     'Nombramiento Permanente',
-  nombramiento_provisional:    'Nombramiento Provisional',
-  servicios_ocasionales:       'Servicios Ocasionales',
-  libre_nombramiento_remocion: 'Libre Nombramiento y Remoción',
-  codigo_trabajo:              'Código del Trabajo',
-  servicios_profesionales:     'Servicios Profesionales',
-}
+  nombramiento_permanente: "Nombramiento Permanente",
+  nombramiento_provisional: "Nombramiento Provisional",
+  servicios_ocasionales: "Servicios Ocasionales",
+  libre_nombramiento_remocion: "Libre Nombramiento y Remoción",
+  codigo_trabajo: "Código del Trabajo",
+  servicios_profesionales: "Servicios Profesionales",
+};
 
 function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    timeZone: 'UTC',
-  })
+  if (!fecha) return "—";
+  return new Date(fecha).toLocaleDateString("es-EC", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 interface DetalleProps {
-  contrato: ContratoConRelaciones
+  contrato: ContratoConRelaciones;
 }
 
 function ContratoDetalle({ contrato }: DetalleProps) {
-  const cargo = (contrato.puesto as {
-    cargo?: {
-      nombre?:                string
-      denominacion_generica?: string
-    } | null
-  })?.cargo
+  const cargo = (
+    contrato.puesto as {
+      cargo?: {
+        nombre?: string;
+        denominacion_generica?: string;
+      } | null;
+    }
+  )?.cargo;
 
-  const unidad = (contrato.unidad_administrativa as {
-    nombre?: string
-  })?.nombre
+  const unidad = (
+    contrato.unidad_administrativa as {
+      nombre?: string;
+    }
+  )?.nombre;
 
   return (
     <Stack
       gap={0}
       p="md"
       style={{
-        background: 'var(--mantine-color-default-hover)',
-        borderTop:  '1px solid var(--mantine-color-default-border)',
+        background: "var(--mantine-color-default-hover)",
+        borderTop: "1px solid var(--mantine-color-default-border)",
       }}
     >
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Cargo</Text>
-          <Text size="sm" fw={500}>{cargo?.nombre ?? '—'}</Text>
+          <Text size="xs" c="dimmed" mb={2}>
+            Cargo
+          </Text>
+          <Text size="sm" fw={500}>
+            {cargo?.nombre ?? "—"}
+          </Text>
           {cargo?.denominacion_generica && (
-            <Text size="xs" c="dimmed">{cargo.denominacion_generica}</Text>
+            <Text size="xs" c="dimmed">
+              {cargo.denominacion_generica}
+            </Text>
           )}
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Unidad administrativa</Text>
-          <Text size="sm" fw={500}>{unidad ?? '—'}</Text>
+          <Text size="xs" c="dimmed" mb={2}>
+            Unidad administrativa
+          </Text>
+          <Text size="sm" fw={500}>
+            {unidad ?? "—"}
+          </Text>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Período</Text>
+          <Text size="xs" c="dimmed" mb={2}>
+            Período
+          </Text>
           <Text size="sm" fw={500}>
             {formatFecha(contrato.fecha_inicio)}
-            {' → '}
+            {" → "}
             {contrato.fecha_fin
               ? formatFecha(contrato.fecha_fin)
-              : 'Indefinido'
-            }
+              : "Indefinido"}
           </Text>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Número de contrato</Text>
+          <Text size="xs" c="dimmed" mb={2}>
+            Número de contrato
+          </Text>
           <Text size="sm" fw={500} ff="monospace">
-            {contrato.numero_contrato ?? '—'}
+            {contrato.numero_contrato ?? "—"}
           </Text>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Número de resolución</Text>
+          <Text size="xs" c="dimmed" mb={2}>
+            Número de resolución
+          </Text>
           <Text size="sm" fw={500} ff="monospace">
-            {contrato.resolucion_numero ?? '—'}
+            {contrato.resolucion_numero ?? "—"}
           </Text>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Marcación biométrica</Text>
+          <Text size="xs" c="dimmed" mb={2}>
+            Marcación biométrica
+          </Text>
           <Text size="sm" fw={500} ff="monospace">
-            {contrato.puede_marcar === false ? 'No' : 'Sí'}
+            {contrato.puede_marcar === false ? "No" : "Sí"}
           </Text>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>Remuneración mensual</Text>
+          <Text size="xs" c="dimmed" mb={2}>
+            Remuneración mensual
+          </Text>
           <Text size="sm" fw={600}>
             {contrato.remuneracion
-              ? `$ ${Number(contrato.remuneracion).toLocaleString('es-EC', {
+              ? `$ ${Number(contrato.remuneracion).toLocaleString("es-EC", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`
-              : '—'
-            }
+              : "—"}
           </Text>
         </Grid.Col>
       </Grid>
     </Stack>
-  )
+  );
 }
 
-interface Props { servidorId: number }
+interface Props {
+  servidorId: number;
+}
 
 export function LaboralTab({ servidorId }: Props) {
-  const [modalOpened, { open, close }] = useDisclosure(false)
+  const [modalOpened, { open, close }] = useDisclosure(false);
   const [editContrato, setEditContrato] =
-    useState<ContratoConRelaciones | null>(null)
+    useState<ContratoConRelaciones | null>(null);
 
-  const { data: contratos = [], isLoading } = useContratos(servidorId)
-  const { eliminar } = useContratoMutations(servidorId)
+  const { data: contratos = [], isLoading } = useContratos(servidorId);
+  const { eliminar } = useContratoMutations(servidorId);
 
   const handleClose = () => {
-    setEditContrato(null)
-    close()
-  }
+    setEditContrato(null);
+    close();
+  };
 
-  const lista = contratos as ContratoConRelaciones[]
+  const lista = contratos as ContratoConRelaciones[];
 
   if (isLoading) {
     return (
@@ -158,7 +192,7 @@ export function LaboralTab({ servidorId }: Props) {
         <Skeleton height={42} radius="md" />
         <Skeleton height={42} radius="md" />
       </Stack>
-    )
+    );
   }
 
   return (
@@ -169,7 +203,10 @@ export function LaboralTab({ servidorId }: Props) {
           color="emerald"
           variant="light"
           leftSection={<IconPlus size={14} />}
-          onClick={() => { setEditContrato(null); open() }}
+          onClick={() => {
+            setEditContrato(null);
+            open();
+          }}
         >
           Nuevo contrato
         </Button>
@@ -187,98 +224,100 @@ export function LaboralTab({ servidorId }: Props) {
           idAccessor="id"
           columns={[
             {
-              accessor: 'tipo_nombramiento',
-              title:    'Tipo de nombramiento',
+              accessor: "tipo_nombramiento",
+              title: "Tipo de nombramiento",
               render: ({ tipo_nombramiento }) => (
                 <Text size="sm" fw={500}>
-                  {NOMBRAMIENTO_LABELS[tipo_nombramiento ?? '']
-                    ?? tipo_nombramiento ?? '—'}
+                  {NOMBRAMIENTO_LABELS[tipo_nombramiento ?? ""] ??
+                    tipo_nombramiento ??
+                    "—"}
                 </Text>
               ),
             },
             {
-              accessor: 'cargo',
-              title:    'Cargo',
+              accessor: "cargo",
+              title: "Cargo",
               render: (contrato) => {
-                const cargo = (contrato.puesto as {
-                  cargo?: { nombre?: string } | null
-                })?.cargo
+                const cargo = (
+                  contrato.puesto as {
+                    cargo?: { nombre?: string } | null;
+                  }
+                )?.cargo;
                 return (
                   <Text size="sm" c="dimmed">
-                    {cargo?.nombre ?? '—'}
+                    {cargo?.nombre ?? "—"}
                   </Text>
-                )
+                );
               },
             },
             {
-              accessor: 'fecha_inicio',
-              title:    'Inicio',
-              width:    110,
+              accessor: "fecha_inicio",
+              title: "Inicio",
+              width: 110,
               render: ({ fecha_inicio }) => (
                 <Text size="sm">{formatFecha(fecha_inicio)}</Text>
               ),
             },
             {
-              accessor: 'remuneracion',
-              title:    'RMU',
-              width:    100,
+              accessor: "remuneracion",
+              title: "RMU",
+              width: 100,
               render: ({ remuneracion }) => (
                 <Text size="sm" ff="monospace">
-                  {remuneracion
-                    ? `$${Number(remuneracion).toFixed(2)}`
-                    : '—'
-                  }
+                  {remuneracion ? `$${Number(remuneracion).toFixed(2)}` : "—"}
                 </Text>
               ),
             },
             {
-              accessor: 'estado',
-              title:    'Estado',
-              width:    100,
+              accessor: "estado",
+              title: "Estado",
+              width: 100,
               render: ({ estado }) => (
                 <Badge
-                  color={ESTADO_COLORS[estado as EstadoContrato] ?? 'gray'}
+                  color={ESTADO_COLORS[estado as EstadoContrato] ?? "gray"}
                   variant="light"
                   size="sm"
                 >
-                  {ESTADO_LABELS[estado as EstadoContrato] ?? estado ?? '—'}
+                  {ESTADO_LABELS[estado as EstadoContrato] ?? estado ?? "—"}
                 </Badge>
               ),
             },
             {
-              accessor: 'acciones',
-              title:    '',
-              width:    50,
+              accessor: "acciones",
+              title: "",
+              width: 50,
               render: (contrato) => (
-                <TableActions actions={[
-                  {
-                    label:   'Editar contrato',
-                    icon:    <IconEdit size={14} />,
-                    color:   'blue',
-                    onClick: () => {
-                      setEditContrato(contrato)
-                      open()
+                <TableActions
+                  actions={[
+                    {
+                      label: "Editar contrato",
+                      icon: <IconEdit size={14} />,
+                      color: "blue",
+                      onClick: () => {
+                        setEditContrato(contrato);
+                        open();
+                      },
                     },
-                  },
-                  {
-                    label:   'Eliminar contrato',
-                    icon:    <IconTrash size={14} />,
-                    color:   'red',
-                    onClick: () => {
-                      if (confirm(
-                        '¿Eliminar este contrato? Esta acción no se puede deshacer.'
-                      ))
-                        eliminar.mutate(Number(contrato.id))
+                    {
+                      label: "Eliminar contrato",
+                      icon: <IconTrash size={14} />,
+                      color: "red",
+                      onClick: () => {
+                        if (
+                          confirm(
+                            "¿Eliminar este contrato? Esta acción no se puede deshacer.",
+                          )
+                        )
+                          eliminar.mutate(Number(contrato.id));
+                      },
                     },
-                  },
-                ]} />
+                  ]}
+                />
               ),
             },
           ]}
           rowExpansion={{
-            content: ({ record }) => (
-              <ContratoDetalle contrato={record} />
-            ),
+            content: ({ record }) => <ContratoDetalle contrato={record} />,
           }}
           withTableBorder
           withColumnBorders={false}
@@ -296,5 +335,5 @@ export function LaboralTab({ servidorId }: Props) {
         contrato={editContrato}
       />
     </Stack>
-  )
+  );
 }

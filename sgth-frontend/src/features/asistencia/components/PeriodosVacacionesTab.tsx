@@ -159,7 +159,7 @@ export function PeriodosVacacionesTab() {
       accessor: 'dias_saldo',
       title:    'Saldo',
       width:    130,
-      render: ({ dias_saldo, dias_generados, regimen }) => {
+      render: ({ dias_saldo, dias_generados }) => {
         const saldo    = Number(dias_saldo)
         const generado = Number(dias_generados)
         const usado    = generado - saldo
@@ -208,7 +208,6 @@ export function PeriodosVacacionesTab() {
       title:    'Acumulado',
       width:    100,
       render: ({ saldo_acumulado, regimen }) => {
-        const limite   = regimen === 'losep' ? 60 : 999
         const acum     = Number(saldo_acumulado)
         const enAlerta = acum >= 45 && regimen === 'losep'
         return (
@@ -379,7 +378,7 @@ export function PeriodosVacacionesTab() {
         >
           <Text size="sm">
             Este servidor no tiene períodos generados.
-            Usa el botón "Generar período {anio}" para crearlo.
+            Usa el botón &quot;Generar período {anio}&quot; para crearlo.
           </Text>
         </Alert>
       ) : (

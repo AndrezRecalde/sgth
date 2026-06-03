@@ -343,7 +343,7 @@ export function PermisosTab() {
         />
       )}
 
-      <PermisoModal opened={opened} onClose={close} isAdmin={true} />
+      <PermisoModal opened={opened} onClose={close} />
     </Stack>
   )
 }
