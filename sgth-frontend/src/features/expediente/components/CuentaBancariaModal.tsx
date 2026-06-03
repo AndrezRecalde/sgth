@@ -13,7 +13,7 @@ import {
   Text,
   Badge,
 } from "@mantine/core";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -69,7 +69,6 @@ export function CuentaBancariaModal({
     control,
     handleSubmit,
     reset,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<CuentaBancariaFormData>({
@@ -85,9 +84,12 @@ export function CuentaBancariaModal({
     },
   });
 
-  const esPrincipalSueldo = watch("es_principal_sueldo");
-  const esPrincipalViatico = watch("es_principal_viatico");
-  const propositoActual = watch("proposito");
+  const esPrincipalSueldo = useWatch({ control, name: "es_principal_sueldo" });
+  const esPrincipalViatico = useWatch({
+    control,
+    name: "es_principal_viatico",
+  });
+  const propositoActual = useWatch({ control, name: "proposito" });
 
   // Auto-asignar propósito según switches
   useEffect(() => {
@@ -141,11 +143,7 @@ export function CuentaBancariaModal({
   const onSubmit = (values: CuentaBancariaFormData) => {
     const mutation = isEditing
       ? cuentaBancariaService
-          .editar(
-            servidorId,
-            Number(initialValues!.id),
-            values,
-          )
+          .editar(servidorId, Number(initialValues!.id), values)
           .then(() => {
             qc.invalidateQueries({
               queryKey: ["cuentas-bancarias", servidorId],
@@ -310,4 +308,3 @@ export function CuentaBancariaModal({
     </Modal>
   );
 }
-
