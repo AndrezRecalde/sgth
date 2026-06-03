@@ -28,6 +28,7 @@ import {
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useQuery } from "@tanstack/react-query";
+import { modals } from "@mantine/modals";
 import { asistenciaService } from "../services/asistenciaService";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -38,6 +39,7 @@ export function MarcacionOnlineTab() {
     lon: number;
   } | null>(null);
   const [cargandoUbicacion, setCargandoUbicacion] = useState(true);
+  const [errorGPS, setErrorGPS] = useState<"denied" | "error" | null>(null);
   const [registrando, setRegistrando] = useState(false);
 
   const cedula = usuario?.servidor?.cedula ?? null;
@@ -66,11 +68,30 @@ export function MarcacionOnlineTab() {
           lat: pos.coords.latitude,
           lon: pos.coords.longitude,
         });
+        setErrorGPS(null);
         setCargandoUbicacion(false);
       },
-      () => setCargandoUbicacion(false),
-      { enableHighAccuracy: true }
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setErrorGPS("denied");
+        } else {
+          setErrorGPS("error");
+        }
+        setCargandoUbicacion(false);
+      },
+      { enableHighAccuracy: true },
     );
+  };
+
+  const mostrarInstruccionesGPS = () => {
+    modals.open({
+      title: "Acceso a ubicación bloqueado",
+      children: (
+        <Text size="sm">
+          Has bloqueado el acceso a la ubicación. Para permitirlo, haz clic en el ícono del candado (🔒) o información (ℹ️) en la barra de direcciones de tu navegador, busca "Ubicación" y cámbialo a "Permitir". Luego recarga la página.
+        </Text>
+      ),
+    });
   };
 
   const handleReintentar = () => {
@@ -109,7 +130,7 @@ export function MarcacionOnlineTab() {
     }
   };
 
-  if (!cedula || !puedeMarcar) {
+  /* if (!cedula || !puedeMarcar) {
     return (
       <Alert
         icon={<IconInfoCircle size={16} />}
@@ -123,7 +144,7 @@ export function MarcacionOnlineTab() {
         </Text>
       </Alert>
     );
-  }
+  } */
 
   // Lógica para determinar el paso activo en el Timeline
   let activeStep = -1;
@@ -172,16 +193,27 @@ export function MarcacionOnlineTab() {
               </>
             ) : (
               <Group gap="xs">
-                <Button
-                  size="compact-xs"
-                  variant="subtle"
-                  color="blue"
-                  onClick={handleReintentar}
-                >
-                  Reintentar
-                </Button>
+                {errorGPS === "denied" ? (
+                  <Button
+                    size="compact-xs"
+                    variant="subtle"
+                    color="red"
+                    onClick={mostrarInstruccionesGPS}
+                  >
+                    Permiso Denegado
+                  </Button>
+                ) : (
+                  <Button
+                    size="compact-xs"
+                    variant="subtle"
+                    color="blue"
+                    onClick={handleReintentar}
+                  >
+                    Reintentar
+                  </Button>
+                )}
                 <Badge
-                  variant="dot"
+                  variant="light"
                   color="red"
                   size="sm"
                   leftSection={
@@ -317,7 +349,7 @@ export function MarcacionOnlineTab() {
                   loading={registrando}
                   onClick={() => registrar("I", "Entrada")}
                   fullWidth
-                  disabled={cargandoEstado}
+                  disabled={cargandoEstado || !ubicacion}
                   p={0}
                 >
                   <Stack gap={4} align="center" justify="center">
@@ -338,7 +370,7 @@ export function MarcacionOnlineTab() {
                   loading={registrando}
                   onClick={() => registrar("I", "Salida")}
                   fullWidth
-                  disabled={cargandoEstado}
+                  disabled={cargandoEstado || !ubicacion}
                   p={0}
                 >
                   <Stack gap={4} align="center" justify="center">
@@ -359,7 +391,7 @@ export function MarcacionOnlineTab() {
                   loading={registrando}
                   onClick={() => registrar("O", "Salida Almuerzo")}
                   fullWidth
-                  disabled={cargandoEstado}
+                  disabled={cargandoEstado || !ubicacion}
                   p={0}
                 >
                   <Stack gap={4} align="center" justify="center">
@@ -382,7 +414,7 @@ export function MarcacionOnlineTab() {
                   loading={registrando}
                   onClick={() => registrar("O", "Retorno Almuerzo")}
                   fullWidth
-                  disabled={cargandoEstado}
+                  disabled={cargandoEstado || !ubicacion}
                   p={0}
                 >
                   <Stack gap={4} align="center" justify="center">
