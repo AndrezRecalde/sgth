@@ -59,12 +59,10 @@ export function CuentaBancariaModal({
   const { data: rawEntidades = [], isLoading: loadingEntidades } =
     useEntidadesFinancieras();
 
-  const entidadOptions = Array.isArray(rawEntidades)
-    ? (rawEntidades as Record<string, unknown>[]).map((e) => ({
-        value: String(e.id),
-        label: String(e.nombre ?? `Entidad ${e.id}`),
-      }))
-    : [];
+  const entidadOptions = (rawEntidades ?? []).map((e) => ({
+    value: String(e.id),
+    label: e.nombre ?? `Entidad ${e.id}`,
+  }));
 
   const {
     register,

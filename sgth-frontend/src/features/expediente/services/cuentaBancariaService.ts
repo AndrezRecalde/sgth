@@ -17,7 +17,7 @@ export const cuentaBancariaService = {
       `/expediente/servidores/${servidorId}/cuentas-bancarias`, data
     ).then(r => r.data.datos),
 
-  editar: (servidorId: number, id: number, data: Record<string, unknown>) =>
+  editar: (servidorId: number, id: number, data: CuentaBancariaFormData) =>
     api.put<ApiResponse<CuentaBancariaServidor>>(
       `/expediente/servidores/${servidorId}/cuentas-bancarias/${id}`, data
     ).then(r => r.data.datos),
