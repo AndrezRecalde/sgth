@@ -307,7 +307,7 @@ export function PeriodosVacacionesTab() {
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
           <Button
-            mt={22}
+            mt="lg"
             variant="light"
             color="blue"
             leftSection={<IconRefresh size={16} />}

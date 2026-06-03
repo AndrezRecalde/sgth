@@ -9,7 +9,7 @@ import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconCheck, IconX,
   IconShieldCheck, IconClipboardList,
-  IconSearch, IconPrinter,
+  IconPrinter,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import React from 'react'
@@ -256,8 +256,8 @@ export function PermisosTab() {
       {/* ── Búsqueda por folio ── */}
       <Group gap="sm" align="flex-end">
         <TextInput
-          placeholder="Buscar por folio (ej: PER-2026-00001)"
-          leftSection={<IconSearch size={14} />}
+          label="Búsqueda por folio"
+          placeholder="Ej: PER-2026-00001"
           value={busquedaFolio}
           onChange={(e) =>
             setBusquedaFolio(e.currentTarget.value)
@@ -272,7 +272,6 @@ export function PermisosTab() {
           size="sm"
           variant="light"
           color="blue"
-          leftSection={<IconSearch size={14} />}
           onClick={() => setFolioQuery(busquedaFolio)}
         >
           Buscar

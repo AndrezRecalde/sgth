@@ -154,7 +154,7 @@ export function ConsolidadoPermisosTab() {
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 3 }}>
             <Button
-              mt={22}
+              mt="lg"
               color="emerald"
               variant="light"
               leftSection={<IconSearch size={16} />}

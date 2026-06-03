@@ -8,7 +8,7 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconPlus, IconBeach, IconCheck, IconX,
-  IconSearch, IconPrinter,
+  IconPrinter,
 } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import React from 'react'
@@ -252,8 +252,8 @@ export function VacacionesTab() {
       {/* ── Búsqueda por folio ── */}
       <Group gap="sm" align="flex-end">
         <TextInput
-          placeholder="Buscar por folio (ej: VAC-2026-00001)"
-          leftSection={<IconSearch size={14} />}
+          label="Búsqueda por folio"
+          placeholder="Ej: VAC-2026-00001"
           value={busquedaFolio}
           onChange={(e) =>
             setBusquedaFolio(e.currentTarget.value)
@@ -268,7 +268,6 @@ export function VacacionesTab() {
           size="sm"
           variant="light"
           color="blue"
-          leftSection={<IconSearch size={14} />}
           onClick={() => setFolioQuery(busquedaFolio)}
         >
           Buscar

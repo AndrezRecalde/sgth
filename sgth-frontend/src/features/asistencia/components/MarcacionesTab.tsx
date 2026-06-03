@@ -169,7 +169,7 @@ export function MarcacionesTab() {
             leftSection={<IconSearch size={16} />}
             disabled={!servidorSel || !fechaInicio || !fechaFin}
             onClick={() => { setBuscar(true); refetch() }}
-            mt={22}
+            mt="lg"
           >
             Consultar
           </Button>
