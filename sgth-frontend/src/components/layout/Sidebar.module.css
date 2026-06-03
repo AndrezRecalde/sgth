@@ -54,7 +54,9 @@
   border-left: 3px solid transparent;
   color: var(--mantine-color-text);
   background-color: transparent;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
   text-decoration: none;
   cursor: pointer;
   border: none;

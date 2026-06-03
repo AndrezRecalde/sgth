@@ -13,6 +13,10 @@ import {
   Switch,
   Tooltip,
   Image,
+  Indicator,
+  Paper,
+  Stack,
+  Button,
 } from "@mantine/core";
 import {
   IconSun,
@@ -20,10 +24,10 @@ import {
   IconBell,
   IconSettings,
   IconLogout,
+  IconCamera,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import classes from "./Topbar.module.css";
 
 interface TopbarProps {
   mobileOpened: boolean;
@@ -42,17 +46,19 @@ export function Topbar({
   const { usuario, clearAuth } = useAuth();
   const router = useRouter();
 
-  const displayName = usuario?.nombre_completo
-    || usuario?.servidor?.nombre
-    || usuario?.email
-    || 'Usuario'
+  const displayName =
+    usuario?.nombre_completo ||
+    usuario?.servidor?.nombre ||
+    usuario?.email ||
+    "Usuario";
 
-  const initials = displayName
-    .split(' ')
-    .slice(0, 2)
-    .map((w: string) => w[0] ?? '')
-    .join('')
-    .toUpperCase() || 'US'
+  const initials =
+    displayName
+      .split(" ")
+      .slice(0, 2)
+      .map((w: string) => w[0] ?? "")
+      .join("")
+      .toUpperCase() || "US";
   const role = usuario?.roles?.[0] || "Usuario";
 
   const handleLogout = (e?: React.MouseEvent) => {
@@ -62,15 +68,7 @@ export function Topbar({
   };
 
   return (
-    <Group
-      h="100%"
-      px="md"
-      justify="space-between"
-      align="center"
-      style={{
-        borderBottom: "0.5px solid var(--mantine-color-default-border)",
-      }}
-    >
+    <Group h="100%" px="md" justify="space-between" align="center">
       {/* Sección Izquierda: Burger y Logo */}
       <Group gap="sm">
         <Burger
@@ -124,11 +122,18 @@ export function Topbar({
             radius="xl"
             aria-label="Notificaciones"
           >
-            <IconBell size={20} />
+            <IconBell size={25} />
           </ActionIcon>
         </Tooltip>
 
-        <Menu width={280} position="bottom-end" shadow="md" withinPortal>
+        <Menu
+          width={340}
+          position="bottom-end"
+          shadow="xl"
+          radius={24}
+          withinPortal
+          transitionProps={{ transition: "pop", duration: 150 }}
+        >
           <Menu.Target>
             <UnstyledButton
               style={{ display: "flex", alignItems: "center" }}
@@ -136,80 +141,117 @@ export function Topbar({
             >
               <Avatar
                 color="emerald"
-                size="md"
-                style={{ cursor: "pointer", fontWeight: 600 }}
+                size={45}
+                style={{ cursor: "pointer", fontWeight: 800 }}
               >
                 {initials}
               </Avatar>
             </UnstyledButton>
           </Menu.Target>
 
-          <Menu.Dropdown>
-            {/* Cabecera de perfil */}
-            <div className={classes.userMenuHeader}>
-              <Avatar color="emerald" size="md" style={{ fontWeight: 600 }}>
-                {initials}
-              </Avatar>
-              <div className={classes.userMenuInfo}>
-                <Text className={classes.userMenuName} truncate>
-                  {displayName}
-                </Text>
-                <Text className={classes.userMenuRole} truncate>
-                  {usuario?.usuario_ti ?? role}
-                </Text>
-              </div>
-            </div>
+          <Menu.Dropdown p="md">
+            {/* Cabecera: Email */}
+            <Text size="sm" fw={600} ta="center" mt="xs">
+              {usuario?.email || "correo@ejemplo.com"}
+            </Text>
 
-            {/* Fila de modo oscuro con Switch */}
-            <Box
-              px="md"
-              py="xs"
-              style={{ cursor: "pointer" }}
-              /* onClick={(e) => {
-                // Prevenir doble toggle si el clic fue directamente en el input del switch
-                if ((e.target as HTMLElement).tagName !== 'INPUT') {
-                  toggleColorScheme()
-                }
-              }} */
-            >
-              <Group justify="space-between">
-                <Group gap="sm">
-                  {colorScheme === "dark" ? (
-                    <IconSun size={16} />
-                  ) : (
-                    <IconMoon size={16} />
-                  )}
-                  <Text size="sm">Modo oscuro</Text>
-                </Group>
-                <Switch
-                  checked={colorScheme === "dark"}
-                  onChange={toggleColorScheme}
-                  size="xs"
+            {/* Avatar & Saludo */}
+            <Stack align="center" gap={4} mt="md">
+              <Indicator
+                inline
+                size={26}
+                offset={10}
+                position="bottom-end"
+                color="var(--mantine-color-body)"
+                withBorder
+                label={<IconCamera size={14} color="var(--mantine-color-text)" />}
+              >
+                <Avatar
                   color="emerald"
-                  styles={{ track: { cursor: "pointer" } }}
-                  aria-label="Toggle modo oscuro"
-                />
-              </Group>
-            </Box>
+                  size={84}
+                  radius="100%"
+                  style={{
+                    border: "2px solid var(--mantine-color-emerald-filled)",
+                    fontWeight: 700,
+                    fontSize: "32px",
+                  }}
+                >
+                  {initials}
+                </Avatar>
+              </Indicator>
+              <Text size="xl" fw={400} mt="sm">
+                ¡Hola, {displayName.split(" ")[0]}!
+              </Text>
+              <Button
+                variant="default"
+                radius="xl"
+                size="sm"
+                mt="xs"
+                fw={600}
+                onClick={() => router.push("/configuracion")}
+              >
+                Gestionar tu cuenta
+              </Button>
+            </Stack>
 
-            <Menu.Divider />
-
-            {/* Configuración */}
-            <Menu.Item
-              leftSection={<IconSettings size={16} />}
-              onClick={() => router.push("/configuracion")}
+            {/* Bloque de Acciones */}
+            <Paper
+              radius="xl"
+              withBorder
+              bg="var(--mantine-color-default-hover)"
+              mt="xl"
+              p={4}
             >
-              Configuración
-            </Menu.Item>
+              <Menu.Item
+                leftSection={
+                  colorScheme === "dark" ? (
+                    <IconSun size={20} />
+                  ) : (
+                    <IconMoon size={20} />
+                  )
+                }
+                rightSection={
+                  <Switch
+                    checked={colorScheme === "dark"}
+                    size="sm"
+                    color="emerald"
+                    style={{ pointerEvents: "none" }}
+                  />
+                }
+                onClick={() => toggleColorScheme()}
+                style={{ borderRadius: "var(--mantine-radius-xl)" }}
+                py="sm"
+              >
+                <Text size="sm" fw={600}>
+                  Modo oscuro
+                </Text>
+              </Menu.Item>
 
-            {/* Cerrar sesión */}
-            <Menu.Item
-              leftSection={<IconLogout size={16} />}
-              color="red"
-              onClick={handleLogout}
-            >
-              Cerrar sesión
-            </Menu.Item>
+              <Menu.Item
+                leftSection={<IconLogout size={20} />}
+                color="red"
+                onClick={handleLogout}
+                style={{ borderRadius: "var(--mantine-radius-xl)" }}
+                py="sm"
+              >
+                <Text size="sm" fw={600}>
+                  Cerrar sesión en todas las cuentas
+                </Text>
+              </Menu.Item>
+            </Paper>
+
+            {/* Footer de enlaces */}
+            <Group justify="center" gap="xs" mt="lg" mb="sm">
+              <Text size="xs" c="dimmed" style={{ cursor: "pointer" }}>
+                Política de Privacidad
+              </Text>
+              <Text size="xs" c="dimmed">
+                •
+              </Text>
+              <Text size="xs" c="dimmed" style={{ cursor: "pointer" }}>
+                Términos del Servicio
+              </Text>
+            </Group>
           </Menu.Dropdown>
         </Menu>
       </Group>
