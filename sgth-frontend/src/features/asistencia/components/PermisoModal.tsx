@@ -49,7 +49,8 @@ const schema = z.object({
   unidad_administrativa_id: z.number({
     error: "Seleccione la unidad",
   }),
-  servidor_id: z.number({ error: "Seleccione el servidor" }),
+  servidor_id: z.number({ error: "Seleccione el servidor" })
+    .min(1, "Seleccione el servidor"),
   jefe_id: z.number({ error: "Seleccione el jefe" }).optional().nullable(),
   tipo: z.enum(["personal", "oficial", "enfermedad", "calamidad"]),
   fecha: z.string().min(1, "La fecha es requerida"),
@@ -157,8 +158,8 @@ export function PermisoModal({ opened, onClose }: Props) {
   };
 
   const onSubmit = async (values: FormData) => {
-    const result = await crear.mutateAsync(values as Record<string, unknown>);
-    setPermisoCreado(result as unknown as PermisoServidor);
+    const result = await crear.mutateAsync(values);
+    setPermisoCreado(result ?? null);
     setPaso(1);
   };
 
@@ -227,7 +228,7 @@ export function PermisoModal({ opened, onClose }: Props) {
                     const id = v ? Number(v) : undefined;
                     field.onChange(id);
                     setUnidadSelId(id ?? null);
-                    setValue("servidor_id", undefined as unknown as number);
+                    setValue("servidor_id", 0);
                     setValue("jefe_id", null);
                   }}
                   error={errors.unidad_administrativa_id?.message}

@@ -48,7 +48,7 @@ export const asistenciaService = {
       }>>('/asistencia/permisos', { params })
         .then(r => r.data.datos),
 
-    crear: (data: Record<string, unknown>) =>
+    crear: <T>(data: T) =>
       api.post<ApiResponse<PermisoServidor>>(
         '/asistencia/permisos', data
       ).then(r => r.data.datos),
@@ -147,12 +147,12 @@ export const asistenciaService = {
         `/asistencia/vacaciones/saldo/${servidorId}`
       ).then(r => r.data.datos),
 
-    crear: (data: Record<string, unknown>) =>
+    crear: <T>(data: T) =>
       api.post<ApiResponse<Vacacion>>(
         '/asistencia/vacaciones', data
       ).then(r => r.data.datos),
 
-    actualizar: (id: number, data: Record<string, unknown>) =>
+    actualizar: <T>(id: number, data: T) =>
       api.put<ApiResponse<Vacacion>>(
         `/asistencia/vacaciones/${id}`, data
       ).then(r => r.data.datos),

@@ -62,7 +62,7 @@ const schema = z.object({
   unidad_administrativa_id: z.number({
     error: 'Seleccione la unidad'
   }),
-  servidor_id:         z.number({ error: 'Seleccione el servidor' }),
+  servidor_id:         z.number({ error: 'Seleccione el servidor' }).min(1, 'Seleccione el servidor'),
   jefe_id:             z.number().optional().nullable(),
   persona_reemplaza_id: z.number().optional().nullable(),
   motivo:              z.string().min(1, 'Seleccione el motivo'),
@@ -225,10 +225,8 @@ export function VacacionModal({ opened, onClose }: Props) {
   }
 
   const onSubmit = async (values: FormData) => {
-    const result = await crear.mutateAsync(
-      values as Record<string, unknown>
-    )
-    setVacacionCreada(result as unknown as Vacacion)
+    const result = await crear.mutateAsync(values)
+    setVacacionCreada(result ?? null)
     setPaso(1)
   }
 
@@ -297,7 +295,7 @@ export function VacacionModal({ opened, onClose }: Props) {
                     const id = v ? Number(v) : undefined
                     field.onChange(id)
                     setUnidadSelId(id ?? null)
-                    setValue('servidor_id', undefined as unknown as number)
+                    setValue('servidor_id', 0)
                     setValue('jefe_id', null)
                     setValue('persona_reemplaza_id', null)
                     setServidorSelId(null)

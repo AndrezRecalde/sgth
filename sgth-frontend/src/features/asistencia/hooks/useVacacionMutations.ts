@@ -16,8 +16,19 @@ export function useVacacionMutations() {
   })
 
   const crear = useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      asistenciaService.vacaciones.crear(data),
+    mutationFn: (data: {
+      unidad_administrativa_id: number
+      servidor_id:              number
+      jefe_id?:                 number | null
+      persona_reemplaza_id?:    number | null
+      fecha_inicio:             string
+      fecha_fin:                string
+      fecha_retorno:            string
+      tipo_dias:                string
+      dias_solicitados:         number
+      saldo_previo?:            number
+      observacion?:             string | null
+    }) => asistenciaService.vacaciones.crear(data),
     onSuccess: () => {
       notifications.show({
         title: 'Solicitud registrada',
@@ -31,7 +42,7 @@ export function useVacacionMutations() {
   })
 
   const actualizar = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
       asistenciaService.vacaciones.actualizar(id, data),
     onSuccess: () => {
       notifications.show({
