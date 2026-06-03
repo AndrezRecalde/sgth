@@ -3,8 +3,10 @@ import { createTheme, rem } from "@mantine/core";
 export const theme = createTheme({
   primaryColor: "emerald",
   primaryShade: 6,
-  fontFamily:
-    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  fontFamily: "var(--font-poppins), sans-serif",
+  headings: {
+    fontFamily: "var(--font-poppins), sans-serif",
+  },
   defaultRadius: "md",
   colors: {
     emerald: [
