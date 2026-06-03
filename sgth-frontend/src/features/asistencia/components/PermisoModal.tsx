@@ -338,7 +338,7 @@ export function PermisoModal({ opened, onClose }: Props) {
                   minDate={new Date()}
                   {...contained}
                   value={toDate(field.value)}
-                  onChange={(d: unknown) => field.onChange(fromDate(d as Date) ?? "")}
+                  onChange={(d: Date | string | null) => field.onChange(fromDate(d instanceof Date ? d : null) ?? "")}
                   error={errors.fecha?.message}
                 />
               )}

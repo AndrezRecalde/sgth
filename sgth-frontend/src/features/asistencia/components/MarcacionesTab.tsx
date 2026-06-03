@@ -166,7 +166,7 @@ export function MarcacionesTab() {
             valueFormat="YYYY-MM-DD"
             {...contained}
             value={fechaInicio}
-            onChange={(val: unknown) => setFechaInicio(val as Date)}
+            onChange={(val: Date | string | null) => setFechaInicio(val instanceof Date ? val : null)}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
@@ -176,7 +176,7 @@ export function MarcacionesTab() {
             valueFormat="YYYY-MM-DD"
             {...contained}
             value={fechaFin}
-            onChange={(val: unknown) => setFechaFin(val as Date)}
+            onChange={(val: Date | string | null) => setFechaFin(val instanceof Date ? val : null)}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 2 }}>
