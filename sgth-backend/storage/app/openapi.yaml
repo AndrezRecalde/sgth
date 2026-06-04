@@ -18551,6 +18551,95 @@
                 }
             }
         },
+        "/v1/viaticos/{id}/aprobar": {
+            "post": {
+                "operationId": "viatico.aprobar",
+                "tags": [
+                    "Viatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vi\u00e1tico aprobado correctamente."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solo se pueden aprobar vi\u00e1ticos en estado solicitado."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "integer",
+                                            "const": 422
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/viaticos/{viaticoId}/liquidar": {
             "post": {
                 "operationId": "viatico.liquidar",
@@ -20966,7 +21055,8 @@
                     "en_comision",
                     "pendiente_liquidacion",
                     "liquidado",
-                    "contabilizado"
+                    "contabilizado",
+                    "aprobado"
                 ],
                 "title": "EstadoViatico"
             },
@@ -26409,6 +26499,21 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "modalidad_anticipo": {
+                        "type": "string"
+                    },
+                    "tipo_viaje": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "pais_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -26430,7 +26535,10 @@
                     "updated_at",
                     "deleted_at",
                     "codigo_viatico",
-                    "comision_id"
+                    "comision_id",
+                    "modalidad_anticipo",
+                    "tipo_viaje",
+                    "pais_destino"
                 ],
                 "title": "Viatico"
             },
