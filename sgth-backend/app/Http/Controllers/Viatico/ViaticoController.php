@@ -39,4 +39,35 @@ class ViaticoController extends Controller
             'viatico' => $viatico
         ], 'Viático liquidado correctamente. Facturas procesadas considerando el 70/30 de la normativa del MRL.');
     }
+
+    public function aprobar(int $id): JsonResponse
+    {
+        $viatico = \App\Models\Viatico\Viatico::findOrFail($id);
+        $this->authorize('gestionar-viaticos');
+
+        if ($viatico->estado->value !== 'solicitado') {
+            return ApiResponse::error(
+                'Solo se pueden aprobar viáticos en estado solicitado.',
+                422
+            );
+        }
+
+        // Modalidad anticipo
+        $montoAnticipo = match($viatico->modalidad_anticipo) {
+            'total'        => $viatico->monto_calculado,
+            'parcial'      => $viatico->monto_anticipo, // ya definido
+            'sin_anticipo' => 0.00,
+            default        => $viatico->monto_calculado,
+        };
+
+        $viatico->update([
+            'estado'         => \App\Enums\EstadoViatico::APROBADO,
+            'monto_anticipo' => $montoAnticipo,
+        ]);
+
+        return ApiResponse::ok(
+            $viatico->fresh(),
+            'Viático aprobado correctamente.'
+        );
+    }
 }

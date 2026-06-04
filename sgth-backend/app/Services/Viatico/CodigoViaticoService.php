@@ -28,7 +28,7 @@ class CodigoViaticoService
                 ? (int) substr($ultimoCodigo, strrpos($ultimoCodigo, '-') + 1) + 1
                 : 1;
 
-            return sprintf('%s-%d-%04d', $codigoUnidad, $anio, $secuencial);
+            return sprintf('%s-%d-%05d', $codigoUnidad, $anio, $secuencial);
         });
     }
 

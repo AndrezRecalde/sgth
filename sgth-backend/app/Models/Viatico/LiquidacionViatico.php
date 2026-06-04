@@ -62,4 +62,12 @@ class LiquidacionViatico extends Model
     {
         return $this->hasMany(FacturaViatico::class, 'liquidacion_viatico_id');
     }
+
+    public function actividades(): HasMany
+    {
+        return $this->hasMany(
+            ActividadLiquidacion::class,
+            'liquidacion_viatico_id'
+        );
+    }
 }

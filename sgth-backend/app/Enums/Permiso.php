@@ -72,6 +72,7 @@ enum Permiso: string
     case LIQUIDAR_VIATICO            = 'liquidar-viatico';
     case VER_VIATICOS_TODOS          = 'ver-viaticos-todos';
     case GESTIONAR_TARIFAS_VIATICO   = 'gestionar-tarifas-viatico';
+    case GESTIONAR_VIATICOS          = 'gestionar-viaticos';
 
     // ── MÓDULO 10: SSO ───────────────────────────────────────────
     case GESTIONAR_SSO               = 'gestionar-sso';

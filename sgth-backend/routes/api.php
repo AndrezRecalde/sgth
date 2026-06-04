@@ -432,6 +432,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->name('viatico.solicitar.por.servidor');
         Route::post('{id}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar'])
             ->name('viatico.solicitar.propio');
+        Route::post('{id}/aprobar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'aprobar']);
         Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
         
         Route::get('{id}/informe/generar-enlace', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']);

@@ -93,6 +93,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_EVALUACIONES_TODAS,
             Permiso::GESTIONAR_EVALUACIONES,
             Permiso::VER_VIATICOS_TODOS,
+            Permiso::GESTIONAR_VIATICOS,
             Permiso::GESTIONAR_TARIFAS_VIATICO,
             Permiso::GESTIONAR_SSO,
             Permiso::VER_SUMARIOS,
@@ -125,6 +126,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_PERMISOS_TODOS,
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::VER_ACTIVIDADES_UNIDAD,
+            Permiso::GESTIONAR_VIATICOS,
             Permiso::GENERAR_REPORTES,
             Permiso::PUEDE_MARCAR_ONLINE,
         ]));
