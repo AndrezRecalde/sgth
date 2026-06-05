@@ -67,6 +67,11 @@ export function ViaticoView() {
     abrirDetalle()
   }
 
+  const handleCreado = (v: Viatico) => {
+    setViaticoSel(v as ViaticoConRelaciones)
+    abrirDetalle()
+  }
+
   const columns: DataTableColumn<ViaticoConRelaciones>[] = [
     {
       accessor: 'codigo_viatico',
@@ -107,17 +112,30 @@ export function ViaticoView() {
     {
       accessor: 'datetime_salida',
       title:    'Período',
-      width:    150,
-      render: ({ datetime_salida, datetime_llegada }) => {
-        const fmt = (f: string | null | undefined) =>
-          f ? new Date(f).toLocaleDateString('es-EC', {
+      width:    160,
+      render: ({ datetime_salida, datetime_llegada, total_dias }) => {
+        if (!datetime_salida) {
+          return (
+            <Badge color="orange" variant="dot" size="sm">
+              Sin itinerario
+            </Badge>
+          )
+        }
+        const fmt = (f: string) =>
+          new Date(f).toLocaleDateString('es-EC', {
             timeZone: 'UTC',
             day: '2-digit', month: '2-digit', year: '2-digit',
-          }) : '—'
+          })
         return (
-          <Text size="xs" ff="monospace">
-            {fmt(datetime_salida as string)} – {fmt(datetime_llegada as string)}
-          </Text>
+          <Stack gap={0}>
+            <Text size="xs" ff="monospace">
+              {fmt(datetime_salida as string)} –{' '}
+              {fmt(datetime_llegada as string)}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {Number(total_dias ?? 0).toFixed(1)} días
+            </Text>
+          </Stack>
         )
       },
     },
@@ -258,6 +276,7 @@ export function ViaticoView() {
       <ViaticoModal
         opened={modalAbierto}
         onClose={close}
+        onCreated={handleCreado}
       />
 
       <ViaticoDetalle

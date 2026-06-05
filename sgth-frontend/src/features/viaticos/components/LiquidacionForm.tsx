@@ -294,7 +294,9 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
         />
 
         <Stack gap="xs">
-          {facturaFields.map((field, i) => (
+          {facturaFields.map((field, i) => {
+            const tipoComp = watch(`facturas.${i}.tipo_comprobante`)
+            return (
             <Card key={field.id} withBorder radius="md" p="sm">
               <Group justify="space-between" mb="xs">
                 <Text size="xs" fw={600} c="dimmed">
@@ -361,19 +363,48 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <TextInput
-                    label="N° Factura"
-                    placeholder="001-001-000000001"
-                    {...contained}
-                    {...register(`facturas.${i}.numero_factura`)}
-                    error={
-                      errors.facturas?.[i]?.numero_factura?.message
-                    }
+                  <Controller
+                    name={`facturas.${i}.fecha_factura`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <DatePickerInput
+                        label="Fecha del comprobante"
+                        placeholder="Seleccionar"
+                        valueFormat="YYYY-MM-DD"
+                        clearable
+                        {...contained}
+                        value={toDate(f.value)}
+                        onChange={(v) =>
+                          f.onChange(fromDate(v as Date | null) ?? '')
+                        }
+                      />
+                    )}
                   />
                 </Grid.Col>
+                {tipoComp === 'ticket' ? (
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <TextInput
+                      label="N° Ticket / Pasaje"
+                      placeholder="Ej: T-001234"
+                      {...contained}
+                      {...register(`facturas.${i}.numero_ticket`)}
+                      error={errors.facturas?.[i]?.numero_ticket?.message}
+                    />
+                  </Grid.Col>
+                ) : (
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <TextInput
+                      label="N° Factura"
+                      placeholder="001-001-000000001"
+                      {...contained}
+                      {...register(`facturas.${i}.numero_factura`)}
+                      error={errors.facturas?.[i]?.numero_factura?.message}
+                    />
+                  </Grid.Col>
+                )}
                 <Grid.Col span={{ base: 12, sm: 6 }}>
                   <TextInput
-                    label="RUC proveedor"
+                    label={tipoComp === 'ticket' ? 'RUC proveedor (opcional)' : 'RUC proveedor'}
                     placeholder="0000000000001"
                     {...contained}
                     {...register(`facturas.${i}.ruc_proveedor`)}
@@ -428,7 +459,8 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
                 </Grid.Col>
               </Grid>
             </Card>
-          ))}
+            )
+          })}
 
           <Button
             size="xs"
@@ -447,7 +479,7 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
               monto:                0,
             })}
           >
-            Agregar factura
+            Agregar otro comprobante
           </Button>
         </Stack>
 

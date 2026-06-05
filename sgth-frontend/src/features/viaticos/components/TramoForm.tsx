@@ -1,63 +1,71 @@
-'use client'
+"use client";
 
 import {
-  Stack, Grid, Select, Button, Group,
-  Divider, TextInput,
-} from '@mantine/core'
-import { DateTimePicker } from '@mantine/dates'
-import '@mantine/dates/styles.css'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import React from 'react'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import {
-  useTiposTransporte,
-  useEmpresasPorTipo,
-} from '../hooks/useViaticos'
-import { useProvincias } from '@/features/expediente/hooks/useProvincias'
-import { useCantones } from '@/features/expediente/hooks/useCantones'
-import { viaticoService } from '../services/viaticoService'
-import { getApiErrorMessage } from '@/types/api'
-import type {
-  CatalogoTransporte,
-  EmpresaTransporte,
-} from '@/types/api'
-import {
-  tramoSchema,
-  type TramoFormData,
-} from '../schemas/viatico.schema'
+  Stack,
+  Grid,
+  Select,
+  Button,
+  Group,
+  Divider,
+  TextInput,
+} from "@mantine/core";
+import { DateTimePicker } from "@mantine/dates";
+import "@mantine/dates/styles.css";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { notifications } from "@mantine/notifications";
+import React from "react";
+import { IconCheck, IconX } from "@tabler/icons-react";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import { useTiposTransporte, useEmpresasPorTipo } from "../hooks/useViaticos";
+import { useProvincias } from "@/features/expediente/hooks/useProvincias";
+import { useCantones } from "@/features/expediente/hooks/useCantones";
+import { viaticoService } from "../services/viaticoService";
+import { getApiErrorMessage } from "@/types/api";
+import type { CatalogoTransporte, EmpresaTransporte } from "@/types/api";
+import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 
 interface Props {
-  viaticoId: number
-  onSuccess: () => void
-  onCancel:  () => void
+  viaticoId: number;
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
 const fromDateTime = (d: Date | null | string): string => {
-  if (!d) return ''
-  const dt = typeof d === 'string' ? new Date(d) : d
-  if (isNaN(dt.getTime())) return ''
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`
-}
+  if (!d) return "";
+  const dt = typeof d === "string" ? new Date(d) : d;
+  if (isNaN(dt.getTime())) return "";
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+};
 
 const PAISES_COMUNES = [
-  'Colombia', 'Perú', 'Bolivia', 'Chile',
-  'Argentina', 'Brasil', 'Venezuela', 'México',
-  'España', 'Estados Unidos', 'Canadá',
-  'Francia', 'Alemania', 'Italia', 'China',
-  'Japón', 'Otro',
-]
+  "Colombia",
+  "Perú",
+  "Bolivia",
+  "Chile",
+  "Argentina",
+  "Brasil",
+  "Venezuela",
+  "México",
+  "España",
+  "Estados Unidos",
+  "Canadá",
+  "Francia",
+  "Alemania",
+  "Italia",
+  "China",
+  "Japón",
+  "Otro",
+];
 
 export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
-  const contained = useContainedInput()
-  const qc        = useQueryClient()
+  const contained = useContainedInput();
+  const qc = useQueryClient();
 
-  const { data: tipos    = [] } = useTiposTransporte()
-  const { data: provincias = [] } = useProvincias()
+  const { data: tipos = [] } = useTiposTransporte();
+  const { data: provincias = [] } = useProvincias();
 
   const {
     control,
@@ -68,101 +76,106 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
   } = useForm<TramoFormData>({
     resolver: zodResolver(tramoSchema),
     defaultValues: {
-      origen_tipo:            'nacional',
-      origen_provincia_id:    null,
-      origen_canton_id:       null,
-      origen_pais:            null,
-      origen_ciudad:          '',
-      destino_tipo:           'nacional',
-      destino_provincia_id:   null,
-      destino_canton_id:      null,
-      destino_pais:           null,
-      destino_ciudad:         '',
+      origen_tipo: "nacional",
+      origen_provincia_id: null,
+      origen_canton_id: null,
+      origen_pais: null,
+      origen_ciudad: "",
+      destino_tipo: "nacional",
+      destino_provincia_id: null,
+      destino_canton_id: null,
+      destino_pais: null,
+      destino_ciudad: "",
       catalogo_transporte_id: 0,
-      empresa_transporte_id:  0,
-      datetime_salida:        '',
-      datetime_llegada:       '',
+      empresa_transporte_id: 0,
+      datetime_salida: "",
+      datetime_llegada: "",
     },
-  })
+  });
 
-  const origenTipo      = watch('origen_tipo')
-  const destinoTipo     = watch('destino_tipo')
-  const catalogoSelId   = watch('catalogo_transporte_id')
-  const origenProvId    = watch('origen_provincia_id')
-  const destinoProvId   = watch('destino_provincia_id')
+  const origenTipo = watch("origen_tipo");
+  const destinoTipo = watch("destino_tipo");
+  const catalogoSelId = watch("catalogo_transporte_id");
+  const origenProvId = watch("origen_provincia_id");
+  const destinoProvId = watch("destino_provincia_id");
 
-  const { data: empresas = [] } =
-    useEmpresasPorTipo(catalogoSelId || null)
+  const { data: empresas = [] } = useEmpresasPorTipo(catalogoSelId || null);
 
-  const { data: cantonesOrigen = [] } =
-    useCantones(origenProvId ?? null)
+  const { data: cantonesOrigen = [] } = useCantones(origenProvId ?? null);
 
-  const { data: cantonesDestino = [] } =
-    useCantones(destinoProvId ?? null)
+  const { data: cantonesDestino = [] } = useCantones(destinoProvId ?? null);
 
-  const tipoOptions = (tipos as CatalogoTransporte[]).map(t => ({
+  const tipoOptions = (tipos as CatalogoTransporte[]).map((t) => ({
     value: String(t.id),
     label: t.nombre,
-  }))
+  }));
 
-  const empresaOptions = (empresas as EmpresaTransporte[]).map(e => ({
+  const empresaOptions = (empresas as EmpresaTransporte[]).map((e) => ({
     value: String(e.id),
     label: e.nombre,
-  }))
+  }));
 
-  const provinciaOptions = (provincias as {
-    id: number; nombre: string
-  }[]).map(p => ({
+  const provinciaOptions = (
+    provincias as {
+      id: number;
+      nombre: string;
+    }[]
+  ).map((p) => ({
     value: String(p.id),
     label: p.nombre,
-  }))
+  }));
 
-  const cantonOrigenOptions = (cantonesOrigen as {
-    id: number; nombre: string
-  }[]).map(c => ({
+  const cantonOrigenOptions = (
+    cantonesOrigen as {
+      id: number;
+      nombre: string;
+    }[]
+  ).map((c) => ({
     value: String(c.id),
     label: c.nombre,
-  }))
+  }));
 
-  const cantonDestinoOptions = (cantonesDestino as {
-    id: number; nombre: string
-  }[]).map(c => ({
+  const cantonDestinoOptions = (
+    cantonesDestino as {
+      id: number;
+      nombre: string;
+    }[]
+  ).map((c) => ({
     value: String(c.id),
     label: c.nombre,
-  }))
+  }));
 
   const crear = useMutation({
-    mutationFn: (data: Parameters<
-      typeof viaticoService.tramos.crear
-    >[1]) => viaticoService.tramos.crear(viaticoId, data),
+    mutationFn: (data: Parameters<typeof viaticoService.tramos.crear>[1]) =>
+      viaticoService.tramos.crear(viaticoId, data),
     onSuccess: () => {
       notifications.show({
-        title:   'Tramo agregado',
-        message: 'El tramo fue registrado al itinerario.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
-      qc.invalidateQueries({ queryKey: ['tramos', viaticoId] })
-      qc.invalidateQueries({ queryKey: ['viatico', viaticoId] })
-      onSuccess()
+        title: "Tramo agregado",
+        message: "El tramo fue registrado al itinerario.",
+        color: "emerald",
+        icon: React.createElement(IconCheck, { size: 16 }),
+      });
+      qc.invalidateQueries({ queryKey: ["tramos", viaticoId] });
+      qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
+      onSuccess();
     },
-    onError: (error: unknown) => notifications.show({
-      title:   'Error',
-      message: getApiErrorMessage(error),
-      color:   'red',
-      icon:    React.createElement(IconX, { size: 16 }),
-    }),
-  })
+    onError: (error: unknown) =>
+      notifications.show({
+        title: "Error",
+        message: getApiErrorMessage(error),
+        color: "red",
+        icon: React.createElement(IconX, { size: 16 }),
+      }),
+  });
 
   const onSubmit = (values: TramoFormData) => {
-    const { catalogo_transporte_id: _, ...rest } = values
-    crear.mutate(rest)
-  }
+    const { catalogo_transporte_id: _, ...rest } = values;
+    crear.mutate(rest);
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="sm">
-
         {/* ── ORIGEN ── */}
         <Divider label="Origen" labelPosition="left" />
 
@@ -173,23 +186,23 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
             <Select
               label="Tipo de origen"
               data={[
-                { value: 'nacional',      label: 'Nacional'      },
-                { value: 'internacional', label: 'Internacional' },
+                { value: "nacional", label: "Nacional" },
+                { value: "internacional", label: "Internacional" },
               ]}
               {...contained}
               value={field.value}
               onChange={(v) => {
-                field.onChange(v ?? 'nacional')
-                setValue('origen_provincia_id', null)
-                setValue('origen_canton_id',    null)
-                setValue('origen_pais',         null)
-                setValue('origen_ciudad',        '')
+                field.onChange(v ?? "nacional");
+                setValue("origen_provincia_id", null);
+                setValue("origen_canton_id", null);
+                setValue("origen_pais", null);
+                setValue("origen_ciudad", "");
               }}
             />
           )}
         />
 
-        {origenTipo === 'nacional' ? (
+        {origenTipo === "nacional" ? (
           <Grid>
             <Grid.Col span={{ base: 12, sm: 4 }}>
               <Controller
@@ -204,9 +217,9 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     {...contained}
                     value={field.value ? String(field.value) : null}
                     onChange={(v) => {
-                      field.onChange(v ? Number(v) : null)
-                      setValue('origen_canton_id', null)
-                      setValue('origen_ciudad', '')
+                      field.onChange(v ? Number(v) : null);
+                      setValue("origen_canton_id", null);
+                      setValue("origen_ciudad", "");
                     }}
                     error={errors.origen_provincia_id?.message}
                   />
@@ -221,9 +234,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   <Select
                     label="Cantón de origen"
                     placeholder={
-                      !origenProvId
-                        ? 'Seleccione provincia'
-                        : 'Seleccionar'
+                      !origenProvId ? "Seleccione provincia" : "Seleccionar"
                     }
                     data={cantonOrigenOptions}
                     searchable
@@ -231,13 +242,16 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     {...contained}
                     value={field.value ? String(field.value) : null}
                     onChange={(v) => {
-                      field.onChange(v ? Number(v) : null)
+                      field.onChange(v ? Number(v) : null);
                       // Poblar ciudad con nombre del cantón
-                      const canton = (cantonesOrigen as {
-                        id: number; nombre: string
-                      }[]).find(c => String(c.id) === v)
+                      const canton = (
+                        cantonesOrigen as {
+                          id: number;
+                          nombre: string;
+                        }[]
+                      ).find((c) => String(c.id) === v);
                       if (canton) {
-                        setValue('origen_ciudad', canton.nombre)
+                        setValue("origen_ciudad", canton.nombre);
                       }
                     }}
                     error={errors.origen_canton_id?.message}
@@ -255,9 +269,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     placeholder="Ej: Esmeraldas"
                     {...contained}
                     value={field.value}
-                    onChange={(e) =>
-                      field.onChange(e.currentTarget.value)
-                    }
+                    onChange={(e) => field.onChange(e.currentTarget.value)}
                     error={errors.origen_ciudad?.message}
                   />
                 )}
@@ -278,8 +290,8 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     {...contained}
                     value={field.value ?? null}
                     onChange={(v) => {
-                      field.onChange(v ?? null)
-                      setValue('origen_ciudad', '')
+                      field.onChange(v ?? null);
+                      setValue("origen_ciudad", "");
                     }}
                     error={errors.origen_pais?.message}
                   />
@@ -296,9 +308,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     placeholder="Ej: Bogotá"
                     {...contained}
                     value={field.value}
-                    onChange={(e) =>
-                      field.onChange(e.currentTarget.value)
-                    }
+                    onChange={(e) => field.onChange(e.currentTarget.value)}
                     error={errors.origen_ciudad?.message}
                   />
                 )}
@@ -322,8 +332,8 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   {...contained}
                   value={field.value ? String(field.value) : null}
                   onChange={(v) => {
-                    field.onChange(v ? Number(v) : 0)
-                    setValue('empresa_transporte_id', 0)
+                    field.onChange(v ? Number(v) : 0);
+                    setValue("empresa_transporte_id", 0);
                   }}
                   error={errors.catalogo_transporte_id?.message}
                 />
@@ -342,14 +352,12 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   disabled={!catalogoSelId}
                   placeholder={
                     !catalogoSelId
-                      ? 'Seleccione primero el tipo'
-                      : 'Seleccionar empresa'
+                      ? "Seleccione primero el tipo"
+                      : "Seleccionar empresa"
                   }
                   {...contained}
                   value={field.value ? String(field.value) : null}
-                  onChange={(v) =>
-                    field.onChange(v ? Number(v) : 0)
-                  }
+                  onChange={(v) => field.onChange(v ? Number(v) : 0)}
                   error={errors.empresa_transporte_id?.message}
                 />
               )}
@@ -367,23 +375,23 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
             <Select
               label="Tipo de destino"
               data={[
-                { value: 'nacional',      label: 'Nacional'      },
-                { value: 'internacional', label: 'Internacional' },
+                { value: "nacional", label: "Nacional" },
+                { value: "internacional", label: "Internacional" },
               ]}
               {...contained}
               value={field.value}
               onChange={(v) => {
-                field.onChange(v ?? 'nacional')
-                setValue('destino_provincia_id', null)
-                setValue('destino_canton_id',    null)
-                setValue('destino_pais',         null)
-                setValue('destino_ciudad',        '')
+                field.onChange(v ?? "nacional");
+                setValue("destino_provincia_id", null);
+                setValue("destino_canton_id", null);
+                setValue("destino_pais", null);
+                setValue("destino_ciudad", "");
               }}
             />
           )}
         />
 
-        {destinoTipo === 'nacional' ? (
+        {destinoTipo === "nacional" ? (
           <Grid>
             <Grid.Col span={{ base: 12, sm: 4 }}>
               <Controller
@@ -398,9 +406,9 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     {...contained}
                     value={field.value ? String(field.value) : null}
                     onChange={(v) => {
-                      field.onChange(v ? Number(v) : null)
-                      setValue('destino_canton_id', null)
-                      setValue('destino_ciudad', '')
+                      field.onChange(v ? Number(v) : null);
+                      setValue("destino_canton_id", null);
+                      setValue("destino_ciudad", "");
                     }}
                     error={errors.destino_provincia_id?.message}
                   />
@@ -415,9 +423,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   <Select
                     label="Cantón de destino"
                     placeholder={
-                      !destinoProvId
-                        ? 'Seleccione provincia'
-                        : 'Seleccionar'
+                      !destinoProvId ? "Seleccione provincia" : "Seleccionar"
                     }
                     data={cantonDestinoOptions}
                     searchable
@@ -425,12 +431,15 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     {...contained}
                     value={field.value ? String(field.value) : null}
                     onChange={(v) => {
-                      field.onChange(v ? Number(v) : null)
-                      const canton = (cantonesDestino as {
-                        id: number; nombre: string
-                      }[]).find(c => String(c.id) === v)
+                      field.onChange(v ? Number(v) : null);
+                      const canton = (
+                        cantonesDestino as {
+                          id: number;
+                          nombre: string;
+                        }[]
+                      ).find((c) => String(c.id) === v);
                       if (canton) {
-                        setValue('destino_ciudad', canton.nombre)
+                        setValue("destino_ciudad", canton.nombre);
                       }
                     }}
                     error={errors.destino_canton_id?.message}
@@ -448,9 +457,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     placeholder="Ej: Quito"
                     {...contained}
                     value={field.value}
-                    onChange={(e) =>
-                      field.onChange(e.currentTarget.value)
-                    }
+                    onChange={(e) => field.onChange(e.currentTarget.value)}
                     error={errors.destino_ciudad?.message}
                   />
                 )}
@@ -471,8 +478,8 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     {...contained}
                     value={field.value ?? null}
                     onChange={(v) => {
-                      field.onChange(v ?? null)
-                      setValue('destino_ciudad', '')
+                      field.onChange(v ?? null);
+                      setValue("destino_ciudad", "");
                     }}
                     error={errors.destino_pais?.message}
                   />
@@ -489,9 +496,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     placeholder="Ej: Bogotá"
                     {...contained}
                     value={field.value}
-                    onChange={(e) =>
-                      field.onChange(e.currentTarget.value)
-                    }
+                    onChange={(e) => field.onChange(e.currentTarget.value)}
                     error={errors.destino_ciudad?.message}
                   />
                 )}
@@ -512,7 +517,11 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   label="Fecha y hora de salida"
                   placeholder="Seleccionar"
                   valueFormat="DD/MM/YYYY HH:mm"
-                  timePickerProps={{ format: '24h' }}
+                  timePickerProps={{
+                    withDropdown: true,
+                    popoverProps: { withinPortal: false },
+                    format: "24h",
+                  }}
                   {...contained}
                   value={field.value ? new Date(field.value) : null}
                   onChange={(v) => field.onChange(fromDateTime(v))}
@@ -530,7 +539,11 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   label="Fecha y hora de llegada"
                   placeholder="Seleccionar"
                   valueFormat="DD/MM/YYYY HH:mm"
-                  timePickerProps={{ format: '24h' }}
+                  timePickerProps={{
+                    withDropdown: true,
+                    popoverProps: { withinPortal: false },
+                    format: "24h",
+                  }}
                   {...contained}
                   value={field.value ? new Date(field.value) : null}
                   onChange={(v) => field.onChange(fromDateTime(v))}
@@ -557,5 +570,5 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
         </Group>
       </Stack>
     </form>
-  )
+  );
 }

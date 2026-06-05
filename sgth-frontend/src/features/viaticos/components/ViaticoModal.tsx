@@ -3,11 +3,13 @@
 import {
   Modal, Stack, Grid, Select, Textarea,
   Button, Group, NumberInput, Divider,
-  Alert, Text,
+  Alert, Text, ThemeIcon,
 } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconInfoCircle } from '@tabler/icons-react'
+import {
+  IconInfoCircle, IconRoute, IconArrowRight,
+} from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useViaticoMutations } from '../hooks/useViaticoMutations'
@@ -15,6 +17,7 @@ import {
   viaticoSchema,
   type ViaticoFormData,
 } from '../schemas/viatico.schema'
+import type { Viatico } from '@/types/api'
 
 const ZONA_OPTIONS = [
   { value: 'dentro_provincia', label: 'Dentro de la provincia' },
@@ -48,11 +51,12 @@ const PAISES_COMUNES = [
 ]
 
 interface Props {
-  opened:  boolean
-  onClose: () => void
+  opened:    boolean
+  onClose:   () => void
+  onCreated: (viatico: Viatico) => void
 }
 
-export function ViaticoModal({ opened, onClose }: Props) {
+export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   const { isMobile }  = useMobileBreakpoint()
   const contained     = useContainedInput()
   const { solicitar } = useViaticoMutations()
@@ -82,15 +86,25 @@ export function ViaticoModal({ opened, onClose }: Props) {
   const handleClose = () => { reset(); onClose() }
 
   const onSubmit = async (values: ViaticoFormData) => {
-    await solicitar.mutateAsync(values)
-    handleClose()
+    const viatico = await solicitar.mutateAsync(values)
+    reset()
+    onClose()
+    // Abrir drawer automáticamente con el viático creado
+    if (viatico) onCreated(viatico as Viatico)
   }
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
-      title="Nueva solicitud de viático"
+      title={
+        <Group gap="xs">
+          <ThemeIcon color="emerald" variant="light" size="sm">
+            <IconRoute size={14} />
+          </ThemeIcon>
+          <Text fw={600}>Nueva solicitud de viático</Text>
+        </Group>
+      }
       size="xl"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
@@ -99,7 +113,30 @@ export function ViaticoModal({ opened, onClose }: Props) {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
 
-          <Divider label="Zona del viaje" labelPosition="left" />
+          <Alert
+            icon={<IconInfoCircle size={14} />}
+            color="blue"
+            variant="light"
+          >
+            <Text size="xs" fw={500}>
+              ¿Cómo funciona?
+            </Text>
+            <Text size="xs" mt={2}>
+              1. Completa este formulario con los datos básicos
+              del viaje y la modalidad de anticipo.
+            </Text>
+            <Text size="xs">
+              2. Al crear la solicitud, el sistema te llevará
+              directamente a registrar el <strong>itinerario
+              del viaje</strong> (tramos de ida y vuelta).
+            </Text>
+            <Text size="xs">
+              3. Las fechas de salida y llegada se calculan
+              automáticamente desde el itinerario.
+            </Text>
+          </Alert>
+
+          <Divider label="Zona y anticipo" labelPosition="left" />
 
           <Grid>
             <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -108,7 +145,8 @@ export function ViaticoModal({ opened, onClose }: Props) {
                 control={control}
                 render={({ field }) => (
                   <Select
-                    label="Zona geográfica"
+                    label="¿A dónde viaja?"
+                    description="Zona geográfica del viaje"
                     data={ZONA_OPTIONS}
                     {...contained}
                     value={field.value}
@@ -126,7 +164,8 @@ export function ViaticoModal({ opened, onClose }: Props) {
                 control={control}
                 render={({ field }) => (
                   <Select
-                    label="Modalidad de anticipo"
+                    label="¿Necesita anticipo?"
+                    description="Modalidad de pago anticipado"
                     data={MODALIDAD_OPTIONS}
                     {...contained}
                     value={field.value}
@@ -147,7 +186,7 @@ export function ViaticoModal({ opened, onClose }: Props) {
               render={({ field }) => (
                 <NumberInput
                   label="Monto del anticipo parcial (USD)"
-                  description="Monto a entregar antes del viaje"
+                  description="¿Cuánto dinero necesita antes del viaje?"
                   prefix="$"
                   decimalScale={2}
                   min={0}
@@ -166,13 +205,17 @@ export function ViaticoModal({ opened, onClose }: Props) {
             <>
               <Alert
                 icon={<IconInfoCircle size={14} />}
-                color="blue"
+                color="orange"
                 variant="light"
               >
-                <Text size="xs">
-                  Para viajes al exterior el monto se calcula
-                  manualmente según el Acuerdo MRL-2011-00051
-                  (valor base × coeficiente del país destino).
+                <Text size="xs" fw={500}>
+                  Viaje al exterior
+                </Text>
+                <Text size="xs" mt={2}>
+                  El monto debe calcularse según el Acuerdo
+                  MRL-2011-00051: valor base de su nivel
+                  × coeficiente del país destino × número
+                  de días. Consulte a la UATH si tiene dudas.
                 </Text>
               </Alert>
               <Grid>
@@ -182,7 +225,7 @@ export function ViaticoModal({ opened, onClose }: Props) {
                     control={control}
                     render={({ field }) => (
                       <Select
-                        label="Tipo de viaje"
+                        label="Motivo del viaje al exterior"
                         placeholder="Seleccionar tipo"
                         data={TIPO_VIAJE_OPTIONS}
                         searchable
@@ -217,7 +260,7 @@ export function ViaticoModal({ opened, onClose }: Props) {
                     control={control}
                     render={({ field }) => (
                       <NumberInput
-                        label="Monto calculado exterior (USD)"
+                        label="Monto total del viático (USD)"
                         description="Valor base × coeficiente país × días"
                         prefix="$"
                         decimalScale={2}
@@ -238,15 +281,16 @@ export function ViaticoModal({ opened, onClose }: Props) {
             </>
           )}
 
-          <Divider label="Justificación" labelPosition="left" />
+          <Divider label="Justificación del viaje" labelPosition="left" />
 
           <Controller
             name="justificacion"
             control={control}
             render={({ field }) => (
               <Textarea
-                label="Justificación del viaje"
-                placeholder="Detalle el motivo de la comisión de servicio"
+                label="¿Cuál es el motivo del viaje?"
+                description="Explique el objetivo de la comisión de servicio (mínimo 10 caracteres)"
+                placeholder="Ej: Participación en el taller de capacitación sobre gestión pública organizado por el SNAP en la ciudad de Quito..."
                 autosize
                 minRows={3}
                 maxRows={6}
@@ -269,8 +313,9 @@ export function ViaticoModal({ opened, onClose }: Props) {
               color="emerald"
               variant="light"
               loading={isSubmitting}
+              rightSection={<IconArrowRight size={14} />}
             >
-              Crear solicitud
+              Crear y registrar itinerario
             </Button>
           </Group>
         </Stack>
