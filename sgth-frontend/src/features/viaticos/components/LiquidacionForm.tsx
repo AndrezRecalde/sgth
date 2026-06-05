@@ -5,7 +5,7 @@ import {
   Stack, Group, Button, Text, Card,
   TextInput, Textarea, NumberInput,
   ActionIcon, Divider, Badge, Grid,
-  Alert,
+  Alert, Select,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
@@ -16,27 +16,19 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useViaticoMutations } from '../hooks/useViaticoMutations'
+import { useCategoriasFactura } from '../hooks/useViaticos'
 import {
   liquidacionSchema,
   type LiquidacionFormData,
 } from '../schemas/viatico.schema'
-import type { Viatico } from '@/types/api'
+import type { Viatico, CategoriaFactura } from '@/types/api'
 
 interface Props {
   viatico:   Viatico
   onSuccess: () => void
 }
 
-const CONCEPTO_OPTIONS = [
-  'alimentacion',
-  'hospedaje',
-  'transporte_terrestre',
-  'pasaje_aereo',
-  'combustible',
-  'peaje',
-  'materiales',
-  'otro',
-]
+
 
 const toDate = (v?: string | null): Date | null => {
   if (!v) return null
@@ -53,6 +45,13 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
   const contained = useContainedInput()
   const { liquidar } = useViaticoMutations()
 
+  const { data: categorias = [] } = useCategoriasFactura()
+
+  const categoriaOptions = (categorias as CategoriaFactura[]).map(c => ({
+    value: String(c.id),
+    label: c.nombre,
+  }))
+
   const {
     control,
     handleSubmit,
@@ -65,11 +64,14 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
       fecha_retorno:  '',
       observaciones:  '',
       facturas: [{
-        concepto:         'alimentacion',
-        detalle:          '',
+        categoria_factura_id: 0,
+        tipo_comprobante: 'factura' as const,
+        fecha_factura:    '',
         numero_factura:   '',
+        numero_ticket:    '',
         ruc_proveedor:    '',
         nombre_proveedor: '',
+        detalle:          '',
         monto:            0,
       }],
       actividades: [{
@@ -312,19 +314,47 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
               <Grid>
                 <Grid.Col span={{ base: 12, sm: 6 }}>
                   <Controller
-                    name={`facturas.${i}.concepto`}
+                    name={`facturas.${i}.categoria_factura_id`}
                     control={control}
                     render={({ field: f }) => (
-                      <TextInput
-                        label="Concepto"
-                        placeholder="alimentacion, hospedaje..."
+                      <Select
+                        label="Categoría"
+                        data={categoriaOptions}
+                        searchable
                         {...contained}
-                        value={f.value}
-                        onChange={(e) =>
-                          f.onChange(e.currentTarget.value)
+                        value={f.value ? String(f.value) : null}
+                        onChange={(v) =>
+                          f.onChange(v ? Number(v) : 0)
                         }
                         error={
-                          errors.facturas?.[i]?.concepto?.message
+                          errors.facturas?.[i]
+                            ?.categoria_factura_id?.message
+                        }
+                      />
+                    )}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Controller
+                    name={`facturas.${i}.tipo_comprobante`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <Select
+                        label="Tipo de comprobante"
+                        data={[
+                          { value: 'factura', label: 'Factura' },
+                          { value: 'ticket',  label: 'Ticket / Pasaje' },
+                          { value: 'recibo',  label: 'Recibo'  },
+                          { value: 'otro',    label: 'Otro'    },
+                        ]}
+                        {...contained}
+                        value={f.value}
+                        onChange={(v) =>
+                          f.onChange(v ?? 'factura')
+                        }
+                        error={
+                          errors.facturas?.[i]
+                            ?.tipo_comprobante?.message
                         }
                       />
                     )}
@@ -406,9 +436,15 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
             color="orange"
             leftSection={<IconPlus size={12} />}
             onClick={() => appendFactura({
-              concepto: 'alimentacion', detalle: '',
-              numero_factura: '', ruc_proveedor: '',
-              nombre_proveedor: '', monto: 0,
+              categoria_factura_id: 0,
+              tipo_comprobante:     'factura',
+              fecha_factura:        '',
+              numero_factura:       '',
+              numero_ticket:        '',
+              ruc_proveedor:        '',
+              nombre_proveedor:     '',
+              detalle:              '',
+              monto:                0,
             })}
           >
             Agregar factura

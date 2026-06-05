@@ -3,56 +3,32 @@ import type {
   ApiResponse,
   PaginatedResponse,
   Viatico,
-  DestinoViatico,
-  TransporteViatico,
+  ViaticoConRelaciones,
+  TramoViatico,
   LiquidacionViatico,
   FacturaViatico,
-  Comision,
   AutorizacionVuelo,
+  CatalogoTransporte,
+  EmpresaTransporte,
+  CategoriaFactura,
   ViaticoParams,
-  ViaticoConRelaciones,
 } from '@/types/api'
 
-export type SolicitarViaticoData = {
-  comision_id?:           number | null
-  zona:                   string
-  tipo:                   string
-  tipo_viaje?:            string | null
-  pais_destino?:          string | null
-  fecha_inicio:           string
-  fecha_fin:              string
-  justificacion:          string
-  modalidad_anticipo:     'sin_anticipo' | 'total' | 'parcial'
-  monto_calculado?:       number
-  servidores_acompanantes?: number[]
-}
-
-export type CrearDestinoViaticoData = {
-  tipo_destino:  string
-  provincia_id?: number | null
-  canton_id?:    number | null
-  pais?:         string | null
-  estado_region?: string | null
-  fecha_llegada: string
-  fecha_salida:  string
-  orden?:        number
-}
-
-export type CrearTransporteViaticoData = {
-  tipo:                    string
-  provincia_origen_id?:    number | null
-  canton_origen_id?:       number | null
-  provincia_destino_id?:   number | null
-  canton_destino_id?:      number | null
-  pais_origen?:            string | null
-  pais_destino?:           string | null
-  fecha_viaje:             string
-  empresa_o_aerolinea?:    string | null
-  numero_ticket_o_billete?: string | null
-  placa_vehiculo?:         string | null
-  kilometraje?:            number | null
-  valor_kilometro?:        number | null
-  monto?:                  number | null
+export type CrearTramoData = {
+  origen_tipo:           'nacional' | 'internacional'
+  origen_provincia_id?:  number | null
+  origen_canton_id?:     number | null
+  origen_pais?:          string | null
+  origen_ciudad:         string
+  destino_tipo:          'nacional' | 'internacional'
+  destino_provincia_id?: number | null
+  destino_canton_id?:    number | null
+  destino_pais?:         string | null
+  destino_ciudad:        string
+  empresa_transporte_id: number
+  datetime_salida:       string
+  datetime_llegada:      string
+  orden?:                number
 }
 
 export const viaticoService = {
@@ -67,17 +43,17 @@ export const viaticoService = {
     api.get<ApiResponse<ViaticoConRelaciones>>(`/viaticos/${id}`)
       .then(r => r.data.datos),
 
-  solicitar: (data: SolicitarViaticoData) =>
+  solicitar: (data: {
+    zona:                   string
+    tipo_viaje?:            string | null
+    pais_destino?:          string | null
+    justificacion:          string
+    modalidad_anticipo:     'sin_anticipo' | 'total' | 'parcial'
+    monto_calculado?:       number | null
+    servidores_acompanantes?: number[]
+  }) =>
     api.post<ApiResponse<Viatico>>(
       '/viaticos', data
-    ).then(r => r.data.datos),
-
-  solicitarPorServidor: (
-    servidorId: number,
-    data: SolicitarViaticoData
-  ) =>
-    api.post<ApiResponse<Viatico>>(
-      `/viaticos/servidor/${servidorId}/solicitar`, data
     ).then(r => r.data.datos),
 
   aprobar: (id: number) =>
@@ -88,22 +64,25 @@ export const viaticoService = {
   liquidar: (
     viaticoId: number,
     data: {
-      fecha_retorno:   string
-      observaciones?:  string | null
+      fecha_retorno:    string
+      observaciones?:   string | null
       facturas: {
-        concepto:        string
-        detalle?:        string | null
-        numero_factura:  string
-        ruc_proveedor:   string
-        nombre_proveedor: string
-        monto:           number
+        categoria_factura_id: number
+        fecha_factura?:       string | null
+        tipo_comprobante:     'factura' | 'ticket' | 'recibo' | 'otro'
+        numero_factura?:      string | null
+        numero_ticket?:       string | null
+        ruc_proveedor?:       string | null
+        nombre_proveedor:     string
+        detalle?:             string | null
+        monto:                number
       }[]
       actividades: {
-        fecha:       string
-        hora_inicio: string
-        hora_fin:    string
-        descripcion: string
-        lugar:       string
+        fecha:        string
+        hora_inicio:  string
+        hora_fin:     string
+        descripcion:  string
+        lugar:        string
       }[]
       servidores_acompanantes?: number[]
     }
@@ -119,57 +98,30 @@ export const viaticoService = {
       `/viaticos/${id}/informe/generar-enlace`
     ).then(r => r.data.datos),
 
-  // ── Destinos ─────────────────────────────────────
-  destinos: {
+  // ── Tramos ───────────────────────────────────────
+  tramos: {
     listar: (viaticoId: number) =>
-      api.get<ApiResponse<DestinoViatico[]>>(
-        `/viaticos/${viaticoId}/destinos`
+      api.get<ApiResponse<TramoViatico[]>>(
+        `/viaticos/${viaticoId}/tramos`
       ).then(r => r.data.datos ?? []),
 
-    crear: (viaticoId: number, data: CrearDestinoViaticoData) =>
-      api.post<ApiResponse<DestinoViatico>>(
-        `/viaticos/${viaticoId}/destinos`, data
+    crear: (viaticoId: number, data: CrearTramoData) =>
+      api.post<ApiResponse<TramoViatico>>(
+        `/viaticos/${viaticoId}/tramos`, data
       ).then(r => r.data.datos),
 
     actualizar: (
       viaticoId: number,
-      destinoId: number,
-      data: CrearDestinoViaticoData
+      tramoId: number,
+      data: Partial<CrearTramoData>
     ) =>
-      api.put<ApiResponse<DestinoViatico>>(
-        `/viaticos/${viaticoId}/destinos/${destinoId}`, data
+      api.put<ApiResponse<TramoViatico>>(
+        `/viaticos/${viaticoId}/tramos/${tramoId}`, data
       ).then(r => r.data.datos),
 
-    eliminar: (viaticoId: number, destinoId: number) =>
+    eliminar: (viaticoId: number, tramoId: number) =>
       api.delete<ApiResponse<void>>(
-        `/viaticos/${viaticoId}/destinos/${destinoId}`
-      ).then(r => r.data),
-  },
-
-  // ── Transportes ──────────────────────────────────
-  transportes: {
-    listar: (viaticoId: number) =>
-      api.get<ApiResponse<TransporteViatico[]>>(
-        `/viaticos/${viaticoId}/transportes`
-      ).then(r => r.data.datos ?? []),
-
-    crear: (viaticoId: number, data: CrearTransporteViaticoData) =>
-      api.post<ApiResponse<TransporteViatico>>(
-        `/viaticos/${viaticoId}/transportes`, data
-      ).then(r => r.data.datos),
-
-    actualizar: (
-      viaticoId: number,
-      transporteId: number,
-      data: CrearTransporteViaticoData
-    ) =>
-      api.put<ApiResponse<TransporteViatico>>(
-        `/viaticos/${viaticoId}/transportes/${transporteId}`, data
-      ).then(r => r.data.datos),
-
-    eliminar: (viaticoId: number, transporteId: number) =>
-      api.delete<ApiResponse<void>>(
-        `/viaticos/${viaticoId}/transportes/${transporteId}`
+        `/viaticos/${viaticoId}/tramos/${tramoId}`
       ).then(r => r.data),
   },
 
@@ -180,45 +132,28 @@ export const viaticoService = {
         `/liquidaciones/${liquidacionId}/facturas`
       ).then(r => r.data.datos ?? []),
 
-    crear: (liquidacionId: number, data: {
-      concepto:         string
-      detalle?:         string | null
-      numero_factura:   string
-      ruc_proveedor:    string
-      nombre_proveedor: string
-      monto:            number
-    }) =>
-      api.post<ApiResponse<FacturaViatico>>(
-        `/liquidaciones/${liquidacionId}/facturas`, data
-      ).then(r => r.data.datos),
-
     eliminar: (liquidacionId: number, facturaId: number) =>
       api.delete<ApiResponse<void>>(
         `/liquidaciones/${liquidacionId}/facturas/${facturaId}`
       ).then(r => r.data),
   },
 
-  // ── Comisiones ───────────────────────────────────
-  comisiones: {
-    listar: (params?: { estado?: string }) =>
-      api.get<ApiResponse<Comision[]>>(
-        '/comisiones', { params }
+  // ── Catálogos ─────────────────────────────────────
+  catalogos: {
+    tiposTransporte: () =>
+      api.get<ApiResponse<CatalogoTransporte[]>>(
+        '/viaticos/catalogos/tipos-transporte'
       ).then(r => r.data.datos ?? []),
 
-    obtener: (id: number) =>
-      api.get<ApiResponse<Comision>>(`/comisiones/${id}`)
-        .then(r => r.data.datos),
+    empresasPorTipo: (tipoId: number) =>
+      api.get<ApiResponse<EmpresaTransporte[]>>(
+        `/viaticos/catalogos/empresas/${tipoId}`
+      ).then(r => r.data.datos ?? []),
 
-    crear: (data: {
-      motivo:                    string
-      unidad_administrativa_id:  number
-      fecha_inicio:              string
-      fecha_fin:                 string
-      documento_autorizacion?:   string | null
-    }) =>
-      api.post<ApiResponse<Comision>>(
-        '/comisiones', data
-      ).then(r => r.data.datos),
+    categoriasFactura: () =>
+      api.get<ApiResponse<CategoriaFactura[]>>(
+        '/viaticos/catalogos/categorias-factura'
+      ).then(r => r.data.datos ?? []),
   },
 
   // ── Autorizaciones de vuelo ──────────────────────

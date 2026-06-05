@@ -761,6 +761,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/viaticos/catalogos/tipos-transporte": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalogoViatico.tiposTransporte"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/catalogos/empresas/{tipoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalogoViatico.empresasPorTipo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/catalogos/categorias-factura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalogoViatico.categoriasFactura"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/capacitacion/certificados/{servidorId}": {
         parameters: {
             query?: never;
@@ -835,38 +883,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["comentarioTicket.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/comisiones": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["comision.index"];
-        put?: never;
-        post: operations["comision.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/comisiones/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["comision.show"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1237,38 +1253,6 @@ export interface paths {
         put: operations["descuentos-recurrentes.update"];
         post?: never;
         delete: operations["descuentos-recurrentes.destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/viaticos/{viaticoId}/destinos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["destinoViatico.index"];
-        put?: never;
-        post: operations["destinoViatico.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/viaticos/{viaticoId}/destinos/{destinoId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["destinoViatico.update"];
-        post?: never;
-        delete: operations["destinoViatico.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3039,23 +3023,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/viaticos/{viaticoId}/transportes": {
+    "/v1/viaticos/{viaticoId}/tramos": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["transporteViatico.index"];
+        get: operations["tramoViatico.index"];
         put?: never;
-        post: operations["transporteViatico.store"];
+        post: operations["tramoViatico.store"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/viaticos/{viaticoId}/transportes/{transporteId}": {
+    "/v1/viaticos/{viaticoId}/tramos/{tramo}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3063,9 +3047,9 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["transporteViatico.update"];
+        put: operations["tramoViatico.update"];
         post?: never;
-        delete: operations["transporteViatico.destroy"];
+        delete: operations["tramoViatico.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3475,7 +3459,7 @@ export interface components {
         /** AutorizacionVueloResource */
         AutorizacionVueloResource: {
             id: string;
-            transporte_viatico_id: string;
+            tramo_viatico_id: string;
             viatico_id: string;
             documento_invitacion_ruta: string;
             justificacion: string;
@@ -3581,11 +3565,38 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /** CatalogoTransporte */
+        CatalogoTransporte: {
+            id: number;
+            nombre: string;
+            codigo: string;
+            tipo_vehiculo: string;
+            requiere_autorizacion: boolean;
+            activo: boolean;
+            orden: number;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /**
          * CategoriaActividadEnum
          * @enum {string}
          */
         CategoriaActividadEnum: "reunion" | "visita_campo" | "elaboracion_documentos" | "coordinacion" | "capacitacion" | "atencion_ciudadana" | "otro";
+        /** CategoriaFactura */
+        CategoriaFactura: {
+            id: number;
+            nombre: string;
+            codigo: string;
+            descripcion: string | null;
+            activo: boolean;
+            orden: number;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** CertificadoCapacitacion */
         CertificadoCapacitacion: {
             id: number;
@@ -3606,19 +3617,6 @@ export interface components {
          * @enum {string}
          */
         ClasificacionPersonal: "empleado" | "contratado" | "obrero";
-        /** ComisionResource */
-        ComisionResource: {
-            id: string;
-            codigo_comision: string;
-            motivo: string;
-            unidad_administrativa_id: string;
-            fecha_inicio: string;
-            fecha_fin: string;
-            documento_autorizacion: string;
-            estado: string;
-            creado_por: string;
-            created_at: string;
-        };
         /**
          * ConceptoFactura
          * @enum {string}
@@ -3787,25 +3785,6 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
-        /** DestinoViatico */
-        DestinoViatico: {
-            id: number;
-            viatico_id: number;
-            tipo_destino: string;
-            provincia_id: number | null;
-            pais: string | null;
-            estado_region: string | null;
-            /** Format: date-time */
-            fecha_llegada: string;
-            /** Format: date-time */
-            fecha_salida: string;
-            orden: number;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            canton_id: number | null;
-        };
         /** DiagnosticoCie10 */
         DiagnosticoCie10: {
             id: number;
@@ -3870,6 +3849,19 @@ export interface components {
             };
             created_at: string;
             url_descarga: string;
+        };
+        /** EmpresaTransporte */
+        EmpresaTransporte: {
+            id: number;
+            catalogo_transporte_id: number;
+            nombre: string;
+            codigo: string;
+            activo: boolean;
+            orden: number;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
         };
         /** EncuestaClima */
         EncuestaClima: {
@@ -4010,9 +4002,8 @@ export interface components {
         FacturaViatico: {
             id: number;
             liquidacion_viatico_id: number;
-            concepto: components["schemas"]["ConceptoFactura"];
             detalle: string | null;
-            numero_factura: string;
+            numero_factura: string | null;
             ruc_proveedor: string;
             nombre_proveedor: string;
             monto: string;
@@ -4022,6 +4013,10 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            categoria_factura_id: number;
+            fecha_factura: string | null;
+            tipo_comprobante: string;
+            numero_ticket: string | null;
         };
         /** GrupoOcupacional */
         GrupoOcupacional: {
@@ -4153,9 +4148,7 @@ export interface components {
         LiquidacionViatico: {
             id: number;
             viatico_id: number;
-            facturas: unknown[] | null;
             total_facturas: string;
-            monto_justificado: string;
             diferencia_devolver: string;
             /** Format: date-time */
             fecha_retorno: string | null;
@@ -4560,16 +4553,6 @@ export interface components {
             fecha_hora: string;
             sintomas: string;
         };
-        /** StoreComisionRequest */
-        StoreComisionRequest: {
-            motivo: string;
-            unidad_administrativa_id: number;
-            /** Format: date-time */
-            fecha_inicio: string;
-            /** Format: date-time */
-            fecha_fin: string;
-            documento_autorizacion?: string | null;
-        };
         /** StoreContratoServidorRequest */
         StoreContratoServidorRequest: {
             tipo_nombramiento: components["schemas"]["TipoNombramiento"];
@@ -4618,19 +4601,6 @@ export interface components {
             fecha_inicio: string;
             referencia_externa?: string | null;
             observacion?: string | null;
-        };
-        /** StoreDestinoViaticoRequest */
-        StoreDestinoViaticoRequest: {
-            /** @enum {string} */
-            tipo_destino: "nacional" | "internacional";
-            provincia_id?: number | null;
-            canton_id?: number | null;
-            pais?: string | null;
-            estado_region?: string | null;
-            /** Format: date-time */
-            fecha_llegada: string;
-            /** Format: date-time */
-            fecha_salida: string;
         };
         /** StoreDiscapacidadServidorRequest */
         StoreDiscapacidadServidorRequest: {
@@ -4825,26 +4795,6 @@ export interface components {
             /** Format: date-time */
             fecha_fin_ultimo_contrato?: string | null;
         };
-        /** StoreTransporteViaticoRequest */
-        StoreTransporteViaticoRequest: {
-            /** @enum {string} */
-            tipo: "bus_interprovincial" | "avion" | "vehiculo_propio" | "taxi" | "transporte_institucional" | "otro";
-            provincia_origen_id?: number | null;
-            canton_origen_id?: number | null;
-            provincia_destino_id?: number | null;
-            canton_destino_id?: number | null;
-            pais_origen?: string | null;
-            pais_destino?: string | null;
-            /** Format: date-time */
-            fecha_viaje: string;
-            empresa_o_aerolinea?: string | null;
-            numero_ticket_o_billete?: string | null;
-            placa_vehiculo?: string | null;
-            kilometraje?: number | null;
-            valor_kilometro?: number | null;
-            monto: number;
-            archivo_respaldo?: string | null;
-        };
         /** StoreTriajeRequest */
         StoreTriajeRequest: {
             presion_arterial_sistolica: number;
@@ -5036,30 +4986,30 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
-        /** TransporteViatico */
-        TransporteViatico: {
+        /** TramoViatico */
+        TramoViatico: {
             id: number;
             viatico_id: number;
-            tipo: string;
-            provincia_origen_id: number | null;
-            provincia_destino_id: number | null;
-            pais_origen: string | null;
-            pais_destino: string | null;
+            origen_tipo: string;
+            origen_provincia_id: number | null;
+            origen_canton_id: number | null;
+            origen_pais: string | null;
+            origen_ciudad: string;
+            destino_tipo: string;
+            destino_provincia_id: number | null;
+            destino_canton_id: number | null;
+            destino_pais: string | null;
+            destino_ciudad: string;
+            empresa_transporte_id: number;
             /** Format: date-time */
-            fecha_viaje: string;
-            empresa_o_aerolinea: string | null;
-            numero_ticket_o_billete: string | null;
-            placa_vehiculo: string | null;
-            kilometraje: string | null;
-            valor_kilometro: string | null;
-            monto: string;
-            archivo_respaldo: string | null;
+            datetime_salida: string;
+            /** Format: date-time */
+            datetime_llegada: string;
+            orden: number;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
-            canton_origen_id: number | null;
-            canton_destino_id: number | null;
         };
         /** Triaje */
         Triaje: {
@@ -5320,11 +5270,6 @@ export interface components {
             id: number;
             servidor_id: number;
             zona: components["schemas"]["ZonaViatico"];
-            tipo: string;
-            /** Format: date-time */
-            fecha_inicio: string;
-            /** Format: date-time */
-            fecha_fin: string;
             justificacion: string;
             estado: components["schemas"]["EstadoViatico"];
             monto_calculado: string;
@@ -5340,10 +5285,13 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
             codigo_viatico: string | null;
-            comision_id: number | null;
             modalidad_anticipo: string;
             tipo_viaje: string | null;
             pais_destino: string | null;
+            fecha_solicitud: string;
+            datetime_salida: string | null;
+            datetime_llegada: string | null;
+            total_dias: string;
         };
         /**
          * ZonaViatico
@@ -7552,6 +7500,86 @@ export interface operations {
             };
         };
     };
+    "catalogoViatico.tiposTransporte": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tipos de transporte.";
+                        datos: components["schemas"]["CatalogoTransporte"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "catalogoViatico.empresasPorTipo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tipoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Empresas de transporte.";
+                        datos: components["schemas"]["EmpresaTransporte"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "catalogoViatico.categoriasFactura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Categorías de factura.";
+                        datos: components["schemas"]["CategoriaFactura"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "certificadoCapacitacion.show": {
         parameters: {
             query?: never;
@@ -7683,92 +7711,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "comision.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Comisiones listadas exitosamente.";
-                        datos: components["schemas"]["ComisionResource"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "comision.store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreComisionRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Comisión registrada exitosamente.";
-                        datos: components["schemas"]["ComisionResource"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "comision.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Detalle de comisión.";
-                        datos: components["schemas"]["ComisionResource"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "conceptoNomina.index": {
@@ -8935,130 +8877,6 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Descuento recurrente eliminado exitosamente";
-                        datos: null;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "destinoViatico.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                viaticoId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Destinos listados exitosamente.";
-                        datos: components["schemas"]["DestinoViatico"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "destinoViatico.store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                viaticoId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreDestinoViaticoRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Destino agregado exitosamente.";
-                        datos: components["schemas"]["DestinoViatico"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "destinoViatico.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                viaticoId: number;
-                destinoId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreDestinoViaticoRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Destino actualizado exitosamente.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "destinoViatico.destroy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                viaticoId: number;
-                destinoId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Destino eliminado exitosamente.";
                         datos: null;
                         meta: null;
                     };
@@ -13608,7 +13426,7 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "transporteViatico.index": {
+    "tramoViatico.index": {
         parameters: {
             query?: never;
             header?: never;
@@ -13627,8 +13445,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Transportes listados exitosamente.";
-                        datos: components["schemas"]["TransporteViatico"][];
+                        mensaje: "Tramos del viático.";
+                        datos: components["schemas"]["TramoViatico"][];
                         meta: null;
                     };
                 };
@@ -13636,7 +13454,7 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "transporteViatico.store": {
+    "tramoViatico.store": {
         parameters: {
             query?: never;
             header?: never;
@@ -13647,7 +13465,26 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StoreTransporteViaticoRequest"];
+                "application/json": {
+                    /** @enum {string} */
+                    origen_tipo: "nacional" | "internacional";
+                    origen_provincia_id?: number | null;
+                    origen_canton_id?: number | null;
+                    origen_pais?: string | null;
+                    origen_ciudad: string;
+                    /** @enum {string} */
+                    destino_tipo: "nacional" | "internacional";
+                    destino_provincia_id?: number | null;
+                    destino_canton_id?: number | null;
+                    destino_pais?: string | null;
+                    destino_ciudad: string;
+                    empresa_transporte_id: number;
+                    /** Format: date-time */
+                    datetime_salida: string;
+                    /** Format: date-time */
+                    datetime_llegada: string;
+                    orden?: number | null;
+                };
             };
         };
         responses: {
@@ -13659,8 +13496,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Transporte agregado exitosamente.";
-                        datos: components["schemas"]["TransporteViatico"];
+                        mensaje: "Tramo registrado correctamente.";
+                        datos: components["schemas"]["TramoViatico"];
                         meta: null;
                     };
                 };
@@ -13669,19 +13506,39 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "transporteViatico.update": {
+    "tramoViatico.update": {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 viaticoId: number;
-                transporteId: number;
+                /** @description The tramo ID */
+                tramo: number;
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["StoreTransporteViaticoRequest"];
+                "application/json": {
+                    /** @enum {string} */
+                    origen_tipo?: "nacional" | "internacional";
+                    origen_provincia_id?: number | null;
+                    origen_canton_id?: number | null;
+                    origen_pais?: string | null;
+                    origen_ciudad?: string;
+                    /** @enum {string} */
+                    destino_tipo?: "nacional" | "internacional";
+                    destino_provincia_id?: number | null;
+                    destino_canton_id?: number | null;
+                    destino_pais?: string | null;
+                    destino_ciudad?: string;
+                    empresa_transporte_id?: number;
+                    /** Format: date-time */
+                    datetime_salida?: string;
+                    /** Format: date-time */
+                    datetime_llegada?: string;
+                    orden?: number;
+                };
             };
         };
         responses: {
@@ -13693,23 +13550,25 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Transporte actualizado exitosamente.";
-                        datos: string;
+                        mensaje: "Tramo actualizado.";
+                        datos: components["schemas"]["TramoViatico"] | null;
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
-    "transporteViatico.destroy": {
+    "tramoViatico.destroy": {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 viaticoId: number;
-                transporteId: number;
+                /** @description The tramo ID */
+                tramo: number;
             };
             cookie?: never;
         };
@@ -13723,13 +13582,14 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Transporte eliminado exitosamente.";
+                        mensaje: "Tramo eliminado.";
                         datos: null;
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "triaje.show": {

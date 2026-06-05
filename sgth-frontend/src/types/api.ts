@@ -97,27 +97,110 @@ export type EntidadFinanciera = {
   estado?:    boolean
 }
 
-// ── Viáticos ─────────────────────────────────
-export type Viatico           = components['schemas']['Viatico']
-export type DestinoViatico    = components['schemas']['DestinoViatico']
-export type TransporteViatico = components['schemas']['TransporteViatico']
-export type LiquidacionViatico = components['schemas']['LiquidacionViatico']
-export type FacturaViatico    = components['schemas']['FacturaViatico']
-export type Comision          = components['schemas']['ComisionResource']
-export type AutorizacionVuelo = components['schemas']['AutorizacionVueloResource']
+// ── Viáticos ──────────────────────────────
+export type Viatico = components['schemas']['Viatico']
+export type LiquidacionViatico =
+  components['schemas']['LiquidacionViatico']
+export type FacturaViatico =
+  components['schemas']['FacturaViatico']
+export type AutorizacionVuelo =
+  components['schemas']['AutorizacionVueloResource']
 
-export type ViaticoServidor = {
+// Nuevos tipos del rediseño
+export type TramoViatico = {
+  id:                    number
+  viatico_id:            number
+  orden:                 number
+  origen_tipo:           'nacional' | 'internacional'
+  origen_provincia_id?:  number | null
+  origen_canton_id?:     number | null
+  origen_pais?:          string | null
+  origen_ciudad:         string
+  destino_tipo:          'nacional' | 'internacional'
+  destino_provincia_id?: number | null
+  destino_canton_id?:    number | null
+  destino_pais?:         string | null
+  destino_ciudad:        string
+  empresa_transporte_id: number
+  empresa?: {
+    id:      number
+    nombre:  string
+    codigo:  string
+    catalogo?: {
+      id:                     number
+      nombre:                 string
+      tipo_vehiculo:          string
+      requiere_autorizacion:  boolean
+    }
+  }
+  origen_provincia?:  { id: number; nombre: string } | null
+  origen_canton?:     { id: number; nombre: string } | null
+  destino_provincia?: { id: number; nombre: string } | null
+  destino_canton?:    { id: number; nombre: string } | null
+  datetime_salida:    string
+  datetime_llegada:   string
+  autorizacion_vuelo?: {
+    id:     number
+    estado: 'pendiente' | 'aprobada' | 'rechazada'
+  } | null
+}
+
+export type CatalogoTransporte = {
+  id:                    number
+  nombre:                string
+  codigo:                string
+  tipo_vehiculo:         'terrestre' | 'aereo' | 'maritimo' | 'otro'
+  requiere_autorizacion: boolean
+  activo:                boolean
+  orden:                 number
+}
+
+export type EmpresaTransporte = {
+  id:                     number
+  catalogo_transporte_id: number
+  nombre:                 string
+  codigo:                 string
+  activo:                 boolean
+  orden:                  number
+}
+
+export type CategoriaFactura = {
   id:          number
-  viatico_id:  number
-  servidor_id: number
-  es_titular:  boolean
+  nombre:      string
+  codigo:      string
+  descripcion?: string | null
+  activo:      boolean
+  orden:       number
+}
+
+export type ViaticoConRelaciones = Viatico & {
   servidor?: {
     id:       number
     cedula?:  string
     nombre?:  string
     apellido?: string
-    unidad_administrativa?: { nombre?: string } | null
   }
+  tramos?:   TramoViatico[]
+  liquidacion?: LiquidacionViatico & {
+    detalles_factura?: FacturaViatico[]
+  }
+}
+
+// Actualiza EstadoViatico
+export type EstadoViatico =
+  | 'solicitado'
+  | 'aprobado'
+  | 'con_anticipo'
+  | 'en_comision'
+  | 'pendiente_liquidacion'
+  | 'liquidado'
+  | 'contabilizado'
+
+export type ViaticoParams = {
+  page?:        number
+  per_page?:    number
+  estado?:      EstadoViatico
+  servidor_id?: number
 }
 
 export type ActividadLiquidacion = {
@@ -160,14 +243,6 @@ export type DetalleNomina = {
 // export type Vacacion = components['schemas']['Vacacion']
 
 // ── Enums de conveniencia ────────────────────
-export type EstadoViatico =
-  | 'solicitado'
-  | 'aprobado'
-  | 'con_anticipo'
-  | 'en_comision'
-  | 'pendiente_liquidacion'
-  | 'liquidado'
-  | 'contabilizado'
 
 export type TipoNombramiento =
   | 'nombramiento_permanente'
@@ -201,14 +276,6 @@ export type ServidorParams = {
   estado?: EstadoContrato
 }
 
-export type ViaticoParams = {
-  page?:       number
-  per_page?:   number
-  estado?:     EstadoViatico
-  servidor_id?: number
-  folio?:      string
-}
-
 export type AgendaParams = {
   page?: number
   per_page?: number
@@ -240,14 +307,6 @@ export type ExtensionTelefonicaParams = {
 }
 
 // Tipos extendidos con relaciones (no generados por OpenAPI)
-export type ViaticoConRelaciones = Viatico & {
-  servidor?: {
-    id: number
-    cedula?: string
-    nombre?: string
-    apellido?: string
-  } | null
-}
 
 export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | 'nombre' | 'acronimo' | 'descripcion' | 'nivel' | 'estado' | 'unidad_padre_id' | 'tipo_unidad' | 'puestos_count' | 'puestos' | 'hijos'> & {
   id: number

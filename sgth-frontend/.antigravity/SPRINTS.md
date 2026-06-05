@@ -25,7 +25,7 @@ Si un tipo ya existe en api.ts, impórtalo desde ahí — nunca lo redefinas.
 | F-03c  | Estructura — Cargos y Grupos  | ✅ Completo    |
 | F-04   | Expediente Digital            | ⏳ Pendiente   |
 | F-05   | Nómina y Asistencia           | ⏳ Pendiente   |
-| F-06   | Viáticos                      | ⏳ Pendiente   |
+| F-06   | Viáticos                      | ✅ Completo    |
 | F-07   | Dispensario Médico            | ⏳ Pendiente   |
 | F-08   | Autoservicio del Servidor     | ⏳ Pendiente   |
 | F-09   | Selección y Evaluación        | ⏳ Pendiente   |

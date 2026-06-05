@@ -105,10 +105,10 @@ export function ViaticoView() {
       },
     },
     {
-      accessor: 'fecha_inicio',
+      accessor: 'datetime_salida',
       title:    'Período',
       width:    150,
-      render: ({ fecha_inicio, fecha_fin }) => {
+      render: ({ datetime_salida, datetime_llegada }) => {
         const fmt = (f: string | null | undefined) =>
           f ? new Date(f).toLocaleDateString('es-EC', {
             timeZone: 'UTC',
@@ -116,7 +116,7 @@ export function ViaticoView() {
           }) : '—'
         return (
           <Text size="xs" ff="monospace">
-            {fmt(fecha_inicio as string)} – {fmt(fecha_fin as string)}
+            {fmt(datetime_salida as string)} – {fmt(datetime_llegada as string)}
           </Text>
         )
       },
