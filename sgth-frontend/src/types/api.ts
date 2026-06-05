@@ -240,6 +240,15 @@ export type ExtensionTelefonicaParams = {
 }
 
 // Tipos extendidos con relaciones (no generados por OpenAPI)
+export type ViaticoConRelaciones = Viatico & {
+  servidor?: {
+    id: number
+    cedula?: string
+    nombre?: string
+    apellido?: string
+  } | null
+}
+
 export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | 'nombre' | 'acronimo' | 'descripcion' | 'nivel' | 'estado' | 'unidad_padre_id' | 'tipo_unidad' | 'puestos_count' | 'puestos' | 'hijos'> & {
   id: number
   codigo?: string

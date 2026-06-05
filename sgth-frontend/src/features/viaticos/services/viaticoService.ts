@@ -10,6 +10,7 @@ import type {
   Comision,
   AutorizacionVuelo,
   ViaticoParams,
+  ViaticoConRelaciones,
 } from '@/types/api'
 
 export type SolicitarViaticoData = {
@@ -58,12 +59,12 @@ export const viaticoService = {
 
   // ── Viáticos ─────────────────────────────────────
   listar: (params?: ViaticoParams) =>
-    api.get<ApiResponse<PaginatedResponse<Viatico>>>(
+    api.get<ApiResponse<PaginatedResponse<ViaticoConRelaciones>>>(
       '/viaticos', { params }
     ).then(r => r.data.datos),
 
   obtener: (id: number) =>
-    api.get<ApiResponse<Viatico>>(`/viaticos/${id}`)
+    api.get<ApiResponse<ViaticoConRelaciones>>(`/viaticos/${id}`)
       .then(r => r.data.datos),
 
   solicitar: (data: SolicitarViaticoData) =>
