@@ -39,7 +39,9 @@ interface Props {
 const fromDateTime = (d: Date | null | string): string => {
   if (!d) return ''
   const dt = typeof d === 'string' ? new Date(d) : d
-  return dt.toISOString().slice(0, 16)
+  if (isNaN(dt.getTime())) return ''
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`
 }
 
 const PAISES_COMUNES = [
