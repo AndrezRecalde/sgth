@@ -20,7 +20,7 @@ export const viaticoSchema = z.object({
     'sin_anticipo',
     'total',
     'parcial',
-  ]).default('total'),
+  ]),
   monto_calculado:   z.number().optional().nullable(),
   servidores_acompanantes: z.array(z.number()).optional(),
 })
