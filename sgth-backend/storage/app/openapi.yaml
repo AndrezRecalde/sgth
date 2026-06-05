@@ -21255,17 +21255,12 @@
                 "type": "string",
                 "enum": [
                     "solicitado",
-                    "aprobado_jefe",
-                    "aprobado_director",
-                    "aprobado_autoridad",
-                    "aprobado_uath",
-                    "aprobado_financiero",
+                    "aprobado",
                     "con_anticipo",
                     "en_comision",
                     "pendiente_liquidacion",
                     "liquidado",
-                    "contabilizado",
-                    "aprobado"
+                    "contabilizado"
                 ],
                 "title": "EstadoViatico"
             },
@@ -23385,33 +23380,54 @@
                             "exterior"
                         ]
                     },
-                    "tipo": {
-                        "type": "string",
-                        "enum": [
-                            "con_pernocte",
-                            "sin_pernocte"
-                        ]
-                    },
-                    "fecha_inicio": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_fin": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
                     "justificacion": {
                         "type": "string",
                         "minLength": 10,
                         "maxLength": 2000
+                    },
+                    "modalidad_anticipo": {
+                        "type": "string",
+                        "enum": [
+                            "sin_anticipo",
+                            "total",
+                            "parcial"
+                        ]
+                    },
+                    "tipo_viaje": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "pais_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "monto_calculado": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "servidores_acompanantes": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 },
                 "required": [
                     "zona",
-                    "tipo",
-                    "fecha_inicio",
-                    "fecha_fin",
-                    "justificacion"
+                    "justificacion",
+                    "modalidad_anticipo"
                 ],
                 "title": "SolicitarViaticoRequest"
             },

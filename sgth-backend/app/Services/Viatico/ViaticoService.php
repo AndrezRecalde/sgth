@@ -220,11 +220,11 @@ final class ViaticoService implements ViaticoServiceInterface
     private function calcularMonto(
         Servidor $servidor,
         string $zona,
-        string $tipo,
-        ?Carbon $inicio,
-        ?Carbon $fin
+        string $tipo = 'con_pernocte',
+        ?Carbon $inicio = null,
+        ?Carbon $fin = null
     ): float {
-        // Determinar nivel según el puesto
+        // Nivel según denominación del puesto
         $denominacion = strtolower(
             $servidor->puesto?->denominacion ?? ''
         );
@@ -234,32 +234,23 @@ final class ViaticoService implements ViaticoServiceInterface
                     || str_contains($denominacion, 'director');
         $nivel = $esAutoridad ? 'autoridad' : 'servidor';
 
-        $horasComision = ($inicio && $fin) ? $fin->diffInHours($inicio) : 0;
-        $diasComision  = ($inicio && $fin) ? ($fin->diffInDays($inicio) ?: 1) : 1;
-
-        // Determinar tipo de tarifa
-        $tipoTarifaBuscar = match($tipo) {
-            'sin_pernocte' => $horasComision < 10
-                ? 'subsistencia'
-                : 'sin_pernocte',
-            default => 'con_pernocte',
-        };
+        // Sin fechas → calcular por 1 día como referencia
+        $diasComision = ($inicio && $fin)
+            ? ($fin->diffInDays($inicio) ?: 1)
+            : 1;
 
         $tarifa = TarifaViatico::where('zona', $zona)
             ->where('nivel', $nivel)
-            ->where('tipo_tarifa', $tipoTarifaBuscar)
+            ->where('tipo_tarifa', 'con_pernocte')
             ->first();
 
         if (!$tarifa) {
             throw new ReglaNegocioException(
                 "No se encontró tarifa para: zona={$zona}, " .
-                "nivel={$nivel}, tipo={$tipoTarifaBuscar}. " .
-                "Verifique las tarifas en el sistema."
+                "nivel={$nivel}. Verifique las tarifas."
             );
         }
 
-        return $tipo === 'con_pernocte'
-            ? (float) $tarifa->valor_diario * $diasComision
-            : (float) $tarifa->valor_diario;
+        return (float) $tarifa->valor_diario * $diasComision;
     }
 }
