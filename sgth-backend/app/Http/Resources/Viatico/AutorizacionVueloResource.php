@@ -11,7 +11,7 @@ class AutorizacionVueloResource extends JsonResource
     {
         return [
             'id'                        => $this->id,
-            'transporte_viatico_id'     => $this->transporte_viatico_id,
+            'tramo_viatico_id'          => $this->tramo_viatico_id,
             'viatico_id'                => $this->viatico_id,
             'documento_invitacion_ruta' => $this->documento_invitacion_ruta,
             'justificacion'             => $this->justificacion,

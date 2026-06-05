@@ -15,7 +15,10 @@ class FacturaViatico extends Model
 
     protected $fillable = [
         'liquidacion_viatico_id',
-        'concepto',
+        'categoria_factura_id',
+        'fecha_factura',
+        'tipo_comprobante',
+        'numero_ticket',
         'detalle',
         'numero_factura',
         'ruc_proveedor',
@@ -28,13 +31,12 @@ class FacturaViatico extends Model
     protected function casts(): array
     {
         return [
-            'concepto' => ConceptoFactura::class,
             'monto'    => 'decimal:2',
         ];
     }
 
-    public function liquidacion(): BelongsTo
+    public function categoria(): BelongsTo
     {
-        return $this->belongsTo(LiquidacionViatico::class, 'liquidacion_viatico_id');
+        return $this->belongsTo(CategoriaFactura::class, 'categoria_factura_id');
     }
 }

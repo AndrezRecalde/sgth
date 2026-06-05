@@ -13,10 +13,13 @@ class AutorizacionVueloController extends Controller
 {
     public function index(): JsonResponse
     {
-        $autorizaciones = AutorizacionVuelo::with(['transporte', 'viatico.servidor'])
-            ->where('estado', 'pendiente')
-            ->get();
-            
+        $autorizaciones = AutorizacionVuelo::with([
+            'tramo.empresa.catalogo',
+            'tramo.origenProvincia',
+            'tramo.destinoProvincia',
+            'viatico.servidor',
+        ])->where('estado', 'pendiente')->get();
+
         return ApiResponse::ok(AutorizacionVueloResource::collection($autorizaciones));
     }
 

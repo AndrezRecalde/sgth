@@ -4288,6 +4288,157 @@
                 }
             }
         },
+        "/v1/viaticos/catalogos/tipos-transporte": {
+            "get": {
+                "operationId": "catalogoViatico.tiposTransporte",
+                "tags": [
+                    "CatalogoViatico"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Tipos de transporte."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CatalogoTransporte"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/catalogos/empresas/{tipoId}": {
+            "get": {
+                "operationId": "catalogoViatico.empresasPorTipo",
+                "tags": [
+                    "CatalogoViatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "tipoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Empresas de transporte."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EmpresaTransporte"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/catalogos/categorias-factura": {
+            "get": {
+                "operationId": "catalogoViatico.categoriasFactura",
+                "tags": [
+                    "CatalogoViatico"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Categor\u00edas de factura."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CategoriaFactura"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/capacitacion/certificados/{servidorId}": {
             "get": {
                 "operationId": "certificadoCapacitacion.show",
@@ -4534,165 +4685,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/comisiones": {
-            "get": {
-                "operationId": "comision.index",
-                "tags": [
-                    "Comision"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Comisiones listadas exitosamente."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ComisionResource"
-                                            }
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "comision.store",
-                "tags": [
-                    "Comision"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreComisionRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Comisi\u00f3n registrada exitosamente."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/ComisionResource"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/comisiones/{id}": {
-            "get": {
-                "operationId": "comision.show",
-                "tags": [
-                    "Comision"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Detalle de comisi\u00f3n."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/ComisionResource"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -7185,263 +7177,6 @@
                                         "mensaje": {
                                             "type": "string",
                                             "const": "Descuento recurrente eliminado exitosamente"
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/viaticos/{viaticoId}/destinos": {
-            "get": {
-                "operationId": "destinoViatico.index",
-                "tags": [
-                    "DestinoViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "viaticoId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Destinos listados exitosamente."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/DestinoViatico"
-                                            }
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "destinoViatico.store",
-                "tags": [
-                    "DestinoViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "viaticoId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreDestinoViaticoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Destino agregado exitosamente."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/DestinoViatico"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/viaticos/{viaticoId}/destinos/{destinoId}": {
-            "put": {
-                "operationId": "destinoViatico.update",
-                "tags": [
-                    "DestinoViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "viaticoId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "destinoId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreDestinoViaticoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Destino actualizado exitosamente."
-                                        },
-                                        "datos": {
-                                            "type": "string"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "destinoViatico.destroy",
-                "tags": [
-                    "DestinoViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "viaticoId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "destinoId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Destino eliminado exitosamente."
                                         },
                                         "datos": {
                                             "type": "null"
@@ -16760,11 +16495,11 @@
                 }
             }
         },
-        "/v1/viaticos/{viaticoId}/transportes": {
+        "/v1/viaticos/{viaticoId}/tramos": {
             "get": {
-                "operationId": "transporteViatico.index",
+                "operationId": "tramoViatico.index",
                 "tags": [
-                    "TransporteViatico"
+                    "TramoViatico"
                 ],
                 "parameters": [
                     {
@@ -16789,12 +16524,12 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Transportes listados exitosamente."
+                                            "const": "Tramos del vi\u00e1tico."
                                         },
                                         "datos": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/TransporteViatico"
+                                                "$ref": "#/components/schemas/TramoViatico"
                                             }
                                         },
                                         "meta": {
@@ -16817,9 +16552,9 @@
                 }
             },
             "post": {
-                "operationId": "transporteViatico.store",
+                "operationId": "tramoViatico.store",
                 "tags": [
-                    "TransporteViatico"
+                    "TramoViatico"
                 ],
                 "parameters": [
                     {
@@ -16836,7 +16571,96 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StoreTransporteViaticoRequest"
+                                "type": "object",
+                                "properties": {
+                                    "origen_tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "nacional",
+                                            "internacional"
+                                        ]
+                                    },
+                                    "origen_provincia_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "origen_canton_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "origen_pais": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    },
+                                    "origen_ciudad": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "destino_tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "nacional",
+                                            "internacional"
+                                        ]
+                                    },
+                                    "destino_provincia_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "destino_canton_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "destino_pais": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    },
+                                    "destino_ciudad": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "empresa_transporte_id": {
+                                        "type": "integer"
+                                    },
+                                    "datetime_salida": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "datetime_llegada": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "orden": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "minimum": 1
+                                    }
+                                },
+                                "required": [
+                                    "origen_tipo",
+                                    "origen_ciudad",
+                                    "destino_tipo",
+                                    "destino_ciudad",
+                                    "empresa_transporte_id",
+                                    "datetime_salida",
+                                    "datetime_llegada"
+                                ]
                             }
                         }
                     }
@@ -16854,10 +16678,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Transporte agregado exitosamente."
+                                            "const": "Tramo registrado correctamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/TransporteViatico"
+                                            "$ref": "#/components/schemas/TramoViatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -16873,20 +16697,20 @@
                             }
                         }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "/v1/viaticos/{viaticoId}/transportes/{transporteId}": {
+        "/v1/viaticos/{viaticoId}/tramos/{tramo}": {
             "put": {
-                "operationId": "transporteViatico.update",
+                "operationId": "tramoViatico.update",
                 "tags": [
-                    "TransporteViatico"
+                    "TramoViatico"
                 ],
                 "parameters": [
                     {
@@ -16898,20 +16722,97 @@
                         }
                     },
                     {
-                        "name": "transporteId",
+                        "name": "tramo",
                         "in": "path",
                         "required": true,
+                        "description": "The tramo ID",
                         "schema": {
                             "type": "integer"
                         }
                     }
                 ],
                 "requestBody": {
-                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StoreTransporteViaticoRequest"
+                                "type": "object",
+                                "properties": {
+                                    "origen_tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "nacional",
+                                            "internacional"
+                                        ]
+                                    },
+                                    "origen_provincia_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "origen_canton_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "origen_pais": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    },
+                                    "origen_ciudad": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "destino_tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "nacional",
+                                            "internacional"
+                                        ]
+                                    },
+                                    "destino_provincia_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "destino_canton_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "destino_pais": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    },
+                                    "destino_ciudad": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "empresa_transporte_id": {
+                                        "type": "integer"
+                                    },
+                                    "datetime_salida": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "datetime_llegada": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "orden": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    }
+                                }
                             }
                         }
                     }
@@ -16929,10 +16830,17 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Transporte actualizado exitosamente."
+                                            "const": "Tramo actualizado."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/TramoViatico"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
@@ -16948,18 +16856,21 @@
                             }
                         }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             },
             "delete": {
-                "operationId": "transporteViatico.destroy",
+                "operationId": "tramoViatico.destroy",
                 "tags": [
-                    "TransporteViatico"
+                    "TramoViatico"
                 ],
                 "parameters": [
                     {
@@ -16971,9 +16882,10 @@
                         }
                     },
                     {
-                        "name": "transporteId",
+                        "name": "tramo",
                         "in": "path",
                         "required": true,
+                        "description": "The tramo ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -16992,7 +16904,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Transporte eliminado exitosamente."
+                                            "const": "Tramo eliminado."
                                         },
                                         "datos": {
                                             "type": "null"
@@ -17010,6 +16922,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -19157,7 +19072,7 @@
                     "id": {
                         "type": "string"
                     },
-                    "transporte_viatico_id": {
+                    "tramo_viatico_id": {
                         "type": "string"
                     },
                     "viatico_id": {
@@ -19184,7 +19099,7 @@
                 },
                 "required": [
                     "id",
-                    "transporte_viatico_id",
+                    "tramo_viatico_id",
                     "viatico_id",
                     "documento_invitacion_ruta",
                     "justificacion",
@@ -19577,6 +19492,58 @@
                 ],
                 "title": "Cargo"
             },
+            "CatalogoTransporte": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "codigo": {
+                        "type": "string"
+                    },
+                    "tipo_vehiculo": {
+                        "type": "string"
+                    },
+                    "requiere_autorizacion": {
+                        "type": "boolean"
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "orden": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre",
+                    "codigo",
+                    "tipo_vehiculo",
+                    "requiere_autorizacion",
+                    "activo",
+                    "orden",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CatalogoTransporte"
+            },
             "CategoriaActividadEnum": {
                 "type": "string",
                 "enum": [
@@ -19589,6 +19556,57 @@
                     "otro"
                 ],
                 "title": "CategoriaActividadEnum"
+            },
+            "CategoriaFactura": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "codigo": {
+                        "type": "string"
+                    },
+                    "descripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "orden": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre",
+                    "codigo",
+                    "descripcion",
+                    "activo",
+                    "orden",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CategoriaFactura"
             },
             "CertificadoCapacitacion": {
                 "type": "object",
@@ -19651,54 +19669,6 @@
                     "obrero"
                 ],
                 "title": "ClasificacionPersonal"
-            },
-            "ComisionResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "codigo_comision": {
-                        "type": "string"
-                    },
-                    "motivo": {
-                        "type": "string"
-                    },
-                    "unidad_administrativa_id": {
-                        "type": "string"
-                    },
-                    "fecha_inicio": {
-                        "type": "string"
-                    },
-                    "fecha_fin": {
-                        "type": "string"
-                    },
-                    "documento_autorizacion": {
-                        "type": "string"
-                    },
-                    "estado": {
-                        "type": "string"
-                    },
-                    "creado_por": {
-                        "type": "string"
-                    },
-                    "created_at": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "codigo_comision",
-                    "motivo",
-                    "unidad_administrativa_id",
-                    "fecha_inicio",
-                    "fecha_fin",
-                    "documento_autorizacion",
-                    "estado",
-                    "creado_por",
-                    "created_at"
-                ],
-                "title": "ComisionResource"
             },
             "ConceptoFactura": {
                 "type": "string",
@@ -20385,84 +20355,6 @@
                 ],
                 "title": "DescuentoRecurrente"
             },
-            "DestinoViatico": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "viatico_id": {
-                        "type": "integer"
-                    },
-                    "tipo_destino": {
-                        "type": "string"
-                    },
-                    "provincia_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "pais": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "estado_region": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "fecha_llegada": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_salida": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "orden": {
-                        "type": "integer"
-                    },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "canton_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "id",
-                    "viatico_id",
-                    "tipo_destino",
-                    "provincia_id",
-                    "pais",
-                    "estado_region",
-                    "fecha_llegada",
-                    "fecha_salida",
-                    "orden",
-                    "created_at",
-                    "updated_at",
-                    "canton_id"
-                ],
-                "title": "DestinoViatico"
-            },
             "DiagnosticoCie10": {
                 "type": "object",
                 "properties": {
@@ -20717,6 +20609,54 @@
                     "url_descarga"
                 ],
                 "title": "DocumentoServidorResource"
+            },
+            "EmpresaTransporte": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "catalogo_transporte_id": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "codigo": {
+                        "type": "string"
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "orden": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "catalogo_transporte_id",
+                    "nombre",
+                    "codigo",
+                    "activo",
+                    "orden",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "EmpresaTransporte"
             },
             "EncuestaClima": {
                 "type": "object",
@@ -21192,9 +21132,6 @@
                     "liquidacion_viatico_id": {
                         "type": "integer"
                     },
-                    "concepto": {
-                        "$ref": "#/components/schemas/ConceptoFactura"
-                    },
                     "detalle": {
                         "type": [
                             "string",
@@ -21202,7 +21139,10 @@
                         ]
                     },
                     "numero_factura": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "ruc_proveedor": {
                         "type": "string"
@@ -21238,12 +21178,29 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "categoria_factura_id": {
+                        "type": "integer"
+                    },
+                    "fecha_factura": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tipo_comprobante": {
+                        "type": "string"
+                    },
+                    "numero_ticket": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
                     "id",
                     "liquidacion_viatico_id",
-                    "concepto",
                     "detalle",
                     "numero_factura",
                     "ruc_proveedor",
@@ -21252,7 +21209,11 @@
                     "archivo_ruta",
                     "archivo_nombre",
                     "created_at",
-                    "updated_at"
+                    "updated_at",
+                    "categoria_factura_id",
+                    "fecha_factura",
+                    "tipo_comprobante",
+                    "numero_ticket"
                 ],
                 "title": "FacturaViatico"
             },
@@ -21801,17 +21762,7 @@
                     "viatico_id": {
                         "type": "integer"
                     },
-                    "facturas": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
-                        "items": {}
-                    },
                     "total_facturas": {
-                        "type": "string"
-                    },
-                    "monto_justificado": {
                         "type": "string"
                     },
                     "diferencia_devolver": {
@@ -21874,9 +21825,7 @@
                 "required": [
                     "id",
                     "viatico_id",
-                    "facturas",
                     "total_facturas",
-                    "monto_justificado",
                     "diferencia_devolver",
                     "fecha_retorno",
                     "fecha_liquidacion",
@@ -23381,39 +23330,6 @@
                 ],
                 "title": "StoreCitaMedicaAutoservicioRequest"
             },
-            "StoreComisionRequest": {
-                "type": "object",
-                "properties": {
-                    "motivo": {
-                        "type": "string",
-                        "minLength": 10
-                    },
-                    "unidad_administrativa_id": {
-                        "type": "integer"
-                    },
-                    "fecha_inicio": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_fin": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "documento_autorizacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "motivo",
-                    "unidad_administrativa_id",
-                    "fecha_inicio",
-                    "fecha_fin"
-                ],
-                "title": "StoreComisionRequest"
-            },
             "StoreContratoServidorRequest": {
                 "type": "object",
                 "properties": {
@@ -23604,58 +23520,6 @@
                     "fecha_inicio"
                 ],
                 "title": "StoreDescuentoRecurrenteRequest"
-            },
-            "StoreDestinoViaticoRequest": {
-                "type": "object",
-                "properties": {
-                    "tipo_destino": {
-                        "type": "string",
-                        "enum": [
-                            "nacional",
-                            "internacional"
-                        ]
-                    },
-                    "provincia_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "canton_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "pais": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "estado_region": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "fecha_llegada": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_salida": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "tipo_destino",
-                    "fecha_llegada",
-                    "fecha_salida"
-                ],
-                "title": "StoreDestinoViaticoRequest"
             },
             "StoreDiscapacidadServidorRequest": {
                 "type": "object",
@@ -24452,115 +24316,6 @@
                 ],
                 "title": "StoreServidorRequest"
             },
-            "StoreTransporteViaticoRequest": {
-                "type": "object",
-                "properties": {
-                    "tipo": {
-                        "type": "string",
-                        "enum": [
-                            "bus_interprovincial",
-                            "avion",
-                            "vehiculo_propio",
-                            "taxi",
-                            "transporte_institucional",
-                            "otro"
-                        ]
-                    },
-                    "provincia_origen_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "canton_origen_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "provincia_destino_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "canton_destino_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "pais_origen": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "pais_destino": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "fecha_viaje": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "empresa_o_aerolinea": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "numero_ticket_o_billete": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "placa_vehiculo": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 20
-                    },
-                    "kilometraje": {
-                        "type": [
-                            "number",
-                            "null"
-                        ],
-                        "minimum": 0.1
-                    },
-                    "valor_kilometro": {
-                        "type": [
-                            "number",
-                            "null"
-                        ],
-                        "minimum": 0
-                    },
-                    "monto": {
-                        "type": "number",
-                        "minimum": 0
-                    },
-                    "archivo_respaldo": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "tipo",
-                    "fecha_viaje",
-                    "monto"
-                ],
-                "title": "StoreTransporteViaticoRequest"
-            },
             "StoreTriajeRequest": {
                 "type": "object",
                 "properties": {
@@ -25271,7 +25026,7 @@
                 ],
                 "title": "TipoUnidad"
             },
-            "TransporteViatico": {
+            "TramoViatico": {
                 "type": "object",
                 "properties": {
                     "id": {
@@ -25280,75 +25035,67 @@
                     "viatico_id": {
                         "type": "integer"
                     },
-                    "tipo": {
+                    "origen_tipo": {
                         "type": "string"
                     },
-                    "provincia_origen_id": {
+                    "origen_provincia_id": {
                         "type": [
                             "integer",
                             "null"
                         ]
                     },
-                    "provincia_destino_id": {
+                    "origen_canton_id": {
                         "type": [
                             "integer",
                             "null"
                         ]
                     },
-                    "pais_origen": {
+                    "origen_pais": {
                         "type": [
                             "string",
                             "null"
                         ]
                     },
-                    "pais_destino": {
+                    "origen_ciudad": {
+                        "type": "string"
+                    },
+                    "destino_tipo": {
+                        "type": "string"
+                    },
+                    "destino_provincia_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "destino_canton_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "destino_pais": {
                         "type": [
                             "string",
                             "null"
                         ]
                     },
-                    "fecha_viaje": {
+                    "destino_ciudad": {
+                        "type": "string"
+                    },
+                    "empresa_transporte_id": {
+                        "type": "integer"
+                    },
+                    "datetime_salida": {
                         "type": "string",
                         "format": "date-time"
                     },
-                    "empresa_o_aerolinea": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                    "datetime_llegada": {
+                        "type": "string",
+                        "format": "date-time"
                     },
-                    "numero_ticket_o_billete": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "placa_vehiculo": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "kilometraje": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "valor_kilometro": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "monto": {
-                        "type": "string"
-                    },
-                    "archivo_respaldo": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                    "orden": {
+                        "type": "integer"
                     },
                     "created_at": {
                         "type": [
@@ -25363,42 +25110,29 @@
                             "null"
                         ],
                         "format": "date-time"
-                    },
-                    "canton_origen_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "canton_destino_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
                     }
                 },
                 "required": [
                     "id",
                     "viatico_id",
-                    "tipo",
-                    "provincia_origen_id",
-                    "provincia_destino_id",
-                    "pais_origen",
-                    "pais_destino",
-                    "fecha_viaje",
-                    "empresa_o_aerolinea",
-                    "numero_ticket_o_billete",
-                    "placa_vehiculo",
-                    "kilometraje",
-                    "valor_kilometro",
-                    "monto",
-                    "archivo_respaldo",
+                    "origen_tipo",
+                    "origen_provincia_id",
+                    "origen_canton_id",
+                    "origen_pais",
+                    "origen_ciudad",
+                    "destino_tipo",
+                    "destino_provincia_id",
+                    "destino_canton_id",
+                    "destino_pais",
+                    "destino_ciudad",
+                    "empresa_transporte_id",
+                    "datetime_salida",
+                    "datetime_llegada",
+                    "orden",
                     "created_at",
-                    "updated_at",
-                    "canton_origen_id",
-                    "canton_destino_id"
+                    "updated_at"
                 ],
-                "title": "TransporteViatico"
+                "title": "TramoViatico"
             },
             "Triaje": {
                 "type": "object",
@@ -26420,17 +26154,6 @@
                     "zona": {
                         "$ref": "#/components/schemas/ZonaViatico"
                     },
-                    "tipo": {
-                        "type": "string"
-                    },
-                    "fecha_inicio": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_fin": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
                     "justificacion": {
                         "type": "string"
                     },
@@ -26494,12 +26217,6 @@
                             "null"
                         ]
                     },
-                    "comision_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
                     "modalidad_anticipo": {
                         "type": "string"
                     },
@@ -26514,15 +26231,30 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "fecha_solicitud": {
+                        "type": "string"
+                    },
+                    "datetime_salida": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "datetime_llegada": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "total_dias": {
+                        "type": "string"
                     }
                 },
                 "required": [
                     "id",
                     "servidor_id",
                     "zona",
-                    "tipo",
-                    "fecha_inicio",
-                    "fecha_fin",
                     "justificacion",
                     "estado",
                     "monto_calculado",
@@ -26535,10 +26267,13 @@
                     "updated_at",
                     "deleted_at",
                     "codigo_viatico",
-                    "comision_id",
                     "modalidad_anticipo",
                     "tipo_viaje",
-                    "pais_destino"
+                    "pais_destino",
+                    "fecha_solicitud",
+                    "datetime_salida",
+                    "datetime_llegada",
+                    "total_dias"
                 ],
                 "title": "Viatico"
             },

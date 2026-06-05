@@ -67,22 +67,21 @@ class Viatico extends Model
         return $this->belongsTo(Comision::class);
     }
 
-    public function destinos(): HasMany
+    public function tramos(): HasMany
     {
-        return $this->hasMany(DestinoViatico::class);
+        return $this->hasMany(TramoViatico::class)
+                    ->orderBy('orden');
     }
 
-    public function transportes(): HasMany
+    public function autorizacionesVuelo(): HasMany
     {
-        return $this->hasMany(TransporteViatico::class);
+        return $this->hasMany(AutorizacionVuelo::class);
     }
 
     public function tieneAutorizacionesPendientes(): bool
     {
-        return $this->transportes()
-            ->where('tipo', 'avion')
-            ->whereHas('autorizacion', fn($q) =>
-                $q->where('estado', 'pendiente'))
+        return $this->autorizacionesVuelo()
+            ->where('estado', 'pendiente')
             ->exists();
     }
 

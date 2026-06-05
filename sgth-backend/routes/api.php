@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Viatico\TramoViaticoController;
+use App\Http\Controllers\Viatico\CatalogoViaticoController;
 
 // ── Rutas públicas (sin autenticación) ────────────────────────────
 Route::prefix('v1')->group(function () {
@@ -440,21 +442,23 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->name('viaticos.informe.descargar')
             ->middleware('signed');
             
-        // Destinos
-        Route::prefix('{id}/destinos')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'store']);
-            Route::put('{destino}', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'update']);
-            Route::delete('{destino}', [\App\Http\Controllers\Viatico\DestinoViaticoController::class, 'destroy']);
-        });
+        // Tramos del itinerario
+        Route::get('{viaticoId}/tramos',
+            [TramoViaticoController::class, 'index']);
+        Route::post('{viaticoId}/tramos',
+            [TramoViaticoController::class, 'store']);
+        Route::put('{viaticoId}/tramos/{tramo}',
+            [TramoViaticoController::class, 'update']);
+        Route::delete('{viaticoId}/tramos/{tramo}',
+            [TramoViaticoController::class, 'destroy']);
 
-        // Transportes
-        Route::prefix('{id}/transportes')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'store']);
-            Route::put('{transporte}', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'update']);
-            Route::delete('{transporte}', [\App\Http\Controllers\Viatico\TransporteViaticoController::class, 'destroy']);
-        });
+        // Catálogos de viáticos
+        Route::get('catalogos/tipos-transporte',
+            [CatalogoViaticoController::class, 'tiposTransporte']);
+        Route::get('catalogos/empresas/{tipoId}',
+            [CatalogoViaticoController::class, 'empresasPorTipo']);
+        Route::get('catalogos/categorias-factura',
+            [CatalogoViaticoController::class, 'categoriasFactura']);
         
         Route::prefix('vuelos')->group(function () {
             Route::get('/', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'index'])
@@ -472,13 +476,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('{id}/facturas', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'index']);
         Route::post('{id}/facturas', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'store']);
         Route::delete('{id}/facturas/{factura}', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'destroy']);
-    });
-
-    // Comisiones
-    Route::prefix('comisiones')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Viatico\ComisionController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\Viatico\ComisionController::class, 'store']);
-        Route::get('{id}', [\App\Http\Controllers\Viatico\ComisionController::class, 'show']);
     });
 
     // Módulo 14: Disciplinario

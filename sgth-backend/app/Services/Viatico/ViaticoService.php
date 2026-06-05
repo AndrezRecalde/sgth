@@ -32,39 +32,35 @@ final class ViaticoService implements ViaticoServiceInterface
             );
         }
 
-        $servidor    = Servidor::with('puesto')->findOrFail($servidorId);
-        $fechaInicio = Carbon::parse($datos['fecha_inicio']);
-        $fechaFin    = Carbon::parse($datos['fecha_fin']);
-        $zona        = $datos['zona'];
+        $servidor = Servidor::with('puesto')->findOrFail($servidorId);
+        $zona     = $datos['zona'];
 
-        // Para viaje al EXTERIOR el monto viene manual del request
-        if ($zona === 'exterior') {
-            $montoCalculado = (float) ($datos['monto_calculado'] ?? 0.00);
-        } else {
-            $montoCalculado = $this->calcularMonto(
-                $servidor, $zona, $datos['tipo'], $fechaInicio, $fechaFin
-            );
-        }
+        // Para exterior el monto viene manual
+        $montoCalculado = $zona === 'exterior'
+            ? (float) ($datos['monto_calculado'] ?? 0.00)
+            : $this->calcularMonto(
+                $servidor,
+                $zona,
+                $datos['tipo_calculo'] ?? 'con_pernocte',
+                null,
+                null
+              );
 
         return DB::transaction(function () use (
-            $servidorId, $datos, $userId,
-            $fechaInicio, $fechaFin, $montoCalculado
+            $servidorId, $datos, $userId, $montoCalculado
         ) {
             $viatico = Viatico::create([
-                'servidor_id'       => $servidorId,
-                'comision_id'       => $datos['comision_id']    ?? null,
-                'zona'              => $datos['zona'],
-                'tipo'              => $datos['tipo'],
-                'tipo_viaje'        => $datos['tipo_viaje']     ?? null,
-                'pais_destino'      => $datos['pais_destino']   ?? null,
-                'fecha_inicio'      => $fechaInicio,
-                'fecha_fin'         => $fechaFin,
-                'justificacion'     => $datos['justificacion'],
-                'estado'            => EstadoViatico::SOLICITADO,
-                'monto_calculado'   => $montoCalculado,
-                'monto_anticipo'    => 0.00,
-                'modalidad_anticipo'=> $datos['modalidad_anticipo'] ?? 'total',
-                'created_by'        => $userId,
+                'servidor_id'        => $servidorId,
+                'zona'               => $datos['zona'],
+                'fecha_solicitud'    => now()->toDateString(),
+                'tipo_viaje'         => $datos['tipo_viaje']     ?? null,
+                'pais_destino'       => $datos['pais_destino']   ?? null,
+                'justificacion'      => $datos['justificacion'],
+                'estado'             => EstadoViatico::SOLICITADO,
+                'monto_calculado'    => $montoCalculado,
+                'monto_anticipo'     => 0.00,
+                'modalidad_anticipo' => $datos['modalidad_anticipo'] ?? 'total',
+                'created_by'         => $userId,
             ]);
 
             // Registrar servidor titular
@@ -74,9 +70,9 @@ final class ViaticoService implements ViaticoServiceInterface
                 'es_titular'  => true,
             ]);
 
-            // Registrar servidores acompañantes
+            // Servidores acompañantes
             foreach ($datos['servidores_acompanantes'] ?? [] as $sid) {
-                if ((int) $sid === $servidorId) continue; // evitar duplicado
+                if ((int) $sid === $servidorId) continue;
                 ViaticoServidor::create([
                     'viatico_id'  => $viatico->id,
                     'servidor_id' => (int) $sid,
@@ -225,8 +221,8 @@ final class ViaticoService implements ViaticoServiceInterface
         Servidor $servidor,
         string $zona,
         string $tipo,
-        Carbon $inicio,
-        Carbon $fin
+        ?Carbon $inicio,
+        ?Carbon $fin
     ): float {
         // Determinar nivel según el puesto
         $denominacion = strtolower(
@@ -238,8 +234,8 @@ final class ViaticoService implements ViaticoServiceInterface
                     || str_contains($denominacion, 'director');
         $nivel = $esAutoridad ? 'autoridad' : 'servidor';
 
-        $horasComision = $fin->diffInHours($inicio);
-        $diasComision  = $fin->diffInDays($inicio) ?: 1;
+        $horasComision = ($inicio && $fin) ? $fin->diffInHours($inicio) : 0;
+        $diasComision  = ($inicio && $fin) ? ($fin->diffInDays($inicio) ?: 1) : 1;
 
         // Determinar tipo de tarifa
         $tipoTarifaBuscar = match($tipo) {

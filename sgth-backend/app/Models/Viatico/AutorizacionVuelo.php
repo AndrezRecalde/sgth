@@ -15,7 +15,7 @@ class AutorizacionVuelo extends Model
     protected $table = 'autorizaciones_vuelo';
 
     protected $fillable = [
-        'transporte_viatico_id',
+        'tramo_viatico_id',
         'viatico_id',
         'documento_invitacion_ruta',
         'justificacion',
@@ -32,9 +32,9 @@ class AutorizacionVuelo extends Model
         ];
     }
 
-    public function transporte(): BelongsTo
+    public function tramo(): BelongsTo
     {
-        return $this->belongsTo(TransporteViatico::class, 'transporte_viatico_id');
+        return $this->belongsTo(TramoViatico::class, 'tramo_viatico_id');
     }
 
     public function viatico(): BelongsTo
