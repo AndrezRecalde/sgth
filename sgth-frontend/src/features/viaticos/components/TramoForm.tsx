@@ -512,6 +512,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   label="Fecha y hora de salida"
                   placeholder="Seleccionar"
                   valueFormat="DD/MM/YYYY HH:mm"
+                  timePickerProps={{ format: '24h' }}
                   {...contained}
                   value={field.value ? new Date(field.value) : null}
                   onChange={(v) => field.onChange(fromDateTime(v))}
@@ -529,6 +530,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   label="Fecha y hora de llegada"
                   placeholder="Seleccionar"
                   valueFormat="DD/MM/YYYY HH:mm"
+                  timePickerProps={{ format: '24h' }}
                   {...contained}
                   value={field.value ? new Date(field.value) : null}
                   onChange={(v) => field.onChange(fromDateTime(v))}
