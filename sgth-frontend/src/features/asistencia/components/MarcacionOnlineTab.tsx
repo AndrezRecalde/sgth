@@ -88,7 +88,10 @@ export function MarcacionOnlineTab() {
       title: "Acceso a ubicación bloqueado",
       children: (
         <Text size="sm">
-          Has bloqueado el acceso a la ubicación. Para permitirlo, haz clic en el ícono del candado (🔒) o información (ℹ️) en la barra de direcciones de tu navegador, busca "Ubicación" y cámbialo a "Permitir". Luego recarga la página.
+          Has bloqueado el acceso a la ubicación. Para permitirlo, haz clic en
+          el ícono del candado (🔒) o información (ℹ️) en la barra de
+          direcciones de tu navegador, busca Ubicación y cámbialo a Permitir.
+          Luego recarga la página.
         </Text>
       ),
     });
@@ -130,7 +133,7 @@ export function MarcacionOnlineTab() {
     }
   };
 
-  /* if (!cedula || !puedeMarcar) {
+  if (!cedula || !puedeMarcar) {
     return (
       <Alert
         icon={<IconInfoCircle size={16} />}
@@ -144,7 +147,7 @@ export function MarcacionOnlineTab() {
         </Text>
       </Alert>
     );
-  } */
+  }
 
   // Lógica para determinar el paso activo en el Timeline
   let activeStep = -1;

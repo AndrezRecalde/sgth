@@ -3331,6 +3331,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/viaticos/{id}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["viatico.aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/{viaticoId}/liquidar": {
         parameters: {
             query?: never;
@@ -3959,7 +3975,7 @@ export interface components {
          * EstadoViatico
          * @enum {string}
          */
-        EstadoViatico: "solicitado" | "aprobado_jefe" | "aprobado_director" | "aprobado_autoridad" | "aprobado_uath" | "aprobado_financiero" | "con_anticipo" | "en_comision" | "pendiente_liquidacion" | "liquidado" | "contabilizado";
+        EstadoViatico: "solicitado" | "aprobado_jefe" | "aprobado_director" | "aprobado_autoridad" | "aprobado_uath" | "aprobado_financiero" | "con_anticipo" | "en_comision" | "pendiente_liquidacion" | "liquidado" | "contabilizado" | "aprobado";
         /** EvaluacionSeleccion */
         EvaluacionSeleccion: {
             id: number;
@@ -5325,6 +5341,9 @@ export interface components {
             deleted_at: string | null;
             codigo_viatico: string | null;
             comision_id: number | null;
+            modalidad_anticipo: string;
+            tipo_viaje: string | null;
+            pais_destino: string | null;
         };
         /**
          * ZonaViatico
@@ -14462,6 +14481,50 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "viatico.aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Viático aprobado correctamente.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solo se pueden aprobar viáticos en estado solicitado.";
+                        datos: null;
+                        /** @constant */
+                        errores: 422;
+                    };
+                };
+            };
         };
     };
     "viatico.liquidar": {

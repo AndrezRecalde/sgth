@@ -48,7 +48,6 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <AppShell
-      withBorder={false}
       header={{ height: 70 }}
       navbar={{
         width: isTablet ? 60 : 230,

@@ -106,6 +106,31 @@ export type FacturaViatico    = components['schemas']['FacturaViatico']
 export type Comision          = components['schemas']['ComisionResource']
 export type AutorizacionVuelo = components['schemas']['AutorizacionVueloResource']
 
+export type ViaticoServidor = {
+  id:          number
+  viatico_id:  number
+  servidor_id: number
+  es_titular:  boolean
+  servidor?: {
+    id:       number
+    cedula?:  string
+    nombre?:  string
+    apellido?: string
+    unidad_administrativa?: { nombre?: string } | null
+  }
+}
+
+export type ActividadLiquidacion = {
+  id:                     number
+  liquidacion_viatico_id: number
+  fecha:                  string
+  hora_inicio:            string
+  hora_fin:               string
+  descripcion:            string
+  lugar:                  string
+  orden:                  number
+}
+
 // ── Dispensario ──────────────────────────────
 export type Beneficiario       = components['schemas']['BeneficiarioResource']
 export type HistoriaClinica    = components['schemas']['HistoriaClinica']
@@ -137,11 +162,7 @@ export type DetalleNomina = {
 // ── Enums de conveniencia ────────────────────
 export type EstadoViatico =
   | 'solicitado'
-  | 'aprobado_jefe'
-  | 'aprobado_director'
-  | 'aprobado_autoridad'
-  | 'aprobado_uath'
-  | 'aprobado_financiero'
+  | 'aprobado'
   | 'con_anticipo'
   | 'en_comision'
   | 'pendiente_liquidacion'
@@ -181,10 +202,11 @@ export type ServidorParams = {
 }
 
 export type ViaticoParams = {
-  page?: number
-  per_page?: number
-  estado?: EstadoViatico
+  page?:       number
+  per_page?:   number
+  estado?:     EstadoViatico
   servidor_id?: number
+  folio?:      string
 }
 
 export type AgendaParams = {

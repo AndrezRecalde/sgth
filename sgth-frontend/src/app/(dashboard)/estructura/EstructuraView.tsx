@@ -1,76 +1,90 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
-  Tabs, Box, Button, Group, SegmentedControl,
+  Tabs,
+  Box,
+  Button,
+  Group,
+  SegmentedControl,
   Center,
-} from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
-  IconSitemap, IconPhone, IconBriefcase,
-  IconCubePlus, IconListTree, IconHierarchy,
-} from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { OrganigramaTree } from '@/features/estructura/components/OrganigramaTree'
-import { OrganigramaChart } from '@/features/estructura/components/OrganigramaChart'
-import { UnidadDrawer } from '@/features/estructura/components/UnidadDrawer'
-import { DirectorioTable } from '@/features/estructura/components/DirectorioTable'
-import { DirectorioToolbar } from '@/features/estructura/components/DirectorioToolbar'
-import { PuestosTab } from '@/features/estructura/components/PuestosTab'
-import { UnidadModal } from '@/features/estructura/components/UnidadModal'
-import { ExtensionModal } from '@/features/estructura/components/ExtensionModal'
-import { useOrganigrama } from '@/features/estructura/hooks/useOrganigrama'
-import { useUnidad } from '@/features/estructura/hooks/useUnidad'
-import { useDirectorio } from '@/features/estructura/hooks/useDirectorio'
-import { useExtensionMutations } from '@/features/estructura/hooks/useExtensionMutations'
-import type { UnidadConRelaciones, ExtensionConRelaciones } from '@/types/api'
-import { CargosTab } from '@/features/estructura/components/CargosTab'
-import { GruposOcupacionalesTab } from '@/features/estructura/components/GruposOcupacionalesTab'
-import { IconId, IconScale } from '@tabler/icons-react'
+  IconSitemap,
+  IconPhone,
+  IconBriefcase,
+  IconCubePlus,
+  IconListTree,
+  IconHierarchy,
+} from "@tabler/icons-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { OrganigramaTree } from "@/features/estructura/components/OrganigramaTree";
+import { OrganigramaChart } from "@/features/estructura/components/OrganigramaChart";
+import { UnidadDrawer } from "@/features/estructura/components/UnidadDrawer";
+import { DirectorioTable } from "@/features/estructura/components/DirectorioTable";
+import { DirectorioToolbar } from "@/features/estructura/components/DirectorioToolbar";
+import { PuestosTab } from "@/features/estructura/components/PuestosTab";
+import { UnidadModal } from "@/features/estructura/components/UnidadModal";
+import { ExtensionModal } from "@/features/estructura/components/ExtensionModal";
+import { useOrganigrama } from "@/features/estructura/hooks/useOrganigrama";
+import { useUnidad } from "@/features/estructura/hooks/useUnidad";
+import { useDirectorio } from "@/features/estructura/hooks/useDirectorio";
+import { useExtensionMutations } from "@/features/estructura/hooks/useExtensionMutations";
+import type { UnidadConRelaciones, ExtensionConRelaciones } from "@/types/api";
+import { CargosTab } from "@/features/estructura/components/CargosTab";
+import { GruposOcupacionalesTab } from "@/features/estructura/components/GruposOcupacionalesTab";
+import { IconId, IconScale } from "@tabler/icons-react";
 
 export function EstructuraView() {
-  const [search, setSearch]   = useState('')
-  const [unidadId, setUnidadId] = useState<string | null>(null)
-  const [vistaOrg, setVistaOrg] = useState<'acordeon' | 'nodo'>('acordeon')
+  const [search, setSearch] = useState("");
+  const [unidadId, setUnidadId] = useState<string | null>(null);
+  const [vistaOrg, setVistaOrg] = useState<"acordeon" | "nodo">("acordeon");
 
-  const [unidadModal, unidadModalHandlers]       = useDisclosure(false)
-  const [extensionModal, extensionModalHandlers] = useDisclosure(false)
-  const [drawerOpened, drawerHandlers]           = useDisclosure(false)
+  const [unidadModal, unidadModalHandlers] = useDisclosure(false);
+  const [extensionModal, extensionModalHandlers] = useDisclosure(false);
+  const [drawerOpened, drawerHandlers] = useDisclosure(false);
 
-  const [editUnidad, setEditUnidad]       = useState<UnidadConRelaciones | null>(null)
-  const [editExtension, setEditExtension] = useState<ExtensionConRelaciones | null>(null)
-  const [selectedUnidadId, setSelectedUnidadId] = useState<number | null>(null)
+  const [editUnidad, setEditUnidad] = useState<UnidadConRelaciones | null>(
+    null,
+  );
+  const [editExtension, setEditExtension] =
+    useState<ExtensionConRelaciones | null>(null);
+  const [selectedUnidadId, setSelectedUnidadId] = useState<number | null>(null);
 
-  const { eliminar: eliminarExtension } = useExtensionMutations()
+  const { eliminar: eliminarExtension } = useExtensionMutations();
 
-  const { data: organigrama, isLoading: isLoadingOrg, error: errorOrg } =
-    useOrganigrama()
+  const {
+    data: organigrama,
+    isLoading: isLoadingOrg,
+    error: errorOrg,
+  } = useOrganigrama();
 
   const { data: unidadDetalle, isLoading: isLoadingDrawer } =
-    useUnidad(selectedUnidadId)
+    useUnidad(selectedUnidadId);
 
   const { data: directorio = [], isLoading: isLoadingDir } = useDirectorio({
     search: search || undefined,
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
-  })
+  });
 
   const handleNodeClick = (unidad: UnidadConRelaciones) => {
-    const nivel = unidad.nivel ?? 0
+    const nivel = unidad.nivel ?? 0;
     if (nivel === 2) {
-      setSelectedUnidadId(Number(unidad.id))
-      drawerHandlers.open()
+      setSelectedUnidadId(Number(unidad.id));
+      drawerHandlers.open();
     }
-  }
+  };
 
   const handleCloseDrawer = () => {
-    drawerHandlers.close()
-    setSelectedUnidadId(null)
-  }
+    drawerHandlers.close();
+    setSelectedUnidadId(null);
+  };
 
   const handleEditExtension = (ext: ExtensionConRelaciones) => {
-    setEditExtension(ext)
-    extensionModalHandlers.open()
-  }
+    setEditExtension(ext);
+    extensionModalHandlers.open();
+  };
 
   return (
     <Box>
@@ -103,11 +117,11 @@ export function EstructuraView() {
           <Group justify="space-between" mb="md">
             <SegmentedControl
               value={vistaOrg}
-              onChange={(v) => setVistaOrg(v as 'acordeon' | 'nodo')}
+              onChange={(v) => setVistaOrg(v as "acordeon" | "nodo")}
               color="emerald"
               data={[
                 {
-                  value: 'acordeon',
+                  value: "acordeon",
                   label: (
                     <Center style={{ gap: 10 }}>
                       <IconListTree size={14} />
@@ -116,7 +130,7 @@ export function EstructuraView() {
                   ),
                 },
                 {
-                  value: 'nodo',
+                  value: "nodo",
                   label: (
                     <Center style={{ gap: 10 }}>
                       <IconHierarchy size={14} />
@@ -136,7 +150,7 @@ export function EstructuraView() {
             </Button>
           </Group>
 
-          {vistaOrg === 'acordeon' ? (
+          {vistaOrg === "acordeon" ? (
             <OrganigramaTree
               unidades={organigrama ?? []}
               isLoading={isLoadingOrg}
@@ -166,15 +180,20 @@ export function EstructuraView() {
           <DirectorioToolbar
             onSearch={setSearch}
             onUnidadChange={setUnidadId}
-            onClear={() => { setSearch(''); setUnidadId(null) }}
+            onClear={() => {
+              setSearch("");
+              setUnidadId(null);
+            }}
           />
           <DirectorioTable
             data={directorio}
             isLoading={isLoadingDir}
             onEdit={handleEditExtension}
             onDelete={(ext) => {
-              if (confirm(`¿Eliminar la extensión ${ext.numero_extension ?? ''}?`)) {
-                eliminarExtension.mutate(ext.id)
+              if (
+                confirm(`¿Eliminar la extensión ${ext.numero_extension ?? ""}?`)
+              ) {
+                eliminarExtension.mutate(ext.id);
               }
             }}
           />
@@ -195,12 +214,18 @@ export function EstructuraView() {
 
       <UnidadModal
         opened={unidadModal}
-        onClose={() => { setEditUnidad(null); unidadModalHandlers.close() }}
+        onClose={() => {
+          setEditUnidad(null);
+          unidadModalHandlers.close();
+        }}
         unidad={editUnidad}
       />
       <ExtensionModal
         opened={extensionModal}
-        onClose={() => { setEditExtension(null); extensionModalHandlers.close() }}
+        onClose={() => {
+          setEditExtension(null);
+          extensionModalHandlers.close();
+        }}
         extension={editExtension}
       />
       <UnidadDrawer
@@ -210,5 +235,5 @@ export function EstructuraView() {
         isLoading={isLoadingDrawer}
       />
     </Box>
-  )
+  );
 }

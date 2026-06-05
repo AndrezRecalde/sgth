@@ -22,7 +22,7 @@ import {
   IconMoon,
   IconBell,
   IconLogout,
-  IconCamera,
+  IconGrain,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -44,11 +44,7 @@ export function Topbar({
   const { usuario, clearAuth } = useAuth();
   const router = useRouter();
 
-  const displayName =
-    usuario?.nombre_completo ||
-    usuario?.servidor?.nombre ||
-    usuario?.email ||
-    "Usuario";
+  const displayName = usuario?.usuario_ti || "Usuario";
 
   const initials =
     displayName
@@ -122,7 +118,17 @@ export function Topbar({
             <IconBell size={25} />
           </ActionIcon>
         </Tooltip>
-
+        <Tooltip label="Aplicaciones">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="lg"
+            radius="xl"
+            aria-label="Aplicaciones"
+          >
+            <IconGrain size={25} />
+          </ActionIcon>
+        </Tooltip>
         <Menu
           width={340}
           position="bottom-end"
@@ -159,11 +165,9 @@ export function Topbar({
                 size={26}
                 offset={10}
                 position="bottom-end"
-                color="var(--mantine-color-body)"
+                color="emerald"
                 withBorder
-                label={
-                  <IconCamera size={14} color="var(--mantine-color-text)" />
-                }
+                processing
               >
                 <Avatar
                   color="emerald"
