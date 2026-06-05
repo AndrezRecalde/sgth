@@ -300,7 +300,7 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
 
         <Stack gap="xs">
           {facturaFields.map((field, i) => {
-            const tipoComp = watch(`facturas.${i}.tipo_comprobante`);
+            const tipoComp = facturasWatch?.[i]?.tipo_comprobante ?? "factura";
             return (
               <Card key={field.id} withBorder radius="md" p="sm">
                 <Group justify="space-between" mb="xs">
