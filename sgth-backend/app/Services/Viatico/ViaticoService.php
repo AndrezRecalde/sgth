@@ -199,6 +199,49 @@ final class ViaticoService implements ViaticoServiceInterface
         });
     }
 
+    public function contabilizar(
+        int $viaticoId,
+        int $userId
+    ): LiquidacionViatico {
+        $viatico = Viatico::with('liquidacion')->findOrFail($viaticoId);
+
+        if ($viatico->estado !== EstadoViatico::LIQUIDADO) {
+            throw new ReglaNegocioException(
+                'Solo se pueden contabilizar viáticos ' .
+                'en estado liquidado.'
+            );
+        }
+
+        if (!$viatico->liquidacion) {
+            throw new ReglaNegocioException(
+                'El viático no tiene liquidación registrada.'
+            );
+        }
+
+        $jefeService = app(
+            \App\Services\Viatico\JefeFinancieroService::class
+        );
+        $jefe = $jefeService->obtenerJefeFinanciero();
+
+        return DB::transaction(function () use (
+            $viatico, $userId, $jefe
+        ) {
+            $viatico->liquidacion->update([
+                'jefe_financiero_id'    => $jefe['user_id'],
+                'cargo_jefe_financiero' => $jefe['cargo'],
+                'contabilizado_por'     => $userId,
+                'fecha_contabilizacion' => now()->toDateString(),
+            ]);
+
+            $viatico->update([
+                'estado'     => EstadoViatico::CONTABILIZADO,
+                'updated_by' => $userId,
+            ]);
+
+            return $viatico->liquidacion->fresh();
+        });
+    }
+
     public function verificarBloqueo(int $servidorId): bool
     {
         $viaticosPendientes = Viatico::where('servidor_id', $servidorId)

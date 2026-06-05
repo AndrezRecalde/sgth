@@ -121,4 +121,95 @@ class ViaticoController extends Controller
             'Viático aprobado correctamente.'
         );
     }
+
+    public function entregarAnticipo(int $id): JsonResponse
+    {
+        $viatico = \App\Models\Viatico\Viatico::findOrFail($id);
+        $this->authorize('gestionar-viaticos');
+
+        if ($viatico->estado->value !== 'aprobado') {
+            return ApiResponse::error(
+                'Solo se puede entregar anticipo a viáticos aprobados.',
+                422
+            );
+        }
+
+        $viatico->update([
+            'estado'     => \App\Enums\EstadoViatico::CON_ANTICIPO,
+            'updated_by' => request()->user()->id,
+        ]);
+
+        return ApiResponse::ok(
+            $viatico->fresh(),
+            'Anticipo entregado. El viático queda listo para la comisión.'
+        );
+    }
+
+    public function marcarEnComision(int $id): JsonResponse
+    {
+        $viatico = \App\Models\Viatico\Viatico::findOrFail($id);
+        $this->authorize('gestionar-viaticos');
+
+        $estadosValidos = [
+            \App\Enums\EstadoViatico::CON_ANTICIPO->value,
+            \App\Enums\EstadoViatico::APROBADO->value,
+        ];
+
+        if (!in_array($viatico->estado->value, $estadosValidos)) {
+            return ApiResponse::error(
+                'El viático debe estar aprobado o con anticipo ' .
+                'para marcarse en comisión.',
+                422
+            );
+        }
+
+        $viatico->update([
+            'estado'     => \App\Enums\EstadoViatico::EN_COMISION,
+            'updated_by' => request()->user()->id,
+        ]);
+
+        return ApiResponse::ok(
+            $viatico->fresh(),
+            'Viático marcado en comisión.'
+        );
+    }
+
+    public function marcarPendienteLiquidacion(int $id): JsonResponse
+    {
+        $viatico = \App\Models\Viatico\Viatico::findOrFail($id);
+        $this->authorize('gestionar-viaticos');
+
+        if ($viatico->estado->value !== 'en_comision') {
+            return ApiResponse::error(
+                'El viático debe estar en comisión para ' .
+                'marcarse pendiente de liquidación.',
+                422
+            );
+        }
+
+        $viatico->update([
+            'estado'     => \App\Enums\EstadoViatico::PENDIENTE_LIQUIDACION,
+            'updated_by' => request()->user()->id,
+        ]);
+
+        return ApiResponse::ok(
+            $viatico->fresh(),
+            'Viático marcado como pendiente de liquidación.'
+        );
+    }
+
+    public function contabilizar(int $id): JsonResponse
+    {
+        $this->authorize('gestionar-viaticos');
+
+        $liquidacion = $this->viaticoService->contabilizar(
+            $id,
+            request()->user()->id
+        );
+
+        return ApiResponse::ok(
+            $liquidacion,
+            'Viático contabilizado correctamente.'
+        );
+    }
 }

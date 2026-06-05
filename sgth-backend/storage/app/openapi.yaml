@@ -18824,6 +18824,328 @@
                 }
             }
         },
+        "/v1/viaticos/{id}/entregar-anticipo": {
+            "post": {
+                "operationId": "viatico.entregarAnticipo",
+                "tags": [
+                    "Viatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Anticipo entregado. El vi\u00e1tico queda listo para la comisi\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solo se puede entregar anticipo a vi\u00e1ticos aprobados."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "integer",
+                                            "const": 422
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/{id}/marcar-en-comision": {
+            "post": {
+                "operationId": "viatico.marcarEnComision",
+                "tags": [
+                    "Viatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vi\u00e1tico marcado en comisi\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "integer",
+                                            "const": 422
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/{id}/marcar-pendiente-liquidacion": {
+            "post": {
+                "operationId": "viatico.marcarPendienteLiquidacion",
+                "tags": [
+                    "Viatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vi\u00e1tico marcado como pendiente de liquidaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "integer",
+                                            "const": 422
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/{id}/contabilizar": {
+            "post": {
+                "operationId": "viatico.contabilizar",
+                "tags": [
+                    "Viatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vi\u00e1tico contabilizado correctamente."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/LiquidacionViatico"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/viaticos/{viaticoId}/liquidar": {
             "post": {
                 "operationId": "viatico.liquidar",
@@ -22084,6 +22406,30 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "jefe_financiero_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cargo_jefe_financiero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "contabilizado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "fecha_contabilizacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -22098,7 +22444,11 @@
                     "updated_by",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "jefe_financiero_id",
+                    "cargo_jefe_financiero",
+                    "contabilizado_por",
+                    "fecha_contabilizacion"
                 ],
                 "title": "LiquidacionViatico"
             },

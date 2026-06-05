@@ -29,6 +29,10 @@ class LiquidacionViatico extends Model
         'observaciones',
         'created_by',
         'updated_by',
+        'jefe_financiero_id',
+        'cargo_jefe_financiero',
+        'contabilizado_por',
+        'fecha_contabilizacion',
     ];
 
     protected function casts(): array
@@ -68,6 +72,22 @@ class LiquidacionViatico extends Model
         return $this->hasMany(
             ActividadLiquidacion::class,
             'liquidacion_viatico_id'
+        );
+    }
+
+    public function jefeFinanciero(): BelongsTo
+    {
+        return $this->belongsTo(
+            \App\Models\User::class,
+            'jefe_financiero_id'
+        );
+    }
+
+    public function contabilizadoPor(): BelongsTo
+    {
+        return $this->belongsTo(
+            \App\Models\User::class,
+            'contabilizado_por'
         );
     }
 }
