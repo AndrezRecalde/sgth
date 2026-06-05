@@ -18,7 +18,7 @@ import {
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
@@ -62,7 +62,6 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
     control,
     handleSubmit,
     register,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<LiquidacionFormData>({
     resolver: zodResolver(liquidacionSchema),
@@ -106,7 +105,11 @@ export function LiquidacionForm({ viatico, onSuccess }: Props) {
     remove: removeActividad,
   } = useFieldArray({ control, name: "actividades" });
 
-  const facturasWatch = watch("facturas");
+  const facturasWatch = useWatch({
+    control,
+    name: "facturas",
+    defaultValue: [],
+  });
   const totalFacturas = facturasWatch.reduce(
     (sum, f) => sum + (Number(f.monto) || 0),
     0,
