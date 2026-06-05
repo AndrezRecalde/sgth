@@ -36,9 +36,9 @@ import { useViatico } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { TramosList } from "./TramosList";
 import { TramoForm } from "./TramoForm";
-import { LiquidacionForm } from "./LiquidacionForm";
+import { LiquidacionSection } from "./LiquidacionSection";
 import { ViaticoEditModal } from "./ViaticoEditModal";
-import type { ViaticoConRelaciones, Viatico } from "@/types/api";
+import type { ViaticoConRelaciones } from "@/types/api";
 
 interface Props {
   viaticoId: number;
@@ -100,8 +100,7 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
     useDisclosure(false);
   const [tramosAbierto, { open: abrirTramos, close: cerrarTramos }] =
     useDisclosure(false);
-  const [liquidAbierto, { open: abrirLiquid, close: cerrarLiquid }] =
-    useDisclosure(false);
+
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
 
   const {
@@ -190,15 +189,12 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
             <Text size="xs" c="dimmed">
               Solicitud del{" "}
               {d.fecha_solicitud
-                ? new Date(d.fecha_solicitud).toLocaleDateString(
-                    "es-EC",
-                    {
-                      timeZone: "UTC",
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    },
-                  )
+                ? new Date(d.fecha_solicitud).toLocaleDateString("es-EC", {
+                    timeZone: "UTC",
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })
                 : "—"}
             </Text>
           </div>
@@ -422,8 +418,7 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
                     total: "Anticipo total",
                     parcial: "Anticipo parcial",
                     sin_anticipo: "Sin anticipo",
-                  }[d.modalidad_anticipo ?? ""] ??
-                    d.modalidad_anticipo}
+                  }[d.modalidad_anticipo ?? ""] ?? d.modalidad_anticipo}
                 </Badge>
               </Group>
               <Group justify="space-between">
@@ -461,20 +456,16 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
                     Liquidación
                   </Text>
                 </Group>
-                {estadoActual === "pendiente_liquidacion" && (
-                  <Button
-                    size="xs"
-                    color="emerald"
-                    variant="light"
-                    leftSection={<IconPencil size={12} />}
-                    onClick={abrirLiquid}
-                  >
-                    Registrar liquidación
-                  </Button>
-                )}
               </Group>
               <Divider mb="sm" />
-              {d.liquidacion ? (
+              {estadoActual === "pendiente_liquidacion" && !d.liquidacion ? (
+                <LiquidacionSection
+                  viatico={d}
+                  onSuccess={() => {
+                    router.refresh();
+                  }}
+                />
+              ) : d.liquidacion ? (
                 <Stack gap="xs">
                   <Group justify="space-between">
                     <Text size="xs" c="dimmed">
@@ -641,9 +632,8 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
           >
             <Text size="xs">
               El primer tramo debe salir el{" "}
-              <strong>{fmt(d.datetime_salida)}</strong> y el último
-              tramo debe llegar el{" "}
-              <strong>{fmt(d.datetime_llegada)}</strong>.
+              <strong>{fmt(d.datetime_salida)}</strong> y el último tramo debe
+              llegar el <strong>{fmt(d.datetime_llegada)}</strong>.
             </Text>
           </Alert>
 
@@ -674,22 +664,7 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
         </Stack>
       </Modal>
 
-      {/* Modal liquidación */}
-      <Modal
-        opened={liquidAbierto}
-        onClose={cerrarLiquid}
-        title="Registrar liquidación del viático"
-        size="xl"
-        radius="xl"
-        fullScreen={false}
-      >
-        <LiquidacionForm
-          viatico={d}
-          onSuccess={() => {
-            cerrarLiquid();
-          }}
-        />
-      </Modal>
+
     </Stack>
   );
 }

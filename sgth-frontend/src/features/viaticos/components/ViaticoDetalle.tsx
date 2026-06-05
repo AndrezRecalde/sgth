@@ -30,7 +30,7 @@ import { useViatico } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { TramosList } from "./TramosList";
 import { TramoForm } from "./TramoForm";
-import { LiquidacionForm } from "./LiquidacionForm";
+import { LiquidacionSection } from "./LiquidacionSection";
 import type { Viatico, ViaticoConRelaciones } from "@/types/api";
 
 interface Props {
@@ -339,7 +339,7 @@ export function ViaticoDetalle({ opened, onClose, viatico }: Props) {
 
             {/* Tab Liquidación */}
             <Tabs.Panel value="liquidacion" pt="md">
-              <LiquidacionForm viatico={d as Viatico} onSuccess={onClose} />
+              <LiquidacionSection viatico={d as Viatico} onSuccess={onClose} />
             </Tabs.Panel>
           </Tabs>
 
