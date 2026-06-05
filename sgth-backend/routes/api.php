@@ -429,6 +429,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'index']);
         Route::post('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'store']);
         Route::get('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'show']);
+        Route::patch('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'update']);
         
         Route::post('servidor/{servidorId}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar'])
             ->name('viatico.solicitar.por.servidor');

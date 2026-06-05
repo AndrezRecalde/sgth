@@ -3,61 +3,39 @@ namespace App\Observers\Viatico;
 
 use App\Models\Viatico\AutorizacionVuelo;
 use App\Models\Viatico\TramoViatico;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class TramoViaticoObserver
 {
     public function created(TramoViatico $tramo): void
     {
-        $this->sincronizarFechasViatico($tramo);
         $this->generarAutorizacionSiAplica($tramo);
     }
 
     public function updated(TramoViatico $tramo): void
     {
-        $this->sincronizarFechasViatico($tramo);
+        // Si cambió la empresa y ya no requiere autorización,
+        // eliminar la autorización pendiente
+        if ($tramo->wasChanged('empresa_transporte_id')) {
+            $requiere = $tramo->empresa
+                ?->catalogo
+                ?->requiere_autorizacion ?? false;
+
+            if (!$requiere) {
+                AutorizacionVuelo::where(
+                    'tramo_viatico_id', $tramo->id
+                )->where('estado', 'pendiente')
+                 ->delete();
+            }
+        }
     }
 
     public function deleted(TramoViatico $tramo): void
     {
-        $this->sincronizarFechasViatico($tramo);
-    }
-
-    private function sincronizarFechasViatico(
-        TramoViatico $tramo
-    ): void {
-        $viatico = $tramo->viatico;
-        if (!$viatico) return;
-
-        $tramos = $viatico->tramos()->get();
-
-        if ($tramos->isEmpty()) {
-            $viatico->update([
-                'datetime_salida'  => null,
-                'datetime_llegada' => null,
-                'total_dias'       => 0,
-            ]);
-            return;
-        }
-
-        $salida  = $tramos->min('datetime_salida');
-        $llegada = $tramos->max('datetime_llegada');
-
-        $totalDias = 0;
-        if ($salida && $llegada) {
-            $totalDias = round(
-                Carbon::parse($salida)
-                    ->diffInHours(Carbon::parse($llegada)) / 24,
-                2
-            );
-        }
-
-        $viatico->update([
-            'datetime_salida'  => $salida,
-            'datetime_llegada' => $llegada,
-            'total_dias'       => $totalDias,
-        ]);
+        // Eliminar autorización de vuelo asociada
+        AutorizacionVuelo::where(
+            'tramo_viatico_id', $tramo->id
+        )->delete();
     }
 
     private function generarAutorizacionSiAplica(

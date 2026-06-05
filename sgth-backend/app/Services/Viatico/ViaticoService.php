@@ -26,33 +26,47 @@ final class ViaticoService implements ViaticoServiceInterface
     ): Viatico {
         if ($this->verificarBloqueo($servidorId)) {
             throw new ReglaNegocioException(
-                'El servidor tiene bloqueada la solicitud de nuevos ' .
-                'viáticos por mantener liquidaciones pendientes fuera ' .
-                'del plazo legal de 5 días hábiles.'
+                'El servidor tiene bloqueada la solicitud de ' .
+                'nuevos viáticos por mantener liquidaciones ' .
+                'pendientes fuera del plazo legal de 5 días hábiles.'
             );
         }
 
         $servidor = Servidor::with('puesto')->findOrFail($servidorId);
         $zona     = $datos['zona'];
 
+        $datetimeSalida  = Carbon::parse($datos['datetime_salida']);
+        $datetimeLlegada = Carbon::parse($datos['datetime_llegada']);
+
+        // Calcular total_dias directamente
+        $totalDias = round(
+            $datetimeSalida->diffInHours($datetimeLlegada) / 24,
+            2
+        );
+
         // Para exterior el monto viene manual
-        $montoCalculado = $zona === 'exterior'
-            ? (float) ($datos['monto_calculado'] ?? 0.00)
-            : $this->calcularMonto(
+        if ($zona === 'exterior') {
+            $montoCalculado = (float) ($datos['monto_calculado'] ?? 0.00);
+        } else {
+            $montoCalculado = $this->calcularMonto(
                 $servidor,
                 $zona,
-                $datos['tipo_calculo'] ?? 'con_pernocte',
-                null,
-                null
-              );
+                $totalDias
+            );
+        }
 
         return DB::transaction(function () use (
-            $servidorId, $datos, $userId, $montoCalculado
+            $servidorId, $datos, $userId,
+            $montoCalculado, $datetimeSalida,
+            $datetimeLlegada, $totalDias
         ) {
             $viatico = Viatico::create([
                 'servidor_id'        => $servidorId,
                 'zona'               => $datos['zona'],
                 'fecha_solicitud'    => now()->toDateString(),
+                'datetime_salida'    => $datetimeSalida,
+                'datetime_llegada'   => $datetimeLlegada,
+                'total_dias'         => $totalDias,
                 'tipo_viaje'         => $datos['tipo_viaje']     ?? null,
                 'pais_destino'       => $datos['pais_destino']   ?? null,
                 'justificacion'      => $datos['justificacion'],
@@ -263,24 +277,16 @@ final class ViaticoService implements ViaticoServiceInterface
     private function calcularMonto(
         Servidor $servidor,
         string $zona,
-        string $tipo = 'con_pernocte',
-        ?Carbon $inicio = null,
-        ?Carbon $fin = null
+        float $totalDias = 1
     ): float {
-        // Nivel según denominación del puesto
         $denominacion = strtolower(
-            $servidor->puesto?->denominacion ?? ''
+            $servidor->puesto?->cargo?->nombre ?? ''
         );
-        $esAutoridad = str_contains($denominacion, 'ministro')
-                    || str_contains($denominacion, 'secretario')
+        $esAutoridad = str_contains($denominacion, 'director')
                     || str_contains($denominacion, 'prefecto')
-                    || str_contains($denominacion, 'director');
+                    || str_contains($denominacion, 'coordinador')
+                    || str_contains($denominacion, 'secretario');
         $nivel = $esAutoridad ? 'autoridad' : 'servidor';
-
-        // Sin fechas → calcular por 1 día como referencia
-        $diasComision = ($inicio && $fin)
-            ? ($fin->diffInDays($inicio) ?: 1)
-            : 1;
 
         $tarifa = TarifaViatico::where('zona', $zona)
             ->where('nivel', $nivel)
@@ -294,6 +300,6 @@ final class ViaticoService implements ViaticoServiceInterface
             );
         }
 
-        return (float) $tarifa->valor_diario * $diasComision;
+        return round((float) $tarifa->valor_diario * $totalDias, 2);
     }
 }

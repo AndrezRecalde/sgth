@@ -25,18 +25,107 @@ class ViaticoController extends Controller
     public function show(int $id): JsonResponse
     {
         $viatico = \App\Models\Viatico\Viatico::with([
-            'servidor',
+            'servidor.puesto.cargo',
+            'servidor.puesto.unidadAdministrativa',
             'tramos.empresa.catalogo',
             'tramos.origenProvincia',
             'tramos.origenCanton',
             'tramos.destinoProvincia',
             'tramos.destinoCanton',
             'tramos.autorizacionVuelo',
+            'liquidacion.actividades',
             'liquidacion.detallesFactura.categoria',
-            'servidoresAcompanantes.servidor',
+            'liquidacion.jefeFinanciero',
+            'liquidacion.contabilizadoPor',
+            'todosServidores.servidor.puesto.cargo',
+            'autorizacionesVuelo',
         ])->findOrFail($id);
 
-        return ApiResponse::ok($viatico, 'Detalle del viático.');
+        return ApiResponse::ok(
+            $viatico,
+            'Detalle del viático.'
+        );
+    }
+
+    public function update(
+        \Illuminate\Http\Request $request,
+        int $id
+    ): JsonResponse {
+        $viatico = \App\Models\Viatico\Viatico::findOrFail($id);
+
+        // Solo editable si no está contabilizado
+        if ($viatico->estado->value === 'contabilizado') {
+            return ApiResponse::error(
+                'No se puede editar un viático contabilizado.',
+                422
+            );
+        }
+
+        $data = $request->validate([
+            'zona'             => 'sometimes|in:dentro_provincia,fuera_provincia,exterior',
+            'datetime_salida'  => 'sometimes|date',
+            'datetime_llegada' => 'sometimes|date|after:datetime_salida',
+            'justificacion'    => 'sometimes|string|min:10|max:2000',
+            'modalidad_anticipo' => 'sometimes|in:sin_anticipo,total,parcial',
+            'monto_calculado'  => 'sometimes|nullable|numeric|min:0',
+            'tipo_viaje'       => 'sometimes|nullable|string|max:100',
+            'pais_destino'     => 'sometimes|nullable|string|max:100',
+        ]);
+
+        // Recalcular total_dias si cambian las fechas
+        if (
+            isset($data['datetime_salida']) ||
+            isset($data['datetime_llegada'])
+        ) {
+            $salida  = \Carbon\Carbon::parse(
+                $data['datetime_salida'] ?? $viatico->datetime_salida
+            );
+            $llegada = \Carbon\Carbon::parse(
+                $data['datetime_llegada'] ?? $viatico->datetime_llegada
+            );
+            $data['total_dias'] = round(
+                $salida->diffInHours($llegada) / 24, 2
+            );
+
+            // Recalcular monto si es nacional
+            if (
+                ($data['zona'] ?? $viatico->zona) !== 'exterior' &&
+                !isset($data['monto_calculado'])
+            ) {
+                $servidor = \App\Models\Expediente\Servidor::with('puesto.cargo')
+                    ->findOrFail($viatico->servidor_id);
+
+                $denominacion = strtolower(
+                    $servidor->puesto?->cargo?->nombre ?? ''
+                );
+                $esAutoridad = str_contains($denominacion, 'director')
+                            || str_contains($denominacion, 'prefecto')
+                            || str_contains($denominacion, 'coordinador');
+                $nivel = $esAutoridad ? 'autoridad' : 'servidor';
+                $zona  = $data['zona'] ?? $viatico->zona;
+
+                $tarifa = \App\Models\Viatico\TarifaViatico::where('zona', $zona)
+                    ->where('nivel', $nivel)
+                    ->where('tipo_tarifa', 'con_pernocte')
+                    ->first();
+
+                if ($tarifa) {
+                    $data['monto_calculado'] = round(
+                        (float) $tarifa->valor_diario *
+                        $data['total_dias'],
+                        2
+                    );
+                }
+            }
+        }
+
+        $data['updated_by'] = $request->user()->id;
+        $viatico->update($data);
+
+        return ApiResponse::ok(
+            $viatico->fresh(),
+            'Viático actualizado correctamente.'
+        );
     }
 
     public function store(SolicitarViaticoRequest $request): JsonResponse
