@@ -7,8 +7,13 @@ import { getApiErrorMessage } from '@/types/api'
 
 export function useViaticoMutations() {
   const qc = useQueryClient()
-  const invalidar = () =>
+
+  const invalidar = (id?: number) => {
     qc.invalidateQueries({ queryKey: ['viaticos'] })
+    if (id) {
+      qc.invalidateQueries({ queryKey: ['viatico', id] })
+    }
+  }
 
   const onError = (error: unknown) =>
     notifications.show({
@@ -17,6 +22,24 @@ export function useViaticoMutations() {
       color:   'red',
       icon:    React.createElement(IconX, { size: 16 }),
     })
+
+  const mkMutation = (
+    mutationFn: (id: number) => Promise<unknown>,
+    title:      string,
+    message:    string,
+  ) => useMutation({
+    mutationFn,
+    onSuccess: (_data, id) => {
+      notifications.show({
+        title,
+        message,
+        color: 'emerald',
+        icon:  React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar(id)
+    },
+    onError,
+  })
 
   const solicitar = useMutation({
     mutationFn: (data: Parameters<
@@ -34,19 +57,35 @@ export function useViaticoMutations() {
     onError,
   })
 
-  const aprobar = useMutation({
-    mutationFn: (id: number) => viaticoService.aprobar(id),
-    onSuccess: () => {
-      notifications.show({
-        title:   'Viático aprobado',
-        message: 'El viático fue aprobado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
-      invalidar()
-    },
-    onError,
-  })
+  const aprobar = mkMutation(
+    viaticoService.aprobar,
+    'Viático aprobado',
+    'El viático fue aprobado correctamente.',
+  )
+
+  const entregarAnticipo = mkMutation(
+    viaticoService.entregarAnticipo,
+    'Anticipo entregado',
+    'El anticipo fue registrado como entregado.',
+  )
+
+  const marcarEnComision = mkMutation(
+    viaticoService.marcarEnComision,
+    'En comisión',
+    'El servidor ha sido marcado en comisión.',
+  )
+
+  const marcarPendienteLiquidacion = mkMutation(
+    viaticoService.marcarPendienteLiquidacion,
+    'Pendiente de liquidación',
+    'El viático queda pendiente de liquidación.',
+  )
+
+  const contabilizar = mkMutation(
+    viaticoService.contabilizar,
+    'Viático contabilizado',
+    'La liquidación fue contabilizada correctamente.',
+  )
 
   const liquidar = useMutation({
     mutationFn: ({
@@ -54,7 +93,7 @@ export function useViaticoMutations() {
       data,
     }: {
       viaticoId: number
-      data:      Parameters<typeof viaticoService.liquidar>[1]
+      data: Parameters<typeof viaticoService.liquidar>[1]
     }) => viaticoService.liquidar(viaticoId, data),
     onSuccess: () => {
       notifications.show({
@@ -68,5 +107,13 @@ export function useViaticoMutations() {
     onError,
   })
 
-  return { solicitar, aprobar, liquidar }
+  return {
+    solicitar,
+    aprobar,
+    entregarAnticipo,
+    marcarEnComision,
+    marcarPendienteLiquidacion,
+    contabilizar,
+    liquidar,
+  }
 }

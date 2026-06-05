@@ -3283,6 +3283,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/viaticos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["viatico.index"];
+        put?: never;
+        post: operations["viatico.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["viatico.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/servidor/{servidorId}/solicitar": {
         parameters: {
             query?: never;
@@ -3325,6 +3357,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["viatico.aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/{id}/entregar-anticipo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["viatico.entregarAnticipo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/{id}/marcar-en-comision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["viatico.marcarEnComision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/{id}/marcar-pendiente-liquidacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["viatico.marcarPendienteLiquidacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/{id}/contabilizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["viatico.contabilizar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3967,7 +4063,7 @@ export interface components {
          * EstadoViatico
          * @enum {string}
          */
-        EstadoViatico: "solicitado" | "aprobado_jefe" | "aprobado_director" | "aprobado_autoridad" | "aprobado_uath" | "aprobado_financiero" | "con_anticipo" | "en_comision" | "pendiente_liquidacion" | "liquidado" | "contabilizado" | "aprobado";
+        EstadoViatico: "solicitado" | "aprobado" | "con_anticipo" | "en_comision" | "pendiente_liquidacion" | "liquidado" | "contabilizado";
         /** EvaluacionSeleccion */
         EvaluacionSeleccion: {
             id: number;
@@ -4163,6 +4259,10 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            jefe_financiero_id: number | null;
+            cargo_jefe_financiero: string | null;
+            contabilizado_por: number | null;
+            fecha_contabilizacion: string | null;
         };
         /** LiquidarViaticoRequest */
         LiquidarViaticoRequest: {
@@ -4500,13 +4600,13 @@ export interface components {
         SolicitarViaticoRequest: {
             /** @enum {string} */
             zona: "dentro_provincia" | "fuera_provincia" | "exterior";
-            /** @enum {string} */
-            tipo: "con_pernocte" | "sin_pernocte";
-            /** Format: date-time */
-            fecha_inicio: string;
-            /** Format: date-time */
-            fecha_fin: string;
             justificacion: string;
+            /** @enum {string} */
+            modalidad_anticipo: "sin_anticipo" | "total" | "parcial";
+            tipo_viaje?: string | null;
+            pais_destino?: string | null;
+            monto_calculado?: number | null;
+            servidores_acompanantes?: number[] | null;
         };
         /** StoreAlergiaPacienteRequest */
         StoreAlergiaPacienteRequest: {
@@ -14277,6 +14377,115 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "viatico.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Viáticos listados.";
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["Viatico"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "viatico.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SolicitarViaticoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud de viático creada con éxito.";
+                        datos: components["schemas"]["Viatico"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "viatico.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Detalle del viático.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
     "viatico.solicitar.por.servidor": {
         parameters: {
             query?: never;
@@ -14385,6 +14594,165 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "viatico.entregarAnticipo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Anticipo entregado. El viático queda listo para la comisión.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solo se puede entregar anticipo a viáticos aprobados.";
+                        datos: null;
+                        /** @constant */
+                        errores: 422;
+                    };
+                };
+            };
+        };
+    };
+    "viatico.marcarEnComision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Viático marcado en comisión.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: null;
+                        /** @constant */
+                        errores: 422;
+                    };
+                };
+            };
+        };
+    };
+    "viatico.marcarPendienteLiquidacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Viático marcado como pendiente de liquidación.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: null;
+                        /** @constant */
+                        errores: 422;
+                    };
+                };
+            };
+        };
+    };
+    "viatico.contabilizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Viático contabilizado correctamente.";
+                        datos: components["schemas"]["LiquidacionViatico"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "viatico.liquidar": {

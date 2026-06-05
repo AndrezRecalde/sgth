@@ -1,10 +1,11 @@
-import { Metadata } from 'next'
-import { ViaticoView } from '@/features/viaticos/components/ViaticoView'
+import { Metadata } from "next";
+import { ViaticoView } from "@/features/viaticos/components/ViaticoView";
 
 export const metadata: Metadata = {
-  title: 'Viáticos — SGTH GADPE',
-}
+  title: "Viaticos",
+  description: "Gestión del control de viaticos institucional",
+};
 
 export default function ViaticoPage() {
-  return <ViaticoView />
+  return <ViaticoView />;
 }

@@ -72,7 +72,13 @@ export function ViaticoDetalle({ opened, onClose, viatico }: Props) {
   const { data: detalle, isLoading } =
     useViatico(opened ? (viatico?.id ?? null) : null)
 
-  const { aprobar } = useViaticoMutations()
+  const {
+    aprobar,
+    entregarAnticipo,
+    marcarEnComision,
+    marcarPendienteLiquidacion,
+    contabilizar,
+  } = useViaticoMutations()
 
   const d = detalle as ViaticoConRelaciones | undefined
   const estadoActual = (d?.estado ?? viatico?.estado ?? '') as string
@@ -167,7 +173,7 @@ export function ViaticoDetalle({ opened, onClose, viatico }: Props) {
             </Grid>
           </Card>
 
-          {/* ── Acción aprobar ── */}
+          {/* ── Acciones según estado ── */}
           {estadoActual === 'solicitado' && (
             <Button
               color="emerald"
@@ -181,6 +187,70 @@ export function ViaticoDetalle({ opened, onClose, viatico }: Props) {
               fullWidth
             >
               Aprobar viático
+            </Button>
+          )}
+
+          {estadoActual === 'aprobado' && (
+            <Button
+              color="cyan"
+              variant="light"
+              leftSection={<IconCurrencyDollar size={16} />}
+              loading={entregarAnticipo.isPending}
+              onClick={() => {
+                entregarAnticipo.mutate(d.id)
+                onClose()
+              }}
+              fullWidth
+            >
+              Entregar anticipo
+            </Button>
+          )}
+
+          {estadoActual === 'con_anticipo' && (
+            <Button
+              color="violet"
+              variant="light"
+              leftSection={<IconPlane size={16} />}
+              loading={marcarEnComision.isPending}
+              onClick={() => {
+                marcarEnComision.mutate(d.id)
+                onClose()
+              }}
+              fullWidth
+            >
+              Marcar en comisión
+            </Button>
+          )}
+
+          {estadoActual === 'en_comision' && (
+            <Button
+              color="yellow"
+              variant="light"
+              leftSection={<IconFileInvoice size={16} />}
+              loading={marcarPendienteLiquidacion.isPending}
+              onClick={() => {
+                marcarPendienteLiquidacion.mutate(d.id)
+                onClose()
+              }}
+              fullWidth
+            >
+              Marcar pendiente de liquidación
+            </Button>
+          )}
+
+          {estadoActual === 'liquidado' && (
+            <Button
+              color="gray"
+              variant="light"
+              leftSection={<IconCheck size={16} />}
+              loading={contabilizar.isPending}
+              onClick={() => {
+                contabilizar.mutate(d.id)
+                onClose()
+              }}
+              fullWidth
+            >
+              Contabilizar liquidación
             </Button>
           )}
 

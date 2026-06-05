@@ -61,6 +61,27 @@ export const viaticoService = {
       `/viaticos/${id}/aprobar`
     ).then(r => r.data.datos),
 
+  entregarAnticipo: (id: number) =>
+    api.post<ApiResponse<Viatico>>(
+      `/viaticos/${id}/entregar-anticipo`
+    ).then(r => r.data.datos),
+
+  marcarEnComision: (id: number) =>
+    api.post<ApiResponse<Viatico>>(
+      `/viaticos/${id}/marcar-en-comision`
+    ).then(r => r.data.datos),
+
+  marcarPendienteLiquidacion: (id: number) =>
+    api.post<ApiResponse<Viatico>>(
+      `/viaticos/${id}/marcar-pendiente-liquidacion`
+    ).then(r => r.data.datos),
+
+  contabilizar: (id: number) =>
+    api.post<ApiResponse<{
+      liquidacion: LiquidacionViatico
+    }>>(`/viaticos/${id}/contabilizar`)
+      .then(r => r.data.datos),
+
   liquidar: (
     viaticoId: number,
     data: {

@@ -2,7 +2,7 @@
 
 import {
   Stack, Grid, Select, Button, Group,
-  Divider, Text, SegmentedControl, TextInput,
+  Divider, TextInput,
 } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
 import '@mantine/dates/styles.css'
@@ -17,9 +17,14 @@ import {
   useTiposTransporte,
   useEmpresasPorTipo,
 } from '../hooks/useViaticos'
+import { useProvincias } from '@/features/expediente/hooks/useProvincias'
+import { useCantones } from '@/features/expediente/hooks/useCantones'
 import { viaticoService } from '../services/viaticoService'
 import { getApiErrorMessage } from '@/types/api'
-import type { CatalogoTransporte, EmpresaTransporte } from '@/types/api'
+import type {
+  CatalogoTransporte,
+  EmpresaTransporte,
+} from '@/types/api'
 import {
   tramoSchema,
   type TramoFormData,
@@ -31,17 +36,27 @@ interface Props {
   onCancel:  () => void
 }
 
-const fromDateTime = (d: Date | string | null): string => {
+const fromDateTime = (d: Date | null | string): string => {
   if (!d) return ''
-  const date = typeof d === 'string' ? new Date(d) : d
-  return date.toISOString().slice(0, 16)
+  const dt = typeof d === 'string' ? new Date(d) : d
+  return dt.toISOString().slice(0, 16)
 }
 
-export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
-  const contained  = useContainedInput()
-  const qc         = useQueryClient()
+const PAISES_COMUNES = [
+  'Colombia', 'Perú', 'Bolivia', 'Chile',
+  'Argentina', 'Brasil', 'Venezuela', 'México',
+  'España', 'Estados Unidos', 'Canadá',
+  'Francia', 'Alemania', 'Italia', 'China',
+  'Japón', 'Otro',
+]
 
-  const { data: tipos = [] } = useTiposTransporte()
+export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
+  const contained = useContainedInput()
+  const qc        = useQueryClient()
+
+  const { data: tipos    = [] } = useTiposTransporte()
+  const { data: provincias = [] } = useProvincias()
+
   const {
     control,
     handleSubmit,
@@ -68,12 +83,20 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
     },
   })
 
-  const origenTipo       = watch('origen_tipo')
-  const destinoTipo      = watch('destino_tipo')
-  const catalogoSelId    = watch('catalogo_transporte_id')
+  const origenTipo      = watch('origen_tipo')
+  const destinoTipo     = watch('destino_tipo')
+  const catalogoSelId   = watch('catalogo_transporte_id')
+  const origenProvId    = watch('origen_provincia_id')
+  const destinoProvId   = watch('destino_provincia_id')
 
   const { data: empresas = [] } =
     useEmpresasPorTipo(catalogoSelId || null)
+
+  const { data: cantonesOrigen = [] } =
+    useCantones(origenProvId ?? null)
+
+  const { data: cantonesDestino = [] } =
+    useCantones(destinoProvId ?? null)
 
   const tipoOptions = (tipos as CatalogoTransporte[]).map(t => ({
     value: String(t.id),
@@ -85,11 +108,31 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
     label: e.nombre,
   }))
 
+  const provinciaOptions = (provincias as {
+    id: number; nombre: string
+  }[]).map(p => ({
+    value: String(p.id),
+    label: p.nombre,
+  }))
+
+  const cantonOrigenOptions = (cantonesOrigen as {
+    id: number; nombre: string
+  }[]).map(c => ({
+    value: String(c.id),
+    label: c.nombre,
+  }))
+
+  const cantonDestinoOptions = (cantonesDestino as {
+    id: number; nombre: string
+  }[]).map(c => ({
+    value: String(c.id),
+    label: c.nombre,
+  }))
+
   const crear = useMutation({
     mutationFn: (data: Parameters<
       typeof viaticoService.tramos.crear
-    >[1]) =>
-      viaticoService.tramos.crear(viaticoId, data),
+    >[1]) => viaticoService.tramos.crear(viaticoId, data),
     onSuccess: () => {
       notifications.show({
         title:   'Tramo agregado',
@@ -114,41 +157,112 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
     crear.mutate(rest)
   }
 
-  const PAISES_COMUNES = [
-    'Colombia', 'Perú', 'Bolivia', 'Chile',
-    'Argentina', 'Brasil', 'Venezuela', 'México',
-    'España', 'Estados Unidos', 'Canadá', 'Otro',
-  ]
-
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="sm">
 
-        {/* ORIGEN */}
+        {/* ── ORIGEN ── */}
         <Divider label="Origen" labelPosition="left" />
+
         <Controller
           name="origen_tipo"
           control={control}
           render={({ field }) => (
-            <SegmentedControl
+            <Select
+              label="Tipo de origen"
               data={[
-                { value: 'nacional',       label: 'Nacional'       },
-                { value: 'internacional',  label: 'Internacional'  },
+                { value: 'nacional',      label: 'Nacional'      },
+                { value: 'internacional', label: 'Internacional' },
               ]}
+              {...contained}
               value={field.value}
               onChange={(v) => {
-                field.onChange(v)
+                field.onChange(v ?? 'nacional')
                 setValue('origen_provincia_id', null)
                 setValue('origen_canton_id',    null)
                 setValue('origen_pais',         null)
+                setValue('origen_ciudad',        '')
               }}
-              fullWidth
-              size="xs"
             />
           )}
         />
 
-        {origenTipo === 'internacional' ? (
+        {origenTipo === 'nacional' ? (
+          <Grid>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Controller
+                name="origen_provincia_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Provincia de origen"
+                    placeholder="Seleccionar"
+                    data={provinciaOptions}
+                    searchable
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) => {
+                      field.onChange(v ? Number(v) : null)
+                      setValue('origen_canton_id', null)
+                      setValue('origen_ciudad', '')
+                    }}
+                    error={errors.origen_provincia_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Controller
+                name="origen_canton_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Cantón de origen"
+                    placeholder={
+                      !origenProvId
+                        ? 'Seleccione provincia'
+                        : 'Seleccionar'
+                    }
+                    data={cantonOrigenOptions}
+                    searchable
+                    disabled={!origenProvId}
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) => {
+                      field.onChange(v ? Number(v) : null)
+                      // Poblar ciudad con nombre del cantón
+                      const canton = (cantonesOrigen as {
+                        id: number; nombre: string
+                      }[]).find(c => String(c.id) === v)
+                      if (canton) {
+                        setValue('origen_ciudad', canton.nombre)
+                      }
+                    }}
+                    error={errors.origen_canton_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Controller
+                name="origen_ciudad"
+                control={control}
+                render={({ field }) => (
+                  <TextInput
+                    label="Ciudad / Lugar"
+                    placeholder="Ej: Esmeraldas"
+                    {...contained}
+                    value={field.value}
+                    onChange={(e) =>
+                      field.onChange(e.currentTarget.value)
+                    }
+                    error={errors.origen_ciudad?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+          </Grid>
+        ) : (
           <Grid>
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Controller
@@ -161,7 +275,10 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     searchable
                     {...contained}
                     value={field.value ?? null}
-                    onChange={(v) => field.onChange(v ?? null)}
+                    onChange={(v) => {
+                      field.onChange(v ?? null)
+                      setValue('origen_ciudad', '')
+                    }}
                     error={errors.origen_pais?.message}
                   />
                 )}
@@ -174,42 +291,21 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                 render={({ field }) => (
                   <TextInput
                     label="Ciudad de origen"
-                    placeholder="Ingrese la ciudad"
+                    placeholder="Ej: Bogotá"
                     {...contained}
-                    value={field.value || ''}
-                    onChange={(e) => field.onChange(e.currentTarget.value)}
+                    value={field.value}
+                    onChange={(e) =>
+                      field.onChange(e.currentTarget.value)
+                    }
                     error={errors.origen_ciudad?.message}
                   />
                 )}
               />
             </Grid.Col>
           </Grid>
-        ) : (
-          <Controller
-            name="origen_ciudad"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Ciudad / Cantón de origen"
-                placeholder="Ej: Esmeraldas"
-                data={[
-                  'Esmeraldas', 'Quito', 'Guayaquil', 'Cuenca',
-                  'Manta', 'Ambato', 'Loja', 'Ibarra', 'Riobamba',
-                  'Santo Domingo', 'Machala', 'Portoviejo',
-                  'Lago Agrio', 'Tena', 'Baños', 'Tulcán',
-                  'Latacunga', 'Morona', 'Puyo', 'Otra ciudad',
-                ]}
-                searchable
-                {...contained}
-                value={field.value || null}
-                onChange={(v) => field.onChange(v ?? '')}
-                error={errors.origen_ciudad?.message}
-              />
-            )}
-          />
         )}
 
-        {/* TRANSPORTE */}
+        {/* ── TRANSPORTE ── */}
         <Divider label="Transporte" labelPosition="left" />
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -259,31 +355,107 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
           </Grid.Col>
         </Grid>
 
-        {/* DESTINO */}
+        {/* ── DESTINO ── */}
         <Divider label="Destino" labelPosition="left" />
+
         <Controller
           name="destino_tipo"
           control={control}
           render={({ field }) => (
-            <SegmentedControl
+            <Select
+              label="Tipo de destino"
               data={[
                 { value: 'nacional',      label: 'Nacional'      },
                 { value: 'internacional', label: 'Internacional' },
               ]}
+              {...contained}
               value={field.value}
               onChange={(v) => {
-                field.onChange(v)
+                field.onChange(v ?? 'nacional')
                 setValue('destino_provincia_id', null)
                 setValue('destino_canton_id',    null)
                 setValue('destino_pais',         null)
+                setValue('destino_ciudad',        '')
               }}
-              fullWidth
-              size="xs"
             />
           )}
         />
 
-        {destinoTipo === 'internacional' ? (
+        {destinoTipo === 'nacional' ? (
+          <Grid>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Controller
+                name="destino_provincia_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Provincia de destino"
+                    placeholder="Seleccionar"
+                    data={provinciaOptions}
+                    searchable
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) => {
+                      field.onChange(v ? Number(v) : null)
+                      setValue('destino_canton_id', null)
+                      setValue('destino_ciudad', '')
+                    }}
+                    error={errors.destino_provincia_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Controller
+                name="destino_canton_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Cantón de destino"
+                    placeholder={
+                      !destinoProvId
+                        ? 'Seleccione provincia'
+                        : 'Seleccionar'
+                    }
+                    data={cantonDestinoOptions}
+                    searchable
+                    disabled={!destinoProvId}
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) => {
+                      field.onChange(v ? Number(v) : null)
+                      const canton = (cantonesDestino as {
+                        id: number; nombre: string
+                      }[]).find(c => String(c.id) === v)
+                      if (canton) {
+                        setValue('destino_ciudad', canton.nombre)
+                      }
+                    }}
+                    error={errors.destino_canton_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Controller
+                name="destino_ciudad"
+                control={control}
+                render={({ field }) => (
+                  <TextInput
+                    label="Ciudad / Lugar exacto"
+                    placeholder="Ej: Quito"
+                    {...contained}
+                    value={field.value}
+                    onChange={(e) =>
+                      field.onChange(e.currentTarget.value)
+                    }
+                    error={errors.destino_ciudad?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+          </Grid>
+        ) : (
           <Grid>
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Controller
@@ -296,7 +468,10 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                     searchable
                     {...contained}
                     value={field.value ?? null}
-                    onChange={(v) => field.onChange(v ?? null)}
+                    onChange={(v) => {
+                      field.onChange(v ?? null)
+                      setValue('destino_ciudad', '')
+                    }}
                     error={errors.destino_pais?.message}
                   />
                 )}
@@ -309,42 +484,21 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                 render={({ field }) => (
                   <TextInput
                     label="Ciudad de destino"
-                    placeholder="Ingrese la ciudad"
+                    placeholder="Ej: Bogotá"
                     {...contained}
-                    value={field.value || ''}
-                    onChange={(e) => field.onChange(e.currentTarget.value)}
+                    value={field.value}
+                    onChange={(e) =>
+                      field.onChange(e.currentTarget.value)
+                    }
                     error={errors.destino_ciudad?.message}
                   />
                 )}
               />
             </Grid.Col>
           </Grid>
-        ) : (
-          <Controller
-            name="destino_ciudad"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Ciudad / Cantón de destino"
-                placeholder="Ej: Quito"
-                data={[
-                  'Esmeraldas', 'Quito', 'Guayaquil', 'Cuenca',
-                  'Manta', 'Ambato', 'Loja', 'Ibarra', 'Riobamba',
-                  'Santo Domingo', 'Machala', 'Portoviejo',
-                  'Lago Agrio', 'Tena', 'Baños', 'Tulcán',
-                  'Latacunga', 'Morona', 'Puyo', 'Otra ciudad',
-                ]}
-                searchable
-                {...contained}
-                value={field.value || null}
-                onChange={(v) => field.onChange(v ?? '')}
-                error={errors.destino_ciudad?.message}
-              />
-            )}
-          />
         )}
 
-        {/* FECHAS */}
+        {/* ── FECHAS ── */}
         <Divider label="Fechas y horas" labelPosition="left" />
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -357,12 +511,8 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   placeholder="Seleccionar"
                   valueFormat="DD/MM/YYYY HH:mm"
                   {...contained}
-                  value={field.value
-                    ? new Date(field.value)
-                    : null}
-                  onChange={(v) =>
-                    field.onChange(fromDateTime(v))
-                  }
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(v) => field.onChange(fromDateTime(v))}
                   error={errors.datetime_salida?.message}
                 />
               )}
@@ -378,12 +528,8 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
                   placeholder="Seleccionar"
                   valueFormat="DD/MM/YYYY HH:mm"
                   {...contained}
-                  value={field.value
-                    ? new Date(field.value)
-                    : null}
-                  onChange={(v) =>
-                    field.onChange(fromDateTime(v))
-                  }
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(v) => field.onChange(fromDateTime(v))}
                   error={errors.datetime_llegada?.message}
                 />
               )}
@@ -392,11 +538,7 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
         </Grid>
 
         <Group justify="flex-end" mt="sm">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onCancel}
-          >
+          <Button variant="default" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
           <Button
