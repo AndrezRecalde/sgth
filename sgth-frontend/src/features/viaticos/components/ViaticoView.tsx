@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Stack, Group, Button, Text, Badge,
   Tabs, Chip,
@@ -17,7 +18,6 @@ import { TableActions } from '@/components/ui/TableActions'
 import { useViaticos } from '../hooks/useViaticos'
 import { useViaticoMutations } from '../hooks/useViaticoMutations'
 import { ViaticoModal } from './ViaticoModal'
-import { ViaticoDetalle } from './ViaticoDetalle'
 import { VuelosTab } from './VuelosTab'
 import type { Viatico, EstadoViatico, ViaticoConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -43,11 +43,10 @@ const ESTADO_LABELS: Record<EstadoViatico, string> = {
 }
 
 export function ViaticoView() {
+  const router = useRouter()
   const [modalAbierto, { open, close }] = useDisclosure(false)
   const [viaticoSel, setViaticoSel] =
     useState<ViaticoConRelaciones | null>(null)
-  const [detalleAbierto, { open: abrirDetalle, close: cerrarDetalle }] =
-    useDisclosure(false)
   const [filtroEstado, setFiltroEstado] =
     useState<string>('solicitado')
 
@@ -63,13 +62,11 @@ export function ViaticoView() {
   const { aprobar } = useViaticoMutations()
 
   const handleVer = (v: ViaticoConRelaciones) => {
-    setViaticoSel(v)
-    abrirDetalle()
+    router.push(`/viaticos/${v.id}`)
   }
 
   const handleCreado = (v: Viatico) => {
-    setViaticoSel(v as ViaticoConRelaciones)
-    abrirDetalle()
+    router.push(`/viaticos/${v.id}`)
   }
 
   const columns: DataTableColumn<ViaticoConRelaciones>[] = [
@@ -279,11 +276,6 @@ export function ViaticoView() {
         onCreated={handleCreado}
       />
 
-      <ViaticoDetalle
-        opened={detalleAbierto}
-        onClose={cerrarDetalle}
-        viatico={viaticoSel}
-      />
     </Stack>
   )
 }

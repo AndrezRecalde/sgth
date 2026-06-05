@@ -175,15 +175,36 @@ export type CategoriaFactura = {
 
 export type ViaticoConRelaciones = Viatico & {
   servidor?: {
-    id:       number
-    cedula?:  string
-    nombre?:  string
-    apellido?: string
+    id:              number
+    cedula?:         string
+    nombre?:         string
+    segundo_nombre?: string | null
+    apellido?:       string
+    segundo_apellido?: string | null
+    puesto?: {
+      id?:   number
+      cargo?: { nombre?: string } | null
+      unidad_administrativa?: { nombre?: string } | null
+    } | null
   }
   tramos?:   TramoViatico[]
   liquidacion?: LiquidacionViatico & {
+    actividades?:     ActividadLiquidacion[]
     detalles_factura?: FacturaViatico[]
   }
+  todos_servidores?: {
+    id:          number
+    es_titular:  boolean
+    servidor?: {
+      id:       number
+      nombre?:  string
+      apellido?: string
+      puesto?: {
+        cargo?: { nombre?: string } | null
+      } | null
+    }
+  }[]
+  autorizaciones_vuelo?: AutorizacionVuelo[]
 }
 
 // Actualiza EstadoViatico

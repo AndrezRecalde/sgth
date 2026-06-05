@@ -5,9 +5,11 @@ import {
   Grid,
   Select,
   Button,
-  Group,
   Divider,
   TextInput,
+  Alert,
+  Text,
+  Group,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import "@mantine/dates/styles.css";
@@ -28,8 +30,9 @@ import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 
 interface Props {
   viaticoId: number;
+  viatico?:  import('@/types/api').Viatico | null;
   onSuccess: () => void;
-  onCancel: () => void;
+  onCancel:  () => void;
 }
 
 const fromDateTime = (d: Date | null | string): string => {
@@ -60,7 +63,7 @@ const PAISES_COMUNES = [
   "Otro",
 ];
 
-export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
+export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
   const contained = useContainedInput();
   const qc = useQueryClient();
 
@@ -98,6 +101,39 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
   const catalogoSelId = watch("catalogo_transporte_id");
   const origenProvId = watch("origen_provincia_id");
   const destinoProvId = watch("destino_provincia_id");
+
+  const salidaTramo  = watch('datetime_salida')
+  const llegadaTramo = watch('datetime_llegada')
+
+  const alertaSalida: 'ok' | 'error' | null =
+    viatico && salidaTramo
+      ? (() => {
+          const sv = new Date(
+            viatico.datetime_salida as string
+          )
+          const st = new Date(salidaTramo)
+          if (isNaN(sv.getTime()) || isNaN(st.getTime()))
+            return null
+          return sv.getTime() === st.getTime()
+            ? 'ok'
+            : 'error'
+        })()
+      : null
+
+  const alertaLlegada: 'ok' | 'error' | null =
+    viatico && llegadaTramo
+      ? (() => {
+          const lv = new Date(
+            viatico.datetime_llegada as string
+          )
+          const lt = new Date(llegadaTramo)
+          if (isNaN(lv.getTime()) || isNaN(lt.getTime()))
+            return null
+          return lt.getTime() > lv.getTime()
+            ? 'error'
+            : 'ok'
+        })()
+      : null
 
   const { data: empresas = [] } = useEmpresasPorTipo(catalogoSelId || null);
 
@@ -553,6 +589,52 @@ export function TramoForm({ viaticoId, onSuccess, onCancel }: Props) {
             />
           </Grid.Col>
         </Grid>
+
+        {viatico && (
+          <Stack gap="xs">
+            {alertaSalida === 'ok' && (
+              <Alert color="emerald" variant="light" p="xs">
+                <Text size="xs">
+                  ✅ La salida del tramo coincide con
+                  el inicio del viático
+                </Text>
+              </Alert>
+            )}
+            {alertaSalida === 'error' && (
+              <Alert color="orange" variant="light" p="xs">
+                <Text size="xs" fw={500}>
+                  ⚠️ El primer tramo debe salir exactamente el{' '}
+                  <strong>
+                    {new Date(viatico.datetime_salida as string)
+                      .toLocaleString('es-EC', {
+                        timeZone: 'UTC',
+                        day: '2-digit', month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                  </strong>
+                </Text>
+              </Alert>
+            )}
+            {alertaLlegada === 'error' && (
+              <Alert color="red" variant="light" p="xs">
+                <Text size="xs" fw={500}>
+                  🚫 La llegada no puede superar la fecha
+                  de regreso del viático:{' '}
+                  <strong>
+                    {new Date(viatico.datetime_llegada as string)
+                      .toLocaleString('es-EC', {
+                        timeZone: 'UTC',
+                        day: '2-digit', month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                  </strong>
+                </Text>
+              </Alert>
+            )}
+          </Stack>
+        )}
 
         <Group justify="flex-end" mt="sm">
           <Button variant="default" size="sm" onClick={onCancel}>

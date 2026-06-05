@@ -16856,11 +16856,11 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -18591,6 +18591,125 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "viatico.update",
+                "tags": [
+                    "Viatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "zona": {
+                                        "type": "string",
+                                        "enum": [
+                                            "dentro_provincia",
+                                            "fuera_provincia",
+                                            "exterior"
+                                        ]
+                                    },
+                                    "datetime_salida": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "datetime_llegada": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "justificacion": {
+                                        "type": "string",
+                                        "minLength": 10,
+                                        "maxLength": 2000
+                                    },
+                                    "modalidad_anticipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "sin_anticipo",
+                                            "total",
+                                            "parcial"
+                                        ]
+                                    },
+                                    "monto_calculado": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "minimum": 0
+                                    },
+                                    "tipo_viaje": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    },
+                                    "pais_destino": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vi\u00e1tico actualizado correctamente."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -23743,11 +23862,21 @@
                             "parcial"
                         ]
                     },
+                    "datetime_salida": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Fechas directas del vi\u00e1tico"
+                    },
+                    "datetime_llegada": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
                     "tipo_viaje": {
                         "type": [
                             "string",
                             "null"
                         ],
+                        "description": "Opcionales",
                         "maxLength": 100
                     },
                     "pais_destino": {
@@ -23777,7 +23906,9 @@
                 "required": [
                     "zona",
                     "justificacion",
-                    "modalidad_anticipo"
+                    "modalidad_anticipo",
+                    "datetime_salida",
+                    "datetime_llegada"
                 ],
                 "title": "SolicitarViaticoRequest"
             },
@@ -26871,16 +27002,10 @@
                         "type": "string"
                     },
                     "datetime_salida": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "datetime_llegada": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "total_dias": {
                         "type": "string"

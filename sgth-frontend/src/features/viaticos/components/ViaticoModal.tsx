@@ -3,12 +3,15 @@
 import {
   Modal, Stack, Grid, Select, Textarea,
   Button, Group, NumberInput, Divider,
-  Alert, Text, ThemeIcon,
+  Alert, Text, Card, Badge, ThemeIcon,
 } from '@mantine/core'
+import { DateTimePicker } from '@mantine/dates'
+import '@mantine/dates/styles.css'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
-  IconInfoCircle, IconRoute, IconArrowRight,
+  IconInfoCircle, IconUser, IconArrowRight,
+  IconCalendar,
 } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -18,17 +21,19 @@ import {
   type ViaticoFormData,
 } from '../schemas/viatico.schema'
 import type { Viatico } from '@/types/api'
+import { useQuery } from '@tanstack/react-query'
+import api from '@/lib/axios'
 
 const ZONA_OPTIONS = [
-  { value: 'dentro_provincia', label: 'Dentro de la provincia' },
-  { value: 'fuera_provincia',  label: 'Fuera de la provincia'  },
-  { value: 'exterior',         label: 'Exterior (internacional)' },
+  { value: 'dentro_provincia', label: '📍 Dentro de la provincia' },
+  { value: 'fuera_provincia',  label: '🗺 Fuera de la provincia'  },
+  { value: 'exterior',         label: '✈️ Exterior (internacional)' },
 ]
 
 const MODALIDAD_OPTIONS = [
-  { value: 'total',        label: 'Anticipo total (100%)' },
-  { value: 'parcial',      label: 'Anticipo parcial'      },
-  { value: 'sin_anticipo', label: 'Sin anticipo'          },
+  { value: 'total',        label: '💰 Anticipo total (100%)' },
+  { value: 'parcial',      label: '💵 Anticipo parcial'      },
+  { value: 'sin_anticipo', label: '🚫 Sin anticipo'          },
 ]
 
 const TIPO_VIAJE_OPTIONS = [
@@ -43,12 +48,19 @@ const TIPO_VIAJE_OPTIONS = [
   { value: 'asistencia_humanitaria',    label: 'Asistencia humanitaria' },
 ]
 
-const PAISES_COMUNES = [
+const PAISES = [
   'Colombia', 'Perú', 'Bolivia', 'Chile', 'Argentina',
   'Brasil', 'Venezuela', 'México', 'España',
   'Estados Unidos', 'Canadá', 'Francia', 'Alemania',
   'Italia', 'China', 'Japón', 'Otro',
 ]
+
+const fromDateTime = (d: Date | null | string): string => {
+  if (!d) return ''
+  const dt = typeof d === 'string' ? new Date(d) : d
+  if (isNaN(dt.getTime())) return ''
+  return dt.toISOString().slice(0, 16)
+}
 
 interface Props {
   opened:    boolean
@@ -61,6 +73,36 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   const contained     = useContainedInput()
   const { solicitar } = useViaticoMutations()
 
+  // Cargar datos del servidor autenticado
+  const { data: miPerfil } = useQuery({
+    queryKey: ['mi-perfil'],
+    queryFn: () =>
+      api.get<{ datos: {
+        id: number
+        name: string
+        servidor?: {
+          nombre?:         string
+          segundo_nombre?: string | null
+          apellido?:       string
+          segundo_apellido?: string | null
+          puesto?: {
+            cargo?: { nombre?: string } | null
+            unidad_administrativa?: { nombre?: string } | null
+          } | null
+        } | null
+      } }>('/auth/me').then(r => r.data.datos),
+    enabled: opened,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const servidor = miPerfil?.servidor
+  const nombreCompleto = [
+    servidor?.nombre,
+    servidor?.segundo_nombre,
+    servidor?.apellido,
+    servidor?.segundo_apellido,
+  ].filter(Boolean).join(' ')
+
   const {
     control,
     handleSubmit,
@@ -71,6 +113,8 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
     resolver: zodResolver(viaticoSchema),
     defaultValues: {
       zona:                    'fuera_provincia',
+      datetime_salida:         '',
+      datetime_llegada:        '',
       tipo_viaje:              null,
       pais_destino:            null,
       justificacion:           '',
@@ -80,8 +124,21 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
     },
   })
 
-  const zonaWatch      = watch('zona')
-  const modalidadWatch = watch('modalidad_anticipo')
+  const zonaWatch       = watch('zona')
+  const modalidadWatch  = watch('modalidad_anticipo')
+  const salidaWatch     = watch('datetime_salida')
+  const llegadaWatch    = watch('datetime_llegada')
+
+  // Calcular días en tiempo real
+  const calcularDias = (): string => {
+    if (!salidaWatch || !llegadaWatch) return '—'
+    const s = new Date(salidaWatch)
+    const l = new Date(llegadaWatch)
+    if (isNaN(s.getTime()) || isNaN(l.getTime())) return '—'
+    const horas = (l.getTime() - s.getTime()) / 3600000
+    if (horas <= 0) return '—'
+    return (horas / 24).toFixed(1) + ' días'
+  }
 
   const handleClose = () => { reset(); onClose() }
 
@@ -89,7 +146,6 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
     const viatico = await solicitar.mutateAsync(values)
     reset()
     onClose()
-    // Abrir drawer automáticamente con el viático creado
     if (viatico) onCreated(viatico as Viatico)
   }
 
@@ -100,9 +156,11 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
       title={
         <Group gap="xs">
           <ThemeIcon color="emerald" variant="light" size="sm">
-            <IconRoute size={14} />
+            <IconCalendar size={14} />
           </ThemeIcon>
-          <Text fw={600}>Nueva solicitud de viático</Text>
+          <Text fw={600} size="md">
+            Nueva solicitud de viático
+          </Text>
         </Group>
       }
       size="xl"
@@ -111,32 +169,50 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
       closeOnClickOutside={false}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack gap="sm">
+        <Stack gap="md">
 
-          <Alert
-            icon={<IconInfoCircle size={14} />}
-            color="blue"
-            variant="light"
-          >
-            <Text size="xs" fw={500}>
-              ¿Cómo funciona?
-            </Text>
-            <Text size="xs" mt={2}>
-              1. Completa este formulario con los datos básicos
-              del viaje y la modalidad de anticipo.
-            </Text>
-            <Text size="xs">
-              2. Al crear la solicitud, el sistema te llevará
-              directamente a registrar el <strong>itinerario
-              del viaje</strong> (tramos de ida y vuelta).
-            </Text>
-            <Text size="xs">
-              3. Las fechas de salida y llegada se calculan
-              automáticamente desde el itinerario.
-            </Text>
-          </Alert>
+          {/* ── Información del servidor ── */}
+          {servidor && (
+            <Card
+              withBorder
+              radius="md"
+              p="sm"
+              bg="blue.0"
+            >
+              <Group gap="sm">
+                <ThemeIcon
+                  color="blue"
+                  variant="light"
+                  size="lg"
+                  radius="xl"
+                >
+                  <IconUser size={18} />
+                </ThemeIcon>
+                <div>
+                  <Text fw={600} size="sm">
+                    {nombreCompleto || miPerfil?.name}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {servidor.puesto?.cargo?.nombre ?? 'Sin cargo asignado'}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {servidor.puesto?.unidad_administrativa?.nombre ?? ''}
+                  </Text>
+                </div>
+                <Badge
+                  size="xs"
+                  color="blue"
+                  variant="light"
+                  ml="auto"
+                >
+                  Solicitante
+                </Badge>
+              </Group>
+            </Card>
+          )}
 
-          <Divider label="Zona y anticipo" labelPosition="left" />
+          {/* ── Datos del viaje ── */}
+          <Divider label="¿A dónde y cuándo viaja?" labelPosition="left" />
 
           <Grid>
             <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -145,8 +221,8 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 control={control}
                 render={({ field }) => (
                   <Select
-                    label="¿A dónde viaja?"
-                    description="Zona geográfica del viaje"
+                    label="Zona geográfica del viaje"
+                    description="¿Viaja dentro o fuera de la provincia?"
                     data={ZONA_OPTIONS}
                     {...contained}
                     value={field.value}
@@ -164,8 +240,8 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 control={control}
                 render={({ field }) => (
                   <Select
-                    label="¿Necesita anticipo?"
-                    description="Modalidad de pago anticipado"
+                    label="¿Necesita anticipo de dinero?"
+                    description="El anticipo se entregará antes del viaje"
                     data={MODALIDAD_OPTIONS}
                     {...contained}
                     value={field.value}
@@ -179,6 +255,85 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             </Grid.Col>
           </Grid>
 
+          {/* Fechas y horas */}
+          <Grid>
+            <Grid.Col span={{ base: 12, sm: 5 }}>
+              <Controller
+                name="datetime_salida"
+                control={control}
+                render={({ field }) => (
+                  <DateTimePicker
+                    label="Fecha y hora de salida"
+                    description="¿Cuándo sale de Esmeraldas?"
+                    placeholder="Seleccionar"
+                    valueFormat="DD/MM/YYYY HH:mm"
+                    timePickerProps={{
+                      withDropdown: true,
+                      format: '24h',
+                    }}
+                    {...contained}
+                    value={field.value
+                      ? new Date(field.value)
+                      : null}
+                    onChange={(v) =>
+                      field.onChange(fromDateTime(v))
+                    }
+                    error={errors.datetime_salida?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 5 }}>
+              <Controller
+                name="datetime_llegada"
+                control={control}
+                render={({ field }) => (
+                  <DateTimePicker
+                    label="Fecha y hora de regreso"
+                    description="¿Cuándo regresa a Esmeraldas?"
+                    placeholder="Seleccionar"
+                    valueFormat="DD/MM/YYYY HH:mm"
+                    timePickerProps={{
+                      withDropdown: true,
+                      format: '24h',
+                    }}
+                    {...contained}
+                    value={field.value
+                      ? new Date(field.value)
+                      : null}
+                    onChange={(v) =>
+                      field.onChange(fromDateTime(v))
+                    }
+                    error={errors.datetime_llegada?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 2 }}>
+              <div>
+                <Text size="xs" c="dimmed" mb={4}>
+                  Total días
+                </Text>
+                <Card
+                  withBorder
+                  p="xs"
+                  radius="md"
+                  style={{ textAlign: 'center' }}
+                >
+                  <Text
+                    fw={700}
+                    size="lg"
+                    c={calcularDias() === '—'
+                      ? 'dimmed' : 'emerald'}
+                  >
+                    {calcularDias()}
+                  </Text>
+                </Card>
+              </div>
+            </Grid.Col>
+          </Grid>
+
+          {/* Anticipo parcial */}
           {modalidadWatch === 'parcial' && (
             <Controller
               name="monto_calculado"
@@ -201,6 +356,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             />
           )}
 
+          {/* Exterior */}
           {zonaWatch === 'exterior' && (
             <>
               <Alert
@@ -209,59 +365,61 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 variant="light"
               >
                 <Text size="xs" fw={500}>
-                  Viaje al exterior
+                  Viaje al exterior — consulte a la UATH
                 </Text>
                 <Text size="xs" mt={2}>
-                  El monto debe calcularse según el Acuerdo
+                  El monto se calcula según el Acuerdo
                   MRL-2011-00051: valor base de su nivel
-                  × coeficiente del país destino × número
-                  de días. Consulte a la UATH si tiene dudas.
+                  × coeficiente del país destino × días.
                 </Text>
               </Alert>
               <Grid>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
                   <Controller
                     name="tipo_viaje"
                     control={control}
                     render={({ field }) => (
                       <Select
                         label="Motivo del viaje al exterior"
-                        placeholder="Seleccionar tipo"
                         data={TIPO_VIAJE_OPTIONS}
                         searchable
-                        clearable
                         {...contained}
                         value={field.value ?? null}
-                        onChange={(v) => field.onChange(v ?? null)}
+                        onChange={(v) =>
+                          field.onChange(v ?? null)
+                        }
+                        error={errors.tipo_viaje?.message}
                       />
                     )}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
                   <Controller
                     name="pais_destino"
                     control={control}
                     render={({ field }) => (
                       <Select
                         label="País de destino"
-                        placeholder="Seleccionar país"
-                        data={PAISES_COMUNES}
+                        data={PAISES}
                         searchable
                         {...contained}
                         value={field.value ?? null}
-                        onChange={(v) => field.onChange(v ?? null)}
+                        onChange={(v) =>
+                          field.onChange(v ?? null)
+                        }
+                        error={errors.pais_destino?.message}
                       />
                     )}
                   />
                 </Grid.Col>
-                <Grid.Col span={12}>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
                   <Controller
                     name="monto_calculado"
                     control={control}
                     render={({ field }) => (
                       <NumberInput
-                        label="Monto total del viático (USD)"
-                        description="Valor base × coeficiente país × días"
+                        label="Monto total (USD)"
+                        description="Valor base × coeficiente × días"
                         prefix="$"
                         decimalScale={2}
                         min={0}
@@ -281,16 +439,20 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             </>
           )}
 
-          <Divider label="Justificación del viaje" labelPosition="left" />
+          {/* Justificación */}
+          <Divider
+            label="¿Por qué realiza este viaje?"
+            labelPosition="left"
+          />
 
           <Controller
             name="justificacion"
             control={control}
             render={({ field }) => (
               <Textarea
-                label="¿Cuál es el motivo del viaje?"
-                description="Explique el objetivo de la comisión de servicio (mínimo 10 caracteres)"
-                placeholder="Ej: Participación en el taller de capacitación sobre gestión pública organizado por el SNAP en la ciudad de Quito..."
+                label="Justificación del viaje"
+                description="Explique el objetivo de la comisión (mínimo 10 caracteres)"
+                placeholder="Ej: Participación en el taller de capacitación sobre contratación pública organizado por el SERCOP en la ciudad de Quito, del 10 al 12 de junio de 2026..."
                 autosize
                 minRows={3}
                 maxRows={6}
@@ -304,18 +466,20 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             )}
           />
 
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>
+          <Group justify="flex-end" mt="xs">
+            <Button
+              variant="default"
+              onClick={handleClose}
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
               color="emerald"
-              variant="light"
               loading={isSubmitting}
               rightSection={<IconArrowRight size={14} />}
             >
-              Crear y registrar itinerario
+              Crear solicitud
             </Button>
           </Group>
         </Stack>

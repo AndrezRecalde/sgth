@@ -36,9 +36,11 @@ const toDate = (v?: string | null): Date | null => {
   return new Date(y, m - 1, d)
 }
 
-const fromDate = (d: Date | null): string | null => {
+const fromDate = (d: Date | string | null): string | null => {
   if (!d) return null
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  const dt = typeof d === 'string' ? new Date(d + 'T00:00:00') : d
+  if (!(dt instanceof Date) || isNaN(dt.getTime())) return null
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`
 }
 
 export function LiquidacionForm({ viatico, onSuccess }: Props) {

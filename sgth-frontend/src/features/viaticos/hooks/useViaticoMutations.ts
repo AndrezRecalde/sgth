@@ -57,6 +57,23 @@ export function useViaticoMutations() {
     onError,
   })
 
+  const actualizar = useMutation({
+    mutationFn: ({ id, data }: {
+      id:   number
+      data: Parameters<typeof viaticoService.actualizar>[1]
+    }) => viaticoService.actualizar(id, data),
+    onSuccess: (_data, { id }) => {
+      notifications.show({
+        title:   'Cambios guardados',
+        message: 'El viático fue actualizado correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar(id)
+    },
+    onError,
+  })
+
   const aprobar = mkMutation(
     viaticoService.aprobar,
     'Viático aprobado',
@@ -108,12 +125,9 @@ export function useViaticoMutations() {
   })
 
   return {
-    solicitar,
-    aprobar,
-    entregarAnticipo,
-    marcarEnComision,
-    marcarPendienteLiquidacion,
-    contabilizar,
+    solicitar, aprobar, actualizar,
+    entregarAnticipo, marcarEnComision,
+    marcarPendienteLiquidacion, contabilizar,
     liquidar,
   }
 }

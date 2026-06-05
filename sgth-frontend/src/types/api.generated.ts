@@ -3312,7 +3312,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["viatico.update"];
         trace?: never;
     };
     "/v1/viaticos/servidor/{servidorId}/solicitar": {
@@ -4603,6 +4603,14 @@ export interface components {
             justificacion: string;
             /** @enum {string} */
             modalidad_anticipo: "sin_anticipo" | "total" | "parcial";
+            /**
+             * Format: date-time
+             * @description Fechas directas del viático
+             */
+            datetime_salida: string;
+            /** Format: date-time */
+            datetime_llegada: string;
+            /** @description Opcionales */
             tipo_viaje?: string | null;
             pais_destino?: string | null;
             monto_calculado?: number | null;
@@ -5389,8 +5397,8 @@ export interface components {
             tipo_viaje: string | null;
             pais_destino: string | null;
             fecha_solicitud: string;
-            datetime_salida: string | null;
-            datetime_llegada: string | null;
+            datetime_salida: string;
+            datetime_llegada: string;
             total_dias: string;
         };
         /**
@@ -14484,6 +14492,53 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "viatico.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    zona?: "dentro_provincia" | "fuera_provincia" | "exterior";
+                    /** Format: date-time */
+                    datetime_salida?: string;
+                    /** Format: date-time */
+                    datetime_llegada?: string;
+                    justificacion?: string;
+                    /** @enum {string} */
+                    modalidad_anticipo?: "sin_anticipo" | "total" | "parcial";
+                    monto_calculado?: number | null;
+                    tipo_viaje?: string | null;
+                    pais_destino?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Viático actualizado correctamente.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "viatico.solicitar.por.servidor": {

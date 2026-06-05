@@ -6,6 +6,8 @@ export const viaticoSchema = z.object({
     'fuera_provincia',
     'exterior',
   ]),
+  datetime_salida:  z.string().min(1, 'Requerido'),
+  datetime_llegada: z.string().min(1, 'Requerido'),
   tipo_viaje:        z.string().optional().nullable(),
   pais_destino:      z.string().optional().nullable(),
   justificacion:     z.string().min(10, 'Mínimo 10 caracteres'),

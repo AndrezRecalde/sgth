@@ -56,6 +56,21 @@ export const viaticoService = {
       '/viaticos', data
     ).then(r => r.data.datos),
 
+  // Actualizar viático (PATCH)
+  actualizar: (id: number, data: {
+    zona?:               string
+    datetime_salida?:    string
+    datetime_llegada?:   string
+    justificacion?:      string
+    modalidad_anticipo?: string
+    monto_calculado?:    number | null
+    tipo_viaje?:         string | null
+    pais_destino?:       string | null
+  }) =>
+    api.patch<ApiResponse<Viatico>>(
+      `/viaticos/${id}`, data
+    ).then(r => r.data.datos),
+
   aprobar: (id: number) =>
     api.post<ApiResponse<Viatico>>(
       `/viaticos/${id}/aprobar`
