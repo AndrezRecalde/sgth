@@ -13,6 +13,57 @@ class ViaticoController extends Controller
 {
     public function __construct(private ViaticoServiceInterface $viaticoService) {}
 
+    public function index(): JsonResponse
+    {
+        $viaticos = \App\Models\Viatico\Viatico::with(['servidor'])
+            ->orderByDesc('created_at')
+            ->paginate(50);
+
+        return ApiResponse::ok($viaticos, 'Viáticos listados.');
+    }
+
+    public function show(int $id): JsonResponse
+    {
+        $viatico = \App\Models\Viatico\Viatico::with([
+            'servidor',
+            'tramos.empresa.catalogo',
+            'tramos.origenProvincia',
+            'tramos.origenCanton',
+            'tramos.destinoProvincia',
+            'tramos.destinoCanton',
+            'tramos.autorizacionVuelo',
+            'liquidacion.detallesFactura.categoria',
+            'servidoresAcompanantes.servidor',
+        ])->findOrFail($id);
+
+        return ApiResponse::ok($viatico, 'Detalle del viático.');
+    }
+
+    public function store(SolicitarViaticoRequest $request): JsonResponse
+    {
+        // El servidor es el usuario autenticado
+        $servidorId = $request->user()->servidor?->id;
+
+        if (!$servidorId) {
+            return ApiResponse::error(
+                'El usuario autenticado no tiene un expediente ' .
+                'de servidor vinculado.',
+                422
+            );
+        }
+
+        $viatico = $this->viaticoService->solicitar(
+            $servidorId,
+            $request->validated(),
+            $request->user()->id
+        );
+
+        return ApiResponse::created(
+            $viatico,
+            'Solicitud de viático creada con éxito.'
+        );
+    }
+
     public function solicitar(int $servidorId, SolicitarViaticoRequest $request): JsonResponse
     {
         $viatico = $this->viaticoService->solicitar(
