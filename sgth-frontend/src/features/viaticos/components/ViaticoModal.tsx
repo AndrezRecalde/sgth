@@ -1,153 +1,184 @@
-'use client'
+"use client";
 
 import {
-  Modal, Stack, Grid, Select, Textarea,
-  Button, Group, NumberInput, Divider,
-  Alert, Text, Card, Badge, ThemeIcon,
-} from '@mantine/core'
-import { DateTimePicker } from '@mantine/dates'
-import '@mantine/dates/styles.css'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+  Modal,
+  Stack,
+  Grid,
+  Select,
+  Textarea,
+  Button,
+  Group,
+  NumberInput,
+  Divider,
+  Alert,
+  Text,
+  Card,
+  Badge,
+  ThemeIcon,
+} from "@mantine/core";
+import { DateTimePicker } from "@mantine/dates";
+import "@mantine/dates/styles.css";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  IconInfoCircle, IconUser, IconArrowRight,
+  IconInfoCircle,
+  IconUser,
+  IconArrowRight,
   IconCalendar,
-} from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useViaticoMutations } from '../hooks/useViaticoMutations'
-import {
-  viaticoSchema,
-  type ViaticoFormData,
-} from '../schemas/viatico.schema'
-import type { Viatico } from '@/types/api'
-import { useQuery } from '@tanstack/react-query'
-import api from '@/lib/axios'
+} from "@tabler/icons-react";
+import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import { useViaticoMutations } from "../hooks/useViaticoMutations";
+import { viaticoSchema, type ViaticoFormData } from "../schemas/viatico.schema";
+import type { Viatico } from "@/types/api";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/axios";
 
 const ZONA_OPTIONS = [
-  { value: 'dentro_provincia', label: '📍 Dentro de la provincia' },
-  { value: 'fuera_provincia',  label: '🗺 Fuera de la provincia'  },
-  { value: 'exterior',         label: '✈️ Exterior (internacional)' },
-]
+  { value: "dentro_provincia", label: "📍 Dentro de la provincia" },
+  { value: "fuera_provincia", label: "🗺 Fuera de la provincia" },
+  { value: "exterior", label: "✈️ Exterior (internacional)" },
+];
 
 const MODALIDAD_OPTIONS = [
-  { value: 'total',        label: '💰 Anticipo total (100%)' },
-  { value: 'parcial',      label: '💵 Anticipo parcial'      },
-  { value: 'sin_anticipo', label: '🚫 Sin anticipo'          },
-]
+  { value: "total", label: "💰 Anticipo total (100%)" },
+  { value: "parcial", label: "💵 Anticipo parcial" },
+  { value: "sin_anticipo", label: "🚫 Sin anticipo" },
+];
 
 const TIPO_VIAJE_OPTIONS = [
-  { value: 'capacitacion',              label: 'Capacitación' },
-  { value: 'reunion_oficial',           label: 'Reunión oficial' },
-  { value: 'taller_foro_seminario',     label: 'Taller / Foro / Seminario' },
-  { value: 'feria_evento_especial',     label: 'Feria o evento especial' },
-  { value: 'visita_protocolar',         label: 'Visita protocolar' },
-  { value: 'firma_acuerdo',             label: 'Firma de acuerdo' },
-  { value: 'visita_tecnica',            label: 'Visita técnica' },
-  { value: 'cooperacion_internacional', label: 'Cooperación internacional' },
-  { value: 'asistencia_humanitaria',    label: 'Asistencia humanitaria' },
-]
+  { value: "capacitacion", label: "Capacitación" },
+  { value: "reunion_oficial", label: "Reunión oficial" },
+  { value: "taller_foro_seminario", label: "Taller / Foro / Seminario" },
+  { value: "feria_evento_especial", label: "Feria o evento especial" },
+  { value: "visita_protocolar", label: "Visita protocolar" },
+  { value: "firma_acuerdo", label: "Firma de acuerdo" },
+  { value: "visita_tecnica", label: "Visita técnica" },
+  { value: "cooperacion_internacional", label: "Cooperación internacional" },
+  { value: "asistencia_humanitaria", label: "Asistencia humanitaria" },
+];
 
 const PAISES = [
-  'Colombia', 'Perú', 'Bolivia', 'Chile', 'Argentina',
-  'Brasil', 'Venezuela', 'México', 'España',
-  'Estados Unidos', 'Canadá', 'Francia', 'Alemania',
-  'Italia', 'China', 'Japón', 'Otro',
-]
+  "Colombia",
+  "Perú",
+  "Bolivia",
+  "Chile",
+  "Argentina",
+  "Brasil",
+  "Venezuela",
+  "México",
+  "España",
+  "Estados Unidos",
+  "Canadá",
+  "Francia",
+  "Alemania",
+  "Italia",
+  "China",
+  "Japón",
+  "Otro",
+];
 
 const fromDateTime = (d: Date | null | string): string => {
-  if (!d) return ''
-  const dt = typeof d === 'string' ? new Date(d) : d
-  if (isNaN(dt.getTime())) return ''
-  return dt.toISOString().slice(0, 16)
-}
+  if (!d) return "";
+  const dt = typeof d === "string" ? new Date(d) : d;
+  if (isNaN(dt.getTime())) return "";
+  return dt.toISOString().slice(0, 16);
+};
 
 interface Props {
-  opened:    boolean
-  onClose:   () => void
-  onCreated: (viatico: Viatico) => void
+  opened: boolean;
+  onClose: () => void;
+  onCreated: (viatico: Viatico) => void;
 }
 
 export function ViaticoModal({ opened, onClose, onCreated }: Props) {
-  const { isMobile }  = useMobileBreakpoint()
-  const contained     = useContainedInput()
-  const { solicitar } = useViaticoMutations()
+  const { isMobile } = useMobileBreakpoint();
+  const contained = useContainedInput();
+  const { solicitar } = useViaticoMutations();
 
   // Cargar datos del servidor autenticado
   const { data: miPerfil } = useQuery({
-    queryKey: ['mi-perfil'],
+    queryKey: ["mi-perfil"],
     queryFn: () =>
-      api.get<{ datos: {
-        id: number
-        name: string
-        servidor?: {
-          nombre?:         string
-          segundo_nombre?: string | null
-          apellido?:       string
-          segundo_apellido?: string | null
-          puesto?: {
-            cargo?: { nombre?: string } | null
-            unidad_administrativa?: { nombre?: string } | null
-          } | null
-        } | null
-      } }>('/auth/me').then(r => r.data.datos),
+      api
+        .get<{
+          datos: {
+            id: number;
+            name: string;
+            servidor?: {
+              nombre?: string;
+              segundo_nombre?: string | null;
+              apellido?: string;
+              segundo_apellido?: string | null;
+              puesto?: {
+                cargo?: { nombre?: string } | null;
+                unidad_administrativa?: { nombre?: string } | null;
+              } | null;
+            } | null;
+          };
+        }>("/auth/me")
+        .then((r) => r.data.datos),
     enabled: opened,
     staleTime: 1000 * 60 * 5,
-  })
+  });
 
-  const servidor = miPerfil?.servidor
+  const servidor = miPerfil?.servidor;
   const nombreCompleto = [
     servidor?.nombre,
     servidor?.segundo_nombre,
     servidor?.apellido,
     servidor?.segundo_apellido,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const {
     control,
     handleSubmit,
     reset,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<ViaticoFormData>({
     resolver: zodResolver(viaticoSchema),
     defaultValues: {
-      zona:                    'fuera_provincia',
-      datetime_salida:         '',
-      datetime_llegada:        '',
-      tipo_viaje:              null,
-      pais_destino:            null,
-      justificacion:           '',
-      modalidad_anticipo:      'total',
-      monto_calculado:         null,
+      zona: "fuera_provincia",
+      datetime_salida: "",
+      datetime_llegada: "",
+      tipo_viaje: null,
+      pais_destino: null,
+      justificacion: "",
+      modalidad_anticipo: "total",
+      monto_calculado: null,
       servidores_acompanantes: [],
     },
-  })
+  });
 
-  const zonaWatch       = watch('zona')
-  const modalidadWatch  = watch('modalidad_anticipo')
-  const salidaWatch     = watch('datetime_salida')
-  const llegadaWatch    = watch('datetime_llegada')
+  const zonaWatch = useWatch({ control, name: "zona" });
+  const modalidadWatch = useWatch({ control, name: "modalidad_anticipo" });
+  const salidaWatch = useWatch({ control, name: "datetime_salida" });
+  const llegadaWatch = useWatch({ control, name: "datetime_llegada" });
 
   // Calcular días en tiempo real
   const calcularDias = (): string => {
-    if (!salidaWatch || !llegadaWatch) return '—'
-    const s = new Date(salidaWatch)
-    const l = new Date(llegadaWatch)
-    if (isNaN(s.getTime()) || isNaN(l.getTime())) return '—'
-    const horas = (l.getTime() - s.getTime()) / 3600000
-    if (horas <= 0) return '—'
-    return (horas / 24).toFixed(1) + ' días'
-  }
+    if (!salidaWatch || !llegadaWatch) return "—";
+    const s = new Date(salidaWatch);
+    const l = new Date(llegadaWatch);
+    if (isNaN(s.getTime()) || isNaN(l.getTime())) return "—";
+    const horas = (l.getTime() - s.getTime()) / 3600000;
+    if (horas <= 0) return "—";
+    return (horas / 24).toFixed(1) + " días";
+  };
 
-  const handleClose = () => { reset(); onClose() }
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
 
   const onSubmit = async (values: ViaticoFormData) => {
-    const viatico = await solicitar.mutateAsync(values)
-    reset()
-    onClose()
-    if (viatico) onCreated(viatico as Viatico)
-  }
+    const viatico = await solicitar.mutateAsync(values);
+    reset();
+    onClose();
+    if (viatico) onCreated(viatico as Viatico);
+  };
 
   return (
     <Modal
@@ -165,27 +196,16 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
       }
       size="xl"
       fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
+      radius={isMobile ? 0 : "xl"}
       closeOnClickOutside={false}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
-
           {/* ── Información del servidor ── */}
           {servidor && (
-            <Card
-              withBorder
-              radius="md"
-              p="sm"
-              bg="blue.0"
-            >
+            <Card withBorder radius="md" p="sm" bg="blue.0">
               <Group gap="sm">
-                <ThemeIcon
-                  color="blue"
-                  variant="light"
-                  size="lg"
-                  radius="xl"
-                >
+                <ThemeIcon color="blue" variant="light" size="lg" radius="xl">
                   <IconUser size={18} />
                 </ThemeIcon>
                 <div>
@@ -193,18 +213,13 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                     {nombreCompleto || miPerfil?.name}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {servidor.puesto?.cargo?.nombre ?? 'Sin cargo asignado'}
+                    {servidor.puesto?.cargo?.nombre ?? "Sin cargo asignado"}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {servidor.puesto?.unidad_administrativa?.nombre ?? ''}
+                    {servidor.puesto?.unidad_administrativa?.nombre ?? ""}
                   </Text>
                 </div>
-                <Badge
-                  size="xs"
-                  color="blue"
-                  variant="light"
-                  ml="auto"
-                >
+                <Badge size="xs" color="blue" variant="light" ml="auto">
                   Solicitante
                 </Badge>
               </Group>
@@ -226,9 +241,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                     data={ZONA_OPTIONS}
                     {...contained}
                     value={field.value}
-                    onChange={(v) =>
-                      field.onChange(v ?? 'fuera_provincia')
-                    }
+                    onChange={(v) => field.onChange(v ?? "fuera_provincia")}
                     error={errors.zona?.message}
                   />
                 )}
@@ -245,9 +258,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                     data={MODALIDAD_OPTIONS}
                     {...contained}
                     value={field.value}
-                    onChange={(v) =>
-                      field.onChange(v ?? 'total')
-                    }
+                    onChange={(v) => field.onChange(v ?? "total")}
                     error={errors.modalidad_anticipo?.message}
                   />
                 )}
@@ -269,15 +280,11 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                     valueFormat="DD/MM/YYYY HH:mm"
                     timePickerProps={{
                       withDropdown: true,
-                      format: '24h',
+                      format: "24h",
                     }}
                     {...contained}
-                    value={field.value
-                      ? new Date(field.value)
-                      : null}
-                    onChange={(v) =>
-                      field.onChange(fromDateTime(v))
-                    }
+                    value={field.value ? new Date(field.value) : null}
+                    onChange={(v) => field.onChange(fromDateTime(v))}
                     error={errors.datetime_salida?.message}
                   />
                 )}
@@ -295,15 +302,11 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                     valueFormat="DD/MM/YYYY HH:mm"
                     timePickerProps={{
                       withDropdown: true,
-                      format: '24h',
+                      format: "24h",
                     }}
                     {...contained}
-                    value={field.value
-                      ? new Date(field.value)
-                      : null}
-                    onChange={(v) =>
-                      field.onChange(fromDateTime(v))
-                    }
+                    value={field.value ? new Date(field.value) : null}
+                    onChange={(v) => field.onChange(fromDateTime(v))}
                     error={errors.datetime_llegada?.message}
                   />
                 )}
@@ -318,13 +321,12 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                   withBorder
                   p="xs"
                   radius="md"
-                  style={{ textAlign: 'center' }}
+                  style={{ textAlign: "center" }}
                 >
                   <Text
                     fw={700}
                     size="lg"
-                    c={calcularDias() === '—'
-                      ? 'dimmed' : 'emerald'}
+                    c={calcularDias() === "—" ? "dimmed" : "emerald"}
                   >
                     {calcularDias()}
                   </Text>
@@ -334,7 +336,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
           </Grid>
 
           {/* Anticipo parcial */}
-          {modalidadWatch === 'parcial' && (
+          {modalidadWatch === "parcial" && (
             <Controller
               name="monto_calculado"
               control={control}
@@ -348,7 +350,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                   {...contained}
                   value={field.value ?? 0}
                   onChange={(v) =>
-                    field.onChange(typeof v === 'number' ? v : null)
+                    field.onChange(typeof v === "number" ? v : null)
                   }
                   error={errors.monto_calculado?.message}
                 />
@@ -357,7 +359,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
           )}
 
           {/* Exterior */}
-          {zonaWatch === 'exterior' && (
+          {zonaWatch === "exterior" && (
             <>
               <Alert
                 icon={<IconInfoCircle size={14} />}
@@ -368,9 +370,8 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                   Viaje al exterior — consulte a la UATH
                 </Text>
                 <Text size="xs" mt={2}>
-                  El monto se calcula según el Acuerdo
-                  MRL-2011-00051: valor base de su nivel
-                  × coeficiente del país destino × días.
+                  El monto se calcula según el Acuerdo MRL-2011-00051: valor
+                  base de su nivel × coeficiente del país destino × días.
                 </Text>
               </Alert>
               <Grid>
@@ -385,9 +386,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                         searchable
                         {...contained}
                         value={field.value ?? null}
-                        onChange={(v) =>
-                          field.onChange(v ?? null)
-                        }
+                        onChange={(v) => field.onChange(v ?? null)}
                         error={errors.tipo_viaje?.message}
                       />
                     )}
@@ -404,9 +403,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                         searchable
                         {...contained}
                         value={field.value ?? null}
-                        onChange={(v) =>
-                          field.onChange(v ?? null)
-                        }
+                        onChange={(v) => field.onChange(v ?? null)}
                         error={errors.pais_destino?.message}
                       />
                     )}
@@ -426,9 +423,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                         {...contained}
                         value={field.value ?? 0}
                         onChange={(v) =>
-                          field.onChange(
-                            typeof v === 'number' ? v : null
-                          )
+                          field.onChange(typeof v === "number" ? v : null)
                         }
                         error={errors.monto_calculado?.message}
                       />
@@ -440,10 +435,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
           )}
 
           {/* Justificación */}
-          <Divider
-            label="¿Por qué realiza este viaje?"
-            labelPosition="left"
-          />
+          <Divider label="¿Por qué realiza este viaje?" labelPosition="left" />
 
           <Controller
             name="justificacion"
@@ -458,19 +450,14 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 maxRows={6}
                 {...contained}
                 value={field.value}
-                onChange={(e) =>
-                  field.onChange(e.currentTarget.value)
-                }
+                onChange={(e) => field.onChange(e.currentTarget.value)}
                 error={errors.justificacion?.message}
               />
             )}
           />
 
           <Group justify="flex-end" mt="xs">
-            <Button
-              variant="default"
-              onClick={handleClose}
-            >
+            <Button variant="default" onClick={handleClose}>
               Cancelar
             </Button>
             <Button
@@ -485,5 +472,5 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
         </Stack>
       </form>
     </Modal>
-  )
+  );
 }

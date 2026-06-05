@@ -45,8 +45,7 @@ const ESTADO_LABELS: Record<EstadoViatico, string> = {
 export function ViaticoView() {
   const router = useRouter()
   const [modalAbierto, { open, close }] = useDisclosure(false)
-  const [viaticoSel, setViaticoSel] =
-    useState<ViaticoConRelaciones | null>(null)
+
   const [filtroEstado, setFiltroEstado] =
     useState<string>('solicitado')
 

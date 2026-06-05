@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import "@mantine/dates/styles.css";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
@@ -30,9 +30,9 @@ import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 
 interface Props {
   viaticoId: number;
-  viatico?:  import('@/types/api').Viatico | null;
+  viatico?: import("@/types/api").Viatico | null;
   onSuccess: () => void;
-  onCancel:  () => void;
+  onCancel: () => void;
 }
 
 const fromDateTime = (d: Date | null | string): string => {
@@ -73,7 +73,6 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<TramoFormData>({
@@ -96,44 +95,34 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
     },
   });
 
-  const origenTipo = watch("origen_tipo");
-  const destinoTipo = watch("destino_tipo");
-  const catalogoSelId = watch("catalogo_transporte_id");
-  const origenProvId = watch("origen_provincia_id");
-  const destinoProvId = watch("destino_provincia_id");
+  const origenTipo = useWatch({ control, name: "origen_tipo" });
+  const destinoTipo = useWatch({ control, name: "destino_tipo" });
+  const catalogoSelId = useWatch({ control, name: "catalogo_transporte_id" });
+  const origenProvId = useWatch({ control, name: "origen_provincia_id" });
+  const destinoProvId = useWatch({ control, name: "destino_provincia_id" });
 
-  const salidaTramo  = watch('datetime_salida')
-  const llegadaTramo = watch('datetime_llegada')
+  const salidaTramo = useWatch({ control, name: "datetime_salida" });
+  const llegadaTramo = useWatch({ control, name: "datetime_llegada" });
 
-  const alertaSalida: 'ok' | 'error' | null =
+  const alertaSalida: "ok" | "error" | null =
     viatico && salidaTramo
       ? (() => {
-          const sv = new Date(
-            viatico.datetime_salida as string
-          )
-          const st = new Date(salidaTramo)
-          if (isNaN(sv.getTime()) || isNaN(st.getTime()))
-            return null
-          return sv.getTime() === st.getTime()
-            ? 'ok'
-            : 'error'
+          const sv = new Date(viatico.datetime_salida as string);
+          const st = new Date(salidaTramo);
+          if (isNaN(sv.getTime()) || isNaN(st.getTime())) return null;
+          return sv.getTime() === st.getTime() ? "ok" : "error";
         })()
-      : null
+      : null;
 
-  const alertaLlegada: 'ok' | 'error' | null =
+  const alertaLlegada: "ok" | "error" | null =
     viatico && llegadaTramo
       ? (() => {
-          const lv = new Date(
-            viatico.datetime_llegada as string
-          )
-          const lt = new Date(llegadaTramo)
-          if (isNaN(lv.getTime()) || isNaN(lt.getTime()))
-            return null
-          return lt.getTime() > lv.getTime()
-            ? 'error'
-            : 'ok'
+          const lv = new Date(viatico.datetime_llegada as string);
+          const lt = new Date(llegadaTramo);
+          if (isNaN(lv.getTime()) || isNaN(lt.getTime())) return null;
+          return lt.getTime() > lv.getTime() ? "error" : "ok";
         })()
-      : null
+      : null;
 
   const { data: empresas = [] } = useEmpresasPorTipo(catalogoSelId || null);
 
@@ -205,7 +194,8 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
   });
 
   const onSubmit = (values: TramoFormData) => {
-    const { catalogo_transporte_id: _, ...rest } = values;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { catalogo_transporte_id, ...rest } = values;
     crear.mutate(rest);
   };
 
@@ -592,43 +582,49 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
 
         {viatico && (
           <Stack gap="xs">
-            {alertaSalida === 'ok' && (
+            {alertaSalida === "ok" && (
               <Alert color="emerald" variant="light" p="xs">
                 <Text size="xs">
-                  ✅ La salida del tramo coincide con
-                  el inicio del viático
+                  ✅ La salida del tramo coincide con el inicio del viático
                 </Text>
               </Alert>
             )}
-            {alertaSalida === 'error' && (
+            {alertaSalida === "error" && (
               <Alert color="orange" variant="light" p="xs">
                 <Text size="xs" fw={500}>
-                  ⚠️ El primer tramo debe salir exactamente el{' '}
+                  ⚠️ El primer tramo debe salir exactamente el{" "}
                   <strong>
-                    {new Date(viatico.datetime_salida as string)
-                      .toLocaleString('es-EC', {
-                        timeZone: 'UTC',
-                        day: '2-digit', month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit', minute: '2-digit',
-                      })}
+                    {new Date(viatico.datetime_salida as string).toLocaleString(
+                      "es-EC",
+                      {
+                        timeZone: "UTC",
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
                   </strong>
                 </Text>
               </Alert>
             )}
-            {alertaLlegada === 'error' && (
+            {alertaLlegada === "error" && (
               <Alert color="red" variant="light" p="xs">
                 <Text size="xs" fw={500}>
-                  🚫 La llegada no puede superar la fecha
-                  de regreso del viático:{' '}
+                  🚫 La llegada no puede superar la fecha de regreso del
+                  viático:{" "}
                   <strong>
-                    {new Date(viatico.datetime_llegada as string)
-                      .toLocaleString('es-EC', {
-                        timeZone: 'UTC',
-                        day: '2-digit', month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit', minute: '2-digit',
-                      })}
+                    {new Date(
+                      viatico.datetime_llegada as string,
+                    ).toLocaleString("es-EC", {
+                      timeZone: "UTC",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </strong>
                 </Text>
               </Alert>
