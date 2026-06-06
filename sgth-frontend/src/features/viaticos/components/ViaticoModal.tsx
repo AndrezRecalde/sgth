@@ -170,9 +170,23 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
     const s = new Date(salidaWatch);
     const l = new Date(llegadaWatch);
     if (isNaN(s.getTime()) || isNaN(l.getTime())) return "—";
-    const horas = (l.getTime() - s.getTime()) / 3600000;
-    if (horas <= 0) return "—";
-    return (horas / 24).toFixed(1) + " días";
+    // Opción B: días calendario sin considerar horas
+    // Solo la fecha (sin hora) y +1 porque el día
+    // de regreso cuenta como día completo
+    const soloFechaSalida = new Date(
+      s.getFullYear(),
+      s.getMonth(),
+      s.getDate(),
+    );
+    const soloFechaLlegada = new Date(
+      l.getFullYear(),
+      l.getMonth(),
+      l.getDate(),
+    );
+    const diffMs = soloFechaLlegada.getTime() - soloFechaSalida.getTime();
+    const diffDias = Math.round(diffMs / 86400000);
+    if (diffDias < 0) return "—";
+    return diffDias + 1 + " días";
   };
 
   const handleClose = () => {
