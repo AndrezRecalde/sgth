@@ -82,7 +82,14 @@ const fromDateTime = (d: Date | null | string): string => {
   if (!d) return "";
   const dt = typeof d === "string" ? new Date(d) : d;
   if (isNaN(dt.getTime())) return "";
-  return dt.toISOString().slice(0, 16);
+
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  const hours = String(dt.getHours()).padStart(2, "0");
+  const minutes = String(dt.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 interface Props {
@@ -446,7 +453,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 description="Explique el objetivo de la comisión (mínimo 10 caracteres)"
                 placeholder="Ej: Participación en el taller de capacitación sobre contratación pública organizado por el SERCOP en la ciudad de Quito, del 10 al 12 de junio de 2026..."
                 autosize
-                minRows={3}
+                minRows={4}
                 maxRows={6}
                 {...contained}
                 value={field.value}

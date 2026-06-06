@@ -10,15 +10,23 @@ import classes from "@/styles/inputs.contained.module.css";
  *   const contained = useContainedInput()
  *   <TextInput {...contained} label="Nombres" />
  */
+const CONTAINED_PROPS = {
+  classNames: {
+    root: classes.root,
+    wrapper: classes.wrapper,
+    label: classes.label,
+    description: classes.description,
+    input: classes.input,
+    innerInput: classes.innerInput,
+  },
+  inputWrapperOrder: [
+    "description",
+    "label",
+    "input",
+    "error",
+  ] as ("description" | "label" | "input" | "error")[],
+};
+
 export function useContainedInput() {
-  return {
-    classNames: {
-      root: classes.root,
-      wrapper: classes.wrapper,
-      label: classes.label,
-      input: classes.input,
-      innerInput: classes.innerInput,
-    },
-    //variant: "filled" as const,
-  };
+  return CONTAINED_PROPS;
 }

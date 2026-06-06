@@ -39,8 +39,14 @@ const fromDateTime = (d: Date | null | string): string => {
   if (!d) return "";
   const dt = typeof d === "string" ? new Date(d) : d;
   if (isNaN(dt.getTime())) return "";
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  const hours = String(dt.getHours()).padStart(2, "0");
+  const minutes = String(dt.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const PAISES_COMUNES = [

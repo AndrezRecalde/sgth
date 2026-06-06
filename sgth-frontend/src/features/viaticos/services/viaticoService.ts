@@ -44,12 +44,14 @@ export const viaticoService = {
       .then(r => r.data.datos),
 
   solicitar: (data: {
-    zona:                   string
-    tipo_viaje?:            string | null
-    pais_destino?:          string | null
-    justificacion:          string
-    modalidad_anticipo:     'sin_anticipo' | 'total' | 'parcial'
-    monto_calculado?:       number | null
+    zona:                    string
+    datetime_salida:         string
+    datetime_llegada:        string
+    tipo_viaje?:             string | null
+    pais_destino?:           string | null
+    justificacion:           string
+    modalidad_anticipo:      'sin_anticipo' | 'total' | 'parcial'
+    monto_calculado?:        number | null
     servidores_acompanantes?: number[]
   }) =>
     api.post<ApiResponse<Viatico>>(

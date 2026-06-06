@@ -24,6 +24,12 @@
   transition: color 0.15s ease;
 }
 
+.description {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  margin-bottom: 4px;
+}
+
 .innerInput {
   padding-top: 18px;
   font-size: 14px;
