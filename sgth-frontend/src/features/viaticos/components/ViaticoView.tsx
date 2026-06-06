@@ -118,8 +118,7 @@ export function ViaticoView() {
           )
         }
         const fmt = (f: string) =>
-          new Date(f).toLocaleDateString('es-EC', {
-            timeZone: 'UTC',
+          new Date(f.replace(/-/g, "/")).toLocaleDateString('es-EC', {
             day: '2-digit', month: '2-digit', year: '2-digit',
           })
         return (
