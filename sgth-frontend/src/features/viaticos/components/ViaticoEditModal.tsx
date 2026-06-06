@@ -167,6 +167,7 @@ export function ViaticoEditModal({
                     valueFormat="DD/MM/YYYY HH:mm"
                     timePickerProps={{
                       withDropdown: true,
+                      popoverProps: { withinPortal: false },
                       format: '24h',
                     }}
                     {...contained}
@@ -194,6 +195,7 @@ export function ViaticoEditModal({
                     valueFormat="DD/MM/YYYY HH:mm"
                     timePickerProps={{
                       withDropdown: true,
+                      popoverProps: { withinPortal: false },
                       format: '24h',
                     }}
                     {...contained}

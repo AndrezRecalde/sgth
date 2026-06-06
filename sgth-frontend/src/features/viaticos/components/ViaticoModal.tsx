@@ -301,6 +301,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                     valueFormat="DD/MM/YYYY HH:mm"
                     timePickerProps={{
                       withDropdown: true,
+                      popoverProps: { withinPortal: false },
                       format: "24h",
                     }}
                     {...contained}
@@ -323,6 +324,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                     valueFormat="DD/MM/YYYY HH:mm"
                     timePickerProps={{
                       withDropdown: true,
+                      popoverProps: { withinPortal: false },
                       format: "24h",
                     }}
                     {...contained}
