@@ -83,9 +83,9 @@ class ViaticoController extends Controller
             $llegada = \Carbon\Carbon::parse(
                 $data['datetime_llegada'] ?? $viatico->datetime_llegada
             );
-            $data['total_dias'] = round(
-                $salida->diffInHours($llegada) / 24, 2
-            );
+            $data['total_dias'] = (float) $salida
+                ->copy()->startOfDay()
+                ->diffInDays($llegada->copy()->startOfDay()) + 1;
 
             // Recalcular monto si es nacional
             if (

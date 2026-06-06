@@ -38,11 +38,11 @@ final class ViaticoService implements ViaticoServiceInterface
         $datetimeSalida  = Carbon::parse($datos['datetime_salida']);
         $datetimeLlegada = Carbon::parse($datos['datetime_llegada']);
 
-        // Calcular total_dias directamente
-        $totalDias = round(
-            $datetimeSalida->diffInHours($datetimeLlegada) / 24,
-            2
-        );
+        // Opción B: días calendario incluyendo día de regreso
+        // Solo fechas, sin importar la hora
+        $totalDias = (float) $datetimeSalida
+            ->copy()->startOfDay()
+            ->diffInDays($datetimeLlegada->copy()->startOfDay()) + 1;
 
         // Para exterior el monto viene manual
         if ($zona === 'exterior') {
