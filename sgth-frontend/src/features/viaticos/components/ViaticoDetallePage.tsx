@@ -76,8 +76,9 @@ const PASO_STEPPER: Record<string, number> = {
 
 function fmt(f?: string | null): string {
   if (!f) return "—";
-  return new Date(f).toLocaleString("es-EC", {
-    timeZone: "UTC",
+  const dt = new Date(f.replace(/-/g, "/"));
+  if (isNaN(dt.getTime())) return "—";
+  return dt.toLocaleString("es-EC", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -189,8 +190,7 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
             <Text size="xs" c="dimmed">
               Solicitud del{" "}
               {d.fecha_solicitud
-                ? new Date(d.fecha_solicitud).toLocaleDateString("es-EC", {
-                    timeZone: "UTC",
+                ? new Date(d.fecha_solicitud.replace(/-/g, "/")).toLocaleDateString("es-EC", {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",
