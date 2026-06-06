@@ -130,6 +130,11 @@ class ViaticoController extends Controller
 
     public function store(SolicitarViaticoRequest $request): JsonResponse
     {
+        \Illuminate\Support\Facades\Log::info(
+            'ViaticoController@store - datos recibidos',
+            $request->validated()
+        );
+
         // El servidor es el usuario autenticado
         $servidorId = $request->user()->servidor?->id;
 
