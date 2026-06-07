@@ -554,6 +554,12 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
                     popoverProps: { withinPortal: false },
                     format: "24h",
                   }}
+                  minDate={viatico?.datetime_salida
+                    ? new Date(viatico.datetime_salida as string)
+                    : undefined}
+                  maxDate={viatico?.datetime_llegada
+                    ? new Date(viatico.datetime_llegada as string)
+                    : undefined}
                   {...contained}
                   value={field.value ? new Date(field.value) : null}
                   onChange={(v) => field.onChange(fromDateTime(v))}
@@ -576,6 +582,12 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
                     popoverProps: { withinPortal: false },
                     format: "24h",
                   }}
+                  minDate={viatico?.datetime_salida
+                    ? new Date(viatico.datetime_salida as string)
+                    : undefined}
+                  maxDate={viatico?.datetime_llegada
+                    ? new Date(viatico.datetime_llegada as string)
+                    : undefined}
                   {...contained}
                   value={field.value ? new Date(field.value) : null}
                   onChange={(v) => field.onChange(fromDateTime(v))}

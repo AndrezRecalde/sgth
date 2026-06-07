@@ -15,6 +15,7 @@ import {
   Card,
   Badge,
   ThemeIcon,
+  MultiSelect,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import "@mantine/dates/styles.css";
@@ -25,9 +26,11 @@ import {
   IconUser,
   IconArrowRight,
   IconCalendar,
+  IconUsers,
 } from "@tabler/icons-react";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { viaticoSchema, type ViaticoFormData } from "../schemas/viatico.schema";
 import type { Viatico } from "@/types/api";
@@ -113,6 +116,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             id: number;
             name: string;
             servidor?: {
+              id: number;
               nombre?: string;
               segundo_nombre?: string | null;
               apellido?: string;
@@ -138,6 +142,23 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   ]
     .filter(Boolean)
     .join(" ");
+
+  // Cargar servidores para acompañantes
+  const { data: servidoresData } = useServidores({
+    per_page: 200,
+  })
+
+  const servidoresOptions = (servidoresData?.data ?? [])
+    .filter((s) => {
+      // Excluir al servidor autenticado (titular)
+      const miId = miPerfil?.servidor?.id
+      return miId ? s.id !== miId : true
+    })
+    .map((s) => ({
+      value: String(s.id),
+      label: [s.apellido, s.nombre]
+        .filter(Boolean).join(' '),
+    }))
 
   const {
     control,
@@ -456,6 +477,57 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
               </Grid>
             </>
           )}
+
+          {/* Servidores acompañantes */}
+          <Divider
+            label="¿Viajan más servidores en esta comisión?"
+            labelPosition="left"
+          />
+
+          {/* Servidor titular — solo informativo */}
+          {servidor && (
+            <Card withBorder radius="md" p="xs" bg="emerald.0">
+              <Group gap="xs">
+                <ThemeIcon
+                  color="emerald"
+                  variant="light"
+                  size="sm"
+                  radius="xl"
+                >
+                  <IconUsers size={12} />
+                </ThemeIcon>
+                <div>
+                  <Text size="xs" fw={600}>
+                    {nombreCompleto || miPerfil?.name}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    Servidor titular — se agrega automáticamente
+                  </Text>
+                </div>
+              </Group>
+            </Card>
+          )}
+
+          <Controller
+            name="servidores_acompanantes"
+            control={control}
+            render={({ field }) => (
+              <MultiSelect
+                label="Servidores acompañantes (opcional)"
+                description="Seleccione los servidores que también
+                  participan en esta comisión"
+                placeholder="Buscar servidor..."
+                data={servidoresOptions}
+                searchable
+                clearable
+                {...contained}
+                value={(field.value ?? []).map(String)}
+                onChange={(v) =>
+                  field.onChange(v.map(Number))
+                }
+              />
+            )}
+          />
 
           {/* Justificación */}
           <Divider label="¿Por qué realiza este viaje?" labelPosition="left" />

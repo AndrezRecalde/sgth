@@ -38,7 +38,8 @@ import { TramosList } from "./TramosList";
 import { TramoForm } from "./TramoForm";
 import { LiquidacionSection } from "./LiquidacionSection";
 import { ViaticoEditModal } from "./ViaticoEditModal";
-import type { ViaticoConRelaciones } from "@/types/api";
+import { ServidoresModal } from './ServidoresModal';
+import type { ViaticoConRelaciones, Viatico } from "@/types/api";
 
 interface Props {
   viaticoId: number;
@@ -101,6 +102,10 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
     useDisclosure(false);
   const [tramosAbierto, { open: abrirTramos, close: cerrarTramos }] =
     useDisclosure(false);
+  const [
+    servidoresModalAbierto,
+    { open: abrirServidores, close: cerrarServidores },
+  ] = useDisclosure(false)
 
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
 
@@ -362,6 +367,17 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
                   Servidores en comisión
                 </Text>
               </Group>
+              {puedeEditarDatos && (
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="teal"
+                  leftSection={<IconPencil size={12} />}
+                  onClick={abrirServidores}
+                >
+                  Editar
+                </Button>
+              )}
             </Group>
             <Divider mb="sm" />
             <Stack gap="xs">
@@ -664,6 +680,11 @@ export function ViaticoDetallePage({ viaticoId }: Props) {
         </Stack>
       </Modal>
 
+      <ServidoresModal
+        opened={servidoresModalAbierto}
+        onClose={cerrarServidores}
+        viatico={d as Viatico}
+      />
 
     </Stack>
   );
