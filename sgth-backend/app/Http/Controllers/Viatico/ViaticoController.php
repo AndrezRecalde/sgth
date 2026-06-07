@@ -22,24 +22,43 @@ class ViaticoController extends Controller
         return ApiResponse::ok($viaticos, 'Viáticos listados.');
     }
 
-    public function show(int $id): JsonResponse
+    public function show(string $identificador): JsonResponse
     {
-        $viatico = \App\Models\Viatico\Viatico::with([
-            'servidor.puesto.cargo',
-            'servidor.puesto.unidadAdministrativa',
-            'tramos.empresa.catalogo',
-            'tramos.origenProvincia',
-            'tramos.origenCanton',
-            'tramos.destinoProvincia',
-            'tramos.destinoCanton',
-            'tramos.autorizacionVuelo',
-            'liquidacion.actividades',
-            'liquidacion.detallesFactura.categoria',
-            'liquidacion.jefeFinanciero',
-            'liquidacion.contabilizadoPor',
-            'todosServidores.servidor.puesto.cargo',
-            'autorizacionesVuelo',
-        ])->findOrFail($id);
+        // Acepta tanto id numérico como codigo_viatico
+        $viatico = is_numeric($identificador)
+            ? \App\Models\Viatico\Viatico::with([
+                'servidor.puesto.cargo',
+                'servidor.puesto.unidadAdministrativa',
+                'tramos.empresa.catalogo',
+                'tramos.origenProvincia',
+                'tramos.origenCanton',
+                'tramos.destinoProvincia',
+                'tramos.destinoCanton',
+                'tramos.autorizacionVuelo',
+                'liquidacion.actividades',
+                'liquidacion.detallesFactura.categoria',
+                'liquidacion.jefeFinanciero',
+                'liquidacion.contabilizadoPor',
+                'todosServidores.servidor.puesto.cargo',
+                'autorizacionesVuelo',
+            ])->findOrFail((int) $identificador)
+            : \App\Models\Viatico\Viatico::with([
+                'servidor.puesto.cargo',
+                'servidor.puesto.unidadAdministrativa',
+                'tramos.empresa.catalogo',
+                'tramos.origenProvincia',
+                'tramos.origenCanton',
+                'tramos.destinoProvincia',
+                'tramos.destinoCanton',
+                'tramos.autorizacionVuelo',
+                'liquidacion.actividades',
+                'liquidacion.detallesFactura.categoria',
+                'liquidacion.jefeFinanciero',
+                'liquidacion.contabilizadoPor',
+                'todosServidores.servidor.puesto.cargo',
+                'autorizacionesVuelo',
+            ])->where('codigo_viatico', $identificador)
+              ->firstOrFail();
 
         return ApiResponse::ok(
             $viatico,
