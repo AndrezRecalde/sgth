@@ -12,6 +12,8 @@ interface EstructuraServiceInterface
     // Unidades Administrativas
     public function listarUnidades(array $filtros): LengthAwarePaginator;
 
+    public function listarUnidadesTodas(array $filtros): \Illuminate\Database\Eloquent\Collection;
+
     public function crearUnidad(array $datos): UnidadAdministrativa;
 
     public function obtenerUnidad(int $id): UnidadAdministrativa;

@@ -28,6 +28,14 @@ class UnidadAdministrativaController extends Controller
         return ApiResponse::ok(UnidadAdministrativaResource::collection($unidades), 'Unidades administrativas obtenidas exitosamente');
     }
 
+    public function todas(Request $request): JsonResponse
+    {
+        $unidades = $this->estructuraService->listarUnidadesTodas(
+            $request->all()
+        );
+        return ApiResponse::ok($unidades, 'Unidades listadas.');
+    }
+
     public function store(StoreUnidadAdministrativaRequest $request): JsonResponse
     {
         // La autorización ya está delegada al FormRequest

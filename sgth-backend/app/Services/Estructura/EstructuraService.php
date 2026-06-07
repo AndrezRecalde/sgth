@@ -25,6 +25,24 @@ final class EstructuraService implements EstructuraServiceInterface
             ->paginate($filtros['por_pagina'] ?? 15);
     }
 
+    public function listarUnidadesTodas(array $filtros): Collection
+    {
+        return UnidadAdministrativa::query()
+            ->when(
+                isset($filtros['nivel']),
+                fn($q) => $q->where('nivel', $filtros['nivel'])
+            )
+            ->when(
+                isset($filtros['estado']),
+                fn($q) => $q->where('estado', $filtros['estado'])
+            )
+            ->where('estado', true)
+            ->orderBy('nivel')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'nivel', 'acronimo',
+                   'codigo', 'unidad_padre_id']);
+    }
+
     public function crearUnidad(array $datos): UnidadAdministrativa
     {
         return UnidadAdministrativa::create($datos);

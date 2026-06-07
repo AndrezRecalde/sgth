@@ -52,6 +52,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     // Módulo 01: Estructura Organizacional
     Route::prefix('estructura')->group(function () {
         Route::get('organigrama', \App\Http\Controllers\Estructura\OrganigramaController::class);
+        Route::get(
+            'unidades-administrativas/todas',
+            [\App\Http\Controllers\Estructura\UnidadAdministrativaController::class, 'todas']
+        );
         Route::apiResource('unidades-administrativas', \App\Http\Controllers\Estructura\UnidadAdministrativaController::class);
         Route::apiResource('puestos', \App\Http\Controllers\Estructura\PuestoController::class);
 
