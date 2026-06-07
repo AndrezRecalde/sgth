@@ -5,32 +5,31 @@ use App\Enums\EstadoViatico;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\Servidor;
 use App\Models\Viatico\Viatico;
-use Spatie\LaravelPdf\Facades\Pdf;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 class PdfInformeViaticoService
 {
-    /**
-     * Genera el PDF de SOLICITUD de viático
-     * (antes de la comisión)
-     */
-    public function generarSolicitud(int|string $identificador): string
-    {
-        $viatico = $this->cargarViatico($identificador);
-
+    public function generarSolicitud(
+        int|string $identificador
+    ): string {
+        $viatico  = $this->cargarViatico($identificador);
         $prefecto = $this->obtenerPrefecto();
 
         $nombreArchivo = "solicitud_{$viatico->codigo_viatico}.pdf";
-        $path = "informes-viatico/{$nombreArchivo}";
+        $path          = "informes-viatico/{$nombreArchivo}";
 
-        $rutaAbsoluta = Storage::path($path);
-        Pdf::view('pdf.viaticos.solicitud-viatico', [
-            'viatico'  => $viatico,
-            'prefecto' => $prefecto,
-            'logo'     => public_path('images/logo-gadpe.png'),
-        ])->format('A4')
-          ->save($rutaAbsoluta);
+        $pdf = Pdf::loadView(
+            'pdf.viaticos.solicitud-viatico',
+            [
+                'viatico'  => $viatico,
+                'prefecto' => $prefecto,
+                'logo'     => public_path('images/logo-gadpe.png'),
+            ]
+        )->setPaper('a4', 'portrait');
+
+        Storage::put($path, $pdf->output());
 
         return URL::temporarySignedRoute(
             'viaticos.informe.descargar',
@@ -39,10 +38,6 @@ class PdfInformeViaticoService
         );
     }
 
-    /**
-     * Genera el PDF de INFORME DE LIQUIDACIÓN
-     * (después de la comisión)
-     */
     public function generarInformeLiquidacion(
         int|string $identificador
     ): string {
@@ -65,15 +60,18 @@ class PdfInformeViaticoService
         $prefecto = $this->obtenerPrefecto();
 
         $nombreArchivo = "informe_{$viatico->codigo_viatico}.pdf";
-        $path = "informes-viatico/{$nombreArchivo}";
+        $path          = "informes-viatico/{$nombreArchivo}";
 
-        $rutaAbsoluta = Storage::path($path);
-        Pdf::view('pdf.viaticos.informe-liquidacion', [
-            'viatico'  => $viatico,
-            'prefecto' => $prefecto,
-            'logo'     => public_path('images/logo-gadpe.png'),
-        ])->format('A4')
-          ->save($rutaAbsoluta);
+        $pdf = Pdf::loadView(
+            'pdf.viaticos.informe-comision',
+            [
+                'viatico'  => $viatico,
+                'prefecto' => $prefecto,
+                'logo'     => public_path('images/logo-gadpe.png'),
+            ]
+        )->setPaper('a4', 'portrait');
+
+        Storage::put($path, $pdf->output());
 
         return URL::temporarySignedRoute(
             'viaticos.informe.descargar',
@@ -82,9 +80,6 @@ class PdfInformeViaticoService
         );
     }
 
-    /**
-     * Mantiene compatibilidad con el controller existente
-     */
     public function generarEnlaceTemporal(
         int|string $identificador
     ): string {
@@ -105,7 +100,6 @@ class PdfInformeViaticoService
             'tramos.origenCanton',
             'tramos.destinoProvincia',
             'tramos.destinoCanton',
-            'tramos.autorizacionVuelo',
             'liquidacion.actividades',
             'liquidacion.detallesFactura.categoria',
             'todosServidores.servidor.puesto.cargo',
