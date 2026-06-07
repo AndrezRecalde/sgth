@@ -1,19 +1,32 @@
 import { useState } from 'react'
 import { notifications } from '@mantine/notifications'
-import { viaticoService } from '../services/viaticoService'
+import api from '@/lib/axios'
 
 export function usePdfViatico() {
   const [loadingSolicitud, setLoadingSolicitud] = useState(false)
   const [loadingInforme,   setLoadingInforme]   = useState(false)
+
+  const abrirPdf = async (url: string): Promise<void> => {
+    const response = await api.get(url, {
+      responseType: 'blob',
+    })
+    const blob    = new Blob([response.data], {
+      type: 'application/pdf',
+    })
+    const blobUrl = URL.createObjectURL(blob)
+    window.open(blobUrl, '_blank')
+    // Liberar memoria después de 60 segundos
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+  }
 
   const descargarSolicitud = async (
     identificador: string | number
   ) => {
     setLoadingSolicitud(true)
     try {
-      const url = await viaticoService
-        .generarSolicitudPdf(identificador)
-      window.open(url, '_blank')
+      await abrirPdf(
+        `/viaticos/${identificador}/solicitud/generar-enlace`
+      )
     } catch {
       notifications.show({
         title:   'Error al generar PDF',
@@ -31,9 +44,9 @@ export function usePdfViatico() {
   ) => {
     setLoadingInforme(true)
     try {
-      const url = await viaticoService
-        .generarInformePdf(identificador)
-      window.open(url, '_blank')
+      await abrirPdf(
+        `/viaticos/${identificador}/informe/generar-enlace`
+      )
     } catch {
       notifications.show({
         title:   'Error al generar PDF',
