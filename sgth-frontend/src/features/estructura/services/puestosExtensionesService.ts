@@ -15,15 +15,22 @@ import type {
 export const puestosExtensionesService = {
   // Puestos
   listarPuestos: (params?: PuestoParams) =>
-    api.get<ApiResponse<PaginatedResponse<PuestoConRelaciones>>>('/estructura/puestos', { params })
-    .then(r => {
-      const data = r.data.datos;
-      return {
-        data: data.data,
-        total: data.total ?? 0,
-        current_page: data.current_page ?? 1,
-      };
-    }),
+    api.get<{
+      exito:   boolean
+      mensaje: string
+      datos:   PuestoConRelaciones[]
+      meta: {
+        total:         number
+        pagina_actual: number
+        por_pagina:    number
+        ultima_pagina: number
+      }
+    }>('/estructura/puestos', { params })
+    .then(r => ({
+      data:         r.data.datos,
+      total:        r.data.meta?.total ?? 0,
+      current_page: r.data.meta?.pagina_actual ?? 1,
+    })),
 
   crearPuesto: (data: PuestoFormData) =>
     api.post<ApiResponse<Puesto>>(
