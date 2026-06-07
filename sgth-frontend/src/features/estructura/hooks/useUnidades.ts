@@ -9,3 +9,11 @@ export function useUnidades(params?: UnidadAdministrativaParams) {
     staleTime: 1000 * 60 * 5,
   })
 }
+
+export function useTodasUnidades(params?: { nivel?: number }) {
+  return useQuery({
+    queryKey: ['unidades-todas', params],
+    queryFn: () => estructuraService.listarTodasUnidades(params),
+    staleTime: 1000 * 60 * 10,
+  })
+}

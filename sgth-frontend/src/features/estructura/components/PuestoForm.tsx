@@ -7,7 +7,7 @@ import {
 import { useForm, Controller, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '../hooks/useUnidades'
+import { useTodasUnidades } from '../hooks/useUnidades'
 import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
 import { useCargos } from '../hooks/useCargos'
 import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
@@ -40,7 +40,7 @@ interface Props {
 
 export function PuestoForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput()
-  const { data: unidadesRaw } = useUnidades()
+  const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 })
   const { data: gruposRaw }   = useGruposOcupacionales()
   const { data: cargosRaw }   = useCargos()
 

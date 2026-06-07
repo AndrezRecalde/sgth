@@ -15,6 +15,12 @@ export const estructuraService = {
       '/estructura/unidades-administrativas', { params }
     ).then(r => r.data.datos),
 
+  listarTodasUnidades: (params?: { nivel?: number; estado?: boolean }) =>
+    api.get<ApiResponse<UnidadAdministrativa[]>>(
+      '/estructura/unidades-administrativas/todas',
+      { params }
+    ).then(r => r.data.datos ?? []),
+
   obtenerUnidad: (id: number) =>
     api.get<ApiResponse<UnidadAdministrativa>>(
       `/estructura/unidades-administrativas/${id}`

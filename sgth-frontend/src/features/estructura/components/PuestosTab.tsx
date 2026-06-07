@@ -7,7 +7,10 @@ import { IconCubePlus } from "@tabler/icons-react";
 import { SgthTable } from "@/components/ui/SgthTable";
 import { usePuestos } from "../hooks/usePuestos";
 import { usePuestoMutations } from "../hooks/usePuestoMutations";
-import { useUnidades } from "../hooks/useUnidades";
+import {
+  useUnidades,
+  useTodasUnidades,
+} from '../hooks/useUnidades'
 import { getPuestoColumns } from "./puesto.columns";
 import { PuestoModal } from "./PuestoModal";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -23,7 +26,7 @@ export function PuestosTab() {
 
   const contained = useContainedInput();
   const { eliminar } = usePuestoMutations();
-  const { data: unidades = [] } = useUnidades();
+  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 });
 
   const unidadIdNum = unidadIds.length > 0 ? Number(unidadIds[0]) : undefined;
 

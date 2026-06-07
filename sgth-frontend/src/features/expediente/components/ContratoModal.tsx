@@ -17,7 +17,7 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
-import { useUnidades } from "@/features/estructura/hooks/useUnidades";
+import { useTodasUnidades } from "@/features/estructura/hooks/useUnidades";
 import { usePuestos } from "@/features/estructura/hooks/usePuestos";
 import { useContratoMutations } from "../hooks/useContratoMutations";
 import {
@@ -105,7 +105,7 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
   });
 
   // Unidades solo nivel 2
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 });
+  const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 });
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[];
 
   // Puestos filtrados por unidad seleccionada
