@@ -40,7 +40,7 @@ interface Props {
 
 export function PuestoForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput()
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  const { data: unidadesRaw } = useUnidades()
   const { data: gruposRaw }   = useGruposOcupacionales()
   const { data: cargosRaw }   = useCargos()
 

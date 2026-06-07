@@ -23,7 +23,7 @@ export function PuestosTab() {
 
   const contained = useContainedInput();
   const { eliminar } = usePuestoMutations();
-  const { data: unidades = [] } = useUnidades({ nivel: 2 });
+  const { data: unidades = [] } = useUnidades();
 
   const unidadIdNum = unidadIds.length > 0 ? Number(unidadIds[0]) : undefined;
 
