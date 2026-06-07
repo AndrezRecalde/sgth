@@ -6,19 +6,19 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\Servidor;
 use App\Models\Viatico\Viatico;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 
 class PdfInformeViaticoService
 {
-    public function generarSolicitud(
+    /**
+     * Genera el PDF de solicitud y retorna
+     * el contenido como string para ser
+     * descargado directamente
+     */
+    public function generarSolicitudContent(
         int|string $identificador
-    ): string {
+    ): array {
         $viatico  = $this->cargarViatico($identificador);
         $prefecto = $this->obtenerPrefecto();
-
-        $nombreArchivo = "solicitud_{$viatico->codigo_viatico}.pdf";
-        $path          = "informes-viatico/{$nombreArchivo}";
 
         $pdf = Pdf::loadView(
             'pdf.viaticos.solicitud-viatico',
@@ -29,18 +29,18 @@ class PdfInformeViaticoService
             ]
         )->setPaper('a4', 'portrait');
 
-        Storage::put($path, $pdf->output());
-
-        return URL::temporarySignedRoute(
-            'viaticos.informe.descargar',
-            now()->addMinutes(30),
-            ['archivo' => $nombreArchivo]
-        );
+        return [
+            'content'  => $pdf->output(),
+            'filename' => "solicitud_{$viatico->codigo_viatico}.pdf",
+        ];
     }
 
-    public function generarInformeLiquidacion(
+    /**
+     * Genera el PDF de informe de liquidación
+     */
+    public function generarInformeContent(
         int|string $identificador
-    ): string {
+    ): array {
         $viatico = $this->cargarViatico($identificador);
 
         $estadosPermitidos = [
@@ -59,9 +59,6 @@ class PdfInformeViaticoService
 
         $prefecto = $this->obtenerPrefecto();
 
-        $nombreArchivo = "informe_{$viatico->codigo_viatico}.pdf";
-        $path          = "informes-viatico/{$nombreArchivo}";
-
         $pdf = Pdf::loadView(
             'pdf.viaticos.informe-comision',
             [
@@ -71,19 +68,23 @@ class PdfInformeViaticoService
             ]
         )->setPaper('a4', 'portrait');
 
-        Storage::put($path, $pdf->output());
-
-        return URL::temporarySignedRoute(
-            'viaticos.informe.descargar',
-            now()->addMinutes(30),
-            ['archivo' => $nombreArchivo]
-        );
+        return [
+            'content'  => $pdf->output(),
+            'filename' => "informe_{$viatico->codigo_viatico}.pdf",
+        ];
     }
 
+    /**
+     * Mantiene compatibilidad — ahora lanza excepción
+     * indicando que se debe usar el nuevo método
+     */
     public function generarEnlaceTemporal(
         int|string $identificador
     ): string {
-        return $this->generarInformeLiquidacion($identificador);
+        // Devuelve URL directa al endpoint
+        return route('viaticos.informe.generar-enlace', [
+            'identificador' => $identificador,
+        ]);
     }
 
     private function cargarViatico(int|string $identificador): Viatico

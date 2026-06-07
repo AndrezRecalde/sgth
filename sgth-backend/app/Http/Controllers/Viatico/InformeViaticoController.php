@@ -3,8 +3,7 @@ namespace App\Http\Controllers\Viatico;
 
 use App\Http\Controllers\Controller;
 use App\Services\Viatico\PdfInformeViaticoService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Response;
 
 class InformeViaticoController extends Controller
 {
@@ -13,38 +12,44 @@ class InformeViaticoController extends Controller
     ) {}
 
     /**
-     * Genera el PDF de solicitud de viático
+     * Descarga el PDF de solicitud de viático
      */
     public function generarSolicitud(
         string $identificador
-    ): JsonResponse {
-        $url = $this->service->generarSolicitud($identificador);
-        return response()->json(['url' => $url]);
+    ): Response {
+        $result = $this->service->generarSolicitudContent(
+            $identificador
+        );
+
+        return response($result['content'], 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' .
+                $result['filename'] . '"',
+        ]);
     }
 
     /**
-     * Genera el PDF de informe de liquidación
+     * Descarga el PDF de informe de liquidación
      */
     public function generarEnlace(
         string $identificador
-    ): JsonResponse {
-        $url = $this->service->generarInformeLiquidacion(
+    ): Response {
+        $result = $this->service->generarInformeContent(
             $identificador
         );
-        return response()->json(['url' => $url]);
+
+        return response($result['content'], 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' .
+                $result['filename'] . '"',
+        ]);
     }
 
     /**
-     * Descarga el archivo PDF generado
+     * Endpoint legacy — redirige al nuevo
      */
-    public function descargar(string $archivo)
+    public function descargar(string $archivo): Response
     {
-        $path = "informes-viatico/{$archivo}";
-
-        if (!Storage::exists($path)) {
-            abort(404, 'El informe no existe o ha expirado.');
-        }
-
-        return Storage::download($path);
+        return response('Endpoint deprecado.', 410);
     }
 }
