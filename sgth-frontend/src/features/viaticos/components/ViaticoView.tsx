@@ -61,11 +61,11 @@ export function ViaticoView() {
   const { aprobar } = useViaticoMutations()
 
   const handleVer = (v: ViaticoConRelaciones) => {
-    router.push(`/viaticos/${v.id}`)
+    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`)
   }
 
   const handleCreado = (v: Viatico) => {
-    router.push(`/viaticos/${v.id}`)
+    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`)
   }
 
   const columns: DataTableColumn<ViaticoConRelaciones>[] = [

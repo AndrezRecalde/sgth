@@ -10,11 +10,14 @@ export function useViaticos(params?: ViaticoParams) {
   })
 }
 
-export function useViatico(id: number | null) {
+export function useViatico(
+  identificador: string | number | null
+) {
   return useQuery({
-    queryKey: ['viatico', id],
-    queryFn:  () => viaticoService.obtener(id!),
-    enabled:  !!id,
+    queryKey: ['viatico', identificador],
+    queryFn:  () =>
+      viaticoService.obtener(String(identificador!)),
+    enabled:  !!identificador,
     staleTime: 0,
   })
 }

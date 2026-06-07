@@ -39,9 +39,10 @@ export const viaticoService = {
       '/viaticos', { params }
     ).then(r => r.data.datos),
 
-  obtener: (id: number) =>
-    api.get<ApiResponse<ViaticoConRelaciones>>(`/viaticos/${id}`)
-      .then(r => r.data.datos),
+  obtener: (identificador: string | number) =>
+    api.get<ApiResponse<ViaticoConRelaciones>>(
+      `/viaticos/${identificador}`
+    ).then(r => r.data.datos),
 
   solicitar: (data: {
     zona:                    string

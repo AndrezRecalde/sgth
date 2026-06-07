@@ -42,7 +42,7 @@ import { ServidoresModal } from './ServidoresModal';
 import type { ViaticoConRelaciones, Viatico } from "@/types/api";
 
 interface Props {
-  viaticoId: number;
+  identificador: string | number;
 }
 
 const ESTADO_COLORS: Record<string, string> = {
@@ -93,9 +93,9 @@ function fmtMonto(v?: number | string | null): string {
   return `$${Number(v).toFixed(2)}`;
 }
 
-export function ViaticoDetallePage({ viaticoId }: Props) {
+export function ViaticoDetallePage({ identificador }: Props) {
   const router = useRouter();
-  const { data: detalle, isLoading } = useViatico(viaticoId);
+  const { data: detalle, isLoading } = useViatico(identificador);
   const d = detalle as ViaticoConRelaciones | undefined;
 
   const [editModalAbierto, { open: abrirEdit, close: cerrarEdit }] =
