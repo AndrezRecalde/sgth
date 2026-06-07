@@ -70,6 +70,8 @@ class ViaticoController extends Controller
             'monto_calculado'  => 'sometimes|nullable|numeric|min:0',
             'tipo_viaje'       => 'sometimes|nullable|string|max:100',
             'pais_destino'     => 'sometimes|nullable|string|max:100',
+            'servidores_acompanantes'   => ['nullable', 'array'],
+            'servidores_acompanantes.*' => ['integer', 'exists:servidores,id'],
         ]);
 
         // Recalcular total_dias si cambian las fechas
@@ -121,6 +123,26 @@ class ViaticoController extends Controller
 
         $data['updated_by'] = $request->user()->id;
         $viatico->update($data);
+
+        // Actualizar acompañantes si vienen en el request
+        if ($request->has('servidores_acompanantes')) {
+            // Eliminar acompañantes anteriores
+            \App\Models\Viatico\ViaticoServidor::where(
+                'viatico_id', $viatico->id
+            )->where('es_titular', false)->delete();
+
+            // Agregar los nuevos
+            foreach (
+                $request->input('servidores_acompanantes', [])
+                as $servidorId
+            ) {
+                \App\Models\Viatico\ViaticoServidor::create([
+                    'viatico_id'  => $viatico->id,
+                    'servidor_id' => $servidorId,
+                    'es_titular'  => false,
+                ]);
+            }
+        }
 
         return ApiResponse::ok(
             $viatico->fresh(),
