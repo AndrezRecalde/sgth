@@ -459,7 +459,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
         Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
         
-        Route::get('{id}/informe/generar-enlace', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']);
+        Route::get('{identificador}/solicitud/generar-enlace',
+            [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarSolicitud']
+        )->name('viaticos.solicitud.generar-enlace');
+
+        Route::get('{identificador}/informe/generar-enlace',
+            [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']
+        )->name('viaticos.informe.generar-enlace');
+
         Route::get('informe/descargar/{archivo}', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'descargar'])
             ->name('viaticos.informe.descargar')
             ->middleware('signed');
