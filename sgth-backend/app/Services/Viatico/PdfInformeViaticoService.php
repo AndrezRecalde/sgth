@@ -24,13 +24,13 @@ class PdfInformeViaticoService
         $nombreArchivo = "solicitud_{$viatico->codigo_viatico}.pdf";
         $path = "informes-viatico/{$nombreArchivo}";
 
-        $pdf = Pdf::view('pdf.viaticos.solicitud-viatico', [
+        $rutaAbsoluta = Storage::path($path);
+        Pdf::view('pdf.viaticos.solicitud-viatico', [
             'viatico'  => $viatico,
             'prefecto' => $prefecto,
             'logo'     => public_path('images/logo-gadpe.png'),
-        ])->format('A4');
-
-        Storage::put($path, $pdf->content());
+        ])->format('A4')
+          ->save($rutaAbsoluta);
 
         return URL::temporarySignedRoute(
             'viaticos.informe.descargar',
@@ -67,13 +67,13 @@ class PdfInformeViaticoService
         $nombreArchivo = "informe_{$viatico->codigo_viatico}.pdf";
         $path = "informes-viatico/{$nombreArchivo}";
 
-        $pdf = Pdf::view('pdf.viaticos.informe-liquidacion', [
+        $rutaAbsoluta = Storage::path($path);
+        Pdf::view('pdf.viaticos.informe-liquidacion', [
             'viatico'  => $viatico,
             'prefecto' => $prefecto,
             'logo'     => public_path('images/logo-gadpe.png'),
-        ])->format('A4');
-
-        Storage::put($path, $pdf->content());
+        ])->format('A4')
+          ->save($rutaAbsoluta);
 
         return URL::temporarySignedRoute(
             'viaticos.informe.descargar',
