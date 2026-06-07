@@ -31,7 +31,10 @@ import {
   IconAlertCircle,
   IconUsers,
   IconFileInvoice,
+  IconDownload,
+  IconFileText,
 } from "@tabler/icons-react";
+import { usePdfViatico } from '../hooks/usePdfViatico';
 import { useViatico } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { TramosList } from "./TramosList";
@@ -108,6 +111,13 @@ export function ViaticoDetallePage({ identificador }: Props) {
   ] = useDisclosure(false)
 
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
+
+  const {
+    descargarSolicitud,
+    descargarInforme,
+    loadingSolicitud,
+    loadingInforme,
+  } = usePdfViatico()
 
   const {
     aprobar,
@@ -191,6 +201,38 @@ export function ViaticoDetallePage({ identificador }: Props) {
               >
                 {ESTADO_LABELS[estadoActual] ?? estadoActual}
               </Badge>
+
+              <Group gap="xs" ml="auto">
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="blue"
+                  leftSection={<IconFileText size={12} />}
+                  loading={loadingSolicitud}
+                  onClick={() =>
+                    descargarSolicitud(d.codigo_viatico ?? d.id)
+                  }
+                >
+                  Solicitud PDF
+                </Button>
+
+                {(estadoActual === 'pendiente_liquidacion' ||
+                  estadoActual === 'liquidado' ||
+                  estadoActual === 'contabilizado') && (
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="emerald"
+                    leftSection={<IconDownload size={12} />}
+                    loading={loadingInforme}
+                    onClick={() =>
+                      descargarInforme(d.codigo_viatico ?? d.id)
+                    }
+                  >
+                    Informe PDF
+                  </Button>
+                )}
+              </Group>
             </Group>
             <Text size="xs" c="dimmed">
               Solicitud del{" "}

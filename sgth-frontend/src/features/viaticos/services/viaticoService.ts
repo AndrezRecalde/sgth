@@ -138,6 +138,16 @@ export const viaticoService = {
       `/viaticos/${id}/informe/generar-enlace`
     ).then(r => r.data.datos),
 
+  generarSolicitudPdf: (identificador: string | number) =>
+    api.get<{ url: string }>(
+      `/viaticos/${identificador}/solicitud/generar-enlace`
+    ).then(r => r.data.url),
+
+  generarInformePdf: (identificador: string | number) =>
+    api.get<{ url: string }>(
+      `/viaticos/${identificador}/informe/generar-enlace`
+    ).then(r => r.data.url),
+
   // ── Tramos ───────────────────────────────────────
   tramos: {
     listar: (viaticoId: number) =>
