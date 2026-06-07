@@ -101,7 +101,7 @@ final class EstructuraService implements EstructuraServiceInterface
     {
         return Puesto::query()
             ->with(['cargo', 'unidadAdministrativa', 'grupoOcupacional'])
-            ->join('cargos', 'cargos.id', '=', 'puestos.cargo_id')
+            ->leftJoin('cargos', 'cargos.id', '=', 'puestos.cargo_id')
             ->select('puestos.*')
             ->when(
                 isset($filtros['unidad_administrativa_id']),
