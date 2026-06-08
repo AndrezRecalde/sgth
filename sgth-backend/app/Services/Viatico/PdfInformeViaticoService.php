@@ -20,18 +20,28 @@ class PdfInformeViaticoService
         $viatico  = $this->cargarViatico($identificador);
         $prefecto = $this->obtenerPrefecto();
 
-        $zonaLabel = match($viatico->zona) {
+        $zonaValue = $viatico->zona instanceof \BackedEnum
+            ? $viatico->zona->value
+            : (string) $viatico->zona;
+
+        $modalidadValue = $viatico->modalidad_anticipo instanceof \BackedEnum
+            ? $viatico->modalidad_anticipo->value
+            : (string) $viatico->modalidad_anticipo;
+
+        $zonaLabel = match($zonaValue) {
             'dentro_provincia' => 'Dentro de la Provincia',
             'fuera_provincia'  => 'Fuera de la Provincia',
             'exterior'         => 'Exterior (Internacional)',
-            default            => ucfirst(str_replace('_', ' ', $viatico->zona ?? '')),
+            default            => ucfirst(
+                str_replace('_', ' ', $zonaValue)
+            ),
         };
 
-        $modalidadLabel = match($viatico->modalidad_anticipo) {
+        $modalidadLabel = match($modalidadValue) {
             'total'        => 'Anticipo Total (100%)',
             'parcial'      => 'Anticipo Parcial',
             'sin_anticipo' => 'Sin Anticipo',
-            default        => ucfirst($viatico->modalidad_anticipo ?? ''),
+            default        => ucfirst($modalidadValue),
         };
 
         $pdf = Pdf::loadView(
@@ -76,18 +86,28 @@ class PdfInformeViaticoService
 
         $prefecto = $this->obtenerPrefecto();
 
-        $zonaLabel = match($viatico->zona) {
+        $zonaValue = $viatico->zona instanceof \BackedEnum
+            ? $viatico->zona->value
+            : (string) $viatico->zona;
+
+        $modalidadValue = $viatico->modalidad_anticipo instanceof \BackedEnum
+            ? $viatico->modalidad_anticipo->value
+            : (string) $viatico->modalidad_anticipo;
+
+        $zonaLabel = match($zonaValue) {
             'dentro_provincia' => 'Dentro de la Provincia',
             'fuera_provincia'  => 'Fuera de la Provincia',
             'exterior'         => 'Exterior (Internacional)',
-            default            => ucfirst(str_replace('_', ' ', $viatico->zona ?? '')),
+            default            => ucfirst(
+                str_replace('_', ' ', $zonaValue)
+            ),
         };
 
-        $modalidadLabel = match($viatico->modalidad_anticipo) {
+        $modalidadLabel = match($modalidadValue) {
             'total'        => 'Anticipo Total (100%)',
             'parcial'      => 'Anticipo Parcial',
             'sin_anticipo' => 'Sin Anticipo',
-            default        => ucfirst($viatico->modalidad_anticipo ?? ''),
+            default        => ucfirst($modalidadValue),
         };
 
         $pdf = Pdf::loadView(
