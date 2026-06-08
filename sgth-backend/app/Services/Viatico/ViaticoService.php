@@ -259,9 +259,12 @@ final class ViaticoService implements ViaticoServiceInterface
             ->get();
 
         foreach ($viaticosPendientes as $v) {
+            if (!$v->datetime_llegada) continue;
+
             $fechaLimite = $this->calcularDiasHabiles(
-                $v->fecha_fin->copy(), 5
+                Carbon::parse($v->datetime_llegada)->copy(), 5
             );
+
             if (now()->gt($fechaLimite)) {
                 return true;
             }
