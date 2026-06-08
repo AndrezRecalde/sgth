@@ -8,10 +8,14 @@ import { getApiErrorMessage } from "@/types/api";
 export function useViaticoMutations() {
   const qc = useQueryClient();
 
-  const invalidar = (id?: number) => {
+  const invalidar = (id?: number, codigo?: string | number) => {
     qc.invalidateQueries({ queryKey: ["viaticos"] });
     if (id) {
       qc.invalidateQueries({ queryKey: ["viatico", id] });
+    }
+    if (codigo) {
+      qc.invalidateQueries({ queryKey: ["viatico", String(codigo)] });
+      qc.invalidateQueries({ queryKey: ["viatico", Number(codigo)] });
     }
   };
 
@@ -23,7 +27,8 @@ export function useViaticoMutations() {
       icon: React.createElement(IconX, { size: 16 }),
     });
 
-  const createMutationOpts = (
+  // Mutación de estado — invalida por id Y por codigo
+  const createEstadoMutation = (
     mutationFn: (id: number) => Promise<unknown>,
     title: string,
     message: string,
@@ -36,7 +41,11 @@ export function useViaticoMutations() {
         color: "emerald",
         icon: React.createElement(IconCheck, { size: 16 }),
       });
-      invalidar(id);
+      // Invalida AMBAS formas del query key
+      qc.invalidateQueries({ queryKey: ["viaticos"] });
+      qc.invalidateQueries({ queryKey: ["viatico", id] });
+      // Invalida también queries que usen string
+      qc.invalidateQueries({ queryKey: ["viatico"] });
     },
     onError,
   });
@@ -76,31 +85,31 @@ export function useViaticoMutations() {
     onError,
   });
 
-  const aprobar = useMutation(createMutationOpts(
+  const aprobar = useMutation(createEstadoMutation(
     viaticoService.aprobar,
     "Viático aprobado",
     "El viático fue aprobado correctamente.",
   ));
 
-  const entregarAnticipo = useMutation(createMutationOpts(
+  const entregarAnticipo = useMutation(createEstadoMutation(
     viaticoService.entregarAnticipo,
     "Anticipo entregado",
     "El anticipo fue registrado como entregado.",
   ));
 
-  const marcarEnComision = useMutation(createMutationOpts(
+  const marcarEnComision = useMutation(createEstadoMutation(
     viaticoService.marcarEnComision,
     "En comisión",
     "El servidor ha sido marcado en comisión.",
   ));
 
-  const marcarPendienteLiquidacion = useMutation(createMutationOpts(
+  const marcarPendienteLiquidacion = useMutation(createEstadoMutation(
     viaticoService.marcarPendienteLiquidacion,
     "Pendiente de liquidación",
     "El viático queda pendiente de liquidación.",
   ));
 
-  const contabilizar = useMutation(createMutationOpts(
+  const contabilizar = useMutation(createEstadoMutation(
     viaticoService.contabilizar,
     "Viático contabilizado",
     "La liquidación fue contabilizada correctamente.",
@@ -114,14 +123,17 @@ export function useViaticoMutations() {
       viaticoId: number;
       data: Parameters<typeof viaticoService.liquidar>[1];
     }) => viaticoService.liquidar(viaticoId, data),
-    onSuccess: () => {
+    onSuccess: (_data, { viaticoId }) => {
       notifications.show({
         title: "Viático liquidado",
         message: "La liquidación fue registrada correctamente.",
         color: "emerald",
         icon: React.createElement(IconCheck, { size: 16 }),
       });
-      invalidar();
+      // Invalida el viático específico
+      qc.invalidateQueries({ queryKey: ["viaticos"] });
+      qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
+      qc.invalidateQueries({ queryKey: ["viatico"] });
     },
     onError,
   });

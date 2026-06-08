@@ -37,6 +37,7 @@ import {
 import { usePdfViatico } from '../hooks/usePdfViatico';
 import { useViatico } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
+import { useQueryClient } from '@tanstack/react-query';
 import { TramosList } from "./TramosList";
 import { TramoForm } from "./TramoForm";
 import { LiquidacionSection } from "./LiquidacionSection";
@@ -98,6 +99,7 @@ function fmtMonto(v?: number | string | null): string {
 
 export function ViaticoDetallePage({ identificador }: Props) {
   const router = useRouter();
+  const qc = useQueryClient();
   const { data: detalle, isLoading } = useViatico(identificador);
   const d = detalle as ViaticoConRelaciones | undefined;
 
@@ -111,6 +113,10 @@ export function ViaticoDetallePage({ identificador }: Props) {
   ] = useDisclosure(false)
 
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
+  const [
+    liquidacionModalAbierto,
+    { open: abrirLiquidacion, close: cerrarLiquidacion }
+  ] = useDisclosure(false)
 
   const {
     descargarSolicitud,
@@ -130,8 +136,12 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const estadoActual = d?.estado ?? "";
   const pasoActivo = PASO_STEPPER[estadoActual] ?? 0;
   const esEditable = !["contabilizado"].includes(estadoActual);
-  const puedeEditarDatos = ["solicitado"].includes(estadoActual);
-  const puedeEditarTramos = ["solicitado", "aprobado"].includes(estadoActual);
+  const puedeEditarDatos = ![
+    "liquidado", "contabilizado"
+  ].includes(estadoActual);
+  const puedeEditarTramos = ![
+    "liquidado", "contabilizado"
+  ].includes(estadoActual);
 
   const servidor = d?.servidor;
   const nombreCompleto = [servidor?.nombre, servidor?.apellido]
@@ -168,7 +178,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
         <Button
           variant="default"
           leftSection={<IconArrowLeft size={14} />}
-          onClick={() => router.push("/viaticos")}
+          onClick={() => qc.invalidateQueries({ queryKey: ["viatico"] })}
         >
           Volver
         </Button>
@@ -185,7 +195,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             variant="subtle"
             color="gray"
             size="lg"
-            onClick={() => router.push("/viaticos")}
+            onClick={() => qc.invalidateQueries({ queryKey: ["viatico"] })}
           >
             <IconArrowLeft size={18} />
           </ActionIcon>
@@ -520,50 +530,99 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 <LiquidacionSection
                   viatico={d}
                   onSuccess={() => {
-                    router.refresh();
+                    qc.invalidateQueries({ queryKey: ["viatico"] });
                   }}
                 />
               ) : d.liquidacion ? (
                 <Stack gap="xs">
                   <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      Total facturas
-                    </Text>
+                    <Text size="xs" c="dimmed">Total facturas</Text>
                     <Text fw={600}>
                       {fmtMonto(d.liquidacion.total_facturas)}
                     </Text>
                   </Group>
                   <Group justify="space-between">
+                    <Text size="xs" c="dimmed">Anticipo recibido</Text>
+                    <Text fw={600}>
+                      {fmtMonto(d.monto_anticipo)}
+                    </Text>
+                  </Group>
+                  <Group justify="space-between">
                     <Text size="xs" c="dimmed">
-                      Diferencia a devolver
+                      {Number(d.liquidacion.diferencia_devolver) >= 0
+                        ? 'A devolver'
+                        : 'A cobrar'}
                     </Text>
                     <Text
                       fw={600}
-                      c={
-                        Number(d.liquidacion.diferencia_devolver) >= 0
-                          ? "orange"
-                          : "emerald"
-                      }
+                      c={Number(d.liquidacion.diferencia_devolver) >= 0
+                        ? 'orange' : 'emerald'}
                     >
-                      {fmtMonto(d.liquidacion.diferencia_devolver)}
+                      {fmtMonto(
+                        Math.abs(
+                          Number(d.liquidacion.diferencia_devolver ?? 0)
+                        )
+                      )}
                     </Text>
                   </Group>
-                  <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      Actividades registradas
-                    </Text>
-                    <Badge size="sm" color="blue" variant="light">
-                      {d.liquidacion.actividades?.length ?? 0}
-                    </Badge>
-                  </Group>
-                  <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      Facturas registradas
-                    </Text>
-                    <Badge size="sm" color="orange" variant="light">
-                      {d.liquidacion.detalles_factura?.length ?? 0}
-                    </Badge>
-                  </Group>
+                  <Divider />
+                  {(d.liquidacion.actividades?.length ?? 0) > 0 && (
+                    <Stack gap={4}>
+                      <Text size="xs" fw={600} c="dimmed">
+                        ACTIVIDADES REALIZADAS
+                      </Text>
+                      {d.liquidacion.actividades!.map((a, i) => (
+                        <Group key={i} gap="xs">
+                          <ThemeIcon
+                            size="xs"
+                            color="blue"
+                            variant="light"
+                            radius="xl"
+                          >
+                            <IconCheck size={8} />
+                          </ThemeIcon>
+                          <Text size="xs">
+                            {a.fecha
+                              ? new Date(a.fecha).toLocaleDateString(
+                                  'es-EC',
+                                  { timeZone: 'UTC',
+                                    day: '2-digit', month: '2-digit' }
+                                )
+                              : '—'}
+                            {' — '}{a.lugar}
+                          </Text>
+                        </Group>
+                      ))}
+                    </Stack>
+                  )}
+                  {(d.liquidacion.detalles_factura?.length ?? 0) > 0 && (
+                    <Stack gap={4}>
+                      <Text size="xs" fw={600} c="dimmed">
+                        COMPROBANTES
+                      </Text>
+                      {d.liquidacion.detalles_factura!.map((f, i) => (
+                        <Group key={i} justify="space-between">
+                          <Text size="xs" style={{ flex: 1 }}>
+                            {f.nombre_proveedor ?? '—'}
+                          </Text>
+                          <Text size="xs" fw={600} c="orange">
+                            ${Number(f.monto ?? 0).toFixed(2)}
+                          </Text>
+                        </Group>
+                      ))}
+                    </Stack>
+                  )}
+                  {estadoActual === 'pendiente_liquidacion' && (
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      color="blue"
+                      leftSection={<IconPencil size={12} />}
+                      onClick={abrirLiquidacion}
+                    >
+                      Modificar liquidación
+                    </Button>
+                  )}
                 </Stack>
               ) : (
                 <Text size="sm" c="dimmed">
@@ -586,7 +645,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             loading={aprobar.isPending}
             onClick={() => {
               aprobar.mutate(d.id);
-              router.push("/viaticos");
+              qc.invalidateQueries({ queryKey: ["viatico"] });
             }}
             fullWidth
           >
@@ -594,20 +653,37 @@ export function ViaticoDetallePage({ identificador }: Props) {
           </Button>
         )}
         {estadoActual === "aprobado" && (
-          <Button
-            color="cyan"
-            variant="filled"
-            size="md"
-            leftSection={<IconCurrencyDollar size={18} />}
-            loading={entregarAnticipo.isPending}
-            onClick={() => {
-              entregarAnticipo.mutate(d.id);
-              router.push("/viaticos");
-            }}
-            fullWidth
-          >
-            Confirmar entrega del anticipo
-          </Button>
+          <Card withBorder radius="md" p="sm">
+            <Stack gap="xs">
+              <Text size="sm" fw={600}>
+                Viático aprobado
+              </Text>
+              <Text size="xs" c="dimmed">
+                {d.modalidad_anticipo === 'sin_anticipo'
+                  ? 'Sin anticipo — marcar directamente en comisión'
+                  : 'Proceder con la entrega del anticipo'}
+              </Text>
+              {d.modalidad_anticipo === 'sin_anticipo' ? (
+                <Button
+                  color="teal"
+                  size="sm"
+                  loading={marcarEnComision.isPending}
+                  onClick={() => marcarEnComision.mutate(d.id)}
+                >
+                  Marcar en Comisión
+                </Button>
+              ) : (
+                <Button
+                  color="blue"
+                  size="sm"
+                  loading={entregarAnticipo.isPending}
+                  onClick={() => entregarAnticipo.mutate(d.id)}
+                >
+                  Entregar Anticipo
+                </Button>
+              )}
+            </Stack>
+          </Card>
         )}
         {estadoActual === "con_anticipo" && (
           <Button
@@ -618,7 +694,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             loading={marcarEnComision.isPending}
             onClick={() => {
               marcarEnComision.mutate(d.id);
-              router.push("/viaticos");
+              qc.invalidateQueries({ queryKey: ["viatico"] });
             }}
             fullWidth
           >
@@ -647,7 +723,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             loading={contabilizar.isPending}
             onClick={() => {
               contabilizar.mutate(d.id);
-              router.push("/viaticos");
+              qc.invalidateQueries({ queryKey: ["viatico"] });
             }}
             fullWidth
           >
@@ -727,6 +803,24 @@ export function ViaticoDetallePage({ identificador }: Props) {
         onClose={cerrarServidores}
         viatico={d as Viatico}
       />
+
+      {liquidacionModalAbierto && (
+        <Modal
+          opened={liquidacionModalAbierto}
+          onClose={cerrarLiquidacion}
+          title="Modificar liquidación"
+          size="xl"
+          radius="xl"
+        >
+          <LiquidacionSection
+            viatico={d}
+            onSuccess={() => {
+              qc.invalidateQueries({ queryKey: ['viatico'] })
+              cerrarLiquidacion()
+            }}
+          />
+        </Modal>
+      )}
 
     </Stack>
   );
