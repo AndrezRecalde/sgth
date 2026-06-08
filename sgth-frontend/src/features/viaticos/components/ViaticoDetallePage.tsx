@@ -32,6 +32,7 @@ import {
   IconDownload,
   IconFileText,
   IconChecks,
+  IconReceipt,
 } from "@tabler/icons-react";
 import { usePdfViatico } from "../hooks/usePdfViatico";
 import { useViatico } from "../hooks/useViaticos";
@@ -119,8 +120,10 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const {
     descargarSolicitud,
     descargarInforme,
+    descargarComprobante,
     loadingSolicitud,
     loadingInforme,
+    loadingComprobante,
   } = usePdfViatico();
 
   const {
@@ -233,6 +236,21 @@ export function ViaticoDetallePage({ identificador }: Props) {
                     onClick={() => descargarInforme(d.codigo_viatico ?? d.id)}
                   >
                     Informe PDF
+                  </Button>
+                )}
+
+                {estadoActual === 'contabilizado' && (
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="violet"
+                    leftSection={<IconReceipt size={12} />}
+                    loading={loadingComprobante}
+                    onClick={() =>
+                      descargarComprobante(d.codigo_viatico ?? d.id)
+                    }
+                  >
+                    Comprobante Financiero
                   </Button>
                 )}
               </Group>

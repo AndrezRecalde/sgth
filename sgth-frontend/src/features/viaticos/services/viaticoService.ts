@@ -148,6 +148,12 @@ export const viaticoService = {
       `/viaticos/${identificador}/informe/generar-enlace`
     ).then(r => r.data.url),
 
+  generarComprobantePdf: (identificador: string | number) =>
+    api.get(
+      `/viaticos/${identificador}/comprobante/generar`,
+      { responseType: 'blob' }
+    ).then(r => r.data),
+
   // ── Tramos ───────────────────────────────────────
   tramos: {
     listar: (viaticoId: number) =>
