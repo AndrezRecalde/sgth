@@ -467,6 +467,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']
         )->name('viaticos.informe.generar-enlace');
 
+        Route::get(
+            '{identificador}/comprobante/generar',
+            [\App\Http\Controllers\Viatico\InformeViaticoController::class,
+             'generarComprobanteContabilidad']
+        )->name('viaticos.comprobante.generar');
+
         Route::get('informe/descargar/{archivo}', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'descargar'])
             ->name('viaticos.informe.descargar')
             ->middleware('signed');

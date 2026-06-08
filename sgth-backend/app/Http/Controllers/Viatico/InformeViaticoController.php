@@ -45,6 +45,20 @@ class InformeViaticoController extends Controller
         ]);
     }
 
+    public function generarComprobanteContabilidad(
+        string $identificador
+    ): Response {
+        $result = $this->service->generarComprobanteContabilidad(
+            $identificador
+        );
+
+        return response($result['content'], 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' .
+                $result['filename'] . '"',
+        ]);
+    }
+
     /**
      * Endpoint legacy — redirige al nuevo
      */

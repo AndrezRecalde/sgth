@@ -191,4 +191,97 @@ class PdfInformeViaticoService
             }
         )->with(['puesto.cargo'])->first();
     }
+
+    public function generarComprobanteContabilidad(
+        int|string $identificador
+    ): array {
+        $viatico = $this->cargarViatico($identificador);
+
+        if ($viatico->estado->value !== 'contabilizado') {
+            throw new \App\Exceptions\ReglaNegocioException(
+                'El viático debe estar contabilizado para '
+                . 'generar el comprobante financiero.'
+            );
+        }
+
+        $prefecto      = $this->obtenerPrefecto();
+        $jefeUnidad    = $this->obtenerJefeUnidad($viatico);
+        $directorFinanciero = $this->obtenerDirectorFinanciero();
+
+        // Número en letras
+        $total       = (float) ($viatico->monto_anticipo ?? 0);
+        $totalLetras = \App\Helpers\NumeroALetras::convertir($total);
+
+        // Agrupar facturas por categoría
+        $facturasPorCategoria = $this->agruparFacturasPorCategoria(
+            $viatico
+        );
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'pdf.viaticos.comprobante-contabilidad',
+            [
+                'viatico'             => $viatico,
+                'prefecto'            => $prefecto,
+                'jefeUnidad'          => $jefeUnidad,
+                'directorFinanciero'  => $directorFinanciero,
+                'logo'                => public_path('images/logo-gadpe.png'),
+                'totalLetras'         => $totalLetras,
+                'facturasPorCategoria'=> $facturasPorCategoria,
+                'modalidadLabel'      => match(
+                    $viatico->modalidad_anticipo instanceof \BackedEnum
+                        ? $viatico->modalidad_anticipo->value
+                        : (string) $viatico->modalidad_anticipo
+                ) {
+                    'total'        => 'DEFINITIVA',
+                    'parcial'      => 'PARCIAL',
+                    'sin_anticipo' => 'SIN ANTICIPO',
+                    default        => 'DEFINITIVA',
+                },
+            ]
+        )->setPaper('a4', 'portrait');
+
+        return [
+            'content'  => $pdf->output(),
+            'filename' => "comprobante_{$viatico->codigo_viatico}.pdf",
+        ];
+    }
+
+    private function obtenerDirectorFinanciero(): ?\App\Models\Expediente\Servidor
+    {
+        return \App\Models\Expediente\Servidor::whereHas('puesto', function ($q) {
+            $q->where('es_jefe', true)
+              ->whereHas('unidadAdministrativa', function ($q2) {
+                  $q2->where('nombre', 'like', '%Financier%');
+              });
+        })->with(['puesto.cargo'])->first();
+    }
+
+    private function agruparFacturasPorCategoria(
+        \App\Models\Viatico\Viatico $viatico
+    ): array {
+        $categorias = [
+            1  => ['nombre' => 'Hospedaje',                   'total' => 0],
+            2  => ['nombre' => 'Alimentación',                'total' => 0],
+            3  => ['nombre' => 'Transporte terrestre',        'total' => 0],
+            4  => ['nombre' => 'Pasaje aéreo',                'total' => 0],
+            5  => ['nombre' => 'Combustible',                 'total' => 0],
+            6  => ['nombre' => 'Peaje',                       'total' => 0],
+            10 => ['nombre' => 'Inscripción / Registro',      'total' => 0],
+            13 => ['nombre' => 'Otro',                        'total' => 0],
+        ];
+
+        foreach (
+            $viatico->liquidacion?->detallesFactura ?? []
+            as $factura
+        ) {
+            $catId = $factura->categoria_factura_id;
+            if (isset($categorias[$catId])) {
+                $categorias[$catId]['total'] += (float) $factura->monto;
+            } else {
+                $categorias[13]['total'] += (float) $factura->monto;
+            }
+        }
+
+        return $categorias;
+    }
 }
