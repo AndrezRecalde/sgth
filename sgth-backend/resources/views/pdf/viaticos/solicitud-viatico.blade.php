@@ -3,377 +3,334 @@
 <head>
 <meta charset="UTF-8">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
   font-family: 'DejaVu Sans', Arial, sans-serif;
-  font-size: 9.5px;
+  font-size: 9px;
   color: #1a1a2e;
-  line-height: 1.5;
-  padding: 28px 35px;
-  background: #ffffff;
+  line-height: 1.45;
+  padding: 30px 38px;
+  background: #fff;
 }
 
-/* ── ENCABEZADO ── */
-.header-wrap {
+/* ══ HEADER ══ */
+.hdr {
   display: table;
   width: 100%;
-  border-bottom: 3px solid #1a3a5c;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
-.header-logo-cell {
+.hdr-logo {
   display: table-cell;
-  width: 100px;
+  width: 105px;
   vertical-align: middle;
+  padding-right: 14px;
 }
-.header-logo-cell img {
-  width: 90px;
-  height: auto;
-}
-.header-center-cell {
+.hdr-logo img { width: 95px; height: auto; }
+.hdr-body {
   display: table-cell;
   vertical-align: middle;
-  text-align: center;
-  padding: 0 12px;
+  background: #1a3a5c;
+  padding: 12px 16px;
+  border-radius: 4px 4px 0 0;
 }
-.inst-name {
-  font-size: 9px;
-  font-weight: bold;
-  color: #1a3a5c;
+.hdr-inst {
+  font-size: 8px;
+  color: #a8c4e0;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
-.doc-title {
-  font-size: 14px;
+.hdr-title {
+  font-size: 15px;
   font-weight: bold;
-  color: #1a1a2e;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #ffffff;
+  letter-spacing: 0.3px;
 }
-.doc-subtitle {
-  font-size: 9px;
-  color: #4a5568;
+.hdr-sub {
+  font-size: 8px;
+  color: #c5daf0;
   margin-top: 3px;
 }
-.header-right-cell {
+.hdr-right {
   display: table-cell;
-  width: 140px;
+  width: 130px;
   vertical-align: middle;
-  text-align: right;
+  padding-left: 10px;
 }
-.doc-code-box {
+.code-box {
   border: 2px solid #1a3a5c;
   border-radius: 5px;
   padding: 8px 10px;
-  background: #f0f4f8;
+  background: #f0f5fb;
+  text-align: center;
 }
-.doc-code-label {
-  font-size: 7.5px;
+.code-lbl {
+  font-size: 7px;
   color: #4a5568;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.doc-code-value {
-  font-size: 12px;
+.code-val {
+  font-size: 11px;
   font-weight: bold;
   color: #1a3a5c;
-  margin-top: 2px;
+  margin: 2px 0;
+  word-break: break-all;
 }
-.doc-date-label {
-  font-size: 7.5px;
-  color: #4a5568;
-  text-transform: uppercase;
-  margin-top: 5px;
-}
-.doc-date-value {
-  font-size: 10px;
+.code-date {
+  font-size: 9px;
   font-weight: bold;
   color: #2d3748;
+  border-top: 1px solid #cbd5e0;
+  padding-top: 4px;
+  margin-top: 4px;
+}
+.code-date-lbl {
+  font-size: 7px;
+  color: #718096;
+  text-transform: uppercase;
 }
 
-/* ── CHECKBOXES ── */
-.solicita-bar {
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  padding: 7px 14px;
-  margin-bottom: 14px;
+/* ══ BARRA INFERIOR DEL HEADER ══ */
+.hdr-bar {
+  margin-left: 119px;
+  background: #2d6a9f;
+  border-radius: 0 0 4px 0;
+  padding: 5px 16px;
+  margin-bottom: 12px;
+}
+.hdr-bar-inner {
   display: table;
   width: 100%;
 }
-.solicita-label {
+.check-lbl {
   display: table-cell;
+  font-size: 8px;
   font-weight: bold;
-  font-size: 9px;
-  color: #2d3748;
+  color: #e2edf7;
   vertical-align: middle;
-  padding-right: 16px;
+  padding-right: 14px;
   white-space: nowrap;
 }
-.solicita-items {
+.check-items {
   display: table-cell;
   vertical-align: middle;
 }
-.check-item {
+.chk {
   display: inline-block;
-  margin-right: 18px;
+  margin-right: 14px;
   vertical-align: middle;
 }
-.check-box {
+.chk-box {
   display: inline-block;
-  width: 13px;
-  height: 13px;
-  border: 1.5px solid #2d3748;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid #e2edf7;
   border-radius: 2px;
   text-align: center;
-  line-height: 13px;
-  font-size: 9px;
+  line-height: 10px;
+  font-size: 8px;
   vertical-align: middle;
-  margin-right: 5px;
-  background: white;
-}
-.check-box.on {
-  background: #1a3a5c;
+  margin-right: 4px;
+  background: transparent;
   color: white;
-  border-color: #1a3a5c;
 }
-.check-text {
-  font-size: 9px;
-  color: #2d3748;
+.chk-box.on {
+  background: #27ae60;
+  border-color: #27ae60;
+}
+.chk-txt {
+  font-size: 8px;
   font-weight: bold;
+  color: #e2edf7;
   vertical-align: middle;
 }
 
-/* ── SECCIÓN TÍTULOS ── */
-.section-header {
-  background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);
+/* ══ SECTION ══ */
+.sec-hdr {
+  background: #1a3a5c;
   color: white;
+  font-size: 8px;
   font-weight: bold;
-  font-size: 8.5px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  padding: 5px 10px;
-  margin-top: 12px;
-  margin-bottom: 0;
+  padding: 4px 10px;
+  margin-top: 10px;
+  border-radius: 3px 3px 0 0;
+}
+.sec-hdr-alt {
+  background: #2d6a9f;
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  margin-top: 10px;
   border-radius: 3px 3px 0 0;
 }
 
-/* ── TABLAS DE DATOS ── */
-table.data-table {
+/* ══ DATA TABLE ══ */
+table.dt {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #cbd5e0;
   border-top: none;
 }
-table.data-table th {
+table.dt th {
   background: #edf2f7;
+  font-size: 8px;
   font-weight: bold;
-  font-size: 8.5px;
-  padding: 5px 8px;
+  padding: 4px 8px;
   border: 1px solid #cbd5e0;
   color: #2d3748;
   text-align: left;
   white-space: nowrap;
+  width: 22%;
 }
-table.data-table td {
-  font-size: 9px;
-  padding: 5px 8px;
+table.dt td {
+  font-size: 8.5px;
+  padding: 4px 8px;
   border: 1px solid #cbd5e0;
   color: #1a1a2e;
   background: white;
 }
-table.data-table tr:nth-child(even) td {
-  background: #f7fafc;
-}
+table.dt tr:nth-child(even) td { background: #f7fafc; }
 
-/* ── TABLA DE TRANSPORTE ── */
-table.transport-table {
+/* ══ GRID TABLE ══ */
+table.gt {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #cbd5e0;
   border-top: none;
 }
-table.transport-table th {
+table.gt th {
   background: #2d6a9f;
   color: white;
-  font-size: 8px;
-  padding: 5px 6px;
+  font-size: 7.5px;
+  padding: 4px 6px;
   border: 1px solid #2d6a9f;
   text-align: center;
   font-weight: bold;
 }
-table.transport-table td {
-  font-size: 8.5px;
-  padding: 5px 6px;
-  border: 1px solid #cbd5e0;
-  text-align: center;
-  color: #1a1a2e;
-}
-table.transport-table tr:nth-child(even) td {
-  background: #f0f4f8;
-}
-table.transport-table .td-left {
-  text-align: left;
-}
-
-/* ── SERVIDORES ── */
-table.serv-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #cbd5e0;
-  border-top: none;
-}
-table.serv-table th {
-  background: #2d6a9f;
-  color: white;
+table.gt td {
   font-size: 8px;
-  padding: 5px 8px;
-  border: 1px solid #2d6a9f;
-  text-align: center;
-}
-table.serv-table td {
-  font-size: 8.5px;
-  padding: 5px 8px;
+  padding: 4px 6px;
   border: 1px solid #cbd5e0;
   color: #1a1a2e;
+  text-align: center;
 }
+table.gt .tl { text-align: left; }
+table.gt tr:nth-child(even) td { background: #f0f5fb; }
 
-/* ── JUSTIFICACIÓN ── */
-.justif-box {
+/* ══ JUSTIFICACIÓN ══ */
+.jbox {
   border: 1px solid #cbd5e0;
   border-top: none;
-  padding: 10px 12px;
-  font-size: 9px;
+  padding: 9px 11px;
+  font-size: 8.5px;
   line-height: 1.6;
   color: #2d3748;
   background: white;
-  min-height: 55px;
+  min-height: 50px;
 }
 
-/* ── CUENTA BANCARIA ── */
+/* ══ CUENTA ══ */
 .cuenta-wrap {
   display: table;
   width: 100%;
   border: 1px solid #cbd5e0;
   border-top: none;
-  background: white;
 }
-.cuenta-cell {
+.cc {
   display: table-cell;
-  padding: 7px 10px;
+  padding: 6px 10px;
   border-right: 1px solid #e2e8f0;
   vertical-align: middle;
 }
-.cuenta-cell:last-child { border-right: none; }
-.cuenta-lbl {
-  font-size: 7.5px;
+.cc:last-child { border-right: none; }
+.cc-lbl {
+  font-size: 7px;
   color: #718096;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
-.cuenta-val {
+.cc-val {
   font-size: 10px;
   font-weight: bold;
   color: #1a3a5c;
   margin-top: 2px;
 }
 
-/* ── CLÁUSULA ── */
+/* ══ CLÁUSULA ══ */
 .clausula {
   margin-top: 10px;
-  border-left: 3px solid #e53e3e;
-  padding: 7px 10px;
-  font-size: 8.5px;
+  border-left: 3px solid #c0392b;
+  padding: 6px 10px;
+  font-size: 8px;
   color: #742a2a;
   background: #fff5f5;
   border-radius: 0 3px 3px 0;
   font-style: italic;
 }
 
-/* ── FIRMAS ── */
-.firmas-wrap {
+/* ══ FIRMAS ══ */
+.firmas {
   display: table;
   width: 100%;
-  margin-top: 35px;
+  margin-top: 38px;
   page-break-inside: avoid;
 }
-.firma-cell {
+.fc {
   display: table-cell;
   width: 33.33%;
   text-align: center;
-  padding: 0 12px;
+  padding: 0 10px;
   vertical-align: bottom;
 }
-.firma-espacio {
-  height: 40px;
+.fline {
+  height: 38px;
   border-bottom: 1.5px solid #1a3a5c;
-  margin: 0 10px 6px;
+  margin: 0 8px 5px;
 }
-.firma-nombre {
-  font-size: 9px;
-  font-weight: bold;
-  color: #1a3a5c;
-  text-transform: uppercase;
-}
-.firma-cargo {
-  font-size: 8px;
-  color: #4a5568;
-  margin-top: 2px;
-}
-.firma-rol {
-  font-size: 7.5px;
-  color: #718096;
-  margin-top: 1px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
+.fn { font-size: 8.5px; font-weight: bold; color: #1a3a5c; text-transform: uppercase; }
+.fc-cargo { font-size: 7.5px; color: #4a5568; margin-top: 2px; }
+.fc-rol { font-size: 7px; color: #718096; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
 
-/* ── PIE ── */
+/* ══ PIE ══ */
 .footer {
-  margin-top: 18px;
-  padding-top: 6px;
+  margin-top: 16px;
+  padding-top: 5px;
   border-top: 1px solid #e2e8f0;
   display: table;
   width: 100%;
 }
-.footer-left {
-  display: table-cell;
-  font-size: 7.5px;
-  color: #a0aec0;
-  vertical-align: middle;
-}
-.footer-right {
-  display: table-cell;
-  font-size: 7.5px;
-  color: #a0aec0;
-  text-align: right;
-  vertical-align: middle;
-}
+.fl { display: table-cell; font-size: 7px; color: #b0bec5; vertical-align: middle; }
+.fr { display: table-cell; font-size: 7px; color: #b0bec5; text-align: right; vertical-align: middle; }
 </style>
 </head>
 <body>
 
-{{-- ══ ENCABEZADO ══ --}}
-<div class="header-wrap">
-  <div class="header-logo-cell">
+{{-- ══ HEADER ══ --}}
+<div class="hdr">
+  <div class="hdr-logo">
     @if(file_exists($logo))
       <img src="{{ $logo }}" alt="GADPE">
     @else
-      <div style="font-size:11px;font-weight:bold;color:#1a3a5c;">GADPE</div>
+      <div style="font-size:10px;font-weight:bold;color:#1a3a5c;text-align:center;">GADPE</div>
     @endif
   </div>
-  <div class="header-center-cell">
-    <div class="inst-name">Gobierno Autónomo Descentralizado<br>de la Provincia de Esmeraldas</div>
-    <div class="doc-title">Solicitud de Viático</div>
-    <div class="doc-subtitle">Licencia con Remuneración — Comisión de Servicios</div>
+  <div class="hdr-body">
+    <div class="hdr-inst">Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas</div>
+    <div class="hdr-title">Solicitud de Viático</div>
+    <div class="hdr-sub">Licencia con Remuneración — Comisión de Servicios Institucionales</div>
   </div>
-  <div class="header-right-cell">
-    <div class="doc-code-box">
-      <div class="doc-code-label">N° Solicitud</div>
-      <div class="doc-code-value">{{ $viatico->codigo_viatico }}</div>
-      <div class="doc-date-label">Fecha de Solicitud</div>
-      <div class="doc-date-value">
+  <div class="hdr-right">
+    <div class="code-box">
+      <div class="code-lbl">N° Solicitud</div>
+      <div class="code-val">{{ $viatico->codigo_viatico }}</div>
+      <div class="code-date-lbl">Fecha</div>
+      <div class="code-date">
         {{ $viatico->fecha_solicitud
             ? \Carbon\Carbon::parse($viatico->fecha_solicitud)->format('d/m/Y')
             : date('d/m/Y') }}
@@ -382,36 +339,38 @@ table.serv-table td {
   </div>
 </div>
 
-{{-- ══ CHECKBOXES ══ --}}
-<div class="solicita-bar">
-  <span class="solicita-label">A SOLICITAR:</span>
-  <span class="solicita-items">
-    <span class="check-item">
-      <span class="check-box on">✓</span>
-      <span class="check-text">VIÁTICOS</span>
-    </span>
-    <span class="check-item">
-      <span class="check-box on">✓</span>
-      <span class="check-text">MOVILIZACIONES</span>
-    </span>
-    <span class="check-item">
-      <span class="check-box {{ $viatico->zona === 'exterior' ? 'on' : '' }}">
-        {{ $viatico->zona === 'exterior' ? '✓' : '' }}
+{{-- ══ BARRA CHECKBOXES ══ --}}
+<div class="hdr-bar">
+  <div class="hdr-bar-inner">
+    <div class="check-lbl">A SOLICITAR:</div>
+    <div class="check-items">
+      <span class="chk">
+        <span class="chk-box on">✓</span>
+        <span class="chk-txt">VIÁTICOS</span>
       </span>
-      <span class="check-text">SUBSISTENCIAS</span>
-    </span>
-    <span class="check-item">
-      <span class="check-box"></span>
-      <span class="check-text">ALIMENTACIÓN</span>
-    </span>
-  </span>
+      <span class="chk">
+        <span class="chk-box on">✓</span>
+        <span class="chk-txt">MOVILIZACIONES</span>
+      </span>
+      <span class="chk">
+        <span class="chk-box {{ $viatico->zona === 'exterior' ? 'on' : '' }}">
+          {{ $viatico->zona === 'exterior' ? '✓' : '' }}
+        </span>
+        <span class="chk-txt">SUBSISTENCIAS</span>
+      </span>
+      <span class="chk">
+        <span class="chk-box"></span>
+        <span class="chk-txt">ALIMENTACIÓN</span>
+      </span>
+    </div>
+  </div>
 </div>
 
 {{-- ══ DATOS GENERALES ══ --}}
-<div class="section-header">Datos Generales del Servidor</div>
-<table class="data-table">
+<div class="sec-hdr">Datos Generales del Servidor</div>
+<table class="dt">
   <tr>
-    <th style="width:22%">Apellidos y Nombres</th>
+    <th>Apellidos y Nombres</th>
     <td colspan="3">
       <strong>
       {{ collect([
@@ -425,46 +384,32 @@ table.serv-table td {
   </tr>
   <tr>
     <th>Cargo / Puesto</th>
-    <td style="width:28%">
-      {{ $viatico->servidor?->puesto?->cargo?->nombre ?? '—' }}
-    </td>
-    <th style="width:22%">Unidad Administrativa</th>
-    <td>
-      {{ $viatico->servidor?->puesto?->unidadAdministrativa?->nombre ?? '—' }}
-    </td>
+    <td>{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
+    <th>Unidad Administrativa</th>
+    <td>{{ $viatico->servidor?->puesto?->unidadAdministrativa?->nombre ?? '—' }}</td>
   </tr>
   <tr>
     <th>Zona del Viaje</th>
-    <td>
-      @switch($viatico->zona)
-        @case('dentro_provincia') Dentro de la Provincia @break
-        @case('fuera_provincia')  Fuera de la Provincia  @break
-        @case('exterior')         Exterior — Internacional @break
-        @default {{ $viatico->zona }}
-      @endswitch
-    </td>
+    <td>{{ $zonaLabel }}</td>
     <th>Código de Solicitud</th>
     <td><strong>{{ $viatico->codigo_viatico }}</strong></td>
   </tr>
   <tr>
     <th>Provincia / Ciudad Destino</th>
     <td>
-      @if($viatico->zona === 'exterior')
-        {{ $viatico->pais_destino ?? '—' }}
-      @else
-        @php
-          $ultimo = $viatico->tramos->sortBy('orden')->last();
-          $ciudad = $ultimo?->destino_ciudad ?? '—';
-          $prov   = $ultimo?->destinoProvincia?->nombre ?? '';
-        @endphp
-        {{ collect([$prov, $ciudad])->filter()->join(' — ') }}
-      @endif
+      @php
+        $ultimo = $viatico->tramos->sortBy('orden')->last();
+        if ($viatico->zona === 'exterior') {
+          echo $viatico->pais_destino ?? '—';
+        } else {
+          $prov = $ultimo?->destinoProvincia?->nombre ?? '';
+          $cant = $ultimo?->destinoCanton?->nombre ?? $ultimo?->destino_ciudad ?? '';
+          echo collect([$prov, $cant])->filter()->join(' — ') ?: '—';
+        }
+      @endphp
     </td>
     <th>Total Días</th>
-    <td>
-      <strong>{{ number_format($viatico->total_dias ?? 0, 0) }}</strong>
-      día(s)
-    </td>
+    <td><strong>{{ number_format($viatico->total_dias ?? 0, 0) }}</strong> día(s)</td>
   </tr>
   <tr>
     <th>Fecha / Hora de Salida</th>
@@ -488,69 +433,58 @@ table.serv-table td {
       </strong>
     </td>
     <th>Modalidad Anticipo</th>
-    <td>
-      @switch($viatico->modalidad_anticipo)
-        @case('total')        Anticipo Total (100%) @break
-        @case('parcial')      Anticipo Parcial @break
-        @case('sin_anticipo') Sin Anticipo @break
-        @default {{ $viatico->modalidad_anticipo }}
-      @endswitch
-    </td>
+    <td>{{ $modalidadLabel }}</td>
   </tr>
 </table>
 
 {{-- ══ SERVIDORES ══ --}}
-<div class="section-header">Servidores que Integran la Comisión</div>
-<table class="serv-table">
+<div class="sec-hdr-alt">Servidores que Integran la Comisión</div>
+<table class="gt">
   <thead>
     <tr>
-      <th style="width:8%;text-align:center">N°</th>
-      <th style="text-align:left">Apellidos y Nombres</th>
-      <th style="text-align:left">Cargo</th>
-      <th style="width:15%;text-align:center">Condición</th>
+      <th style="width:8%">N°</th>
+      <th class="tl">Apellidos y Nombres</th>
+      <th class="tl">Cargo</th>
+      <th style="width:15%">Condición</th>
     </tr>
   </thead>
   <tbody>
     @forelse($viatico->todosServidores as $vs)
     <tr>
-      <td style="text-align:center">{{ $loop->iteration }}</td>
-      <td>
+      <td>{{ $loop->iteration }}</td>
+      <td class="tl">
         {{ collect([
             $vs->servidor?->apellido,
             $vs->servidor?->segundo_apellido,
             $vs->servidor?->nombre,
           ])->filter()->join(' ') ?: '—' }}
       </td>
-      <td>{{ $vs->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
-      <td style="text-align:center">
-        <strong>{{ $vs->es_titular ? 'Titular' : 'Acompañante' }}</strong>
-      </td>
+      <td class="tl">{{ $vs->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
+      <td><strong>{{ $vs->es_titular ? 'Titular' : 'Acompañante' }}</strong></td>
     </tr>
     @empty
     <tr>
-      <td colspan="4" style="text-align:center;color:#718096">
-        Sin servidores registrados.
-      </td>
+      <td colspan="4" style="color:#718096">Sin servidores registrados.</td>
     </tr>
     @endforelse
   </tbody>
 </table>
 
 {{-- ══ JUSTIFICACIÓN ══ --}}
-<div class="section-header">Descripción de las Actividades a Realizarse</div>
-<div class="justif-box">{{ $viatico->justificacion ?? '—' }}</div>
+<div class="sec-hdr">Descripción de las Actividades a Realizarse</div>
+<div class="jbox">{{ $viatico->justificacion ?? '—' }}</div>
 
 {{-- ══ TRANSPORTE ══ --}}
-<div class="section-header">Itinerario de Transporte</div>
-<table class="transport-table">
+<div class="sec-hdr-alt">Itinerario de Transporte</div>
+<table class="gt">
   <thead>
     <tr>
       <th>Tipo</th>
-      <th>Empresa / Nombre</th>
-      <th>Ruta</th>
-      <th>Fecha Salida</th>
+      <th class="tl">Empresa / Nombre</th>
+      <th class="tl">Ruta</th>
+      <th>F. Salida</th>
       <th>Hora</th>
-      <th>Fecha Llegada</th>
+      <th>F. Llegada</th>
       <th>Hora</th>
     </tr>
   </thead>
@@ -562,21 +496,18 @@ table.serv-table td {
             $tramo->origenProvincia?->nombre,
             $tramo->origenCanton?->nombre ?: $tramo->origen_ciudad,
           ])->filter()->unique()->join(' / ')
-        : collect([$tramo->origen_pais, $tramo->origen_ciudad])
-            ->filter()->join(' / ');
-
+        : collect([$tramo->origen_pais, $tramo->origen_ciudad])->filter()->join(' / ');
       $dest = $tramo->destino_tipo === 'nacional'
         ? collect([
             $tramo->destinoProvincia?->nombre,
             $tramo->destinoCanton?->nombre ?: $tramo->destino_ciudad,
           ])->filter()->unique()->join(' / ')
-        : collect([$tramo->destino_pais, $tramo->destino_ciudad])
-            ->filter()->join(' / ');
+        : collect([$tramo->destino_pais, $tramo->destino_ciudad])->filter()->join(' / ');
     @endphp
     <tr>
       <td>{{ strtoupper($tramo->empresa?->catalogo?->tipo_vehiculo ?? 'TERRESTRE') }}</td>
-      <td class="td-left">{{ $tramo->empresa?->nombre ?? '—' }}</td>
-      <td class="td-left"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
+      <td class="tl">{{ $tramo->empresa?->nombre ?? '—' }}</td>
+      <td class="tl"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
       <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('d/m/Y') : '—' }}</td>
       <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('H:i') : '—' }}</td>
       <td>{{ $tramo->datetime_llegada ? \Carbon\Carbon::parse($tramo->datetime_llegada)->format('d/m/Y') : '—' }}</td>
@@ -584,33 +515,27 @@ table.serv-table td {
     </tr>
     @empty
     <tr>
-      <td colspan="7" style="text-align:center;color:#718096">
-        Sin tramos de transporte registrados.
-      </td>
+      <td colspan="7" style="color:#718096">Sin tramos registrados.</td>
     </tr>
     @endforelse
   </tbody>
 </table>
 
-{{-- ══ DATOS BANCARIOS ══ --}}
+{{-- ══ CUENTA BANCARIA ══ --}}
 @php $cuenta = $viatico->servidor?->cuentasBancarias?->first(); @endphp
-<div class="section-header">Datos para Transferencia Bancaria</div>
+<div class="sec-hdr">Datos para Transferencia Bancaria</div>
 <div class="cuenta-wrap">
-  <div class="cuenta-cell" style="width:28%">
-    <div class="cuenta-lbl">Tipo de Cuenta</div>
-    <div class="cuenta-val">
-      {{ $cuenta?->tipo_cuenta ? strtoupper($cuenta->tipo_cuenta) : '—' }}
-    </div>
+  <div class="cc" style="width:28%">
+    <div class="cc-lbl">Tipo de Cuenta</div>
+    <div class="cc-val">{{ $cuenta?->tipo_cuenta ? strtoupper($cuenta->tipo_cuenta) : '—' }}</div>
   </div>
-  <div class="cuenta-cell" style="width:32%">
-    <div class="cuenta-lbl">Número de Cuenta</div>
-    <div class="cuenta-val">{{ $cuenta?->numero_cuenta ?? '—' }}</div>
+  <div class="cc" style="width:32%">
+    <div class="cc-lbl">Número de Cuenta</div>
+    <div class="cc-val">{{ $cuenta?->numero_cuenta ?? '—' }}</div>
   </div>
-  <div class="cuenta-cell">
-    <div class="cuenta-lbl">Institución Financiera</div>
-    <div class="cuenta-val">
-      {{ $cuenta?->entidadFinanciera?->nombre ?? '—' }}
-    </div>
+  <div class="cc">
+    <div class="cc-lbl">Institución Financiera</div>
+    <div class="cc-val">{{ $cuenta?->entidadFinanciera?->nombre ?? '—' }}</div>
   </div>
 </div>
 
@@ -621,68 +546,43 @@ table.serv-table td {
 </div>
 
 {{-- ══ FIRMAS ══ --}}
-<div class="firmas-wrap">
-  <div class="firma-cell">
-    <div class="firma-espacio"></div>
-    <div class="firma-nombre">
-      {{ collect([
-          $viatico->servidor?->apellido,
-          $viatico->servidor?->nombre,
-        ])->filter()->join(' ') ?: '—' }}
+<div class="firmas">
+  <div class="fc">
+    <div class="fline"></div>
+    <div class="fn">
+      {{ collect([$viatico->servidor?->apellido, $viatico->servidor?->nombre])->filter()->join(' ') ?: '—' }}
     </div>
-    <div class="firma-cargo">
-      {{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}
-    </div>
-    <div class="firma-rol">Servidor Solicitante</div>
+    <div class="fc-cargo">{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}</div>
+    <div class="fc-rol">Servidor Solicitante</div>
   </div>
-  <div class="firma-cell">
-    <div class="firma-espacio"></div>
+  <div class="fc">
+    <div class="fline"></div>
     @if($jefeUnidad)
-      <div class="firma-nombre">
-        {{ collect([
-            $jefeUnidad->apellido,
-            $jefeUnidad->nombre,
-          ])->filter()->join(' ') }}
-      </div>
-      <div class="firma-cargo">
-        {{ $jefeUnidad->puesto?->cargo?->nombre ?? 'Director/a' }}
-      </div>
+      <div class="fn">{{ collect([$jefeUnidad->apellido, $jefeUnidad->nombre])->filter()->join(' ') }}</div>
+      <div class="fc-cargo">{{ $jefeUnidad->puesto?->cargo?->nombre ?? 'Director/a' }}</div>
     @else
-      <div class="firma-nombre" style="color:#a0aec0">
-        ___________________________
-      </div>
-      <div class="firma-cargo" style="color:#a0aec0">Director/a</div>
+      <div class="fn" style="color:#a0aec0">___________________________</div>
+      <div class="fc-cargo" style="color:#a0aec0">Director/a de Unidad</div>
     @endif
-    <div class="firma-rol">Responsable de Unidad Solicitante</div>
+    <div class="fc-rol">Responsable de Unidad Solicitante</div>
   </div>
-  <div class="firma-cell">
-    <div class="firma-espacio"></div>
+  <div class="fc">
+    <div class="fline"></div>
     @if($prefecto)
-      <div class="firma-nombre">
-        {{ collect([
-            $prefecto->apellido,
-            $prefecto->nombre,
-          ])->filter()->join(' ') }}
-      </div>
-      <div class="firma-cargo">
-        {{ $prefecto->puesto?->cargo?->nombre ?? 'Prefecto/a Provincial' }}
-      </div>
+      <div class="fn">{{ collect([$prefecto->apellido, $prefecto->nombre])->filter()->join(' ') }}</div>
+      <div class="fc-cargo">{{ $prefecto->puesto?->cargo?->nombre ?? 'Prefecto/a Provincial' }}</div>
     @else
-      <div class="firma-nombre" style="color:#a0aec0">
-        ___________________________
-      </div>
-      <div class="firma-cargo">Prefecto/a Provincial</div>
+      <div class="fn" style="color:#a0aec0">___________________________</div>
+      <div class="fc-cargo">Prefecto/a Provincial</div>
     @endif
-    <div class="firma-rol">Máxima Autoridad o Delegado</div>
+    <div class="fc-rol">Máxima Autoridad o Delegado</div>
   </div>
 </div>
 
 {{-- ══ PIE ══ --}}
 <div class="footer">
-  <div class="footer-left">
-    SGTH — GAD Provincial de Esmeraldas
-  </div>
-  <div class="footer-right">
+  <div class="fl">SGTH — GAD Provincial de Esmeraldas</div>
+  <div class="fr">
     Generado el {{ date('d/m/Y H:i') }} •
     Documento oficial — No requiere sello húmedo
   </div>

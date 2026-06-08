@@ -20,13 +20,29 @@ class PdfInformeViaticoService
         $viatico  = $this->cargarViatico($identificador);
         $prefecto = $this->obtenerPrefecto();
 
+        $zonaLabel = match($viatico->zona) {
+            'dentro_provincia' => 'Dentro de la Provincia',
+            'fuera_provincia'  => 'Fuera de la Provincia',
+            'exterior'         => 'Exterior (Internacional)',
+            default            => ucfirst(str_replace('_', ' ', $viatico->zona ?? '')),
+        };
+
+        $modalidadLabel = match($viatico->modalidad_anticipo) {
+            'total'        => 'Anticipo Total (100%)',
+            'parcial'      => 'Anticipo Parcial',
+            'sin_anticipo' => 'Sin Anticipo',
+            default        => ucfirst($viatico->modalidad_anticipo ?? ''),
+        };
+
         $pdf = Pdf::loadView(
             'pdf.viaticos.solicitud-viatico',
             [
-                'viatico'      => $viatico,
-                'prefecto'     => $prefecto,
-                'jefeUnidad'   => $this->obtenerJefeUnidad($viatico),
-                'logo'         => public_path('images/logo-gadpe.png'),
+                'viatico'        => $viatico,
+                'prefecto'       => $prefecto,
+                'jefeUnidad'     => $this->obtenerJefeUnidad($viatico),
+                'logo'           => public_path('images/logo-gadpe.png'),
+                'zonaLabel'      => $zonaLabel,
+                'modalidadLabel' => $modalidadLabel,
             ]
         )->setPaper('a4', 'portrait');
 
@@ -60,13 +76,29 @@ class PdfInformeViaticoService
 
         $prefecto = $this->obtenerPrefecto();
 
+        $zonaLabel = match($viatico->zona) {
+            'dentro_provincia' => 'Dentro de la Provincia',
+            'fuera_provincia'  => 'Fuera de la Provincia',
+            'exterior'         => 'Exterior (Internacional)',
+            default            => ucfirst(str_replace('_', ' ', $viatico->zona ?? '')),
+        };
+
+        $modalidadLabel = match($viatico->modalidad_anticipo) {
+            'total'        => 'Anticipo Total (100%)',
+            'parcial'      => 'Anticipo Parcial',
+            'sin_anticipo' => 'Sin Anticipo',
+            default        => ucfirst($viatico->modalidad_anticipo ?? ''),
+        };
+
         $pdf = Pdf::loadView(
             'pdf.viaticos.informe-comision',
             [
-                'viatico'      => $viatico,
-                'prefecto'     => $prefecto,
-                'jefeUnidad'   => $this->obtenerJefeUnidad($viatico),
-                'logo'         => public_path('images/logo-gadpe.png'),
+                'viatico'        => $viatico,
+                'prefecto'       => $prefecto,
+                'jefeUnidad'     => $this->obtenerJefeUnidad($viatico),
+                'logo'           => public_path('images/logo-gadpe.png'),
+                'zonaLabel'      => $zonaLabel,
+                'modalidadLabel' => $modalidadLabel,
             ]
         )->setPaper('a4', 'portrait');
 
