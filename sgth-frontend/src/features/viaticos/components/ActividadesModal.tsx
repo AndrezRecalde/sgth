@@ -55,13 +55,19 @@ const toDate = (v?: string | null): Date | null => {
   return new Date(y, m - 1, d)
 }
 
-const fromDate = (d: Date | null): string => {
-  if (!d) return ''
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
+const safeFormatDate = (v: any): string => {
+  if (!v) return ''
+  const d = new Date(v)
+  if (isNaN(d.getTime())) return ''
+  
+  if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) {
+    return d.toISOString().slice(0, 10)
+  }
+  
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 export function ActividadesModal({
@@ -225,7 +231,7 @@ export function ActividadesModal({
                           {...contained}
                           value={toDate(f.value)}
                           onChange={(v) =>
-                            f.onChange(fromDate(v ? new Date(v) : null))
+                            f.onChange(safeFormatDate(v))
                           }
                           error={
                             errors.actividades?.[i]
