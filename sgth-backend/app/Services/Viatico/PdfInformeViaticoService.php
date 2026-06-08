@@ -23,9 +23,10 @@ class PdfInformeViaticoService
         $pdf = Pdf::loadView(
             'pdf.viaticos.solicitud-viatico',
             [
-                'viatico'  => $viatico,
-                'prefecto' => $prefecto,
-                'logo'     => public_path('images/logo-gadpe.png'),
+                'viatico'      => $viatico,
+                'prefecto'     => $prefecto,
+                'jefeUnidad'   => $this->obtenerJefeUnidad($viatico),
+                'logo'         => public_path('images/logo-gadpe.png'),
             ]
         )->setPaper('a4', 'portrait');
 
@@ -62,9 +63,10 @@ class PdfInformeViaticoService
         $pdf = Pdf::loadView(
             'pdf.viaticos.informe-comision',
             [
-                'viatico'  => $viatico,
-                'prefecto' => $prefecto,
-                'logo'     => public_path('images/logo-gadpe.png'),
+                'viatico'      => $viatico,
+                'prefecto'     => $prefecto,
+                'jefeUnidad'   => $this->obtenerJefeUnidad($viatico),
+                'logo'         => public_path('images/logo-gadpe.png'),
             ]
         )->setPaper('a4', 'portrait');
 
@@ -119,5 +121,22 @@ class PdfInformeViaticoService
                 $q2->where('nombre', 'like', '%Prefect%');
             });
         })->with('puesto.cargo')->first();
+    }
+
+    private function obtenerJefeUnidad(
+        Viatico $viatico
+    ): ?Servidor {
+        $unidadId = $viatico->servidor
+            ?->puesto
+            ?->unidad_administrativa_id;
+
+        if (!$unidadId) return null;
+
+        return Servidor::whereHas('puesto', function ($q)
+            use ($unidadId) {
+                $q->where('es_jefe', true)
+                  ->where('unidad_administrativa_id', $unidadId);
+            }
+        )->with(['puesto.cargo'])->first();
     }
 }
