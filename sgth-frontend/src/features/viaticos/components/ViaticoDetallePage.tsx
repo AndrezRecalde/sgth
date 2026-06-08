@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Stack,
   Grid,
@@ -22,7 +21,6 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   IconArrowLeft,
   IconPencil,
-  IconCheck,
   IconCurrencyDollar,
   IconPlane,
   IconRoute,
@@ -33,16 +31,17 @@ import {
   IconFileInvoice,
   IconDownload,
   IconFileText,
+  IconChecks,
 } from "@tabler/icons-react";
-import { usePdfViatico } from '../hooks/usePdfViatico';
+import { usePdfViatico } from "../hooks/usePdfViatico";
 import { useViatico } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 import { TramosList } from "./TramosList";
 import { TramoForm } from "./TramoForm";
 import { LiquidacionSection } from "./LiquidacionSection";
 import { ViaticoEditModal } from "./ViaticoEditModal";
-import { ServidoresModal } from './ServidoresModal';
+import { ServidoresModal } from "./ServidoresModal";
 import type { ViaticoConRelaciones, Viatico } from "@/types/api";
 
 interface Props {
@@ -98,7 +97,6 @@ function fmtMonto(v?: number | string | null): string {
 }
 
 export function ViaticoDetallePage({ identificador }: Props) {
-  const router = useRouter();
   const qc = useQueryClient();
   const { data: detalle, isLoading } = useViatico(identificador);
   const d = detalle as ViaticoConRelaciones | undefined;
@@ -110,20 +108,20 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const [
     servidoresModalAbierto,
     { open: abrirServidores, close: cerrarServidores },
-  ] = useDisclosure(false)
+  ] = useDisclosure(false);
 
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
   const [
     liquidacionModalAbierto,
-    { open: abrirLiquidacion, close: cerrarLiquidacion }
-  ] = useDisclosure(false)
+    { open: abrirLiquidacion, close: cerrarLiquidacion },
+  ] = useDisclosure(false);
 
   const {
     descargarSolicitud,
     descargarInforme,
     loadingSolicitud,
     loadingInforme,
-  } = usePdfViatico()
+  } = usePdfViatico();
 
   const {
     aprobar,
@@ -135,13 +133,12 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
   const estadoActual = d?.estado ?? "";
   const pasoActivo = PASO_STEPPER[estadoActual] ?? 0;
-  const esEditable = !["contabilizado"].includes(estadoActual);
-  const puedeEditarDatos = ![
-    "liquidado", "contabilizado"
-  ].includes(estadoActual);
-  const puedeEditarTramos = ![
-    "liquidado", "contabilizado"
-  ].includes(estadoActual);
+  const puedeEditarDatos = !["liquidado", "contabilizado"].includes(
+    estadoActual,
+  );
+  const puedeEditarTramos = !["liquidado", "contabilizado"].includes(
+    estadoActual,
+  );
 
   const servidor = d?.servidor;
   const nombreCompleto = [servidor?.nombre, servidor?.apellido]
@@ -219,25 +216,21 @@ export function ViaticoDetallePage({ identificador }: Props) {
                   color="blue"
                   leftSection={<IconFileText size={12} />}
                   loading={loadingSolicitud}
-                  onClick={() =>
-                    descargarSolicitud(d.codigo_viatico ?? d.id)
-                  }
+                  onClick={() => descargarSolicitud(d.codigo_viatico ?? d.id)}
                 >
                   Solicitud PDF
                 </Button>
 
-                {(estadoActual === 'pendiente_liquidacion' ||
-                  estadoActual === 'liquidado' ||
-                  estadoActual === 'contabilizado') && (
+                {(estadoActual === "pendiente_liquidacion" ||
+                  estadoActual === "liquidado" ||
+                  estadoActual === "contabilizado") && (
                   <Button
                     size="xs"
                     variant="light"
                     color="emerald"
                     leftSection={<IconDownload size={12} />}
                     loading={loadingInforme}
-                    onClick={() =>
-                      descargarInforme(d.codigo_viatico ?? d.id)
-                    }
+                    onClick={() => descargarInforme(d.codigo_viatico ?? d.id)}
                   >
                     Informe PDF
                   </Button>
@@ -247,7 +240,9 @@ export function ViaticoDetallePage({ identificador }: Props) {
             <Text size="xs" c="dimmed">
               Solicitud del{" "}
               {d.fecha_solicitud
-                ? new Date(d.fecha_solicitud.replace(/-/g, "/")).toLocaleDateString("es-EC", {
+                ? new Date(
+                    d.fecha_solicitud.replace(/-/g, "/"),
+                  ).toLocaleDateString("es-EC", {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",
@@ -536,32 +531,37 @@ export function ViaticoDetallePage({ identificador }: Props) {
               ) : d.liquidacion ? (
                 <Stack gap="xs">
                   <Group justify="space-between">
-                    <Text size="xs" c="dimmed">Total facturas</Text>
+                    <Text size="xs" c="dimmed">
+                      Total facturas
+                    </Text>
                     <Text fw={600}>
                       {fmtMonto(d.liquidacion.total_facturas)}
                     </Text>
                   </Group>
                   <Group justify="space-between">
-                    <Text size="xs" c="dimmed">Anticipo recibido</Text>
-                    <Text fw={600}>
-                      {fmtMonto(d.monto_anticipo)}
+                    <Text size="xs" c="dimmed">
+                      Anticipo recibido
                     </Text>
+                    <Text fw={600}>{fmtMonto(d.monto_anticipo)}</Text>
                   </Group>
                   <Group justify="space-between">
                     <Text size="xs" c="dimmed">
                       {Number(d.liquidacion.diferencia_devolver) >= 0
-                        ? 'A devolver'
-                        : 'A cobrar'}
+                        ? "A devolver"
+                        : "A cobrar"}
                     </Text>
                     <Text
                       fw={600}
-                      c={Number(d.liquidacion.diferencia_devolver) >= 0
-                        ? 'orange' : 'emerald'}
+                      c={
+                        Number(d.liquidacion.diferencia_devolver) >= 0
+                          ? "orange"
+                          : "emerald"
+                      }
                     >
                       {fmtMonto(
                         Math.abs(
-                          Number(d.liquidacion.diferencia_devolver ?? 0)
-                        )
+                          Number(d.liquidacion.diferencia_devolver ?? 0),
+                        ),
                       )}
                     </Text>
                   </Group>
@@ -579,17 +579,18 @@ export function ViaticoDetallePage({ identificador }: Props) {
                             variant="light"
                             radius="xl"
                           >
-                            <IconCheck size={8} />
+                            <IconChecks size={8} />
                           </ThemeIcon>
                           <Text size="xs">
                             {a.fecha
-                              ? new Date(a.fecha).toLocaleDateString(
-                                  'es-EC',
-                                  { timeZone: 'UTC',
-                                    day: '2-digit', month: '2-digit' }
-                                )
-                              : '—'}
-                            {' — '}{a.lugar}
+                              ? new Date(a.fecha).toLocaleDateString("es-EC", {
+                                  timeZone: "UTC",
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                })
+                              : "—"}
+                            {" — "}
+                            {a.lugar}
                           </Text>
                         </Group>
                       ))}
@@ -603,7 +604,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
                       {d.liquidacion.detalles_factura!.map((f, i) => (
                         <Group key={i} justify="space-between">
                           <Text size="xs" style={{ flex: 1 }}>
-                            {f.nombre_proveedor ?? '—'}
+                            {f.nombre_proveedor ?? "—"}
                           </Text>
                           <Text size="xs" fw={600} c="orange">
                             ${Number(f.monto ?? 0).toFixed(2)}
@@ -612,7 +613,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
                       ))}
                     </Stack>
                   )}
-                  {estadoActual === 'pendiente_liquidacion' && (
+                  {estadoActual === "pendiente_liquidacion" && (
                     <Button
                       size="xs"
                       variant="subtle"
@@ -641,7 +642,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             color="emerald"
             variant="filled"
             size="md"
-            leftSection={<IconCheck size={18} />}
+            leftSection={<IconChecks size={18} />}
             loading={aprobar.isPending}
             onClick={() => {
               aprobar.mutate(d.id);
@@ -649,7 +650,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             }}
             fullWidth
           >
-            ✓ Aprobar solicitud de viático
+            Aprobar solicitud de viático
           </Button>
         )}
         {estadoActual === "aprobado" && (
@@ -659,11 +660,11 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 Viático aprobado
               </Text>
               <Text size="xs" c="dimmed">
-                {d.modalidad_anticipo === 'sin_anticipo'
-                  ? 'Sin anticipo — marcar directamente en comisión'
-                  : 'Proceder con la entrega del anticipo'}
+                {d.modalidad_anticipo === "sin_anticipo"
+                  ? "Sin anticipo — marcar directamente en comisión"
+                  : "Proceder con la entrega del anticipo"}
               </Text>
-              {d.modalidad_anticipo === 'sin_anticipo' ? (
+              {d.modalidad_anticipo === "sin_anticipo" ? (
                 <Button
                   color="teal"
                   size="sm"
@@ -711,7 +712,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             onClick={() => marcarPendienteLiquidacion.mutate(d.id)}
             fullWidth
           >
-            El servidor regresó — iniciar liquidación
+            Iniciar liquidación
           </Button>
         )}
         {estadoActual === "liquidado" && (
@@ -815,13 +816,12 @@ export function ViaticoDetallePage({ identificador }: Props) {
           <LiquidacionSection
             viatico={d}
             onSuccess={() => {
-              qc.invalidateQueries({ queryKey: ['viatico'] })
-              cerrarLiquidacion()
+              qc.invalidateQueries({ queryKey: ["viatico"] });
+              cerrarLiquidacion();
             }}
           />
         </Modal>
       )}
-
     </Stack>
   );
 }

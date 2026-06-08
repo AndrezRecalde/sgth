@@ -358,7 +358,7 @@ export function ViaticoDetalle({ opened, onClose, viatico }: Props) {
                 }}
                 fullWidth
               >
-                ✓ Aprobar solicitud de viático
+                Aprobar solicitud de viático
               </Button>
             )}
 
@@ -406,7 +406,7 @@ export function ViaticoDetalle({ opened, onClose, viatico }: Props) {
                 onClick={handleLiquidarClick}
                 fullWidth
               >
-                El servidor regresó — iniciar liquidación
+                Iniciar liquidación
               </Button>
             )}
 

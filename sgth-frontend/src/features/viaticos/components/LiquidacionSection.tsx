@@ -17,7 +17,8 @@ import { ActividadesModal } from './ActividadesModal'
 import { FacturasModal } from './FacturasModal'
 import type { ActividadData } from './ActividadesModal'
 import type { FacturaData } from './FacturasModal'
-import type { Viatico } from '@/types/api'
+import { useCategoriasFactura } from '../hooks/useViaticos'
+import type { Viatico, CategoriaFactura } from '@/types/api'
 
 interface Props {
   viatico:   Viatico
@@ -30,6 +31,13 @@ function fmtMonto(v?: number | string | null): string {
 }
 
 export function LiquidacionSection({ viatico, onSuccess }: Props) {
+  const { data: categoriasData = [] } = useCategoriasFactura()
+  const categoriaOptions = (categoriasData as CategoriaFactura[])
+    .map(c => ({
+      value: String(c.id),
+      label: c.nombre ?? '',
+    }))
+
   const [actividades, setActividades] =
     useState<ActividadData[]>([])
   const [facturas, setFacturas] =
@@ -171,23 +179,29 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
             ) : (
               <Stack gap="xs">
                 {actividades.map((a, i) => (
-                  <Group key={i} gap="xs">
-                    <IconCircleCheck
-                      size={14}
-                      color="var(--mantine-color-emerald-6)"
-                    />
-                    <Text size="xs">
-                      {a.fecha
-                        ? new Date(a.fecha)
-                            .toLocaleDateString('es-EC', {
+                  <Stack key={i} gap={2}>
+                    <Group gap="xs">
+                      <IconCircleCheck
+                        size={14}
+                        color="var(--mantine-color-emerald-6)"
+                      />
+                      <Text size="xs" fw={500}>
+                        {a.fecha
+                          ? new Date(a.fecha).toLocaleDateString('es-EC', {
                               timeZone: 'UTC',
                               day: '2-digit',
                               month: '2-digit',
                             })
-                        : '—'}
-                      {' '}— {a.lugar}
-                    </Text>
-                  </Group>
+                          : '—'}
+                        {' — '}{a.lugar}
+                      </Text>
+                    </Group>
+                    {a.descripcion && (
+                      <Text size="xs" c="dimmed" ml={22}>
+                        {a.descripcion}
+                      </Text>
+                    )}
+                  </Stack>
                 ))}
                 <Button
                   size="xs"
@@ -259,18 +273,41 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
             ) : (
               <Stack gap="xs">
                 {facturas.map((f, i) => (
-                  <Group key={i} gap="xs">
-                    <IconCircleCheck
-                      size={14}
-                      color="var(--mantine-color-emerald-6)"
-                    />
-                    <Text size="xs">
-                      {f.nombre_proveedor} —{' '}
-                      <strong>
+                  <Stack key={i} gap={2}>
+                    <Group key={i} gap="xs" justify="space-between">
+                      <Group gap="xs" style={{ flex: 1 }}>
+                        <IconCircleCheck
+                          size={14}
+                          color="var(--mantine-color-emerald-6)"
+                        />
+                        <Text size="xs" fw={500}>
+                          {f.nombre_proveedor}
+                        </Text>
+                      </Group>
+                      <Text size="xs" fw={600} c="orange">
                         ${Number(f.monto).toFixed(2)}
-                      </strong>
-                    </Text>
-                  </Group>
+                      </Text>
+                    </Group>
+                    {f.categoria_factura_id > 0 && (
+                      <Group gap={4} ml={22}>
+                        <Badge
+                          size="xs"
+                          color="orange"
+                          variant="dot"
+                        >
+                          {categoriaOptions.find(
+                            c => Number(c.value) === f.categoria_factura_id
+                          )?.label ?? `Categoría ${f.categoria_factura_id}`}
+                        </Badge>
+                        <Text size="xs" c="dimmed">
+                          {f.tipo_comprobante
+                            ? f.tipo_comprobante.charAt(0).toUpperCase() +
+                              f.tipo_comprobante.slice(1)
+                            : ''}
+                        </Text>
+                      </Group>
+                    )}
+                  </Stack>
                 ))}
                 <Button
                   size="xs"
