@@ -131,14 +131,9 @@ final class ViaticoService implements ViaticoServiceInterface
             );
         }
 
-        $fechaRetorno   = Carbon::parse($datos['fecha_retorno']);
-        $fechaLimiteLegal = $this->calcularDiasHabiles(
-            $viatico->fecha_fin->copy(), 5
-        );
-
-        if (now()->gt($fechaLimiteLegal)) {
-            // Nota legal: proceso continúa pero podría registrar alerta
-        }
+        $fechaRetorno = isset($datos['fecha_retorno'])
+            ? Carbon::parse($datos['fecha_retorno'])
+            : Carbon::parse($viatico->datetime_llegada);
 
         return DB::transaction(function () use (
             $viatico, $viaticoId, $datos, $fechaRetorno, $userId
@@ -152,7 +147,6 @@ final class ViaticoService implements ViaticoServiceInterface
             $liquidacion = LiquidacionViatico::create([
                 'viatico_id'          => $viaticoId,
                 'total_facturas'      => $totalFacturas,
-                'monto_justificado'   => $totalFacturas,
                 'diferencia_devolver' => $diferenciaDevolver,
                 'fecha_retorno'       => $fechaRetorno,
                 'fecha_liquidacion'   => now()->toDateString(),
@@ -164,13 +158,15 @@ final class ViaticoService implements ViaticoServiceInterface
             foreach ($facturasPayload as $facturaData) {
                 FacturaViatico::create([
                     'liquidacion_viatico_id' => $liquidacion->id,
-                    'concepto'               => $facturaData['concepto'],
-                    'detalle'                => $facturaData['detalle']          ?? null,
-                    'numero_factura'         => $facturaData['numero_factura'],
-                    'ruc_proveedor'          => $facturaData['ruc_proveedor'],
+                    'categoria_factura_id'   => $facturaData['categoria_factura_id'] ?? null,
+                    'tipo_comprobante'       => $facturaData['tipo_comprobante']     ?? 'factura',
+                    'numero_factura'         => $facturaData['numero_factura']       ?? null,
+                    'numero_ticket'          => $facturaData['numero_ticket']        ?? null,
+                    'fecha_factura'          => $facturaData['fecha_factura']        ?? null,
+                    'ruc_proveedor'          => $facturaData['ruc_proveedor']        ?? null,
                     'nombre_proveedor'       => $facturaData['nombre_proveedor'],
+                    'detalle'                => $facturaData['detalle']              ?? null,
                     'monto'                  => $facturaData['monto'],
-                    'archivo_ruta'           => $facturaData['archivo_ruta']     ?? null,
                 ]);
             }
 
