@@ -95,13 +95,18 @@ export function FacturasModal({
 
   // Opción B: facturas hasta 5 días después de llegada
   const minFecha = viatico.datetime_salida
-    ? new Date(viatico.datetime_salida as string)
+    ? (() => {
+        const d = new Date(viatico.datetime_salida as string)
+        d.setHours(0, 0, 0, 0)
+        return d
+      })()
     : undefined
 
   const maxFactura = viatico.datetime_llegada
     ? (() => {
         const d = new Date(viatico.datetime_llegada as string)
         d.setDate(d.getDate() + 5)
+        d.setHours(23, 59, 59, 999)
         return d
       })()
     : undefined
@@ -359,10 +364,11 @@ export function FacturasModal({
                             clearable
                             minDate={minFecha}
                             maxDate={maxFactura}
+                            popoverProps={{ withinPortal: true }}
                             {...contained}
                             value={toDate(f.value)}
                             onChange={(v) =>
-                              f.onChange(fromDate(v as Date | null))
+                              f.onChange(fromDate(v ? new Date(v) : null))
                             }
                           />
                         )}

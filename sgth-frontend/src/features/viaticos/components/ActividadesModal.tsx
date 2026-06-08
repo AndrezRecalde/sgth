@@ -76,10 +76,18 @@ export function ActividadesModal({
 
   // Rango de fechas permitido: salida → llegada del viático
   const minFecha = viatico.datetime_salida
-    ? new Date(viatico.datetime_salida as string)
+    ? (() => {
+        const d = new Date(viatico.datetime_salida as string)
+        d.setHours(0, 0, 0, 0)
+        return d
+      })()
     : undefined
   const maxFecha = viatico.datetime_llegada
-    ? new Date(viatico.datetime_llegada as string)
+    ? (() => {
+        const d = new Date(viatico.datetime_llegada as string)
+        d.setHours(23, 59, 59, 999)
+        return d
+      })()
     : undefined
 
   const {
@@ -213,10 +221,11 @@ export function ActividadesModal({
                           valueFormat="DD/MM/YYYY"
                           minDate={minFecha}
                           maxDate={maxFecha}
+                          popoverProps={{ withinPortal: true }}
                           {...contained}
                           value={toDate(f.value)}
                           onChange={(v) =>
-                            f.onChange(fromDate(v as Date | null))
+                            f.onChange(fromDate(v ? new Date(v) : null))
                           }
                           error={
                             errors.actividades?.[i]
