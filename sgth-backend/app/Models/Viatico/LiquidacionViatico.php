@@ -22,7 +22,6 @@ class LiquidacionViatico extends Model
         'viatico_id',
         'facturas',
         'total_facturas',
-        'monto_justificado',
         'diferencia_devolver',
         'fecha_retorno',
         'fecha_liquidacion',
@@ -40,7 +39,6 @@ class LiquidacionViatico extends Model
         return [
             'facturas'            => 'array',
             'total_facturas'      => 'decimal:2',
-            'monto_justificado'   => 'decimal:2',
             'diferencia_devolver' => 'decimal:2',
             'fecha_retorno'       => 'date',
             'fecha_liquidacion'   => 'date',
