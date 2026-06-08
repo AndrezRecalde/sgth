@@ -3,168 +3,196 @@
 <head>
 <meta charset="UTF-8">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
   font-family: 'DejaVu Sans', Arial, sans-serif;
-  font-size: 9.5px;
+  font-size: 9px;
   color: #1a1a2e;
-  line-height: 1.5;
-  padding: 28px 35px;
-  background: #ffffff;
+  line-height: 1.45;
+  padding: 30px 38px;
+  background: #fff;
 }
-.header-wrap {
+.hdr {
   display: table;
   width: 100%;
-  border-bottom: 3px solid #1a3a5c;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
-.header-logo-cell {
+.hdr-logo {
   display: table-cell;
-  width: 100px;
+  width: 105px;
   vertical-align: middle;
+  padding-right: 14px;
 }
-.header-logo-cell img { width: 90px; height: auto; }
-.header-center-cell {
+.hdr-logo img { width: 95px; height: auto; }
+.hdr-body {
   display: table-cell;
   vertical-align: middle;
-  text-align: center;
-  padding: 0 12px;
+  background: #1a3a5c;
+  padding: 12px 16px;
+  border-radius: 4px 4px 0 0;
 }
-.inst-name {
-  font-size: 9px;
-  font-weight: bold;
-  color: #1a3a5c;
+.hdr-inst {
+  font-size: 8px;
+  color: #a8c4e0;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
-.doc-title {
-  font-size: 14px;
+.hdr-title {
+  font-size: 15px;
   font-weight: bold;
-  color: #1a1a2e;
-  text-transform: uppercase;
+  color: #ffffff;
+  letter-spacing: 0.3px;
 }
-.doc-subtitle { font-size: 9px; color: #4a5568; margin-top: 3px; }
-.header-right-cell {
+.hdr-sub { font-size: 8px; color: #c5daf0; margin-top: 3px; }
+.hdr-right {
   display: table-cell;
-  width: 140px;
+  width: 130px;
   vertical-align: middle;
-  text-align: right;
+  padding-left: 10px;
 }
-.doc-code-box {
+.code-box {
   border: 2px solid #1a3a5c;
   border-radius: 5px;
   padding: 8px 10px;
-  background: #f0f4f8;
+  background: #f0f5fb;
+  text-align: center;
 }
-.doc-code-label { font-size: 7.5px; color: #4a5568; text-transform: uppercase; }
-.doc-code-value { font-size: 12px; font-weight: bold; color: #1a3a5c; margin-top: 2px; }
-.doc-date-label { font-size: 7.5px; color: #4a5568; text-transform: uppercase; margin-top: 5px; }
-.doc-date-value { font-size: 10px; font-weight: bold; color: #2d3748; }
-.section-header {
-  background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);
-  color: white;
+.code-lbl { font-size: 7px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+.code-val { font-size: 11px; font-weight: bold; color: #1a3a5c; margin: 2px 0; word-break: break-all; }
+.code-date { font-size: 9px; font-weight: bold; color: #2d3748; border-top: 1px solid #cbd5e0; padding-top: 4px; margin-top: 4px; }
+.code-date-lbl { font-size: 7px; color: #718096; text-transform: uppercase; }
+.hdr-bar {
+  margin-left: 119px;
+  background: #2d6a9f;
+  border-radius: 0 0 4px 0;
+  padding: 5px 16px;
+  margin-bottom: 12px;
+}
+.hdr-bar-txt {
+  font-size: 8px;
+  color: #e2edf7;
   font-weight: bold;
-  font-size: 8.5px;
+}
+.sec-hdr {
+  background: #1a3a5c;
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  padding: 5px 10px;
-  margin-top: 12px;
+  padding: 4px 10px;
+  margin-top: 10px;
   border-radius: 3px 3px 0 0;
 }
-table.data-table {
+.sec-hdr-alt {
+  background: #2d6a9f;
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  margin-top: 10px;
+  border-radius: 3px 3px 0 0;
+}
+table.dt {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #cbd5e0;
   border-top: none;
 }
-table.data-table th {
+table.dt th {
   background: #edf2f7;
+  font-size: 8px;
   font-weight: bold;
-  font-size: 8.5px;
-  padding: 5px 8px;
+  padding: 4px 8px;
   border: 1px solid #cbd5e0;
   color: #2d3748;
   text-align: left;
   white-space: nowrap;
+  width: 22%;
 }
-table.data-table td {
-  font-size: 9px;
-  padding: 5px 8px;
+table.dt td {
+  font-size: 8.5px;
+  padding: 4px 8px;
   border: 1px solid #cbd5e0;
+  color: #1a1a2e;
   background: white;
 }
-table.std-table {
+table.dt tr:nth-child(even) td { background: #f7fafc; }
+table.gt {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #cbd5e0;
   border-top: none;
 }
-table.std-table th {
+table.gt th {
   background: #2d6a9f;
   color: white;
-  font-size: 8px;
-  padding: 5px 7px;
+  font-size: 7.5px;
+  padding: 4px 6px;
   border: 1px solid #2d6a9f;
   text-align: center;
   font-weight: bold;
 }
-table.std-table td {
-  font-size: 8.5px;
-  padding: 5px 7px;
+table.gt td {
+  font-size: 8px;
+  padding: 4px 6px;
   border: 1px solid #cbd5e0;
   color: #1a1a2e;
+  text-align: center;
 }
-table.std-table tr:nth-child(even) td { background: #f0f4f8; }
-.text-content-box {
+table.gt .tl { text-align: left; }
+table.gt tr:nth-child(even) td { background: #f0f5fb; }
+.tbox {
   border: 1px solid #cbd5e0;
   border-top: none;
-  padding: 10px 12px;
-  font-size: 9px;
+  padding: 9px 11px;
+  font-size: 8.5px;
   line-height: 1.6;
   color: #2d3748;
   background: white;
   min-height: 45px;
 }
-.resumen-box {
+.resumen-wrap {
   border: 1px solid #cbd5e0;
   border-top: none;
   background: white;
 }
-.resumen-row {
+.res-row {
   display: table;
   width: 100%;
   border-bottom: 1px solid #e2e8f0;
 }
-.resumen-row:last-child { border-bottom: none; }
-.resumen-lbl {
+.res-row:last-child { border-bottom: none; }
+.res-lbl {
   display: table-cell;
-  padding: 6px 10px;
-  font-size: 9px;
+  padding: 5px 10px;
+  font-size: 8.5px;
   color: #4a5568;
   width: 65%;
 }
-.resumen-val {
+.res-val {
   display: table-cell;
-  padding: 6px 10px;
-  font-size: 10px;
+  padding: 5px 10px;
+  font-size: 9.5px;
   font-weight: bold;
   text-align: right;
   color: #2d3748;
 }
-.resumen-total-lbl {
+.res-total-lbl {
   display: table-cell;
-  padding: 8px 10px;
-  font-size: 10px;
+  padding: 7px 10px;
+  font-size: 9.5px;
   font-weight: bold;
   color: #1a3a5c;
   width: 65%;
   background: #edf2f7;
 }
-.resumen-total-val {
+.res-total-val {
   display: table-cell;
-  padding: 8px 10px;
+  padding: 7px 10px;
   font-size: 12px;
   font-weight: bold;
   text-align: right;
@@ -173,77 +201,92 @@ table.std-table tr:nth-child(even) td { background: #f0f4f8; }
 }
 .clausula {
   margin-top: 10px;
-  border-left: 3px solid #e53e3e;
-  padding: 7px 10px;
-  font-size: 8.5px;
+  border-left: 3px solid #c0392b;
+  padding: 6px 10px;
+  font-size: 8px;
   color: #742a2a;
   background: #fff5f5;
   border-radius: 0 3px 3px 0;
   font-style: italic;
 }
-.firmas-wrap {
+.firmas {
   display: table;
   width: 100%;
-  margin-top: 35px;
+  margin-top: 38px;
   page-break-inside: avoid;
 }
-.firma-cell {
+.fc {
   display: table-cell;
   width: 33.33%;
   text-align: center;
-  padding: 0 12px;
+  padding: 0 10px;
   vertical-align: bottom;
 }
-.firma-espacio {
-  height: 40px;
+.fline {
+  height: 38px;
   border-bottom: 1.5px solid #1a3a5c;
-  margin: 0 10px 6px;
+  margin: 0 8px 5px;
 }
-.firma-nombre { font-size: 9px; font-weight: bold; color: #1a3a5c; text-transform: uppercase; }
-.firma-cargo { font-size: 8px; color: #4a5568; margin-top: 2px; }
-.firma-rol { font-size: 7.5px; color: #718096; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
+.fn { font-size: 8.5px; font-weight: bold; color: #1a3a5c; text-transform: uppercase; }
+.fc-cargo { font-size: 7.5px; color: #4a5568; margin-top: 2px; }
+.fc-rol { font-size: 7px; color: #718096; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
 .footer {
-  margin-top: 18px;
-  padding-top: 6px;
+  margin-top: 16px;
+  padding-top: 5px;
   border-top: 1px solid #e2e8f0;
   display: table;
   width: 100%;
 }
-.footer-left { display: table-cell; font-size: 7.5px; color: #a0aec0; vertical-align: middle; }
-.footer-right { display: table-cell; font-size: 7.5px; color: #a0aec0; text-align: right; vertical-align: middle; }
+.fl { display: table-cell; font-size: 7px; color: #b0bec5; vertical-align: middle; }
+.fr { display: table-cell; font-size: 7px; color: #b0bec5; text-align: right; vertical-align: middle; }
 </style>
 </head>
 <body>
 
-{{-- ══ ENCABEZADO ══ --}}
-<div class="header-wrap">
-  <div class="header-logo-cell">
+{{-- ══ HEADER ══ --}}
+<div class="hdr">
+  <div class="hdr-logo">
     @if(file_exists($logo))
       <img src="{{ $logo }}" alt="GADPE">
     @else
-      <div style="font-size:11px;font-weight:bold;color:#1a3a5c;">GADPE</div>
+      <div style="font-size:10px;font-weight:bold;color:#1a3a5c;">GADPE</div>
     @endif
   </div>
-  <div class="header-center-cell">
-    <div class="inst-name">Gobierno Autónomo Descentralizado<br>de la Provincia de Esmeraldas</div>
-    <div class="doc-title">Informe de Licencia con Remuneración</div>
-    <div class="doc-subtitle">Comisión de Servicios — Liquidación de Viático</div>
+  <div class="hdr-body">
+    <div class="hdr-inst">Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas</div>
+    <div class="hdr-title">Informe de Licencia con Remuneración</div>
+    <div class="hdr-sub">Comisión de Servicios — Liquidación de Viático</div>
   </div>
-  <div class="header-right-cell">
-    <div class="doc-code-box">
-      <div class="doc-code-label">N° Solicitud</div>
-      <div class="doc-code-value">{{ $viatico->codigo_viatico }}</div>
-      <div class="doc-date-label">Fecha del Informe</div>
-      <div class="doc-date-value">{{ date('d/m/Y') }}</div>
+  <div class="hdr-right">
+    <div class="code-box">
+      <div class="code-lbl">N° Solicitud</div>
+      <div class="code-val">{{ $viatico->codigo_viatico }}</div>
+      <div class="code-date-lbl">Fecha del Informe</div>
+      <div class="code-date">{{ date('d/m/Y') }}</div>
     </div>
+  </div>
+</div>
+<div class="hdr-bar">
+  <div class="hdr-bar-txt">
+    Período de Comisión:
+    {{ $viatico->datetime_salida
+        ? \Carbon\Carbon::parse($viatico->datetime_salida)->format('d/m/Y H:i')
+        : '—' }}
+    →
+    {{ $viatico->datetime_llegada
+        ? \Carbon\Carbon::parse($viatico->datetime_llegada)->format('d/m/Y H:i')
+        : '—' }}
+    &nbsp;|&nbsp;
+    {{ number_format($viatico->total_dias ?? 0, 0) }} día(s) &nbsp;|&nbsp;
+    Anticipo: $ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}
   </div>
 </div>
 
 {{-- ══ DATOS GENERALES ══ --}}
-<div class="section-header">Datos Generales del Servidor</div>
-<table class="data-table">
+<div class="sec-hdr">Datos Generales del Servidor</div>
+<table class="dt">
   <tr>
-    <th style="width:22%">Apellidos y Nombres</th>
+    <th>Apellidos y Nombres</th>
     <td colspan="3">
       <strong>
       {{ collect([
@@ -257,106 +300,100 @@ table.std-table tr:nth-child(even) td { background: #f0f4f8; }
   </tr>
   <tr>
     <th>Cargo / Puesto</th>
-    <td style="width:28%">
-      {{ $viatico->servidor?->puesto?->cargo?->nombre ?? '—' }}
-    </td>
-    <th style="width:22%">Unidad Administrativa</th>
-    <td>
-      {{ $viatico->servidor?->puesto?->unidadAdministrativa?->nombre ?? '—' }}
-    </td>
+    <td>{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
+    <th>Unidad Administrativa</th>
+    <td>{{ $viatico->servidor?->puesto?->unidadAdministrativa?->nombre ?? '—' }}</td>
   </tr>
   <tr>
     <th>Fecha / Hora de Salida</th>
     <td>
       {{ $viatico->datetime_salida
-          ? \Carbon\Carbon::parse($viatico->datetime_salida)->format('d/m/Y  H:i')
+          ? \Carbon\Carbon::parse($viatico->datetime_salida)->format('d/m/Y H:i')
           : '—' }}
     </td>
     <th>Fecha / Hora de Regreso</th>
     <td>
       {{ $viatico->datetime_llegada
-          ? \Carbon\Carbon::parse($viatico->datetime_llegada)->format('d/m/Y  H:i')
+          ? \Carbon\Carbon::parse($viatico->datetime_llegada)->format('d/m/Y H:i')
           : '—' }}
     </td>
   </tr>
 </table>
 
 {{-- ══ SERVIDORES ══ --}}
-<div class="section-header">Servidores que Integran la Comisión</div>
-<table class="std-table">
+<div class="sec-hdr-alt">Servidores que Integran la Comisión</div>
+<table class="gt">
   <thead>
     <tr>
       <th style="width:8%">Cód.</th>
-      <th style="text-align:left">Apellidos y Nombres</th>
-      <th style="text-align:left">Cargo</th>
+      <th class="tl">Apellidos y Nombres</th>
+      <th class="tl">Cargo</th>
     </tr>
   </thead>
   <tbody>
     @forelse($viatico->todosServidores as $vs)
     <tr>
-      <td style="text-align:center">{{ $vs->servidor_id }}</td>
-      <td>
+      <td>{{ $vs->servidor_id }}</td>
+      <td class="tl">
         {{ collect([
             $vs->servidor?->apellido,
             $vs->servidor?->nombre,
           ])->filter()->join(' ') ?: '—' }}
       </td>
-      <td>{{ $vs->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
+      <td class="tl">{{ $vs->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
     </tr>
     @empty
-    <tr>
-      <td colspan="3" style="text-align:center;color:#718096">—</td>
-    </tr>
+    <tr><td colspan="3" style="color:#718096">—</td></tr>
     @endforelse
   </tbody>
 </table>
 
 {{-- ══ ACTIVIDADES ══ --}}
-<div class="section-header">Informe de Actividades o Productos Alcanzados</div>
+<div class="sec-hdr">Informe de Actividades o Productos Alcanzados</div>
 @if($viatico->liquidacion?->actividades?->count() > 0)
-<table class="std-table">
+<table class="gt">
   <thead>
     <tr>
       <th style="width:12%">Fecha</th>
       <th style="width:9%">H. Inicio</th>
       <th style="width:9%">H. Fin</th>
-      <th style="width:20%;text-align:left">Lugar</th>
-      <th style="text-align:left">Descripción de la Actividad</th>
+      <th style="width:22%" class="tl">Lugar</th>
+      <th class="tl">Descripción de la Actividad</th>
     </tr>
   </thead>
   <tbody>
     @foreach($viatico->liquidacion->actividades->sortBy('orden') as $act)
     <tr>
-      <td style="text-align:center">
+      <td>
         {{ $act->fecha
             ? \Carbon\Carbon::parse($act->fecha)->format('d/m/Y')
             : '—' }}
       </td>
-      <td style="text-align:center">{{ $act->hora_inicio ?? '—' }}</td>
-      <td style="text-align:center">{{ $act->hora_fin ?? '—' }}</td>
-      <td>{{ $act->lugar ?? '—' }}</td>
-      <td>{{ $act->descripcion ?? '—' }}</td>
+      <td>{{ $act->hora_inicio ?? '—' }}</td>
+      <td>{{ $act->hora_fin ?? '—' }}</td>
+      <td class="tl">{{ $act->lugar ?? '—' }}</td>
+      <td class="tl">{{ $act->descripcion ?? '—' }}</td>
     </tr>
     @endforeach
   </tbody>
 </table>
 @else
-<div class="text-content-box">
+<div class="tbox">
   {{ $viatico->justificacion ?? 'Sin descripción de actividades.' }}
 </div>
 @endif
 
 {{-- ══ TRANSPORTE ══ --}}
-<div class="section-header">Itinerario de Transporte</div>
-<table class="std-table">
+<div class="sec-hdr-alt">Itinerario de Transporte</div>
+<table class="gt">
   <thead>
     <tr>
       <th>Tipo</th>
-      <th>Empresa</th>
-      <th>Ruta</th>
-      <th>Fecha Salida</th>
+      <th class="tl">Empresa</th>
+      <th class="tl">Ruta</th>
+      <th>F. Salida</th>
       <th>Hora</th>
-      <th>Fecha Llegada</th>
+      <th>F. Llegada</th>
       <th>Hora</th>
     </tr>
   </thead>
@@ -367,96 +404,85 @@ table.std-table tr:nth-child(even) td { background: #f0f4f8; }
         ? collect([
             $tramo->origenProvincia?->nombre,
             $tramo->origenCanton?->nombre ?: $tramo->origen_ciudad,
-          ])->filter()->unique()->join('/')
-        : collect([$tramo->origen_pais, $tramo->origen_ciudad])
-            ->filter()->join('/');
+          ])->filter()->unique()->join(' / ')
+        : collect([$tramo->origen_pais, $tramo->origen_ciudad])->filter()->join(' / ');
       $dest = $tramo->destino_tipo === 'nacional'
         ? collect([
             $tramo->destinoProvincia?->nombre,
             $tramo->destinoCanton?->nombre ?: $tramo->destino_ciudad,
-          ])->filter()->unique()->join('/')
-        : collect([$tramo->destino_pais, $tramo->destino_ciudad])
-            ->filter()->join('/');
+          ])->filter()->unique()->join(' / ')
+        : collect([$tramo->destino_pais, $tramo->destino_ciudad])->filter()->join(' / ');
     @endphp
     <tr>
       <td>{{ strtoupper($tramo->empresa?->catalogo?->tipo_vehiculo ?? 'TERRESTRE') }}</td>
-      <td style="text-align:left">{{ $tramo->empresa?->nombre ?? '—' }}</td>
-      <td style="text-align:left"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
+      <td class="tl">{{ $tramo->empresa?->nombre ?? '—' }}</td>
+      <td class="tl"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
       <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('d/m/Y') : '—' }}</td>
       <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('H:i') : '—' }}</td>
       <td>{{ $tramo->datetime_llegada ? \Carbon\Carbon::parse($tramo->datetime_llegada)->format('d/m/Y') : '—' }}</td>
       <td>{{ $tramo->datetime_llegada ? \Carbon\Carbon::parse($tramo->datetime_llegada)->format('H:i') : '—' }}</td>
     </tr>
     @empty
-    <tr>
-      <td colspan="7" style="text-align:center;color:#718096">
-        Sin tramos registrados.
-      </td>
-    </tr>
+    <tr><td colspan="7" style="color:#718096">Sin tramos registrados.</td></tr>
     @endforelse
   </tbody>
 </table>
 
 {{-- ══ GASTOS ══ --}}
-<div class="section-header">Gastos — Comprobantes de Respaldo</div>
+<div class="sec-hdr">Gastos — Comprobantes de Respaldo</div>
 @if($viatico->liquidacion?->detallesFactura?->count() > 0)
-<table class="std-table">
+<table class="gt">
   <thead>
     <tr>
-      <th style="text-align:left">RUC</th>
-      <th style="text-align:left">Razón Social / Proveedor</th>
+      <th class="tl">RUC</th>
+      <th class="tl">Razón Social / Proveedor</th>
       <th>N° Comprobante</th>
       <th>Tipo</th>
-      <th style="text-align:left">Categoría</th>
+      <th class="tl">Categoría</th>
       <th>Total</th>
     </tr>
   </thead>
   <tbody>
     @foreach($viatico->liquidacion->detallesFactura as $f)
     <tr>
-      <td>{{ $f->ruc_proveedor ?? '—' }}</td>
-      <td>{{ $f->nombre_proveedor ?? '—' }}</td>
-      <td style="text-align:center">
-        {{ $f->numero_factura ?? $f->numero_ticket ?? '—' }}
-      </td>
-      <td style="text-align:center">
-        {{ strtoupper($f->tipo_comprobante ?? 'FACTURA') }}
-      </td>
-      <td>{{ $f->categoria?->nombre ?? '—' }}</td>
-      <td style="text-align:right">
-        <strong>$ {{ number_format($f->monto ?? 0, 2) }}</strong>
-      </td>
+      <td class="tl">{{ $f->ruc_proveedor ?? '—' }}</td>
+      <td class="tl">{{ $f->nombre_proveedor ?? '—' }}</td>
+      <td>{{ $f->numero_factura ?? $f->numero_ticket ?? '—' }}</td>
+      <td>{{ strtoupper($f->tipo_comprobante ?? 'FACTURA') }}</td>
+      <td class="tl">{{ $f->categoria?->nombre ?? '—' }}</td>
+      <td><strong>$ {{ number_format($f->monto ?? 0, 2) }}</strong></td>
     </tr>
     @endforeach
   </tbody>
 </table>
 
 {{-- ══ RESUMEN FINANCIERO ══ --}}
-<div class="section-header">Resumen Financiero</div>
-<div class="resumen-box">
-  <div class="resumen-row">
-    <div class="resumen-lbl">Anticipo recibido:</div>
-    <div class="resumen-val">$ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}</div>
+<div class="sec-hdr-alt">Resumen Financiero</div>
+<div class="resumen-wrap">
+  <div class="res-row">
+    <div class="res-lbl">Anticipo recibido:</div>
+    <div class="res-val">$ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}</div>
   </div>
-  <div class="resumen-row">
-    <div class="resumen-lbl">Total comprobantes presentados:</div>
-    <div class="resumen-val">
+  <div class="res-row">
+    <div class="res-lbl">Total comprobantes presentados:</div>
+    <div class="res-val">
       $ {{ number_format($viatico->liquidacion->total_facturas ?? 0, 2) }}
     </div>
   </div>
-  <div class="resumen-row">
-    <div class="resumen-total-lbl">
-      {{ ($viatico->liquidacion->diferencia_devolver ?? 0) >= 0
-          ? '★ Valor a devolver a la institución:'
-          : '★ Valor a cobrar por el servidor:' }}
+  <div class="res-row">
+    <div class="res-total-lbl">
+      @php
+        $dif = $viatico->liquidacion->diferencia_devolver ?? 0;
+      @endphp
+      {{ $dif >= 0 ? '★ Valor a devolver a la institución:' : '★ Valor a cobrar por el servidor:' }}
     </div>
-    <div class="resumen-total-val">
-      $ {{ number_format(abs($viatico->liquidacion->diferencia_devolver ?? 0), 2) }}
+    <div class="res-total-val">
+      $ {{ number_format(abs($dif), 2) }}
     </div>
   </div>
 </div>
 @else
-<div class="text-content-box" style="color:#718096">
+<div class="tbox" style="color:#718096">
   Sin comprobantes registrados en la liquidación.
 </div>
 @endif
@@ -468,62 +494,43 @@ table.std-table tr:nth-child(even) td { background: #f0f4f8; }
 </div>
 
 {{-- ══ FIRMAS ══ --}}
-<div class="firmas-wrap">
-  <div class="firma-cell">
-    <div class="firma-espacio"></div>
-    <div class="firma-nombre">
-      {{ collect([
-          $viatico->servidor?->apellido,
-          $viatico->servidor?->nombre,
-        ])->filter()->join(' ') ?: '—' }}
+<div class="firmas">
+  <div class="fc">
+    <div class="fline"></div>
+    <div class="fn">
+      {{ collect([$viatico->servidor?->apellido, $viatico->servidor?->nombre])->filter()->join(' ') ?: '—' }}
     </div>
-    <div class="firma-cargo">
-      {{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}
-    </div>
-    <div class="firma-rol">Servidor Solicitante</div>
+    <div class="fc-cargo">{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}</div>
+    <div class="fc-rol">Servidor Solicitante</div>
   </div>
-  <div class="firma-cell">
-    <div class="firma-espacio"></div>
+  <div class="fc">
+    <div class="fline"></div>
     @if($jefeUnidad)
-      <div class="firma-nombre">
-        {{ collect([
-            $jefeUnidad->apellido,
-            $jefeUnidad->nombre,
-          ])->filter()->join(' ') }}
-      </div>
-      <div class="firma-cargo">
-        {{ $jefeUnidad->puesto?->cargo?->nombre ?? 'Director/a' }}
-      </div>
+      <div class="fn">{{ collect([$jefeUnidad->apellido, $jefeUnidad->nombre])->filter()->join(' ') }}</div>
+      <div class="fc-cargo">{{ $jefeUnidad->puesto?->cargo?->nombre ?? 'Director/a' }}</div>
     @else
-      <div class="firma-nombre" style="color:#a0aec0">___________________________</div>
-      <div class="firma-cargo" style="color:#a0aec0">Director/a</div>
+      <div class="fn" style="color:#a0aec0">___________________________</div>
+      <div class="fc-cargo" style="color:#a0aec0">Director/a de Unidad</div>
     @endif
-    <div class="firma-rol">Responsable de Unidad Solicitante</div>
+    <div class="fc-rol">Responsable de Unidad Solicitante</div>
   </div>
-  <div class="firma-cell">
-    <div class="firma-espacio"></div>
+  <div class="fc">
+    <div class="fline"></div>
     @if($prefecto)
-      <div class="firma-nombre">
-        {{ collect([
-            $prefecto->apellido,
-            $prefecto->nombre,
-          ])->filter()->join(' ') }}
-      </div>
-      <div class="firma-cargo">
-        {{ $prefecto->puesto?->cargo?->nombre ?? 'Prefecto/a Provincial' }}
-      </div>
+      <div class="fn">{{ collect([$prefecto->apellido, $prefecto->nombre])->filter()->join(' ') }}</div>
+      <div class="fc-cargo">{{ $prefecto->puesto?->cargo?->nombre ?? 'Prefecto/a Provincial' }}</div>
     @else
-      <div class="firma-nombre" style="color:#a0aec0">___________________________</div>
-      <div class="firma-cargo">Prefecto/a Provincial</div>
+      <div class="fn" style="color:#a0aec0">___________________________</div>
+      <div class="fc-cargo">Prefecto/a Provincial</div>
     @endif
-    <div class="firma-rol">Máxima Autoridad o Delegado</div>
+    <div class="fc-rol">Máxima Autoridad o Delegado</div>
   </div>
 </div>
 
 {{-- ══ PIE ══ --}}
 <div class="footer">
-  <div class="footer-left">SGTH — GAD Provincial de Esmeraldas</div>
-  <div class="footer-right">
+  <div class="fl">SGTH — GAD Provincial de Esmeraldas</div>
+  <div class="fr">
     Generado el {{ date('d/m/Y H:i') }} •
     Documento oficial — No requiere sello húmedo
   </div>
