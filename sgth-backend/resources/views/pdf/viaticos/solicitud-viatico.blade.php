@@ -400,10 +400,8 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
       @php
         $tramos = $viatico->tramos->sortBy('orden');
 
-        // Obtener tramos de destino y escala
-        $tramosDestino = $tramos->whereIn(
-            'tipo_tramo', ['destino', 'escala']
-        );
+        // Solo tramos tipo 'destino'
+        $tramosDestino = $tramos->where('tipo_tramo', 'destino');
 
         // Si no hay destinos clasificados, usar tramo IDA
         if ($tramosDestino->isEmpty()) {
