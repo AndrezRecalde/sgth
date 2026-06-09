@@ -111,6 +111,7 @@ export type TramoViatico = {
   id:                    number
   viatico_id:            number
   orden:                 number
+  tipo_tramo?:           'ida' | 'destino' | 'escala' | 'regreso' | null
   origen_tipo:           'nacional' | 'internacional'
   origen_provincia_id?:  number | null
   origen_canton_id?:     number | null

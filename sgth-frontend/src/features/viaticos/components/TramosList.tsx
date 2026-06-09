@@ -36,6 +36,16 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
   maritimo: <IconShip size={14} />,
 };
 
+const TIPO_TRAMO_CONFIG: Record<string, {
+  label: string
+  color: string
+}> = {
+  ida:     { label: '🟢 IDA',           color: 'blue'    },
+  destino: { label: '🎯 DESTINO',       color: 'teal'    },
+  escala:  { label: '🔄 PARADA/ESCALA', color: 'orange'  },
+  regreso: { label: '🔴 REGRESO',       color: 'red'     },
+}
+
 function formatDateTime(dt?: string | null): string {
   if (!dt) return "—";
   return new Date(dt).toLocaleString("es-EC", {
@@ -138,6 +148,18 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                     <Badge size="xs" variant="light" color="blue">
                       {t.empresa?.nombre ?? "—"}
                     </Badge>
+                    {t.tipo_tramo && (
+                      <Badge
+                        size="xs"
+                        color={
+                          TIPO_TRAMO_CONFIG[t.tipo_tramo]?.color ?? 'gray'
+                        }
+                        variant="filled"
+                      >
+                        {TIPO_TRAMO_CONFIG[t.tipo_tramo]?.label
+                          ?? t.tipo_tramo}
+                      </Badge>
+                    )}
                     {requiereAuth && (
                       <Badge
                         size="xs"

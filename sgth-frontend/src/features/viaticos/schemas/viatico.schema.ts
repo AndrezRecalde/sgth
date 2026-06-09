@@ -39,6 +39,9 @@ export const tramoSchema = z.object({
   }),
   datetime_salida:  z.string().min(1, 'Requerido'),
   datetime_llegada: z.string().min(1, 'Requerido'),
+  tipo_tramo: z.enum([
+    'ida', 'destino', 'escala', 'regreso'
+  ]).optional().nullable(),
 })
 
 export type TramoFormData = z.infer<typeof tramoSchema>

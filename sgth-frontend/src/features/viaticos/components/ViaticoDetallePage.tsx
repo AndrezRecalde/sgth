@@ -890,6 +890,9 @@ export function ViaticoDetallePage({ identificador }: Props) {
               <TramoForm
                 viaticoId={d.id}
                 viatico={d}
+                tramosExistentes={
+                  (d.tramos as import("@/types/api").TramoViatico[] | undefined)?.length ?? 0
+                }
                 onSuccess={() => setMostrarTramoForm(false)}
                 onCancel={() => setMostrarTramoForm(false)}
               />

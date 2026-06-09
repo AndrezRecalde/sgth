@@ -15,6 +15,7 @@ import type {
 } from '@/types/api'
 
 export type CrearTramoData = {
+  tipo_tramo?:           'ida' | 'destino' | 'escala' | 'regreso' | null
   origen_tipo:           'nacional' | 'internacional'
   origen_provincia_id?:  number | null
   origen_canton_id?:     number | null

@@ -10,6 +10,9 @@ import {
   Alert,
   Text,
   Group,
+  SegmentedControl,
+  Badge,
+  ThemeIcon,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import "@mantine/dates/styles.css";
@@ -29,10 +32,11 @@ import type { CatalogoTransporte, EmpresaTransporte } from "@/types/api";
 import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 
 interface Props {
-  viaticoId: number;
-  viatico?: import("@/types/api").Viatico | null;
-  onSuccess: () => void;
-  onCancel: () => void;
+  viaticoId:         number
+  viatico?:          import("@/types/api").Viatico | null
+  tramosExistentes?: number
+  onSuccess:         () => void
+  onCancel:          () => void
 }
 
 const fromDateTime = (d: Date | null | string): string => {
@@ -89,7 +93,7 @@ const PAISES_COMUNES = [
   "Otro",
 ];
 
-export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
+export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onCancel }: Props) {
   const contained = useContainedInput();
   const qc = useQueryClient();
 
@@ -104,6 +108,7 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
   } = useForm<TramoFormData>({
     resolver: zodResolver(tramoSchema),
     defaultValues: {
+      tipo_tramo: null,
       origen_tipo: "nacional",
       origen_provincia_id: null,
       origen_canton_id: null,
@@ -129,6 +134,14 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
 
   const salidaTramo = useWatch({ control, name: "datetime_salida" });
   const llegadaTramo = useWatch({ control, name: "datetime_llegada" });
+  const tipoTramo = useWatch({ control, name: "tipo_tramo" });
+
+  // Determinar si es el primer tramo (IDA automático)
+  const esPrimerTramo = (tramosExistentes ?? 0) === 0;
+
+  // Si es el primer tramo, forzar tipo IDA
+  // El servidor no puede cambiarlo
+  const tipoTramoEfectivo = esPrimerTramo ? "ida" : tipoTramo;
 
   const alertaSalida: "ok" | "error" | null =
     viatico && salidaTramo
@@ -222,7 +235,10 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
   const onSubmit = (values: TramoFormData) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { catalogo_transporte_id, ...rest } = values;
-    crear.mutate(rest);
+    crear.mutate({
+      ...rest,
+      tipo_tramo: tipoTramoEfectivo ?? "destino",
+    });
   };
 
   return (
@@ -669,6 +685,77 @@ export function TramoForm({ viaticoId, viatico, onSuccess, onCancel }: Props) {
                       minute: "2-digit",
                     })}
                   </strong>
+                </Text>
+              </Alert>
+            )}
+          </Stack>
+        )}
+
+        {/* Tipo de tramo */}
+        <Divider label="¿Qué tipo de tramo es este?" labelPosition="left" />
+
+        {esPrimerTramo ? (
+          <Alert color="blue" variant="light" p="xs">
+            <Group gap="xs">
+              <ThemeIcon color="blue" variant="light" size="sm" radius="xl">
+                <Text size="xs">🟢</Text>
+              </ThemeIcon>
+              <Text size="xs" fw={600}>
+                Tramo de IDA — se asigna automáticamente
+                como el primer tramo del itinerario
+              </Text>
+            </Group>
+          </Alert>
+        ) : (
+          <Stack gap="xs">
+            <Controller
+              name="tipo_tramo"
+              control={control}
+              render={({ field }) => (
+                <SegmentedControl
+                  fullWidth
+                  data={[
+                    {
+                      value: "destino",
+                      label: "🎯 DESTINO",
+                    },
+                    {
+                      value: "escala",
+                      label: "🔄 PARADA/ESCALA",
+                    },
+                    {
+                      value: "regreso",
+                      label: "🔴 REGRESO",
+                    },
+                  ]}
+                  value={field.value ?? "destino"}
+                  onChange={(v) => field.onChange(v)}
+                />
+              )}
+            />
+            {tipoTramo === "destino" && (
+              <Alert color="emerald" variant="light" p="xs">
+                <Text size="xs">
+                  ✅ <strong>DESTINO</strong> — Realizas actividades
+                  de la comisión en esta ciudad
+                </Text>
+              </Alert>
+            )}
+            {tipoTramo === "escala" && (
+              <Alert color="orange" variant="light" p="xs">
+                <Text size="xs">
+                  🔄 <strong>PARADA/ESCALA</strong> — Solo pasas
+                  por esta ciudad, no realizas actividades
+                </Text>
+              </Alert>
+            )}
+            {tipoTramo === "regreso" && (
+              <Alert color="red" variant="light" p="xs">
+                <Text size="xs">
+                  🔴 <strong>REGRESO</strong> — Este es tu último
+                  tramo de vuelta a Esmeraldas.
+                  La llegada debe coincidir exactamente con
+                  la fecha de regreso del viático.
                 </Text>
               </Alert>
             )}
