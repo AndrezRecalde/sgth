@@ -353,7 +353,7 @@ export function ViaticoDetalle({ opened, onClose, viatico }: Props) {
                 leftSection={<IconCheck size={16} />}
                 loading={aprobar.isPending}
                 onClick={() => {
-                  aprobar.mutate(d.id);
+                  aprobar.mutate({ id: d.id });
                   onClose();
                 }}
                 fullWidth

@@ -44,9 +44,8 @@ const ZONA_OPTIONS = [
 ];
 
 const MODALIDAD_OPTIONS = [
-  { value: "total", label: "💰 Anticipo total (100%)" },
-  { value: "parcial", label: "💵 Anticipo parcial" },
-  { value: "sin_anticipo", label: "🚫 Sin anticipo" },
+  { value: "total",        label: "💰 Anticipo (70% del monto calculado)" },
+  { value: "sin_anticipo", label: "🚫 Sin anticipo"                       },
 ];
 
 const TIPO_VIAJE_OPTIONS = [
@@ -379,28 +378,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             </Grid.Col>
           </Grid>
 
-          {/* Anticipo parcial */}
-          {modalidadWatch === "parcial" && (
-            <Controller
-              name="monto_calculado"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Monto del anticipo parcial (USD)"
-                  description="¿Cuánto dinero necesita antes del viaje?"
-                  prefix="$"
-                  decimalScale={2}
-                  min={0}
-                  {...contained}
-                  value={field.value ?? 0}
-                  onChange={(v) =>
-                    field.onChange(typeof v === "number" ? v : null)
-                  }
-                  error={errors.monto_calculado?.message}
-                />
-              )}
-            />
-          )}
+
 
           {/* Exterior */}
           {zonaWatch === "exterior" && (

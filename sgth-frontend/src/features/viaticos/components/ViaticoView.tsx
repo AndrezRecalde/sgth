@@ -30,6 +30,8 @@ const ESTADO_COLORS: Record<EstadoViatico, string> = {
   pendiente_liquidacion:'yellow',
   liquidado:            'emerald',
   contabilizado:        'gray',
+  cancelado:            'red',
+  rechazado:            'orange',
 }
 
 const ESTADO_LABELS: Record<EstadoViatico, string> = {
@@ -40,6 +42,8 @@ const ESTADO_LABELS: Record<EstadoViatico, string> = {
   pendiente_liquidacion:'Pend. liquidación',
   liquidado:            'Liquidado',
   contabilizado:        'Contabilizado',
+  cancelado:            'Cancelado',
+  rechazado:            'Rechazado',
 }
 
 export function ViaticoView() {
@@ -174,7 +178,7 @@ export function ViaticoView() {
             label:   'Aprobar',
             icon:    <IconCheck size={14} />,
             color:   'emerald',
-            onClick: () => aprobar.mutate(v.id),
+            onClick: () => aprobar.mutate({ id: v.id }),
             hidden:  (v.estado as string) !== 'solicitado',
           },
           {

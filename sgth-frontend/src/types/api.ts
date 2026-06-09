@@ -216,6 +216,8 @@ export type EstadoViatico =
   | 'pendiente_liquidacion'
   | 'liquidado'
   | 'contabilizado'
+  | 'cancelado'
+  | 'rechazado'
 
 export type ViaticoParams = {
   page?:        number

@@ -85,11 +85,39 @@ export function useViaticoMutations() {
     onError,
   });
 
-  const aprobar = useMutation(createEstadoMutation(
-    viaticoService.aprobar,
-    "Viático aprobado",
-    "El viático fue aprobado correctamente.",
-  ));
+  const aprobar = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id:   number
+      data?: { coeficiente_exterior?: number; pais_destino?: string }
+    }) => viaticoService.aprobar(id, data),
+    onSuccess: (_data, { id }) => {
+      notifications.show({
+        title:   "Viático aprobado",
+        message: "El viático fue aprobado correctamente.",
+        color:   "emerald",
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ["viaticos"] })
+      qc.invalidateQueries({ queryKey: ["viatico", id] })
+      qc.invalidateQueries({ queryKey: ["viatico"] })
+    },
+    onError,
+  })
+
+  const cancelar = useMutation(createEstadoMutation(
+    viaticoService.cancelar,
+    "Solicitud cancelada",
+    "El viático fue cancelado correctamente.",
+  ))
+
+  const rechazar = useMutation(createEstadoMutation(
+    viaticoService.rechazar,
+    "Viático rechazado",
+    "El viático fue rechazado correctamente.",
+  ))
 
   const entregarAnticipo = useMutation(createEstadoMutation(
     viaticoService.entregarAnticipo,
@@ -141,6 +169,8 @@ export function useViaticoMutations() {
   return {
     solicitar,
     aprobar,
+    cancelar,
+    rechazar,
     actualizar,
     entregarAnticipo,
     marcarEnComision,

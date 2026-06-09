@@ -33,7 +33,10 @@ import {
   IconFileText,
   IconChecks,
   IconReceipt,
+  IconX,
+  IconBan,
 } from "@tabler/icons-react";
+import { AprobarExteriorModal } from './AprobarExteriorModal';
 import { usePdfViatico } from "../hooks/usePdfViatico";
 import { useViatico } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
@@ -57,6 +60,8 @@ const ESTADO_COLORS: Record<string, string> = {
   pendiente_liquidacion: "yellow",
   liquidado: "emerald",
   contabilizado: "gray",
+  cancelado: "red",
+  rechazado: "orange",
 };
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -67,6 +72,8 @@ const ESTADO_LABELS: Record<string, string> = {
   pendiente_liquidacion: "Pendiente de liquidación",
   liquidado: "Liquidado",
   contabilizado: "Contabilizado",
+  cancelado: "Cancelado",
+  rechazado: "Rechazado",
 };
 
 const PASO_STEPPER: Record<string, number> = {
@@ -77,6 +84,8 @@ const PASO_STEPPER: Record<string, number> = {
   pendiente_liquidacion: 4,
   liquidado: 5,
   contabilizado: 6,
+  cancelado: 0,
+  rechazado: 0,
 };
 
 function fmt(f?: string | null): string {
@@ -132,7 +141,14 @@ export function ViaticoDetallePage({ identificador }: Props) {
     marcarEnComision,
     marcarPendienteLiquidacion,
     contabilizar,
+    cancelar,
+    rechazar,
   } = useViaticoMutations();
+
+  const [
+    exteriorModalAbierto,
+    { open: abrirExterior, close: cerrarExterior },
+  ] = useDisclosure(false);
 
   const estadoActual = d?.estado ?? "";
   const pasoActivo = PASO_STEPPER[estadoActual] ?? 0;
@@ -656,20 +672,40 @@ export function ViaticoDetallePage({ identificador }: Props) {
       {/* ── Botón acción principal ── */}
       <Card withBorder radius="md" p="sm">
         {estadoActual === "solicitado" && (
-          <Button
-            color="emerald"
-            variant="filled"
-            size="md"
-            leftSection={<IconChecks size={18} />}
-            loading={aprobar.isPending}
-            onClick={() => {
-              aprobar.mutate(d.id);
-              qc.invalidateQueries({ queryKey: ["viatico"] });
-            }}
-            fullWidth
-          >
-            Aprobar solicitud de viático
-          </Button>
+          <Stack gap="xs">
+            <Button
+              color="emerald"
+              variant="filled"
+              size="md"
+              leftSection={<IconChecks size={18} />}
+              loading={aprobar.isPending}
+              onClick={() => {
+                if (d.zona === 'exterior') {
+                  abrirExterior()
+                } else {
+                  aprobar.mutate({ id: d.id })
+                }
+              }}
+              fullWidth
+            >
+              Aprobar solicitud de viático
+            </Button>
+            <Button
+              size="sm"
+              variant="light"
+              color="red"
+              leftSection={<IconX size={14} />}
+              loading={cancelar.isPending}
+              onClick={() => {
+                if (confirm('¿Cancelar esta solicitud?')) {
+                  cancelar.mutate(d.id)
+                }
+              }}
+              fullWidth
+            >
+              Cancelar solicitud
+            </Button>
+          </Stack>
         )}
         {estadoActual === "aprobado" && (
           <Card withBorder radius="md" p="sm">
@@ -701,37 +737,86 @@ export function ViaticoDetallePage({ identificador }: Props) {
                   Entregar Anticipo
                 </Button>
               )}
+              {/* Solo visible para gestores */}
+              <Button
+                size="xs"
+                variant="subtle"
+                color="red"
+                leftSection={<IconBan size={12} />}
+                loading={rechazar.isPending}
+                onClick={() => {
+                  if (confirm('¿Rechazar este viático?')) {
+                    rechazar.mutate(d.id)
+                  }
+                }}
+              >
+                Rechazar
+              </Button>
             </Stack>
           </Card>
         )}
         {estadoActual === "con_anticipo" && (
-          <Button
-            color="violet"
-            variant="filled"
-            size="md"
-            leftSection={<IconPlane size={18} />}
-            loading={marcarEnComision.isPending}
-            onClick={() => {
-              marcarEnComision.mutate(d.id);
-              qc.invalidateQueries({ queryKey: ["viatico"] });
-            }}
-            fullWidth
-          >
-            El servidor está en comisión
-          </Button>
+          <Stack gap="xs">
+            <Button
+              color="violet"
+              variant="filled"
+              size="md"
+              leftSection={<IconPlane size={18} />}
+              loading={marcarEnComision.isPending}
+              onClick={() => {
+                marcarEnComision.mutate(d.id);
+                qc.invalidateQueries({ queryKey: ["viatico"] });
+              }}
+              fullWidth
+            >
+              El servidor está en comisión
+            </Button>
+            {/* Solo visible para gestores */}
+            <Button
+              size="xs"
+              variant="subtle"
+              color="red"
+              leftSection={<IconBan size={12} />}
+              loading={rechazar.isPending}
+              onClick={() => {
+                if (confirm('¿Rechazar este viático?')) {
+                  rechazar.mutate(d.id)
+                }
+              }}
+            >
+              Rechazar
+            </Button>
+          </Stack>
         )}
         {estadoActual === "en_comision" && (
-          <Button
-            color="yellow"
-            variant="filled"
-            size="md"
-            leftSection={<IconClipboardList size={18} />}
-            loading={marcarPendienteLiquidacion.isPending}
-            onClick={() => marcarPendienteLiquidacion.mutate(d.id)}
-            fullWidth
-          >
-            Iniciar liquidación
-          </Button>
+          <Stack gap="xs">
+            <Button
+              color="yellow"
+              variant="filled"
+              size="md"
+              leftSection={<IconClipboardList size={18} />}
+              loading={marcarPendienteLiquidacion.isPending}
+              onClick={() => marcarPendienteLiquidacion.mutate(d.id)}
+              fullWidth
+            >
+              Iniciar liquidación
+            </Button>
+            {/* Solo visible para gestores */}
+            <Button
+              size="xs"
+              variant="subtle"
+              color="red"
+              leftSection={<IconBan size={12} />}
+              loading={rechazar.isPending}
+              onClick={() => {
+                if (confirm('¿Rechazar este viático?')) {
+                  rechazar.mutate(d.id)
+                }
+              }}
+            >
+              Rechazar
+            </Button>
+          </Stack>
         )}
         {estadoActual === "liquidado" && (
           <Button
@@ -839,6 +924,14 @@ export function ViaticoDetallePage({ identificador }: Props) {
             }}
           />
         </Modal>
+      )}
+
+      {exteriorModalAbierto && (
+        <AprobarExteriorModal
+          opened={exteriorModalAbierto}
+          onClose={cerrarExterior}
+          viatico={d as Viatico}
+        />
       )}
     </Stack>
   );

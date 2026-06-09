@@ -75,9 +75,22 @@ export const viaticoService = {
       `/viaticos/${id}`, data
     ).then(r => r.data.datos),
 
-  aprobar: (id: number) =>
+  cancelar: (id: number) =>
     api.post<ApiResponse<Viatico>>(
-      `/viaticos/${id}/aprobar`
+      `/viaticos/${id}/cancelar`
+    ).then(r => r.data.datos),
+
+  rechazar: (id: number) =>
+    api.post<ApiResponse<Viatico>>(
+      `/viaticos/${id}/rechazar`
+    ).then(r => r.data.datos),
+
+  aprobar: (id: number, data?: {
+    coeficiente_exterior?: number
+    pais_destino?:         string
+  }) =>
+    api.post<ApiResponse<Viatico>>(
+      `/viaticos/${id}/aprobar`, data ?? {}
     ).then(r => r.data.datos),
 
   entregarAnticipo: (id: number) =>

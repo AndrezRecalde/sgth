@@ -25,9 +25,8 @@ const ZONA_OPTIONS = [
 ]
 
 const MODALIDAD_OPTIONS = [
-  { value: 'total',        label: 'Anticipo total (100%)' },
-  { value: 'parcial',      label: 'Anticipo parcial'      },
-  { value: 'sin_anticipo', label: 'Sin anticipo'          },
+  { value: 'total',        label: 'Anticipo (70% del monto calculado)' },
+  { value: 'sin_anticipo', label: 'Sin anticipo'                       },
 ]
 
 const fromDateTime = (d: Date | null | string): string => {
