@@ -43,9 +43,6 @@ class SolicitarViaticoRequest extends FormRequest
         ];
 
         if ($this->input('zona') === 'exterior') {
-            $rules['monto_calculado'] = [
-                'required', 'numeric', 'min:1',
-            ];
             $rules['tipo_viaje']   = ['required', 'string'];
             $rules['pais_destino'] = ['required', 'string'];
         }

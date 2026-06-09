@@ -16,7 +16,7 @@ class NumeroALetras
     ];
 
     private static array $centenas = [
-        '', 'CIEN', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS',
+        '', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS',
         'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS',
         'NOVECIENTOS',
     ];
