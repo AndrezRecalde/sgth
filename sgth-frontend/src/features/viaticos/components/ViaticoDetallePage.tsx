@@ -36,7 +36,7 @@ import {
   IconX,
   IconBan,
 } from "@tabler/icons-react";
-import { AprobarExteriorModal } from './AprobarExteriorModal';
+import { AprobarExteriorModal } from "./AprobarExteriorModal";
 import { usePdfViatico } from "../hooks/usePdfViatico";
 import { useViatico } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
@@ -145,10 +145,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
     rechazar,
   } = useViaticoMutations();
 
-  const [
-    exteriorModalAbierto,
-    { open: abrirExterior, close: cerrarExterior },
-  ] = useDisclosure(false);
+  const [exteriorModalAbierto, { open: abrirExterior, close: cerrarExterior }] =
+    useDisclosure(false);
 
   const estadoActual = d?.estado ?? "";
   const pasoActivo = PASO_STEPPER[estadoActual] ?? 0;
@@ -255,7 +253,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
                   </Button>
                 )}
 
-                {estadoActual === 'contabilizado' && (
+                {estadoActual === "contabilizado" && (
                   <Button
                     size="xs"
                     variant="light"
@@ -307,7 +305,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
           <Card withBorder radius="md" h="100%">
             <Group justify="space-between" mb="sm">
               <Group gap="xs">
-                <ThemeIcon color="blue" variant="light" size="sm">
+                <ThemeIcon variant="default" size="sm">
                   <IconClipboardList size={14} />
                 </ThemeIcon>
                 <Text fw={600} size="sm">
@@ -315,14 +313,14 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 </Text>
               </Group>
               {puedeEditarDatos && (
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="blue"
+                <Button
+                  size="xs"
+                  variant="light"
+                  leftSection={<IconPencil size={12} />}
                   onClick={abrirEdit}
                 >
-                  <IconPencil size={14} />
-                </ActionIcon>
+                  Gestionar
+                </Button>
               )}
             </Group>
             <Divider mb="sm" />
@@ -399,7 +397,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
           <Card withBorder radius="md" h="100%">
             <Group justify="space-between" mb="sm">
               <Group gap="xs">
-                <ThemeIcon color="violet" variant="light" size="sm">
+                <ThemeIcon variant="default" size="sm">
                   <IconRoute size={14} />
                 </ThemeIcon>
                 <Text fw={600} size="sm">
@@ -410,7 +408,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 <Button
                   size="xs"
                   variant="light"
-                  color="violet"
                   leftSection={<IconPencil size={12} />}
                   onClick={abrirTramos}
                 >
@@ -441,7 +438,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
           <Card withBorder radius="md">
             <Group justify="space-between" mb="sm">
               <Group gap="xs">
-                <ThemeIcon color="teal" variant="light" size="sm">
+                <ThemeIcon variant="default" size="sm">
                   <IconUsers size={14} />
                 </ThemeIcon>
                 <Text fw={600} size="sm">
@@ -452,7 +449,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 <Button
                   size="xs"
                   variant="light"
-                  color="teal"
                   leftSection={<IconPencil size={12} />}
                   onClick={abrirServidores}
                 >
@@ -496,7 +492,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
           <Card withBorder radius="md">
             <Group justify="space-between" mb="sm">
               <Group gap="xs">
-                <ThemeIcon color="orange" variant="light" size="sm">
+                <ThemeIcon variant="default" size="sm">
                   <IconCurrencyDollar size={14} />
                 </ThemeIcon>
                 <Text fw={600} size="sm">
@@ -680,10 +676,10 @@ export function ViaticoDetallePage({ identificador }: Props) {
               leftSection={<IconChecks size={18} />}
               loading={aprobar.isPending}
               onClick={() => {
-                if (d.zona === 'exterior') {
-                  abrirExterior()
+                if (d.zona === "exterior") {
+                  abrirExterior();
                 } else {
-                  aprobar.mutate({ id: d.id })
+                  aprobar.mutate({ id: d.id });
                 }
               }}
               fullWidth
@@ -697,8 +693,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
               leftSection={<IconX size={14} />}
               loading={cancelar.isPending}
               onClick={() => {
-                if (confirm('¿Cancelar esta solicitud?')) {
-                  cancelar.mutate(d.id)
+                if (confirm("¿Cancelar esta solicitud?")) {
+                  cancelar.mutate(d.id);
                 }
               }}
               fullWidth
@@ -745,8 +741,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 leftSection={<IconBan size={12} />}
                 loading={rechazar.isPending}
                 onClick={() => {
-                  if (confirm('¿Rechazar este viático?')) {
-                    rechazar.mutate(d.id)
+                  if (confirm("¿Rechazar este viático?")) {
+                    rechazar.mutate(d.id);
                   }
                 }}
               >
@@ -779,8 +775,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
               leftSection={<IconBan size={12} />}
               loading={rechazar.isPending}
               onClick={() => {
-                if (confirm('¿Rechazar este viático?')) {
-                  rechazar.mutate(d.id)
+                if (confirm("¿Rechazar este viático?")) {
+                  rechazar.mutate(d.id);
                 }
               }}
             >
@@ -809,8 +805,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
               leftSection={<IconBan size={12} />}
               loading={rechazar.isPending}
               onClick={() => {
-                if (confirm('¿Rechazar este viático?')) {
-                  rechazar.mutate(d.id)
+                if (confirm("¿Rechazar este viático?")) {
+                  rechazar.mutate(d.id);
                 }
               }}
             >

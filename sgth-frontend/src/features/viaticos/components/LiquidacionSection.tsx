@@ -1,94 +1,96 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
-  Stack, Card, Text, Group, Button,
-  Badge, Divider, Alert, ThemeIcon,
+  Stack,
+  Card,
+  Text,
+  Group,
+  Button,
+  Badge,
+  Divider,
+  Alert,
+  ThemeIcon,
   Grid,
-} from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
-  IconClipboardList, IconFileInvoice,
-  IconCheck, IconAlertCircle, IconPencil,
+  IconClipboardList,
+  IconFileInvoice,
+  IconCheck,
+  IconAlertCircle,
+  IconPencil,
   IconCircleCheck,
-} from '@tabler/icons-react'
-import { useViaticoMutations } from '../hooks/useViaticoMutations'
-import { ActividadesModal } from './ActividadesModal'
-import { FacturasModal } from './FacturasModal'
-import type { ActividadData } from './ActividadesModal'
-import type { FacturaData } from './FacturasModal'
-import { useCategoriasFactura } from '../hooks/useViaticos'
-import type { Viatico, CategoriaFactura } from '@/types/api'
+} from "@tabler/icons-react";
+import { useViaticoMutations } from "../hooks/useViaticoMutations";
+import { ActividadesModal } from "./ActividadesModal";
+import { FacturasModal } from "./FacturasModal";
+import type { ActividadData } from "./ActividadesModal";
+import type { FacturaData } from "./FacturasModal";
+import { useCategoriasFactura } from "../hooks/useViaticos";
+import type { Viatico, CategoriaFactura } from "@/types/api";
 
 interface Props {
-  viatico:   Viatico
-  onSuccess: () => void
+  viatico: Viatico;
+  onSuccess: () => void;
 }
 
 function fmtMonto(v?: number | string | null): string {
-  if (v == null) return '—'
-  return `$${Number(v).toFixed(2)}`
+  if (v == null) return "—";
+  return `$${Number(v).toFixed(2)}`;
 }
 
 export function LiquidacionSection({ viatico, onSuccess }: Props) {
-  const { data: categoriasData = [] } = useCategoriasFactura()
-  const categoriaOptions = (categoriasData as CategoriaFactura[])
-    .map(c => ({
-      value: String(c.id),
-      label: c.nombre ?? '',
-    }))
+  const { data: categoriasData = [] } = useCategoriasFactura();
+  const categoriaOptions = (categoriasData as CategoriaFactura[]).map((c) => ({
+    value: String(c.id),
+    label: c.nombre ?? "",
+  }));
 
-  const [actividades, setActividades] =
-    useState<ActividadData[]>([])
-  const [facturas, setFacturas] =
-    useState<FacturaData[]>([])
+  const [actividades, setActividades] = useState<ActividadData[]>([]);
+  const [facturas, setFacturas] = useState<FacturaData[]>([]);
 
-  const [
-    actModalAbierto,
-    { open: abrirAct, close: cerrarAct },
-  ] = useDisclosure(false)
+  const [actModalAbierto, { open: abrirAct, close: cerrarAct }] =
+    useDisclosure(false);
 
-  const [
-    factModalAbierto,
-    { open: abrirFact, close: cerrarFact },
-  ] = useDisclosure(false)
+  const [factModalAbierto, { open: abrirFact, close: cerrarFact }] =
+    useDisclosure(false);
 
-  const { liquidar } = useViaticoMutations()
+  const { liquidar } = useViaticoMutations();
 
-  const anticipo     = Number(viatico.monto_anticipo ?? 0)
+  const anticipo = Number(viatico.monto_anticipo ?? 0);
   const totalFacturas = facturas.reduce(
-    (sum, f) => sum + (Number(f.monto) || 0), 0
-  )
-  const diferencia   = anticipo - totalFacturas
+    (sum, f) => sum + (Number(f.monto) || 0),
+    0,
+  );
+  const diferencia = anticipo - totalFacturas;
 
-  const puedeRegistrar =
-    actividades.length > 0 && facturas.length > 0
+  const puedeRegistrar = actividades.length > 0 && facturas.length > 0;
 
   const handleRegistrar = async () => {
     await liquidar.mutateAsync({
       viaticoId: viatico.id,
       data: {
         fecha_retorno: (() => {
-          const d = new Date(
-            viatico.datetime_llegada as string
-          )
-          return d.toISOString().slice(0, 10)
+          const d = new Date(viatico.datetime_llegada as string);
+          return d.toISOString().slice(0, 10);
         })(),
         actividades,
         facturas,
       },
-    })
-    onSuccess()
-  }
+    });
+    onSuccess();
+  };
 
   return (
     <Stack gap="md">
-
       {/* Resumen rápido si ya hay datos */}
       {(actividades.length > 0 || facturas.length > 0) && (
         <Card withBorder radius="md" p="sm" bg="gray.0">
           <Group justify="space-between">
-            <Text size="sm" c="dimmed">Anticipo:</Text>
+            <Text size="sm" c="dimmed">
+              Anticipo:
+            </Text>
             <Text size="sm" fw={600}>
               {fmtMonto(anticipo)}
             </Text>
@@ -104,15 +106,9 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
           <Divider my={4} />
           <Group justify="space-between">
             <Text size="sm" fw={600}>
-              {diferencia >= 0
-                ? 'A devolver:'
-                : 'A cobrar:'}
+              {diferencia >= 0 ? "A devolver:" : "A cobrar:"}
             </Text>
-            <Text
-              size="sm"
-              fw={700}
-              c={diferencia >= 0 ? 'orange' : 'emerald'}
-            >
+            <Text size="sm" fw={700} c={diferencia >= 0 ? "orange" : "emerald"}>
               {fmtMonto(Math.abs(diferencia))}
             </Text>
           </Group>
@@ -120,15 +116,12 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
       )}
 
       <Grid>
-
         {/* Sección actividades */}
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <Card withBorder radius="md" h="100%">
             <Group justify="space-between" mb="sm">
               <Group gap="xs">
-                <ThemeIcon
-                  color="blue" variant="light" size="sm"
-                >
+                <ThemeIcon color="blue" variant="light" size="sm">
                   <IconClipboardList size={14} />
                 </ThemeIcon>
                 <Text fw={600} size="sm">
@@ -136,15 +129,9 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
                 </Text>
               </Group>
               {actividades.length > 0 && (
-                <Badge
-                  color="blue"
-                  variant="light"
-                  size="sm"
-                >
-                  {actividades.length}{' '}
-                  {actividades.length === 1
-                    ? 'actividad'
-                    : 'actividades'}
+                <Badge color="blue" variant="light" size="sm">
+                  {actividades.length}{" "}
+                  {actividades.length === 1 ? "actividad" : "actividades"}
                 </Badge>
               )}
             </Group>
@@ -159,17 +146,15 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
                   w="100%"
                 >
                   <Text size="xs">
-                    Debe registrar las actividades
-                    realizadas durante la comisión.
+                    Debe registrar las actividades realizadas durante la
+                    comisión.
                   </Text>
                 </Alert>
                 <Button
                   color="blue"
                   variant="light"
                   size="sm"
-                  leftSection={
-                    <IconClipboardList size={14} />
-                  }
+                  leftSection={<IconClipboardList size={14} />}
                   onClick={abrirAct}
                   fullWidth
                 >
@@ -187,13 +172,14 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
                       />
                       <Text size="xs" fw={500}>
                         {a.fecha
-                          ? new Date(a.fecha).toLocaleDateString('es-EC', {
-                              timeZone: 'UTC',
-                              day: '2-digit',
-                              month: '2-digit',
+                          ? new Date(a.fecha).toLocaleDateString("es-EC", {
+                              timeZone: "UTC",
+                              day: "2-digit",
+                              month: "2-digit",
                             })
-                          : '—'}
-                        {' — '}{a.lugar}
+                          : "—"}
+                        {" — "}
+                        {a.lugar}
                       </Text>
                     </Group>
                     {a.descripcion && (
@@ -222,9 +208,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
           <Card withBorder radius="md" h="100%">
             <Group justify="space-between" mb="sm">
               <Group gap="xs">
-                <ThemeIcon
-                  color="orange" variant="light" size="sm"
-                >
+                <ThemeIcon color="orange" variant="light" size="sm">
                   <IconFileInvoice size={14} />
                 </ThemeIcon>
                 <Text fw={600} size="sm">
@@ -232,15 +216,9 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
                 </Text>
               </Group>
               {facturas.length > 0 && (
-                <Badge
-                  color="orange"
-                  variant="light"
-                  size="sm"
-                >
-                  {facturas.length}{' '}
-                  {facturas.length === 1
-                    ? 'comprobante'
-                    : 'comprobantes'}
+                <Badge color="orange" variant="light" size="sm">
+                  {facturas.length}{" "}
+                  {facturas.length === 1 ? "comprobante" : "comprobantes"}
                 </Badge>
               )}
             </Group>
@@ -255,8 +233,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
                   w="100%"
                 >
                   <Text size="xs">
-                    Debe adjuntar los comprobantes
-                    de los gastos realizados.
+                    Debe adjuntar los comprobantes de los gastos realizados.
                   </Text>
                 </Alert>
                 <Button
@@ -290,20 +267,16 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
                     </Group>
                     {f.categoria_factura_id > 0 && (
                       <Group gap={4} ml={22}>
-                        <Badge
-                          size="xs"
-                          color="orange"
-                          variant="dot"
-                        >
+                        <Badge size="xs" color="orange" variant="dot">
                           {categoriaOptions.find(
-                            c => Number(c.value) === f.categoria_factura_id
+                            (c) => Number(c.value) === f.categoria_factura_id,
                           )?.label ?? `Categoría ${f.categoria_factura_id}`}
                         </Badge>
                         <Text size="xs" c="dimmed">
                           {f.tipo_comprobante
                             ? f.tipo_comprobante.charAt(0).toUpperCase() +
                               f.tipo_comprobante.slice(1)
-                            : ''}
+                            : ""}
                         </Text>
                       </Group>
                     )}
@@ -332,9 +305,9 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
           variant="light"
         >
           <Text size="xs">
-            Para registrar la liquidación debe completar
-            tanto el <strong>informe de actividades</strong>
-            {' '}como las <strong>facturas de respaldo</strong>.
+            Para registrar la liquidación debe completar tanto el{" "}
+            <strong>informe de actividades</strong> como las{" "}
+            <strong>facturas de respaldo</strong>.
           </Text>
         </Alert>
       )}
@@ -368,5 +341,5 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         valorInicial={facturas}
       />
     </Stack>
-  )
+  );
 }

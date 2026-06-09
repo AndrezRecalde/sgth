@@ -1,86 +1,97 @@
-'use client'
+"use client";
 
 import {
-  Modal, Stack, Card, Text, Group,
-  Button, Grid, TextInput, ActionIcon,
-  Divider, Badge, Alert, Select,
-  NumberInput, ThemeIcon,
-} from '@mantine/core'
-import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
+  Modal,
+  Stack,
+  Card,
+  Text,
+  Group,
+  Button,
+  Grid,
+  TextInput,
+  ActionIcon,
+  Divider,
+  Badge,
+  Alert,
+  Select,
+  NumberInput,
+  ThemeIcon,
+} from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import "@mantine/dates/styles.css";
 import {
-  IconPlus, IconTrash, IconFileInvoice,
-  IconInfoCircle, IconCheck,
-} from '@tabler/icons-react'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import { useCategoriasFactura } from '../hooks/useViaticos'
-import type { Viatico, CategoriaFactura } from '@/types/api'
+  IconPlus,
+  IconTrash,
+  IconFileInvoice,
+  IconInfoCircle,
+  IconCheck,
+} from "@tabler/icons-react";
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod/v4";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
+import { useCategoriasFactura } from "../hooks/useViaticos";
+import type { Viatico, CategoriaFactura } from "@/types/api";
 
 interface Props {
-  opened:    boolean
-  onClose:   () => void
-  viatico:   Viatico
-  onGuardar: (facturas: FacturaData[]) => void
-  valorInicial?: FacturaData[]
+  opened: boolean;
+  onClose: () => void;
+  viatico: Viatico;
+  onGuardar: (facturas: FacturaData[]) => void;
+  valorInicial?: FacturaData[];
 }
 
 export interface FacturaData {
-  categoria_factura_id: number
-  fecha_factura?:       string | null
-  tipo_comprobante:     'factura' | 'ticket' | 'recibo' | 'otro'
-  numero_factura?:      string | null
-  numero_ticket?:       string | null
-  ruc_proveedor?:       string | null
-  nombre_proveedor:     string
-  detalle?:             string | null
-  monto:                number
+  categoria_factura_id: number;
+  fecha_factura?: string | null;
+  tipo_comprobante: "factura" | "ticket" | "recibo" | "otro";
+  numero_factura?: string | null;
+  numero_ticket?: string | null;
+  ruc_proveedor?: string | null;
+  nombre_proveedor: string;
+  detalle?: string | null;
+  monto: number;
 }
 
 const facturaItemSchema = z.object({
-  categoria_factura_id: z.number().min(1, 'Seleccione categoría'),
-  fecha_factura:        z.string().optional().nullable(),
-  tipo_comprobante:     z.enum([
-    'factura', 'ticket', 'recibo', 'otro',
-  ]),
-  numero_factura:  z.string().optional().nullable(),
-  numero_ticket:   z.string().optional().nullable(),
-  ruc_proveedor:   z.string().optional().nullable(),
-  nombre_proveedor: z.string().min(1, 'Requerido'),
-  detalle:         z.string().optional().nullable(),
-  monto:           z.number().min(0.01, 'Mínimo $0.01'),
-})
+  categoria_factura_id: z.number().min(1, "Seleccione categoría"),
+  fecha_factura: z.string().optional().nullable(),
+  tipo_comprobante: z.enum(["factura", "ticket", "recibo", "otro"]),
+  numero_factura: z.string().optional().nullable(),
+  numero_ticket: z.string().optional().nullable(),
+  ruc_proveedor: z.string().optional().nullable(),
+  nombre_proveedor: z.string().min(1, "Requerido"),
+  detalle: z.string().optional().nullable(),
+  monto: z.number().min(0.01, "Mínimo $0.01"),
+});
 
 const schema = z.object({
-  facturas: z.array(facturaItemSchema)
-    .min(1, 'Agregue al menos una factura'),
-})
+  facturas: z.array(facturaItemSchema).min(1, "Agregue al menos una factura"),
+});
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
+  if (!v) return null;
+  const [y, m, d] = v.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
 
-const safeFormatDate = (v: any): string => {
-  if (!v) return ''
-  const d = new Date(v)
-  if (isNaN(d.getTime())) return ''
-  
+const safeFormatDate = (v: Date | string | null | undefined): string => {
+  if (!v) return "";
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return "";
+
   if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) {
-    return d.toISOString().slice(0, 10)
+    return d.toISOString().slice(0, 10);
   }
-  
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
+
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 export function FacturasModal({
   opened,
@@ -89,83 +100,87 @@ export function FacturasModal({
   onGuardar,
   valorInicial = [],
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
-  const contained    = useContainedInput()
+  const { isMobile } = useMobileBreakpoint();
+  const contained = useContainedInput();
 
-  const { data: categorias = [] } = useCategoriasFactura()
-  const categoriaOptions = (categorias as CategoriaFactura[])
-    .map(c => ({
-      value: String(c.id),
-      label: c.nombre,
-    }))
+  const { data: categorias = [] } = useCategoriasFactura();
+  const categoriaOptions = (categorias as CategoriaFactura[]).map((c) => ({
+    value: String(c.id),
+    label: c.nombre,
+  }));
 
   // Opción B: facturas hasta 5 días después de llegada
   const minFecha = viatico.datetime_salida
     ? (() => {
-        const d = new Date(viatico.datetime_salida as string)
-        d.setHours(0, 0, 0, 0)
-        return d
+        const d = new Date(viatico.datetime_salida as string);
+        d.setHours(0, 0, 0, 0);
+        return d;
       })()
-    : undefined
+    : undefined;
 
   const maxFactura = viatico.datetime_llegada
     ? (() => {
-        const d = new Date(viatico.datetime_llegada as string)
-        d.setDate(d.getDate() + 5)
-        d.setHours(23, 59, 59, 999)
-        return d
+        const d = new Date(viatico.datetime_llegada as string);
+        d.setDate(d.getDate() + 5);
+        d.setHours(23, 59, 59, 999);
+        return d;
       })()
-    : undefined
+    : undefined;
 
   const {
     control,
-    handleSubmit,
     register,
-    watch,
+    handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      facturas: valorInicial.length > 0
-        ? valorInicial
-        : [{
-            categoria_factura_id: 0,
-            fecha_factura:        '',
-            tipo_comprobante:     'factura' as const,
-            numero_factura:       '',
-            numero_ticket:        '',
-            ruc_proveedor:        '',
-            nombre_proveedor:     '',
-            detalle:              '',
-            monto:                0,
-          }],
+      facturas:
+        valorInicial.length > 0
+          ? valorInicial
+          : [
+              {
+                categoria_factura_id: 0,
+                fecha_factura: "",
+                tipo_comprobante: "factura" as const,
+                numero_factura: "",
+                numero_ticket: "",
+                ruc_proveedor: "",
+                nombre_proveedor: "",
+                detalle: "",
+                monto: 0,
+              },
+            ],
     },
-  })
+  });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'facturas',
-  })
+    name: "facturas",
+  });
 
-  const facturasWatch = watch('facturas')
+  const facturasWatch = useWatch({ control, name: "facturas" }) || [];
   const totalFacturas = facturasWatch.reduce(
-    (sum, f) => sum + (Number(f.monto) || 0), 0
-  )
-  const anticipo   = Number(viatico.monto_anticipo ?? 0)
-  const diferencia = anticipo - totalFacturas
+    (sum, f) => sum + (Number(f.monto) || 0),
+    0,
+  );
+  const anticipo = Number(viatico.monto_anticipo ?? 0);
+  const diferencia = anticipo - totalFacturas;
 
   const onSubmit = (values: FormData) => {
-    onGuardar(values.facturas)
-    onClose()
-  }
+    onGuardar(values.facturas);
+    onClose();
+  };
 
   const formatFecha = (f?: string | null) => {
-    if (!f) return '—'
-    return new Date(f).toLocaleDateString('es-EC', {
-      timeZone: 'UTC',
-      day: '2-digit', month: 'long', year: 'numeric',
-    })
-  }
+    if (!f) return "—";
+    return new Date(f).toLocaleDateString("es-EC", {
+      timeZone: "UTC",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
 
   return (
     <Modal
@@ -173,9 +188,7 @@ export function FacturasModal({
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon
-            color="orange" variant="light" size="sm"
-          >
+          <ThemeIcon color="orange" variant="light" size="sm">
             <IconFileInvoice size={14} />
           </ThemeIcon>
           <Text fw={600}>Facturas de respaldo</Text>
@@ -188,7 +201,6 @@ export function FacturasModal({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
-
           {/* Resumen financiero */}
           <Card withBorder radius="md" p="sm" bg="gray.0">
             <Group justify="space-between">
@@ -211,13 +223,13 @@ export function FacturasModal({
             <Group justify="space-between">
               <Text size="sm" fw={600}>
                 {diferencia >= 0
-                  ? 'A devolver a la institución:'
-                  : 'Diferencia a cobrar:'}
+                  ? "A devolver a la institución:"
+                  : "Diferencia a cobrar:"}
               </Text>
               <Text
                 size="sm"
                 fw={700}
-                c={diferencia >= 0 ? 'orange' : 'emerald'}
+                c={diferencia >= 0 ? "orange" : "emerald"}
               >
                 ${Math.abs(diferencia).toFixed(2)}
               </Text>
@@ -234,44 +246,30 @@ export function FacturasModal({
               Período válido para comprobantes
             </Text>
             <Text size="xs" mt={2}>
-              Desde el{' '}
+              Desde el{" "}
+              <strong>{formatFecha(viatico.datetime_salida as string)}</strong>{" "}
+              hasta 5 días después del regreso:{" "}
               <strong>
-                {formatFecha(
-                  viatico.datetime_salida as string
-                )}
-              </strong>
-              {' '}hasta 5 días después del regreso:{' '}
-              <strong>
-                {maxFactura?.toLocaleDateString('es-EC', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
+                {maxFactura?.toLocaleDateString("es-EC", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
                 })}
-              </strong>.
+              </strong>
+              .
             </Text>
           </Alert>
 
           {/* Lista de facturas */}
           <Stack gap="sm">
             {fields.map((field, i) => {
-              const tipoComp =
-                watch(`facturas.${i}.tipo_comprobante`)
+              const tipoComp = facturasWatch[i]?.tipo_comprobante ?? "factura";
 
               return (
-                <Card
-                  key={field.id}
-                  withBorder
-                  radius="md"
-                  p="sm"
-                >
+                <Card key={field.id} withBorder radius="md" p="sm">
                   <Group justify="space-between" mb="xs">
                     <Group gap="xs">
-                      <Badge
-                        size="sm"
-                        color="orange"
-                        variant="light"
-                        circle
-                      >
+                      <Badge size="sm" color="orange" variant="light" circle>
                         {i + 1}
                       </Badge>
                       <Text size="sm" fw={600}>
@@ -294,9 +292,7 @@ export function FacturasModal({
                     {/* Categoría */}
                     <Grid.Col span={{ base: 12, sm: 4 }}>
                       <Controller
-                        name={
-                          `facturas.${i}.categoria_factura_id`
-                        }
+                        name={`facturas.${i}.categoria_factura_id`}
                         control={control}
                         render={({ field: f }) => (
                           <Select
@@ -305,17 +301,10 @@ export function FacturasModal({
                             data={categoriaOptions}
                             searchable
                             {...contained}
-                            value={
-                              f.value
-                                ? String(f.value)
-                                : null
-                            }
-                            onChange={(v) =>
-                              f.onChange(v ? Number(v) : 0)
-                            }
+                            value={f.value ? String(f.value) : null}
+                            onChange={(v) => f.onChange(v ? Number(v) : 0)}
                             error={
-                              errors.facturas?.[i]
-                                ?.categoria_factura_id
+                              errors.facturas?.[i]?.categoria_factura_id
                                 ?.message
                             }
                           />
@@ -326,31 +315,22 @@ export function FacturasModal({
                     {/* Tipo comprobante */}
                     <Grid.Col span={{ base: 12, sm: 4 }}>
                       <Controller
-                        name={
-                          `facturas.${i}.tipo_comprobante`
-                        }
+                        name={`facturas.${i}.tipo_comprobante`}
                         control={control}
                         render={({ field: f }) => (
                           <Select
                             label="Tipo de comprobante"
                             data={[
-                              { value: 'factura',
-                                label: '🧾 Factura' },
-                              { value: 'ticket',
-                                label: '🎫 Ticket / Pasaje' },
-                              { value: 'recibo',
-                                label: '📄 Recibo' },
-                              { value: 'otro',
-                                label: '📎 Otro' },
+                              { value: "factura", label: "🧾 Factura" },
+                              { value: "ticket", label: "🎫 Ticket / Pasaje" },
+                              { value: "recibo", label: "📄 Recibo" },
+                              { value: "otro", label: "📎 Otro" },
                             ]}
                             {...contained}
                             value={f.value}
-                            onChange={(v) =>
-                              f.onChange(v ?? 'factura')
-                            }
+                            onChange={(v) => f.onChange(v ?? "factura")}
                             error={
-                              errors.facturas?.[i]
-                                ?.tipo_comprobante?.message
+                              errors.facturas?.[i]?.tipo_comprobante?.message
                             }
                           />
                         )}
@@ -373,9 +353,7 @@ export function FacturasModal({
                             popoverProps={{ withinPortal: true }}
                             {...contained}
                             value={toDate(f.value)}
-                            onChange={(v) =>
-                              f.onChange(safeFormatDate(v))
-                            }
+                            onChange={(v) => f.onChange(safeFormatDate(v))}
                           />
                         )}
                       />
@@ -383,31 +361,21 @@ export function FacturasModal({
 
                     {/* N° documento condicional */}
                     <Grid.Col span={{ base: 12, sm: 6 }}>
-                      {tipoComp === 'ticket' ? (
+                      {tipoComp === "ticket" ? (
                         <TextInput
                           label="N° Ticket / Pasaje"
                           placeholder="Ej: T-001234"
                           {...contained}
-                          {...register(
-                            `facturas.${i}.numero_ticket`
-                          )}
-                          error={
-                            errors.facturas?.[i]
-                              ?.numero_ticket?.message
-                          }
+                          {...register(`facturas.${i}.numero_ticket`)}
+                          error={errors.facturas?.[i]?.numero_ticket?.message}
                         />
                       ) : (
                         <TextInput
                           label="N° Factura"
                           placeholder="001-001-000000001"
                           {...contained}
-                          {...register(
-                            `facturas.${i}.numero_factura`
-                          )}
-                          error={
-                            errors.facturas?.[i]
-                              ?.numero_factura?.message
-                          }
+                          {...register(`facturas.${i}.numero_factura`)}
+                          error={errors.facturas?.[i]?.numero_factura?.message}
                         />
                       )}
                     </Grid.Col>
@@ -416,19 +384,14 @@ export function FacturasModal({
                     <Grid.Col span={{ base: 12, sm: 6 }}>
                       <TextInput
                         label={
-                          tipoComp === 'ticket'
-                            ? 'RUC / Identificación (opcional)'
-                            : 'RUC del proveedor'
+                          tipoComp === "ticket"
+                            ? "RUC / Identificación (opcional)"
+                            : "RUC del proveedor"
                         }
                         placeholder="0000000000001"
                         {...contained}
-                        {...register(
-                          `facturas.${i}.ruc_proveedor`
-                        )}
-                        error={
-                          errors.facturas?.[i]
-                            ?.ruc_proveedor?.message
-                        }
+                        {...register(`facturas.${i}.ruc_proveedor`)}
+                        error={errors.facturas?.[i]?.ruc_proveedor?.message}
                       />
                     </Grid.Col>
 
@@ -438,13 +401,8 @@ export function FacturasModal({
                         label="Nombre del proveedor"
                         placeholder="Ej: Hotel Quito Palace"
                         {...contained}
-                        {...register(
-                          `facturas.${i}.nombre_proveedor`
-                        )}
-                        error={
-                          errors.facturas?.[i]
-                            ?.nombre_proveedor?.message
-                        }
+                        {...register(`facturas.${i}.nombre_proveedor`)}
+                        error={errors.facturas?.[i]?.nombre_proveedor?.message}
                       />
                     </Grid.Col>
 
@@ -462,14 +420,9 @@ export function FacturasModal({
                             {...contained}
                             value={f.value}
                             onChange={(v) =>
-                              f.onChange(
-                                typeof v === 'number' ? v : 0
-                              )
+                              f.onChange(typeof v === "number" ? v : 0)
                             }
-                            error={
-                              errors.facturas?.[i]
-                                ?.monto?.message
-                            }
+                            error={errors.facturas?.[i]?.monto?.message}
                           />
                         )}
                       />
@@ -486,7 +439,7 @@ export function FacturasModal({
                     </Grid.Col>
                   </Grid>
                 </Card>
-              )
+              );
             })}
           </Stack>
 
@@ -495,17 +448,19 @@ export function FacturasModal({
             color="orange"
             size="sm"
             leftSection={<IconPlus size={14} />}
-            onClick={() => append({
-              categoria_factura_id: 0,
-              fecha_factura:        '',
-              tipo_comprobante:     'factura' as const,
-              numero_factura:       '',
-              numero_ticket:        '',
-              ruc_proveedor:        '',
-              nombre_proveedor:     '',
-              detalle:              '',
-              monto:                0,
-            })}
+            onClick={() =>
+              append({
+                categoria_factura_id: 0,
+                fecha_factura: "",
+                tipo_comprobante: "factura" as const,
+                numero_factura: "",
+                numero_ticket: "",
+                ruc_proveedor: "",
+                nombre_proveedor: "",
+                detalle: "",
+                monto: 0,
+              })
+            }
           >
             Agregar otro comprobante
           </Button>
@@ -527,5 +482,5 @@ export function FacturasModal({
         </Stack>
       </form>
     </Modal>
-  )
+  );
 }

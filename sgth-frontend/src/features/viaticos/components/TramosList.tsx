@@ -118,7 +118,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
   return (
     <Stack gap="xs">
       <Timeline active={lista.length} bulletSize={24} lineWidth={2}>
-        {lista.map((t, i) => {
+        {lista.map((t) => {
           const tipoVehiculo =
             t.empresa?.catalogo?.tipo_vehiculo ?? "terrestre";
           const requiereAuth =

@@ -1,88 +1,86 @@
-'use client'
+"use client";
 
 import {
-  Modal, Stack, Text, Group, Button,
-  NumberInput, TextInput, Card,
-  ThemeIcon, Divider,
-} from '@mantine/core'
-import { IconCheck, IconWorld } from '@tabler/icons-react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import { useViaticoMutations } from '../hooks/useViaticoMutations'
-import type { Viatico } from '@/types/api'
+  Modal,
+  Stack,
+  Text,
+  Group,
+  Button,
+  NumberInput,
+  TextInput,
+  Card,
+  ThemeIcon,
+  Divider,
+} from "@mantine/core";
+import { IconCheck, IconWorld } from "@tabler/icons-react";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod/v4";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
+import { useViaticoMutations } from "../hooks/useViaticoMutations";
+import type { Viatico } from "@/types/api";
 
 const schema = z.object({
-  pais_destino:         z.string().min(1, 'Requerido'),
-  coeficiente_exterior: z.number()
-    .min(0.1, 'Mínimo 0.1')
-    .max(5,   'Máximo 5.0'),
-})
+  pais_destino: z.string().min(1, "Requerido"),
+  coeficiente_exterior: z.number().min(0.1, "Mínimo 0.1").max(5, "Máximo 5.0"),
+});
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 interface Props {
-  opened:  boolean
-  onClose: () => void
-  viatico: Viatico
+  opened: boolean;
+  onClose: () => void;
+  viatico: Viatico;
 }
 
-const TARIFA_DIGNATARIO = 220.00
-const TARIFA_SERVIDOR   = 185.00
+const TARIFA_DIGNATARIO = 220.0;
+const TARIFA_SERVIDOR = 185.0;
 
-export function AprobarExteriorModal({
-  opened,
-  onClose,
-  viatico,
-}: Props) {
-  const { isMobile } = useMobileBreakpoint()
-  const contained    = useContainedInput()
-  const { aprobar }  = useViaticoMutations()
+export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
+  const { isMobile } = useMobileBreakpoint();
+  const contained = useContainedInput();
+  const { aprobar } = useViaticoMutations();
 
   const esDignatario =
-    (viatico as { puesto?: { rol_puesto?: string } })
-      ?.puesto?.rol_puesto === 'dignatario' ||
-    (viatico as unknown as {
-      servidor?: { puesto?: { rol_puesto?: string } }
-    })?.servidor?.puesto?.rol_puesto === 'dignatario'
+    (viatico as { puesto?: { rol_puesto?: string } })?.puesto?.rol_puesto ===
+      "dignatario" ||
+    (
+      viatico as unknown as {
+        servidor?: { puesto?: { rol_puesto?: string } };
+      }
+    )?.servidor?.puesto?.rol_puesto === "dignatario";
 
-  const tarifaBase = esDignatario
-    ? TARIFA_DIGNATARIO
-    : TARIFA_SERVIDOR
+  const tarifaBase = esDignatario ? TARIFA_DIGNATARIO : TARIFA_SERVIDOR;
 
-  const totalDias = Number(viatico.total_dias ?? 1)
+  const totalDias = Number(viatico.total_dias ?? 1);
 
   const {
     control,
     register,
-    watch,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      pais_destino:         (viatico.pais_destino as string) ?? '',
+      pais_destino: (viatico.pais_destino as string) ?? "",
       coeficiente_exterior: 1.0,
     },
-  })
+  });
 
-  const coef = watch('coeficiente_exterior') ?? 1
-  const montoCalculado = Math.round(
-    tarifaBase * coef * totalDias * 100
-  ) / 100
+  const coef = useWatch({ control, name: "coeficiente_exterior" }) ?? 1;
+  const montoCalculado = Math.round(tarifaBase * coef * totalDias * 100) / 100;
 
   const onSubmit = async (values: FormData) => {
     await aprobar.mutateAsync({
-      id:   viatico.id,
+      id: viatico.id,
       data: {
         coeficiente_exterior: values.coeficiente_exterior,
-        pais_destino:         values.pais_destino,
+        pais_destino: values.pais_destino,
       },
-    })
-    onClose()
-  }
+    });
+    onClose();
+  };
 
   return (
     <Modal
@@ -103,14 +101,13 @@ export function AprobarExteriorModal({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
-
           <Card withBorder radius="md" p="sm" bg="blue.0">
             <Text size="xs" c="dimmed">
               Tarifa base aplicable
             </Text>
             <Text size="sm" fw={700} c="blue">
-              {esDignatario ? 'Dignatario' : 'Servidor'}:
-              ${tarifaBase.toFixed(2)}/día
+              {esDignatario ? "Dignatario" : "Servidor"}: $
+              {tarifaBase.toFixed(2)}/día
             </Text>
             <Text size="xs" c="dimmed" mt={4}>
               {totalDias} día(s) de comisión
@@ -121,7 +118,7 @@ export function AprobarExteriorModal({
             label="País de destino"
             placeholder="Ej: Colombia"
             {...contained}
-            {...register('pais_destino')}
+            {...register("pais_destino")}
             error={errors.pais_destino?.message}
           />
 
@@ -139,9 +136,7 @@ export function AprobarExteriorModal({
                 step={0.1}
                 {...contained}
                 value={field.value}
-                onChange={(v) =>
-                  field.onChange(typeof v === 'number' ? v : 1)
-                }
+                onChange={(v) => field.onChange(typeof v === "number" ? v : 1)}
                 error={errors.coeficiente_exterior?.message}
               />
             )}
@@ -159,9 +154,7 @@ export function AprobarExteriorModal({
               </Text>
             </Group>
             <Text size="xs" c="dimmed" mt={4}>
-              ${tarifaBase.toFixed(2)} ×
-              {coef.toFixed(4)} ×
-              {totalDias} días
+              ${tarifaBase.toFixed(2)} ×{coef.toFixed(4)} ×{totalDias} días
             </Text>
           </Card>
 
@@ -181,5 +174,5 @@ export function AprobarExteriorModal({
         </Stack>
       </form>
     </Modal>
-  )
+  );
 }

@@ -44,8 +44,8 @@ const ZONA_OPTIONS = [
 ];
 
 const MODALIDAD_OPTIONS = [
-  { value: "total",        label: "💰 Anticipo (70% del monto calculado)" },
-  { value: "sin_anticipo", label: "🚫 Sin anticipo"                       },
+  { value: "total", label: "💰 Anticipo (70% del monto calculado)" },
+  { value: "sin_anticipo", label: "🚫 Sin anticipo" },
 ];
 
 const TIPO_VIAJE_OPTIONS = [
@@ -145,19 +145,18 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   // Cargar servidores para acompañantes
   const { data: servidoresData } = useServidores({
     per_page: 200,
-  })
+  });
 
   const servidoresOptions = (servidoresData?.data ?? [])
     .filter((s) => {
       // Excluir al servidor autenticado (titular)
-      const miId = miPerfil?.servidor?.id
-      return miId ? s.id !== miId : true
+      const miId = miPerfil?.servidor?.id;
+      return miId ? s.id !== miId : true;
     })
     .map((s) => ({
       value: String(s.id),
-      label: [s.apellido, s.nombre]
-        .filter(Boolean).join(' '),
-    }))
+      label: [s.apellido, s.nombre].filter(Boolean).join(" "),
+    }));
 
   const {
     control,
@@ -180,7 +179,6 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   });
 
   const zonaWatch = useWatch({ control, name: "zona" });
-  const modalidadWatch = useWatch({ control, name: "modalidad_anticipo" });
   const salidaWatch = useWatch({ control, name: "datetime_salida" });
   const llegadaWatch = useWatch({ control, name: "datetime_llegada" });
 
@@ -378,8 +376,6 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             </Grid.Col>
           </Grid>
 
-
-
           {/* Exterior */}
           {zonaWatch === "exterior" && (
             <>
@@ -389,11 +385,12 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 variant="light"
               >
                 <Text size="xs" fw={500}>
-                  Viaje al exterior — consulte a la UATH
+                  Viaje al exterior (internacional)
                 </Text>
                 <Text size="xs" mt={2}>
-                  El monto se calcula según el Acuerdo MRL-2011-00051: valor
-                  base de su nivel × coeficiente del país destino × días.
+                  El monto se calculará automáticamente cuando el gestor
+                  apruebe la solicitud, aplicando la tarifa según su nivel
+                  y el coeficiente del país de destino.
                 </Text>
               </Alert>
               <Grid>
@@ -432,25 +429,23 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 4 }}>
-                  <Controller
-                    name="monto_calculado"
-                    control={control}
-                    render={({ field }) => (
-                      <NumberInput
-                        label="Monto total (USD)"
-                        description="Valor base × coeficiente × días"
-                        prefix="$"
-                        decimalScale={2}
-                        min={0}
-                        {...contained}
-                        value={field.value ?? 0}
-                        onChange={(v) =>
-                          field.onChange(typeof v === "number" ? v : null)
-                        }
-                        error={errors.monto_calculado?.message}
-                      />
-                    )}
-                  />
+                  <Stack gap={4} justify="flex-end" h="100%">
+                    <Text size="xs" fw={500} c="dimmed">
+                      Monto a cobrar
+                    </Text>
+                    <Alert
+                      color="blue"
+                      variant="light"
+                      p="xs"
+                      icon={<IconInfoCircle size={12} />}
+                    >
+                      <Text size="xs">
+                        El gestor calculará el monto al
+                        aprobar la solicitud según la
+                        tarifa del país y el coeficiente.
+                      </Text>
+                    </Alert>
+                  </Stack>
                 </Grid.Col>
               </Grid>
             </>
@@ -500,9 +495,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 clearable
                 {...contained}
                 value={(field.value ?? []).map(String)}
-                onChange={(v) =>
-                  field.onChange(v.map(Number))
-                }
+                onChange={(v) => field.onChange(v.map(Number))}
               />
             )}
           />

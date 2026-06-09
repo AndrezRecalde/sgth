@@ -55,7 +55,7 @@ const toDate = (v?: string | null): Date | null => {
   return new Date(y, m - 1, d)
 }
 
-const safeFormatDate = (v: any): string => {
+const safeFormatDate = (v: Date | string | null | undefined): string => {
   if (!v) return ''
   const d = new Date(v)
   if (isNaN(d.getTime())) return ''
