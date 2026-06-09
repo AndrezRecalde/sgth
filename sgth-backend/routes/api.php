@@ -432,6 +432,26 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('viaticos')->group(function () {
         Route::get('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'index']);
         Route::post('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'store']);
+
+        // Catálogos de viáticos
+        Route::get('catalogos/tipos-transporte',
+            [CatalogoViaticoController::class, 'tiposTransporte']);
+        Route::get('catalogos/empresas/{tipoId}',
+            [CatalogoViaticoController::class, 'empresasPorTipo']);
+        Route::get('catalogos/categorias-factura',
+            [CatalogoViaticoController::class, 'categoriasFactura']);
+
+        Route::prefix('vuelos')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'index']);
+            Route::post('{id}/aprobar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'aprobar']);
+            Route::post('{id}/rechazar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'rechazar']);
+            Route::post('{id}/documento', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'subirDocumento']);
+        });
+
+        Route::get('informe/descargar/{archivo}', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'descargar'])
+            ->name('viaticos.informe.descargar')
+            ->middleware('signed');
+
         Route::get('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'show']);
         Route::patch('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'update']);
         
@@ -483,10 +503,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
              'generarComprobanteContabilidad']
         )->name('viaticos.comprobante.generar');
 
-        Route::get('informe/descargar/{archivo}', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'descargar'])
-            ->name('viaticos.informe.descargar')
-            ->middleware('signed');
-            
         // Tramos del itinerario
         Route::get('{viaticoId}/tramos',
             [TramoViaticoController::class, 'index']);
@@ -496,24 +512,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             [TramoViaticoController::class, 'update']);
         Route::delete('{viaticoId}/tramos/{tramo}',
             [TramoViaticoController::class, 'destroy']);
-
-        // Catálogos de viáticos
-        Route::get('catalogos/tipos-transporte',
-            [CatalogoViaticoController::class, 'tiposTransporte']);
-        Route::get('catalogos/empresas/{tipoId}',
-            [CatalogoViaticoController::class, 'empresasPorTipo']);
-        Route::get('catalogos/categorias-factura',
-            [CatalogoViaticoController::class, 'categoriasFactura']);
-        
-        Route::prefix('vuelos')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'index'])
-                ->middleware('role:maxima-autoridad');
-            Route::post('{id}/aprobar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'aprobar'])
-                ->middleware('role:maxima-autoridad');
-            Route::post('{id}/rechazar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'rechazar'])
-                ->middleware('role:maxima-autoridad');
-            Route::post('{id}/documento', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'subirDocumento']);
-        });
     });
 
     // Liquidaciones y Facturas
