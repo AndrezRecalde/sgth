@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconWorld } from "@tabler/icons-react";
 import { useForm, Controller, useWatch } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -38,6 +39,7 @@ const TARIFA_DIGNATARIO = 220.0;
 const TARIFA_SERVIDOR = 185.0;
 
 export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
+  const qc = useQueryClient();
   const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { aprobar } = useViaticoMutations();
@@ -79,6 +81,10 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
         pais_destino: values.pais_destino,
       },
     });
+    // Invalidar explícitamente el query del viático
+    // por id numérico Y por codigo_viatico string
+    qc.invalidateQueries({ queryKey: ["viatico"] });
+    qc.invalidateQueries({ queryKey: ["viaticos"] });
     onClose();
   };
 
