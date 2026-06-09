@@ -13,21 +13,18 @@ class AutorizacionVueloController extends Controller
 {
     public function index(): JsonResponse
     {
-        \Illuminate\Support\Facades\Log::info(
-            'VuelosController@index - usuario: ' .
-            request()->user()?->id .
-            ' total: ' .
-            AutorizacionVuelo::where('estado', 'pendiente')->count()
-        );
-
         $autorizaciones = AutorizacionVuelo::with([
-            'tramo.empresa.catalogo',
+            'viatico.servidor.puesto.cargo',
+            'tramo.empresa',
             'tramo.origenProvincia',
+            'tramo.origenCanton',
             'tramo.destinoProvincia',
-            'viatico.servidor',
+            'tramo.destinoCanton',
         ])->where('estado', 'pendiente')->get();
 
-        return ApiResponse::ok(AutorizacionVueloResource::collection($autorizaciones));
+        return ApiResponse::ok(
+            AutorizacionVueloResource::collection($autorizaciones)
+        );
     }
 
     public function aprobar(Request $request, string $id): JsonResponse
