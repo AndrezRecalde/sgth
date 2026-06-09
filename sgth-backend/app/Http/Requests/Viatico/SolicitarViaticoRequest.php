@@ -22,7 +22,7 @@ class SolicitarViaticoRequest extends FormRequest
             ],
             'modalidad_anticipo' => [
                 'required',
-                'in:sin_anticipo,total,parcial',
+                'in:sin_anticipo,total',
             ],
             // Fechas directas del viático
             'datetime_salida'  => [
@@ -48,12 +48,6 @@ class SolicitarViaticoRequest extends FormRequest
             ];
             $rules['tipo_viaje']   = ['required', 'string'];
             $rules['pais_destino'] = ['required', 'string'];
-        }
-
-        if ($this->input('modalidad_anticipo') === 'parcial') {
-            $rules['monto_calculado'] = [
-                'required', 'numeric', 'min:1',
-            ];
         }
 
         return $rules;

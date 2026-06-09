@@ -449,6 +449,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             [\App\Http\Controllers\Viatico\ViaticoController::class,
              'marcarEnComision']);
 
+        Route::post('{id}/cancelar',
+            [\App\Http\Controllers\Viatico\ViaticoController::class,
+             'cancelar']
+        )->name('viaticos.cancelar');
+
+        Route::post('{id}/rechazar',
+            [\App\Http\Controllers\Viatico\ViaticoController::class,
+             'rechazar']
+        )->name('viaticos.rechazar');
+
         Route::post('{id}/marcar-pendiente-liquidacion',
             [\App\Http\Controllers\Viatico\ViaticoController::class,
              'marcarPendienteLiquidacion']);

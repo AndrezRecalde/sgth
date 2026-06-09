@@ -226,57 +226,64 @@ class ViaticoController extends Controller
         ], 'Viático liquidado correctamente. Facturas procesadas considerando el 70/30 de la normativa del MRL.');
     }
 
-    public function aprobar(int $id): JsonResponse
+    public function aprobar(
+        int $id,
+        \Illuminate\Http\Request $request
+    ): JsonResponse
     {
-        $viatico = \App\Models\Viatico\Viatico::findOrFail($id);
         $this->authorize('gestionar-viaticos');
-
-        if ($viatico->estado->value !== 'solicitado') {
-            return ApiResponse::error(
-                'Solo se pueden aprobar viáticos en estado solicitado.',
-                422
-            );
-        }
-
-        // Modalidad anticipo
-        $montoAnticipo = match($viatico->modalidad_anticipo) {
-            'total'        => $viatico->monto_calculado,
-            'parcial'      => $viatico->monto_anticipo, // ya definido
-            'sin_anticipo' => 0.00,
-            default        => $viatico->monto_calculado,
-        };
-
-        $viatico->update([
-            'estado'         => \App\Enums\EstadoViatico::APROBADO,
-            'monto_anticipo' => $montoAnticipo,
-        ]);
-
+        $viatico = $this->viaticoService->aprobar(
+            $id,
+            $request->only([
+                'coeficiente_exterior',
+                'pais_destino',
+            ])
+        );
         return ApiResponse::ok(
-            $viatico->fresh(),
+            $viatico,
             'Viático aprobado correctamente.'
         );
     }
 
     public function entregarAnticipo(int $id): JsonResponse
     {
-        $viatico = \App\Models\Viatico\Viatico::findOrFail($id);
         $this->authorize('gestionar-viaticos');
-
-        if ($viatico->estado->value !== 'aprobado') {
-            return ApiResponse::error(
-                'Solo se puede entregar anticipo a viáticos aprobados.',
-                422
-            );
-        }
-
-        $viatico->update([
-            'estado'     => \App\Enums\EstadoViatico::CON_ANTICIPO,
-            'updated_by' => request()->user()->id,
-        ]);
+        $viatico = $this->viaticoService->entregarAnticipo($id);
 
         return ApiResponse::ok(
-            $viatico->fresh(),
+            $viatico,
             'Anticipo entregado. El viático queda listo para la comisión.'
+        );
+    }
+
+    public function cancelar(
+        int $id,
+        \Illuminate\Http\Request $request
+    ): JsonResponse
+    {
+        $viatico = $this->viaticoService->cancelar(
+            $id,
+            $request->user()->id
+        );
+        return ApiResponse::ok(
+            $viatico,
+            'Viático cancelado correctamente.'
+        );
+    }
+
+    public function rechazar(
+        int $id,
+        \Illuminate\Http\Request $request
+    ): JsonResponse
+    {
+        $this->authorize('gestionar-viaticos');
+        $viatico = $this->viaticoService->rechazar(
+            $id,
+            $request->user()->id
+        );
+        return ApiResponse::ok(
+            $viatico,
+            'Viático rechazado correctamente.'
         );
     }
 

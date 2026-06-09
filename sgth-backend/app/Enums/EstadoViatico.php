@@ -10,4 +10,6 @@ enum EstadoViatico: string
     case PENDIENTE_LIQUIDACION = 'pendiente_liquidacion';
     case LIQUIDADO             = 'liquidado';
     case CONTABILIZADO         = 'contabilizado';
+    case CANCELADO             = 'cancelado';
+    case RECHAZADO             = 'rechazado';
 }

@@ -30,6 +30,8 @@ class Viatico extends Model
         'datetime_salida',
         'datetime_llegada',
         'total_dias',
+        'coeficiente_exterior',
+        'motivo_rechazo',
         'justificacion',
         'estado',
         'monto_calculado',

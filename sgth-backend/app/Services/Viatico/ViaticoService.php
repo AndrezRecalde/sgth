@@ -252,6 +252,125 @@ final class ViaticoService implements ViaticoServiceInterface
         });
     }
 
+    public function aprobar(
+        int $viaticoId,
+        array $datos = []
+    ): Viatico {
+        $viatico = Viatico::with('servidor.puesto')
+            ->findOrFail($viaticoId);
+
+        if ($viatico->estado !== EstadoViatico::SOLICITADO) {
+            throw new ReglaNegocioException(
+                'Solo se pueden aprobar viáticos en estado solicitado.'
+            );
+        }
+
+        // Calcular monto para exterior con coeficiente
+        if ($viatico->zona === 'exterior'
+            && isset($datos['coeficiente_exterior'])
+        ) {
+            $coeficiente = (float) $datos['coeficiente_exterior'];
+            $paisDestino = $datos['pais_destino'] ?? $viatico->pais_destino;
+
+            // Determinar tarifa base por rol_puesto
+            $rolPuesto = $viatico->servidor?->puesto?->rol_puesto ?? '';
+            $tarifaBase = $rolPuesto === 'dignatario'
+                ? 220.00
+                : 185.00;
+
+            $montoCalculado = round(
+                $tarifaBase * $coeficiente * (float) $viatico->total_dias,
+                2
+            );
+
+            $viatico->update([
+                'estado'               => EstadoViatico::APROBADO,
+                'monto_calculado'      => $montoCalculado,
+                'coeficiente_exterior' => $coeficiente,
+                'pais_destino'         => $paisDestino,
+            ]);
+        } else {
+            $viatico->update([
+                'estado' => EstadoViatico::APROBADO,
+            ]);
+        }
+
+        return $viatico->fresh();
+    }
+
+    public function entregarAnticipo(int $viaticoId): Viatico
+    {
+        $viatico = Viatico::findOrFail($viaticoId);
+
+        if ($viatico->estado !== EstadoViatico::APROBADO) {
+            throw new ReglaNegocioException(
+                'Solo se puede entregar anticipo a viáticos aprobados.'
+            );
+        }
+
+        // Anticipo = 70% del monto calculado
+        $montoAnticipo = round(
+            (float) $viatico->monto_calculado * 0.70, 2
+        );
+
+        $viatico->update([
+            'estado'         => EstadoViatico::CON_ANTICIPO,
+            'monto_anticipo' => $montoAnticipo,
+        ]);
+
+        return $viatico->fresh();
+    }
+
+    public function cancelar(
+        int $viaticoId,
+        int $userId
+    ): Viatico {
+        $viatico = Viatico::findOrFail($viaticoId);
+
+        $estadosPermitidos = [
+            EstadoViatico::SOLICITADO,
+        ];
+
+        if (!in_array($viatico->estado, $estadosPermitidos)) {
+            throw new ReglaNegocioException(
+                'Solo se puede cancelar una solicitud en estado solicitado.'
+            );
+        }
+
+        $viatico->update([
+            'estado'     => EstadoViatico::CANCELADO,
+            'updated_by' => $userId,
+        ]);
+
+        return $viatico->fresh();
+    }
+
+    public function rechazar(
+        int $viaticoId,
+        int $userId
+    ): Viatico {
+        $viatico = Viatico::findOrFail($viaticoId);
+
+        $estadosNoPermitidos = [
+            EstadoViatico::CONTABILIZADO,
+            EstadoViatico::CANCELADO,
+            EstadoViatico::RECHAZADO,
+        ];
+
+        if (in_array($viatico->estado, $estadosNoPermitidos)) {
+            throw new ReglaNegocioException(
+                'No se puede rechazar un viático en este estado.'
+            );
+        }
+
+        $viatico->update([
+            'estado'     => EstadoViatico::RECHAZADO,
+            'updated_by' => $userId,
+        ]);
+
+        return $viatico->fresh();
+    }
+
     public function verificarBloqueo(int $servidorId): bool
     {
         $viaticosPendientes = Viatico::where('servidor_id', $servidorId)
@@ -262,7 +381,7 @@ final class ViaticoService implements ViaticoServiceInterface
             if (!$v->datetime_llegada) continue;
 
             $fechaLimite = $this->calcularDiasHabiles(
-                Carbon::parse($v->datetime_llegada)->copy(), 5
+                Carbon::parse($v->datetime_llegada)->copy(), 4
             );
 
             if (now()->gt($fechaLimite)) {
