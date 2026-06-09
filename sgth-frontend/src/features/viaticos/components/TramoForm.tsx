@@ -13,8 +13,6 @@ import {
   UnstyledButton,
   Box,
   Card,
-  Badge,
-  ThemeIcon,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import "@mantine/dates/styles.css";
@@ -34,11 +32,11 @@ import type { CatalogoTransporte, EmpresaTransporte } from "@/types/api";
 import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 
 interface Props {
-  viaticoId:         number
-  viatico?:          import("@/types/api").Viatico | null
-  tramosExistentes?: number
-  onSuccess:         () => void
-  onCancel:          () => void
+  viaticoId: number;
+  viatico?: import("@/types/api").Viatico | null;
+  tramosExistentes?: number;
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
 const fromDateTime = (d: Date | null | string): string => {
@@ -95,7 +93,13 @@ const PAISES_COMUNES = [
   "Otro",
 ];
 
-export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onCancel }: Props) {
+export function TramoForm({
+  viaticoId,
+  viatico,
+  tramosExistentes,
+  onSuccess,
+  onCancel,
+}: Props) {
   const contained = useContainedInput();
   const qc = useQueryClient();
 
@@ -237,8 +241,8 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
 
   const onSubmit = (values: TramoFormData) => {
     if (!esPrimerTramo && !tipoTramoEfectivo) {
-      setError('tipo_tramo', {
-        message: 'Debes seleccionar el tipo de tramo'
+      setError("tipo_tramo", {
+        message: "Debes seleccionar el tipo de tramo",
       });
       return;
     }
@@ -702,20 +706,16 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
         )}
 
         {/* Tipo de tramo */}
-        <Divider
-          label="¿Qué tipo de tramo es este?"
-          labelPosition="left"
-        />
+        <Divider label="¿Qué tipo de tramo es este?" labelPosition="left" />
 
         {esPrimerTramo ? (
           <Alert color="blue" variant="light" p="xs">
             <Group gap="xs">
               <Text size="xs" fw={600} c="blue">
-                🟢 Tramo de IDA
+                Tramo de IDA
               </Text>
               <Text size="xs" c="dimmed">
-                — se asigna automáticamente como el
-                primer tramo del itinerario
+                — se asigna automáticamente como el primer tramo del itinerario
               </Text>
             </Group>
           </Alert>
@@ -723,7 +723,7 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
           <Controller
             name="tipo_tramo"
             control={control}
-            rules={{ required: 'Debe seleccionar el tipo de tramo' }}
+            rules={{ required: "Debe seleccionar el tipo de tramo" }}
             render={({ field }) => (
               <Stack gap="xs">
                 <Text size="xs" c="dimmed">
@@ -732,33 +732,32 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
                 <Grid>
                   {[
                     {
-                      value:       'destino',
-                      emoji:       '🎯',
-                      label:       'DESTINO',
-                      description: '¿Realizas actividades de la comisión en esta ciudad?',
-                      color:       'teal',
+                      value: "destino",
+                      label: "DESTINO",
+                      description:
+                        "¿Realizas actividades de la comisión en esta ciudad?",
+                      color: "teal",
                     },
                     {
-                      value:       'escala',
-                      emoji:       '🔄',
-                      label:       'PARADA / ESCALA',
-                      description: 'Solo pasas por esta ciudad, no realizas actividades.',
-                      color:       'orange',
+                      value: "escala",
+                      label: "PARADA / ESCALA",
+                      description:
+                        "Solo pasas por esta ciudad, no realizas actividades.",
+                      color: "orange",
                     },
                     {
-                      value:       'regreso',
-                      emoji:       '🔴',
-                      label:       'REGRESO',
-                      description: 'Último tramo de vuelta a tu ciudad base.',
-                      color:       'red',
+                      value: "regreso",
+                      label: "REGRESO",
+                      description: "Último tramo de vuelta a tu ciudad base.",
+                      color: "red",
                     },
                   ].map((opt) => {
-                    const selected = field.value === opt.value
+                    const selected = field.value === opt.value;
                     return (
                       <Grid.Col key={opt.value} span={{ base: 12, sm: 4 }}>
                         <UnstyledButton
                           onClick={() => field.onChange(opt.value)}
-                          style={{ width: '100%' }}
+                          style={{ width: "100%" }}
                         >
                           <Card
                             withBorder
@@ -772,32 +771,35 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
                               background: selected
                                 ? `var(--mantine-color-${opt.color}-0)`
                                 : undefined,
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
                             }}
                           >
                             <Group justify="space-between" mb={4}>
-                              <Text size="lg">{opt.emoji}</Text>
                               <Box
                                 style={{
-                                  width:        18,
-                                  height:       18,
+                                  width: 18,
+                                  height: 18,
                                   borderRadius: 4,
-                                  border:       selected
-                                    ? 'none'
-                                    : '2px solid var(--mantine-color-gray-4)',
+                                  border: selected
+                                    ? "none"
+                                    : "2px solid var(--mantine-color-gray-4)",
                                   background: selected
                                     ? `var(--mantine-color-${opt.color}-6)`
-                                    : 'white',
-                                  display:        'flex',
-                                  alignItems:     'center',
-                                  justifyContent: 'center',
-                                  flexShrink:     0,
+                                    : "white",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
                                 }}
                               >
                                 {selected && (
-                                  <Text size="xs" c="white" fw={700}
-                                    style={{ lineHeight: 1 }}>
+                                  <Text
+                                    size="xs"
+                                    c="white"
+                                    fw={700}
+                                    style={{ lineHeight: 1 }}
+                                  >
                                     ✓
                                   </Text>
                                 )}
@@ -806,7 +808,7 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
                             <Text
                               size="xs"
                               fw={700}
-                              c={selected ? opt.color : 'dark'}
+                              c={selected ? opt.color : "dark"}
                               mb={4}
                             >
                               {opt.label}
@@ -817,7 +819,7 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
                           </Card>
                         </UnstyledButton>
                       </Grid.Col>
-                    )
+                    );
                   })}
                 </Grid>
                 {errors.tipo_tramo && (

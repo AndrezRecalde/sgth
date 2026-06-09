@@ -40,10 +40,10 @@ const TIPO_TRAMO_CONFIG: Record<string, {
   label: string
   color: string
 }> = {
-  ida:     { label: '🟢 IDA',           color: 'blue'    },
-  destino: { label: '🎯 DESTINO',       color: 'teal'    },
-  escala:  { label: '🔄 PARADA/ESCALA', color: 'orange'  },
-  regreso: { label: '🔴 REGRESO',       color: 'red'     },
+  ida:     { label: 'IDA',           color: 'blue'    },
+  destino: { label: 'DESTINO',       color: 'teal'    },
+  escala:  { label: 'PARADA/ESCALA', color: 'orange'  },
+  regreso: { label: 'REGRESO',       color: 'red'     },
 }
 
 function formatDateTime(dt?: string | null): string {
