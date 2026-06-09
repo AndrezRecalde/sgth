@@ -398,14 +398,39 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
     <th>Provincia / Ciudad Destino</th>
     <td>
       @php
-        $ultimo = $viatico->tramos->sortBy('orden')->last();
-        if ($viatico->zona === 'exterior') {
-          echo $viatico->pais_destino ?? '—';
-        } else {
-          $prov = $ultimo?->destinoProvincia?->nombre ?? '';
-          $cant = $ultimo?->destinoCanton?->nombre ?? $ultimo?->destino_ciudad ?? '';
-          echo collect([$prov, $cant])->filter()->join(' — ') ?: '—';
+        $tramos = $viatico->tramos->sortBy('orden');
+
+        // Obtener tramos de destino y escala
+        $tramosDestino = $tramos->whereIn(
+            'tipo_tramo', ['destino', 'escala']
+        );
+
+        // Si no hay destinos clasificados, usar tramo IDA
+        if ($tramosDestino->isEmpty()) {
+            $tramosDestino = $tramos->where('tipo_tramo', 'ida');
         }
+
+        // Si aún está vacío, usar todos excepto el último
+        if ($tramosDestino->isEmpty()) {
+            $tramosDestino = $tramos->slice(0, -1);
+        }
+
+        $destinos = $tramosDestino->map(function($t) {
+            if ($t->destino_tipo === 'internacional') {
+                return collect([
+                    $t->destino_pais,
+                    $t->destino_ciudad,
+                ])->filter()->join('/');
+            }
+            return collect([
+                $t->destinoProvincia?->nombre,
+                $t->destinoCanton?->nombre ?: $t->destino_ciudad,
+            ])->filter()->unique()->join('/');
+        })->filter()->unique()->values();
+
+        echo $destinos->isNotEmpty()
+            ? $destinos->join(' • ')
+            : '—';
       @endphp
     </td>
     <th>Total Días</th>
@@ -433,7 +458,13 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
       </strong>
     </td>
     <th>Modalidad Anticipo</th>
-    <td>{{ $modalidadLabel }}</td>
+    <td>
+      @php
+        $porcentaje = ($modalidadValue === 'total')
+            ? ' (70%)' : '';
+        echo $modalidadLabel . $porcentaje;
+      @endphp
+    </td>
   </tr>
 </table>
 

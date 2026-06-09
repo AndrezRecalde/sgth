@@ -48,6 +48,7 @@ class TramoViaticoController extends Controller
             'datetime_salida'       => 'required|date',
             'datetime_llegada'      => 'required|date|after:datetime_salida',
             'orden'                 => 'nullable|integer|min:1',
+            'tipo_tramo'            => 'nullable|in:ida,destino,escala,regreso',
         ]);
 
         // Orden automático
@@ -62,6 +63,37 @@ class TramoViaticoController extends Controller
         )->orderBy('orden')->get();
 
         $esPrimerTramo = $tramosExistentes->isEmpty();
+
+        // ── Tipo de tramo automático ──────────────────
+        $totalTramos = $tramosExistentes->count();
+
+        if ($esPrimerTramo) {
+            // Primer tramo siempre es IDA
+            $data['tipo_tramo'] = 'ida';
+        } elseif (
+            isset($data['tipo_tramo']) &&
+            $data['tipo_tramo'] === 'regreso'
+        ) {
+            // El servidor marcó este como REGRESO
+            // Validar que llegada = datetime_llegada del viático
+            $llegadaViatico = Carbon::parse(
+                $viatico->datetime_llegada
+            );
+            $llegadaTramo = Carbon::parse(
+                $data['datetime_llegada']
+            );
+            if (!$llegadaViatico->eq($llegadaTramo)) {
+                return ApiResponse::error(
+                    'El tramo de REGRESO debe llegar exactamente el ' .
+                    $llegadaViatico->format('d/m/Y H:i') .
+                    ' (fecha de llegada del viático).',
+                    422
+                );
+            }
+        } elseif (!isset($data['tipo_tramo'])) {
+            // Si no viene tipo_tramo, asignar destino por defecto
+            $data['tipo_tramo'] = 'destino';
+        }
 
         // ── Validar primer tramo ──────────────────────
         if ($esPrimerTramo) {
@@ -149,6 +181,7 @@ class TramoViaticoController extends Controller
             'datetime_salida'       => 'sometimes|date',
             'datetime_llegada'      => 'sometimes|date',
             'orden'                 => 'sometimes|integer|min:1',
+            'tipo_tramo'            => 'sometimes|in:ida,destino,escala,regreso',
         ]);
 
         $viatico = Viatico::findOrFail($viaticoId);
@@ -194,6 +227,15 @@ class TramoViaticoController extends Controller
                     '(' . $llegadaViatico->format('d/m/Y H:i') . ').',
                     422
                 );
+            }
+        }
+
+        // No permitir cambiar tipo de IDA o REGRESO automático
+        if (isset($data['tipo_tramo'])) {
+            $esPrimeroCheck = $tramosExistentes->first()?->id
+                === $tramo->id;
+            if ($esPrimeroCheck) {
+                $data['tipo_tramo'] = 'ida';
             }
         }
 

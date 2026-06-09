@@ -53,6 +53,7 @@ class PdfInformeViaticoService
                 'logo'           => public_path('images/logo-gadpe.png'),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
+                'modalidadValue' => $modalidadValue,
             ]
         )->setPaper('a4', 'portrait');
 

@@ -21,7 +21,7 @@ class TramoViatico extends Model
         'destino_pais', 'destino_ciudad',
         'empresa_transporte_id',
         'datetime_salida', 'datetime_llegada',
-        'orden',
+        'orden', 'tipo_tramo',
     ];
     protected function casts(): array
     {
