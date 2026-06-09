@@ -10,7 +10,9 @@ import {
   Alert,
   Text,
   Group,
-  SegmentedControl,
+  UnstyledButton,
+  Box,
+  Card,
   Badge,
   ThemeIcon,
 } from "@mantine/core";
@@ -104,6 +106,7 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
     control,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<TramoFormData>({
     resolver: zodResolver(tramoSchema),
@@ -233,6 +236,13 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
   });
 
   const onSubmit = (values: TramoFormData) => {
+    if (!esPrimerTramo && !tipoTramoEfectivo) {
+      setError('tipo_tramo', {
+        message: 'Debes seleccionar el tipo de tramo'
+      });
+      return;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { catalogo_transporte_id, ...rest } = values;
     crear.mutate({
@@ -692,74 +702,132 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess, onC
         )}
 
         {/* Tipo de tramo */}
-        <Divider label="¿Qué tipo de tramo es este?" labelPosition="left" />
+        <Divider
+          label="¿Qué tipo de tramo es este?"
+          labelPosition="left"
+        />
 
         {esPrimerTramo ? (
           <Alert color="blue" variant="light" p="xs">
             <Group gap="xs">
-              <ThemeIcon color="blue" variant="light" size="sm" radius="xl">
-                <Text size="xs">🟢</Text>
-              </ThemeIcon>
-              <Text size="xs" fw={600}>
-                Tramo de IDA — se asigna automáticamente
-                como el primer tramo del itinerario
+              <Text size="xs" fw={600} c="blue">
+                🟢 Tramo de IDA
+              </Text>
+              <Text size="xs" c="dimmed">
+                — se asigna automáticamente como el
+                primer tramo del itinerario
               </Text>
             </Group>
           </Alert>
         ) : (
-          <Stack gap="xs">
-            <Controller
-              name="tipo_tramo"
-              control={control}
-              render={({ field }) => (
-                <SegmentedControl
-                  fullWidth
-                  data={[
+          <Controller
+            name="tipo_tramo"
+            control={control}
+            rules={{ required: 'Debe seleccionar el tipo de tramo' }}
+            render={({ field }) => (
+              <Stack gap="xs">
+                <Text size="xs" c="dimmed">
+                  Selecciona el rol de este tramo en tu itinerario:
+                </Text>
+                <Grid>
+                  {[
                     {
-                      value: "destino",
-                      label: "🎯 DESTINO",
+                      value:       'destino',
+                      emoji:       '🎯',
+                      label:       'DESTINO',
+                      description: '¿Realizas actividades de la comisión en esta ciudad?',
+                      color:       'teal',
                     },
                     {
-                      value: "escala",
-                      label: "🔄 PARADA/ESCALA",
+                      value:       'escala',
+                      emoji:       '🔄',
+                      label:       'PARADA / ESCALA',
+                      description: 'Solo pasas por esta ciudad, no realizas actividades.',
+                      color:       'orange',
                     },
                     {
-                      value: "regreso",
-                      label: "🔴 REGRESO",
+                      value:       'regreso',
+                      emoji:       '🔴',
+                      label:       'REGRESO',
+                      description: 'Último tramo de vuelta a tu ciudad base.',
+                      color:       'red',
                     },
-                  ]}
-                  value={field.value ?? "destino"}
-                  onChange={(v) => field.onChange(v)}
-                />
-              )}
-            />
-            {tipoTramo === "destino" && (
-              <Alert color="emerald" variant="light" p="xs">
-                <Text size="xs">
-                  ✅ <strong>DESTINO</strong> — Realizas actividades
-                  de la comisión en esta ciudad
-                </Text>
-              </Alert>
+                  ].map((opt) => {
+                    const selected = field.value === opt.value
+                    return (
+                      <Grid.Col key={opt.value} span={{ base: 12, sm: 4 }}>
+                        <UnstyledButton
+                          onClick={() => field.onChange(opt.value)}
+                          style={{ width: '100%' }}
+                        >
+                          <Card
+                            withBorder
+                            radius="md"
+                            p="sm"
+                            style={{
+                              borderColor: selected
+                                ? `var(--mantine-color-${opt.color}-6)`
+                                : undefined,
+                              borderWidth: selected ? 2 : 1,
+                              background: selected
+                                ? `var(--mantine-color-${opt.color}-0)`
+                                : undefined,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <Group justify="space-between" mb={4}>
+                              <Text size="lg">{opt.emoji}</Text>
+                              <Box
+                                style={{
+                                  width:        18,
+                                  height:       18,
+                                  borderRadius: 4,
+                                  border:       selected
+                                    ? 'none'
+                                    : '2px solid var(--mantine-color-gray-4)',
+                                  background: selected
+                                    ? `var(--mantine-color-${opt.color}-6)`
+                                    : 'white',
+                                  display:        'flex',
+                                  alignItems:     'center',
+                                  justifyContent: 'center',
+                                  flexShrink:     0,
+                                }}
+                              >
+                                {selected && (
+                                  <Text size="xs" c="white" fw={700}
+                                    style={{ lineHeight: 1 }}>
+                                    ✓
+                                  </Text>
+                                )}
+                              </Box>
+                            </Group>
+                            <Text
+                              size="xs"
+                              fw={700}
+                              c={selected ? opt.color : 'dark'}
+                              mb={4}
+                            >
+                              {opt.label}
+                            </Text>
+                            <Text size="xs" c="dimmed" lh={1.4}>
+                              {opt.description}
+                            </Text>
+                          </Card>
+                        </UnstyledButton>
+                      </Grid.Col>
+                    )
+                  })}
+                </Grid>
+                {errors.tipo_tramo && (
+                  <Text size="xs" c="red">
+                    {errors.tipo_tramo.message as string}
+                  </Text>
+                )}
+              </Stack>
             )}
-            {tipoTramo === "escala" && (
-              <Alert color="orange" variant="light" p="xs">
-                <Text size="xs">
-                  🔄 <strong>PARADA/ESCALA</strong> — Solo pasas
-                  por esta ciudad, no realizas actividades
-                </Text>
-              </Alert>
-            )}
-            {tipoTramo === "regreso" && (
-              <Alert color="red" variant="light" p="xs">
-                <Text size="xs">
-                  🔴 <strong>REGRESO</strong> — Este es tu último
-                  tramo de vuelta a Esmeraldas.
-                  La llegada debe coincidir exactamente con
-                  la fecha de regreso del viático.
-                </Text>
-              </Alert>
-            )}
-          </Stack>
+          />
         )}
 
         <Group justify="flex-end" mt="sm">
