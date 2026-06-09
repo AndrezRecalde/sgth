@@ -38,7 +38,7 @@ import {
 } from "@tabler/icons-react";
 import { AprobarExteriorModal } from "./AprobarExteriorModal";
 import { usePdfViatico } from "../hooks/usePdfViatico";
-import { useViatico } from "../hooks/useViaticos";
+import { useViatico, useTramos } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { useQueryClient } from "@tanstack/react-query";
 import { TramosList } from "./TramosList";
@@ -110,6 +110,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const qc = useQueryClient();
   const { data: detalle, isLoading } = useViatico(identificador);
   const d = detalle as ViaticoConRelaciones | undefined;
+
+  const { data: tramosData = [] } = useTramos(detalle?.id ?? null);
 
   const [editModalAbierto, { open: abrirEdit, close: cerrarEdit }] =
     useDisclosure(false);
@@ -891,7 +893,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 viaticoId={d.id}
                 viatico={d}
                 tramosExistentes={
-                  (d.tramos as import("@/types/api").TramoViatico[] | undefined)?.length ?? 0
+                  (tramosData as import("@/types/api").TramoViatico[]).length
                 }
                 onSuccess={() => setMostrarTramoForm(false)}
                 onCancel={() => setMostrarTramoForm(false)}
