@@ -213,6 +213,13 @@ class AppServiceProvider extends ServiceProvider
             return $user?->hasRole('admin-ti');
         });
 
+        // Super administradores — acceso sin restricciones
+        Gate::before(function ($user, $ability) {
+            if ($user->hasAnyRole(['admin-ti', 'admin-uath'])) {
+                return true;
+            }
+        });
+
         Scramble::configure()
             ->withDocumentTransformers(function (OpenApi $openApi) {
                 $openApi->secure(
