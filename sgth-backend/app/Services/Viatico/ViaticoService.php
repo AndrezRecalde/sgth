@@ -265,9 +265,13 @@ final class ViaticoService implements ViaticoServiceInterface
             );
         }
 
-        // Calcular monto para exterior con coeficiente
-        if ($viatico->zona === 'exterior'
+        $zonaValue = $viatico->zona instanceof \BackedEnum
+            ? $viatico->zona->value
+            : (string) $viatico->zona;
+
+        if ($zonaValue === 'exterior'
             && isset($datos['coeficiente_exterior'])
+            && (float) $datos['coeficiente_exterior'] > 0
         ) {
             $coeficiente = (float) $datos['coeficiente_exterior'];
             $paisDestino = $datos['pais_destino'] ?? $viatico->pais_destino;
