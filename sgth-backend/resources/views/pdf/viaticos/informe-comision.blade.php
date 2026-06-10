@@ -459,22 +459,38 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 {{-- ══ RESUMEN FINANCIERO ══ --}}
 <div class="sec-hdr-alt">Resumen Financiero</div>
 <div class="resumen-wrap">
+  @php
+    $montoAsignado  = (float) ($viatico->monto_calculado ?? 0);
+    $anticipo       = (float) ($viatico->monto_anticipo ?? 0);
+    $totalFacturas  = (float) ($viatico->liquidacion->total_facturas ?? 0);
+    $diferencia     = $montoAsignado - $totalFacturas;
+    $montoMostrar   = $diferencia >= 0 ? $diferencia : 0;
+    $porcentaje     = $montoAsignado > 0
+        ? round(($totalFacturas / $montoAsignado) * 100, 1)
+        : 0;
+  @endphp
   <div class="res-row">
-    <div class="res-lbl">Anticipo recibido:</div>
-    <div class="res-val">$ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}</div>
+    <div class="res-lbl">Monto total asignado:</div>
+    <div class="res-val">
+      $ {{ number_format($montoAsignado, 2) }}
+    </div>
   </div>
   <div class="res-row">
-    <div class="res-lbl">Total comprobantes presentados:</div>
+    <div class="res-lbl">Anticipo entregado (70%):</div>
     <div class="res-val">
-      $ {{ number_format($viatico->liquidacion->total_facturas ?? 0, 2) }}
+      $ {{ number_format($anticipo, 2) }}
+    </div>
+  </div>
+  <div class="res-row">
+    <div class="res-lbl">
+      Total comprobantes ({{ $porcentaje }}% justificado):
+    </div>
+    <div class="res-val">
+      $ {{ number_format($totalFacturas, 2) }}
     </div>
   </div>
   <div class="res-row">
     <div class="res-total-lbl">
-      @php
-        $diferencia = (float) ($viatico->liquidacion->diferencia_devolver ?? 0);
-        $montoMostrar = $diferencia >= 0 ? $diferencia : 0;
-      @endphp
       ★ Valor a devolver a la institución:
     </div>
     <div class="res-total-val">
@@ -484,9 +500,9 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   @if($diferencia < 0)
   <div class="res-row" style="background:#fff8f0;">
     <div class="res-lbl" style="color:#c05621;font-size:8px;font-style:italic;">
-      ⚠ Los comprobantes superan el anticipo en
+      ⚠ Comprobantes exceden el monto asignado en
       $ {{ number_format(abs($diferencia), 2) }}.
-      La diferencia es responsabilidad del servidor.
+      Diferencia asumida por el servidor.
     </div>
     <div class="res-val" style="color:#c05621;">—</div>
   </div>

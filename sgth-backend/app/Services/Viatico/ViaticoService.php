@@ -141,8 +141,11 @@ final class ViaticoService implements ViaticoServiceInterface
             $facturasPayload  = $datos['facturas']    ?? [];
             $actividadesPayload = $datos['actividades'] ?? [];
             $totalFacturas    = collect($facturasPayload)->sum('monto');
+            // La diferencia se calcula contra el MONTO TOTAL ASIGNADO
+            // no contra el anticipo entregado
+            $montoAsignado = (float) ($viatico->monto_calculado ?? 0.00);
             $anticipoRecibido = (float) ($viatico->monto_anticipo ?? 0.00);
-            $diferenciaDevolver = $anticipoRecibido - $totalFacturas;
+            $diferenciaDevolver = $montoAsignado - $totalFacturas;
 
             $liquidacion = LiquidacionViatico::create([
                 'viatico_id'          => $viaticoId,

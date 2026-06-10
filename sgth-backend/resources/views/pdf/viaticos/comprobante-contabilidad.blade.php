@@ -379,7 +379,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   <tr class="total-row">
     <td class="lbl">TOTAL:</td>
     <td class="val">
-      $ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}
+      $ {{ number_format($viatico->monto_calculado ?? 0, 2) }}
     </td>
   </tr>
 </table>
@@ -387,9 +387,10 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 {{-- ══ VALORES A JUSTIFICAR ══ --}}
 <div class="sec-hdr">Valores a Justificar</div>
 @php
-  $anticipo     = (float) ($viatico->monto_anticipo ?? 0);
-  $devengado    = round($anticipo * 0.30, 2);
-  $aJustificar  = round($anticipo * 0.70, 2);
+  $montoAsignado = (float) ($viatico->monto_calculado ?? 0);
+  $anticipo      = (float) ($viatico->monto_anticipo ?? 0);
+  $devengado     = round($montoAsignado * 0.30, 2);
+  $aJustificar   = round($montoAsignado * 0.70, 2);
 @endphp
 <table class="ft">
   <tr>
@@ -476,10 +477,10 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
     <div class="f-lbl">Valor a liquidar: (a) + (b) + (c) - (d)</div>
     <div class="f-val">
       @php
-        $valorLiquidar = $devengado + $totalMovilizacion +
-            ($hospedaje + $alimentacion + $inscripcion + $otro) -
-            ($viatico->monto_anticipo ?? 0);
-        $valorMostrar = $valorLiquidar >= 0 ? $valorLiquidar : 0;
+        $totalJustificado = $totalMovilizacion +
+            $hospedaje + $alimentacion + $inscripcion + $otro;
+        $diferencia = $montoAsignado - $totalJustificado;
+        $valorMostrar = $diferencia >= 0 ? $diferencia : 0;
       @endphp
       $ {{ number_format($valorMostrar, 2) }}
     </div>
