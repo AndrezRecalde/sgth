@@ -391,6 +391,46 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   $anticipo      = (float) ($viatico->monto_anticipo ?? 0);
   $devengado     = round($montoAsignado * 0.30, 2);
   $aJustificar   = round($montoAsignado * 0.70, 2);
+
+  // Separar facturas por grupo
+  $hospedaje         = 0;
+  $alimentacion      = 0;
+  $transporteTerrestre = 0;
+  $pasajeAereo       = 0;
+  $combustible       = 0;
+  $peaje             = 0;
+  $inscripcion       = 0;
+  $otro              = 0;
+  $totalMovilizacion = 0;
+  $totalHospAli      = 0;
+
+  foreach ($facturasPorCategoria as $catId => $cat) {
+      if (in_array($catId, [1, 2])) {
+          if ($catId === 1) $hospedaje    = $cat['total'];
+          if ($catId === 2) $alimentacion = $cat['total'];
+          $totalHospAli += $cat['total'];
+      } else {
+          if ($catId === 3)  $transporteTerrestre = $cat['total'];
+          if ($catId === 4)  $pasajeAereo         = $cat['total'];
+          if ($catId === 5)  $combustible         = $cat['total'];
+          if ($catId === 6)  $peaje               = $cat['total'];
+          if ($catId === 10) $inscripcion         = $cat['total'];
+          if ($catId === 13) $otro                = $cat['total'];
+          $totalMovilizacion += $cat['total'];
+      }
+  }
+
+  $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
+      ? $viatico->modalidad_anticipo->value
+      : (string) $viatico->modalidad_anticipo;
+
+  $diferenciaDevolver = ($modalidad === 'sin_anticipo')
+      ? 0
+      : (($totalHospAli >= $anticipo)
+          ? 0
+          : round($anticipo - $totalHospAli, 2));
+
+  $valorMostrar = $diferenciaDevolver;
 @endphp
 <table class="ft">
   <tr>
@@ -404,29 +444,40 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 </table>
 
 {{-- ══ VALORES JUSTIFICADOS ══ --}}
-<div class="sec-hdr">Valores Justificados</div>
-<div class="sec-hdr-alt">Movilización</div>
-@php
-  $hospedaje          = $facturasPorCategoria[1]['total'] ?? 0;
-  $alimentacion       = $facturasPorCategoria[2]['total'] ?? 0;
-  $transporteTerrestre= $facturasPorCategoria[3]['total'] ?? 0;
-  $pasajeAereo        = $facturasPorCategoria[4]['total'] ?? 0;
-  $combustible        = $facturasPorCategoria[5]['total'] ?? 0;
-  $peaje              = $facturasPorCategoria[6]['total'] ?? 0;
-  $inscripcion        = $facturasPorCategoria[10]['total'] ?? 0;
-  $otro               = $facturasPorCategoria[13]['total'] ?? 0;
-  $totalMovilizacion  = $transporteTerrestre + $pasajeAereo +
-                        $combustible + $peaje;
-  $totalJustificado   = $hospedaje + $alimentacion +
-                        $totalMovilizacion + $inscripcion + $otro;
-@endphp
+<div class="sec-hdr">
+  Valores Justificados — Viático Diario (H&A)
+</div>
 <table class="ft">
   <tr>
-    <td class="lbl">Pasajes terrestres / fluviales nacionales</td>
+    <td class="lbl">Hospedaje</td>
+    <td class="val">$ {{ number_format($hospedaje, 2) }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Alimentación</td>
+    <td class="val">$ {{ number_format($alimentacion, 2) }}</td>
+  </tr>
+  <tr class="total-row">
+    <td class="lbl">
+      TOTAL H&A ({{ $aJustificar > 0
+        ? round(($totalHospAli/$aJustificar)*100, 1)
+        : 0 }}% del 70%):
+    </td>
+    <td class="val">
+      $ {{ number_format($totalHospAli, 2) }} (c)
+    </td>
+  </tr>
+</table>
+
+<div class="sec-hdr-alt">
+  Movilización (rubro independiente)
+</div>
+<table class="ft">
+  <tr>
+    <td class="lbl">Pasajes terrestres / fluviales</td>
     <td class="val">$ {{ number_format($transporteTerrestre, 2) }}</td>
   </tr>
   <tr>
-    <td class="lbl">Pasajes aéreos nacionales</td>
+    <td class="lbl">Pasajes aéreos</td>
     <td class="val">$ {{ number_format($pasajeAereo, 2) }}</td>
   </tr>
   <tr>
@@ -439,16 +490,9 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   </tr>
   <tr class="total-row">
     <td class="lbl">TOTAL MOVILIZACIÓN:</td>
-    <td class="val">$ {{ number_format($totalMovilizacion, 2) }} (b)</td>
-  </tr>
-</table>
-
-<table class="ft" style="margin-top:0;border-top:none;">
-  <tr>
-    <td class="lbl">
-      Valor justificado (Hospedaje, Alimentación e Inscripciones)
+    <td class="val">
+      $ {{ number_format($totalMovilizacion, 2) }} (b)
     </td>
-    <td class="val">$ {{ number_format($hospedaje + $alimentacion + $inscripcion + $otro, 2) }} (c)</td>
   </tr>
 </table>
 
@@ -474,22 +518,38 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 <div class="sec-hdr">Liquidación</div>
 <div class="formula-box">
   <div class="formula-row">
-    <div class="f-lbl">Valor a liquidar: (a) + (b) + (c) - (d)</div>
+    <div class="f-lbl">(a) Devengado 30%:</div>
+    <div class="f-val">$ {{ number_format($devengado, 2) }}</div>
+  </div>
+  <div class="formula-row">
+    <div class="f-lbl">(b) Total movilización:</div>
     <div class="f-val">
-      @php
-        $totalJustificado = $totalMovilizacion +
-            $hospedaje + $alimentacion + $inscripcion + $otro;
-        $diferencia = $montoAsignado - $totalJustificado;
-        $valorMostrar = $diferencia >= 0 ? $diferencia : 0;
-      @endphp
-      $ {{ number_format($valorMostrar, 2) }}
+      $ {{ number_format($totalMovilizacion, 2) }}
+    </div>
+  </div>
+  <div class="formula-row">
+    <div class="f-lbl">(c) Total H&A justificado:</div>
+    <div class="f-val">
+      $ {{ number_format($totalHospAli, 2) }}
+    </div>
+  </div>
+  <div class="formula-row">
+    <div class="f-lbl">(d) Anticipo entregado:</div>
+    <div class="f-val">$ {{ number_format($anticipo, 2) }}</div>
+  </div>
+  <div class="formula-row" style="border-top:1px solid #cbd5e0;padding-top:4px;margin-top:4px;">
+    <div class="f-lbl">
+      <strong>A devolver: (d) - (c):</strong>
+    </div>
+    <div class="f-val">
+      <strong>$ {{ number_format($diferenciaDevolver, 2) }}</strong>
     </div>
   </div>
 </div>
 <div class="formula-total">
-  <div class="ft-lbl">TOTAL A LIQUIDAR:</div>
+  <div class="ft-lbl">VALOR TOTAL DEL VIÁTICO:</div>
   <div class="ft-val">
-    $ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}
+    $ {{ number_format($montoAsignado, 2) }}
   </div>
 </div>
 
