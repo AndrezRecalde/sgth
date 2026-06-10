@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Stack, Group, Button, Text, Badge, Tabs, Chip, TextInput, ActionIcon } from "@mantine/core";
-import { useDisclosure, useDebouncedValue } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconPlane,
   IconPlus,
@@ -53,8 +53,8 @@ export function ViaticoView() {
 
   const [filtroEstado, setFiltroEstado] = useState<string>("solicitado");
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [debouncedSearch] = useDebouncedValue(search, 400);
+  const [busquedaCodigo, setBusquedaCodigo] = useState('');
+  const [codigoQuery, setCodigoQuery]       = useState('');
 
   const filtros = {
     estado:
@@ -63,7 +63,7 @@ export function ViaticoView() {
         : (filtroEstado as EstadoViatico),
     per_page: 15,
     page,
-    search: debouncedSearch.trim() || undefined,
+    search: codigoQuery || undefined,
   };
 
   const { data, isLoading } = useViaticos(filtros);
@@ -224,31 +224,48 @@ export function ViaticoView() {
 
         <Tabs.Panel value="viaticos" pt="md">
           <Stack gap="sm">
-            <TextInput
-              placeholder="Buscar por código (Ej: GTIC-2026-00001)"
-              leftSection={<IconSearch size={14} />}
-              rightSection={
-                search ? (
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="gray"
-                    onClick={() => {
-                      setSearch('')
-                      setPage(1)
-                    }}
-                  >
-                    <IconX size={12} />
-                  </ActionIcon>
-                ) : null
-              }
-              value={search}
-              onChange={(e) => {
-                setSearch(e.currentTarget.value)
-                setPage(1)
-              }}
-              style={{ maxWidth: 320 }}
-            />
+            <Group gap="xs">
+              <TextInput
+                placeholder="Buscar por código..."
+                leftSection={<IconSearch size={14} />}
+                value={busquedaCodigo}
+                onChange={(e) => setBusquedaCodigo(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setCodigoQuery(busquedaCodigo.trim())
+                    setPage(1)
+                  }
+                }}
+                style={{ width: 260 }}
+                rightSection={
+                  busquedaCodigo ? (
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      color="gray"
+                      onClick={() => {
+                        setBusquedaCodigo('')
+                        setCodigoQuery('')
+                        setPage(1)
+                      }}
+                    >
+                      <IconX size={12} />
+                    </ActionIcon>
+                  ) : null
+                }
+              />
+              <Button
+                variant="light"
+                color="blue"
+                leftSection={<IconSearch size={14} />}
+                onClick={() => {
+                  setCodigoQuery(busquedaCodigo.trim())
+                  setPage(1)
+                }}
+              >
+                Buscar
+              </Button>
+            </Group>
 
             {/* Chips de estado */}
             <Group gap="xs">
