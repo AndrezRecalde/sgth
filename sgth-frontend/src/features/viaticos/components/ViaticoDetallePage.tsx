@@ -698,20 +698,25 @@ export function ViaticoDetallePage({ identificador }: Props) {
                       ?? 'sin_anticipo'
 
                     // Separar facturas por grupo
-                    const facturas =
-                      d.liquidacion.detalles_factura ?? []
+                    type FacturaConCategoria = {
+                      monto?: number | string | null
+                      categoria?: { grupo?: string } | null
+                    }
+                    const facturas: FacturaConCategoria[] =
+                      (d.liquidacion.detalles_factura ?? []) as
+                        FacturaConCategoria[]
                     const totalHospAli = facturas
-                      .filter((f: any) =>
+                      .filter((f) =>
                         f.categoria?.grupo === 'viatico'
                       )
-                      .reduce((sum: number, f: any) =>
+                      .reduce((sum, f) =>
                         sum + Number(f.monto ?? 0), 0
                       )
                     const totalMovilizacion = facturas
-                      .filter((f: any) =>
+                      .filter((f) =>
                         f.categoria?.grupo !== 'viatico'
                       )
-                      .reduce((sum: number, f: any) =>
+                      .reduce((sum, f) =>
                         sum + Number(f.monto ?? 0), 0
                       )
 
