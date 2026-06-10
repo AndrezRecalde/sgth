@@ -487,6 +487,31 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             [\App\Http\Controllers\Viatico\ViaticoController::class,
              'contabilizar']);
 
+        Route::prefix('{viaticoId}/liquidacion')
+            ->group(function () {
+                Route::get('/',
+                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
+                     'obtenerOCrear']);
+
+                Route::get('actividades',
+                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
+                     'listarActividades']);
+                Route::post('actividades',
+                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
+                     'guardarActividades']);
+
+                Route::get('facturas',
+                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
+                     'listarFacturas']);
+                Route::post('facturas',
+                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
+                     'guardarFacturas']);
+
+                Route::post('confirmar',
+                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
+                     'confirmar']);
+            });
+
         Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
         
         Route::get('{identificador}/solicitud/generar-enlace',
