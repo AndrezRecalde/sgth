@@ -704,25 +704,44 @@ export function ViaticoDetallePage({ identificador }: Props) {
                   </Group>
                   <Group justify="space-between">
                     <Text size="xs" c="dimmed">
-                      {Number(d.liquidacion.diferencia_devolver) >= 0
-                        ? "A devolver"
-                        : "A cobrar"}
+                      A devolver a la institución
                     </Text>
                     <Text
                       fw={600}
-                      c={
-                        Number(d.liquidacion.diferencia_devolver) >= 0
-                          ? "orange"
-                          : "emerald"
-                      }
+                      c={Number(d.liquidacion.diferencia_devolver) >= 0
+                        ? "orange" : "gray"}
                     >
-                      {fmtMonto(
-                        Math.abs(
-                          Number(d.liquidacion.diferencia_devolver ?? 0),
-                        ),
-                      )}
+                      {Number(d.liquidacion.diferencia_devolver) >= 0
+                        ? fmtMonto(
+                            Number(d.liquidacion.diferencia_devolver ?? 0)
+                          )
+                        : '$0.00'}
                     </Text>
                   </Group>
+                  {Number(d.liquidacion.diferencia_devolver) < 0 && (
+                    <Alert
+                      color="orange"
+                      variant="light"
+                      p="xs"
+                      mt={4}
+                    >
+                      <Text size="xs">
+                        ⚠️ El total de comprobantes supera
+                        el anticipo recibido. La diferencia
+                        de{' '}
+                        <strong>
+                          {fmtMonto(
+                            Math.abs(
+                              Number(
+                                d.liquidacion.diferencia_devolver ?? 0
+                              )
+                            )
+                          )}
+                        </strong>
+                        {' '}es responsabilidad del servidor.
+                      </Text>
+                    </Alert>
+                  )}
                   <Divider />
                   {(d.liquidacion.actividades?.length ?? 0) > 0 && (
                     <Stack gap={4}>

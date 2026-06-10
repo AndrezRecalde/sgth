@@ -233,18 +233,30 @@ export function FacturasModal({
             <Divider my={4} />
             <Group justify="space-between">
               <Text size="sm" fw={600}>
-                {diferencia >= 0
-                  ? "A devolver a la institución:"
-                  : "Diferencia a cobrar:"}
+                A devolver a la institución:
               </Text>
               <Text
                 size="sm"
                 fw={700}
-                c={diferencia >= 0 ? "orange" : "emerald"}
+                c={diferencia >= 0 ? 'orange' : 'gray'}
               >
-                ${Math.abs(diferencia).toFixed(2)}
+                {diferencia >= 0
+                  ? `$${diferencia.toFixed(2)}`
+                  : '$0.00'}
               </Text>
             </Group>
+            {diferencia < 0 && (
+              <Alert color="orange" variant="light" p="xs">
+                <Text size="xs">
+                  ⚠️ Los comprobantes superan el anticipo.
+                  La diferencia de{' '}
+                  <strong>
+                    ${Math.abs(diferencia).toFixed(2)}
+                  </strong>
+                  {' '}es responsabilidad del servidor.
+                </Text>
+              </Alert>
+            )}
           </Card>
 
           {/* Alerta de rango */}

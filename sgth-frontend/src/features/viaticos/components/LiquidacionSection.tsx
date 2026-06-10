@@ -106,12 +106,28 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
           <Divider my={4} />
           <Group justify="space-between">
             <Text size="sm" fw={600}>
-              {diferencia >= 0 ? "A devolver:" : "A cobrar:"}
+              A devolver a la institución:
             </Text>
-            <Text size="sm" fw={700} c={diferencia >= 0 ? "orange" : "emerald"}>
-              {fmtMonto(Math.abs(diferencia))}
+            <Text
+              size="sm"
+              fw={700}
+              c={diferencia >= 0 ? 'orange' : 'gray'}
+            >
+              {diferencia >= 0
+                ? fmtMonto(diferencia)
+                : '$0.00'}
             </Text>
           </Group>
+          {diferencia < 0 && (
+            <Alert color="orange" variant="light" p="xs">
+              <Text size="xs">
+                ⚠️ Los comprobantes superan el anticipo.
+                La diferencia de{' '}
+                <strong>{fmtMonto(Math.abs(diferencia))}</strong>
+                {' '}es responsabilidad del servidor.
+              </Text>
+            </Alert>
+          )}
         </Card>
       )}
 
