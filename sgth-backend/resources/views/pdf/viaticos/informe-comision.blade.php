@@ -458,56 +458,140 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 
 {{-- ══ RESUMEN FINANCIERO ══ --}}
 <div class="sec-hdr-alt">Resumen Financiero</div>
-<div class="resumen-wrap">
   @php
     $montoAsignado  = (float) ($viatico->monto_calculado ?? 0);
     $anticipo       = (float) ($viatico->monto_anticipo ?? 0);
-    $totalFacturas  = (float) ($viatico->liquidacion->total_facturas ?? 0);
-    $diferencia     = $montoAsignado - $totalFacturas;
-    $montoMostrar   = $diferencia >= 0 ? $diferencia : 0;
-    $porcentaje     = $montoAsignado > 0
-        ? round(($totalFacturas / $montoAsignado) * 100, 1)
+    $monto70        = round($montoAsignado * 0.70, 2);
+    $monto30        = round($montoAsignado * 0.30, 2);
+
+    // Separar facturas por grupo
+    $totalHospAli = 0;
+    $totalMovilizacion = 0;
+    foreach ($viatico->liquidacion?->detallesFactura ?? [] as $f) {
+        if ($f->categoria?->grupo === 'viatico') {
+            $totalHospAli += (float) $f->monto;
+        } else {
+            $totalMovilizacion += (float) $f->monto;
+        }
+    }
+    $totalFacturas = $totalHospAli + $totalMovilizacion;
+
+    $porcentajeHA = $monto70 > 0
+        ? min(round(($totalHospAli / $monto70) * 100, 1), 100)
         : 0;
+    $justificadoCompleto = $totalHospAli >= $monto70;
+
+    $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
+        ? $viatico->modalidad_anticipo->value
+        : (string) $viatico->modalidad_anticipo;
+
+    if ($modalidad === 'sin_anticipo') {
+        $diferenciaDevolver = 0;
+    } else {
+        $diferenciaDevolver = ($totalHospAli >= $anticipo ||
+                               $totalFacturas >= $montoAsignado)
+            ? 0
+            : round($anticipo - $totalHospAli, 2);
+    }
   @endphp
-  <div class="res-row">
-    <div class="res-lbl">Monto total asignado:</div>
-    <div class="res-val">
-      $ {{ number_format($montoAsignado, 2) }}
+
+  {{-- Viático diario H&A --}}
+  <div class="resumen-wrap">
+    <div class="res-row">
+      <div class="res-lbl">
+        Monto total asignado:
+      </div>
+      <div class="res-val">
+        $ {{ number_format($montoAsignado, 2) }}
+      </div>
     </div>
+    <div class="res-row">
+      <div class="res-lbl">
+        70% a justificar (Hospedaje y Alimentación):
+      </div>
+      <div class="res-val">
+        $ {{ number_format($monto70, 2) }}
+      </div>
+    </div>
+    @if($anticipo > 0)
+    <div class="res-row">
+      <div class="res-lbl">
+        Anticipo entregado:
+      </div>
+      <div class="res-val">
+        $ {{ number_format($anticipo, 2) }}
+      </div>
+    </div>
+    @endif
+    <div class="res-row">
+      <div class="res-lbl">
+        Total H&A presentado ({{ $porcentajeHA }}%):
+      </div>
+      <div class="res-val"
+        style="color:{{ $justificadoCompleto ? '#2d6a4f' : '#e67e22' }}">
+        $ {{ number_format($totalHospAli, 2) }}
+      </div>
+    </div>
+    <div class="res-row">
+      <div class="res-lbl">
+        30% devengado (sin comprobante):
+      </div>
+      <div class="res-val">
+        $ {{ number_format($monto30, 2) }}
+      </div>
+    </div>
+    @if($diferenciaDevolver > 0)
+    <div class="res-row" style="background:#fff0f0;">
+      <div class="res-total-lbl" style="color:#c0392b;">
+        ★ A devolver a la institución:
+      </div>
+      <div class="res-total-val" style="color:#c0392b;">
+        $ {{ number_format($diferenciaDevolver, 2) }}
+      </div>
+    </div>
+    @else
+    <div class="res-row">
+      <div class="res-total-lbl">
+        ★ A devolver a la institución:
+      </div>
+      <div class="res-total-val">
+        $ 0.00
+      </div>
+    </div>
+    @endif
   </div>
-  <div class="res-row">
-    <div class="res-lbl">Anticipo entregado (70%):</div>
-    <div class="res-val">
-      $ {{ number_format($anticipo, 2) }}
+
+  {{-- Movilización --}}
+  @if($totalMovilizacion > 0)
+  <div style="margin-top:8px;">
+    <div class="sec-hdr-alt" style="margin-top: 0;">
+      Movilización (rubro independiente)
     </div>
-  </div>
-  <div class="res-row">
-    <div class="res-lbl">
-      Total comprobantes ({{ $porcentaje }}% justificado):
+    <div class="resumen-wrap">
+      @foreach($viatico->liquidacion->detallesFactura as $f)
+        @if($f->categoria?->grupo !== 'viatico')
+        <div class="res-row">
+          <div class="res-lbl">
+            {{ $f->categoria?->nombre ?? '—' }}
+            ({{ $f->nombre_proveedor ?? '—' }}):
+          </div>
+          <div class="res-val">
+            $ {{ number_format($f->monto ?? 0, 2) }}
+          </div>
+        </div>
+        @endif
+      @endforeach
+      <div class="res-row">
+        <div class="res-total-lbl">
+          Total Movilización:
+        </div>
+        <div class="res-total-val">
+          $ {{ number_format($totalMovilizacion, 2) }}
+        </div>
+      </div>
     </div>
-    <div class="res-val">
-      $ {{ number_format($totalFacturas, 2) }}
-    </div>
-  </div>
-  <div class="res-row">
-    <div class="res-total-lbl">
-      ★ Valor a devolver a la institución:
-    </div>
-    <div class="res-total-val">
-      $ {{ number_format($montoMostrar, 2) }}
-    </div>
-  </div>
-  @if($diferencia < 0)
-  <div class="res-row" style="background:#fff8f0;">
-    <div class="res-lbl" style="color:#c05621;font-size:8px;font-style:italic;">
-      ⚠ Comprobantes exceden el monto asignado en
-      $ {{ number_format(abs($diferencia), 2) }}.
-      Diferencia asumida por el servidor.
-    </div>
-    <div class="res-val" style="color:#c05621;">—</div>
   </div>
   @endif
-</div>
 @else
 <div class="tbox" style="color:#718096">
   Sin comprobantes registrados en la liquidación.
