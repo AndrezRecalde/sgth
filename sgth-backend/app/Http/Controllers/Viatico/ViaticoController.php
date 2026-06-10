@@ -13,13 +13,46 @@ class ViaticoController extends Controller
 {
     public function __construct(private ViaticoServiceInterface $viaticoService) {}
 
-    public function index(): JsonResponse
-    {
-        $viaticos = \App\Models\Viatico\Viatico::with(['servidor'])
-            ->orderByDesc('created_at')
-            ->paginate(50);
+    public function index(
+        \Illuminate\Http\Request $request
+    ): JsonResponse {
+        $query = \App\Models\Viatico\Viatico::with(['servidor'])
+            ->orderByDesc('created_at');
 
-        return ApiResponse::ok($viaticos, 'Viáticos listados.');
+        // Filtro por estado
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->input('estado'));
+        }
+
+        // Filtro por zona
+        if ($request->filled('zona')) {
+            $query->where('zona', $request->input('zona'));
+        }
+
+        // Filtro por servidor (para el servidor logueado)
+        if ($request->filled('servidor_id')) {
+            $query->where(
+                'servidor_id',
+                $request->input('servidor_id')
+            );
+        }
+
+        // Búsqueda por código
+        if ($request->filled('search')) {
+            $query->where(
+                'codigo_viatico',
+                'like',
+                '%' . $request->input('search') . '%'
+            );
+        }
+
+        $perPage = (int) $request->input('per_page', 50);
+        $viaticos = $query->paginate($perPage);
+
+        return ApiResponse::ok(
+            $viaticos,
+            'Viáticos listados.'
+        );
     }
 
     public function show(string $identificador): JsonResponse
