@@ -688,60 +688,117 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 />
               ) : d.liquidacion ? (
                 <Stack gap="xs">
-                  <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      Total facturas
-                    </Text>
-                    <Text fw={600}>
-                      {fmtMonto(d.liquidacion.total_facturas)}
-                    </Text>
-                  </Group>
-                  <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      Anticipo recibido
-                    </Text>
-                    <Text fw={600}>{fmtMonto(d.monto_anticipo)}</Text>
-                  </Group>
-                  <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      A devolver a la institución
-                    </Text>
-                    <Text
-                      fw={600}
-                      c={Number(d.liquidacion.diferencia_devolver) >= 0
-                        ? "orange" : "gray"}
-                    >
-                      {Number(d.liquidacion.diferencia_devolver) >= 0
-                        ? fmtMonto(
-                            Number(d.liquidacion.diferencia_devolver ?? 0)
-                          )
-                        : '$0.00'}
-                    </Text>
-                  </Group>
-                  {Number(d.liquidacion.diferencia_devolver) < 0 && (
-                    <Alert
-                      color="orange"
-                      variant="light"
-                      p="xs"
-                      mt={4}
-                    >
-                      <Text size="xs">
-                        El total de comprobantes supera
-                        el anticipo recibido. La diferencia
-                        de{' '}
-                        <strong>
-                          {fmtMonto(
-                            Math.abs(
-                              Number(
-                                d.liquidacion.diferencia_devolver ?? 0
-                              )
-                            )
-                          )}
-                        </strong>
-                        {' '}es responsabilidad del servidor.
-                      </Text>
-                    </Alert>
-                  )}
+                  {(() => {
+                    const montoAsignado =
+                      Number(d.monto_calculado ?? 0)
+                    const anticipo =
+                      Number(d.monto_anticipo ?? 0)
+                    const totalFacturas =
+                      Number(d.liquidacion.total_facturas ?? 0)
+                    const diferencia =
+                      montoAsignado - totalFacturas
+                    const porcentaje = montoAsignado > 0
+                      ? Math.min(
+                          Math.round(
+                            (totalFacturas / montoAsignado) * 100
+                          ), 100
+                        )
+                      : 0
+                    const justificadoCompleto =
+                      totalFacturas >= montoAsignado
+                    return (
+                      <>
+                        <Group justify="space-between">
+                          <Text size="xs" c="dimmed">
+                            Monto total asignado
+                          </Text>
+                          <Text fw={600}>
+                            {fmtMonto(montoAsignado)}
+                          </Text>
+                        </Group>
+                        <Group justify="space-between">
+                          <Text size="xs" c="dimmed">
+                            Anticipo entregado (70%)
+                          </Text>
+                          <Text fw={600}>
+                            {fmtMonto(anticipo)}
+                          </Text>
+                        </Group>
+                        <Group justify="space-between">
+                          <Text size="xs" c="dimmed">
+                            Total comprobantes
+                          </Text>
+                          <Text
+                            fw={600}
+                            c={justificadoCompleto
+                              ? 'teal' : 'orange'}
+                          >
+                            {fmtMonto(totalFacturas)}
+                            {' '}
+                            <Text
+                              span
+                              size="xs"
+                              c={justificadoCompleto
+                                ? 'teal' : 'orange'}
+                            >
+                              ({porcentaje}%)
+                            </Text>
+                          </Text>
+                        </Group>
+                        <Divider />
+                        <Group justify="space-between">
+                          <Text size="xs" fw={600}>
+                            A devolver a la institución
+                          </Text>
+                          <Text
+                            fw={700}
+                            c={justificadoCompleto
+                              ? 'teal' : 'orange'}
+                          >
+                            {diferencia >= 0
+                              ? fmtMonto(diferencia)
+                              : '$0.00'}
+                          </Text>
+                        </Group>
+                        {!justificadoCompleto &&
+                         diferencia > 0 && (
+                          <Alert
+                            color="yellow"
+                            variant="light"
+                            p="xs"
+                          >
+                            <Text size="xs">
+                              Faltan{' '}
+                              <strong>
+                                {fmtMonto(diferencia)}
+                              </strong>
+                              {' '}por justificar del monto
+                              total asignado.
+                            </Text>
+                          </Alert>
+                        )}
+                        {diferencia < 0 && (
+                          <Alert
+                            color="orange"
+                            variant="light"
+                            p="xs"
+                          >
+                            <Text size="xs">
+                              Los comprobantes exceden el
+                              monto asignado en{' '}
+                              <strong>
+                                {fmtMonto(
+                                  Math.abs(diferencia)
+                                )}
+                              </strong>
+                              . Gastos extras a cargo
+                              del servidor.
+                            </Text>
+                          </Alert>
+                        )}
+                      </>
+                    )
+                  })()}
                   <Divider />
                   {(d.liquidacion.actividades?.length ?? 0) > 0 && (
                     <Stack gap={4}>

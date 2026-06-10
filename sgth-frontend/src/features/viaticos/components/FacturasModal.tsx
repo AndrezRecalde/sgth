@@ -175,8 +175,16 @@ export function FacturasModal({
     (sum, f) => sum + (Number(f.monto) || 0),
     0,
   );
-  const anticipo = Number(viatico.monto_anticipo ?? 0);
-  const diferencia = anticipo - totalFacturas;
+  const montoAsignado = Number(viatico.monto_calculado ?? 0)
+  const anticipo      = Number(viatico.monto_anticipo ?? 0)
+  const diferencia    = montoAsignado - totalFacturas
+  const porcentajeJustif = montoAsignado > 0
+    ? Math.min(
+        Math.round((totalFacturas / montoAsignado) * 100),
+        100
+      )
+    : 0
+  const justificadoCompleto = totalFacturas >= montoAsignado
 
   const onSubmit = (values: FormData) => {
     onGuardar(values.facturas);
@@ -216,7 +224,15 @@ export function FacturasModal({
           <Card withBorder radius="md" p="sm" bg="gray.0">
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
-                Anticipo recibido:
+                Monto total asignado:
+              </Text>
+              <Text size="sm" fw={600}>
+                ${montoAsignado.toFixed(2)}
+              </Text>
+            </Group>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Anticipo entregado (70%):
               </Text>
               <Text size="sm" fw={600}>
                 ${anticipo.toFixed(2)}
@@ -226,8 +242,17 @@ export function FacturasModal({
               <Text size="sm" c="dimmed">
                 Total comprobantes:
               </Text>
-              <Text size="sm" fw={600} c="blue">
+              <Text
+                size="sm"
+                fw={600}
+                c={justificadoCompleto ? 'teal' : 'orange'}
+              >
                 ${totalFacturas.toFixed(2)}
+                {' '}
+                <Text span size="xs"
+                  c={justificadoCompleto ? 'teal' : 'orange'}>
+                  ({porcentajeJustif}%)
+                </Text>
               </Text>
             </Group>
             <Divider my={4} />
@@ -238,22 +263,30 @@ export function FacturasModal({
               <Text
                 size="sm"
                 fw={700}
-                c={diferencia >= 0 ? 'orange' : 'gray'}
+                c={justificadoCompleto ? 'teal' : 'orange'}
               >
                 {diferencia >= 0
                   ? `$${diferencia.toFixed(2)}`
                   : '$0.00'}
               </Text>
             </Group>
+            {!justificadoCompleto && diferencia > 0 && (
+              <Alert color="yellow" variant="light" p="xs">
+                <Text size="xs">
+                  Faltan{' '}
+                  <strong>${diferencia.toFixed(2)}</strong>
+                  {' '}por justificar del monto total asignado.
+                </Text>
+              </Alert>
+            )}
             {diferencia < 0 && (
               <Alert color="orange" variant="light" p="xs">
                 <Text size="xs">
-                  Los comprobantes superan el anticipo.
-                  La diferencia de{' '}
+                  Los comprobantes exceden en{' '}
                   <strong>
                     ${Math.abs(diferencia).toFixed(2)}
-                  </strong>
-                  {' '}es responsabilidad del servidor.
+                  </strong>.
+                  Gastos extras a cargo del servidor.
                 </Text>
               </Alert>
             )}
