@@ -125,10 +125,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
   ] = useDisclosure(false);
 
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
-  const [
-    liquidacionModalAbierto,
-    { open: abrirLiquidacion, close: cerrarLiquidacion },
-  ] = useDisclosure(false);
 
   const {
     descargarSolicitud,
@@ -679,7 +675,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 </Group>
               </Group>
               <Divider mb="sm" />
-              {estadoActual === "pendiente_liquidacion" && !d.liquidacion ? (
+              {estadoActual === "pendiente_liquidacion" ? (
                 <LiquidacionSection
                   viatico={d}
                   onSuccess={() => {
@@ -912,17 +908,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
                         </Group>
                       ))}
                     </Stack>
-                  )}
-                  {estadoActual === "pendiente_liquidacion" && (
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      color="blue"
-                      leftSection={<IconPencil size={12} />}
-                      onClick={abrirLiquidacion}
-                    >
-                      Modificar liquidación
-                    </Button>
                   )}
                 </Stack>
               ) : (
@@ -1177,23 +1162,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
         viatico={d as Viatico}
       />
 
-      {liquidacionModalAbierto && (
-        <Modal
-          opened={liquidacionModalAbierto}
-          onClose={cerrarLiquidacion}
-          title="Modificar liquidación"
-          size="xl"
-          radius="xl"
-        >
-          <LiquidacionSection
-            viatico={d}
-            onSuccess={() => {
-              qc.invalidateQueries({ queryKey: ["viatico"] });
-              cerrarLiquidacion();
-            }}
-          />
-        </Modal>
-      )}
 
       {exteriorModalAbierto && (
         <AprobarExteriorModal
