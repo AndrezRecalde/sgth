@@ -68,7 +68,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
       descripcion: a.descripcion as string,
       lugar:       a.lugar as string,
     }));
-  }, [liquidacionData?.actividades]);
+  }, [liquidacionData]);
 
   const facturas: FacturaData[] = useMemo(() => {
     if (!liquidacionData?.detalles_factura) return [];
@@ -84,7 +84,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
       detalle:         f.detalle as string ?? '',
       monto:           Number(f.monto),
     }));
-  }, [liquidacionData?.detalles_factura]);
+  }, [liquidacionData]);
 
   const montoAsignado = Number(viatico.monto_calculado ?? 0)
   const montoAnticipo = Number(viatico.monto_anticipo ?? 0)
