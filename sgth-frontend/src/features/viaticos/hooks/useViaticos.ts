@@ -64,3 +64,15 @@ export function useVuelosAutorizacion() {
     staleTime: 0,
   })
 }
+
+export function useLiquidacion(
+  viaticoId: number | null
+) {
+  return useQuery({
+    queryKey: ['liquidacion', viaticoId],
+    queryFn:  () =>
+      viaticoService.liquidacion.obtener(viaticoId!),
+    enabled:  !!viaticoId,
+    staleTime: 0,
+  })
+}

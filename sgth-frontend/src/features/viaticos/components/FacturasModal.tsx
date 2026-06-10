@@ -33,12 +33,13 @@ import { useContainedInput } from "@/hooks/useContainedInput";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useCategoriasFactura } from "../hooks/useViaticos";
 import type { Viatico, CategoriaFactura } from "@/types/api";
+import { useViaticoMutations } from "../hooks/useViaticoMutations";
 
 interface Props {
   opened: boolean;
   onClose: () => void;
   viatico: Viatico;
-  onGuardar: (facturas: FacturaData[]) => void;
+  onGuardar?: (facturas: FacturaData[]) => void;
   valorInicial?: FacturaData[];
 }
 
@@ -204,8 +205,14 @@ export function FacturasModal({
     : 0
   const justificadoCompleto = totalFacturas >= montoAsignado
 
-  const onSubmit = (values: FormData) => {
-    onGuardar(values.facturas);
+  const { guardarFacturas } = useViaticoMutations()
+
+  const onSubmit = async (values: FormData) => {
+    await guardarFacturas.mutateAsync({
+      viaticoId: viatico.id,
+      facturas:  values.facturas,
+    })
+    onGuardar?.(values.facturas);
     onClose();
   };
 
@@ -550,6 +557,7 @@ export function FacturasModal({
               type="submit"
               color="orange"
               leftSection={<IconCheck size={14} />}
+              loading={guardarFacturas.isPending}
             >
               Guardar comprobantes ({fields.length})
             </Button>

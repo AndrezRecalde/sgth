@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Stack,
   Card,
@@ -27,8 +27,8 @@ import { ActividadesModal } from "./ActividadesModal";
 import { FacturasModal } from "./FacturasModal";
 import type { ActividadData } from "./ActividadesModal";
 import type { FacturaData } from "./FacturasModal";
-import { useCategoriasFactura } from "../hooks/useViaticos";
-import type { Viatico, CategoriaFactura } from "@/types/api";
+import { useCategoriasFactura, useLiquidacion } from "../hooks/useViaticos";
+import type { Viatico, CategoriaFactura, ActividadLiquidacion, FacturaViatico } from "@/types/api";
 
 interface Props {
   viatico: Viatico;
@@ -56,7 +56,41 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const [factModalAbierto, { open: abrirFact, close: cerrarFact }] =
     useDisclosure(false);
 
-  const { liquidar } = useViaticoMutations();
+  const { confirmarLiquidacion } = useViaticoMutations();
+
+  const { data: liquidacionData } = useLiquidacion(
+    viatico.id
+  )
+
+  useEffect(() => {
+    if (liquidacionData?.actividades?.length) {
+      setActividades(
+        liquidacionData.actividades.map((a: ActividadLiquidacion) => ({
+          fecha:       a.fecha as string,
+          hora_inicio: a.hora_inicio as string ?? '',
+          hora_fin:    a.hora_fin as string ?? '',
+          descripcion: a.descripcion as string,
+          lugar:       a.lugar as string,
+        }))
+      )
+    }
+    if (liquidacionData?.detalles_factura?.length) {
+      setFacturas(
+        liquidacionData.detalles_factura.map((f: FacturaViatico) => ({
+          categoria_factura_id: Number(f.categoria_factura_id),
+          fecha_factura:        f.fecha_factura as string ?? '',
+          tipo_comprobante:     (f.tipo_comprobante as
+            'factura'|'ticket'|'recibo'|'otro') ?? 'factura',
+          numero_factura:  f.numero_factura as string ?? '',
+          numero_ticket:   f.numero_ticket as string ?? '',
+          ruc_proveedor:   f.ruc_proveedor as string ?? '',
+          nombre_proveedor: f.nombre_proveedor as string,
+          detalle:         f.detalle as string ?? '',
+          monto:           Number(f.monto),
+        }))
+      )
+    }
+  }, [liquidacionData])
 
   const montoAsignado = Number(viatico.monto_calculado ?? 0)
   const montoAnticipo = Number(viatico.monto_anticipo ?? 0)
@@ -103,19 +137,9 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const puedeRegistrar = actividades.length > 0 && facturas.length > 0;
 
   const handleRegistrar = async () => {
-    await liquidar.mutateAsync({
-      viaticoId: viatico.id,
-      data: {
-        fecha_retorno: (() => {
-          const d = new Date(viatico.datetime_llegada as string);
-          return d.toISOString().slice(0, 10);
-        })(),
-        actividades,
-        facturas,
-      },
-    });
-    onSuccess();
-  };
+    await confirmarLiquidacion.mutateAsync(viatico.id)
+    onSuccess()
+  }
 
   return (
     <Stack gap="md">
@@ -425,7 +449,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         color="emerald"
         size="md"
         disabled={!puedeRegistrar}
-        loading={liquidar.isPending}
+        loading={confirmarLiquidacion.isPending}
         leftSection={<IconCheck size={16} />}
         onClick={handleRegistrar}
         fullWidth

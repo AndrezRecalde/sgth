@@ -17,12 +17,13 @@ import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import type { Viatico } from '@/types/api'
+import { useViaticoMutations } from '../hooks/useViaticoMutations'
 
 interface Props {
-  opened:   boolean
-  onClose:  () => void
-  viatico:  Viatico
-  onGuardar: (actividades: ActividadData[]) => void
+  opened:    boolean
+  onClose:   () => void
+  viatico:   Viatico
+  onGuardar?: (actividades: ActividadData[]) => void
   valorInicial?: ActividadData[]
 }
 
@@ -121,8 +122,14 @@ export function ActividadesModal({
     name: 'actividades',
   })
 
-  const onSubmit = (values: FormData) => {
-    onGuardar(values.actividades)
+  const { guardarActividades } = useViaticoMutations()
+
+  const onSubmit = async (values: FormData) => {
+    await guardarActividades.mutateAsync({
+      viaticoId:   viatico.id,
+      actividades: values.actividades,
+    })
+    onGuardar?.(values.actividades)
     onClose()
   }
 
@@ -333,6 +340,7 @@ export function ActividadesModal({
               type="submit"
               color="blue"
               leftSection={<IconCheck size={14} />}
+              loading={guardarActividades.isPending}
             >
               Guardar actividades ({fields.length})
             </Button>

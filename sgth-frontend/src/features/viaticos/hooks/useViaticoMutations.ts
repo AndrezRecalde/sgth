@@ -166,6 +166,77 @@ export function useViaticoMutations() {
     onError,
   });
 
+  const guardarActividades = useMutation({
+    mutationFn: ({
+      viaticoId,
+      actividades,
+    }: {
+      viaticoId:   number
+      actividades: Parameters<
+        typeof viaticoService.liquidacion.guardarActividades
+      >[1]
+    }) => viaticoService.liquidacion.guardarActividades(
+      viaticoId, actividades
+    ),
+    onSuccess: (_data, { viaticoId }) => {
+      notifications.show({
+        title:   'Actividades guardadas',
+        message: 'Las actividades se guardaron correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({
+        queryKey: ['liquidacion', viaticoId]
+      })
+      qc.invalidateQueries({ queryKey: ['viatico'] })
+    },
+    onError,
+  })
+
+  const guardarFacturas = useMutation({
+    mutationFn: ({
+      viaticoId,
+      facturas,
+    }: {
+      viaticoId: number
+      facturas:  Parameters<
+        typeof viaticoService.liquidacion.guardarFacturas
+      >[1]
+    }) => viaticoService.liquidacion.guardarFacturas(
+      viaticoId, facturas
+    ),
+    onSuccess: (_data, { viaticoId }) => {
+      notifications.show({
+        title:   'Facturas guardadas',
+        message: 'Los comprobantes se guardaron correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({
+        queryKey: ['liquidacion', viaticoId]
+      })
+      qc.invalidateQueries({ queryKey: ['viatico'] })
+    },
+    onError,
+  })
+
+  const confirmarLiquidacion = useMutation({
+    mutationFn: (viaticoId: number) =>
+      viaticoService.liquidacion.confirmar(viaticoId),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Liquidación registrada',
+        message: 'La liquidación fue confirmada correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['viaticos'] })
+      qc.invalidateQueries({ queryKey: ['viatico'] })
+      qc.invalidateQueries({ queryKey: ['liquidacion'] })
+    },
+    onError,
+  })
+
   return {
     solicitar,
     aprobar,
@@ -177,5 +248,8 @@ export function useViaticoMutations() {
     marcarPendienteLiquidacion,
     contabilizar,
     liquidar,
+    guardarActividades,
+    guardarFacturas,
+    confirmarLiquidacion,
   };
 }
