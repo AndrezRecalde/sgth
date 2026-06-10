@@ -472,14 +472,25 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   <div class="res-row">
     <div class="res-total-lbl">
       @php
-        $dif = $viatico->liquidacion->diferencia_devolver ?? 0;
+        $diferencia = (float) ($viatico->liquidacion->diferencia_devolver ?? 0);
+        $montoMostrar = $diferencia >= 0 ? $diferencia : 0;
       @endphp
-      {{ $dif >= 0 ? '★ Valor a devolver a la institución:' : '★ Valor a cobrar por el servidor:' }}
+      ★ Valor a devolver a la institución:
     </div>
     <div class="res-total-val">
-      $ {{ number_format(abs($dif), 2) }}
+      $ {{ number_format($montoMostrar, 2) }}
     </div>
   </div>
+  @if($diferencia < 0)
+  <div class="res-row" style="background:#fff8f0;">
+    <div class="res-lbl" style="color:#c05621;font-size:8px;font-style:italic;">
+      ⚠ Los comprobantes superan el anticipo en
+      $ {{ number_format(abs($diferencia), 2) }}.
+      La diferencia es responsabilidad del servidor.
+    </div>
+    <div class="res-val" style="color:#c05621;">—</div>
+  </div>
+  @endif
 </div>
 @else
 <div class="tbox" style="color:#718096">

@@ -475,12 +475,13 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   <div class="formula-row">
     <div class="f-lbl">Valor a liquidar: (a) + (b) + (c) - (d)</div>
     <div class="f-val">
-      $ {{ number_format(
-            $devengado + $totalMovilizacion +
+      @php
+        $valorLiquidar = $devengado + $totalMovilizacion +
             ($hospedaje + $alimentacion + $inscripcion + $otro) -
-            ($viatico->monto_anticipo ?? 0),
-            2
-          ) }}
+            ($viatico->monto_anticipo ?? 0);
+        $valorMostrar = $valorLiquidar >= 0 ? $valorLiquidar : 0;
+      @endphp
+      $ {{ number_format($valorMostrar, 2) }}
     </div>
   </div>
 </div>
