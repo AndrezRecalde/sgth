@@ -693,108 +693,174 @@ export function ViaticoDetallePage({ identificador }: Props) {
                       Number(d.monto_calculado ?? 0)
                     const anticipo =
                       Number(d.monto_anticipo ?? 0)
-                    const totalFacturas =
-                      Number(d.liquidacion.total_facturas ?? 0)
-                    const diferencia =
-                      montoAsignado - totalFacturas
-                    const porcentaje = montoAsignado > 0
+                    const monto70 =
+                      Math.round(montoAsignado * 0.70 * 100) / 100
+                    const monto30 =
+                      Math.round(montoAsignado * 0.30 * 100) / 100
+                    const modalidad =
+                      (d.modalidad_anticipo as string)
+                      ?? 'sin_anticipo'
+
+                    // Separar facturas por grupo
+                    const facturas =
+                      d.liquidacion.detalles_factura ?? []
+                    const totalHospAli = facturas
+                      .filter((f: any) =>
+                        f.categoria?.grupo === 'viatico'
+                      )
+                      .reduce((sum: number, f: any) =>
+                        sum + Number(f.monto ?? 0), 0
+                      )
+                    const totalMovilizacion = facturas
+                      .filter((f: any) =>
+                        f.categoria?.grupo !== 'viatico'
+                      )
+                      .reduce((sum: number, f: any) =>
+                        sum + Number(f.monto ?? 0), 0
+                      )
+
+                    const porcentajeHA = monto70 > 0
                       ? Math.min(
                           Math.round(
-                            (totalFacturas / montoAsignado) * 100
+                            (totalHospAli / monto70) * 100
                           ), 100
                         )
                       : 0
                     const justificadoCompleto =
-                      totalFacturas >= montoAsignado
+                      totalHospAli >= monto70
+
+                    const diferenciaDevolver =
+                      modalidad === 'sin_anticipo'
+                        ? 0
+                        : totalHospAli >= anticipo
+                          ? 0
+                          : Math.round(
+                              (anticipo - totalHospAli) * 100
+                            ) / 100
+
                     return (
                       <>
+                        {/* Viático H&A */}
+                        <Text size="xs" fw={700} c="blue" mb={4}>
+                          Viático diario — H&A
+                        </Text>
                         <Group justify="space-between">
                           <Text size="xs" c="dimmed">
-                            Monto total asignado
+                            Monto asignado
                           </Text>
-                          <Text fw={600}>
+                          <Text size="xs" fw={600}>
                             {fmtMonto(montoAsignado)}
                           </Text>
                         </Group>
                         <Group justify="space-between">
                           <Text size="xs" c="dimmed">
-                            Anticipo entregado (70%)
+                            70% a justificar (H&A)
                           </Text>
-                          <Text fw={600}>
-                            {fmtMonto(anticipo)}
+                          <Text size="xs" fw={600}>
+                            {fmtMonto(monto70)}
+                          </Text>
+                        </Group>
+                        {anticipo > 0 && (
+                          <Group justify="space-between">
+                            <Text size="xs" c="dimmed">
+                              Anticipo entregado
+                            </Text>
+                            <Text size="xs" fw={600}>
+                              {fmtMonto(anticipo)}
+                            </Text>
+                          </Group>
+                        )}
+                        <Group justify="space-between">
+                          <Text size="xs" c="dimmed">
+                            Total H&A presentado
+                          </Text>
+                          <Text
+                            size="xs"
+                            fw={700}
+                            c={justificadoCompleto
+                              ? 'teal' : 'orange'}
+                          >
+                            {fmtMonto(totalHospAli)}
+                            {' '}({porcentajeHA}%)
                           </Text>
                         </Group>
                         <Group justify="space-between">
                           <Text size="xs" c="dimmed">
-                            Total comprobantes
+                            30% devengado
                           </Text>
-                          <Text
-                            fw={600}
-                            c={justificadoCompleto
-                              ? 'teal' : 'orange'}
-                          >
-                            {fmtMonto(totalFacturas)}
-                            {' '}
-                            <Text
-                              span
-                              size="xs"
-                              c={justificadoCompleto
-                                ? 'teal' : 'orange'}
-                            >
-                              ({porcentaje}%)
-                            </Text>
+                          <Text size="xs" fw={600}>
+                            {fmtMonto(monto30)}
                           </Text>
                         </Group>
-                        <Divider />
+                        <Divider my={4} />
                         <Group justify="space-between">
                           <Text size="xs" fw={600}>
                             A devolver a la institución
                           </Text>
                           <Text
+                            size="xs"
                             fw={700}
-                            c={justificadoCompleto
-                              ? 'teal' : 'orange'}
+                            c={diferenciaDevolver > 0
+                              ? 'red' : 'teal'}
                           >
-                            {diferencia >= 0
-                              ? fmtMonto(diferencia)
-                              : '$0.00'}
+                            {fmtMonto(diferenciaDevolver)}
                           </Text>
                         </Group>
-                        {!justificadoCompleto &&
-                         diferencia > 0 && (
+                        {diferenciaDevolver > 0 && (
                           <Alert
-                            color="yellow"
+                            color="red"
                             variant="light"
                             p="xs"
+                            mt={4}
                           >
                             <Text size="xs">
                               Faltan{' '}
                               <strong>
-                                {fmtMonto(diferencia)}
+                                {fmtMonto(diferenciaDevolver)}
                               </strong>
-                              {' '}por justificar del monto
-                              total asignado.
+                              {' '}en H&A por justificar.
                             </Text>
                           </Alert>
                         )}
-                        {diferencia < 0 && (
+                        {justificadoCompleto && (
                           <Alert
-                            color="orange"
+                            color="teal"
                             variant="light"
                             p="xs"
+                            mt={4}
                           >
                             <Text size="xs">
-                              Los comprobantes exceden el
-                              monto asignado en{' '}
-                              <strong>
-                                {fmtMonto(
-                                  Math.abs(diferencia)
-                                )}
-                              </strong>
-                              . Gastos extras a cargo
-                              del servidor.
+                              Justificación completa del 70%.
+                              Devengado: {fmtMonto(monto30)}
                             </Text>
                           </Alert>
+                        )}
+
+                        {/* Movilización */}
+                        {totalMovilizacion > 0 && (
+                          <>
+                            <Divider
+                              my={6}
+                              label="Movilización"
+                              labelPosition="left"
+                            />
+                            <Group justify="space-between">
+                              <Text size="xs" c="dimmed">
+                                Total movilización
+                              </Text>
+                              <Text
+                                size="xs"
+                                fw={600}
+                                c="orange"
+                              >
+                                {fmtMonto(totalMovilizacion)}
+                              </Text>
+                            </Group>
+                            <Text size="xs" c="dimmed">
+                              Rubro independiente —
+                              no afecta el viático diario
+                            </Text>
+                          </>
                         )}
                       </>
                     )
