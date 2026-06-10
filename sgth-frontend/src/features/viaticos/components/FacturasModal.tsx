@@ -64,7 +64,18 @@ const facturaItemSchema = z.object({
   nombre_proveedor: z.string().min(1, "Requerido"),
   detalle: z.string().optional().nullable(),
   monto: z.number().min(0.01, "Mínimo $0.01"),
-});
+}).refine(
+  (data) => {
+    if (["factura", "recibo"].includes(data.tipo_comprobante)) {
+      return !!data.ruc_proveedor && data.ruc_proveedor.trim().length > 0;
+    }
+    return true;
+  },
+  {
+    message: "El RUC es obligatorio para factura y recibo",
+    path: ["ruc_proveedor"],
+  }
+);
 
 const schema = z.object({
   facturas: z.array(facturaItemSchema).min(1, "Agregue al menos una factura"),
@@ -384,11 +395,12 @@ export function FacturasModal({
                     <Grid.Col span={{ base: 12, sm: 6 }}>
                       <TextInput
                         label={
-                          tipoComp === "ticket"
-                            ? "RUC / Identificación (opcional)"
-                            : "RUC del proveedor"
+                          ["factura", "recibo"].includes(tipoComp)
+                            ? "RUC del proveedor *"
+                            : "RUC / Identificación (opcional)"
                         }
                         placeholder="0000000000001"
+                        required={["factura", "recibo"].includes(tipoComp)}
                         {...contained}
                         {...register(`facturas.${i}.ruc_proveedor`)}
                         error={errors.facturas?.[i]?.ruc_proveedor?.message}
