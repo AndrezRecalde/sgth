@@ -50,11 +50,15 @@ export function ViaticoView() {
   const [modalAbierto, { open, close }] = useDisclosure(false);
 
   const [filtroEstado, setFiltroEstado] = useState<string>("solicitado");
+  const [page, setPage] = useState(1);
 
   const filtros = {
     estado:
-      filtroEstado === "todos" ? undefined : (filtroEstado as EstadoViatico),
-    per_page: 50,
+      filtroEstado === "todos"
+        ? undefined
+        : (filtroEstado as EstadoViatico),
+    per_page: 15,
+    page,
   };
 
   const { data, isLoading } = useViaticos(filtros);
@@ -237,7 +241,10 @@ export function ViaticoView() {
                   size="sm"
                   color={op.color}
                   checked={filtroEstado === op.value}
-                  onChange={() => setFiltroEstado(op.value)}
+                  onChange={() => {
+                    setFiltroEstado(op.value);
+                    setPage(1);
+                  }}
                 >
                   {op.label}
                 </Chip>
@@ -269,6 +276,10 @@ export function ViaticoView() {
                 columns={columns}
                 fetching={isLoading}
                 minHeight={200}
+                totalRecords={data?.total ?? lista.length}
+                recordsPerPage={15}
+                page={page}
+                onPageChange={setPage}
               />
             )}
           </Stack>

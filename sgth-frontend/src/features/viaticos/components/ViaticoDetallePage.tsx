@@ -46,6 +46,7 @@ import { TramoForm } from "./TramoForm";
 import { LiquidacionSection } from "./LiquidacionSection";
 import { ViaticoEditModal } from "./ViaticoEditModal";
 import { ServidoresModal } from "./ServidoresModal";
+import { useRouter } from "next/navigation";
 import type { ViaticoConRelaciones, Viatico } from "@/types/api";
 
 interface Props {
@@ -107,6 +108,7 @@ function fmtMonto(v?: number | string | null): string {
 }
 
 export function ViaticoDetallePage({ identificador }: Props) {
+  const router = useRouter();
   const qc = useQueryClient();
   const { data: detalle, isLoading } = useViatico(identificador);
   const d = detalle as ViaticoConRelaciones | undefined;
@@ -318,7 +320,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
         <Button
           variant="default"
           leftSection={<IconArrowLeft size={14} />}
-          onClick={() => qc.invalidateQueries({ queryKey: ["viatico"] })}
+          onClick={() => router.push("/viaticos")}
         >
           Volver
         </Button>
@@ -335,7 +337,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             variant="subtle"
             color="gray"
             size="lg"
-            onClick={() => qc.invalidateQueries({ queryKey: ["viatico"] })}
+            onClick={() => router.push("/viaticos")}
           >
             <IconArrowLeft size={18} />
           </ActionIcon>
