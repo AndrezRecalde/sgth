@@ -8,7 +8,7 @@ class CategoriaFactura extends Model
 {
     protected $table = 'categorias_factura';
     protected $fillable = [
-        'nombre', 'codigo', 'descripcion', 'activo', 'orden',
+        'nombre', 'grupo', 'codigo', 'descripcion', 'activo', 'orden',
     ];
     protected function casts(): array
     {

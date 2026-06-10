@@ -141,11 +141,40 @@ final class ViaticoService implements ViaticoServiceInterface
             $facturasPayload  = $datos['facturas']    ?? [];
             $actividadesPayload = $datos['actividades'] ?? [];
             $totalFacturas    = collect($facturasPayload)->sum('monto');
-            // La diferencia se calcula contra el MONTO TOTAL ASIGNADO
-            // no contra el anticipo entregado
-            $montoAsignado = (float) ($viatico->monto_calculado ?? 0.00);
-            $anticipoRecibido = (float) ($viatico->monto_anticipo ?? 0.00);
-            $diferenciaDevolver = $montoAsignado - $totalFacturas;
+            $montoAsignado    = (float) ($viatico->monto_calculado ?? 0.00);
+            $montoAnticipo    = (float) ($viatico->monto_anticipo ?? 0.00);
+            $monto70          = round($montoAsignado * 0.70, 2);
+
+            // Solo H&A cuenta para justificar el 70%
+            $idsViatico = \App\Models\Viatico\CategoriaFactura
+                ::where('grupo', 'viatico')
+                ->pluck('id')
+                ->toArray();
+
+            $totalHospAli = collect($facturasPayload)
+                ->whereIn('categoria_factura_id', $idsViatico)
+                ->sum('monto');
+
+            $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
+                ? $viatico->modalidad_anticipo->value
+                : (string) $viatico->modalidad_anticipo;
+
+            if ($modalidad === 'sin_anticipo') {
+                // Sin anticipo: no debe nada,
+                // la institución le paga lo justificado + 30%
+                $diferenciaDevolver = 0;
+            } else {
+                // Con anticipo (70%):
+                // debe justificar el monto del anticipo
+                if ($totalHospAli >= $montoAnticipo ||
+                    $totalFacturas >= $montoAsignado) {
+                    $diferenciaDevolver = 0;
+                } else {
+                    $diferenciaDevolver = round(
+                        $montoAnticipo - $totalHospAli, 2
+                    );
+                }
+            }
 
             $liquidacion = LiquidacionViatico::create([
                 'viatico_id'          => $viaticoId,
