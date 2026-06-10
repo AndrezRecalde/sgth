@@ -50,4 +50,27 @@ class LiquidarViaticoRequest extends FormRequest
             'facturas.*.tipo_comprobante.required_with'     => 'El tipo de comprobante es obligatorio.',
         ];
     }
+
+    public function withValidator(
+        \Illuminate\Validation\Validator $validator
+    ): void {
+        $validator->after(function ($v) {
+            $facturas = $this->input('facturas', []);
+            foreach ($facturas as $i => $factura) {
+                $tipo = $factura['tipo_comprobante'] ?? '';
+                $requiereRuc = in_array($tipo, [
+                    'factura', 'recibo'
+                ]);
+                if ($requiereRuc &&
+                    empty($factura['ruc_proveedor'])
+                ) {
+                    $v->errors()->add(
+                        "facturas.{$i}.ruc_proveedor",
+                        'El RUC es obligatorio para ' .
+                        strtoupper($tipo) . '.'
+                    );
+                }
+            }
+        });
+    }
 }
