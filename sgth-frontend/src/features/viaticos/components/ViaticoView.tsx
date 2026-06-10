@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Stack, Group, Button, Text, Badge, Tabs, Chip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { Stack, Group, Button, Text, Badge, Tabs, Chip, TextInput, ActionIcon } from "@mantine/core";
+import { useDisclosure, useDebouncedValue } from "@mantine/hooks";
 import {
   IconPlane,
   IconPlus,
   IconCheck,
   IconCurrencyDollar,
+  IconSearch,
+  IconX,
 } from "@tabler/icons-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SgthTable } from "@/components/ui/SgthTable";
@@ -51,6 +53,8 @@ export function ViaticoView() {
 
   const [filtroEstado, setFiltroEstado] = useState<string>("solicitado");
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebouncedValue(search, 400);
 
   const filtros = {
     estado:
@@ -59,6 +63,7 @@ export function ViaticoView() {
         : (filtroEstado as EstadoViatico),
     per_page: 15,
     page,
+    search: debouncedSearch.trim() || undefined,
   };
 
   const { data, isLoading } = useViaticos(filtros);
@@ -219,6 +224,32 @@ export function ViaticoView() {
 
         <Tabs.Panel value="viaticos" pt="md">
           <Stack gap="sm">
+            <TextInput
+              placeholder="Buscar por código (Ej: GTIC-2026-00001)"
+              leftSection={<IconSearch size={14} />}
+              rightSection={
+                search ? (
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="gray"
+                    onClick={() => {
+                      setSearch('')
+                      setPage(1)
+                    }}
+                  >
+                    <IconX size={12} />
+                  </ActionIcon>
+                ) : null
+              }
+              value={search}
+              onChange={(e) => {
+                setSearch(e.currentTarget.value)
+                setPage(1)
+              }}
+              style={{ maxWidth: 320 }}
+            />
+
             {/* Chips de estado */}
             <Group gap="xs">
               <Text size="sm" fw={500} c="dimmed">
