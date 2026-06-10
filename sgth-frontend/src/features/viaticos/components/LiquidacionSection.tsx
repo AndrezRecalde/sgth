@@ -121,7 +121,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
           {diferencia < 0 && (
             <Alert color="orange" variant="light" p="xs">
               <Text size="xs">
-                ⚠️ Los comprobantes superan el anticipo.
+                Los comprobantes superan el anticipo.
                 La diferencia de{' '}
                 <strong>{fmtMonto(Math.abs(diferencia))}</strong>
                 {' '}es responsabilidad del servidor.

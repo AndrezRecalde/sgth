@@ -248,7 +248,7 @@ export function FacturasModal({
             {diferencia < 0 && (
               <Alert color="orange" variant="light" p="xs">
                 <Text size="xs">
-                  ⚠️ Los comprobantes superan el anticipo.
+                  Los comprobantes superan el anticipo.
                   La diferencia de{' '}
                   <strong>
                     ${Math.abs(diferencia).toFixed(2)}

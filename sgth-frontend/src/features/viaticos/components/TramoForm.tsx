@@ -668,7 +668,7 @@ export function TramoForm({
             {alertaSalida === "error" && (
               <Alert color="orange" variant="light" p="xs">
                 <Text size="xs" fw={500}>
-                  ⚠️ El primer tramo debe salir exactamente el{" "}
+                  El primer tramo debe salir exactamente el{" "}
                   <strong>
                     {new Date(
                       (viatico.datetime_salida as string).replace(/-/g, "/"),

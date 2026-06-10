@@ -726,7 +726,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
                       mt={4}
                     >
                       <Text size="xs">
-                        ⚠️ El total de comprobantes supera
+                        El total de comprobantes supera
                         el anticipo recibido. La diferencia
                         de{' '}
                         <strong>
