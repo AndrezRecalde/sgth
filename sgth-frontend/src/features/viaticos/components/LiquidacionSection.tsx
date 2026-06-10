@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import {
   Stack,
   Card,
@@ -47,9 +47,6 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
     label: c.nombre ?? "",
   }));
 
-  const [actividades, setActividades] = useState<ActividadData[]>([]);
-  const [facturas, setFacturas] = useState<FacturaData[]>([]);
-
   const [actModalAbierto, { open: abrirAct, close: cerrarAct }] =
     useDisclosure(false);
 
@@ -62,35 +59,32 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
     viatico.id
   )
 
-  useEffect(() => {
-    if (liquidacionData?.actividades?.length) {
-      setActividades(
-        liquidacionData.actividades.map((a: ActividadLiquidacion) => ({
-          fecha:       a.fecha as string,
-          hora_inicio: a.hora_inicio as string ?? '',
-          hora_fin:    a.hora_fin as string ?? '',
-          descripcion: a.descripcion as string,
-          lugar:       a.lugar as string,
-        }))
-      )
-    }
-    if (liquidacionData?.detalles_factura?.length) {
-      setFacturas(
-        liquidacionData.detalles_factura.map((f: FacturaViatico) => ({
-          categoria_factura_id: Number(f.categoria_factura_id),
-          fecha_factura:        f.fecha_factura as string ?? '',
-          tipo_comprobante:     (f.tipo_comprobante as
-            'factura'|'ticket'|'recibo'|'otro') ?? 'factura',
-          numero_factura:  f.numero_factura as string ?? '',
-          numero_ticket:   f.numero_ticket as string ?? '',
-          ruc_proveedor:   f.ruc_proveedor as string ?? '',
-          nombre_proveedor: f.nombre_proveedor as string,
-          detalle:         f.detalle as string ?? '',
-          monto:           Number(f.monto),
-        }))
-      )
-    }
-  }, [liquidacionData])
+  const actividades: ActividadData[] = useMemo(() => {
+    if (!liquidacionData?.actividades) return [];
+    return liquidacionData.actividades.map((a: ActividadLiquidacion) => ({
+      fecha:       a.fecha as string,
+      hora_inicio: a.hora_inicio as string ?? '',
+      hora_fin:    a.hora_fin as string ?? '',
+      descripcion: a.descripcion as string,
+      lugar:       a.lugar as string,
+    }));
+  }, [liquidacionData?.actividades]);
+
+  const facturas: FacturaData[] = useMemo(() => {
+    if (!liquidacionData?.detalles_factura) return [];
+    return liquidacionData.detalles_factura.map((f: FacturaViatico) => ({
+      categoria_factura_id: Number(f.categoria_factura_id),
+      fecha_factura:        f.fecha_factura as string ?? '',
+      tipo_comprobante:     (f.tipo_comprobante as
+        'factura'|'ticket'|'recibo'|'otro') ?? 'factura',
+      numero_factura:  f.numero_factura as string ?? '',
+      numero_ticket:   f.numero_ticket as string ?? '',
+      ruc_proveedor:   f.ruc_proveedor as string ?? '',
+      nombre_proveedor: f.nombre_proveedor as string,
+      detalle:         f.detalle as string ?? '',
+      monto:           Number(f.monto),
+    }));
+  }, [liquidacionData?.detalles_factura]);
 
   const montoAsignado = Number(viatico.monto_calculado ?? 0)
   const montoAnticipo = Number(viatico.monto_anticipo ?? 0)
@@ -462,7 +456,6 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         opened={actModalAbierto}
         onClose={cerrarAct}
         viatico={viatico}
-        onGuardar={setActividades}
         valorInicial={actividades}
       />
 
@@ -470,7 +463,6 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         opened={factModalAbierto}
         onClose={cerrarFact}
         viatico={viatico}
-        onGuardar={setFacturas}
         valorInicial={facturas}
       />
     </Stack>
