@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { notifications } from '@mantine/notifications'
+import { IconFileText, IconDownload,
+         IconReceipt, IconLoader } from '@tabler/icons-react'
+import React from 'react'
 import api from '@/lib/axios'
 import { viaticoService } from '../services/viaticoService'
 
 export function usePdfViatico() {
-  const [loadingSolicitud, setLoadingSolicitud] = useState(false)
-  const [loadingInforme,   setLoadingInforme]   = useState(false)
+  const [loadingSolicitud,   setLoadingSolicitud]   = useState(false)
+  const [loadingInforme,     setLoadingInforme]     = useState(false)
   const [loadingComprobante, setLoadingComprobante] = useState(false)
 
   const abrirPdf = async (url: string): Promise<void> => {
@@ -17,7 +20,6 @@ export function usePdfViatico() {
     })
     const blobUrl = URL.createObjectURL(blob)
     window.open(blobUrl, '_blank')
-    // Liberar memoria después de 60 segundos
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
   }
 
@@ -25,16 +27,36 @@ export function usePdfViatico() {
     identificador: string | number
   ) => {
     setLoadingSolicitud(true)
+    const notifId = notifications.show({
+      id:       'pdf-solicitud',
+      loading:  true,
+      title:    'Generando solicitud PDF',
+      message:  'Por favor espere...',
+      autoClose: false,
+      withCloseButton: false,
+      icon: React.createElement(IconLoader, { size: 16 }),
+    })
     try {
       await abrirPdf(
         `/viaticos/${identificador}/solicitud/generar-enlace`
       )
+      notifications.update({
+        id:       'pdf-solicitud',
+        loading:  false,
+        title:    'PDF generado',
+        message:  'La solicitud se abrió correctamente.',
+        color:    'emerald',
+        autoClose: 3000,
+        icon: React.createElement(IconFileText, { size: 16 }),
+      })
     } catch {
-      notifications.show({
-        title:   'Error al generar PDF',
-        message: 'No se pudo generar la solicitud. ' +
-                 'Intente nuevamente.',
-        color:   'red',
+      notifications.update({
+        id:       'pdf-solicitud',
+        loading:  false,
+        title:    'Error al generar PDF',
+        message:  'No se pudo generar la solicitud.',
+        color:    'red',
+        autoClose: 4000,
       })
     } finally {
       setLoadingSolicitud(false)
@@ -45,17 +67,37 @@ export function usePdfViatico() {
     identificador: string | number
   ) => {
     setLoadingInforme(true)
+    notifications.show({
+      id:       'pdf-informe',
+      loading:  true,
+      title:    'Generando informe PDF',
+      message:  'Por favor espere...',
+      autoClose: false,
+      withCloseButton: false,
+      icon: React.createElement(IconLoader, { size: 16 }),
+    })
     try {
       await abrirPdf(
         `/viaticos/${identificador}/informe/generar-enlace`
       )
+      notifications.update({
+        id:       'pdf-informe',
+        loading:  false,
+        title:    'PDF generado',
+        message:  'El informe se abrió correctamente.',
+        color:    'emerald',
+        autoClose: 3000,
+        icon: React.createElement(IconDownload, { size: 16 }),
+      })
     } catch {
-      notifications.show({
-        title:   'Error al generar PDF',
-        message: 'No se pudo generar el informe. ' +
-                 'El viático debe estar en estado ' +
-                 'pendiente de liquidación o superior.',
-        color:   'red',
+      notifications.update({
+        id:       'pdf-informe',
+        loading:  false,
+        title:    'Error al generar PDF',
+        message:  'El viático debe estar en estado ' +
+                  'pendiente de liquidación o superior.',
+        color:    'red',
+        autoClose: 4000,
       })
     } finally {
       setLoadingInforme(false)
@@ -66,6 +108,15 @@ export function usePdfViatico() {
     identificador: string | number
   ) => {
     setLoadingComprobante(true)
+    notifications.show({
+      id:       'pdf-comprobante',
+      loading:  true,
+      title:    'Generando comprobante financiero',
+      message:  'Por favor espere...',
+      autoClose: false,
+      withCloseButton: false,
+      icon: React.createElement(IconLoader, { size: 16 }),
+    })
     try {
       const blob = await viaticoService
         .generarComprobantePdf(identificador)
@@ -74,13 +125,23 @@ export function usePdfViatico() {
       )
       window.open(blobUrl, '_blank')
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+      notifications.update({
+        id:       'pdf-comprobante',
+        loading:  false,
+        title:    'Comprobante generado',
+        message:  'El comprobante se abrió correctamente.',
+        color:    'emerald',
+        autoClose: 3000,
+        icon: React.createElement(IconReceipt, { size: 16 }),
+      })
     } catch {
-      notifications.show({
-        title:   'Error al generar comprobante',
-        message: 'No se pudo generar el comprobante ' +
-                 'financiero. El viático debe estar ' +
-                 'en estado contabilizado.',
-        color:   'red',
+      notifications.update({
+        id:       'pdf-comprobante',
+        loading:  false,
+        title:    'Error al generar comprobante',
+        message:  'El viático debe estar contabilizado.',
+        color:    'red',
+        autoClose: 4000,
       })
     } finally {
       setLoadingComprobante(false)

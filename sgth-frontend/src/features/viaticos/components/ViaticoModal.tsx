@@ -8,7 +8,6 @@ import {
   Textarea,
   Button,
   Group,
-  NumberInput,
   Divider,
   Alert,
   Text,
@@ -38,14 +37,14 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
 const ZONA_OPTIONS = [
-  { value: "dentro_provincia", label: "📍 Dentro de la provincia" },
-  { value: "fuera_provincia", label: "🗺 Fuera de la provincia" },
-  { value: "exterior", label: "✈️ Exterior (internacional)" },
+  { value: "dentro_provincia", label: "Dentro de la provincia" },
+  { value: "fuera_provincia", label: "Fuera de la provincia" },
+  { value: "exterior", label: "Exterior (internacional)" },
 ];
 
 const MODALIDAD_OPTIONS = [
-  { value: "total", label: "💰 Anticipo (70% del monto calculado)" },
-  { value: "sin_anticipo", label: "🚫 Sin anticipo" },
+  { value: "total", label: "Anticipo (70% del monto calculado)" },
+  { value: "sin_anticipo", label: "Sin anticipo" },
 ];
 
 const TIPO_VIAJE_OPTIONS = [
@@ -388,9 +387,9 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                   Viaje al exterior (internacional)
                 </Text>
                 <Text size="xs" mt={2}>
-                  El monto se calculará automáticamente cuando el gestor
-                  apruebe la solicitud, aplicando la tarifa según su nivel
-                  y el coeficiente del país de destino.
+                  El monto se calculará automáticamente cuando el gestor apruebe
+                  la solicitud, aplicando la tarifa según su nivel y el
+                  coeficiente del país de destino.
                 </Text>
               </Alert>
               <Grid>
@@ -440,9 +439,8 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                       icon={<IconInfoCircle size={12} />}
                     >
                       <Text size="xs">
-                        El gestor calculará el monto al
-                        aprobar la solicitud según la
-                        tarifa del país y el coeficiente.
+                        El gestor calculará el monto al aprobar la solicitud
+                        según la tarifa del país y el coeficiente.
                       </Text>
                     </Alert>
                   </Stack>

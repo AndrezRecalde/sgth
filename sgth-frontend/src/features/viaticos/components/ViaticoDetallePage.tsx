@@ -167,22 +167,146 @@ export function ViaticoDetallePage({ identificador }: Props) {
   if (isLoading) {
     return (
       <Stack gap="md" p="md">
-        <Skeleton height={40} />
-        <Skeleton height={60} />
+        {/* Header skeleton */}
+        <Group justify="space-between">
+          <Stack gap="xs">
+            <Skeleton height={28} width={200} radius="sm" />
+            <Skeleton height={16} width={140} radius="sm" />
+          </Stack>
+          <Group gap="xs">
+            <Skeleton height={30} width={110} radius="md" />
+            <Skeleton height={30} width={110} radius="md" />
+          </Group>
+        </Group>
+
+        {/* Stepper skeleton */}
+        <Skeleton height={60} radius="md" />
+
+        {/* Grid de secciones */}
         <Grid>
-          <Grid.Col span={6}>
-            <Skeleton height={160} />
+          {/* Información general */}
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Card withBorder radius="md" p="md">
+              <Group mb="sm">
+                <Skeleton height={20} width={20} radius="xl" />
+                <Skeleton height={16} width={150} radius="sm" />
+              </Group>
+              <Divider mb="sm" />
+              <Stack gap="xs">
+                {[120, 90, 110, 100, 130].map((w, i) => (
+                  <Group key={i} justify="space-between">
+                    <Skeleton height={12} width={80} radius="sm" />
+                    <Skeleton height={12} width={w} radius="sm" />
+                  </Group>
+                ))}
+              </Stack>
+            </Card>
           </Grid.Col>
-          <Grid.Col span={6}>
-            <Skeleton height={160} />
+
+          {/* Anticipo y monto */}
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Card withBorder radius="md" p="md">
+              <Group mb="sm">
+                <Skeleton height={20} width={20} radius="xl" />
+                <Skeleton height={16} width={130} radius="sm" />
+              </Group>
+              <Divider mb="sm" />
+              <Stack gap="xs">
+                {[100, 80, 110].map((w, i) => (
+                  <Group key={i} justify="space-between">
+                    <Skeleton height={12} width={70} radius="sm" />
+                    <Skeleton height={12} width={w} radius="sm" />
+                  </Group>
+                ))}
+              </Stack>
+            </Card>
           </Grid.Col>
-          <Grid.Col span={6}>
-            <Skeleton height={160} />
+
+          {/* Servidores en comisión */}
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Card withBorder radius="md" p="md">
+              <Group mb="sm">
+                <Skeleton height={20} width={20} radius="xl" />
+                <Skeleton height={16} width={170} radius="sm" />
+              </Group>
+              <Divider mb="sm" />
+              <Stack gap="xs">
+                {[1, 2].map((i) => (
+                  <Group key={i} gap="xs">
+                    <Skeleton height={32} width={32} radius="xl" />
+                    <Stack gap={4}>
+                      <Skeleton height={12} width={140} radius="sm" />
+                      <Skeleton height={10} width={100} radius="sm" />
+                    </Stack>
+                  </Group>
+                ))}
+              </Stack>
+            </Card>
           </Grid.Col>
-          <Grid.Col span={6}>
-            <Skeleton height={160} />
+
+          {/* Itinerario del viaje */}
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Card withBorder radius="md" p="md">
+              <Group mb="sm">
+                <Skeleton height={20} width={20} radius="xl" />
+                <Skeleton height={16} width={140} radius="sm" />
+              </Group>
+              <Divider mb="sm" />
+              <Stack gap="sm">
+                {[1, 2].map((i) => (
+                  <Group key={i} gap="xs">
+                    <Skeleton height={24} width={24} radius="xl" />
+                    <Stack gap={4} style={{ flex: 1 }}>
+                      <Skeleton height={12} width="70%" radius="sm" />
+                      <Skeleton height={10} width="50%" radius="sm" />
+                    </Stack>
+                  </Group>
+                ))}
+              </Stack>
+            </Card>
+          </Grid.Col>
+
+          {/* Informe de actividades */}
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Card withBorder radius="md" p="md">
+              <Group mb="sm">
+                <Skeleton height={20} width={20} radius="xl" />
+                <Skeleton height={16} width={170} radius="sm" />
+              </Group>
+              <Divider mb="sm" />
+              <Stack gap="xs">
+                {[1, 2, 3].map((i) => (
+                  <Group key={i} gap="xs">
+                    <Skeleton height={14} width={14} radius="xl" />
+                    <Skeleton height={11} width={180} radius="sm" />
+                  </Group>
+                ))}
+              </Stack>
+            </Card>
+          </Grid.Col>
+
+          {/* Facturas de respaldo */}
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Card withBorder radius="md" p="md">
+              <Group mb="sm">
+                <Skeleton height={20} width={20} radius="xl" />
+                <Skeleton height={16} width={160} radius="sm" />
+              </Group>
+              <Divider mb="sm" />
+              <Stack gap="xs">
+                {[1, 2].map((i) => (
+                  <Group key={i} justify="space-between">
+                    <Skeleton height={11} width={150} radius="sm" />
+                    <Skeleton height={11} width={60} radius="sm" />
+                  </Group>
+                ))}
+              </Stack>
+            </Card>
           </Grid.Col>
         </Grid>
+
+        {/* Botón acción skeleton */}
+        <Skeleton height={44} radius="md" />
       </Stack>
     );
   }

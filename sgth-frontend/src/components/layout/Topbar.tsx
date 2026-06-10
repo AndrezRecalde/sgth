@@ -22,7 +22,7 @@ import {
   IconMoon,
   IconBell,
   IconLogout,
-  IconGrain,
+  IconGridDots,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -126,7 +126,7 @@ export function Topbar({
             radius="xl"
             aria-label="Aplicaciones"
           >
-            <IconGrain size={25} />
+            <IconGridDots size={25} />
           </ActionIcon>
         </Tooltip>
         <Menu
