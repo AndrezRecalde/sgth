@@ -115,15 +115,28 @@ export function FacturasModal({
   const contained = useContainedInput();
 
   const { data: categorias = [] } = useCategoriasFactura();
-  const categoriaOptions = (categorias as CategoriaFactura[]).map((c) => ({
-    value: String(c.id),
-    label: c.grupo === 'viatico'
-      ? `${c.nombre} (Viático)`
-      : `${c.nombre} (Movilización)`,
-    group: c.grupo === 'viatico'
-      ? 'Viático (H&A — justifica 70%)'
-      : 'Movilización',
-  }));
+  const viaticoItems = (categorias as CategoriaFactura[])
+    .filter((c) => c.grupo === 'viatico')
+    .map((c) => ({
+      value: String(c.id),
+      label: `${c.nombre} (Viático)`,
+    }));
+
+  const movilizacionItems = (categorias as CategoriaFactura[])
+    .filter((c) => c.grupo !== 'viatico')
+    .map((c) => ({
+      value: String(c.id),
+      label: `${c.nombre} (Movilización)`,
+    }));
+
+  const categoriaOptions = [
+    ...(viaticoItems.length > 0
+      ? [{ group: 'Viático (H&A — justifica 70%)', items: viaticoItems }]
+      : []),
+    ...(movilizacionItems.length > 0
+      ? [{ group: 'Movilización', items: movilizacionItems }]
+      : []),
+  ];
 
   // Opción B: facturas hasta 5 días después de llegada
   const minFecha = viatico.datetime_salida
