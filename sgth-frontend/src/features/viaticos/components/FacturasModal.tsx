@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import {
   Modal,
   Stack,
@@ -161,6 +163,7 @@ export function FacturasModal({
     control,
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -188,6 +191,26 @@ export function FacturasModal({
     control,
     name: "facturas",
   });
+
+  useEffect(() => {
+    if (opened) {
+      reset({
+        facturas: valorInicial.length > 0
+          ? valorInicial
+          : [{
+              categoria_factura_id: 0,
+              fecha_factura:        '',
+              tipo_comprobante:     'factura' as const,
+              numero_factura:       '',
+              numero_ticket:        '',
+              ruc_proveedor:        '',
+              nombre_proveedor:     '',
+              detalle:              '',
+              monto:                0,
+            }],
+      })
+    }
+  }, [opened, valorInicial, reset])
 
   const facturasWatch = useWatch({ control, name: "facturas" }) || [];
   const totalFacturas = facturasWatch.reduce(

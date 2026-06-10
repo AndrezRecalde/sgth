@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+
 import {
   Modal, Stack, Card, Text, Group,
   Button, Grid, Textarea, ActionIcon,
@@ -101,6 +103,7 @@ export function ActividadesModal({
     control,
     handleSubmit,
     register,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -121,6 +124,22 @@ export function ActividadesModal({
     control,
     name: 'actividades',
   })
+
+  useEffect(() => {
+    if (opened) {
+      reset({
+        actividades: valorInicial.length > 0
+          ? valorInicial
+          : [{
+              fecha:       '',
+              hora_inicio: '08:00',
+              hora_fin:    '17:00',
+              descripcion: '',
+              lugar:       '',
+            }],
+      })
+    }
+  }, [opened, valorInicial, reset])
 
   const { guardarActividades } = useViaticoMutations()
 
