@@ -59,15 +59,46 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const { liquidar } = useViaticoMutations();
 
   const montoAsignado = Number(viatico.monto_calculado ?? 0)
-  const anticipo      = Number(viatico.monto_anticipo ?? 0)
-  const totalFacturas = facturas.reduce(
-    (sum, f) => sum + (Number(f.monto) || 0), 0
-  )
-  const diferencia          = montoAsignado - totalFacturas
-  const porcentajeJustif    = montoAsignado > 0
-    ? Math.min(Math.round((totalFacturas / montoAsignado) * 100), 100)
+  const montoAnticipo = Number(viatico.monto_anticipo ?? 0)
+  const monto70       = Math.round(montoAsignado * 0.70 * 100) / 100
+  const monto30       = Math.round(montoAsignado * 0.30 * 100) / 100
+  const modalidad     = (viatico.modalidad_anticipo as string)
+                        ?? 'sin_anticipo'
+
+  // IDs de categorías de viático (H&A)
+  const idsViatico = (categoriasData as CategoriaFactura[])
+    .filter(c => c.grupo === 'viatico')
+    .map(c => Number(c.id))
+
+  const totalHospAli = facturas
+    .filter(f => idsViatico.includes(
+      Number(f.categoria_factura_id)
+    ))
+    .reduce((sum, f) => sum + (Number(f.monto) || 0), 0)
+
+  const totalMovilizacion = facturas
+    .filter(f => !idsViatico.includes(
+      Number(f.categoria_factura_id)
+    ))
+    .reduce((sum, f) => sum + (Number(f.monto) || 0), 0)
+
+  const totalFacturas = totalHospAli + totalMovilizacion
+
+  const porcentajeHA = monto70 > 0
+    ? Math.min(
+        Math.round((totalHospAli / monto70) * 100), 100
+      )
     : 0
-  const justificadoCompleto = totalFacturas >= montoAsignado
+
+  const justificadoCompleto = totalHospAli >= monto70
+
+  // Diferencia a devolver
+  const diferenciaDevolver = modalidad === 'sin_anticipo'
+    ? 0
+    : (totalHospAli >= montoAnticipo ||
+       totalFacturas >= montoAsignado)
+      ? 0
+      : Math.round((montoAnticipo - totalHospAli) * 100) / 100
 
   const puedeRegistrar = actividades.length > 0 && facturas.length > 0;
 
@@ -90,74 +121,107 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
     <Stack gap="md">
       {/* Resumen rápido si ya hay datos */}
       {(actividades.length > 0 || facturas.length > 0) && (
-        <Card withBorder radius="md" p="sm" bg="gray.0">
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              Monto total asignado:
+        <Stack gap="sm">
+          {/* Resumen viático H&A */}
+          <Card withBorder radius="md" p="sm">
+            <Text size="xs" fw={700} c="blue" mb="xs">
+              Viático diario — Hospedaje y Alimentación
             </Text>
-            <Text size="sm" fw={600}>
-              {fmtMonto(montoAsignado)}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              Anticipo entregado (70%):
-            </Text>
-            <Text size="sm" fw={600}>
-              {fmtMonto(anticipo)}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              Total comprobantes:
-            </Text>
-            <Text
-              size="sm"
-              fw={600}
-              c={justificadoCompleto ? 'teal' : 'orange'}
-            >
-              {fmtMonto(totalFacturas)}
-              {' '}
-              <Text span size="xs"
-                c={justificadoCompleto ? 'teal' : 'orange'}>
-                ({porcentajeJustif}%)
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">
+                Monto asignado:
               </Text>
-            </Text>
-          </Group>
-          <Divider my={4} />
-          <Group justify="space-between">
-            <Text size="sm" fw={600}>
-              A devolver a la institución:
-            </Text>
-            <Text
-              size="sm"
-              fw={700}
-              c={justificadoCompleto ? 'teal' : 'orange'}
-            >
-              {diferencia >= 0
-                ? fmtMonto(diferencia)
-                : '$0.00'}
-            </Text>
-          </Group>
-          {!justificadoCompleto && diferencia > 0 && (
-            <Alert color="yellow" variant="light" p="xs" mt={4}>
-              <Text size="xs">
-                Faltan{' '}
-                <strong>{fmtMonto(diferencia)}</strong>
-                {' '}por justificar del monto total asignado.
+              <Text size="xs" fw={600}>
+                ${montoAsignado.toFixed(2)}
               </Text>
-            </Alert>
+            </Group>
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">
+                70% a justificar (H&A):
+              </Text>
+              <Text size="xs" fw={600}>
+                ${monto70.toFixed(2)}
+              </Text>
+            </Group>
+            {montoAnticipo > 0 && (
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  Anticipo entregado:
+                </Text>
+                <Text size="xs" fw={600}>
+                  ${montoAnticipo.toFixed(2)}
+                </Text>
+              </Group>
+            )}
+            <Divider my={4} />
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">
+                Total H&A presentado:
+              </Text>
+              <Text
+                size="xs"
+                fw={700}
+                c={justificadoCompleto ? 'teal' : 'orange'}
+              >
+                ${totalHospAli.toFixed(2)}
+                {' '}({porcentajeHA}%)
+              </Text>
+            </Group>
+            {diferenciaDevolver > 0 && (
+              <Group justify="space-between" mt={4}>
+                <Text size="xs" c="red" fw={600}>
+                  A devolver a la institución:
+                </Text>
+                <Text size="xs" c="red" fw={700}>
+                  ${diferenciaDevolver.toFixed(2)}
+                </Text>
+              </Group>
+            )}
+            {!justificadoCompleto && diferenciaDevolver === 0
+              && modalidad === 'sin_anticipo' && (
+              <Alert color="yellow" variant="light" p="xs" mt={4}>
+                <Text size="xs">
+                  Faltan{' '}
+                  <strong>
+                    ${(monto70 - totalHospAli).toFixed(2)}
+                  </strong>
+                  {' '}en H&A. Recibirás solo lo justificado
+                  + el 30% devengado (${monto30.toFixed(2)}).
+                </Text>
+              </Alert>
+            )}
+            {justificadoCompleto && (
+              <Alert color="teal" variant="light" p="xs" mt={4}>
+                <Text size="xs">
+                  Justificación completa del 70%.
+                  Recibirás el 30% devengado adicional
+                  (${monto30.toFixed(2)}).
+                </Text>
+              </Alert>
+            )}
+          </Card>
+
+          {/* Resumen movilización */}
+          {totalMovilizacion > 0 && (
+            <Card withBorder radius="md" p="sm">
+              <Text size="xs" fw={700} c="orange" mb="xs">
+                Movilización (rubro independiente)
+              </Text>
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  Total movilización:
+                </Text>
+                <Text size="xs" fw={600} c="orange">
+                  ${totalMovilizacion.toFixed(2)}
+                </Text>
+              </Group>
+              <Text size="xs" c="dimmed" mt={4}>
+                Se presenta como respaldo adicional.
+                No afecta el cálculo del viático diario.
+              </Text>
+            </Card>
           )}
-          {diferencia < 0 && (
-            <Alert color="orange" variant="light" p="xs" mt={4}>
-              <Text size="xs">
-                Los comprobantes exceden el monto asignado en{' '}
-                <strong>{fmtMonto(Math.abs(diferencia))}</strong>.
-                Gastos extras a cargo del servidor.
-              </Text>
-            </Alert>
-          )}
-        </Card>
+        </Stack>
       )}
 
       <Grid>

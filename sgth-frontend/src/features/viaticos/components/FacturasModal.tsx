@@ -117,7 +117,12 @@ export function FacturasModal({
   const { data: categorias = [] } = useCategoriasFactura();
   const categoriaOptions = (categorias as CategoriaFactura[]).map((c) => ({
     value: String(c.id),
-    label: c.nombre,
+    label: c.grupo === 'viatico'
+      ? `${c.nombre} (Viático)`
+      : `${c.nombre} (Movilización)`,
+    group: c.grupo === 'viatico'
+      ? 'Viático (H&A — justifica 70%)'
+      : 'Movilización',
   }));
 
   // Opción B: facturas hasta 5 días después de llegada

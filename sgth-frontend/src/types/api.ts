@@ -172,6 +172,7 @@ export type CategoriaFactura = {
   descripcion?: string | null
   activo:      boolean
   orden:       number
+  grupo?: 'viatico' | 'movilizacion' | null
 }
 
 export type ViaticoConRelaciones = Viatico & {
