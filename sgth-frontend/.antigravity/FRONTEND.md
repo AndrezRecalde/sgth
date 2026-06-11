@@ -1,5 +1,7 @@
 # SGTH Frontend — Documento de Contexto del Agente
+
 # GAD Provincial de Esmeraldas
+
 # Versión 2.0 — Mayo 2026
 
 ---
@@ -76,12 +78,11 @@ echarts-for-react     (versión instalada)
 
 ```typescript
 // ❌ NUNCA
-(servidor as unknown as { id: number }).id
-data as unknown as PuestoConRelaciones[]
+(servidor as unknown as { id: number }).id;
+data as unknown as PuestoConRelaciones[];
 
 // ✅ SIEMPRE — corregir el tipo en api.ts
-servidor.id
-(data as PuestoConRelaciones[])  // solo si el tipo es compatible
+servidor.id(data as PuestoConRelaciones[]); // solo si el tipo es compatible
 ```
 
 ### 2.5 Estilos
@@ -144,6 +145,7 @@ defaultRadius: 'md'
 ### 3.5 Elevación — sin sombras decorativas
 
 La elevación se expresa con bordes, no sombras:
+
 - Base: `border: 1px solid var(--mantine-color-default-border)`
 - Hover: borde color emerald
 - Focus: Mantine lo maneja automáticamente
@@ -194,27 +196,25 @@ en el Topbar, no como botón independiente.
 
 ```tsx
 // src/components/layout/Topbar.tsx — toggle dentro del menú de usuario
-import { useMantineColorScheme } from '@mantine/core'
-import { IconSun, IconMoon } from '@tabler/icons-react'
+import { useMantineColorScheme } from "@mantine/core";
+import { IconSun, IconMoon } from "@tabler/icons-react";
 
 // Dentro de Menu.Dropdown:
 <Box px="md" py="xs">
   <Group justify="space-between">
     <Group gap="sm">
-      {colorScheme === 'dark'
-        ? <IconSun size={16} />
-        : <IconMoon size={16} />}
+      {colorScheme === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
       <Text size="sm">Modo oscuro</Text>
     </Group>
     <Switch
-      checked={colorScheme === 'dark'}
+      checked={colorScheme === "dark"}
       onChange={toggleColorScheme}
       size="xs"
       color="emerald"
       aria-label="Toggle modo oscuro"
     />
   </Group>
-</Box>
+</Box>;
 ```
 
 El topbar NO tiene botón de toggle independiente.
@@ -248,26 +248,34 @@ Móvil (<md):    Sidebar oculto, Burger en Topbar abre Drawer
 Los formularios con @mantine/form existentes se migran progresivamente.
 
 ```tsx
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
-import { TextInput, Select, Button, Grid } from '@mantine/core'
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod/v4";
+import { TextInput, Select, Button, Grid } from "@mantine/core";
 
 const schema = z.object({
-  nombre: z.string().min(2, 'Mínimo 2 caracteres'),
-  cedula: z.string().length(10, 'Debe tener 10 dígitos').regex(/^\d+$/, 'Solo dígitos'),
-  genero: z.enum(['masculino', 'femenino', 'otro']),
-})
+  nombre: z.string().min(2, "Mínimo 2 caracteres"),
+  cedula: z
+    .string()
+    .length(10, "Debe tener 10 dígitos")
+    .regex(/^\d+$/, "Solo dígitos"),
+  genero: z.enum(["masculino", "femenino", "otro"]),
+});
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 export function MiForm({ onSubmit }: { onSubmit: (data: FormData) => void }) {
-  const contained = useContainedInput()
+  const contained = useContainedInput();
 
-  const { register, control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { nombre: '', cedula: '', genero: 'masculino' },
-  })
+    defaultValues: { nombre: "", cedula: "", genero: "masculino" },
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -279,7 +287,7 @@ export function MiForm({ onSubmit }: { onSubmit: (data: FormData) => void }) {
             placeholder="Primer nombre"
             error={errors.nombre?.message}
             {...contained}
-            {...register('nombre')}
+            {...register("nombre")}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -291,9 +299,9 @@ export function MiForm({ onSubmit }: { onSubmit: (data: FormData) => void }) {
               <Select
                 label="Género"
                 data={[
-                  { value: 'masculino', label: 'Masculino' },
-                  { value: 'femenino',  label: 'Femenino' },
-                  { value: 'otro',      label: 'Otro' },
+                  { value: "masculino", label: "Masculino" },
+                  { value: "femenino", label: "Femenino" },
+                  { value: "otro", label: "Otro" },
                 ]}
                 error={errors.genero?.message}
                 {...contained}
@@ -308,7 +316,7 @@ export function MiForm({ onSubmit }: { onSubmit: (data: FormData) => void }) {
         <Button type="submit">Guardar</Button>
       </Group>
     </form>
-  )
+  );
 }
 ```
 
@@ -352,14 +360,14 @@ const contained = useContainedInput()
 
 ```typescript
 // src/features/expediente/schemas/servidor.schema.ts
-import { z } from 'zod/v4'   // ← SIEMPRE 'zod/v4', nunca 'zod'
+import { z } from "zod/v4"; // ← SIEMPRE 'zod/v4', nunca 'zod'
 
 export const servidorSchema = z.object({
-  nombre: z.string().min(2, 'Mínimo 2 caracteres'),
-  cedula: z.string().length(10, 'Debe tener 10 dígitos'),
-})
+  nombre: z.string().min(2, "Mínimo 2 caracteres"),
+  cedula: z.string().length(10, "Debe tener 10 dígitos"),
+});
 
-export type ServidorFormData = z.infer<typeof servidorSchema>
+export type ServidorFormData = z.infer<typeof servidorSchema>;
 ```
 
 ## 5.7 Botones de acción — patrón estándar
@@ -400,7 +408,7 @@ con ícono relevante a la izquierda.
 ### 6.1 SgthTable — componente obligatorio
 
 ```tsx
-import { SgthTable } from '@/components/ui/SgthTable'
+import { SgthTable } from "@/components/ui/SgthTable";
 
 <SgthTable
   records={data}
@@ -410,7 +418,7 @@ import { SgthTable } from '@/components/ui/SgthTable'
   recordsPerPage={15}
   page={page}
   onPageChange={setPage}
-/>
+/>;
 ```
 
 Props por defecto en SgthTable (NO repetir):
@@ -453,14 +461,14 @@ import { TableActions } from '@/components/ui/TableActions'
 
 ```tsx
 // src/components/ui/EmptyState.tsx
-import { Stack, Text, ThemeIcon } from '@mantine/core'
-import type { TablerIconsProps } from '@tabler/icons-react'
+import { Stack, Text, ThemeIcon } from "@mantine/core";
+import type { TablerIconsProps } from "@tabler/icons-react";
 
 interface Props {
-  icon:         React.FC<TablerIconsProps>
-  title:        string
-  description?: string
-  action?:      React.ReactNode
+  icon: React.FC<TablerIconsProps>;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
 }
 
 export function EmptyState({ icon: Icon, title, description, action }: Props) {
@@ -470,18 +478,23 @@ export function EmptyState({ icon: Icon, title, description, action }: Props) {
         <Icon size={28} />
       </ThemeIcon>
       <Stack align="center" gap="xs">
-        <Text fw={600} size="md" c="dimmed">{title}</Text>
+        <Text fw={600} size="md" c="dimmed">
+          {title}
+        </Text>
         {description && (
-          <Text size="sm" c="dimmed" ta="center" maw={360}>{description}</Text>
+          <Text size="sm" c="dimmed" ta="center" maw={360}>
+            {description}
+          </Text>
         )}
       </Stack>
       {action}
     </Stack>
-  )
+  );
 }
 ```
 
 Uso:
+
 ```tsx
 <EmptyState
   icon={IconUsers}
@@ -544,17 +557,18 @@ Ejemplos:
 
 ```tsx
 // src/app/(dashboard)/estructura/page.tsx
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'GADPE — Estructura Organizacional',
-  description: 'Gestión del organigrama institucional y puestos del GAD Provincial de Esmeraldas',
-}
+  title: "GADPE — Estructura Organizacional",
+  description:
+    "Gestión del organigrama institucional y puestos del GAD Provincial de Esmeraldas",
+};
 
 export default function EstructuraPage() {
   // 'use client' NO se puede usar con metadata estática
   // Si la página necesita interactividad, extraer a componente hijo
-  return <EstructuraView />
+  return <EstructuraView />;
 }
 ```
 
@@ -564,11 +578,12 @@ export default function EstructuraPage() {
 // src/app/layout.tsx
 export const metadata: Metadata = {
   title: {
-    default:  'GADPE — Sistema de Gestión de Talento Humano',
-    template: '%s | SGTH',
+    default: "GADPE — Sistema de Gestión de Talento Humano",
+    template: "%s | SGTH",
   },
-  description: 'Sistema Integral de Gestión de Talento Humano — GAD Provincial de Esmeraldas',
-}
+  description:
+    "Sistema Integral de Gestión de Talento Humano — GAD Provincial de Esmeraldas",
+};
 ```
 
 **Nota:** Los page.tsx con `export const metadata` NO pueden tener `'use client'`.
@@ -599,7 +614,9 @@ Crear un componente hijo cliente y exportarlo desde el page.tsx sin directiva.
   label={
     <Group gap="xs">
       <IconUser size={14} />
-      <Text size="sm" fw={600}>Datos personales</Text>
+      <Text size="sm" fw={600}>
+        Datos personales
+      </Text>
     </Group>
   }
   labelPosition="left"
@@ -613,9 +630,15 @@ Crear un componente hijo cliente y exportarlo desde el page.tsx sin directiva.
 <Paper withBorder radius="lg" p="lg">
   <Group justify="space-between" align="flex-start">
     <div>
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600} mb={4}>Servidores activos</Text>
-      <Text size="xl" fw={700}>247</Text>
-      <Text size="xs" c="emerald" mt={4}>+3 este mes</Text>
+      <Text size="xs" c="dimmed" tt="uppercase" fw={600} mb={4}>
+        Servidores activos
+      </Text>
+      <Text size="xl" fw={700}>
+        247
+      </Text>
+      <Text size="xs" c="emerald" mt={4}>
+        +3 este mes
+      </Text>
     </div>
     <ThemeIcon size={44} radius="md" variant="light" color="emerald">
       <IconUsers size={22} />
@@ -629,11 +652,27 @@ Crear un componente hijo cliente y exportarlo desde el page.tsx sin directiva.
 ```tsx
 <SegmentedControl
   value={vista}
-  onChange={(v) => setVista(v as 'tabla' | 'tarjetas')}
+  onChange={(v) => setVista(v as "tabla" | "tarjetas")}
   color="emerald"
   data={[
-    { value: 'tabla',    label: <Group gap="xs"><IconList size={14} />Tabla</Group> },
-    { value: 'tarjetas', label: <Group gap="xs"><IconGridDots size={14} />Tarjetas</Group> },
+    {
+      value: "tabla",
+      label: (
+        <Group gap="xs">
+          <IconList size={14} />
+          Tabla
+        </Group>
+      ),
+    },
+    {
+      value: "tarjetas",
+      label: (
+        <Group gap="xs">
+          <IconGridDots size={14} />
+          Tarjetas
+        </Group>
+      ),
+    },
   ]}
 />
 ```
@@ -652,7 +691,6 @@ Crear un componente hijo cliente y exportarlo desde el page.tsx sin directiva.
 ❌ Pages Router de Next.js
 ❌ TypeScript any
 ❌ as unknown as T — nunca bypasear el tipo
-❌ Shadows decorativas
 ❌ CSS Tailwind
 ❌ Importar desde 'zod' — usar 'zod/v4'
 ❌ Input sin label — todos tienen label obligatorio
@@ -763,10 +801,10 @@ sgth-backend/storage/app/openapi.yaml → copiar → sgth-frontend/openapi.yaml
 
 ```typescript
 // ✅ SIEMPRE
-import type { Servidor, Canton } from '@/types/api'
+import type { Servidor, Canton } from "@/types/api";
 
 // ❌ NUNCA — desde el generado
-import type { components } from '@/types/api.generated'
+import type { components } from "@/types/api.generated";
 ```
 
 ---
@@ -809,13 +847,13 @@ import type { components } from '@/types/api.generated'
 
 ## 16. REFERENCIAS
 
-- Mantine v9:          https://mantine.dev
-- Mantine DataTable:   https://icflorescu.github.io/mantine-datatable
-- React Hook Form:     https://react-hook-form.com
-- TanStack Query v5:   https://tanstack.com/query/v5
-- ECharts:             https://echarts.apache.org
-- Tabler Icons:        https://tabler.io/icons
-- Zod v4:              https://zod.dev
+- Mantine v9: https://mantine.dev
+- Mantine DataTable: https://icflorescu.github.io/mantine-datatable
+- React Hook Form: https://react-hook-form.com
+- TanStack Query v5: https://tanstack.com/query/v5
+- ECharts: https://echarts.apache.org
+- Tabler Icons: https://tabler.io/icons
+- Zod v4: https://zod.dev
 
 ---
 

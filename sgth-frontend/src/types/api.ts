@@ -176,6 +176,7 @@ export type CategoriaFactura = {
 }
 
 export type ViaticoConRelaciones = Viatico & {
+  coeficiente_exterior?: number | string | null;
   servidor?: {
     id:              number
     cedula?:         string

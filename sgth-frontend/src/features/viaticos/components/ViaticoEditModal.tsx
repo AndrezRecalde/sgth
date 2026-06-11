@@ -51,9 +51,10 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   viatico: Viatico;
+  onSuccess?: () => void;
 }
 
-export function ViaticoEditModal({ opened, onClose, viatico }: Props) {
+export function ViaticoEditModal({ opened, onClose, viatico, onSuccess }: Props) {
   const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { actualizar } = useViaticoMutations();
@@ -92,6 +93,7 @@ export function ViaticoEditModal({ opened, onClose, viatico }: Props) {
         modalidad_anticipo: values.modalidad_anticipo,
       },
     });
+    onSuccess?.();
     onClose();
   };
 
