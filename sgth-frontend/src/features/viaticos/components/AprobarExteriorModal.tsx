@@ -44,14 +44,16 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
   const contained = useContainedInput();
   const { aprobar } = useViaticoMutations();
 
+  type ViaticoConServidor = Viatico & {
+    puesto?:    { rol_puesto?: string } | null
+    servidor?:  {
+      puesto?: { rol_puesto?: string } | null
+    } | null
+  }
+  const v = viatico as ViaticoConServidor
   const esDignatario =
-    (viatico as { puesto?: { rol_puesto?: string } })?.puesto?.rol_puesto ===
-      "dignatario" ||
-    (
-      viatico as unknown as {
-        servidor?: { puesto?: { rol_puesto?: string } };
-      }
-    )?.servidor?.puesto?.rol_puesto === "dignatario";
+    v.puesto?.rol_puesto === 'dignatario' ||
+    v.servidor?.puesto?.rol_puesto === 'dignatario'
 
   const tarifaBase = esDignatario ? TARIFA_DIGNATARIO : TARIFA_SERVIDOR;
 
