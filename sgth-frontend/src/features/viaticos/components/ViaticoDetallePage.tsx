@@ -1,73 +1,80 @@
-'use client'
+"use client";
 
-import { useState }          from 'react'
+import { useState } from "react";
 import {
-  Stack, Grid, Card, Text, Group,
-  Button, Stepper, Divider,
-  Skeleton, Badge, Modal, ThemeIcon,
-} from '@mantine/core'
-import { useDisclosure }     from '@mantine/hooks'
-import { IconArrowLeft }     from '@tabler/icons-react'
-import { useRouter }         from 'next/navigation'
-import { useQueryClient }    from '@tanstack/react-query'
+  Stack,
+  Grid,
+  Card,
+  Text,
+  Group,
+  Button,
+  Stepper,
+  Skeleton,
+  Badge,
+  Modal,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowLeft } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { useViatico, useTramos } from '../hooks/useViaticos'
-import { useViaticoMutations }   from '../hooks/useViaticoMutations'
-import { usePdfViatico }         from '../hooks/usePdfViatico'
+import { useViatico, useTramos } from "../hooks/useViaticos";
+import { useViaticoMutations } from "../hooks/useViaticoMutations";
+import { usePdfViatico } from "../hooks/usePdfViatico";
 
-import { ViaticoInfoCard }       from './ViaticoInfoCard'
-import { ViaticoAnticipoCard }   from './ViaticoAnticipoCard'
-import { ViaticoServidoresCard } from './ViaticoServidoresCard'
-import { ViaticoItinerarioCard } from './ViaticoItinerarioCard'
-import { ViaticoLiquidacionCard } from './ViaticoLiquidacionCard'
-import { ViaticoAcciones }       from './ViaticoAcciones'
-import { AprobarExteriorModal }  from './AprobarExteriorModal'
-import { ViaticoEditModal }      from './ViaticoEditModal'
-import { ServidoresModal }       from './ServidoresModal'
-import { TramoForm }             from './TramoForm'
-import { TramosList }            from './TramosList'
+import { ViaticoInfoCard } from "./ViaticoInfoCard";
+import { ViaticoAnticipoCard } from "./ViaticoAnticipoCard";
+import { ViaticoServidoresCard } from "./ViaticoServidoresCard";
+import { ViaticoItinerarioCard } from "./ViaticoItinerarioCard";
+import { ViaticoLiquidacionCard } from "./ViaticoLiquidacionCard";
+import { ViaticoAcciones } from "./ViaticoAcciones";
+import { AprobarExteriorModal } from "./AprobarExteriorModal";
+import { ViaticoEditModal } from "./ViaticoEditModal";
+import { ServidoresModal } from "./ServidoresModal";
+import { TramoForm } from "./TramoForm";
+import { TramosList } from "./TramosList";
 
-import type { ViaticoConRelaciones, Viatico } from '@/types/api'
+import type { ViaticoConRelaciones, Viatico } from "@/types/api";
 
 interface Props {
-  identificador: string | number
+  identificador: string | number;
 }
 
 const ESTADO_COLORS: Record<string, string> = {
-  solicitado:             'orange',
-  aprobado:               'blue',
-  con_anticipo:           'cyan',
-  en_comision:            'violet',
-  pendiente_liquidacion:  'yellow',
-  liquidado:              'emerald',
-  contabilizado:          'gray',
-  cancelado:              'red',
-  rechazado:              'orange',
-}
+  solicitado: "orange",
+  aprobado: "blue",
+  con_anticipo: "cyan",
+  en_comision: "violet",
+  pendiente_liquidacion: "yellow",
+  liquidado: "emerald",
+  contabilizado: "gray",
+  cancelado: "red",
+  rechazado: "orange",
+};
 
 const ESTADO_LABELS: Record<string, string> = {
-  solicitado:             'Solicitado',
-  aprobado:               'Aprobado',
-  con_anticipo:           'Con anticipo',
-  en_comision:            'En comisión',
-  pendiente_liquidacion:  'Pendiente de liquidación',
-  liquidado:              'Liquidado',
-  contabilizado:          'Contabilizado',
-  cancelado:              'Cancelado',
-  rechazado:              'Rechazado',
-}
+  solicitado: "Solicitado",
+  aprobado: "Aprobado",
+  con_anticipo: "Con anticipo",
+  en_comision: "En comisión",
+  pendiente_liquidacion: "Pendiente de liquidación",
+  liquidado: "Liquidado",
+  contabilizado: "Contabilizado",
+  cancelado: "Cancelado",
+  rechazado: "Rechazado",
+};
 
 const PASO_STEPPER: Record<string, number> = {
-  solicitado:             0,
-  aprobado:               1,
-  con_anticipo:           2,
-  en_comision:            3,
-  pendiente_liquidacion:  4,
-  liquidado:              5,
-  contabilizado:          6,
-  cancelado:              0,
-  rechazado:              0,
-}
+  solicitado: 0,
+  aprobado: 1,
+  con_anticipo: 2,
+  en_comision: 3,
+  pendiente_liquidacion: 4,
+  liquidado: 5,
+  contabilizado: 6,
+  cancelado: 0,
+  rechazado: 0,
+};
 
 function ViaticoDetalleSkeleton() {
   return (
@@ -92,66 +99,79 @@ function ViaticoDetalleSkeleton() {
       </Grid>
       <Skeleton height={44} radius="md" />
     </Stack>
-  )
+  );
 }
 
 export function ViaticoDetallePage({ identificador }: Props) {
-  const router = useRouter()
-  const qc     = useQueryClient()
+  const router = useRouter();
+  const qc = useQueryClient();
 
-  const { data: detalle, isLoading } = useViatico(identificador)
-  const d = detalle as ViaticoConRelaciones | undefined
+  const { data: detalle, isLoading } = useViatico(identificador);
+  const d = detalle as ViaticoConRelaciones | undefined;
 
-  const { data: tramosData = [] } = useTramos(detalle?.id ?? null)
+  const { data: tramosData = [] } = useTramos(detalle?.id ?? null);
 
-  const [editModalAbierto,
-    { open: abrirEdit, close: cerrarEdit }]           = useDisclosure(false)
-  const [tramosAbierto,
-    { open: abrirTramos, close: cerrarTramos }]       = useDisclosure(false)
-  const [servidoresModalAbierto,
-    { open: abrirServidores, close: cerrarServidores }] = useDisclosure(false)
-  const [exteriorModalAbierto,
-    { open: abrirExterior, close: cerrarExterior }]   = useDisclosure(false)
+  const [editModalAbierto, { open: abrirEdit, close: cerrarEdit }] =
+    useDisclosure(false);
+  const [tramosAbierto, { open: abrirTramos, close: cerrarTramos }] =
+    useDisclosure(false);
+  const [
+    servidoresModalAbierto,
+    { open: abrirServidores, close: cerrarServidores },
+  ] = useDisclosure(false);
+  const [exteriorModalAbierto, { open: abrirExterior, close: cerrarExterior }] =
+    useDisclosure(false);
 
-  const [mostrarTramoForm, setMostrarTramoForm] = useState(false)
-
-  const {
-    descargarSolicitud, descargarInforme, descargarComprobante,
-    loadingSolicitud, loadingInforme, loadingComprobante,
-  } = usePdfViatico()
+  const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
 
   const {
-    aprobar, entregarAnticipo, marcarEnComision,
-    marcarPendienteLiquidacion, contabilizar,
-    cancelar, rechazar,
-  } = useViaticoMutations()
+    descargarSolicitud,
+    descargarInforme,
+    descargarComprobante,
+    loadingSolicitud,
+    loadingInforme,
+    loadingComprobante,
+  } = usePdfViatico();
+
+  const {
+    aprobar,
+    entregarAnticipo,
+    marcarEnComision,
+    marcarPendienteLiquidacion,
+    contabilizar,
+    cancelar,
+    rechazar,
+  } = useViaticoMutations();
 
   const invalidar = () => {
-    qc.invalidateQueries({ queryKey: ['viatico'] })
-    qc.invalidateQueries({ queryKey: ['viaticos'] })
-  }
+    qc.invalidateQueries({ queryKey: ["viatico"] });
+    qc.invalidateQueries({ queryKey: ["viaticos"] });
+  };
 
-  if (isLoading) return <ViaticoDetalleSkeleton />
-  if (!d) return (
-    <Stack p="md">
-      <Text c="dimmed">Viático no encontrado.</Text>
-    </Stack>
-  )
+  if (isLoading) return <ViaticoDetalleSkeleton />;
+  if (!d)
+    return (
+      <Stack p="md">
+        <Text c="dimmed">Viático no encontrado.</Text>
+      </Stack>
+    );
 
-  const estadoActual  = d.estado ?? ''
-  const pasoActivo    = PASO_STEPPER[estadoActual] ?? 0
-  const puedeEditarDatos  = !['liquidado', 'contabilizado']
-    .includes(estadoActual)
-  const puedeEditarTramos = !['liquidado', 'contabilizado']
-    .includes(estadoActual)
+  const estadoActual = d.estado ?? "";
+  const pasoActivo = PASO_STEPPER[estadoActual] ?? 0;
+  const puedeEditarDatos = !["liquidado", "contabilizado"].includes(
+    estadoActual,
+  );
+  const puedeEditarTramos = !["liquidado", "contabilizado"].includes(
+    estadoActual,
+  );
 
   const handleAprobar = () => {
-    if (d.zona === 'exterior') {
-      abrirExterior()
+    if (d.zona === "exterior") {
+      abrirExterior();
     } else {
-      aprobar.mutate({ id: d.id })
+      aprobar.mutate({ id: d.id });
     }
-  }
+  };
 
   return (
     <Stack gap="md" p="md">
@@ -168,10 +188,10 @@ export function ViaticoDetallePage({ identificador }: Props) {
           </Button>
           <div>
             <Text fw={700} size="lg">
-              {d.codigo_viatico ?? '—'}
+              {d.codigo_viatico ?? "—"}
             </Text>
             <Badge
-              color={ESTADO_COLORS[estadoActual] ?? 'gray'}
+              color={ESTADO_COLORS[estadoActual] ?? "gray"}
               variant="light"
               size="sm"
             >
@@ -204,33 +224,25 @@ export function ViaticoDetallePage({ identificador }: Props) {
         onPendiente={() => marcarPendienteLiquidacion.mutate(d.id)}
         onContabilizar={() => contabilizar.mutate(d.id)}
         onCancelar={() => {
-          if (confirm('Cancelar esta solicitud?'))
-            cancelar.mutate(d.id)
+          if (confirm("Cancelar esta solicitud?")) cancelar.mutate(d.id);
         }}
         onRechazar={() => {
-          if (confirm('Rechazar este viático?'))
-            rechazar.mutate(d.id)
+          if (confirm("Rechazar este viático?")) rechazar.mutate(d.id);
         }}
-        onSolicitud={() =>
-          descargarSolicitud(d.codigo_viatico ?? d.id)
-        }
-        onInforme={() =>
-          descargarInforme(d.codigo_viatico ?? d.id)
-        }
-        onComprobante={() =>
-          descargarComprobante(d.codigo_viatico ?? d.id)
-        }
+        onSolicitud={() => descargarSolicitud(d.codigo_viatico ?? d.id)}
+        onInforme={() => descargarInforme(d.codigo_viatico ?? d.id)}
+        onComprobante={() => descargarComprobante(d.codigo_viatico ?? d.id)}
         loadings={{
-          aprobar:      aprobar.isPending,
-          anticipo:     entregarAnticipo.isPending,
-          comision:     marcarEnComision.isPending,
-          pendiente:    marcarPendienteLiquidacion.isPending,
+          aprobar: aprobar.isPending,
+          anticipo: entregarAnticipo.isPending,
+          comision: marcarEnComision.isPending,
+          pendiente: marcarPendienteLiquidacion.isPending,
           contabilizar: contabilizar.isPending,
-          cancelar:     cancelar.isPending,
-          rechazar:     rechazar.isPending,
-          solicitud:    loadingSolicitud,
-          informe:      loadingInforme,
-          comprobante:  loadingComprobante,
+          cancelar: cancelar.isPending,
+          rechazar: rechazar.isPending,
+          solicitud: loadingSolicitud,
+          informe: loadingInforme,
+          comprobante: loadingComprobante,
         }}
       />
 
@@ -264,8 +276,9 @@ export function ViaticoDetallePage({ identificador }: Props) {
           />
         </Grid.Col>
 
-        {['pendiente_liquidacion', 'liquidado',
-          'contabilizado'].includes(estadoActual) && (
+        {["pendiente_liquidacion", "liquidado", "contabilizado"].includes(
+          estadoActual,
+        ) && (
           <Grid.Col span={12}>
             <ViaticoLiquidacionCard
               viatico={d}
@@ -322,12 +335,14 @@ export function ViaticoDetallePage({ identificador }: Props) {
             </Button>
           ) : (
             <Card withBorder radius="md" p="md">
-              <Text size="sm" fw={600} mb="sm">Nuevo tramo</Text>
+              <Text size="sm" fw={600} mb="sm">
+                Nuevo tramo
+              </Text>
               <TramoForm
                 viaticoId={d.id}
                 viatico={d}
                 tramosExistentes={
-                  (tramosData as import('@/types/api').TramoViatico[]).length
+                  (tramosData as import("@/types/api").TramoViatico[]).length
                 }
                 onSuccess={() => setMostrarTramoForm(false)}
                 onCancel={() => setMostrarTramoForm(false)}
@@ -337,5 +352,5 @@ export function ViaticoDetallePage({ identificador }: Props) {
         </Stack>
       </Modal>
     </Stack>
-  )
+  );
 }

@@ -1,17 +1,22 @@
-'use client'
+"use client";
 
 import {
-  Card, Group, Text, Button,
-  Divider, Alert, ThemeIcon,
-} from '@mantine/core'
-import { IconRoute, IconAlertCircle } from '@tabler/icons-react'
-import { TramosList } from './TramosList'
-import type { ViaticoConRelaciones } from '@/types/api'
+  Card,
+  Group,
+  Text,
+  Button,
+  Divider,
+  Alert,
+  ThemeIcon,
+} from "@mantine/core";
+import { IconRoute, IconAlertCircle } from "@tabler/icons-react";
+import { TramosList } from "./TramosList";
+import type { ViaticoConRelaciones } from "@/types/api";
 
 interface Props {
-  viatico:     ViaticoConRelaciones
-  puedeEditar: boolean
-  onGestionar: () => void
+  viatico: ViaticoConRelaciones;
+  puedeEditar: boolean;
+  onGestionar: () => void;
 }
 
 export function ViaticoItinerarioCard({
@@ -26,14 +31,12 @@ export function ViaticoItinerarioCard({
           <ThemeIcon variant="default" size="sm">
             <IconRoute size={14} />
           </ThemeIcon>
-          <Text fw={600} size="sm">Itinerario del viaje</Text>
+          <Text fw={600} size="sm">
+            Itinerario del viaje
+          </Text>
         </Group>
         {puedeEditar && (
-          <Button
-            size="xs"
-            variant="light"
-            onClick={onGestionar}
-          >
+          <Button size="xs" variant="light" onClick={onGestionar}>
             Gestionar
           </Button>
         )}
@@ -48,11 +51,11 @@ export function ViaticoItinerarioCard({
           mt="sm"
         >
           <Text size="xs">
-            Aun no hay tramos registrados. Pulse{' '}
-            <strong>Gestionar</strong> para agregar el itinerario.
+            Aun no hay tramos registrados. Pulse <strong>Gestionar</strong> para
+            agregar el itinerario.
           </Text>
         </Alert>
       )}
     </Card>
-  )
+  );
 }

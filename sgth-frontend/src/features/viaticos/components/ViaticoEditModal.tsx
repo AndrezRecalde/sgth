@@ -54,7 +54,12 @@ interface Props {
   onSuccess?: () => void;
 }
 
-export function ViaticoEditModal({ opened, onClose, viatico, onSuccess }: Props) {
+export function ViaticoEditModal({
+  opened,
+  onClose,
+  viatico,
+  onSuccess,
+}: Props) {
   const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { actualizar } = useViaticoMutations();
