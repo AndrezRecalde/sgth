@@ -90,6 +90,11 @@ export const viaticoService = {
       `/viaticos/${id}/contabilizar`
     ).then(r => r.data.datos),
 
+  devolverCorreccion: (id: number) =>
+    api.post<ApiResponse<Viatico>>(
+      `/viaticos/${id}/devolver-correccion`
+    ).then(r => r.data.datos),
+
   generarSolicitudPdf: (identificador: string | number) =>
     api.get<{ url: string }>(
       `/viaticos/${identificador}/solicitud/generar-enlace`

@@ -112,6 +112,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
     contabilizar,
     cancelar,
     rechazar,
+    devolverCorreccion,
   } = useViaticoMutations();
 
   const invalidar = () => {
@@ -235,6 +236,10 @@ export function ViaticoDetallePage({ identificador }: Props) {
             marcarPendienteLiquidacion.mutate(d.id)
           }
           onContabilizar={() => contabilizar.mutate(d.id)}
+          onDevolverCorreccion={() => {
+            if (confirm('¿Devolver esta liquidación para correcciones?'))
+              devolverCorreccion.mutate(d.id)
+          }}
           onCancelar={() => {
             if (confirm('Cancelar esta solicitud?'))
               cancelar.mutate(d.id)
@@ -258,6 +263,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             comision:     marcarEnComision.isPending,
             pendiente:    marcarPendienteLiquidacion.isPending,
             contabilizar: contabilizar.isPending,
+            devolverCorreccion: devolverCorreccion.isPending,
             cancelar:     cancelar.isPending,
             rechazar:     rechazar.isPending,
             solicitud:    loadingSolicitud,

@@ -4,7 +4,7 @@ import { Group, Button, Stack, Alert, Text, Divider } from '@mantine/core'
 import {
   IconCheck, IconX, IconBan, IconPlane,
   IconRoute, IconFileInvoice, IconDownload,
-  IconFileText, IconReceipt,
+  IconFileText, IconReceipt, IconArrowBack,
 } from '@tabler/icons-react'
 import type { ViaticoConRelaciones } from '@/types/api'
 
@@ -21,6 +21,7 @@ interface Props {
   onSolicitud:    () => void
   onInforme:      () => void
   onComprobante:  () => void
+  onDevolverCorreccion: () => void
   loadings: {
     aprobar:      boolean
     anticipo:     boolean
@@ -32,6 +33,7 @@ interface Props {
     solicitud:    boolean
     informe:      boolean
     comprobante:  boolean
+    devolverCorreccion: boolean
   }
 }
 
@@ -48,6 +50,7 @@ export function ViaticoAcciones({
   onSolicitud,
   onInforme,
   onComprobante,
+  onDevolverCorreccion,
   loadings,
 }: Props) {
   const sinAnticipo = (d.modalidad_anticipo as string) === 'sin_anticipo'
@@ -216,6 +219,16 @@ export function ViaticoAcciones({
             onClick={onContabilizar}
           >
             Contabilizar
+          </Button>
+          <Button
+            size="sm"
+            variant="light"
+            color="orange"
+            leftSection={<IconArrowBack size={14} />}
+            loading={loadings.devolverCorreccion}
+            onClick={onDevolverCorreccion}
+          >
+            Devolver a corrección
           </Button>
           <Button
             size="xs"

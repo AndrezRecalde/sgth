@@ -131,6 +131,12 @@ export function useViaticoEstados() {
     'La liquidación fue contabilizada correctamente.',
   ))
 
+  const devolverCorreccion = useMutation(crearMutacionEstado(
+    viaticoService.devolverCorreccion,
+    'Devuelto a corrección',
+    'La liquidación fue devuelta para correcciones.',
+  ))
+
   return {
     solicitar,
     actualizar,
@@ -141,5 +147,6 @@ export function useViaticoEstados() {
     marcarEnComision,
     marcarPendienteLiquidacion,
     contabilizar,
+    devolverCorreccion,
   }
 }
