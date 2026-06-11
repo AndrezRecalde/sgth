@@ -2,9 +2,9 @@
 
 import {
   Card, Grid, Textarea, ActionIcon,
-  Group, Text, Badge, TimeInput, TextInput,
+  Group, Text, Badge, TextInput,
 } from '@mantine/core'
-import { DatePickerInput } from '@mantine/dates'
+import { DatePickerInput, TimeInput } from '@mantine/dates'
 import { IconTrash } from '@tabler/icons-react'
 import {
   Controller,
