@@ -23,29 +23,10 @@ import { VuelosTab } from "./VuelosTab";
 import type { Viatico, EstadoViatico, ViaticoConRelaciones } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
 
-const ESTADO_COLORS: Record<EstadoViatico, string> = {
-  solicitado: "orange",
-  aprobado: "blue",
-  con_anticipo: "cyan",
-  en_comision: "violet",
-  pendiente_liquidacion: "yellow",
-  liquidado: "emerald",
-  contabilizado: "gray",
-  cancelado: "red",
-  rechazado: "orange",
-};
-
-const ESTADO_LABELS: Record<EstadoViatico, string> = {
-  solicitado: "Solicitado",
-  aprobado: "Aprobado",
-  con_anticipo: "Con anticipo",
-  en_comision: "En comisión",
-  pendiente_liquidacion: "Pend. liquidación",
-  liquidado: "Liquidado",
-  contabilizado: "Contabilizado",
-  cancelado: "Cancelado",
-  rechazado: "Rechazado",
-};
+import {
+  ESTADO_COLORS,
+  ESTADO_LABELS,
+} from '../constants/viatico.constants';
 
 export function ViaticoView() {
   const router = useRouter();

@@ -32,11 +32,9 @@ function fmt(f?: string | null): string {
   });
 }
 
-const ZONA_LABELS: Record<string, string> = {
-  dentro_provincia: "Dentro de la provincia",
-  fuera_provincia: "Fuera de la provincia",
-  exterior: "Exterior",
-};
+import {
+  ZONA_LABELS,
+} from '../constants/viatico.constants';
 
 export function ViaticoInfoCard({ viatico: d, puedeEditar, onEditar }: Props) {
   const servidor = d.servidor;

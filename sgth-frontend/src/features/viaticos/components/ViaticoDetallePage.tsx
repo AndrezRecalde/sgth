@@ -40,41 +40,11 @@ interface Props {
   identificador: string | number;
 }
 
-const ESTADO_COLORS: Record<string, string> = {
-  solicitado: "orange",
-  aprobado: "blue",
-  con_anticipo: "cyan",
-  en_comision: "violet",
-  pendiente_liquidacion: "yellow",
-  liquidado: "emerald",
-  contabilizado: "gray",
-  cancelado: "red",
-  rechazado: "orange",
-};
-
-const ESTADO_LABELS: Record<string, string> = {
-  solicitado: "Solicitado",
-  aprobado: "Aprobado",
-  con_anticipo: "Con anticipo",
-  en_comision: "En comisión",
-  pendiente_liquidacion: "Pendiente de liquidación",
-  liquidado: "Liquidado",
-  contabilizado: "Contabilizado",
-  cancelado: "Cancelado",
-  rechazado: "Rechazado",
-};
-
-const PASO_STEPPER: Record<string, number> = {
-  solicitado: 0,
-  aprobado: 1,
-  con_anticipo: 2,
-  en_comision: 3,
-  pendiente_liquidacion: 4,
-  liquidado: 5,
-  contabilizado: 6,
-  cancelado: 0,
-  rechazado: 0,
-};
+import {
+  ESTADO_COLORS,
+  ESTADO_LABELS,
+  PASO_STEPPER,
+} from '../constants/viatico.constants';
 
 function ViaticoDetalleSkeleton() {
   return (
