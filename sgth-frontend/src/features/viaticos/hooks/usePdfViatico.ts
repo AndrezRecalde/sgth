@@ -11,7 +11,10 @@ export function usePdfViatico() {
   const [loadingInforme,     setLoadingInforme]     = useState(false)
   const [loadingComprobante, setLoadingComprobante] = useState(false)
 
-  const abrirPdf = async (url: string): Promise<void> => {
+  const abrirPdf = async (
+    url: string,
+    filename: string
+  ): Promise<void> => {
     const response = await api.get(url, {
       responseType: 'blob',
     })
@@ -19,7 +22,15 @@ export function usePdfViatico() {
       type: 'application/pdf',
     })
     const blobUrl = URL.createObjectURL(blob)
-    window.open(blobUrl, '_blank')
+
+    // Crear link con nombre de archivo definido
+    const link    = document.createElement('a')
+    link.href     = blobUrl
+    link.download = filename
+    link.target   = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
   }
 
@@ -38,7 +49,8 @@ export function usePdfViatico() {
     })
     try {
       await abrirPdf(
-        `/viaticos/${identificador}/solicitud/generar-enlace`
+        `/viaticos/${identificador}/solicitud/generar-enlace`,
+        `solicitud-${identificador}.pdf`
       )
       notifications.update({
         id:       'pdf-solicitud',
@@ -78,7 +90,8 @@ export function usePdfViatico() {
     })
     try {
       await abrirPdf(
-        `/viaticos/${identificador}/informe/generar-enlace`
+        `/viaticos/${identificador}/informe/generar-enlace`,
+        `informe-${identificador}.pdf`
       )
       notifications.update({
         id:       'pdf-informe',
@@ -123,7 +136,13 @@ export function usePdfViatico() {
       const blobUrl = URL.createObjectURL(
         new Blob([blob], { type: 'application/pdf' })
       )
-      window.open(blobUrl, '_blank')
+      const link    = document.createElement('a')
+      link.href     = blobUrl
+      link.download = `comprobante-${identificador}.pdf`
+      link.target   = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
       notifications.update({
         id:       'pdf-comprobante',
