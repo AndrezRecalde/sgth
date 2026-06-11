@@ -1,48 +1,42 @@
-"use client";
+'use client'
 
-import { Group, Button, Stack, Alert, Text } from "@mantine/core";
+import { Group, Button, Stack, Alert, Text, Divider } from '@mantine/core'
 import {
-  IconCheck,
-  IconX,
-  IconBan,
-  IconPlane,
-  IconRoute,
-  IconFileInvoice,
-  IconDownload,
-  IconFileText,
-  IconReceipt,
-} from "@tabler/icons-react";
-import type { ViaticoConRelaciones } from "@/types/api";
+  IconCheck, IconX, IconBan, IconPlane,
+  IconRoute, IconFileInvoice, IconDownload,
+  IconFileText, IconReceipt,
+} from '@tabler/icons-react'
+import type { ViaticoConRelaciones } from '@/types/api'
 
 interface Props {
-  viatico: ViaticoConRelaciones;
-  estadoActual: string;
-  onAprobar: () => void;
-  onEntregar: () => void;
-  onComision: () => void;
-  onPendiente: () => void;
-  onContabilizar: () => void;
-  onCancelar: () => void;
-  onRechazar: () => void;
-  onSolicitud: () => void;
-  onInforme: () => void;
-  onComprobante: () => void;
+  viatico:        ViaticoConRelaciones
+  estadoActual:   string
+  onAprobar:      () => void
+  onEntregar:     () => void
+  onComision:     () => void
+  onPendiente:    () => void
+  onContabilizar: () => void
+  onCancelar:     () => void
+  onRechazar:     () => void
+  onSolicitud:    () => void
+  onInforme:      () => void
+  onComprobante:  () => void
   loadings: {
-    aprobar: boolean;
-    anticipo: boolean;
-    comision: boolean;
-    pendiente: boolean;
-    contabilizar: boolean;
-    cancelar: boolean;
-    rechazar: boolean;
-    solicitud: boolean;
-    informe: boolean;
-    comprobante: boolean;
-  };
+    aprobar:      boolean
+    anticipo:     boolean
+    comision:     boolean
+    pendiente:    boolean
+    contabilizar: boolean
+    cancelar:     boolean
+    rechazar:     boolean
+    solicitud:    boolean
+    informe:      boolean
+    comprobante:  boolean
+  }
 }
 
 export function ViaticoAcciones({
-  viatico,
+  viatico: d,
   estadoActual,
   onAprobar,
   onEntregar,
@@ -56,9 +50,11 @@ export function ViaticoAcciones({
   onComprobante,
   loadings,
 }: Props) {
+  const sinAnticipo = (d.modalidad_anticipo as string) === 'sin_anticipo'
+
   return (
     <Stack gap="sm">
-      {/* PDF Solicitud siempre visible */}
+      {/* PDFs — siempre visibles */}
       <Group>
         <Button
           size="xs"
@@ -71,9 +67,8 @@ export function ViaticoAcciones({
           Solicitud PDF
         </Button>
 
-        {["pendiente_liquidacion", "liquidado", "contabilizado"].includes(
-          estadoActual,
-        ) && (
+        {['pendiente_liquidacion', 'liquidado',
+          'contabilizado'].includes(estadoActual) && (
           <Button
             size="xs"
             variant="light"
@@ -86,7 +81,7 @@ export function ViaticoAcciones({
           </Button>
         )}
 
-        {estadoActual === "contabilizado" && (
+        {estadoActual === 'contabilizado' && (
           <Button
             size="xs"
             variant="light"
@@ -100,8 +95,10 @@ export function ViaticoAcciones({
         )}
       </Group>
 
+      <Divider />
+
       {/* Acciones por estado */}
-      {estadoActual === "solicitado" && (
+      {estadoActual === 'solicitado' && (
         <Group>
           <Button
             size="sm"
@@ -125,17 +122,19 @@ export function ViaticoAcciones({
         </Group>
       )}
 
-      {estadoActual === "aprobado" && (
+      {estadoActual === 'aprobado' && (
         <Group>
-          <Button
-            size="sm"
-            color="cyan"
-            leftSection={<IconCheck size={14} />}
-            loading={loadings.anticipo}
-            onClick={onEntregar}
-          >
-            Entregar anticipo
-          </Button>
+          {!sinAnticipo && (
+            <Button
+              size="sm"
+              color="cyan"
+              leftSection={<IconCheck size={14} />}
+              loading={loadings.anticipo}
+              onClick={onEntregar}
+            >
+              Entregar anticipo
+            </Button>
+          )}
           <Button
             size="sm"
             variant="light"
@@ -159,7 +158,7 @@ export function ViaticoAcciones({
         </Group>
       )}
 
-      {estadoActual === "con_anticipo" && (
+      {estadoActual === 'con_anticipo' && (
         <Group>
           <Button
             size="sm"
@@ -183,7 +182,7 @@ export function ViaticoAcciones({
         </Group>
       )}
 
-      {estadoActual === "en_comision" && (
+      {estadoActual === 'en_comision' && (
         <Group>
           <Button
             size="sm"
@@ -207,7 +206,7 @@ export function ViaticoAcciones({
         </Group>
       )}
 
-      {estadoActual === "liquidado" && (
+      {estadoActual === 'liquidado' && (
         <Group>
           <Button
             size="sm"
@@ -231,7 +230,7 @@ export function ViaticoAcciones({
         </Group>
       )}
 
-      {["cancelado", "rechazado"].includes(estadoActual) && (
+      {['cancelado', 'rechazado'].includes(estadoActual) && (
         <Alert color="red" variant="light">
           <Text size="xs">
             Este viático fue <strong>{estadoActual}</strong>.
@@ -239,5 +238,5 @@ export function ViaticoAcciones({
         </Alert>
       )}
     </Stack>
-  );
+  )
 }

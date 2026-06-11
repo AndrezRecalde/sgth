@@ -180,38 +180,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
         </Stepper>
       </Card>
 
-      {/* Acciones */}
-      <ViaticoAcciones
-        viatico={d}
-        estadoActual={estadoActual}
-        onAprobar={handleAprobar}
-        onEntregar={() => entregarAnticipo.mutate(d.id)}
-        onComision={() => marcarEnComision.mutate(d.id)}
-        onPendiente={() => marcarPendienteLiquidacion.mutate(d.id)}
-        onContabilizar={() => contabilizar.mutate(d.id)}
-        onCancelar={() => {
-          if (confirm("Cancelar esta solicitud?")) cancelar.mutate(d.id);
-        }}
-        onRechazar={() => {
-          if (confirm("Rechazar este viático?")) rechazar.mutate(d.id);
-        }}
-        onSolicitud={() => descargarSolicitud(d.codigo_viatico ?? d.id)}
-        onInforme={() => descargarInforme(d.codigo_viatico ?? d.id)}
-        onComprobante={() => descargarComprobante(d.codigo_viatico ?? d.id)}
-        loadings={{
-          aprobar: aprobar.isPending,
-          anticipo: entregarAnticipo.isPending,
-          comision: marcarEnComision.isPending,
-          pendiente: marcarPendienteLiquidacion.isPending,
-          contabilizar: contabilizar.isPending,
-          cancelar: cancelar.isPending,
-          rechazar: rechazar.isPending,
-          solicitud: loadingSolicitud,
-          informe: loadingInforme,
-          comprobante: loadingComprobante,
-        }}
-      />
-
       {/* Grid de secciones */}
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
@@ -219,6 +187,14 @@ export function ViaticoDetallePage({ identificador }: Props) {
             viatico={d}
             puedeEditar={puedeEditarDatos}
             onEditar={abrirEdit}
+          />
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <ViaticoItinerarioCard
+            viatico={d}
+            puedeEditar={puedeEditarTramos}
+            onGestionar={abrirTramos}
           />
         </Grid.Col>
 
@@ -234,14 +210,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
           />
         </Grid.Col>
 
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <ViaticoItinerarioCard
-            viatico={d}
-            puedeEditar={puedeEditarTramos}
-            onGestionar={abrirTramos}
-          />
-        </Grid.Col>
-
         {["pendiente_liquidacion", "liquidado", "contabilizado"].includes(
           estadoActual,
         ) && (
@@ -254,6 +222,50 @@ export function ViaticoDetallePage({ identificador }: Props) {
           </Grid.Col>
         )}
       </Grid>
+
+      {/* Acciones — al final de la página */}
+      <Card withBorder radius="md" p="md">
+        <ViaticoAcciones
+          viatico={d}
+          estadoActual={estadoActual}
+          onAprobar={handleAprobar}
+          onEntregar={() => entregarAnticipo.mutate(d.id)}
+          onComision={() => marcarEnComision.mutate(d.id)}
+          onPendiente={() =>
+            marcarPendienteLiquidacion.mutate(d.id)
+          }
+          onContabilizar={() => contabilizar.mutate(d.id)}
+          onCancelar={() => {
+            if (confirm('Cancelar esta solicitud?'))
+              cancelar.mutate(d.id)
+          }}
+          onRechazar={() => {
+            if (confirm('Rechazar este viático?'))
+              rechazar.mutate(d.id)
+          }}
+          onSolicitud={() =>
+            descargarSolicitud(d.codigo_viatico ?? d.id)
+          }
+          onInforme={() =>
+            descargarInforme(d.codigo_viatico ?? d.id)
+          }
+          onComprobante={() =>
+            descargarComprobante(d.codigo_viatico ?? d.id)
+          }
+          loadings={{
+            aprobar:      aprobar.isPending,
+            anticipo:     entregarAnticipo.isPending,
+            comision:     marcarEnComision.isPending,
+            pendiente:    marcarPendienteLiquidacion.isPending,
+            contabilizar: contabilizar.isPending,
+            cancelar:     cancelar.isPending,
+            rechazar:     rechazar.isPending,
+            solicitud:    loadingSolicitud,
+            informe:      loadingInforme,
+            comprobante:  loadingComprobante,
+          }}
+        />
+      </Card>
 
       {/* Modales */}
       {editModalAbierto && (

@@ -23,21 +23,18 @@ interface Props {
 const OPCIONES = [
   {
     value: "destino",
-    emoji: "D",
     label: "DESTINO",
     description: "Realizas actividades de la comisión en esta ciudad.",
     color: "teal",
   },
   {
     value: "escala",
-    emoji: "P",
     label: "PARADA / ESCALA",
     description: "Solo pasas por esta ciudad, no realizas actividades.",
     color: "orange",
   },
   {
     value: "regreso",
-    emoji: "R",
     label: "REGRESO",
     description: "Último tramo de vuelta a tu ciudad base.",
     color: "red",
@@ -100,14 +97,7 @@ export function TramoTipoSelector({
                         transition: "all 0.15s ease",
                       }}
                     >
-                      <Group justify="space-between" mb={4}>
-                        <Text
-                          size="sm"
-                          fw={700}
-                          c={selected ? opt.color : "dark"}
-                        >
-                          {opt.emoji}
-                        </Text>
+                      <Group justify="flex-end" mb={4}>
                         <Box
                           style={{
                             width: 18,

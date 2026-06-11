@@ -67,7 +67,7 @@ export function TramoLugarSelect({
       {tipo === "nacional" ? (
         <>
         <Grid>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
             <Controller
               name={provKey as keyof TramoFormData}
               control={control}
@@ -91,7 +91,7 @@ export function TramoLugarSelect({
               )}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
             <Controller
               name={cantonKey as keyof TramoFormData}
               control={control}
@@ -125,25 +125,28 @@ export function TramoLugarSelect({
               )}
             />
           </Grid.Col>
-        </Grid>
-        <Controller
-          name={ciudadKey as keyof TramoFormData}
-          control={control}
-          render={({ field }) => (
-            <TextInput
-              label="Ciudad"
-              placeholder="Ej: Esmeraldas, Quito..."
-              description="Se completa automáticamente al seleccionar el cantón"
-              {...contained}
-              value={(field.value as string) ?? ''}
-              onChange={(e) => field.onChange(e.currentTarget.value)}
-              error={
-                (errors as Record<string, { message?: string }>)
-                  [ciudadKey]?.message
-              }
+          <Grid.Col span={{ base: 12, sm: 4 }}>
+            <Controller
+              name={ciudadKey as keyof TramoFormData}
+              control={control}
+              render={({ field }) => (
+                <TextInput
+                  label="Ciudad"
+                  placeholder="Ej: Esmeraldas"
+                  {...contained}
+                  value={(field.value as string) ?? ''}
+                  onChange={(e) =>
+                    field.onChange(e.currentTarget.value)
+                  }
+                  error={
+                    (errors as Record<string, { message?: string }>)
+                      [ciudadKey]?.message
+                  }
+                />
+              )}
             />
-          )}
-        />
+          </Grid.Col>
+        </Grid>
         </>
       ) : (
         <Grid>

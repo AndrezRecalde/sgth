@@ -115,14 +115,14 @@ export function ViaticoInfoCard({ viatico: d, puedeEditar, onEditar }: Props) {
             {Number(d.total_dias ?? 0).toFixed(1)} días
           </Badge>
         </Group>
-        <Group justify="space-between">
+        <Stack gap={2}>
           <Text size="xs" c="dimmed">
             Justificación
           </Text>
-          <Text size="sm" ta="right" maw={200} lineClamp={3}>
+          <Text size="sm" lineClamp={4}>
             {d.justificacion ?? "—"}
           </Text>
-        </Group>
+        </Stack>
         {d.zona === "exterior" && d.pais_destino && (
           <>
             <Divider />
