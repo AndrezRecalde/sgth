@@ -31,12 +31,10 @@ export const tramoSchema = z.object({
   destino_canton_id:     z.number().optional().nullable(),
   destino_pais:          z.string().optional().nullable(),
   destino_ciudad:        z.string().min(1, 'Requerido'),
-  catalogo_transporte_id: z.number({
-    error: 'Seleccione el tipo de transporte',
-  }),
-  empresa_transporte_id: z.number({
-    error: 'Seleccione la empresa',
-  }),
+  catalogo_transporte_id: z.number()
+    .min(1, 'Seleccione el tipo de transporte'),
+  empresa_transporte_id: z.number()
+    .min(1, 'Seleccione la empresa de transporte'),
   datetime_salida:  z.string().min(1, 'Requerido'),
   datetime_llegada: z.string().min(1, 'Requerido'),
   tipo_tramo: z.enum([

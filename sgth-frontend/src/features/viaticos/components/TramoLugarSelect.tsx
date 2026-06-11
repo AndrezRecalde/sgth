@@ -1,7 +1,7 @@
 "use client";
 
 import { Grid, Select, TextInput } from "@mantine/core";
-import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import { Controller, type Control, type FieldErrors, type UseFormSetValue } from "react-hook-form";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import type { TramoFormData } from "../schemas/viatico.schema";
 
@@ -18,6 +18,7 @@ interface Props {
   paises: Opcion[];
   onTipoChange: (v: string) => void;
   onProvinciaChange: (v: string | null) => void;
+  setValue: UseFormSetValue<TramoFormData>;
 }
 
 export function TramoLugarSelect({
@@ -31,6 +32,7 @@ export function TramoLugarSelect({
   paises,
   onTipoChange,
   onProvinciaChange,
+  setValue,
 }: Props) {
   const contained = useContainedInput();
 
@@ -101,7 +103,19 @@ export function TramoLugarSelect({
                   disabled={cantonOptions.length === 0}
                   {...contained}
                   value={field.value ? String(field.value) : null}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
+                  onChange={(v) => {
+                    field.onChange(v ? Number(v) : null)
+                    // Auto-rellenar ciudad con el nombre del cantón
+                    const canton = cantonOptions.find(
+                      c => c.value === v
+                    )
+                    if (canton) {
+                      setValue(
+                        ciudadKey as keyof TramoFormData,
+                        canton.label
+                      )
+                    }
+                  }}
                   error={
                     (errors as Record<string, { message?: string }>)[cantonKey]
                       ?.message
