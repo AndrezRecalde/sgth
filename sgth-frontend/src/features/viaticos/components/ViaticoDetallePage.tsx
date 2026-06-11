@@ -12,6 +12,7 @@ import {
   Skeleton,
   Badge,
   Modal,
+  ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
@@ -148,15 +149,10 @@ export function ViaticoDetallePage({ identificador }: Props) {
       {/* Header */}
       <Group justify="space-between">
         <Group gap="xs">
-          <Button
-            size="xs"
-            variant="subtle"
-            leftSection={<IconArrowLeft size={14} />}
-            onClick={() => router.back()}
-          >
-            Volver
-          </Button>
-          <div>
+          <ActionIcon size="md" variant="subtle" onClick={() => router.back()}>
+            <IconArrowLeft size={14} />
+          </ActionIcon>
+          <Group>
             <Text fw={700} size="lg">
               {d.codigo_viatico ?? "—"}
             </Text>
@@ -167,7 +163,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             >
               {ESTADO_LABELS[estadoActual] ?? estadoActual}
             </Badge>
-          </div>
+          </Group>
         </Group>
       </Group>
 
@@ -286,41 +282,48 @@ export function ViaticoDetallePage({ identificador }: Props) {
       )}
 
       {/* Modal Tramos */}
-      <Modal
-        opened={tramosAbierto}
-        onClose={cerrarTramos}
-        title="Gestionar itinerario"
-        size="xl"
-        radius="xl"
-      >
-        <Stack gap="md">
-          <TramosList viaticoId={d.id} puedeEditar={true} />
-          {!mostrarTramoForm ? (
-            <Button
-              variant="light"
-              color="blue"
-              onClick={() => setMostrarTramoForm(true)}
-            >
-              Agregar tramo
-            </Button>
-          ) : (
-            <Card withBorder radius="md" p="md">
-              <Text size="sm" fw={600} mb="sm">
-                Nuevo tramo
-              </Text>
-              <TramoForm
-                viaticoId={d.id}
-                viatico={d}
-                tramosExistentes={
-                  (tramosData as import("@/types/api").TramoViatico[]).length
-                }
-                onSuccess={() => setMostrarTramoForm(false)}
-                onCancel={() => setMostrarTramoForm(false)}
-              />
-            </Card>
-          )}
-        </Stack>
-      </Modal>
+      {tramosAbierto && (
+        <Modal
+          opened={tramosAbierto}
+          onClose={() => {
+            setMostrarTramoForm(false)
+            cerrarTramos()
+          }}
+          title="Gestionar itinerario"
+          size="xl"
+          radius="xl"
+        >
+          <Stack gap="md">
+            <TramosList viaticoId={d.id} puedeEditar={true} />
+            {!mostrarTramoForm ? (
+              <Button
+                variant="light"
+                color="blue"
+                onClick={() => setMostrarTramoForm(true)}
+              >
+                Agregar tramo
+              </Button>
+            ) : (
+              <Card withBorder radius="md" p="md">
+                <Text size="sm" fw={600} mb="sm">
+                  Nuevo tramo
+                </Text>
+                <TramoForm
+                  viaticoId={d.id}
+                  viatico={d as unknown as import('@/types/api').Viatico}
+                  tramosExistentes={
+                    (tramosData as import('@/types/api').TramoViatico[]).length
+                  }
+                  onSuccess={() => {
+                    setMostrarTramoForm(false)
+                  }}
+                  onCancel={() => setMostrarTramoForm(false)}
+                />
+              </Card>
+            )}
+          </Stack>
+        </Modal>
+      )}
     </Stack>
   );
 }
