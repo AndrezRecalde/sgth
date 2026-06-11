@@ -54,7 +54,7 @@ type FormData = z.infer<typeof schema>
 
 const toDate = (v?: string | null): Date | null => {
   if (!v) return null
-  const [y, m, d] = v.split('-').map(Number)
+  const [y, m, d] = v.slice(0, 10).split('-').map(Number)
   return new Date(y, m - 1, d)
 }
 

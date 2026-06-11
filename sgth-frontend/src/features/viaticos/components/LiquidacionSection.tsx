@@ -35,11 +35,6 @@ interface Props {
   onSuccess: () => void;
 }
 
-function fmtMonto(v?: number | string | null): string {
-  if (v == null) return "—";
-  return `$${Number(v).toFixed(2)}`;
-}
-
 export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const { data: categoriasData = [] } = useCategoriasFactura();
   const categoriaOptions = (categoriasData as CategoriaFactura[]).map((c) => ({
