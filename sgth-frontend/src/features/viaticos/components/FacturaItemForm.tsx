@@ -96,7 +96,7 @@ export function FacturaItemForm({
         )}
       </Group>
 
-      <Grid gutter="sm">
+      <Grid>
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <Controller
             name={`facturas.${index}.categoria_factura_id`}
