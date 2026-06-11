@@ -479,6 +479,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
              'rechazar']
         )->name('viaticos.rechazar');
 
+        Route::post('{id}/devolver-correccion',
+            [\App\Http\Controllers\Viatico\ViaticoController::class,
+             'devolverCorreccion']
+        )->name('viaticos.devolver-correccion');
+
         Route::post('{id}/marcar-pendiente-liquidacion',
             [\App\Http\Controllers\Viatico\ViaticoController::class,
              'marcarPendienteLiquidacion']);

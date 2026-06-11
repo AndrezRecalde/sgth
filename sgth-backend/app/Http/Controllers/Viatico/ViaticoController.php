@@ -320,6 +320,20 @@ class ViaticoController extends Controller
         );
     }
 
+    public function devolverCorreccion(
+        int $id,
+        \Illuminate\Http\Request $request
+    ): JsonResponse {
+        $viatico = $this->viaticoService->devolverCorreccion(
+            $id,
+            $request->user()->id
+        );
+        return ApiResponse::ok(
+            $viatico,
+            'Viático devuelto a corrección correctamente.'
+        );
+    }
+
     public function marcarEnComision(int $id): JsonResponse
     {
         $viatico = \App\Models\Viatico\Viatico::findOrFail($id);

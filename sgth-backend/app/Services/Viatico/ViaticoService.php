@@ -407,6 +407,27 @@ final class ViaticoService implements ViaticoServiceInterface
         return $viatico->fresh();
     }
 
+    public function devolverCorreccion(
+        int $viaticoId,
+        int $userId
+    ): Viatico {
+        $viatico = Viatico::findOrFail($viaticoId);
+
+        if ($viatico->estado !== EstadoViatico::LIQUIDADO) {
+            throw new ReglaNegocioException(
+                'Solo se puede devolver a corrección
+                 un viático en estado liquidado.'
+            );
+        }
+
+        $viatico->update([
+            'estado'     => EstadoViatico::PENDIENTE_LIQUIDACION,
+            'updated_by' => $userId,
+        ]);
+
+        return $viatico->fresh();
+    }
+
     public function verificarBloqueo(int $servidorId): bool
     {
         $viaticosPendientes = Viatico::where('servidor_id', $servidorId)
