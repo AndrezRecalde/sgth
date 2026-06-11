@@ -1,22 +1,22 @@
-'use client'
+"use client";
 
-import { Card, Group, Text, Badge, ThemeIcon } from '@mantine/core'
-import { IconUser } from '@tabler/icons-react'
+import { Card, Group, Text, Badge, ThemeIcon } from "@mantine/core";
+import { IconUser } from "@tabler/icons-react";
 
 interface Servidor {
-  nombre?:          string | null
-  segundo_nombre?:  string | null
-  apellido?:        string | null
-  segundo_apellido?: string | null
+  nombre?: string | null;
+  segundo_nombre?: string | null;
+  apellido?: string | null;
+  segundo_apellido?: string | null;
   puesto?: {
-    cargo?:                  { nombre?: string } | null
-    unidad_administrativa?:  { nombre?: string } | null
-  } | null
+    cargo?: { nombre?: string } | null;
+    unidad_administrativa?: { nombre?: string } | null;
+  } | null;
 }
 
 interface Props {
-  servidor:       Servidor
-  nombreDisplay?: string
+  servidor: Servidor;
+  nombreDisplay?: string;
 }
 
 export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
@@ -25,7 +25,9 @@ export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
     servidor.segundo_nombre,
     servidor.apellido,
     servidor.segundo_apellido,
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Card withBorder radius="md" p="sm" bg="blue.0">
@@ -38,10 +40,10 @@ export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
             {nombreCompleto || nombreDisplay}
           </Text>
           <Text size="xs" c="dimmed">
-            {servidor.puesto?.cargo?.nombre ?? 'Sin cargo asignado'}
+            {servidor.puesto?.cargo?.nombre ?? "Sin cargo asignado"}
           </Text>
           <Text size="xs" c="dimmed">
-            {servidor.puesto?.unidad_administrativa?.nombre ?? ''}
+            {servidor.puesto?.unidad_administrativa?.nombre ?? ""}
           </Text>
         </div>
         <Badge size="xs" color="blue" variant="light" ml="auto">
@@ -49,5 +51,5 @@ export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
         </Badge>
       </Group>
     </Card>
-  )
+  );
 }

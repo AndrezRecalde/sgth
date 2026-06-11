@@ -44,7 +44,7 @@ import {
   ESTADO_COLORS,
   ESTADO_LABELS,
   PASO_STEPPER,
-} from '../constants/viatico.constants';
+} from "../constants/viatico.constants";
 
 function ViaticoDetalleSkeleton() {
   return (

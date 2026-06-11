@@ -32,9 +32,7 @@ function fmt(f?: string | null): string {
   });
 }
 
-import {
-  ZONA_LABELS,
-} from '../constants/viatico.constants';
+import { ZONA_LABELS } from "../constants/viatico.constants";
 
 export function ViaticoInfoCard({ viatico: d, puedeEditar, onEditar }: Props) {
   const servidor = d.servidor;

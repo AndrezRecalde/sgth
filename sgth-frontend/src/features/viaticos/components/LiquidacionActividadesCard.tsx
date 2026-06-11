@@ -1,19 +1,28 @@
-'use client'
+"use client";
 
 import {
-  Card, Group, Text, Badge, Button,
-  Divider, Stack, Alert, ThemeIcon,
-} from '@mantine/core'
+  Card,
+  Group,
+  Text,
+  Badge,
+  Button,
+  Divider,
+  Stack,
+  Alert,
+  ThemeIcon,
+} from "@mantine/core";
 import {
-  IconClipboardList, IconAlertCircle,
-  IconPencil, IconCircleCheck,
-} from '@tabler/icons-react'
-import type { ActividadData } from './ActividadesModal'
+  IconClipboardList,
+  IconAlertCircle,
+  IconPencil,
+  IconCircleCheck,
+} from "@tabler/icons-react";
+import type { ActividadData } from "./ActividadesModal";
 
 interface Props {
-  actividades: ActividadData[]
-  onRegistrar: () => void
-  onEditar:    () => void
+  actividades: ActividadData[];
+  onRegistrar: () => void;
+  onEditar: () => void;
 }
 
 export function LiquidacionActividadesCard({
@@ -28,12 +37,14 @@ export function LiquidacionActividadesCard({
           <ThemeIcon color="blue" variant="light" size="sm">
             <IconClipboardList size={14} />
           </ThemeIcon>
-          <Text fw={600} size="sm">Informe de actividades</Text>
+          <Text fw={600} size="sm">
+            Informe de actividades
+          </Text>
         </Group>
         {actividades.length > 0 && (
           <Badge color="blue" variant="light" size="sm">
-            {actividades.length}{' '}
-            {actividades.length === 1 ? 'actividad' : 'actividades'}
+            {actividades.length}{" "}
+            {actividades.length === 1 ? "actividad" : "actividades"}
           </Badge>
         )}
       </Group>
@@ -73,13 +84,14 @@ export function LiquidacionActividadesCard({
                 />
                 <Text size="xs" fw={500}>
                   {a.fecha
-                    ? new Date(a.fecha).toLocaleDateString('es-EC', {
-                        timeZone: 'UTC',
-                        day:      '2-digit',
-                        month:    '2-digit',
+                    ? new Date(a.fecha).toLocaleDateString("es-EC", {
+                        timeZone: "UTC",
+                        day: "2-digit",
+                        month: "2-digit",
                       })
-                    : '—'}
-                  {' — '}{a.lugar}
+                    : "—"}
+                  {" — "}
+                  {a.lugar}
                 </Text>
               </Group>
               {a.descripcion && (
@@ -101,5 +113,5 @@ export function LiquidacionActividadesCard({
         </Stack>
       )}
     </Card>
-  )
+  );
 }

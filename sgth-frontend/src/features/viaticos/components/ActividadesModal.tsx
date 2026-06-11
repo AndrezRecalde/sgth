@@ -1,33 +1,22 @@
 'use client'
 
-import { useEffect } from 'react'
-
+import { useEffect }           from 'react'
 import {
-  Modal, Stack, Card, Text, Group,
-  Button, Grid, Textarea, ActionIcon,
-  Divider, Badge, Alert, ThemeIcon, TextInput,
+  Modal, Stack, Button, Group,
+  Alert, Text, ThemeIcon, Divider,
 } from '@mantine/core'
-import { DatePickerInput, TimeInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
 import {
-  IconPlus, IconTrash, IconClipboardList,
+  IconPlus, IconClipboardList,
   IconAlertCircle, IconCheck,
 } from '@tabler/icons-react'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import type { Viatico } from '@/types/api'
-import { useViaticoMutations } from '../hooks/useViaticoMutations'
-
-interface Props {
-  opened:    boolean
-  onClose:   () => void
-  viatico:   Viatico
-  onGuardar?: (actividades: ActividadData[]) => void
-  valorInicial?: ActividadData[]
-}
+import { useForm, useFieldArray } from 'react-hook-form'
+import { zodResolver }           from '@hookform/resolvers/zod'
+import { z }                     from 'zod/v4'
+import { useMobileBreakpoint }   from '@/hooks/useMobileBreakpoint'
+import { useViaticoMutations }   from '../hooks/useViaticoMutations'
+import { ActividadItemForm }     from './ActividadItemForm'
+import type { Viatico }          from '@/types/api'
 
 export interface ActividadData {
   fecha:       string
@@ -52,38 +41,37 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.slice(0, 10).split('-').map(Number)
-  return new Date(y, m - 1, d)
+const ACTIVIDAD_VACIA: ActividadData = {
+  fecha:       '',
+  hora_inicio: '08:00',
+  hora_fin:    '17:00',
+  descripcion: '',
+  lugar:       '',
 }
 
-const safeFormatDate = (v: Date | string | null | undefined): string => {
-  if (!v) return ''
-  const d = new Date(v)
-  if (isNaN(d.getTime())) return ''
-  
-  if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) {
-    return d.toISOString().slice(0, 10)
-  }
-  
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+interface Props {
+  opened:         boolean
+  onClose:        () => void
+  viatico:        Viatico
+  onGuardar?:     (actividades: ActividadData[]) => void
+  valorInicial?:  ActividadData[]
+}
+
+function formatFechaRango(f?: string | null): string {
+  if (!f) return '—'
+  return new Date(f).toLocaleDateString('es-EC', {
+    timeZone: 'UTC',
+    day: '2-digit', month: 'long', year: 'numeric',
+  })
 }
 
 export function ActividadesModal({
-  opened,
-  onClose,
-  viatico,
-  onGuardar,
-  valorInicial = [],
+  opened, onClose, viatico,
+  onGuardar, valorInicial = [],
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
-  const contained    = useContainedInput()
+  const { isMobile }          = useMobileBreakpoint()
+  const { guardarActividades } = useViaticoMutations()
 
-  // Rango de fechas permitido: salida → llegada del viático
   const minFecha = viatico.datetime_salida
     ? (() => {
         const d = new Date(viatico.datetime_salida as string)
@@ -91,6 +79,7 @@ export function ActividadesModal({
         return d
       })()
     : undefined
+
   const maxFecha = viatico.datetime_llegada
     ? (() => {
         const d = new Date(viatico.datetime_llegada as string)
@@ -100,48 +89,28 @@ export function ActividadesModal({
     : undefined
 
   const {
-    control,
-    handleSubmit,
-    register,
-    reset,
+    control, handleSubmit, register, reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       actividades: valorInicial.length > 0
-        ? valorInicial
-        : [{
-            fecha:       '',
-            hora_inicio: '08:00',
-            hora_fin:    '17:00',
-            descripcion: '',
-            lugar:       '',
-          }],
+        ? valorInicial : [ACTIVIDAD_VACIA],
     },
   })
 
   const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'actividades',
+    control, name: 'actividades',
   })
 
   useEffect(() => {
     if (opened) {
       reset({
         actividades: valorInicial.length > 0
-          ? valorInicial
-          : [{
-              fecha:       '',
-              hora_inicio: '08:00',
-              hora_fin:    '17:00',
-              descripcion: '',
-              lugar:       '',
-            }],
+          ? valorInicial : [ACTIVIDAD_VACIA],
       })
     }
   }, [opened, valorInicial, reset])
-
-  const { guardarActividades } = useViaticoMutations()
 
   const onSubmit = async (values: FormData) => {
     await guardarActividades.mutateAsync({
@@ -150,14 +119,6 @@ export function ActividadesModal({
     })
     onGuardar?.(values.actividades)
     onClose()
-  }
-
-  const formatFechaRango = (f?: string | null) => {
-    if (!f) return '—'
-    return new Date(f).toLocaleDateString('es-EC', {
-      timeZone: 'UTC',
-      day: '2-digit', month: 'long', year: 'numeric',
-    })
   }
 
   return (
@@ -179,157 +140,37 @@ export function ActividadesModal({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
-
-          {/* Alerta de rango de fechas */}
           <Alert
             icon={<IconAlertCircle size={14} />}
             color="blue"
             variant="light"
           >
-            <Text size="xs" fw={500}>
-              Período del viático
-            </Text>
+            <Text size="xs" fw={500}>Período del viático</Text>
             <Text size="xs" mt={2}>
               Solo puede registrar actividades entre el{' '}
               <strong>
-                {formatFechaRango(
-                  viatico.datetime_salida as string
-                )}
+                {formatFechaRango(viatico.datetime_salida as string)}
               </strong>
               {' '}y el{' '}
               <strong>
-                {formatFechaRango(
-                  viatico.datetime_llegada as string
-                )}
+                {formatFechaRango(viatico.datetime_llegada as string)}
               </strong>.
-              Los días fuera de este rango no estarán disponibles.
             </Text>
           </Alert>
 
-          {/* Lista de actividades */}
           <Stack gap="sm">
             {fields.map((field, i) => (
-              <Card
+              <ActividadItemForm
                 key={field.id}
-                withBorder
-                radius="md"
-                p="sm"
-              >
-                <Group justify="space-between" mb="xs">
-                  <Group gap="xs">
-                    <Badge
-                      size="sm"
-                      color="blue"
-                      variant="light"
-                      circle
-                    >
-                      {i + 1}
-                    </Badge>
-                    <Text size="sm" fw={600}>
-                      Actividad {i + 1}
-                    </Text>
-                  </Group>
-                  {fields.length > 1 && (
-                    <ActionIcon
-                      size="sm"
-                      color="red"
-                      variant="subtle"
-                      onClick={() => remove(i)}
-                    >
-                      <IconTrash size={13} />
-                    </ActionIcon>
-                  )}
-                </Group>
-
-                <Grid>
-                  <Grid.Col span={{ base: 12, sm: 4 }}>
-                    <Controller
-                      name={`actividades.${i}.fecha`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <DatePickerInput
-                          label="Fecha de la actividad"
-                          placeholder="Seleccionar"
-                          valueFormat="DD/MM/YYYY"
-                          minDate={minFecha}
-                          maxDate={maxFecha}
-                          popoverProps={{ withinPortal: true }}
-                          {...contained}
-                          value={toDate(f.value)}
-                          onChange={(v) =>
-                            f.onChange(safeFormatDate(v))
-                          }
-                          error={
-                            errors.actividades?.[i]
-                              ?.fecha?.message
-                          }
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 6, sm: 4 }}>
-                    <TimeInput
-                      label="Hora inicio"
-                      {...contained}
-                      {...register(
-                        `actividades.${i}.hora_inicio`
-                      )}
-                      error={
-                        errors.actividades?.[i]
-                          ?.hora_inicio?.message
-                      }
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 6, sm: 4 }}>
-                    <TimeInput
-                      label="Hora fin"
-                      {...contained}
-                      {...register(
-                        `actividades.${i}.hora_fin`
-                      )}
-                      error={
-                        errors.actividades?.[i]
-                          ?.hora_fin?.message
-                      }
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6 }}>
-                    <Controller
-                      name={`actividades.${i}.lugar`}
-                      control={control}
-                      render={({ field: f }) => (
-                        <TextInput
-                          label="Lugar"
-                          placeholder="Ej: Ministerio de Trabajo — Quito"
-                          {...contained}
-                          value={f.value}
-                          onChange={(e) =>
-                            f.onChange(e.currentTarget.value)
-                          }
-                          error={
-                            errors.actividades?.[i]
-                              ?.lugar?.message
-                          }
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                </Grid>
-
-                <Textarea
-                  label="Descripción de la actividad"
-                  placeholder="Describa las actividades realizadas en este día"
-                  autosize
-                  minRows={2}
-                  maxRows={4}
-                  mt="xs"
-                  {...contained}
-                  {...register(`actividades.${i}.descripcion`)}
-                  error={
-                    errors.actividades?.[i]?.descripcion?.message
-                  }
-                />
-              </Card>
+                index={i}
+                control={control}
+                register={register}
+                errors={errors}
+                minFecha={minFecha}
+                maxFecha={maxFecha}
+                onEliminar={() => remove(i)}
+                puedeEliminar={fields.length > 1}
+              />
             ))}
           </Stack>
 
@@ -338,13 +179,7 @@ export function ActividadesModal({
             color="blue"
             size="sm"
             leftSection={<IconPlus size={14} />}
-            onClick={() => append({
-              fecha:       '',
-              hora_inicio: '08:00',
-              hora_fin:    '17:00',
-              descripcion: '',
-              lugar:       '',
-            })}
+            onClick={() => append({ ...ACTIVIDAD_VACIA })}
           >
             Agregar otro día de actividades
           </Button>

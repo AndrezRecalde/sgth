@@ -1,82 +1,94 @@
-'use client'
+"use client";
 
 import {
-  Card, Grid, Select, TextInput,
-  NumberInput, ActionIcon, Group,
-  Text, Alert,
-} from '@mantine/core'
-import { DatePickerInput } from '@mantine/dates'
-import { IconTrash, IconInfoCircle } from '@tabler/icons-react'
+  Card,
+  Grid,
+  Select,
+  TextInput,
+  NumberInput,
+  ActionIcon,
+  Group,
+  Text,
+} from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import { IconTrash } from "@tabler/icons-react";
 import {
-  Controller, useWatch,
-  type Control, type UseFormRegister,
+  Controller,
+  useWatch,
+  type Control,
+  type UseFormRegister,
   type FieldErrors,
-} from 'react-hook-form'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import type { CategoriaFactura } from '@/types/api'
+} from "react-hook-form";
+import { useContainedInput } from "@/hooks/useContainedInput";
 
 type FacturaFormData = {
   facturas: {
-    categoria_factura_id: number
-    fecha_factura?:       string | null
-    tipo_comprobante:     'factura' | 'ticket' | 'recibo' | 'otro'
-    numero_factura?:      string | null
-    numero_ticket?:       string | null
-    ruc_proveedor?:       string | null
-    nombre_proveedor:     string
-    detalle?:             string | null
-    monto:                number
-  }[]
-}
+    categoria_factura_id: number;
+    fecha_factura?: string | null;
+    tipo_comprobante: "factura" | "ticket" | "recibo" | "otro";
+    numero_factura?: string | null;
+    numero_ticket?: string | null;
+    ruc_proveedor?: string | null;
+    nombre_proveedor: string;
+    detalle?: string | null;
+    monto: number;
+  }[];
+};
 
-type Opcion = { value: string; label: string }
-type GrupoOpcion = { group: string; items: Opcion[] }
+type Opcion = { value: string; label: string };
+type GrupoOpcion = { group: string; items: Opcion[] };
 
 interface Props {
-  index:             number
-  control:           Control<FacturaFormData>
-  register:          UseFormRegister<FacturaFormData>
-  errors:            FieldErrors<FacturaFormData>
-  categoriaOptions:  (Opcion | GrupoOpcion)[]
-  minFecha?:         Date
-  maxFecha?:         Date
-  onEliminar:        () => void
-  puedeEliminar:     boolean
+  index: number;
+  control: Control<FacturaFormData>;
+  register: UseFormRegister<FacturaFormData>;
+  errors: FieldErrors<FacturaFormData>;
+  categoriaOptions: (Opcion | GrupoOpcion)[];
+  minFecha?: Date;
+  maxFecha?: Date;
+  onEliminar: () => void;
+  puedeEliminar: boolean;
 }
 
 const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.slice(0, 10).split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
+  if (!v) return null;
+  const [y, m, d] = v.slice(0, 10).split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
 
 const safeFormatDate = (v: Date | string | null | undefined): string => {
-  if (!v) return ''
-  const d = new Date(v)
-  if (isNaN(d.getTime())) return ''
+  if (!v) return "";
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return "";
   if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) {
-    return d.toISOString().slice(0, 10)
+    return d.toISOString().slice(0, 10);
   }
   return [
     d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+};
 
 export function FacturaItemForm({
-  index, control, register, errors,
-  categoriaOptions, minFecha, maxFecha,
-  onEliminar, puedeEliminar,
+  index,
+  control,
+  register,
+  errors,
+  categoriaOptions,
+  minFecha,
+  maxFecha,
+  onEliminar,
+  puedeEliminar,
 }: Props) {
-  const contained = useContainedInput()
+  const contained = useContainedInput();
 
   const tipoComp = useWatch({
     control,
     name: `facturas.${index}.tipo_comprobante`,
-  })
+  });
 
-  const errFactura = errors.facturas?.[index]
+  const errFactura = errors.facturas?.[index];
 
   return (
     <Card withBorder radius="md" p="sm">
@@ -123,16 +135,14 @@ export function FacturaItemForm({
               <Select
                 label="Tipo de comprobante"
                 data={[
-                  { value: 'factura', label: 'Factura' },
-                  { value: 'ticket',  label: 'Ticket' },
-                  { value: 'recibo',  label: 'Recibo' },
-                  { value: 'otro',    label: 'Otro' },
+                  { value: "factura", label: "Factura" },
+                  { value: "ticket", label: "Ticket" },
+                  { value: "recibo", label: "Recibo" },
+                  { value: "otro", label: "Otro" },
                 ]}
                 {...contained}
                 value={field.value}
-                onChange={(v) =>
-                  field.onChange(v ?? 'factura')
-                }
+                onChange={(v) => field.onChange(v ?? "factura")}
                 error={errFactura?.tipo_comprobante?.message}
               />
             )}
@@ -142,12 +152,12 @@ export function FacturaItemForm({
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <TextInput
             label={
-              ['factura', 'recibo'].includes(tipoComp)
-                ? 'RUC del proveedor *'
-                : 'RUC / Identificación (opcional)'
+              ["factura", "recibo"].includes(tipoComp)
+                ? "RUC del proveedor *"
+                : "RUC / Identificación (opcional)"
             }
             placeholder="0000000000001"
-            required={['factura', 'recibo'].includes(tipoComp)}
+            required={["factura", "recibo"].includes(tipoComp)}
             {...contained}
             {...register(`facturas.${index}.ruc_proveedor`)}
             error={errFactura?.ruc_proveedor?.message}
@@ -164,7 +174,7 @@ export function FacturaItemForm({
           />
         </Grid.Col>
 
-        {tipoComp === 'ticket' ? (
+        {tipoComp === "ticket" ? (
           <Grid.Col span={{ base: 12, sm: 6 }}>
             <TextInput
               label="Número de ticket"
@@ -198,9 +208,7 @@ export function FacturaItemForm({
                 minDate={minFecha}
                 maxDate={maxFecha}
                 value={toDate(field.value)}
-                onChange={(v) =>
-                  field.onChange(v ? safeFormatDate(v) : null)
-                }
+                onChange={(v) => field.onChange(v ? safeFormatDate(v) : null)}
                 error={errFactura?.fecha_factura?.message}
               />
             )}
@@ -219,9 +227,7 @@ export function FacturaItemForm({
                 min={0.01}
                 {...contained}
                 value={field.value}
-                onChange={(v) =>
-                  field.onChange(typeof v === 'number' ? v : 0)
-                }
+                onChange={(v) => field.onChange(typeof v === "number" ? v : 0)}
                 error={errFactura?.monto?.message}
               />
             )}
@@ -238,5 +244,5 @@ export function FacturaItemForm({
         </Grid.Col>
       </Grid>
     </Card>
-  )
+  );
 }

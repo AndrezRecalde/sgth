@@ -1,24 +1,23 @@
-'use client'
+"use client";
 
-import { Grid, Select, TextInput } from '@mantine/core'
-import { Controller, type Control,
-         type FieldErrors } from 'react-hook-form'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import type { TramoFormData } from '../schemas/viatico.schema'
+import { Grid, Select, TextInput } from "@mantine/core";
+import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import type { TramoFormData } from "../schemas/viatico.schema";
 
-type Opcion = { value: string; label: string }
+type Opcion = { value: string; label: string };
 
 interface Props {
-  prefijo:          'origen' | 'destino'
-  label:            string
-  control:          Control<TramoFormData>
-  errors:           FieldErrors<TramoFormData>
-  tipo:             'nacional' | 'internacional'
-  provinciaOptions: Opcion[]
-  cantonOptions:    Opcion[]
-  paises:           Opcion[]
-  onTipoChange:     (v: string) => void
-  onProvinciaChange: (v: string | null) => void
+  prefijo: "origen" | "destino";
+  label: string;
+  control: Control<TramoFormData>;
+  errors: FieldErrors<TramoFormData>;
+  tipo: "nacional" | "internacional";
+  provinciaOptions: Opcion[];
+  cantonOptions: Opcion[];
+  paises: Opcion[];
+  onTipoChange: (v: string) => void;
+  onProvinciaChange: (v: string | null) => void;
 }
 
 export function TramoLugarSelect({
@@ -33,13 +32,13 @@ export function TramoLugarSelect({
   onTipoChange,
   onProvinciaChange,
 }: Props) {
-  const contained = useContainedInput()
+  const contained = useContainedInput();
 
-  const tipoKey      = `${prefijo}_tipo`      as const
-  const provKey      = `${prefijo}_provincia_id` as const
-  const cantonKey    = `${prefijo}_canton_id`  as const
-  const paisKey      = `${prefijo}_pais`       as const
-  const ciudadKey    = `${prefijo}_ciudad`     as const
+  const tipoKey = `${prefijo}_tipo` as const;
+  const provKey = `${prefijo}_provincia_id` as const;
+  const cantonKey = `${prefijo}_canton_id` as const;
+  const paisKey = `${prefijo}_pais` as const;
+  const ciudadKey = `${prefijo}_ciudad` as const;
 
   return (
     <>
@@ -50,20 +49,20 @@ export function TramoLugarSelect({
           <Select
             label={`Tipo de ${label.toLowerCase()}`}
             data={[
-              { value: 'nacional',        label: 'Nacional' },
-              { value: 'internacional',   label: 'Internacional' },
+              { value: "nacional", label: "Nacional" },
+              { value: "internacional", label: "Internacional" },
             ]}
             {...contained}
             value={field.value as string}
             onChange={(v) => {
-              field.onChange(v ?? 'nacional')
-              onTipoChange(v ?? 'nacional')
+              field.onChange(v ?? "nacional");
+              onTipoChange(v ?? "nacional");
             }}
           />
         )}
       />
 
-      {tipo === 'nacional' ? (
+      {tipo === "nacional" ? (
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6 }}>
             <Controller
@@ -78,8 +77,8 @@ export function TramoLugarSelect({
                   {...contained}
                   value={field.value ? String(field.value) : null}
                   onChange={(v) => {
-                    field.onChange(v ? Number(v) : null)
-                    onProvinciaChange(v)
+                    field.onChange(v ? Number(v) : null);
+                    onProvinciaChange(v);
                   }}
                   error={
                     (errors as Record<string, { message?: string }>)[provKey]
@@ -102,12 +101,10 @@ export function TramoLugarSelect({
                   disabled={cantonOptions.length === 0}
                   {...contained}
                   value={field.value ? String(field.value) : null}
-                  onChange={(v) =>
-                    field.onChange(v ? Number(v) : null)
-                  }
+                  onChange={(v) => field.onChange(v ? Number(v) : null)}
                   error={
-                    (errors as Record<string, { message?: string }>)
-                      [cantonKey]?.message
+                    (errors as Record<string, { message?: string }>)[cantonKey]
+                      ?.message
                   }
                 />
               )}
@@ -127,11 +124,11 @@ export function TramoLugarSelect({
                   data={paises}
                   searchable
                   {...contained}
-                  value={field.value as string ?? null}
+                  value={(field.value as string) ?? null}
                   onChange={(v) => field.onChange(v ?? null)}
                   error={
-                    (errors as Record<string, { message?: string }>)
-                      [paisKey]?.message
+                    (errors as Record<string, { message?: string }>)[paisKey]
+                      ?.message
                   }
                 />
               )}
@@ -146,13 +143,11 @@ export function TramoLugarSelect({
                   label="Ciudad"
                   placeholder="Ej: Bogotá"
                   {...contained}
-                  value={field.value as string ?? ''}
-                  onChange={(e) =>
-                    field.onChange(e.currentTarget.value)
-                  }
+                  value={(field.value as string) ?? ""}
+                  onChange={(e) => field.onChange(e.currentTarget.value)}
                   error={
-                    (errors as Record<string, { message?: string }>)
-                      [ciudadKey]?.message
+                    (errors as Record<string, { message?: string }>)[ciudadKey]
+                      ?.message
                   }
                 />
               )}
@@ -161,5 +156,5 @@ export function TramoLugarSelect({
         </Grid>
       )}
     </>
-  )
+  );
 }

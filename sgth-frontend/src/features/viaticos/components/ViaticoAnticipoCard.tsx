@@ -21,9 +21,7 @@ function fmtMonto(v?: number | string | null): string {
   return `$${Number(v).toFixed(2)}`;
 }
 
-import {
-  MODALIDAD_LABELS,
-} from '../constants/viatico.constants';
+import { MODALIDAD_LABELS } from "../constants/viatico.constants";
 
 export function ViaticoAnticipoCard({ viatico: d }: Props) {
   return (

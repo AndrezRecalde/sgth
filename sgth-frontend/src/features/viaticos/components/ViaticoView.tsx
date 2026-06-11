@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Stack, Group, Button, Text, Badge, Tabs, Chip, TextInput, ActionIcon } from "@mantine/core";
+import {
+  Stack,
+  Group,
+  Button,
+  Text,
+  Badge,
+  Tabs,
+  Chip,
+  TextInput,
+  ActionIcon,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconPlane,
@@ -23,10 +33,7 @@ import { VuelosTab } from "./VuelosTab";
 import type { Viatico, EstadoViatico, ViaticoConRelaciones } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
 
-import {
-  ESTADO_COLORS,
-  ESTADO_LABELS,
-} from '../constants/viatico.constants';
+import { ESTADO_COLORS, ESTADO_LABELS } from "../constants/viatico.constants";
 
 export function ViaticoView() {
   const router = useRouter();
@@ -34,14 +41,12 @@ export function ViaticoView() {
 
   const [filtroEstado, setFiltroEstado] = useState<string>("solicitado");
   const [page, setPage] = useState(1);
-  const [busquedaCodigo, setBusquedaCodigo] = useState('');
-  const [codigoQuery, setCodigoQuery]       = useState('');
+  const [busquedaCodigo, setBusquedaCodigo] = useState("");
+  const [codigoQuery, setCodigoQuery] = useState("");
 
   const filtros = {
     estado:
-      filtroEstado === "todos"
-        ? undefined
-        : (filtroEstado as EstadoViatico),
+      filtroEstado === "todos" ? undefined : (filtroEstado as EstadoViatico),
     per_page: 15,
     page,
     search: codigoQuery || undefined,
@@ -212,9 +217,9 @@ export function ViaticoView() {
                 value={busquedaCodigo}
                 onChange={(e) => setBusquedaCodigo(e.currentTarget.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    setCodigoQuery(busquedaCodigo.trim())
-                    setPage(1)
+                  if (e.key === "Enter") {
+                    setCodigoQuery(busquedaCodigo.trim());
+                    setPage(1);
                   }
                 }}
                 style={{ width: 260 }}
@@ -225,9 +230,9 @@ export function ViaticoView() {
                       variant="subtle"
                       color="gray"
                       onClick={() => {
-                        setBusquedaCodigo('')
-                        setCodigoQuery('')
-                        setPage(1)
+                        setBusquedaCodigo("");
+                        setCodigoQuery("");
+                        setPage(1);
                       }}
                     >
                       <IconX size={12} />
@@ -240,8 +245,8 @@ export function ViaticoView() {
                 color="blue"
                 leftSection={<IconSearch size={14} />}
                 onClick={() => {
-                  setCodigoQuery(busquedaCodigo.trim())
-                  setPage(1)
+                  setCodigoQuery(busquedaCodigo.trim());
+                  setPage(1);
                 }}
               >
                 Buscar

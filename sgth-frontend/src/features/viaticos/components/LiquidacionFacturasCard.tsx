@@ -1,21 +1,30 @@
-'use client'
+"use client";
 
 import {
-  Card, Group, Text, Badge, Button,
-  Divider, Stack, Alert, ThemeIcon,
-} from '@mantine/core'
+  Card,
+  Group,
+  Text,
+  Badge,
+  Button,
+  Divider,
+  Stack,
+  Alert,
+  ThemeIcon,
+} from "@mantine/core";
 import {
-  IconFileInvoice, IconAlertCircle,
-  IconPencil, IconCircleCheck,
-} from '@tabler/icons-react'
-import type { FacturaData } from './FacturasModal'
-import type { CategoriaFactura } from '@/types/api'
+  IconFileInvoice,
+  IconAlertCircle,
+  IconPencil,
+  IconCircleCheck,
+} from "@tabler/icons-react";
+import type { FacturaData } from "./FacturasModal";
+import type { CategoriaFactura } from "@/types/api";
 
 interface Props {
-  facturas:         FacturaData[]
-  categorias:       CategoriaFactura[]
-  onRegistrar:      () => void
-  onEditar:         () => void
+  facturas: FacturaData[];
+  categorias: CategoriaFactura[];
+  onRegistrar: () => void;
+  onEditar: () => void;
 }
 
 export function LiquidacionFacturasCard({
@@ -24,10 +33,10 @@ export function LiquidacionFacturasCard({
   onRegistrar,
   onEditar,
 }: Props) {
-  const categoriaOptions = categorias.map(c => ({
+  const categoriaOptions = categorias.map((c) => ({
     value: String(c.id),
-    label: c.nombre ?? '',
-  }))
+    label: c.nombre ?? "",
+  }));
 
   return (
     <Card withBorder radius="md" h="100%">
@@ -36,12 +45,14 @@ export function LiquidacionFacturasCard({
           <ThemeIcon color="orange" variant="light" size="sm">
             <IconFileInvoice size={14} />
           </ThemeIcon>
-          <Text fw={600} size="sm">Facturas de respaldo</Text>
+          <Text fw={600} size="sm">
+            Facturas de respaldo
+          </Text>
         </Group>
         {facturas.length > 0 && (
           <Badge color="orange" variant="light" size="sm">
-            {facturas.length}{' '}
-            {facturas.length === 1 ? 'comprobante' : 'comprobantes'}
+            {facturas.length}{" "}
+            {facturas.length === 1 ? "comprobante" : "comprobantes"}
           </Badge>
         )}
       </Group>
@@ -92,14 +103,14 @@ export function LiquidacionFacturasCard({
                 <Group gap={4} ml={22}>
                   <Badge size="xs" color="orange" variant="dot">
                     {categoriaOptions.find(
-                      c => Number(c.value) === f.categoria_factura_id
+                      (c) => Number(c.value) === f.categoria_factura_id,
                     )?.label ?? `Categoría ${f.categoria_factura_id}`}
                   </Badge>
                   <Text size="xs" c="dimmed">
                     {f.tipo_comprobante
                       ? f.tipo_comprobante.charAt(0).toUpperCase() +
                         f.tipo_comprobante.slice(1)
-                      : ''}
+                      : ""}
                   </Text>
                 </Group>
               )}
@@ -117,5 +128,5 @@ export function LiquidacionFacturasCard({
         </Stack>
       )}
     </Card>
-  )
+  );
 }
