@@ -14,14 +14,14 @@
 
   $motivoLabels = [
     'vacaciones_anuales'        => 'VACACIONES ANUALES (MAYOR 5 DIAS)',
-    'permiso_cargo_vacaciones'  => 'PERMISO CON CARGO A VACACIONES (MAX 5 DIAS)',
+    'permiso_cargo_vacaciones'  => 'PERMISO C/ CARGO A VACACIONES (MAX 5 DIAS)',
     'licencia_sin_goce'         => 'LICENCIA SIN GOCE DE HABERES',
     'matrimonio'                => 'MATRIMONIO',
     'capacitacion'              => 'CAPACITACION Y/O ADIESTRAMIENTO',
     'enfermedad'                => 'ENFERMEDAD',
     'maternidad'                => 'MATERNIDAD',
     'paternidad'                => 'PATERNIDAD',
-    'estudios_sin_remuneracion' => 'PERMISO PARA REALIZAR ESTUDIOS SIN REMUNERACION',
+    'estudios_sin_remuneracion' => 'ESTUDIOS SIN REMUNERACION',
     'calamidad_domestica'       => 'CALAMIDAD DOMESTICA',
     'licencia_con_goce'         => 'LICENCIA CON GOCE DE SUELDO',
   ];
@@ -95,7 +95,7 @@
   }
 
   $tipoDiasLabel = ($vacacion->tipo_dias === 'habiles')
-    ? 'dias habiles' : 'dias calendario';
+    ? 'días hábiles' : 'días calendario';
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -104,189 +104,200 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    color: #000;
-    margin: 10px 14px;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 11px;
+    color: #334155;
+    margin: 30px;
+    line-height: 1.4;
   }
 
+  /* ── BRANDING ── */
+  .text-brand { color: #1a5c38; }
+  .bg-brand { background-color: #1a5c38; color: #fff; }
+  
   /* ── HEADER ── */
   .header-table {
     width: 100%;
-    border-collapse: collapse;
-    border: 2px solid #000;
-    margin-bottom: 5px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #1a5c38;
+    padding-bottom: 15px;
   }
   .logo-cell {
-    width: 120px;
-    border-right: 2px solid #000;
-    text-align: center;
-    padding: 5px;
+    width: 140px;
     vertical-align: middle;
   }
-  .logo-cell img { width: 108px; height: auto; }
+  .logo-cell img { width: 120px; height: auto; }
   .title-wrap {
-    text-align: center;
+    text-align: right;
     vertical-align: middle;
-    padding: 6px 12px;
   }
   .inst-name {
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-  .doc-title {
     font-size: 14px;
     font-weight: bold;
+    color: #0f172a;
     text-transform: uppercase;
-    margin-top: 4px;
-    border-top: 1px solid #ccc;
-    padding-top: 4px;
+    letter-spacing: 0.5px;
+  }
+  .doc-title {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-top: 6px;
+    letter-spacing: 1px;
   }
 
-  /* ── TABLA FUNCIONARIO ── */
+  /* ── SECTIONS ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #1a5c38;
+    margin-bottom: 8px;
+    margin-top: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+  }
+
+  /* ── GENERAL TABLES ── */
   .t {
     width: 100%;
     border-collapse: collapse;
-    border: 2px solid #000;
-    margin-bottom: 5px;
+    margin-bottom: 12px;
   }
   .t td {
-    border: 1px solid #aaa;
-    padding: 5px 7px;
-    font-size: 12px;
+    padding: 8px 10px;
     vertical-align: middle;
+    border: 1px solid #e2e8f0;
   }
-  .lbl {
+  .t .lbl {
     font-weight: bold;
-    background: #ececec;
-    font-size: 11px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 10px;
     text-transform: uppercase;
-    white-space: nowrap;
   }
-  .val-bold {
+  .t .val-bold {
     font-weight: bold;
-    font-size: 13px;
+    color: #0f172a;
+    font-size: 12px;
   }
 
   /* ── MOTIVOS ── */
   .motivos-table {
     width: 100%;
     border-collapse: collapse;
-    border: 2px solid #000;
-    margin-bottom: 5px;
+    margin-bottom: 15px;
   }
   .motivos-table td {
-    border: 1px solid #bbb;
-    padding: 5px 7px;
-    font-size: 11px;
+    padding: 6px 4px;
+    font-size: 10px;
     vertical-align: middle;
     width: 33.33%;
+    color: #475569;
   }
-  /* Celda seleccionada */
   .motivo-sel {
-    background: #e8f5e9;
+    color: #1a5c38;
     font-weight: bold;
-    border: 1.5px solid #1a5c38 !important;
   }
-  .radio-box-sel {
+  .check-icon {
     display: inline-block;
     width: 12px;
     height: 12px;
-    border: 2px solid #1a5c38;
-    border-radius: 50%;
+    border: 1px solid #94a3b8;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 12px;
+    font-size: 9px;
+  }
+  .check-icon.active {
     background: #1a5c38;
-    margin-right: 4px;
-    vertical-align: middle;
-  }
-  .radio-box-empty {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border: 1.5px solid #999;
-    border-radius: 50%;
-    background: #fff;
-    margin-right: 4px;
-    vertical-align: middle;
+    border-color: #1a5c38;
+    color: #fff;
   }
 
-  /* ── FIRMA ── */
-  .firma-table {
+  /* ── FIRMAS ── */
+  .firma-grid {
     width: 100%;
     border-collapse: collapse;
-    border: 2px solid #000;
-    margin-bottom: 5px;
+    margin-bottom: 15px;
+    page-break-inside: avoid;
   }
-  .firma-table td {
-    border: 1px solid #aaa;
-    padding: 5px 7px;
+  .firma-grid td {
+    width: 50%;
     vertical-align: top;
-    font-size: 12px;
+    padding: 0 8px;
+  }
+  .firma-grid td:first-child { padding-left: 0; }
+  .firma-grid td:last-child { padding-right: 0; }
+  .firma-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 15px;
+    height: 120px;
+    text-align: center;
+    background: #f8fafc;
+  }
+  .firma-line {
+    border-top: 1px solid #94a3b8;
+    margin: 45px auto 8px auto;
+    width: 85%;
   }
   .f-lbl {
     font-size: 10px;
     font-weight: bold;
+    color: #475569;
     text-transform: uppercase;
-    color: #fff;
-    background: #2d6a4f;
-    padding: 2px 5px;
-    margin-bottom: 3px;
   }
-  .f-space { height: 45px; }
   .f-name {
     font-size: 11px;
     font-weight: bold;
+    color: #0f172a;
     text-transform: uppercase;
-    border-top: 1.5px solid #444;
-    padding-top: 3px;
-    margin-top: 3px;
   }
-  .aceptado {
-    font-size: 11px;
-    margin-top: 5px;
-    line-height: 2;
-  }
-  .check-box {
-    display: inline-block;
-    width: 11px;
-    height: 11px;
-    border: 1.5px solid #666;
-    margin-right: 5px;
-    vertical-align: middle;
-  }
-
-  /* ── INFORME ── */
-  .informe-header {
-    background: #1a5c38;
-    color: #fff;
+  .aceptado-box {
     text-align: center;
-    font-weight: bold;
-    font-size: 12px;
-    padding: 4px;
-    text-transform: uppercase;
-    border: 2px solid #000;
-    border-bottom: 0;
+    margin-top: 10px;
+    font-size: 10px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    margin: 0 5px;
+    color: #64748b;
+    background: #fff;
   }
 
-  /* ── FIRMAS FINALES ── */
-  .firmas-finales {
-    width: 100%;
-    border-collapse: collapse;
-    border: 2px solid #000;
-    margin-bottom: 5px;
-  }
-  .firmas-finales td {
-    border: 1px solid #aaa;
-    padding: 5px 7px;
-    width: 50%;
-    vertical-align: top;
-  }
-
+  /* ── PIE ── */
   .pie {
+    position: fixed;
+    bottom: -15px;
+    left: 30px;
+    right: 30px;
     text-align: right;
-    font-size: 8px;
-    color: #aaa;
+    font-size: 9px;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+  }
+  
+  .qr-box {
+    text-align: center;
+  }
+  .qr-box img {
+    border: 1px solid #e2e8f0;
+    padding: 2px;
+    background: #fff;
+    border-radius: 4px;
+  }
+  .qr-folio {
+    font-size: 9px;
+    color: #64748b;
     margin-top: 4px;
+    font-family: monospace;
   }
 </style>
 </head>
@@ -299,12 +310,12 @@
       @if($logoSrc)
         <img src="{{ $logoSrc }}" alt="Logo GADPE">
       @else
-        <div style="font-size:10px;font-weight:bold;color:#1a5c38;">GADPE</div>
+        <div style="font-size:16px;font-weight:bold;color:#1a5c38;">GADPE</div>
       @endif
     </td>
     <td class="title-wrap">
       <div class="inst-name">
-        Gobierno Autonomo Descentralizado de la Provincia de Esmeraldas
+        Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas
       </div>
       <div class="doc-title">
         Solicitud de Licencia, Permiso y Vacaciones
@@ -313,30 +324,27 @@
   </tr>
 </table>
 
-{{-- ══ DATOS FUNCIONARIO ══ --}}
+<div class="section-title">Información del Solicitante</div>
 <table class="t">
   <tr>
-    <td class="lbl" width="32%">
-      Apellidos y Nombres del Funcionario:
-    </td>
-    <td class="val-bold" width="43%">{{ $nombreServidor }}</td>
-    <td class="lbl" width="12%" style="text-align:center;">
-      Codigo de Solicitud:
-    </td>
-    <td width="13%" style="text-align:center; padding:4px;">
+    <td class="lbl" width="20%">Funcionario</td>
+    <td class="val-bold" width="60%">{{ $nombreServidor }}</td>
+    <td width="20%" rowspan="2" class="qr-box">
       @if($qrSrc)
-        <img src="{{ $qrSrc }}" width="70" height="70" alt="QR">
-        <div style="font-size:8px;font-weight:bold;margin-top:2px;">
-          {{ $folio }}
-        </div>
+        <img src="{{ $qrSrc }}" width="65" height="65" alt="QR">
+        <div class="qr-folio">{{ $folio }}</div>
       @else
-        <div style="font-size:10px;font-weight:bold;">{{ $folio }}</div>
+        <div class="qr-folio" style="margin-top: 25px;">{{ $folio }}</div>
       @endif
     </td>
   </tr>
+  <tr>
+    <td class="lbl">Emisión</td>
+    <td class="val-bold">{{ $fechaEmision }}</td>
+  </tr>
 </table>
 
-{{-- ══ GRID DE MOTIVOS ══ --}}
+<div class="section-title">Motivo de la Solicitud</div>
 <table class="motivos-table">
   @foreach($motivosGrid as $fila)
   <tr>
@@ -345,8 +353,11 @@
         <td></td>
       @else
         <td class="{{ $m === $motivoVal ? 'motivo-sel' : '' }}">
-          <span class="{{ $m === $motivoVal
-            ? 'radio-box-sel' : 'radio-box-empty' }}"></span>
+          <span class="check-icon {{ $m === $motivoVal ? 'active' : '' }}">
+            @if($m === $motivoVal)
+              &#10003;
+            @endif
+          </span>
           {{ $motivoLabels[$m] ?? $m }}
         </td>
       @endif
@@ -355,162 +366,106 @@
   @endforeach
 </table>
 
-{{-- ══ FECHAS ══ --}}
+<div class="section-title">Detalle del Permiso</div>
 <table class="t">
   <tr>
-    <td class="lbl" width="32%">Numero de Dias que Solicita:</td>
-    <td class="val-bold" width="13%">
+    <td class="lbl" width="20%">Días Solicitados</td>
+    <td class="val-bold" width="30%">
       {{ $vacacion->dias_solicitados }}
-      <span style="font-size:10px;font-weight:normal;">
+      <span style="font-size:10px; font-weight:normal; color:#64748b;">
         ({{ $tipoDiasLabel }})
       </span>
     </td>
-    <td class="lbl" width="10%">Desde:</td>
-    <td class="val-bold" width="15%">{{ $fechaInicio }}</td>
-    <td class="lbl" width="10%">Hasta:</td>
-    <td class="val-bold" width="20%">{{ $fechaFin }}</td>
+    <td class="lbl" width="15%">Desde</td>
+    <td class="val-bold" width="35%">{{ $fechaInicio ?: '—' }}</td>
   </tr>
   <tr>
-    <td class="lbl" colspan="2">Dia de Ingreso a sus Labores:</td>
-    <td colspan="4" style="font-size:13px; font-weight:bold;">
-      {{ $fechaRetorno ?: '—' }}
-    </td>
+    <td class="lbl">Día de Retorno</td>
+    <td class="val-bold">{{ $fechaRetorno ?: '—' }}</td>
+    <td class="lbl">Hasta</td>
+    <td class="val-bold">{{ $fechaFin ?: '—' }}</td>
   </tr>
 </table>
 
-{{-- ══ FIRMA SOLICITANTE ══ --}}
-<table class="firma-table">
-  <tr>
-    <td width="55%">
-      <div class="f-lbl">f: Firma del Solicitante</div>
-      <div class="f-space"></div>
-      <div class="f-name">{{ $nombreServidor }}</div>
-    </td>
-    <td width="45%" style="text-align:center; vertical-align:middle;">
-      <div class="f-lbl">Fecha de Emision</div>
-      <div style="font-size:18px; font-weight:bold;
-                  padding:10px 0; text-align:center;">
-        {{ $fechaEmision }}
-      </div>
-    </td>
-  </tr>
-</table>
-
-{{-- ══ FIRMA JEFE DEPARTAMENTAL ══ --}}
-<table class="firma-table">
-  <tr>
-    <td width="55%">
-      <div class="f-lbl">f: Firma Jefe Departamental</div>
-      <div class="f-space"></div>
-    </td>
-    <td width="45%">
-      <div class="f-lbl">Jefe Departamental:</div>
-      <div style="height:22px;">&nbsp;</div>
-      <div class="aceptado">
-        <span class="check-box"></span>ACEPTADO<br>
-        <span class="check-box"></span>NEGADO
-      </div>
-    </td>
-  </tr>
-</table>
-
-{{-- ══ FIRMA DIRECTOR ══ --}}
-<table class="firma-table">
-  <tr>
-    <td width="55%">
-      <div class="f-lbl">f: Firma Director</div>
-      <div class="f-space"></div>
-    </td>
-    <td width="45%">
-      <div class="f-lbl">Jefe Departamental:</div>
-      <div style="font-weight:bold; font-size:12px; margin:5px 0;">
-        {{ $nombreJefe ?: '________________________________' }}
-      </div>
-      <div class="aceptado">
-        <span class="check-box"></span>ACEPTADO<br>
-        <span class="check-box"></span>NEGADO
-      </div>
-    </td>
-  </tr>
-</table>
-
-{{-- ══ OBSERVACIONES ══ --}}
 <table class="t">
   <tr>
-    <td class="lbl" width="28%" style="vertical-align:top;">
-      Observaciones:
+    <td class="lbl" width="20%">Reemplazo</td>
+    <td class="val-bold">{{ $nombreReemplaza ?: '—' }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Observaciones</td>
+    <td>{{ $observacion ?: '—' }}</td>
+  </tr>
+</table>
+
+<div style="height: 15px;"></div>
+
+{{-- ══ FIRMAS: BLOQUE 1 ══ --}}
+<table class="firma-grid">
+  <tr>
+    <td>
+      <div class="firma-box">
+        <div class="firma-line"></div>
+        <div class="f-lbl">Firma del Solicitante</div>
+        <div class="f-name" style="margin-top:4px;">{{ $nombreServidor }}</div>
+      </div>
     </td>
-    <td style="height:60px; vertical-align:top;">
-      {{ $observacion ?: '—' }}
+    <td>
+      <div class="firma-box">
+        <div class="firma-line"></div>
+        <div class="f-lbl">Jefe Inmediato / Director</div>
+        <div class="f-name" style="margin-top:4px;">{{ $nombreJefe ?: '________________________________' }}</div>
+        <div class="aceptado-box">
+          <span class="badge"><span class="check-icon"></span> Aprobado</span>
+          <span class="badge"><span class="check-icon"></span> Negado</span>
+        </div>
+      </div>
     </td>
   </tr>
 </table>
 
-{{-- ══ PERSONA QUE REEMPLAZA ══ --}}
+<div class="section-title" style="margin-top: 25px;">Uso Exclusivo de Talento Humano</div>
 <table class="t">
   <tr>
-    <td class="lbl" width="28%">Persona que me Reemplazara:</td>
-    <td style="font-weight:bold;">
-      {{ $nombreReemplaza ?: '—' }}
-    </td>
+    <td class="lbl" width="20%">Fecha Ingreso</td>
+    <td width="30%" class="val-bold">{{ $fechaIngreso ?: '—' }}</td>
+    <td class="lbl" width="20%">Días de Derecho</td>
+    <td width="30%" class="val-bold">{{ $diasDerecho ? $diasDerecho . ' días' : '—' }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Período de Vac.</td>
+    <td colspan="3" class="val-bold">{{ $periodo ?: '—' }}</td>
   </tr>
 </table>
 
-{{-- ══ INFORME DE VACACIONES ══ --}}
-<div class="informe-header">Informe de Vacaciones</div>
-<table class="t" style="border-top:0; margin-top:0; margin-bottom:5px;">
+{{-- ══ FIRMAS: BLOQUE 2 ══ --}}
+<table class="firma-grid">
   <tr>
-    <td class="lbl" width="24%">Fecha de Ingreso:</td>
-    <td width="26%">{{ $fechaIngreso ?: '—' }}</td>
-    <td class="lbl" width="24%">Tiene Derecho a:</td>
-    <td width="26%">
-      {{ $diasDerecho ? $diasDerecho . ' dias' : '—' }}
+    <td>
+      <div class="firma-box">
+        <div class="firma-line"></div>
+        <div class="f-lbl">Talento Humano</div>
+        <div class="aceptado-box" style="margin-top:15px;">
+          <span class="badge"><span class="check-icon"></span> Aprobado</span>
+          <span class="badge"><span class="check-icon"></span> Negado</span>
+        </div>
+      </div>
     </td>
-  </tr>
-  <tr>
-    <td class="lbl">Vacaciones Corresponden al Periodo de:</td>
-    <td colspan="3">{{ $periodo ?: '—' }}</td>
-  </tr>
-</table>
-
-{{-- ══ FIRMAS FINALES ══ --}}
-<table class="firmas-finales">
-  <tr>
-    <td style="text-align:center;">
-      <div class="f-lbl">f: Direccion de Talento Humano</div>
-      <div style="height:50px;"></div>
-      <table width="100%" style="border:none;">
-        <tr>
-          <td style="border:none;width:50%;font-size:11px;">
-            <span class="check-box"></span>ACEPTADO
-          </td>
-          <td style="border:none;width:50%;font-size:11px;">
-            <span class="check-box"></span>NEGADO
-          </td>
-        </tr>
-      </table>
-    </td>
-    <td style="text-align:center;">
-      <div class="f-lbl">f: Prefectura</div>
-      <div style="height:50px;"></div>
-      <table width="100%" style="border:none;">
-        <tr>
-          <td style="border:none;width:50%;font-size:11px;">
-            <span class="check-box"></span>ACEPTADO
-          </td>
-          <td style="border:none;width:50%;font-size:11px;">
-            <span class="check-box"></span>NEGADO
-          </td>
-        </tr>
-      </table>
+    <td>
+      <div class="firma-box">
+        <div class="firma-line"></div>
+        <div class="f-lbl">Prefectura</div>
+        <div class="aceptado-box" style="margin-top:15px;">
+          <span class="badge"><span class="check-icon"></span> Aprobado</span>
+          <span class="badge"><span class="check-icon"></span> Negado</span>
+        </div>
+      </div>
     </td>
   </tr>
 </table>
 
 <div class="pie">
-  SGTH GADPE &nbsp;|&nbsp;
-  Folio: {{ $folio }} &nbsp;|&nbsp;
-  Generado: {{ now()->format('d/m/Y H:i') }}
+  SGTH GADPE &nbsp;|&nbsp; Folio: {{ $folio }} &nbsp;|&nbsp; Generado: {{ now()->format('d/m/Y H:i') }}
 </div>
 
 </body>
