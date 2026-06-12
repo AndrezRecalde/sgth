@@ -1,101 +1,108 @@
 @php
-  $logoPath = public_path('images/logo-gadpe.png');
-  $logoSrc  = file_exists($logoPath)
-    ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
-    : null;
+    $logoPath = public_path('images/logo-gadpe.png');
+    $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null;
 
-  // Grid de motivos 3 columnas
-  $motivosGrid = [
-    ['vacaciones_anuales', 'permiso_cargo_vacaciones', 'licencia_sin_goce'],
-    ['matrimonio',         'capacitacion',             'enfermedad'],
-    ['paternidad',         'maternidad',               'estudios_sin_remuneracion'],
-    ['calamidad_domestica','licencia_con_goce',        null],
-  ];
+    // Grid de motivos 3 columnas
+    $motivosGrid = [
+        ['vacaciones_anuales', 'permiso_cargo_vacaciones', 'licencia_sin_goce'],
+        ['matrimonio', 'capacitacion', 'enfermedad'],
+        ['paternidad', 'maternidad', 'estudios_sin_remuneracion'],
+        ['calamidad_domestica', 'licencia_con_goce', null],
+    ];
 
-  $motivoLabels = [
-    'vacaciones_anuales'        => 'VACACIONES ANUALES (MAYOR 5 DIAS)',
-    'permiso_cargo_vacaciones'  => 'PERMISO C/ CARGO A VACACIONES (MAX 5 DIAS)',
-    'licencia_sin_goce'         => 'LICENCIA SIN GOCE DE HABERES',
-    'matrimonio'                => 'MATRIMONIO',
-    'capacitacion'              => 'CAPACITACION Y/O ADIESTRAMIENTO',
-    'enfermedad'                => 'ENFERMEDAD',
-    'maternidad'                => 'MATERNIDAD',
-    'paternidad'                => 'PATERNIDAD',
-    'estudios_sin_remuneracion' => 'ESTUDIOS SIN REMUNERACION',
-    'calamidad_domestica'       => 'CALAMIDAD DOMESTICA',
-    'licencia_con_goce'         => 'LICENCIA CON GOCE DE SUELDO',
-  ];
+    $motivoLabels = [
+        'vacaciones_anuales' => 'VACACIONES ANUALES (MAYOR 5 DIAS)',
+        'permiso_cargo_vacaciones' => 'PERMISO C/ CARGO A VACACIONES (MAX 5 DIAS)',
+        'licencia_sin_goce' => 'LICENCIA SIN GOCE DE HABERES',
+        'matrimonio' => 'MATRIMONIO',
+        'capacitacion' => 'CAPACITACION Y/O ADIESTRAMIENTO',
+        'enfermedad' => 'ENFERMEDAD',
+        'maternidad' => 'MATERNIDAD',
+        'paternidad' => 'PATERNIDAD',
+        'estudios_sin_remuneracion' => 'ESTUDIOS SIN REMUNERACION',
+        'calamidad_domestica' => 'CALAMIDAD DOMESTICA',
+        'licencia_con_goce' => 'LICENCIA CON GOCE DE SUELDO',
+    ];
 
-  $motivoVal = $vacacion->motivo instanceof \App\Enums\MotivoVacacion
-    ? $vacacion->motivo->value
-    : (string)($vacacion->motivo ?? '');
+    $motivoVal =
+        $vacacion->motivo instanceof \App\Enums\MotivoVacacion
+            ? $vacacion->motivo->value
+            : (string) ($vacacion->motivo ?? '');
 
-  $nombreServidor = mb_strtoupper(implode(' ', array_filter([
-    $vacacion->servidor->apellido         ?? null,
-    $vacacion->servidor->segundo_apellido ?? null,
-    $vacacion->servidor->nombre           ?? null,
-    $vacacion->servidor->segundo_nombre   ?? null,
-  ])), 'UTF-8');
+    $nombreServidor = mb_strtoupper(
+        implode(
+            ' ',
+            array_filter([
+                $vacacion->servidor->apellido ?? null,
+                $vacacion->servidor->segundo_apellido ?? null,
+                $vacacion->servidor->nombre ?? null,
+                $vacacion->servidor->segundo_nombre ?? null,
+            ]),
+        ),
+        'UTF-8',
+    );
 
-  $nombreJefe = $vacacion->jefe
-    ? mb_strtoupper(implode(' ', array_filter([
-        $vacacion->jefe->apellido         ?? null,
-        $vacacion->jefe->segundo_apellido ?? null,
-        $vacacion->jefe->nombre           ?? null,
-        $vacacion->jefe->segundo_nombre   ?? null,
-      ])), 'UTF-8')
-    : '';
+    $nombreJefe = $vacacion->jefe
+        ? mb_strtoupper(
+            implode(
+                ' ',
+                array_filter([
+                    $vacacion->jefe->apellido ?? null,
+                    $vacacion->jefe->segundo_apellido ?? null,
+                    $vacacion->jefe->nombre ?? null,
+                    $vacacion->jefe->segundo_nombre ?? null,
+                ]),
+            ),
+            'UTF-8',
+        )
+        : '';
 
-  $nombreReemplaza = $vacacion->personaReemplaza
-    ? mb_strtoupper(implode(' ', array_filter([
-        $vacacion->personaReemplaza->apellido ?? null,
-        $vacacion->personaReemplaza->nombre   ?? null,
-      ])), 'UTF-8')
-    : ($vacacion->persona_reemplaza ?? '');
+    $nombreReemplaza = $vacacion->personaReemplaza
+        ? mb_strtoupper(
+            implode(
+                ' ',
+                array_filter([
+                    $vacacion->personaReemplaza->apellido ?? null,
+                    $vacacion->personaReemplaza->nombre ?? null,
+                ]),
+            ),
+            'UTF-8',
+        )
+        : $vacacion->persona_reemplaza ?? '';
 
-  $folio = $vacacion->folio ?? 'S/N';
+    $folio = $vacacion->folio ?? 'S/N';
 
-  $fechaInicio  = $vacacion->fecha_inicio
-    ? \Carbon\Carbon::parse($vacacion->fecha_inicio)->format('d/m/Y') : '';
-  $fechaFin     = $vacacion->fecha_fin
-    ? \Carbon\Carbon::parse($vacacion->fecha_fin)->format('d/m/Y') : '';
-  $fechaRetorno = $vacacion->fecha_retorno
-    ? \Carbon\Carbon::parse($vacacion->fecha_retorno)->format('d/m/Y') : '';
-  $fechaEmision = $vacacion->fecha_emision
-    ? \Carbon\Carbon::parse($vacacion->fecha_emision)->format('d/m/Y')
-    : now()->format('d/m/Y');
+    $fechaInicio = $vacacion->fecha_inicio ? \Carbon\Carbon::parse($vacacion->fecha_inicio)->format('d/m/Y') : '';
+    $fechaFin = $vacacion->fecha_fin ? \Carbon\Carbon::parse($vacacion->fecha_fin)->format('d/m/Y') : '';
+    $fechaRetorno = $vacacion->fecha_retorno ? \Carbon\Carbon::parse($vacacion->fecha_retorno)->format('d/m/Y') : '';
+    $fechaEmision = $vacacion->fecha_emision
+        ? \Carbon\Carbon::parse($vacacion->fecha_emision)->format('d/m/Y')
+        : now()->format('d/m/Y');
 
-  $fechaIngreso = null;
-  if ($vacacion->fecha_ingreso_institucion_informe) {
-    $fechaIngreso = \Carbon\Carbon::parse(
-      $vacacion->fecha_ingreso_institucion_informe
-    )->format('d/m/Y');
-  } elseif ($vacacion->servidor->fecha_ingreso_institucion ?? null) {
-    $fechaIngreso = \Carbon\Carbon::parse(
-      $vacacion->servidor->fecha_ingreso_institucion
-    )->format('d/m/Y');
-  }
-
-  $diasDerecho = $vacacion->dias_derecho ?? '';
-  $periodo     = $vacacion->periodo_vacaciones ?? '';
-  $observacion = mb_strtoupper($vacacion->observacion ?? '', 'UTF-8');
-
-  // QR en formato SVG para evitar fallos si no hay Imagick
-  $qrSrc = null;
-  try {
-    $urlQr = config('app.url') .
-      "/api/v1/asistencia/vacaciones/verificar/{$folio}";
-    $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-        ->size(90)->margin(1)->generate($urlQr);
-    if (!empty($qrSvg)) {
-        $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+    $fechaIngreso = null;
+    if ($vacacion->fecha_ingreso_institucion_informe) {
+        $fechaIngreso = \Carbon\Carbon::parse($vacacion->fecha_ingreso_institucion_informe)->format('d/m/Y');
+    } elseif ($vacacion->servidor->fecha_ingreso_institucion ?? null) {
+        $fechaIngreso = \Carbon\Carbon::parse($vacacion->servidor->fecha_ingreso_institucion)->format('d/m/Y');
     }
-  } catch(\Exception $e) {
-    $qrSrc = null;
-  }
 
-  $tipoDiasLabel = ($vacacion->tipo_dias === 'habiles')
-    ? 'días hábiles' : 'días calendario';
+    $diasDerecho = $vacacion->dias_derecho ?? '';
+    $periodo = $vacacion->periodo_vacaciones ?? '';
+    $observacion = mb_strtoupper($vacacion->observacion ?? '', 'UTF-8');
+
+    // QR en formato SVG para evitar fallos si no hay Imagick
+    $qrSrc = null;
+    try {
+        $urlQr = config('app.url') . "/api/v1/asistencia/vacaciones/verificar/{$folio}";
+        $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(90)->margin(1)->generate($urlQr);
+        if (!empty($qrSvg)) {
+            $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+        }
+    } catch (\Exception $e) {
+        $qrSrc = null;
+    }
+
+    $tipoDiasLabel = $vacacion->tipo_dias === 'habiles' ? 'días hábiles' : 'días calendario';
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -104,7 +111,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 11px;
     color: #334155;
     margin: 30px;
@@ -119,7 +126,7 @@
   .header-table {
     width: 100%;
     margin-bottom: 25px;
-    border-bottom: 2px solid #1a5c38;
+    border-bottom: 1.5px solid #1a5c38;
     padding-bottom: 15px;
   }
   .logo-cell {
@@ -132,7 +139,7 @@
     vertical-align: middle;
   }
   .inst-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     color: #0f172a;
     text-transform: uppercase;
@@ -158,6 +165,43 @@
     padding-bottom: 4px;
   }
 
+  /* ── INFO SOLICITANTE HEADER ── */
+  .info-header {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    background: #f8fafc;
+  }
+  .info-header td {
+    padding: 12px;
+    vertical-align: middle;
+    border: 1px solid #e2e8f0;
+  }
+  .info-left {
+    width: 75%;
+    border-right: 1px solid #e2e8f0;
+  }
+  .info-right {
+    width: 25%;
+    text-align: center;
+  }
+  .lbl {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+  .val {
+    font-size: 13px;
+    color: #0f172a;
+    font-weight: bold;
+  }
+  .val-light {
+    font-size: 11px;
+    color: #475569;
+  }
+  
   /* ── GENERAL TABLES ── */
   .t {
     width: 100%;
@@ -169,14 +213,19 @@
     vertical-align: middle;
     border: 1px solid #e2e8f0;
   }
-  .t .lbl {
+  .t .t-lbl {
     font-weight: bold;
     background: #f8fafc;
     color: #475569;
     font-size: 10px;
     text-transform: uppercase;
+    width: 20%;
   }
-  .t .val-bold {
+  .t .t-val {
+    color: #0f172a;
+    font-size: 11px;
+  }
+  .t .t-val-bold {
     font-weight: bold;
     color: #0f172a;
     font-size: 12px;
@@ -187,16 +236,19 @@
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
   }
   .motivos-table td {
-    padding: 6px 4px;
+    padding: 8px 6px;
     font-size: 10px;
     vertical-align: middle;
     width: 33.33%;
     color: #475569;
+    border: 1px solid #e2e8f0;
   }
   .motivo-sel {
-    color: #1a5c38;
+    background: #f0fdf4;
+    color: #1a5c38 !important;
     font-weight: bold;
   }
   .check-icon {
@@ -217,32 +269,51 @@
     color: #fff;
   }
 
-  /* ── FIRMAS ── */
-  .firma-grid {
+  /* ── DETALLE PERMISO ── */
+  .detalle-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+  }
+  .detalle-table td {
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+  }
+  .dt-lbl {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-weight: bold;
+  }
+  .dt-val {
+    font-size: 13px;
+    font-weight: bold;
+    color: #0f172a;
+  }
+
+  /* ── FIRMAS ── */
+  .firma-section {
+    margin-top: 20px;
     page-break-inside: avoid;
   }
-  .firma-grid td {
-    width: 50%;
-    vertical-align: top;
-    padding: 0 8px;
+  .firma-single {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
   }
-  .firma-grid td:first-child { padding-left: 0; }
-  .firma-grid td:last-child { padding-right: 0; }
-  .firma-box {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 15px;
-    height: 120px;
+  .firma-single td {
     text-align: center;
+    padding: 15px;
+    border: 1px solid #e2e8f0;
     background: #f8fafc;
   }
   .firma-line {
     border-top: 1px solid #94a3b8;
-    margin: 45px auto 8px auto;
-    width: 85%;
+    margin: 40px auto 8px auto;
+    width: 250px;
   }
   .f-lbl {
     font-size: 10px;
@@ -256,6 +327,34 @@
     color: #0f172a;
     text-transform: uppercase;
   }
+
+  .firma-grid {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+  .firma-grid td {
+    width: 50%;
+    vertical-align: top;
+    padding: 0;
+  }
+  .firma-box-left {
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    height: 120px;
+    text-align: center;
+    background: #f8fafc;
+    margin-right: 6px;
+  }
+  .firma-box-right {
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    height: 120px;
+    text-align: center;
+    background: #f8fafc;
+    margin-left: 6px;
+  }
+  
   .aceptado-box {
     text-align: center;
     margin-top: 10px;
@@ -284,20 +383,18 @@
     padding-top: 8px;
   }
   
-  .qr-box {
-    text-align: center;
-  }
-  .qr-box img {
+  .qr-img {
     border: 1px solid #e2e8f0;
     padding: 2px;
     background: #fff;
     border-radius: 4px;
   }
   .qr-folio {
-    font-size: 9px;
-    color: #64748b;
+    font-size: 10px;
+    color: #0f172a;
     margin-top: 4px;
     font-family: monospace;
+    font-weight: bold;
   }
 </style>
 </head>
@@ -324,26 +421,28 @@
   </tr>
 </table>
 
-<div class="section-title">Información del Solicitante</div>
-<table class="t">
+{{-- ══ INFO SOLICITANTE / FOLIO ══ --}}
+<table class="info-header">
   <tr>
-    <td class="lbl" width="20%">Funcionario</td>
-    <td class="val-bold" width="60%">{{ $nombreServidor }}</td>
-    <td width="20%" rowspan="2" class="qr-box">
-      @if($qrSrc)
-        <img src="{{ $qrSrc }}" width="65" height="65" alt="QR">
-        <div class="qr-folio">{{ $folio }}</div>
-      @else
-        <div class="qr-folio" style="margin-top: 25px;">{{ $folio }}</div>
-      @endif
+    <td class="info-left">
+      <div class="lbl">Funcionario Solicitante</div>
+      <div class="val">{{ $nombreServidor }}</div>
+      <div style="margin-top: 8px;">
+        <span class="lbl" style="display:inline-block; margin-right: 5px;">Fecha de Emisión:</span>
+        <span class="val-light">{{ $fechaEmision }}</span>
+      </div>
     </td>
-  </tr>
-  <tr>
-    <td class="lbl">Emisión</td>
-    <td class="val-bold">{{ $fechaEmision }}</td>
+    <td class="info-right">
+      @if($qrSrc)
+        <img src="{{ $qrSrc }}" width="55" height="55" class="qr-img" alt="QR">
+      @endif
+      <div class="qr-folio">{{ $folio }}</div>
+      <div class="lbl" style="margin-top:2px;">Código Solicitud</div>
+    </td>
   </tr>
 </table>
 
+{{-- ══ MOTIVO DE LA SOLICITUD ══ --}}
 <div class="section-title">Motivo de la Solicitud</div>
 <table class="motivos-table">
   @foreach($motivosGrid as $fila)
@@ -354,9 +453,7 @@
       @else
         <td class="{{ $m === $motivoVal ? 'motivo-sel' : '' }}">
           <span class="check-icon {{ $m === $motivoVal ? 'active' : '' }}">
-            @if($m === $motivoVal)
-              &#10003;
-            @endif
+            {!! $m === $motivoVal ? '&#10003;' : '' !!}
           </span>
           {{ $motivoLabels[$m] ?? $m }}
         </td>
@@ -366,103 +463,100 @@
   @endforeach
 </table>
 
+{{-- ══ DETALLE DEL PERMISO ══ --}}
 <div class="section-title">Detalle del Permiso</div>
-<table class="t">
+<table class="detalle-table">
   <tr>
-    <td class="lbl" width="20%">Días Solicitados</td>
-    <td class="val-bold" width="30%">
-      {{ $vacacion->dias_solicitados }}
-      <span style="font-size:10px; font-weight:normal; color:#64748b;">
-        ({{ $tipoDiasLabel }})
-      </span>
+    <td width="25%" style="background: #f8fafc;">
+      <div class="dt-lbl">Días Solicitados</div>
+      <div class="dt-val">{{ $vacacion->dias_solicitados }} <span style="font-size:10px; font-weight:normal; color:#64748b;">({{ $tipoDiasLabel }})</span></div>
     </td>
-    <td class="lbl" width="15%">Desde</td>
-    <td class="val-bold" width="35%">{{ $fechaInicio ?: '—' }}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Día de Retorno</td>
-    <td class="val-bold">{{ $fechaRetorno ?: '—' }}</td>
-    <td class="lbl">Hasta</td>
-    <td class="val-bold">{{ $fechaFin ?: '—' }}</td>
+    <td width="25%">
+      <div class="dt-lbl">Desde</div>
+      <div class="dt-val">{{ $fechaInicio ?: '—' }}</div>
+    </td>
+    <td width="25%">
+      <div class="dt-lbl">Hasta</div>
+      <div class="dt-val">{{ $fechaFin ?: '—' }}</div>
+    </td>
+    <td width="25%" style="background: #f0fdf4;">
+      <div class="dt-lbl" style="color:#1a5c38;">Día de Retorno</div>
+      <div class="dt-val" style="color:#1a5c38;">{{ $fechaRetorno ?: '—' }}</div>
+    </td>
   </tr>
 </table>
 
 <table class="t">
   <tr>
-    <td class="lbl" width="20%">Reemplazo</td>
-    <td class="val-bold">{{ $nombreReemplaza ?: '—' }}</td>
+    <td class="t-lbl" width="20%">Reemplazo</td>
+    <td class="t-val-bold">{{ $nombreReemplaza ?: '—' }}</td>
   </tr>
   <tr>
-    <td class="lbl">Observaciones</td>
-    <td>{{ $observacion ?: '—' }}</td>
+    <td class="t-lbl">Observaciones</td>
+    <td class="t-val">{{ $observacion ?: '—' }}</td>
   </tr>
 </table>
 
-<div style="height: 15px;"></div>
-
-{{-- ══ FIRMAS: BLOQUE 1 ══ --}}
-<table class="firma-grid">
-  <tr>
-    <td>
-      <div class="firma-box">
+{{-- ══ FIRMA DEL SOLICITANTE ══ --}}
+<div class="firma-section">
+  <table class="firma-single">
+    <tr>
+      <td>
+        <div style="height: 25px;"></div>
         <div class="firma-line"></div>
         <div class="f-lbl">Firma del Solicitante</div>
         <div class="f-name" style="margin-top:4px;">{{ $nombreServidor }}</div>
-      </div>
-    </td>
-    <td>
-      <div class="firma-box">
-        <div class="firma-line"></div>
-        <div class="f-lbl">Jefe Inmediato / Director</div>
-        <div class="f-name" style="margin-top:4px;">{{ $nombreJefe ?: '________________________________' }}</div>
-        <div class="aceptado-box">
-          <span class="badge"><span class="check-icon"></span> Aprobado</span>
-          <span class="badge"><span class="check-icon"></span> Negado</span>
-        </div>
-      </div>
-    </td>
-  </tr>
-</table>
+      </td>
+    </tr>
+  </table>
+</div>
 
-<div class="section-title" style="margin-top: 25px;">Uso Exclusivo de Talento Humano</div>
+{{-- ══ USO EXCLUSIVO TALENTO HUMANO ══ --}}
+<div class="section-title">Uso Exclusivo de Talento Humano</div>
 <table class="t">
   <tr>
-    <td class="lbl" width="20%">Fecha Ingreso</td>
-    <td width="30%" class="val-bold">{{ $fechaIngreso ?: '—' }}</td>
-    <td class="lbl" width="20%">Días de Derecho</td>
-    <td width="30%" class="val-bold">{{ $diasDerecho ? $diasDerecho . ' días' : '—' }}</td>
+    <td class="t-lbl" width="20%">Fecha Ingreso</td>
+    <td width="30%" class="t-val-bold">{{ $fechaIngreso ?: '—' }}</td>
+    <td class="t-lbl" width="20%">Días de Derecho</td>
+    <td width="30%" class="t-val-bold">{{ $diasDerecho ? $diasDerecho . ' días' : '—' }}</td>
   </tr>
   <tr>
-    <td class="lbl">Período de Vac.</td>
-    <td colspan="3" class="val-bold">{{ $periodo ?: '—' }}</td>
+    <td class="t-lbl">Período de Vac.</td>
+    <td colspan="3" class="t-val-bold">{{ $periodo ?: '—' }}</td>
   </tr>
 </table>
 
-{{-- ══ FIRMAS: BLOQUE 2 ══ --}}
-<table class="firma-grid">
-  <tr>
-    <td>
-      <div class="firma-box">
-        <div class="firma-line"></div>
-        <div class="f-lbl">Talento Humano</div>
-        <div class="aceptado-box" style="margin-top:15px;">
-          <span class="badge"><span class="check-icon"></span> Aprobado</span>
-          <span class="badge"><span class="check-icon"></span> Negado</span>
+{{-- ══ FIRMAS DE APROBACIÓN ══ --}}
+<div class="firma-section">
+  <table class="firma-grid">
+    <tr>
+      <td>
+        <div class="firma-box-left">
+          <div style="height: 15px;"></div>
+          <div class="firma-line" style="width: 80%;"></div>
+          <div class="f-lbl">Jefe Inmediato / Director</div>
+          <div class="f-name" style="margin-top:4px;">{{ $nombreJefe ?: '_______________________' }}</div>
+          <div class="aceptado-box">
+            <span class="badge"><span class="check-icon"></span> Aprobado</span>
+            <span class="badge"><span class="check-icon"></span> Negado</span>
+          </div>
         </div>
-      </div>
-    </td>
-    <td>
-      <div class="firma-box">
-        <div class="firma-line"></div>
-        <div class="f-lbl">Prefectura</div>
-        <div class="aceptado-box" style="margin-top:15px;">
-          <span class="badge"><span class="check-icon"></span> Aprobado</span>
-          <span class="badge"><span class="check-icon"></span> Negado</span>
+      </td>
+      <td>
+        <div class="firma-box-right">
+          <div style="height: 15px;"></div>
+          <div class="firma-line" style="width: 80%;"></div>
+          <div class="f-lbl">Talento Humano / Prefectura</div>
+          <div class="f-name" style="margin-top:4px;">_______________________</div>
+          <div class="aceptado-box">
+            <span class="badge"><span class="check-icon"></span> Aprobado</span>
+            <span class="badge"><span class="check-icon"></span> Negado</span>
+          </div>
         </div>
-      </div>
-    </td>
-  </tr>
-</table>
+      </td>
+    </tr>
+  </table>
+</div>
 
 <div class="pie">
   SGTH GADPE &nbsp;|&nbsp; Folio: {{ $folio }} &nbsp;|&nbsp; Generado: {{ now()->format('d/m/Y H:i') }}
