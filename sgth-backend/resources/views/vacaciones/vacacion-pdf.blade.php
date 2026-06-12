@@ -177,16 +177,16 @@
 
   /* ── FIRMAS ── */
   .firma-section { margin-top: 15px; page-break-inside: avoid; }
-  .firma-single { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-  .firma-single td { text-align: center; padding: 6px; }
+  
+  .firma-single-box { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; text-align: center; margin-bottom: 15px; }
   .firma-line { border-top: 1px solid #64748b; margin: 0 auto; width: 220px; }
   .f-lbl { font-size: 9px; font-weight: bold; color: #475569; text-transform: uppercase; margin-top: 4px; }
   .f-name { font-size: 10px; font-weight: bold; color: #0f172a; text-transform: uppercase; margin-top: 2px; }
 
   .firma-grid { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
   .firma-grid td { width: 50%; vertical-align: top; padding: 0; text-align: center; }
-  .firma-box-left { padding: 6px; margin-right: 4px; }
-  .firma-box-right { padding: 6px; margin-left: 4px; }
+  .firma-box-left { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; margin-right: 4px; }
+  .firma-box-right { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; margin-left: 4px; }
   
   .aceptado-box { text-align: center; font-size: 9px; }
   .badge { display: inline-block; padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 4px; margin: 0 4px; color: #64748b; background: #fff; }
@@ -224,12 +224,18 @@
 <table class="info-header">
   <tr>
     <td class="info-left">
-      <div class="lbl">Funcionario Solicitante</div>
-      <div class="val">{{ $nombreServidor }}</div>
-      <div style="margin-top: 6px;">
-        <span class="lbl" style="display:inline-block; margin-right: 5px;">Fecha de Emisión:</span>
-        <span class="val-light">{{ $fechaEmision }}</span>
-      </div>
+      <table style="width:100%; border-collapse: collapse; border:none;">
+        <tr>
+          <td style="border:none; padding:0; vertical-align:top; width:65%; background:transparent;">
+            <div class="lbl">Funcionario Solicitante</div>
+            <div class="val">{{ $nombreServidor }}</div>
+          </td>
+          <td style="border:none; padding:0; vertical-align:top; width:35%; background:transparent;">
+            <div class="lbl">Fecha de Emisión</div>
+            <div class="val">{{ $fechaEmision }}</div>
+          </td>
+        </tr>
+      </table>
     </td>
     <td class="info-right">
       @if($qrSrc)
@@ -297,16 +303,12 @@
 
 {{-- ══ FIRMA DEL SOLICITANTE ══ --}}
 <div class="firma-section">
-  <table class="firma-single">
-    <tr>
-      <td>
-        <div style="height: 50px;"></div>
-        <div class="firma-line"></div>
-        <div class="f-lbl">Firma del Solicitante</div>
-        <div class="f-name">{{ $nombreServidor }}</div>
-      </td>
-    </tr>
-  </table>
+  <div class="firma-single-box">
+    <div style="height: 60px;"></div> <!-- Espacio para la firma -->
+    <div class="firma-line"></div>
+    <div class="f-lbl">Firma del Solicitante</div>
+    <div class="f-name">{{ $nombreServidor }}</div>
+  </div>
 </div>
 
 {{-- ══ FIRMAS DE LOS JEFES ══ --}}
@@ -315,7 +317,7 @@
     <tr>
       <td>
         <div class="firma-box-left">
-          <div style="height: 40px;"></div>
+          <div style="height: 55px;"></div>
           <div class="firma-line" style="width: 80%;"></div>
           <div class="f-lbl">Jefe Inmediato</div>
           <div class="f-name">{{ $nombreJefe ?: '_______________________' }}</div>
@@ -328,7 +330,7 @@
       </td>
       <td>
         <div class="firma-box-right">
-          <div style="height: 40px;"></div>
+          <div style="height: 55px;"></div>
           <div class="firma-line" style="width: 80%;"></div>
           <div class="f-lbl">Director</div>
           <div class="f-name">_______________________</div>
@@ -364,7 +366,7 @@
     <tr>
       <td>
         <div class="firma-box-left">
-          <div style="height: 40px;"></div>
+          <div style="height: 55px;"></div>
           <div class="firma-line" style="width: 80%;"></div>
           <div class="f-lbl">Dirección de Talento Humano</div>
           <div style="height: 12px;"></div>
@@ -376,7 +378,7 @@
       </td>
       <td>
         <div class="firma-box-right">
-          <div style="height: 40px;"></div>
+          <div style="height: 55px;"></div>
           <div class="firma-line" style="width: 80%;"></div>
           <div class="f-lbl">Prefectura</div>
           <div style="height: 12px;"></div>
