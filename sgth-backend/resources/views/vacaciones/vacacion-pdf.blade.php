@@ -112,10 +112,10 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     color: #334155;
-    margin: 30px;
-    line-height: 1.4;
+    margin: 15px 25px; /* Reducido para que entre en una sola página */
+    line-height: 1.2;
   }
 
   /* ── BRANDING ── */
@@ -125,55 +125,55 @@
   /* ── HEADER ── */
   .header-table {
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
     border-bottom: 1.5px solid #1a5c38;
-    padding-bottom: 15px;
+    padding-bottom: 8px;
   }
   .logo-cell {
-    width: 140px;
+    width: 120px;
     vertical-align: middle;
   }
-  .logo-cell img { width: 120px; height: auto; }
+  .logo-cell img { width: 100px; height: auto; }
   .title-wrap {
     text-align: right;
     vertical-align: middle;
   }
   .inst-name {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     color: #0f172a;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
   .doc-title {
-    font-size: 11px;
+    font-size: 10px;
     color: #64748b;
     text-transform: uppercase;
-    margin-top: 6px;
+    margin-top: 4px;
     letter-spacing: 1px;
   }
 
   /* ── SECTIONS ── */
   .section-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: bold;
     text-transform: uppercase;
     color: #1a5c38;
-    margin-bottom: 8px;
-    margin-top: 15px;
+    margin-bottom: 6px;
+    margin-top: 10px;
     border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
   }
 
   /* ── INFO SOLICITANTE HEADER ── */
   .info-header {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     background: #f8fafc;
   }
   .info-header td {
-    padding: 12px;
+    padding: 8px 10px;
     vertical-align: middle;
     border: 1px solid #e2e8f0;
   }
@@ -186,19 +186,19 @@
     text-align: center;
   }
   .lbl {
-    font-size: 10px;
+    font-size: 9px;
     color: #64748b;
     text-transform: uppercase;
     font-weight: bold;
     margin-bottom: 2px;
   }
   .val {
-    font-size: 13px;
+    font-size: 12px;
     color: #0f172a;
     font-weight: bold;
   }
   .val-light {
-    font-size: 11px;
+    font-size: 10px;
     color: #475569;
   }
   
@@ -206,10 +206,10 @@
   .t {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
   .t td {
-    padding: 8px 10px;
+    padding: 5px 8px;
     vertical-align: middle;
     border: 1px solid #e2e8f0;
   }
@@ -217,30 +217,30 @@
     font-weight: bold;
     background: #f8fafc;
     color: #475569;
-    font-size: 10px;
+    font-size: 9px;
     text-transform: uppercase;
     width: 20%;
   }
   .t .t-val {
     color: #0f172a;
-    font-size: 11px;
+    font-size: 10px;
   }
   .t .t-val-bold {
     font-weight: bold;
     color: #0f172a;
-    font-size: 12px;
+    font-size: 10px;
   }
 
   /* ── MOTIVOS ── */
   .motivos-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     border: 1px solid #e2e8f0;
   }
   .motivos-table td {
-    padding: 8px 6px;
-    font-size: 10px;
+    padding: 4px;
+    font-size: 9px;
     vertical-align: middle;
     width: 33.33%;
     color: #475569;
@@ -253,15 +253,15 @@
   }
   .check-icon {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border: 1px solid #94a3b8;
-    border-radius: 3px;
-    margin-right: 6px;
+    border-radius: 2px;
+    margin-right: 4px;
     vertical-align: middle;
     text-align: center;
-    line-height: 12px;
-    font-size: 9px;
+    line-height: 10px;
+    font-size: 8px;
   }
   .check-icon.active {
     background: #1a5c38;
@@ -273,56 +273,56 @@
   .detalle-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     border: 1px solid #e2e8f0;
   }
   .detalle-table td {
-    padding: 10px;
+    padding: 6px;
     border: 1px solid #e2e8f0;
     text-align: center;
   }
   .dt-lbl {
-    font-size: 10px;
+    font-size: 9px;
     color: #64748b;
     text-transform: uppercase;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     font-weight: bold;
   }
   .dt-val {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: bold;
     color: #0f172a;
   }
 
   /* ── FIRMAS ── */
   .firma-section {
-    margin-top: 20px;
+    margin-top: 8px;
     page-break-inside: avoid;
   }
   .firma-single {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
   }
   .firma-single td {
     text-align: center;
-    padding: 15px;
+    padding: 6px;
     border: 1px solid #e2e8f0;
     background: #f8fafc;
   }
   .firma-line {
     border-top: 1px solid #94a3b8;
-    margin: 40px auto 8px auto;
-    width: 250px;
+    margin: 20px auto 4px auto;
+    width: 200px;
   }
   .f-lbl {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: bold;
     color: #475569;
     text-transform: uppercase;
   }
   .f-name {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: bold;
     color: #0f172a;
     text-transform: uppercase;
@@ -331,7 +331,7 @@
   .firma-grid {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
   }
   .firma-grid td {
     width: 50%;
@@ -340,32 +340,32 @@
   }
   .firma-box-left {
     border: 1px solid #e2e8f0;
-    padding: 15px;
-    height: 120px;
+    padding: 6px;
+    height: 70px;
     text-align: center;
     background: #f8fafc;
-    margin-right: 6px;
+    margin-right: 4px;
   }
   .firma-box-right {
     border: 1px solid #e2e8f0;
-    padding: 15px;
-    height: 120px;
+    padding: 6px;
+    height: 70px;
     text-align: center;
     background: #f8fafc;
-    margin-left: 6px;
+    margin-left: 4px;
   }
   
   .aceptado-box {
     text-align: center;
-    margin-top: 10px;
-    font-size: 10px;
+    margin-top: 4px;
+    font-size: 9px;
   }
   .badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 2px 6px;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
-    margin: 0 5px;
+    margin: 0 4px;
     color: #64748b;
     background: #fff;
   }
@@ -373,14 +373,14 @@
   /* ── PIE ── */
   .pie {
     position: fixed;
-    bottom: -15px;
-    left: 30px;
-    right: 30px;
+    bottom: -10px;
+    left: 25px;
+    right: 25px;
     text-align: right;
-    font-size: 9px;
+    font-size: 8px;
     color: #94a3b8;
     border-top: 1px solid #e2e8f0;
-    padding-top: 8px;
+    padding-top: 4px;
   }
   
   .qr-img {
@@ -390,9 +390,9 @@
     border-radius: 4px;
   }
   .qr-folio {
-    font-size: 10px;
+    font-size: 9px;
     color: #0f172a;
-    margin-top: 4px;
+    margin-top: 2px;
     font-family: monospace;
     font-weight: bold;
   }
@@ -427,17 +427,16 @@
     <td class="info-left">
       <div class="lbl">Funcionario Solicitante</div>
       <div class="val">{{ $nombreServidor }}</div>
-      <div style="margin-top: 8px;">
+      <div style="margin-top: 6px;">
         <span class="lbl" style="display:inline-block; margin-right: 5px;">Fecha de Emisión:</span>
         <span class="val-light">{{ $fechaEmision }}</span>
       </div>
     </td>
     <td class="info-right">
       @if($qrSrc)
-        <img src="{{ $qrSrc }}" width="55" height="55" class="qr-img" alt="QR">
+        <img src="{{ $qrSrc }}" width="50" height="50" class="qr-img" alt="QR">
       @endif
       <div class="qr-folio">{{ $folio }}</div>
-      <div class="lbl" style="margin-top:2px;">Código Solicitud</div>
     </td>
   </tr>
 </table>
@@ -469,7 +468,7 @@
   <tr>
     <td width="25%" style="background: #f8fafc;">
       <div class="dt-lbl">Días Solicitados</div>
-      <div class="dt-val">{{ $vacacion->dias_solicitados }} <span style="font-size:10px; font-weight:normal; color:#64748b;">({{ $tipoDiasLabel }})</span></div>
+      <div class="dt-val">{{ $vacacion->dias_solicitados }} <span style="font-size:9px; font-weight:normal; color:#64748b;">({{ $tipoDiasLabel }})</span></div>
     </td>
     <td width="25%">
       <div class="dt-lbl">Desde</div>
@@ -501,11 +500,40 @@
 <div class="firma-section">
   <table class="firma-single">
     <tr>
-      <td>
-        <div style="height: 25px;"></div>
-        <div class="firma-line"></div>
+      <td style="height: 60px;">
+        <div class="firma-line" style="margin-top: 20px;"></div>
         <div class="f-lbl">Firma del Solicitante</div>
-        <div class="f-name" style="margin-top:4px;">{{ $nombreServidor }}</div>
+        <div class="f-name" style="margin-top:2px;">{{ $nombreServidor }}</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+{{-- ══ FIRMAS DE LOS JEFES ══ --}}
+<div class="firma-section">
+  <table class="firma-grid">
+    <tr>
+      <td>
+        <div class="firma-box-left">
+          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="f-lbl">Jefe Inmediato</div>
+          <div class="f-name" style="margin-top:2px;">{{ $nombreJefe ?: '_______________________' }}</div>
+          <div class="aceptado-box">
+            <span class="badge"><span class="check-icon"></span> Aprobado</span>
+            <span class="badge"><span class="check-icon"></span> Negado</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="firma-box-right">
+          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="f-lbl">Director</div>
+          <div class="f-name" style="margin-top:2px;">_______________________</div>
+          <div class="aceptado-box">
+            <span class="badge"><span class="check-icon"></span> Aprobado</span>
+            <span class="badge"><span class="check-icon"></span> Negado</span>
+          </div>
+        </div>
       </td>
     </tr>
   </table>
@@ -526,17 +554,15 @@
   </tr>
 </table>
 
-{{-- ══ FIRMAS DE APROBACIÓN ══ --}}
+{{-- ══ FIRMAS FINALES ══ --}}
 <div class="firma-section">
   <table class="firma-grid">
     <tr>
       <td>
         <div class="firma-box-left">
-          <div style="height: 15px;"></div>
-          <div class="firma-line" style="width: 80%;"></div>
-          <div class="f-lbl">Jefe Inmediato / Director</div>
-          <div class="f-name" style="margin-top:4px;">{{ $nombreJefe ?: '_______________________' }}</div>
-          <div class="aceptado-box">
+          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="f-lbl">Dirección de Talento Humano</div>
+          <div class="aceptado-box" style="margin-top:6px;">
             <span class="badge"><span class="check-icon"></span> Aprobado</span>
             <span class="badge"><span class="check-icon"></span> Negado</span>
           </div>
@@ -544,11 +570,9 @@
       </td>
       <td>
         <div class="firma-box-right">
-          <div style="height: 15px;"></div>
-          <div class="firma-line" style="width: 80%;"></div>
-          <div class="f-lbl">Talento Humano / Prefectura</div>
-          <div class="f-name" style="margin-top:4px;">_______________________</div>
-          <div class="aceptado-box">
+          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="f-lbl">Prefectura</div>
+          <div class="aceptado-box" style="margin-top:6px;">
             <span class="badge"><span class="check-icon"></span> Aprobado</span>
             <span class="badge"><span class="check-icon"></span> Negado</span>
           </div>
