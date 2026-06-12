@@ -340,16 +340,16 @@
   }
   .firma-box-left {
     border: 1px solid #e2e8f0;
-    padding: 6px;
-    height: 70px;
+    padding: 8px;
+    height: 95px;
     text-align: center;
     background: #f8fafc;
     margin-right: 4px;
   }
   .firma-box-right {
     border: 1px solid #e2e8f0;
-    padding: 6px;
-    height: 70px;
+    padding: 8px;
+    height: 95px;
     text-align: center;
     background: #f8fafc;
     margin-left: 4px;
@@ -357,7 +357,7 @@
   
   .aceptado-box {
     text-align: center;
-    margin-top: 4px;
+    margin-top: 10px;
     font-size: 9px;
   }
   .badge {
@@ -500,8 +500,8 @@
 <div class="firma-section">
   <table class="firma-single">
     <tr>
-      <td style="height: 60px;">
-        <div class="firma-line" style="margin-top: 20px;"></div>
+      <td style="height: 80px;">
+        <div class="firma-line" style="margin-top: 35px;"></div>
         <div class="f-lbl">Firma del Solicitante</div>
         <div class="f-name" style="margin-top:2px;">{{ $nombreServidor }}</div>
       </td>
@@ -515,9 +515,9 @@
     <tr>
       <td>
         <div class="firma-box-left">
-          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="firma-line" style="width: 80%; margin-top:35px;"></div>
           <div class="f-lbl">Jefe Inmediato</div>
-          <div class="f-name" style="margin-top:2px;">{{ $nombreJefe ?: '_______________________' }}</div>
+          <div class="f-name" style="margin-top:4px;">{{ $nombreJefe ?: '_______________________' }}</div>
           <div class="aceptado-box">
             <span class="badge"><span class="check-icon"></span> Aprobado</span>
             <span class="badge"><span class="check-icon"></span> Negado</span>
@@ -526,9 +526,9 @@
       </td>
       <td>
         <div class="firma-box-right">
-          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="firma-line" style="width: 80%; margin-top:35px;"></div>
           <div class="f-lbl">Director</div>
-          <div class="f-name" style="margin-top:2px;">_______________________</div>
+          <div class="f-name" style="margin-top:4px;">_______________________</div>
           <div class="aceptado-box">
             <span class="badge"><span class="check-icon"></span> Aprobado</span>
             <span class="badge"><span class="check-icon"></span> Negado</span>
@@ -560,9 +560,9 @@
     <tr>
       <td>
         <div class="firma-box-left">
-          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="firma-line" style="width: 80%; margin-top:35px;"></div>
           <div class="f-lbl">Dirección de Talento Humano</div>
-          <div class="aceptado-box" style="margin-top:6px;">
+          <div class="aceptado-box">
             <span class="badge"><span class="check-icon"></span> Aprobado</span>
             <span class="badge"><span class="check-icon"></span> Negado</span>
           </div>
@@ -570,9 +570,9 @@
       </td>
       <td>
         <div class="firma-box-right">
-          <div class="firma-line" style="width: 80%; margin-top:20px;"></div>
+          <div class="firma-line" style="width: 80%; margin-top:35px;"></div>
           <div class="f-lbl">Prefectura</div>
-          <div class="aceptado-box" style="margin-top:6px;">
+          <div class="aceptado-box">
             <span class="badge"><span class="check-icon"></span> Aprobado</span>
             <span class="badge"><span class="check-icon"></span> Negado</span>
           </div>
