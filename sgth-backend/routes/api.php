@@ -649,7 +649,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
         // Admin TI
     Route::prefix('admin')
-        ->middleware('role:admin-ti')
+        ->middleware('role:admin-ti|admin-uath')
         ->group(function () {
             Route::get('usuarios/sugerir-usuario-ti',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'sugerirUsuarioTi'])
