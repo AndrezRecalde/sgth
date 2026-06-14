@@ -61,6 +61,12 @@ export const usuarioService = {
       `/admin/usuarios/${id}/desvincular-servidor`
     ).then(r => r.data.datos),
 
+  asignarServidor: (id: number, servidorId: number) =>
+    api.post<ApiResponse<Usuario>>(
+      `/admin/usuarios/${id}/asignar-servidor`,
+      { servidor_id: servidorId }
+    ).then(r => r.data.datos),
+
   servidoresSinUsuario: (search?: string): Promise<{ id: number; cedula: string; nombre_completo: string }[]> =>
     api.get<ApiResponse<{ id: number; cedula: string; nombre_completo: string }[]>>(
       '/expediente/servidores/sin-usuario',

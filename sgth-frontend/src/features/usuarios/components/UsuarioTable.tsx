@@ -15,13 +15,14 @@ interface Props {
   onRestablecerPassword: (u: Usuario) => void
   onPermisos:            (u: Usuario) => void
   onDesvincular:         (u: Usuario) => void
+  onAsignarServidor:     (u: Usuario) => void
 }
 
 export function UsuarioTable({
   data, isLoading, total, page,
   onPageChange, onEdit,
   onToggleActivo, onRestablecerPassword,
-  onPermisos, onDesvincular,
+  onPermisos, onDesvincular, onAsignarServidor,
 }: Props) {
   return (
     <SgthTable
@@ -32,6 +33,7 @@ export function UsuarioTable({
         onRestablecerPassword,
         onPermisos,
         onDesvincular,
+        onAsignarServidor,
       })}
       fetching={isLoading}
       totalRecords={total || data.length || 0}

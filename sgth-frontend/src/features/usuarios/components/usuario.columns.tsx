@@ -1,5 +1,5 @@
 import { Text, Badge, Switch, Tooltip, Group, Stack } from '@mantine/core'
-import { IconEdit, IconKey, IconShieldCheck, IconUserOff } from '@tabler/icons-react'
+import { IconEdit, IconKey, IconShieldCheck, IconUserOff, IconUserCheck } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Usuario } from '@/types/api'
@@ -46,6 +46,7 @@ type Handlers = {
   onRestablecerPassword: (u: Usuario) => void
   onPermisos:            (u: Usuario) => void
   onDesvincular:         (u: Usuario) => void
+  onAsignarServidor:     (u: Usuario) => void
 }
 
 export const getUsuarioColumns = ({
@@ -54,20 +55,31 @@ export const getUsuarioColumns = ({
   onRestablecerPassword,
   onPermisos,
   onDesvincular,
+  onAsignarServidor,
 }: Handlers): DataTableColumn<Usuario>[] => [
   {
     accessor: 'servidor',
     title:    'Servidor',
-    render: ({ nombre_completo, servidor }) => (
-      <Stack gap={0}>
-        <Text size="sm" fw={500}>
-          {nombre_completo || servidor?.nombre || '—'}
-        </Text>
-        <Text size="xs" c="dimmed">
-          CI: {servidor?.cedula ?? '—'}
-        </Text>
-      </Stack>
-    ),
+    render: ({ nombre_completo, servidor, servidor_id }) => {
+      if (!servidor_id) {
+        return (
+          <Badge color="red" variant="light" size="sm" leftSection={<IconUserOff size={12} />}>
+            SIN SERVIDOR
+          </Badge>
+        )
+      }
+
+      return (
+        <Stack gap={0}>
+          <Text size="sm" fw={500}>
+            {nombre_completo || servidor?.nombre || '—'}
+          </Text>
+          <Text size="xs" c="dimmed">
+            CI: {servidor?.cedula ?? '—'}
+          </Text>
+        </Stack>
+      )
+    },
   },
   {
     accessor: 'usuario_ti',
@@ -141,6 +153,13 @@ export const getUsuarioColumns = ({
           icon:    <IconKey size={14} />,
           color:   'orange',
           onClick: () => onRestablecerPassword(usuario),
+        },
+        {
+          label:   'Asignar servidor',
+          icon:    <IconUserCheck size={14} />,
+          color:   'teal',
+          onClick: () => onAsignarServidor(usuario),
+          hidden:  !!usuario.servidor_id,
         },
         {
           label:   'Desvincular servidor',

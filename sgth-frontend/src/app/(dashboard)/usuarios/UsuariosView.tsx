@@ -10,6 +10,7 @@ import { UsuarioToolbar }     from '@/features/usuarios/components/UsuarioToolba
 import { UsuarioTable }       from '@/features/usuarios/components/UsuarioTable'
 import { UsuarioDrawer }      from '@/features/usuarios/components/UsuarioDrawer'
 import { PermisosDrawer }     from '@/features/usuarios/components/PermisosDrawer'
+import { AsignarServidorModal } from '@/features/usuarios/components/AsignarServidorModal'
 import { useUsuarios }        from '@/features/usuarios/hooks/useUsuarios'
 import { useUsuarioMutations } from '@/features/usuarios/hooks/useUsuarioMutations'
 import type { Usuario }       from '@/types/api'
@@ -21,11 +22,14 @@ export function UsuariosView() {
 
   const [usuarioSel,  setUsuarioSel]  = useState<Usuario | null>(null)
   const [permisosUsr, setPermisosUsr] = useState<Usuario | null>(null)
+  const [asignarUsr,  setAsignarUsr]  = useState<Usuario | null>(null)
 
   const [drawerOpened,
     { open: openDrawer, close: closeDrawer }]   = useDisclosure(false)
   const [permisosOpened,
     { open: openPermisos, close: closePermisos }] = useDisclosure(false)
+  const [asignarOpened,
+    { open: openAsignar, close: closeAsignar }]   = useDisclosure(false)
 
   const { data, isLoading } = useUsuarios({
     page,
@@ -89,6 +93,11 @@ export function UsuariosView() {
     }
   }
 
+  const handleAsignarServidor = (u: Usuario) => {
+    setAsignarUsr(u)
+    openAsignar()
+  }
+
   return (
     <Stack gap="md">
       <PageHeader
@@ -141,6 +150,7 @@ export function UsuariosView() {
           onRestablecerPassword={handleRestablecerPassword}
           onPermisos={handlePermisos}
           onDesvincular={handleDesvincular}
+          onAsignarServidor={handleAsignarServidor}
         />
       )}
 
@@ -154,6 +164,15 @@ export function UsuariosView() {
         opened={permisosOpened}
         onClose={handleClosePermisos}
         usuario={permisosUsr}
+      />
+
+      <AsignarServidorModal
+        opened={asignarOpened}
+        onClose={() => {
+          setAsignarUsr(null)
+          closeAsignar()
+        }}
+        usuario={asignarUsr}
       />
     </Stack>
   )
