@@ -113,22 +113,32 @@ export const getUsuarioColumns = ({
     accessor: 'activo',
     title:    'Estado',
     width:    80,
-    render: (usuario) => (
-      <Tooltip
-        label={usuario.activo ? 'Desactivar' : 'Activar'}
-        withArrow
-      >
-        <Switch
-          checked={
-            String(usuario.activo) === '1' ||
-            String(usuario.activo) === 'true'
+    render: (usuario) => {
+      const sinServidor = !usuario.servidor_id
+      return (
+        <Tooltip
+          label={
+            sinServidor
+              ? 'Sin servidor vinculado'
+              : usuario.activo ? 'Desactivar' : 'Activar'
           }
-          onChange={() => onToggleActivo(usuario)}
-          color="emerald"
-          size="sm"
-        />
-      </Tooltip>
-    ),
+          withArrow
+        >
+          <Switch
+            checked={
+              String(usuario.activo) === '1' ||
+              String(usuario.activo) === 'true'
+            }
+            onChange={() =>
+              !sinServidor && onToggleActivo(usuario)
+            }
+            disabled={sinServidor}
+            color="emerald"
+            size="sm"
+          />
+        </Tooltip>
+      )
+    },
   },
   {
     accessor: 'acciones',

@@ -47,8 +47,8 @@ export const usuarioService = {
     ).then(r => r.data.datos),
 
   toggleActivo: (id: number): Promise<{ activo: boolean }> =>
-    api.patch<ApiResponse<{ activo: boolean }>>(
-      `/usuarios/${id}/toggle-activo`
+    api.post<ApiResponse<{ activo: boolean }>>(
+      `/admin/usuarios/${id}/toggle-activo`
     ).then(r => r.data.datos),
 
   restablecerContrasena: (id: number): Promise<ApiResponse<void>> =>
