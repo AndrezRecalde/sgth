@@ -133,6 +133,48 @@ final class UsuarioController extends Controller
         );
     }
 
+    public function asignarServidor(
+        int $id,
+        \Illuminate\Http\Request $request
+    ): JsonResponse {
+        $data = $request->validate([
+            'servidor_id' => ['required', 'integer',
+                'exists:servidores,id'],
+        ]);
+
+        $usuario = User::findOrFail($id);
+
+        if ($usuario->servidor_id) {
+            return ApiResponse::error(
+                'Este usuario ya tiene un servidor vinculado.',
+                422
+            );
+        }
+
+        // Verificar que el servidor no tenga ya un usuario
+        $servidorOcupado = User::where(
+            'servidor_id', $data['servidor_id']
+        )->exists();
+
+        if ($servidorOcupado) {
+            return ApiResponse::error(
+                'Este servidor ya tiene un usuario asignado.',
+                422
+            );
+        }
+
+        $usuario->update([
+            'servidor_id' => $data['servidor_id'],
+        ]);
+
+        return ApiResponse::ok(
+            new UsuarioResource(
+                $usuario->fresh(['roles', 'servidor'])
+            ),
+            'Servidor asignado al usuario correctamente.'
+        );
+    }
+
     public function sugerirUsuarioTi(Request $request): JsonResponse
     {
         $servidorId = $request->integer('servidor_id');
