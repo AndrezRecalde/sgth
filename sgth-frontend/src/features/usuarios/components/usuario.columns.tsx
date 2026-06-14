@@ -59,10 +59,7 @@ export const getUsuarioColumns = ({
     render: ({ nombre_completo, servidor }) => (
       <Stack gap={0}>
         <Text size="sm" fw={500}>
-          {nombre_completo
-            || [servidor?.nombre, servidor?.apellido]
-               .filter(Boolean).join(' ')
-            || '—'}
+          {nombre_completo || servidor?.nombre || '—'}
         </Text>
         <Text size="xs" c="dimmed">
           CI: {servidor?.cedula ?? '—'}
