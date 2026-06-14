@@ -56,18 +56,58 @@ export function useUsuarioMutations() {
   })
 
   const toggleActivo = useMutation({
-    mutationFn: (id: number) => usuarioService.toggleActivo(id),
+    mutationFn: (id: number) =>
+      usuarioService.toggleActivo(id),
+    onMutate: async (id: number) => {
+      // Cancelar queries en vuelo
+      await qc.cancelQueries({ queryKey: ['usuarios'] })
+
+      // Guardar snapshot anterior
+      const snapshot = qc.getQueriesData({ queryKey: ['usuarios'] })
+
+      // Actualizar optimísticamente
+      qc.setQueriesData(
+        { queryKey: ['usuarios'] },
+        (old: unknown) => {
+          if (!old || typeof old !== 'object') return old
+          const data = old as {
+            data?: { id: number; activo: unknown }[]
+          }
+          if (!Array.isArray(data.data)) return old
+          return {
+            ...data,
+            data: data.data.map(u =>
+              Number(u.id) === id
+                ? { ...u, activo: !u.activo }
+                : u
+            ),
+          }
+        }
+      )
+      return { snapshot }
+    },
     onSuccess: (data) => {
       const estado = data?.activo ? 'activado' : 'desactivado'
       notifications.show({
-        title: `Usuario ${estado}`,
+        title:   `Usuario ${estado}`,
         message: `El usuario fue ${estado} correctamente.`,
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
       })
-      invalidar()
     },
-    onError,
+    onError: (error, _id, context) => {
+      // Revertir si falla
+      if (context?.snapshot) {
+        context.snapshot.forEach(([queryKey, data]) => {
+          qc.setQueryData(queryKey, data)
+        })
+      }
+      onError(error)
+    },
+    onSettled: () => {
+      // Sincronizar con el servidor al terminar
+      qc.invalidateQueries({ queryKey: ['usuarios'] })
+    },
   })
 
   const restablecerContrasena = useMutation({
