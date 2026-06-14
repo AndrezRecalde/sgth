@@ -12,9 +12,24 @@ import type {
 
 export const usuarioService = {
   listar: (params?: UsuarioParams) =>
-    api.get<ApiResponse<PaginatedResponse<Usuario>>>(
-      '/admin/usuarios', { params }
-    ).then(r => r.data.datos),
+    api.get<{
+      exito:  boolean
+      mensaje: string
+      datos:  Usuario[]
+      meta: {
+        pagina_actual: number
+        por_pagina:    number
+        total:         number
+        ultima_pagina: number
+      }
+    }>('/admin/usuarios', { params })
+    .then(r => ({
+      data:          r.data.datos ?? [],
+      total:         r.data.meta?.total ?? 0,
+      current_page:  r.data.meta?.pagina_actual ?? 1,
+      per_page:      r.data.meta?.por_pagina ?? 15,
+      last_page:     r.data.meta?.ultima_pagina ?? 1,
+    })),
 
   obtener: (id: number) =>
     api.get<ApiResponse<Usuario>>(
