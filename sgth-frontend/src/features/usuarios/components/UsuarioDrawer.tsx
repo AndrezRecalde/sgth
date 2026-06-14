@@ -1,200 +1,159 @@
-"use client";
+'use client'
 
-import { useState } from "react";
+import { useState } from 'react'
 import {
-  Drawer,
-  Stack,
-  TextInput,
-  MultiSelect,
-  Button,
-  Group,
-  Divider,
-  Text,
-  Badge,
-  Paper,
-  Avatar,
-  Loader,
-  Accordion,
-  Checkbox,
-  ScrollArea,
-  ThemeIcon,
-  Tooltip,
-  Alert,
-} from "@mantine/core";
-import { useForm, Controller, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+  Drawer, Stack, TextInput, MultiSelect,
+  Button, Group, Divider, Text, Badge,
+  Paper, Avatar, Loader, ThemeIcon,
+  Alert, ScrollArea, ActionIcon,
+} from '@mantine/core'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver }         from '@hookform/resolvers/zod'
+import { z }                   from 'zod/v4'
 import {
-  IconUser,
-  IconSearch,
-  IconCheck,
-  IconX,
-  IconShieldCheck,
-  IconInfoCircle,
-  IconArrowLeft,
-} from "@tabler/icons-react";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
-import { useServidoresSinUsuario } from "../hooks/useServidoresSinUsuario";
-import { usePermisos } from "../hooks/usePermisos";
-import { useUsuarioMutations } from "../hooks/useUsuarioMutations";
-import { usuarioService } from "../services/usuarioService";
-import type { PermisoGrupo, PermisoItem } from "@/types/api";
+  IconUser, IconSearch, IconCheck,
+  IconArrowLeft, IconX,
+} from '@tabler/icons-react'
+import { useContainedInput }    from '@/hooks/useContainedInput'
+import { useMobileBreakpoint }  from '@/hooks/useMobileBreakpoint'
+import { useUsuarioMutations }  from '../hooks/useUsuarioMutations'
+import { usuarioService }       from '../services/usuarioService'
+import type { Usuario }         from '@/types/api'
 
-// ── Schema ────────────────────────────────────────
 const schema = z.object({
-  servidor_id: z.number({ error: "Seleccione un servidor" }),
-  email: z.string().email("Email inválido"),
-  usuario_ti: z
-    .string()
-    .min(3, "Mínimo 3 caracteres")
-    .regex(/^[a-z0-9]+$/, "Solo letras minúsculas y números"),
-  roles: z.array(z.string()).min(1, "Asigne al menos un rol"),
-  permisos: z.array(z.string()).optional(),
-});
+  servidor_id: z.number({ error: 'Seleccione un servidor' }),
+  email:       z.string().email('Email inválido'),
+  usuario_ti:  z.string()
+    .min(3, 'Mínimo 3 caracteres')
+    .regex(/^[a-z0-9]+$/, 'Solo letras minúsculas y números'),
+  roles: z.array(z.string()).min(1, 'Asigne al menos un rol'),
+})
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<typeof schema>
 
-// ── Constantes ────────────────────────────────────
 const ROL_LABELS: Record<string, string> = {
-  "admin-ti": "Admin TI",
-  "admin-uath": "Admin UATH",
-  "asistente-uath": "Asistente UATH",
-  "maxima-autoridad": "Máxima Autoridad",
-  director: "Director",
-  "jefe-unidad": "Jefe de Unidad",
-  servidor: "Servidor",
-  recepcion: "Recepción",
-  "trabajo-social": "Trabajo Social",
-  medico: "Médico",
-  odontologo: "Odontólogo",
-  enfermera: "Enfermera",
-  "admin-dispensario": "Admin Dispensario",
-  "tecnico-dtic": "Técnico DTIC",
-  auditor: "Auditor",
-};
-
-const ROLES_DISPONIBLES = Object.keys(ROL_LABELS).map((r) => ({
-  value: r,
-  label: ROL_LABELS[r],
-}));
-
-// ── Interfaces ────────────────────────────────────
-interface Props {
-  opened: boolean;
-  onClose: () => void;
+  'admin-ti':          'Admin TI',
+  'admin-uath':        'Admin UATH',
+  'asistente-uath':    'Asistente UATH',
+  'maxima-autoridad':  'Máxima Autoridad',
+  'director':          'Director',
+  'jefe-unidad':       'Jefe de Unidad',
+  'servidor':          'Servidor',
+  'recepcion':         'Recepción',
+  'trabajo-social':    'Trabajo Social',
+  'medico':            'Médico',
+  'odontologo':        'Odontólogo',
+  'enfermera':         'Enfermera',
+  'admin-dispensario': 'Admin Dispensario',
+  'tecnico-dtic':      'Técnico DTIC',
+  'auditor':           'Auditor',
 }
 
+const ROLES_DISPONIBLES = Object.entries(ROL_LABELS).map(
+  ([value, label]) => ({ value, label })
+)
+
 type ServidorItem = {
-  id: number;
-  cedula: string;
-  nombre_completo: string;
-};
+  id:              number
+  cedula:          string
+  nombre_completo: string
+}
 
-type Paso = "buscar" | "configurar";
+type Paso = 'buscar' | 'configurar'
 
-// ── Componente ────────────────────────────────────
-export function UsuarioDrawer({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint();
-  const contained = useContainedInput();
-  const { crear } = useUsuarioMutations();
-  const { data: permisosGrupos = [] } = usePermisos();
-  const { data: servidores = [] } = useServidoresSinUsuario();
+interface Props {
+  opened:    boolean
+  onClose:   () => void
+  usuario?:  Usuario | null
+}
 
-  const [paso, setPaso] = useState<Paso>("buscar");
-  const [busqueda, setBusqueda] = useState("");
-  const [servidorSel, setServidorSel] = useState<ServidorItem | null>(null);
-  const [cargandoTi, setCargandoTi] = useState(false);
-  const [permisosActivos, setPermisosActivos] = useState<string[]>([]);
+export function UsuarioDrawer({ opened, onClose, usuario }: Props) {
+  const { isMobile }  = useMobileBreakpoint()
+  const contained     = useContainedInput()
+  const { crear, actualizar } = useUsuarioMutations()
+
+  const modoEditar = !!usuario
+
+  const [paso,        setPaso]        = useState<Paso>('buscar')
+  const [busqueda,    setBusqueda]    = useState('')
+  const [queryBusq,   setQueryBusq]   = useState('')
+  const [servidorSel, setServidorSel] = useState<ServidorItem | null>(null)
+  const [cargandoTi,  setCargandoTi]  = useState(false)
+  const [resultados,  setResultados]  = useState<ServidorItem[]>([])
+  const [buscando,    setBuscando]    = useState(false)
 
   const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
+    register, control, handleSubmit,
+    setValue, reset,
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       servidor_id: undefined,
-      email: "",
-      usuario_ti: "",
-      roles: [],
-      permisos: [],
+      email:       usuario?.email       ?? '',
+      usuario_ti:  usuario?.usuario_ti  ?? '',
+      roles:       (usuario?.roles as string[]) ?? [],
     },
-  });
-
-  const rolesActuales = useWatch({
-    control,
-    name: "roles",
-    defaultValue: [],
-  });
+  })
 
   const handleClose = () => {
     reset()
     setPaso('buscar')
     setBusqueda('')
+    setQueryBusq('')
     setServidorSel(null)
-    setPermisosActivos([])
+    setResultados([])
     onClose()
   }
 
-  // Servidores filtrados por búsqueda
-  const servidoresFiltrados = (servidores as ServidorItem[]).filter(
-    (s) =>
-      s.cedula.includes(busqueda) ||
-      s.nombre_completo.toLowerCase().includes(busqueda.toLowerCase()),
-  );
-
-  // Al seleccionar servidor → pedir usuario_ti sugerido
-  const handleSeleccionarServidor = async (s: ServidorItem) => {
-    setServidorSel(s);
-    setValue("servidor_id", s.id);
-    setCargandoTi(true);
+  const handleBuscar = async () => {
+    if (!busqueda.trim()) return
+    setBuscando(true)
     try {
-      const res = await usuarioService.sugerirUsuarioTi(s.id);
-      const sugerido = res?.usuario_ti_sugerido ?? '';
-      setValue("usuario_ti", sugerido);
+      const res = await usuarioService.servidoresSinUsuario(
+        busqueda.trim()
+      )
+      setResultados(res ?? [])
+      setQueryBusq(busqueda.trim())
     } catch {
-      setValue("usuario_ti", "");
+      setResultados([])
     } finally {
-      setCargandoTi(false);
+      setBuscando(false)
     }
-    setPaso("configurar");
-  };
+  }
 
-  // Toggle permiso directo
-  const togglePermiso = (nombre: string) => {
-    setPermisosActivos((prev) =>
-      prev.includes(nombre)
-        ? prev.filter((p) => p !== nombre)
-        : [...prev, nombre],
-    );
-  };
+  const handleSeleccionar = async (s: ServidorItem) => {
+    setServidorSel(s)
+    setValue('servidor_id', s.id)
+    setCargandoTi(true)
+    try {
+      const res = await usuarioService.sugerirUsuarioTi(s.id)
+      setValue('usuario_ti', res?.usuario_ti_sugerido ?? '')
+    } catch {
+      setValue('usuario_ti', '')
+    } finally {
+      setCargandoTi(false)
+    }
+    setPaso('configurar')
+  }
 
-  // Permisos cubiertos por roles actuales
-  const permisosCubiertos = new Set(
-    (permisosGrupos as PermisoGrupo[]).flatMap((g) =>
-      g.permisos
-        .filter((p: PermisoItem) =>
-          rolesActuales.some((r) => p.roles.includes(r)),
-        )
-        .map((p: PermisoItem) => p.nombre),
-    ),
-  );
-
-  const onSubmit = (values: FormData) => {
-    crear
-      .mutateAsync({
-        ...values,
-        permisos: permisosActivos,
-      } as never)
-      .then(() => {
-        handleClose();
-      })
-      .catch(() => {});
-  };
+  const onSubmit = async (values: FormData) => {
+    try {
+      if (modoEditar && usuario) {
+        await actualizar.mutateAsync({
+          id:   Number(usuario.id),
+          data: {
+            email:      values.email,
+            usuario_ti: values.usuario_ti,
+            roles:      values.roles,
+          },
+        })
+      } else {
+        await crear.mutateAsync(values as never)
+      }
+      handleClose()
+    } catch {}
+  }
 
   return (
     <Drawer
@@ -206,151 +165,67 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
             <IconUser size={16} />
           </ThemeIcon>
           <Text fw={700}>
-            {paso === "buscar" ? "Buscar servidor" : "Configurar acceso"}
+            {modoEditar
+              ? 'Editar usuario'
+              : paso === 'buscar'
+                ? 'Buscar servidor'
+                : 'Configurar acceso'}
           </Text>
         </Group>
       }
       position="right"
-      size={isMobile ? "100%" : 560}
+      size={isMobile ? '100%' : 520}
       padding="lg"
     >
       <ScrollArea h="calc(100vh - 80px)">
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="md">
-            {/* ── PASO 1: Buscar servidor ── */}
-            {paso === "buscar" && (
-              <Stack gap="md">
-                <TextInput
-                  label="Buscar servidor"
-                  placeholder="Cédula o nombre del servidor"
-                  leftSection={<IconSearch size={16} />}
-                  {...contained}
-                  value={busqueda}
-                  onChange={(e) => setBusqueda(e.currentTarget.value)}
-                />
 
-                {servidoresFiltrados.length === 0 && busqueda.length > 0 && (
-                  <Alert
-                    icon={<IconInfoCircle size={16} />}
-                    color="gray"
-                    variant="light"
-                  >
-                    No se encontraron servidores sin usuario asignado para esa
-                    búsqueda.
-                  </Alert>
-                )}
-
-                <Stack gap="xs">
-                  {servidoresFiltrados.slice(0, 8).map((s) => (
-                    <Paper
-                      key={s.id}
-                      withBorder
-                      radius="md"
-                      p="sm"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleSeleccionarServidor(s)}
-                    >
-                      <Group justify="space-between">
-                        <Group gap="sm">
-                          <Avatar color="emerald" size="md" radius="xl">
-                            {s.nombre_completo
-                              .split(" ")
-                              .slice(0, 2)
-                              .map((w) => w[0])
-                              .join("")
-                              .toUpperCase()}
-                          </Avatar>
-                          <div>
-                            <Text size="sm" fw={600}>
-                              {s.nombre_completo}
-                            </Text>
-                            <Text size="xs" c="dimmed">
-                              CI: {s.cedula}
-                            </Text>
-                          </div>
-                        </Group>
-                        <Badge color="emerald" variant="light" size="sm">
-                          Seleccionar →
-                        </Badge>
-                      </Group>
-                    </Paper>
-                  ))}
-                </Stack>
-              </Stack>
-            )}
-
-            {/* ── PASO 2: Configurar acceso ── */}
-            {paso === "configurar" && servidorSel && (
-              <Stack gap="md">
-                {/* Card del servidor seleccionado */}
-                <Paper
-                  withBorder
-                  radius="md"
-                  p="md"
+            {/* MODO EDITAR — directo a configurar */}
+            {modoEditar && usuario && (
+              <>
+                <Paper withBorder radius="md" p="md"
                   style={{
-                    borderLeft: "4px solid var(--mantine-color-emerald-6)",
-                  }}
-                >
-                  <Group justify="space-between">
-                    <Group gap="sm">
-                      <ThemeIcon
-                        color="emerald"
-                        variant="light"
-                        size="lg"
-                        radius="xl"
-                      >
-                        <IconCheck size={18} />
-                      </ThemeIcon>
-                      <div>
-                        <Text size="sm" fw={600}>
-                          {servidorSel.nombre_completo}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          CI: {servidorSel.cedula}
-                        </Text>
-                      </div>
-                    </Group>
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      color="gray"
-                      leftSection={<IconArrowLeft size={12} />}
-                      onClick={() => {
-                        setPaso("buscar");
-                        setServidorSel(null);
-                        setValue("servidor_id", undefined as never);
-                        setValue("usuario_ti", "");
-                        setValue("email", "");
-                      }}
-                    >
-                      Cambiar
-                    </Button>
+                    borderLeft: '4px solid var(--mantine-color-emerald-6)'
+                  }}>
+                  <Group gap="sm">
+                    <ThemeIcon color="emerald" variant="light"
+                      size="lg" radius="xl">
+                      <IconUser size={18} />
+                    </ThemeIcon>
+                    <Stack gap={0}>
+                      <Text size="sm" fw={600}>
+                        {usuario.nombre_completo
+                          || usuario.servidor?.nombre
+                          || '—'}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        CI: {usuario.servidor?.cedula ?? '—'}
+                      </Text>
+                    </Stack>
                   </Group>
                 </Paper>
 
                 <Divider label="Datos de acceso" labelPosition="left" />
 
-                {/* Email */}
                 <TextInput
                   label="Correo institucional"
                   placeholder="usuario@gadpe.gob.ec"
                   {...contained}
-                  {...register("email")}
+                  {...register('email')}
                   error={errors.email?.message}
                 />
 
-                {/* usuario_ti */}
                 <TextInput
                   label="Usuario del sistema"
                   placeholder="ej: jperez"
-                  description="Solo letras minúsculas y números, sin espacios"
-                  rightSection={cargandoTi ? <Loader size="xs" /> : undefined}
+                  rightSection={cargandoTi
+                    ? <Loader size="xs" /> : undefined}
                   {...contained}
-                  {...register("usuario_ti")}
+                  {...register('usuario_ti')}
                   error={errors.usuario_ti?.message}
                 />
 
-                {/* Roles */}
                 <Controller
                   name="roles"
                   control={control}
@@ -368,121 +243,211 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
                   )}
                 />
 
-                {/* Permisos adicionales */}
-                <Divider
-                  label={
-                    <Group gap="xs">
-                      <IconShieldCheck size={14} />
-                      <Text size="sm" fw={600}>
-                        Permisos adicionales
-                      </Text>
-                    </Group>
-                  }
-                  labelPosition="left"
-                />
-
-                <Text size="xs" c="dimmed">
-                  Los permisos marcados con{" "}
-                  <Badge size="xs" color="emerald" variant="light">
-                    cubierto
-                  </Badge>{" "}
-                  ya están incluidos en los roles seleccionados.
-                </Text>
-
-                <Accordion variant="separated" radius="md">
-                  {(permisosGrupos as PermisoGrupo[]).map((grupo) => (
-                    <Accordion.Item key={grupo.modulo} value={grupo.modulo}>
-                      <Accordion.Control>
-                        <Group gap="xs">
-                          <Text size="sm" fw={600}>
-                            {grupo.modulo}
-                          </Text>
-                          <Badge size="xs" variant="outline" color="gray">
-                            {grupo.permisos.length}
-                          </Badge>
-                        </Group>
-                      </Accordion.Control>
-                      <Accordion.Panel>
-                        <Stack gap="xs">
-                          {grupo.permisos.map((p: PermisoItem) => {
-                            const cubierto = permisosCubiertos.has(p.nombre);
-                            const activo = permisosActivos.includes(p.nombre);
-                            return (
-                              <Group
-                                key={p.nombre}
-                                justify="space-between"
-                                wrap="nowrap"
-                              >
-                                <Group gap="xs" wrap="nowrap">
-                                  <Checkbox
-                                    size="sm"
-                                    color="emerald"
-                                    checked={activo || cubierto}
-                                    disabled={cubierto}
-                                    onChange={() =>
-                                      !cubierto && togglePermiso(p.nombre)
-                                    }
-                                  />
-                                  <Text
-                                    size="sm"
-                                    c={cubierto ? "dimmed" : undefined}
-                                  >
-                                    {p.nombre}
-                                  </Text>
-                                </Group>
-                                {cubierto && (
-                                  <Tooltip
-                                    label={`Incluido por: ${p.roles
-                                      .filter((r) => rolesActuales.includes(r))
-                                      .join(", ")}`}
-                                    withArrow
-                                  >
-                                    <Badge
-                                      size="xs"
-                                      color="emerald"
-                                      variant="light"
-                                    >
-                                      cubierto
-                                    </Badge>
-                                  </Tooltip>
-                                )}
-                              </Group>
-                            );
-                          })}
-                        </Stack>
-                      </Accordion.Panel>
-                    </Accordion.Item>
-                  ))}
-                </Accordion>
-
-                {/* Nota contraseña */}
-                <Alert
-                  icon={<IconInfoCircle size={16} />}
-                  color="blue"
-                  variant="light"
-                  radius="md"
-                >
-                  <Text size="xs">
-                    La contraseña inicial será la cédula del servidor (
-                    {servidorSel.cedula}). Se solicitará cambio en el primer
-                    inicio de sesión.
-                  </Text>
-                </Alert>
-
-                {/* Botones */}
                 <Group justify="flex-end" mt="md">
-                  <Button
-                    variant="default"
-                    onClick={handleClose}
-                    leftSection={<IconX size={14} />}
-                  >
+                  <Button variant="default" onClick={handleClose}>
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     color="emerald"
+                    loading={isSubmitting || actualizar.isPending}
+                    leftSection={<IconCheck size={14} />}
+                  >
+                    Guardar cambios
+                  </Button>
+                </Group>
+              </>
+            )}
+
+            {/* MODO CREAR — PASO 1: Buscar servidor */}
+            {!modoEditar && paso === 'buscar' && (
+              <Stack gap="md">
+                <Text size="sm" c="dimmed">
+                  Busca al servidor por cédula o nombre para
+                  crearle un acceso al sistema.
+                </Text>
+
+                <Group gap="xs" align="flex-end">
+                  <TextInput
+                    label="Cédula o nombre del servidor"
+                    placeholder="Ej: 0800123456 o Juan Pérez"
+                    leftSection={<IconSearch size={14} />}
+                    {...contained}
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.currentTarget.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleBuscar()
+                      }
+                    }}
+                    style={{ flex: 1 }}
+                    rightSection={
+                      busqueda ? (
+                        <ActionIcon
+                          size="sm" variant="subtle" color="gray"
+                          onClick={() => {
+                            setBusqueda('')
+                            setQueryBusq('')
+                            setResultados([])
+                          }}
+                        >
+                          <IconX size={12} />
+                        </ActionIcon>
+                      ) : null
+                    }
+                  />
+                  <Button
+                    color="blue"
                     variant="light"
-                    loading={crear.isPending}
+                    loading={buscando}
+                    onClick={handleBuscar}
+                    leftSection={<IconSearch size={14} />}
+                  >
+                    Buscar
+                  </Button>
+                </Group>
+
+                {queryBusq && resultados.length === 0 && !buscando && (
+                  <Alert color="gray" variant="light">
+                    <Text size="xs">
+                      No se encontraron servidores sin usuario
+                      para "{queryBusq}".
+                    </Text>
+                  </Alert>
+                )}
+
+                {resultados.length > 0 && (
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
+                      {resultados.length} resultado(s) — selecciona
+                      el servidor:
+                    </Text>
+                    {resultados.map((s) => (
+                      <Paper
+                        key={s.id}
+                        withBorder
+                        radius="md"
+                        p="sm"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleSeleccionar(s)}
+                      >
+                        <Group justify="space-between">
+                          <Group gap="sm">
+                            <Avatar
+                              color="emerald" size="md" radius="xl"
+                            >
+                              {s.nombre_completo
+                                .split(' ').slice(0, 2)
+                                .map(w => w[0]).join('')
+                                .toUpperCase()}
+                            </Avatar>
+                            <Stack gap={0}>
+                              <Text size="sm" fw={600}>
+                                {s.nombre_completo}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                CI: {s.cedula}
+                              </Text>
+                            </Stack>
+                          </Group>
+                          <Badge color="emerald" variant="light" size="sm">
+                            Seleccionar
+                          </Badge>
+                        </Group>
+                      </Paper>
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
+            )}
+
+            {/* MODO CREAR — PASO 2: Configurar acceso */}
+            {!modoEditar && paso === 'configurar' && servidorSel && (
+              <Stack gap="md">
+                <Paper withBorder radius="md" p="md"
+                  style={{
+                    borderLeft: '4px solid var(--mantine-color-emerald-6)'
+                  }}>
+                  <Group justify="space-between">
+                    <Group gap="sm">
+                      <ThemeIcon color="emerald" variant="light"
+                        size="lg" radius="xl">
+                        <IconCheck size={18} />
+                      </ThemeIcon>
+                      <Stack gap={0}>
+                        <Text size="sm" fw={600}>
+                          {servidorSel.nombre_completo}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          CI: {servidorSel.cedula}
+                        </Text>
+                      </Stack>
+                    </Group>
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      color="gray"
+                      leftSection={<IconArrowLeft size={12} />}
+                      onClick={() => {
+                        setPaso('buscar')
+                        setServidorSel(null)
+                        setValue('servidor_id', undefined as never)
+                        setValue('usuario_ti', '')
+                        setValue('email', '')
+                      }}
+                    >
+                      Cambiar
+                    </Button>
+                  </Group>
+                </Paper>
+
+                <Divider label="Datos de acceso" labelPosition="left" />
+
+                <TextInput
+                  label="Correo institucional"
+                  placeholder="usuario@gadpe.gob.ec"
+                  {...contained}
+                  {...register('email')}
+                  error={errors.email?.message}
+                />
+
+                <TextInput
+                  label="Usuario del sistema"
+                  placeholder="ej: jperez"
+                  description="Solo letras minúsculas y números"
+                  rightSection={cargandoTi
+                    ? <Loader size="xs" /> : undefined}
+                  {...contained}
+                  {...register('usuario_ti')}
+                  error={errors.usuario_ti?.message}
+                />
+
+                <Controller
+                  name="roles"
+                  control={control}
+                  render={({ field }) => (
+                    <MultiSelect
+                      label="Roles del sistema"
+                      placeholder="Seleccione uno o más roles"
+                      data={ROLES_DISPONIBLES}
+                      searchable
+                      {...contained}
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={errors.roles?.message}
+                    />
+                  )}
+                />
+
+                <Group justify="flex-end" mt="md">
+                  <Button variant="default" onClick={handleClose}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    color="emerald"
+                    loading={isSubmitting || crear.isPending}
                     leftSection={<IconCheck size={14} />}
                   >
                     Crear usuario
@@ -490,9 +455,10 @@ export function UsuarioDrawer({ opened, onClose }: Props) {
                 </Group>
               </Stack>
             )}
+
           </Stack>
         </form>
       </ScrollArea>
     </Drawer>
-  );
+  )
 }

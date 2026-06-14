@@ -1,24 +1,24 @@
-'use client'
+"use client";
 
-import { Group, Text, Chip, TextInput, Button, ActionIcon } from '@mantine/core'
-import { IconSearch, IconX } from '@tabler/icons-react'
+import { Group, Chip, TextInput, Button, ActionIcon } from "@mantine/core";
+import { IconSearch, IconX } from "@tabler/icons-react";
 
 const ESTADO_CHIPS = [
-  { value: 'todos',                 label: 'Todos',          color: 'gray'    },
-  { value: 'solicitado',            label: 'Solicitados',    color: 'orange'  },
-  { value: 'aprobado',              label: 'Aprobados',      color: 'blue'    },
-  { value: 'con_anticipo',          label: 'Con anticipo',   color: 'cyan'    },
-  { value: 'pendiente_liquidacion', label: 'Pend. liquid.',  color: 'yellow'  },
-  { value: 'liquidado',             label: 'Liquidados',     color: 'emerald' },
-]
+  { value: "todos", label: "Todos", color: "gray" },
+  { value: "solicitado", label: "Solicitados", color: "orange" },
+  { value: "aprobado", label: "Aprobados", color: "blue" },
+  { value: "con_anticipo", label: "Con anticipo", color: "cyan" },
+  { value: "pendiente_liquidacion", label: "Pend. liquid.", color: "yellow" },
+  { value: "liquidado", label: "Liquidados", color: "emerald" },
+];
 
 interface Props {
-  filtroEstado:    string
-  busquedaCodigo:  string
-  onEstadoChange:  (v: string) => void
-  onBusquedaChange: (v: string) => void
-  onBuscar:        () => void
-  onLimpiar:       () => void
+  filtroEstado: string;
+  busquedaCodigo: string;
+  onEstadoChange: (v: string) => void;
+  onBusquedaChange: (v: string) => void;
+  onBuscar: () => void;
+  onLimpiar: () => void;
 }
 
 export function ViaticoFiltros({
@@ -30,7 +30,7 @@ export function ViaticoFiltros({
   onLimpiar,
 }: Props) {
   return (
-    <>
+    <Group justify="space-between">
       <Group gap="xs">
         <TextInput
           placeholder="Buscar por código..."
@@ -38,13 +38,15 @@ export function ViaticoFiltros({
           value={busquedaCodigo}
           onChange={(e) => onBusquedaChange(e.currentTarget.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') onBuscar()
+            if (e.key === "Enter") onBuscar();
           }}
-          style={{ width: 260 }}
+          style={{ width: 350 }}
           rightSection={
             busquedaCodigo ? (
               <ActionIcon
-                size="sm" variant="subtle" color="gray"
+                size="sm"
+                variant="subtle"
+                color="gray"
                 onClick={onLimpiar}
               >
                 <IconX size={12} />
@@ -54,7 +56,6 @@ export function ViaticoFiltros({
         />
         <Button
           variant="light"
-          color="blue"
           leftSection={<IconSearch size={14} />}
           onClick={onBuscar}
         >
@@ -63,7 +64,6 @@ export function ViaticoFiltros({
       </Group>
 
       <Group gap="xs">
-        <Text size="sm" fw={500} c="dimmed">Estado:</Text>
         {ESTADO_CHIPS.map((op) => (
           <Chip
             key={op.value}
@@ -76,6 +76,6 @@ export function ViaticoFiltros({
           </Chip>
         ))}
       </Group>
-    </>
-  )
+    </Group>
+  );
 }

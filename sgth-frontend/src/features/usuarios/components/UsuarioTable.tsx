@@ -9,16 +9,18 @@ interface Props {
   isLoading:   boolean
   total:       number
   page:        number
-  onPageChange: (page: number) => void
+  onPageChange:          (page: number) => void
   onEdit:                (u: Usuario) => void
   onToggleActivo:        (u: Usuario) => void
   onRestablecerPassword: (u: Usuario) => void
+  onPermisos:            (u: Usuario) => void
 }
 
 export function UsuarioTable({
   data, isLoading, total, page,
   onPageChange, onEdit,
   onToggleActivo, onRestablecerPassword,
+  onPermisos,
 }: Props) {
   return (
     <SgthTable
@@ -27,6 +29,7 @@ export function UsuarioTable({
         onEdit,
         onToggleActivo,
         onRestablecerPassword,
+        onPermisos,
       })}
       fetching={isLoading}
       totalRecords={total || data.length || 0}

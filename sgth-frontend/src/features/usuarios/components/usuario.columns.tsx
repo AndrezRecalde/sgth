@@ -1,8 +1,26 @@
-import { Text, Badge, Switch, Tooltip } from '@mantine/core'
-import { IconEdit, IconKey } from '@tabler/icons-react'
+import { Text, Badge, Switch, Tooltip, Group, Stack } from '@mantine/core'
+import { IconEdit, IconKey, IconShieldCheck } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Usuario } from '@/types/api'
+
+const ROL_COLORS: Record<string, string> = {
+  'admin-ti':          'red',
+  'admin-uath':        'violet',
+  'asistente-uath':    'grape',
+  'maxima-autoridad':  'dark',
+  'director':          'blue',
+  'jefe-unidad':       'cyan',
+  'servidor':          'teal',
+  'recepcion':         'orange',
+  'trabajo-social':    'pink',
+  'medico':            'green',
+  'odontologo':        'lime',
+  'enfermera':         'yellow',
+  'admin-dispensario': 'indigo',
+  'tecnico-dtic':      'gray',
+  'auditor':           'brown',
+}
 
 const ROL_LABELS: Record<string, string> = {
   'admin-ti':          'Admin TI',
@@ -26,47 +44,65 @@ type Handlers = {
   onEdit:                (u: Usuario) => void
   onToggleActivo:        (u: Usuario) => void
   onRestablecerPassword: (u: Usuario) => void
+  onPermisos:            (u: Usuario) => void
 }
 
-export const getUsuarioColumns = (
-  { onEdit, onToggleActivo, onRestablecerPassword }: Handlers
-): DataTableColumn<Usuario>[] => [
+export const getUsuarioColumns = ({
+  onEdit,
+  onToggleActivo,
+  onRestablecerPassword,
+  onPermisos,
+}: Handlers): DataTableColumn<Usuario>[] => [
   {
-    accessor: 'nombre_completo',
-    title: 'Nombre',
-    render: ({ nombre_completo, usuario_ti, servidor }) => (
-      <div>
+    accessor: 'servidor',
+    title:    'Servidor',
+    render: ({ nombre_completo, servidor }) => (
+      <Stack gap={0}>
         <Text size="sm" fw={500}>
-          {nombre_completo || servidor?.nombre || '(Sin servidor vinculado)'}
+          {nombre_completo
+            || [servidor?.nombre, servidor?.apellido]
+               .filter(Boolean).join(' ')
+            || '—'}
         </Text>
-        <Text size="xs" c="dimmed">{usuario_ti}</Text>
-      </div>
+        <Text size="xs" c="dimmed">
+          CI: {servidor?.cedula ?? '—'}
+        </Text>
+      </Stack>
     ),
   },
   {
-    accessor: 'email',
-    title: 'Correo institucional',
-    render: ({ email }) => (
-      <Text size="sm">{email}</Text>
+    accessor: 'usuario_ti',
+    title:    'Usuario TI',
+    width:    120,
+    render: ({ usuario_ti, email }) => (
+      <Stack gap={0}>
+        <Text size="sm" ff="monospace">{usuario_ti ?? '—'}</Text>
+        <Text size="xs" c="dimmed">{email}</Text>
+      </Stack>
     ),
   },
   {
     accessor: 'roles',
-    title: 'Roles',
+    title:    'Rol(es)',
     render: ({ roles }) => (
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+      <Group gap={4} wrap="wrap">
         {(Array.isArray(roles) ? roles : []).map(r => (
-          <Badge key={r} size="xs" variant="light" color="blue">
+          <Badge
+            key={r}
+            size="xs"
+            variant="light"
+            color={ROL_COLORS[r] ?? 'gray'}
+          >
             {ROL_LABELS[r] ?? r}
           </Badge>
         ))}
-      </div>
+      </Group>
     ),
   },
   {
     accessor: 'activo',
-    title: 'Estado',
-    width: 90,
+    title:    'Estado',
+    width:    80,
     render: (usuario) => (
       <Tooltip
         label={usuario.activo ? 'Desactivar' : 'Activar'}
@@ -86,20 +122,26 @@ export const getUsuarioColumns = (
   },
   {
     accessor: 'acciones',
-    title: '',
-    width: 50,
+    title:    '',
+    width:    50,
     render: (usuario) => (
       <TableActions actions={[
         {
-          label: 'Editar usuario',
-          icon: <IconEdit size={14} />,
-          color: 'blue',
+          label:   'Editar usuario',
+          icon:    <IconEdit size={14} />,
+          color:   'blue',
           onClick: () => onEdit(usuario),
         },
         {
-          label: 'Restablecer contraseña',
-          icon: <IconKey size={14} />,
-          color: 'orange',
+          label:   'Asignar permisos',
+          icon:    <IconShieldCheck size={14} />,
+          color:   'violet',
+          onClick: () => onPermisos(usuario),
+        },
+        {
+          label:   'Restablecer contraseña',
+          icon:    <IconKey size={14} />,
+          color:   'orange',
           onClick: () => onRestablecerPassword(usuario),
         },
       ]} />

@@ -1,32 +1,31 @@
 'use client'
 
-import { useState } from 'react'
-import { Box, Button, Group } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { useState }           from 'react'
+import { Stack, Button, Group } from '@mantine/core'
+import { useDisclosure }      from '@mantine/hooks'
 import { IconUsers, IconUserPlus } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { UsuarioToolbar } from '@/features/usuarios/components/UsuarioToolbar'
-import { UsuarioTable } from '@/features/usuarios/components/UsuarioTable'
-import { UsuarioDrawer } from '@/features/usuarios/components/UsuarioDrawer'
-import { UsuarioModal } from '@/features/usuarios/components/UsuarioModal'
-import { useUsuarios } from '@/features/usuarios/hooks/useUsuarios'
+import { PageHeader }         from '@/components/ui/PageHeader'
+import { EmptyState }         from '@/components/ui/EmptyState'
+import { UsuarioToolbar }     from '@/features/usuarios/components/UsuarioToolbar'
+import { UsuarioTable }       from '@/features/usuarios/components/UsuarioTable'
+import { UsuarioDrawer }      from '@/features/usuarios/components/UsuarioDrawer'
+import { PermisosDrawer }     from '@/features/usuarios/components/PermisosDrawer'
+import { useUsuarios }        from '@/features/usuarios/hooks/useUsuarios'
 import { useUsuarioMutations } from '@/features/usuarios/hooks/useUsuarioMutations'
-import type { Usuario } from '@/types/api'
+import type { Usuario }       from '@/types/api'
 
 export function UsuariosView() {
-  const [page, setPage]     = useState(1)
+  const [page,   setPage]   = useState(1)
   const [search, setSearch] = useState('')
-  const [rol, setRol]       = useState<string | null>(null)
+  const [rol,    setRol]    = useState<string | null>(null)
 
-  // Drawer — crear nuevo usuario
-  const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
-    useDisclosure(false)
+  const [usuarioSel,  setUsuarioSel]  = useState<Usuario | null>(null)
+  const [permisosUsr, setPermisosUsr] = useState<Usuario | null>(null)
 
-  // Modal — editar usuario existente
-  const [modalOpened, { open: openModal, close: closeModal }] =
-    useDisclosure(false)
-  const [editUsuario, setEditUsuario] = useState<Usuario | null>(null)
+  const [drawerOpened,
+    { open: openDrawer, close: closeDrawer }]   = useDisclosure(false)
+  const [permisosOpened,
+    { open: openPermisos, close: closePermisos }] = useDisclosure(false)
 
   const { data, isLoading } = useUsuarios({
     page,
@@ -39,23 +38,38 @@ export function UsuariosView() {
 
   const usuarios = (data?.data ?? []) as Usuario[]
 
-  const handleEdit = (u: Usuario) => {
-    setEditUsuario(u)
-    openModal()
+  const handleNuevo = () => {
+    setUsuarioSel(null)
+    openDrawer()
   }
 
-  const handleCloseModal = () => {
-    setEditUsuario(null)
-    closeModal()
+  const handleEditar = (u: Usuario) => {
+    setUsuarioSel(u)
+    openDrawer()
+  }
+
+  const handleCloseDrawer = () => {
+    setUsuarioSel(null)
+    closeDrawer()
+  }
+
+  const handlePermisos = (u: Usuario) => {
+    setPermisosUsr(u)
+    openPermisos()
+  }
+
+  const handleClosePermisos = () => {
+    setPermisosUsr(null)
+    closePermisos()
   }
 
   const handleRestablecerPassword = (u: Usuario) => {
-    const displayName = u.nombre_completo
+    const nombre = u.nombre_completo
       || u.servidor?.nombre
       || u.email
       || '(Sin nombre)'
     if (confirm(
-      `¿Restablecer la contraseña de ${displayName}?\n` +
+      `¿Restablecer la contraseña de ${nombre}?\n` +
       `Se establecerá la cédula del servidor como nueva contraseña.`
     )) {
       restablecerContrasena.mutate(Number(u.id))
@@ -63,19 +77,19 @@ export function UsuariosView() {
   }
 
   return (
-    <Box>
+    <Stack gap="md">
       <PageHeader
         title="Gestión de Usuarios"
         subtitle="Administración de accesos al sistema SGTH"
         icon={<IconUsers size={28} />}
       />
 
-      <Group justify="flex-end" mb="md">
+      <Group justify="flex-end">
         <Button
           color="emerald"
           variant="light"
           leftSection={<IconUserPlus size={16} />}
-          onClick={openDrawer}
+          onClick={handleNuevo}
         >
           Nuevo usuario
         </Button>
@@ -96,7 +110,7 @@ export function UsuariosView() {
               color="emerald"
               variant="light"
               leftSection={<IconUserPlus size={14} />}
-              onClick={openDrawer}
+              onClick={handleNuevo}
             >
               Nuevo usuario
             </Button>
@@ -109,24 +123,24 @@ export function UsuariosView() {
           total={data?.total ?? 0}
           page={page}
           onPageChange={setPage}
-          onEdit={handleEdit}
+          onEdit={handleEditar}
           onToggleActivo={(u) => toggleActivo.mutate(Number(u.id))}
           onRestablecerPassword={handleRestablecerPassword}
+          onPermisos={handlePermisos}
         />
       )}
 
-      {/* Drawer para crear nuevo usuario */}
       <UsuarioDrawer
         opened={drawerOpened}
-        onClose={closeDrawer}
+        onClose={handleCloseDrawer}
+        usuario={usuarioSel}
       />
 
-      {/* Modal para editar usuario existente */}
-      <UsuarioModal
-        opened={modalOpened}
-        onClose={handleCloseModal}
-        usuario={editUsuario}
+      <PermisosDrawer
+        opened={permisosOpened}
+        onClose={handleClosePermisos}
+        usuario={permisosUsr}
       />
-    </Box>
+    </Stack>
   )
 }

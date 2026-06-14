@@ -269,10 +269,8 @@ export function PeriodosVacacionesTab() {
           </Stack>
           <Group gap="sm" justify="flex-end">
             <NumberInput
-              label="Año"
               min={2020}
               max={2035}
-              {...contained}
               value={anio}
               onChange={(v) =>
                 setAnio(typeof v === "number" ? v : new Date().getFullYear())
@@ -304,13 +302,13 @@ export function PeriodosVacacionesTab() {
       {/* ── PANEL INFERIOR: Consulta individual ── */}
       <Group justify="flex-start">
         <Select
-          label="Servidor"
+          clearable
+          searchable
           placeholder="Buscar servidor"
           data={servidorOptions}
-          searchable
-          {...contained}
           value={servidorSelId ? String(servidorSelId) : null}
           onChange={(v) => setServidorSelId(v ? Number(v) : null)}
+          style={{ width: 450 }}
         />
         <Button
           variant="light"

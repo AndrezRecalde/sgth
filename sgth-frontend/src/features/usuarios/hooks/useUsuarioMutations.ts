@@ -84,5 +84,31 @@ export function useUsuarioMutations() {
     onError,
   })
 
-  return { crear, actualizar, toggleActivo, restablecerContrasena }
+  const sincronizarPermisos = useMutation({
+    mutationFn: ({
+      id,
+      permisos,
+    }: {
+      id:       number
+      permisos: string[]
+    }) => usuarioService.sincronizarPermisos(id, permisos),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Permisos actualizados',
+        message: 'Los permisos fueron sincronizados correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  return {
+    crear,
+    actualizar,
+    toggleActivo,
+    restablecerContrasena,
+    sincronizarPermisos,
+  }
 }

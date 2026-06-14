@@ -1,72 +1,69 @@
-'use client'
+"use client";
 
-import { useState }           from 'react'
-import { useRouter }          from 'next/navigation'
-import {
-  Stack, Group, Button, Tabs,
-} from '@mantine/core'
-import { useDisclosure }      from '@mantine/hooks'
-import { IconPlane, IconPlus } from '@tabler/icons-react'
-import { PageHeader }         from '@/components/ui/PageHeader'
-import { SgthTable }          from '@/components/ui/SgthTable'
-import { EmptyState }         from '@/components/ui/EmptyState'
-import { useViaticos }        from '../hooks/useViaticos'
-import { useViaticoMutations } from '../hooks/useViaticoMutations'
-import { ViaticoModal }       from './ViaticoModal'
-import { VuelosTab }          from './VuelosTab'
-import { ViaticoFiltros }     from './ViaticoFiltros'
-import { getViaticoColumns }  from './ViaticoColumns'
-import type { Viatico, EstadoViatico, ViaticoConRelaciones } from '@/types/api'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Stack, Group, Button, Tabs } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlane, IconPlus } from "@tabler/icons-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SgthTable } from "@/components/ui/SgthTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { useViaticos } from "../hooks/useViaticos";
+import { useViaticoMutations } from "../hooks/useViaticoMutations";
+import { ViaticoModal } from "./ViaticoModal";
+import { VuelosTab } from "./VuelosTab";
+import { ViaticoFiltros } from "./ViaticoFiltros";
+import { getViaticoColumns } from "./ViaticoColumns";
+import type { Viatico, EstadoViatico, ViaticoConRelaciones } from "@/types/api";
 
 export function ViaticoView() {
-  const router = useRouter()
-  const [modalAbierto, { open, close }] = useDisclosure(false)
+  const router = useRouter();
+  const [modalAbierto, { open, close }] = useDisclosure(false);
 
-  const [filtroEstado,    setFiltroEstado]    = useState('solicitado')
-  const [page,            setPage]            = useState(1)
-  const [busquedaCodigo,  setBusquedaCodigo]  = useState('')
-  const [codigoQuery,     setCodigoQuery]     = useState('')
+  const [filtroEstado, setFiltroEstado] = useState("solicitado");
+  const [page, setPage] = useState(1);
+  const [busquedaCodigo, setBusquedaCodigo] = useState("");
+  const [codigoQuery, setCodigoQuery] = useState("");
 
   const filtros = {
-    estado:   filtroEstado === 'todos'
-      ? undefined
-      : (filtroEstado as EstadoViatico),
+    estado:
+      filtroEstado === "todos" ? undefined : (filtroEstado as EstadoViatico),
     per_page: 15,
     page,
-    search:   codigoQuery || undefined,
-  }
+    search: codigoQuery || undefined,
+  };
 
-  const { data, isLoading } = useViaticos(filtros)
-  const lista = (data?.data ?? []) as ViaticoConRelaciones[]
-  const { aprobar }         = useViaticoMutations()
+  const { data, isLoading } = useViaticos(filtros);
+  const lista = (data?.data ?? []) as ViaticoConRelaciones[];
+  const { aprobar } = useViaticoMutations();
 
   const handleVer = (v: ViaticoConRelaciones) =>
-    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`)
+    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`);
 
   const handleCreado = (v: Viatico) =>
-    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`)
+    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`);
 
   const handleBuscar = () => {
-    setCodigoQuery(busquedaCodigo.trim())
-    setPage(1)
-  }
+    setCodigoQuery(busquedaCodigo.trim());
+    setPage(1);
+  };
 
   const handleLimpiar = () => {
-    setBusquedaCodigo('')
-    setCodigoQuery('')
-    setPage(1)
-  }
+    setBusquedaCodigo("");
+    setCodigoQuery("");
+    setPage(1);
+  };
 
   const handleEstado = (v: string) => {
-    setFiltroEstado(v)
-    setPage(1)
-  }
+    setFiltroEstado(v);
+    setPage(1);
+  };
 
   const columns = getViaticoColumns({
-    onVer:     handleVer,
+    onVer: handleVer,
     onAprobar: (v) => aprobar.mutate({ id: v.id }),
     onLiquidar: handleVer,
-  })
+  });
 
   return (
     <Stack gap="md">
@@ -137,5 +134,5 @@ export function ViaticoView() {
         onCreated={handleCreado}
       />
     </Stack>
-  )
+  );
 }

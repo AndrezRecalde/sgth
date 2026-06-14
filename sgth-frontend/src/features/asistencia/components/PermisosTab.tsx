@@ -9,19 +9,20 @@ import {
   Badge,
   TextInput,
   Chip,
+  ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconPlus,
   IconCheck,
   IconX,
   IconShieldCheck,
   IconClipboardList,
   IconPrinter,
+  IconSearch,
+  IconCubePlus,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import React from "react";
-import { useContainedInput } from "@/hooks/useContainedInput";
 import { SgthTable } from "@/components/ui/SgthTable";
 import { TableActions } from "@/components/ui/TableActions";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -52,7 +53,6 @@ const TIPO_LABELS: Record<string, string> = {
 };
 
 export function PermisosTab() {
-  const contained = useContainedInput();
   const [opened, { open, close }] = useDisclosure(false);
 
   // ── Filtros ──────────────────────────────────────
@@ -268,78 +268,75 @@ export function PermisosTab() {
   return (
     <Stack gap="md">
       {/* ── Búsqueda por folio ── */}
-      <Group gap="sm" justify="space-between">
+      <Group justify="space-between" align="flex-start">
         <Group>
           <TextInput
-            label="Búsqueda por folio"
             placeholder="Ej: PER-2026-00001"
             value={busquedaFolio}
             onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") setFolioQuery(busquedaFolio);
             }}
-            {...contained}
+            style={{ width: 350 }}
+            rightSection={
+              busquedaFolio && (
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => {
+                    setBusquedaFolio("");
+                    setFolioQuery("");
+                  }}
+                >
+                  <IconX size={12} />
+                </ActionIcon>
+              )
+            }
           />
           <Button
-            radius="xl"
-            size="xs"
+            color="emerald"
             variant="light"
+            leftSection={<IconSearch size={14} />}
             onClick={() => setFolioQuery(busquedaFolio)}
           >
             Buscar
           </Button>
-          {folioQuery && (
-            <Button
-              size="sm"
-              variant="subtle"
-              color="gray"
-              onClick={() => {
-                setBusquedaFolio("");
-                setFolioQuery("");
-              }}
-            >
-              Limpiar
-            </Button>
-          )}
         </Group>
-        {/* ── Chips de estado ── */}
-        <Group gap="xs">
-          {[
-            { value: "todos", label: "Todos", color: "gray" },
-            { value: "pendiente", label: "Pendiente", color: "orange" },
-            { value: "activo", label: "Activo", color: "blue" },
-            {
-              value: "validado_trabajo_social",
-              label: "Validado TS",
-              color: "emerald",
-            },
-            { value: "anulado", label: "Anulado", color: "red" },
-          ].map((op) => (
-            <Chip
-              key={op.value}
-              size="xs"
-              color={op.color}
-              checked={filtroEstado === op.value}
-              onChange={() => setFiltroEstado(op.value)}
-            >
-              {op.label}
-            </Chip>
-          ))}
-        </Group>
-      </Group>
-
-      {/* ── Botón nuevo permiso ── */}
-      <Group justify="flex-end">
-        <Button
-          radius="xl"
-          size="xs"
-          color="emerald"
-          variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={open}
-        >
-          Nuevo permiso
-        </Button>
+        <Stack gap="sm" align="flex-end">
+          {/* ── Chips de estado ── */}
+          <Group gap="xs">
+            {[
+              { value: "todos", label: "Todos", color: "gray" },
+              { value: "pendiente", label: "Pendiente", color: "orange" },
+              { value: "activo", label: "Activo", color: "blue" },
+              {
+                value: "validado_trabajo_social",
+                label: "Validado TS",
+                color: "emerald",
+              },
+              { value: "anulado", label: "Anulado", color: "red" },
+            ].map((op) => (
+              <Chip
+                key={op.value}
+                color={op.color}
+                checked={filtroEstado === op.value}
+                onChange={() => setFiltroEstado(op.value)}
+              >
+                {op.label}
+              </Chip>
+            ))}
+          </Group>
+          {/* ── Botón nuevo permiso ── */}
+          <Button
+            color="emerald"
+            variant="light"
+            leftSection={<IconCubePlus size={20} />}
+            onClick={open}
+          >
+            Nuevo permiso
+          </Button>
+        </Stack>
       </Group>
 
       {lista.length === 0 && !isLoading ? (
