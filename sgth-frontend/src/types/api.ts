@@ -600,15 +600,17 @@ export type UsuarioParams = {
 }
 
 export type UsuarioFormData = {
-  email: string
-  roles: string[]
+  email:       string
+  roles:       string[]
   servidor_id?: number | null
-  cedula?: string | null
+  cedula?:     string | null
+  usuario_ti?: string | null
 }
 
 export type UsuarioUpdateData = {
-  email?: string
-  roles?: string[]
+  email?:      string
+  roles?:      string[]
+  usuario_ti?: string | null
 }
 
 export type PuestoConRelaciones = {
