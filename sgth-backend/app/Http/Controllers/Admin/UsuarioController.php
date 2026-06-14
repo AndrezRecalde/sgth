@@ -125,6 +125,7 @@ final class UsuarioController extends Controller
 
         $usuario->update([
             'servidor_id' => null,
+            'activo'      => false,
         ]);
 
         return ApiResponse::ok(
