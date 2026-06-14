@@ -70,7 +70,6 @@ export const getUsuarioColumns = ({
   {
     accessor: 'usuario_ti',
     title:    'Usuario TI',
-    width:    120,
     render: ({ usuario_ti, email }) => (
       <Stack gap={0}>
         <Text size="sm" ff="monospace">{usuario_ti ?? '—'}</Text>

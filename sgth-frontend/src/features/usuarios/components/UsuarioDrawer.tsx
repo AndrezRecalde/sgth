@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Drawer, Stack, TextInput, MultiSelect,
   Button, Group, Divider, Text, Badge,
@@ -95,6 +95,31 @@ export function UsuarioDrawer({ opened, onClose, usuario }: Props) {
       roles:       (usuario?.roles as string[]) ?? [],
     },
   })
+
+  useEffect(() => {
+    if (opened) {
+      if (usuario) {
+        reset({
+          servidor_id: usuario.servidor_id ?? undefined,
+          email:       usuario.email       ?? '',
+          usuario_ti:  usuario.usuario_ti  ?? '',
+          roles:       (usuario.roles as string[]) ?? [],
+        })
+      } else {
+        reset({
+          servidor_id: undefined,
+          email:       '',
+          usuario_ti:  '',
+          roles:       [],
+        })
+        setPaso('buscar')
+        setBusqueda('')
+        setQueryBusq('')
+        setServidorSel(null)
+        setResultados([])
+      }
+    }
+  }, [opened, usuario, reset])
 
   const handleClose = () => {
     reset()
