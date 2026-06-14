@@ -24,7 +24,7 @@ final class UsuarioController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        // $this->authorize('viewAny', User::class);
+        $this->authorize('viewAny', User::class);
         $paginator = $this->usuarioService->listar($request->all());
 
         return response()->json([
