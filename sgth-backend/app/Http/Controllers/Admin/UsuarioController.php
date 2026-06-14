@@ -111,6 +111,28 @@ final class UsuarioController extends Controller
         );
     }
 
+    public function desvincularServidor(
+        int $id
+    ): JsonResponse {
+        $usuario = User::findOrFail($id);
+
+        if (!$usuario->servidor_id) {
+            return ApiResponse::error(
+                'Este usuario no tiene un servidor vinculado.',
+                422
+            );
+        }
+
+        $usuario->update([
+            'servidor_id' => null,
+        ]);
+
+        return ApiResponse::ok(
+            new UsuarioResource($usuario->fresh(['roles'])),
+            'Servidor desvinculado del usuario correctamente.'
+        );
+    }
+
     public function sugerirUsuarioTi(Request $request): JsonResponse
     {
         $servidorId = $request->integer('servidor_id');

@@ -661,6 +661,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::post('usuarios/{usuario}/toggle-activo',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'toggleActivo'])
                 ->name('usuarios.toggleActivo');
+
+            Route::post('usuarios/{id}/desvincular-servidor',
+                [\App\Http\Controllers\Admin\UsuarioController::class, 'desvincularServidor'])
+                ->name('usuarios.desvincularServidor');
             
             Route::get('usuarios-roles',
                 [\App\Http\Controllers\Admin\UsuarioController::class, 'roles'])
