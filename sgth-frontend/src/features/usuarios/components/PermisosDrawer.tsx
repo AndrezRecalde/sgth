@@ -187,19 +187,12 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
                                   disabled={cubierto}
                                   onChange={() => togglePermiso(p.nombre)}
                                 />
-                                <Stack gap={0}>
-                                  <Text
-                                    size="sm"
-                                    c={cubierto ? 'dimmed' : undefined}
-                                  >
-                                    {p.nombre}
-                                  </Text>
-                                  {p.descripcion && (
-                                    <Text size="xs" c="dimmed">
-                                      {p.descripcion}
-                                    </Text>
-                                  )}
-                                </Stack>
+                                <Text
+                                  size="sm"
+                                  c={cubierto ? 'dimmed' : undefined}
+                                >
+                                  {p.nombre}
+                                </Text>
                               </Group>
                               {cubierto && (
                                 <Badge
