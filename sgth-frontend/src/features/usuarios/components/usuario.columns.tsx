@@ -1,5 +1,5 @@
 import { Text, Badge, Switch, Tooltip, Group, Stack } from '@mantine/core'
-import { IconEdit, IconKey, IconShieldCheck } from '@tabler/icons-react'
+import { IconEdit, IconKey, IconShieldCheck, IconUserOff } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Usuario } from '@/types/api'
@@ -45,6 +45,7 @@ type Handlers = {
   onToggleActivo:        (u: Usuario) => void
   onRestablecerPassword: (u: Usuario) => void
   onPermisos:            (u: Usuario) => void
+  onDesvincular:         (u: Usuario) => void
 }
 
 export const getUsuarioColumns = ({
@@ -52,6 +53,7 @@ export const getUsuarioColumns = ({
   onToggleActivo,
   onRestablecerPassword,
   onPermisos,
+  onDesvincular,
 }: Handlers): DataTableColumn<Usuario>[] => [
   {
     accessor: 'servidor',
@@ -139,6 +141,13 @@ export const getUsuarioColumns = ({
           icon:    <IconKey size={14} />,
           color:   'orange',
           onClick: () => onRestablecerPassword(usuario),
+        },
+        {
+          label:   'Desvincular servidor',
+          icon:    <IconUserOff size={14} />,
+          color:   'orange',
+          onClick: () => onDesvincular(usuario),
+          hidden:  !usuario.servidor_id,
         },
       ]} />
     ),

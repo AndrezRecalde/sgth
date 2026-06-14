@@ -34,7 +34,7 @@ export function UsuariosView() {
     rol:      rol    || undefined,
   })
 
-  const { toggleActivo, restablecerContrasena } = useUsuarioMutations()
+  const { toggleActivo, restablecerContrasena, desvincularServidor } = useUsuarioMutations()
 
   const usuarios = (data?.data ?? []) as Usuario[]
 
@@ -73,6 +73,19 @@ export function UsuariosView() {
       `Se establecerá la cédula del servidor como nueva contraseña.`
     )) {
       restablecerContrasena.mutate(Number(u.id))
+    }
+  }
+
+  const handleDesvincular = (u: Usuario) => {
+    const nombre = u.nombre_completo
+      || u.servidor?.nombre
+      || u.email
+      || '(Sin nombre)'
+    if (confirm(
+      `¿Desvincular el servidor de ${nombre}?\n` +
+      `El usuario conservará su acceso al sistema.`
+    )) {
+      desvincularServidor.mutate(Number(u.id))
     }
   }
 
@@ -127,6 +140,7 @@ export function UsuariosView() {
           onToggleActivo={(u) => toggleActivo.mutate(Number(u.id))}
           onRestablecerPassword={handleRestablecerPassword}
           onPermisos={handlePermisos}
+          onDesvincular={handleDesvincular}
         />
       )}
 

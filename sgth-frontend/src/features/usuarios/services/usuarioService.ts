@@ -56,6 +56,11 @@ export const usuarioService = {
       `/admin/usuarios/${id}/restablecer-contrasena`
     ).then(r => r.data),
 
+  desvincularServidor: (id: number) =>
+    api.post<ApiResponse<Usuario>>(
+      `/admin/usuarios/${id}/desvincular-servidor`
+    ).then(r => r.data.datos),
+
   servidoresSinUsuario: (search?: string): Promise<{ id: number; cedula: string; nombre_completo: string }[]> =>
     api.get<ApiResponse<{ id: number; cedula: string; nombre_completo: string }[]>>(
       '/expediente/servidores/sin-usuario',

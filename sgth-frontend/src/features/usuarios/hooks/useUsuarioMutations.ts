@@ -104,11 +104,27 @@ export function useUsuarioMutations() {
     onError,
   })
 
+  const desvincularServidor = useMutation({
+    mutationFn: (id: number) =>
+      usuarioService.desvincularServidor(id),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Servidor desvinculado',
+        message: 'El servidor fue desvinculado del usuario.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
   return {
     crear,
     actualizar,
     toggleActivo,
     restablecerContrasena,
     sincronizarPermisos,
+    desvincularServidor,
   }
 }
