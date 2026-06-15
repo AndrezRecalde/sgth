@@ -1,117 +1,148 @@
-'use client'
+"use client";
 
-import { useEffect }          from 'react'
-import { useRouter }          from 'next/navigation'
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import type { UsuarioAuth } from "@/store/auth.store";
 import {
-  Stack, Group, Text, Badge,
-  Card, Button, Box, Center,
-  Loader, ThemeIcon, SimpleGrid,
-  Divider, Avatar,
-} from '@mantine/core'
+  Stack,
+  Group,
+  Text,
+  Badge,
+  Card,
+  Button,
+  Box,
+  Center,
+  Loader,
+  ThemeIcon,
+  SimpleGrid,
+  Divider,
+  Avatar,
+} from "@mantine/core";
 import {
-  IconUsers, IconBuildingHospital,
-  IconUserCircle, IconPlane,
-  IconCalendarEvent, IconBeach,
-  IconStethoscope, IconPill,
-  IconFolder, IconLogout,
+  IconUsers,
+  IconBuildingHospital,
+  IconUserCircle,
+  IconPlane,
+  IconCalendarEvent,
+  IconBeach,
+  IconStethoscope,
+  IconPill,
+  IconFolder,
+  IconLogout,
   IconChevronRight,
-} from '@tabler/icons-react'
-import { useAuth }    from '@/hooks/useAuth'
-import { ROUTES }     from '@/config/routes'
-import {
-  getSubsistemasDisponibles,
-} from '@/config/nav'
+} from "@tabler/icons-react";
+import { useAuth } from "@/hooks/useAuth";
+import { ROUTES } from "@/config/routes";
+import { getSubsistemasDisponibles } from "@/config/nav";
 
 const SUBSISTEMA_CONFIG = {
   sgth: {
-    label:       'SGTH',
-    descripcion: 'Gestión de Talento Humano',
-    color:       'emerald' as const,
-    icon:        IconUsers,
-    home:        ROUTES.SGTH.HOME,
+    label: "SGTH",
+    descripcion: "Gestión de Talento Humano",
+    color: "emerald" as const,
+    icon: IconUsers,
+    home: ROUTES.SGTH.HOME,
     modulos: [
-      { label: 'Expediente',  icon: IconFolder },
-      { label: 'Asistencia',  icon: IconCalendarEvent },
-      { label: 'Nómina',      icon: IconUsers },
-      { label: 'Estructura',  icon: IconUsers },
+      { label: "Expediente", icon: IconFolder },
+      { label: "Asistencia", icon: IconCalendarEvent },
+      { label: "Nómina", icon: IconUsers },
+      { label: "Estructura", icon: IconUsers },
     ],
   },
   salud: {
-    label:       'Dispensario',
-    descripcion: 'Sistema de Salud Ambulatoria',
-    color:       'blue' as const,
-    icon:        IconBuildingHospital,
-    home:        ROUTES.SALUD.HOME,
+    label: "Dispensario",
+    descripcion: "Sistema de Salud Ambulatoria",
+    color: "blue" as const,
+    icon: IconBuildingHospital,
+    home: ROUTES.SALUD.HOME,
     modulos: [
-      { label: 'Consultas',   icon: IconStethoscope },
-      { label: 'Odontología', icon: IconStethoscope },
-      { label: 'Farmacia',    icon: IconPill },
-      { label: 'SSO',         icon: IconUsers },
+      { label: "Consultas", icon: IconStethoscope },
+      { label: "Odontología", icon: IconStethoscope },
+      { label: "Farmacia", icon: IconPill },
+      { label: "SSO", icon: IconUsers },
     ],
   },
   portal: {
-    label:       'Portal servidor',
-    descripcion: 'Mi espacio personal',
-    color:       'violet' as const,
-    icon:        IconUserCircle,
-    home:        ROUTES.PORTAL.HOME,
+    label: "Portal servidor",
+    descripcion: "Mi espacio personal",
+    color: "violet" as const,
+    icon: IconUserCircle,
+    home: ROUTES.PORTAL.HOME,
     modulos: [
-      { label: 'Mi perfil',   icon: IconUserCircle },
-      { label: 'Permisos',    icon: IconCalendarEvent },
-      { label: 'Vacaciones',  icon: IconBeach },
-      { label: 'Viáticos',    icon: IconPlane },
+      { label: "Mi perfil", icon: IconUserCircle },
+      { label: "Permisos", icon: IconCalendarEvent },
+      { label: "Vacaciones", icon: IconBeach },
+      { label: "Viáticos", icon: IconPlane },
     ],
   },
-} as const
+} as const;
 
-type SubsistemaKey = keyof typeof SUBSISTEMA_CONFIG
+type SubsistemaKey = keyof typeof SUBSISTEMA_CONFIG;
 
 export default function BienvenidaPage() {
-  const router           = useRouter()
-  const { usuario, clearAuth } = useAuth()
+  const router = useRouter();
+  const { usuario, clearAuth, setAuth, token } = useAuth();
+
+  useQuery({
+    queryKey: ['mi-perfil-bienvenida'],
+    queryFn: async () => {
+      const res = await api.get<{
+        datos: UsuarioAuth
+      }>('/auth/me')
+      const perfil = res.data.datos
+      if (perfil && token) {
+        setAuth(token, perfil)
+      }
+      return perfil
+    },
+    enabled: !!token && !!usuario,
+    staleTime: 0,
+  })
 
   useEffect(() => {
     if (!usuario) {
-      router.replace(ROUTES.AUTH.LOGIN)
+      router.replace(ROUTES.AUTH.LOGIN);
     }
-  }, [usuario, router])
+  }, [usuario, router]);
 
   if (!usuario) {
     return (
       <Center h="100vh">
         <Loader color="emerald" size="xl" type="dots" />
       </Center>
-    )
+    );
   }
 
-  const roles       = (usuario.roles as string[]) ?? []
-  const disponibles = getSubsistemasDisponibles(roles)
+  const roles = (usuario.roles as string[]) ?? [];
+  const disponibles = getSubsistemasDisponibles(roles);
 
-  const nombreCompleto = usuario.nombre_completo
-    || usuario.usuario_ti
-    || usuario.email
+  const nombreCompleto =
+    usuario.nombre_completo || usuario.usuario_ti || usuario.email;
 
-  const initials = (nombreCompleto ?? '')
-    .split(' ')
-    .slice(0, 2)
-    .map((w: string) => w[0] ?? '')
-    .join('')
-    .toUpperCase() || 'US'
+  const initials =
+    (nombreCompleto ?? "")
+      .split(" ")
+      .slice(0, 2)
+      .map((w: string) => w[0] ?? "")
+      .join("")
+      .toUpperCase() || "US";
 
   const handleLogout = () => {
-    clearAuth()
-    window.location.href = '/login?logout=true'
-  }
+    clearAuth();
+    window.location.href = "/login?logout=true";
+  };
 
   const handleIngresar = (key: SubsistemaKey) => {
-    router.push(SUBSISTEMA_CONFIG[key].home)
-  }
+    router.push(SUBSISTEMA_CONFIG[key].home);
+  };
 
   return (
     <Box
       style={{
-        minHeight: '100vh',
-        background: 'var(--mantine-color-body)',
+        minHeight: "100vh",
+        background: "var(--mantine-color-body)",
       }}
     >
       {/* Header mínimo */}
@@ -119,21 +150,17 @@ export default function BienvenidaPage() {
         px="xl"
         py="md"
         style={{
-          borderBottom:
-            '1px solid var(--mantine-color-gray-2)',
+          borderBottom: "1px solid var(--mantine-color-gray-2)",
         }}
       >
         <Group justify="space-between">
           <Group gap="xs">
-            <ThemeIcon
-              color="emerald"
-              variant="light"
-              size="lg"
-              radius="md"
-            >
+            <ThemeIcon color="emerald" variant="light" size="lg" radius="md">
               <IconUsers size={20} />
             </ThemeIcon>
-            <Text fw={700} size="lg">GADPE</Text>
+            <Text fw={700} size="lg">
+              GADPE
+            </Text>
           </Group>
           <Button
             variant="subtle"
@@ -150,7 +177,6 @@ export default function BienvenidaPage() {
       {/* Contenido principal */}
       <Center py="xl" px="md">
         <Stack gap="xl" w="100%" maw={720}>
-
           {/* Tarjeta de perfil */}
           <Card withBorder radius="xl" p="xl">
             <Group gap="lg">
@@ -167,17 +193,11 @@ export default function BienvenidaPage() {
                   {nombreCompleto}
                 </Text>
                 <Text size="sm" c="dimmed">
-                  {usuario.servidor?.puesto?.nombre
-                    ?? usuario.email}
+                  {usuario.servidor?.puesto?.nombre ?? usuario.email}
                 </Text>
                 <Group gap={6} mt={4}>
-                  {roles.map(r => (
-                    <Badge
-                      key={r}
-                      size="xs"
-                      variant="light"
-                      color="emerald"
-                    >
+                  {roles.map((r) => (
+                    <Badge key={r} size="xs" variant="light" color="emerald">
                       {r}
                     </Badge>
                   ))}
@@ -193,15 +213,26 @@ export default function BienvenidaPage() {
               fw={600}
               c="dimmed"
               tt="uppercase"
-              style={{ letterSpacing: '0.05em' }}
+              style={{ letterSpacing: "0.05em" }}
             >
               Selecciona un subsistema
             </Text>
 
-            <SimpleGrid cols={{ base: 1, sm: disponibles.length === 1 ? 1 : disponibles.length === 2 ? 2 : 3 }} spacing="md">
-              {disponibles.map(key => {
-                const cfg  = SUBSISTEMA_CONFIG[key]
-                const Icon = cfg.icon
+            <SimpleGrid
+              cols={{
+                base: 1,
+                sm:
+                  disponibles.length === 1
+                    ? 1
+                    : disponibles.length === 2
+                      ? 2
+                      : 3,
+              }}
+              spacing="md"
+            >
+              {disponibles.map((key) => {
+                const cfg = SUBSISTEMA_CONFIG[key];
+                const Icon = cfg.icon;
 
                 return (
                   <Card
@@ -209,7 +240,7 @@ export default function BienvenidaPage() {
                     withBorder
                     radius="xl"
                     p="lg"
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: "pointer" }}
                     onClick={() => handleIngresar(key)}
                   >
                     <Stack gap="md">
@@ -240,7 +271,7 @@ export default function BienvenidaPage() {
                       <Divider />
 
                       <Stack gap={6}>
-                        {cfg.modulos.map(m => (
+                        {cfg.modulos.map((m) => (
                           <Group key={m.label} gap="xs">
                             <m.icon
                               size={12}
@@ -254,13 +285,12 @@ export default function BienvenidaPage() {
                       </Stack>
                     </Stack>
                   </Card>
-                )
+                );
               })}
             </SimpleGrid>
           </Stack>
-
         </Stack>
       </Center>
     </Box>
-  )
+  );
 }
