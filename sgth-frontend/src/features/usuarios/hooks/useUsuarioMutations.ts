@@ -102,7 +102,7 @@ export function useUsuarioMutations() {
           qc.setQueryData(queryKey, data)
         })
       }
-      onError(error)
+      onError(error as AxiosError<ApiResponse>)
     },
     onSettled: () => {
       // Sincronizar con el servidor al terminar

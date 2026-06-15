@@ -1,43 +1,49 @@
 export const ROUTES = {
   AUTH: {
-    LOGIN: '/login',
+    LOGIN:            '/login',
     CAMBIAR_PASSWORD: '/cambiar-password',
   },
-  DASHBOARD: {
-    HOME: '/',
-    SERVIDORES: '/servidores',
-    USUARIOS: '/usuarios',
+
+  // ── SGTH (Talento Humano) ─────────────
+  SGTH: {
+    HOME:       '/sgth',
+    SERVIDORES: '/sgth/servidores',
+    USUARIOS:   '/sgth/usuarios',
+    ESTRUCTURA: '/sgth/estructura',
+    EXPEDIENTE: '/sgth/expediente',
+    NOMINA:     '/sgth/nomina',
+    ASISTENCIA: '/sgth/asistencia',
+    VIATICOS:   '/sgth/viaticos',
+    VIATICO_DETALLE: (codigo: string | number) =>
+      `/sgth/viaticos/${codigo}`,
   },
-  TALENTO_HUMANO: {
-    ESTRUCTURA: '/estructura',
-    EXPEDIENTE: '/expediente',
-    NOMINA: '/nomina',
-    ASISTENCIA: '/asistencia',
-    VIATICOS: '/viaticos',
+
+  // ── DISPENSARIO MÉDICO ────────────────
+  SALUD: {
+    HOME:         '/salud',
+    CONSULTAS:    '/salud/consultas',
+    ODONTOLOGIA:  '/salud/odontologia',
+    ENFERMERIA:   '/salud/enfermeria',
+    FARMACIA:     '/salud/farmacia',
+    SSO:          '/salud/sso',
+    REPORTES:     '/salud/reportes',
   },
-  BIENESTAR: {
-    DISPENSARIO: '/dispensario',
-    SSO: '/sso',
-    CAPACITACION: '/capacitacion',
-    BIENESTAR: '/bienestar',
+
+  // ── PORTAL SERVIDOR ───────────────────
+  PORTAL: {
+    HOME:            '/portal',
+    MI_PERFIL:       '/portal/mi-perfil',
+    MIS_PERMISOS:    '/portal/mis-permisos',
+    MIS_VACACIONES:  '/portal/mis-vacaciones',
+    MIS_MARCACIONES: '/portal/mis-marcaciones',
+    MIS_ACTIVIDADES: '/portal/mis-actividades',
+    ACADEMICO:       '/portal/academico',
+    MIS_TICKETS:     '/portal/mis-tickets',
+    CERTIFICADOS:    '/portal/certificados',
+    DOCUMENTOS:      '/portal/documentos',
+    REPORTES:        '/portal/reportes',
+    MI_CV:           '/portal/mi-cv',
   },
-  PROCESOS: {
-    SELECCION: '/seleccion',
-    EVALUACION: '/evaluacion',
-    DISCIPLINARIO: '/disciplinario',
-    INVENTARIO_TI: '/inventario-ti',
-    HELPDESK: '/helpdesk',
-    SGD: '/sgd',
-  },
-  ANALISIS: {
-    REPORTERIA: '/reporteria',
-  },
-  AUTOSERVICIO: {
-    MI_PERFIL: '/autoservicio/mi-perfil',
-    MIS_PERMISOS: '/autoservicio/mis-permisos',
-    MIS_VACACIONES: '/autoservicio/mis-vacaciones',
-    MIS_MARCACIONES: '/autoservicio/mis-marcaciones',
-    MIS_ACTIVIDADES: '/autoservicio/mis-actividades',
-    MIS_TICKETS: '/autoservicio/mis-tickets',
-  },
-} as const;
+} as const
+
+export type Subsistema = 'sgth' | 'salud' | 'portal'

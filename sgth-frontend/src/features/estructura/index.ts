@@ -1,1 +1,1 @@
-export { default as EstructuraPage } from '../../app/(dashboard)/estructura/page'
+export { default as EstructuraPage } from '../../app/(sgth)/sgth/estructura/page'

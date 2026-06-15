@@ -26,6 +26,7 @@ import {
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { SubsistemaHeader } from "./SubsistemaHeader";
 
 interface TopbarProps {
   mobileOpened: boolean;
@@ -104,6 +105,9 @@ export function Topbar({
           </Text>
         </Group>
       </Group>
+
+      {/* Centro: Selector de subsistemas */}
+      <SubsistemaHeader />
 
       {/* Sección Derecha: Notificaciones y Menú de Usuario */}
       <Group gap="md">

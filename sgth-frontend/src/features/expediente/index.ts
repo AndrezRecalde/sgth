@@ -1,2 +1,2 @@
 export { default as ExpedientePage } from
-  '../../app/(dashboard)/expediente/page'
+  '../../app/(sgth)/sgth/expediente/page'
