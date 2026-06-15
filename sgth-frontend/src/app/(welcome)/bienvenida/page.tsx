@@ -19,6 +19,7 @@ import {
   Avatar,
   Box,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconUsers,
@@ -226,70 +227,83 @@ export default function BienvenidaPage() {
                 const cfg = SUBSISTEMA_CONFIG[key];
                 const Icon = cfg.icon;
 
+                const tooltipContent = (
+                  <Box p={4}>
+                    <Text size="xs" fw={700} tt="uppercase" c="gray.4" mb={8}>
+                      Módulos incluidos
+                    </Text>
+                    {cfg.modulos.map((m) => (
+                      <Group key={m.label} gap="xs" wrap="nowrap" mb={4}>
+                        <m.icon size={14} style={{ color: "var(--mantine-color-white)" }} />
+                        <Text size="sm" fw={500} style={{ color: "var(--mantine-color-white)" }}>
+                          {m.label}
+                        </Text>
+                      </Group>
+                    ))}
+                  </Box>
+                );
+
                 return (
-                  <Card
+                  <Tooltip
                     key={key}
-                    withBorder
-                    radius="md"
-                    p="xl"
-                    style={{
-                      cursor: "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                      transition: "all 0.2s ease",
-                      borderColor: "var(--mantine-color-gray-3)",
-                    }}
-                    onClick={() => handleIngresar(key)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-5)`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--mantine-color-gray-3)";
-                    }}
+                    label={tooltipContent}
+                    position="top"
+                    withArrow
+                    transitionProps={{ transition: "pop", duration: 200 }}
+                    color="dark"
                   >
-                    <Group justify="space-between" align="flex-start" mb="xl">
+                    <Card
+                      withBorder
+                      radius="lg"
+                      p="xl"
+                      style={{
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        minHeight: 240,
+                        transition: "all 0.2s ease",
+                        borderColor: "var(--mantine-color-gray-2)",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+                      }}
+                      onClick={() => handleIngresar(key)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-4)`;
+                        e.currentTarget.style.transform = "translateY(-4px)";
+                        e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "var(--mantine-color-gray-2)";
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
+                      }}
+                    >
                       <ThemeIcon
                         color={cfg.color}
                         variant="light"
-                        size={56}
-                        radius="md"
+                        size={64}
+                        radius="100%"
+                        mb="lg"
                       >
-                        <Icon size={28} stroke={1.5} />
+                        <Icon size={32} stroke={1.8} />
                       </ThemeIcon>
-                      {key === 'sgth' && (
-                        <Badge variant="light" color="emerald" radius="xl" size="sm" tt="lowercase">
-                          último acceso
-                        </Badge>
-                      )}
-                    </Group>
 
-                    <Text fw={800} size="xl" mb={4} style={{ letterSpacing: "-0.01em" }}>
-                      {cfg.label}
-                    </Text>
-                    <Text size="sm" c="dimmed" mb="xl" fw={500}>
-                      {cfg.descripcion}
-                    </Text>
-
-                    <Stack gap="xs" style={{ flex: 1 }}>
-                      {cfg.modulos.map((m) => (
-                        <Text key={m.label} size="sm" fw={600} c="dimmed">
-                          {m.label}
-                        </Text>
-                      ))}
-                    </Stack>
-
-                    <Button
-                      variant="default"
-                      size="md"
-                      radius="md"
-                      fullWidth
-                      mt="xl"
-                      style={{ fontWeight: 600 }}
-                    >
-                      Ingresar al {cfg.label}
-                    </Button>
-                  </Card>
+                      <Text
+                        fw={800}
+                        size="lg"
+                        mb={8}
+                        ta="center"
+                        style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-dark-8)" }}
+                      >
+                        {cfg.label}
+                      </Text>
+                      <Text size="sm" c="dimmed" ta="center" lh={1.4} px="sm">
+                        {cfg.descripcion}
+                      </Text>
+                    </Card>
+                  </Tooltip>
                 );
               })}
             </SimpleGrid>
