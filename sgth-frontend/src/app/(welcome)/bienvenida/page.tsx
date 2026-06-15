@@ -87,7 +87,7 @@ export default function BienvenidaPage() {
     queryFn: async () => {
       const res = await api.get<{
         datos: UsuarioAuth
-      }>('/auth/me')
+      }>('/auth/perfil')
       const perfil = res.data.datos
       if (perfil && token) {
         setAuth(token, perfil)

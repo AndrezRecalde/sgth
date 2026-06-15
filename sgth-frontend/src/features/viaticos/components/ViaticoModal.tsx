@@ -89,7 +89,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   const { data: miPerfil } = useQuery({
     queryKey: ["mi-perfil"],
     queryFn: () =>
-      api.get<{ datos: MiPerfil }>("/auth/me").then((r) => r.data.datos),
+      api.get<{ datos: MiPerfil }>("/auth/perfil").then((r) => r.data.datos),
     enabled: opened,
     staleTime: 1000 * 60 * 5,
   });

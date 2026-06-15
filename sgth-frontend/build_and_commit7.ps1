@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "fix(welcome): usar Topbar real en bienvenida y actualizar perfil con roles"
+    git commit -m "fix(auth): corregir endpoint auth/me a auth/perfil en todo el frontend"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."
