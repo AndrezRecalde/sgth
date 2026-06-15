@@ -44,6 +44,43 @@ final class AuthController extends Controller
 
     public function perfil(Request $request): JsonResponse
     {
-        return ApiResponse::ok($request->user()->load('roles'));
+        $user = $request->user()->load([
+            'roles',
+            'servidor.puesto.cargo',
+            'servidor.unidad_administrativa',
+        ]);
+
+        $roles    = $user->roles->pluck('name')->toArray();
+        $permisos = $user->getAllPermissions()
+                         ->pluck('name')
+                         ->toArray();
+
+        return ApiResponse::ok([
+            'id'               => $user->id,
+            'nombre_completo'  => $user->nombre_completo,
+            'email'            => $user->email,
+            'usuario_ti'       => $user->usuario_ti,
+            'activo'           => $user->activo,
+            'primer_login'     => $user->primer_login,
+            'servidor_id'      => $user->servidor_id,
+            'roles'            => $roles,
+            'permisos'         => $permisos,
+            'servidor'         => $user->servidor ? [
+                'id'      => $user->servidor->id,
+                'cedula'  => $user->servidor->cedula,
+                'nombre'  => $user->servidor->nombre,
+                'apellido'=> $user->servidor->apellido,
+                'puesto'  => $user->servidor->puesto ? [
+                    'nombre' => $user->servidor->puesto
+                                    ->cargo?->nombre,
+                ] : null,
+                'unidad_administrativa' =>
+                    $user->servidor->unidad_administrativa
+                    ? [
+                        'nombre' => $user->servidor
+                            ->unidad_administrativa->nombre,
+                    ] : null,
+            ] : null,
+        ]);
     }
 }

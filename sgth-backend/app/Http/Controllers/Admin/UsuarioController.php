@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateUsuarioRequest;
 use App\Http\Resources\Admin\UsuarioResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Admin\UsuarioServiceInterface;
+use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,8 @@ final class UsuarioController extends Controller
 
     public function __construct(
         private readonly UsuarioServiceInterface $usuarioService,
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -28,16 +30,16 @@ final class UsuarioController extends Controller
         $paginator = $this->usuarioService->listar($request->all());
 
         return response()->json([
-            'exito'   => true,
+            'exito' => true,
             'mensaje' => 'Consulta exitosa.',
-            'datos'   => UsuarioResource::collection($paginator->items()),
-            'meta'    => [
+            'datos' => UsuarioResource::collection($paginator->items()),
+            'meta' => [
                 'pagina_actual' => $paginator->currentPage(),
-                'por_pagina'    => $paginator->perPage(),
-                'total'         => $paginator->total(),
+                'por_pagina' => $paginator->perPage(),
+                'total' => $paginator->total(),
                 'ultima_pagina' => $paginator->lastPage(),
-                'desde'         => $paginator->firstItem(),
-                'hasta'         => $paginator->lastItem(),
+                'desde' => $paginator->firstItem(),
+                'hasta' => $paginator->lastItem(),
             ],
         ]);
     }
@@ -125,7 +127,7 @@ final class UsuarioController extends Controller
 
         $usuario->update([
             'servidor_id' => null,
-            'activo'      => false,
+            'activo' => false,
         ]);
 
         return ApiResponse::ok(
@@ -136,11 +138,14 @@ final class UsuarioController extends Controller
 
     public function asignarServidor(
         int $id,
-        \Illuminate\Http\Request $request
+        Request $request
     ): JsonResponse {
         $data = $request->validate([
-            'servidor_id' => ['required', 'integer',
-                'exists:servidores,id'],
+            'servidor_id' => [
+                'required',
+                'integer',
+                'exists:servidores,id'
+            ],
         ]);
 
         $usuario = User::findOrFail($id);
@@ -154,7 +159,8 @@ final class UsuarioController extends Controller
 
         // Verificar que el servidor no tenga ya un usuario
         $servidorOcupado = User::where(
-            'servidor_id', $data['servidor_id']
+            'servidor_id',
+            $data['servidor_id']
         )->exists();
 
         if ($servidorOcupado) {
@@ -179,26 +185,26 @@ final class UsuarioController extends Controller
     public function sugerirUsuarioTi(Request $request): JsonResponse
     {
         $servidorId = $request->integer('servidor_id');
-        $servidor   = null;
+        $servidor = null;
 
         if ($servidorId) {
-            $servidor = \App\Models\Expediente\Servidor::find($servidorId);
+            $servidor = Servidor::find($servidorId);
         }
 
-        $nombre   = $servidor?->nombre   ?? $request->string('nombre')->value()  ?? 'usuario';
+        $nombre = $servidor?->nombre ?? $request->string('nombre')->value() ?? 'usuario';
         $apellido = $servidor?->apellido ?? $request->string('apellido')->value() ?? 'sistema';
 
-        $primerNombre   = explode(' ', trim($nombre))[0];
+        $primerNombre = explode(' ', trim($nombre))[0];
         $primerApellido = explode(' ', trim($apellido))[0];
-        $base           = strtolower(substr($primerNombre, 0, 1) . $primerApellido);
+        $base = strtolower(substr($primerNombre, 0, 1) . $primerApellido);
 
         // Eliminar caracteres no ASCII (tildes, ñ, etc.)
         $base = iconv('UTF-8', 'ASCII//TRANSLIT', $base);
         $base = preg_replace('/[^a-z0-9]/', '', $base);
 
         $usuarioTi = $base;
-        $contador  = 1;
-        while (\App\Models\User::where('usuario_ti', $usuarioTi)->exists()) {
+        $contador = 1;
+        while (User::where('usuario_ti', $usuarioTi)->exists()) {
             $usuarioTi = $base . $contador;
             $contador++;
         }
