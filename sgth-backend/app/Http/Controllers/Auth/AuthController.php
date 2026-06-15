@@ -47,7 +47,7 @@ final class AuthController extends Controller
         $user = $request->user()->load([
             'roles',
             'servidor.puesto.cargo',
-            'servidor.unidad_administrativa',
+            'servidor.puesto.unidad_administrativa',
         ]);
 
         $roles    = $user->roles->pluck('name')->toArray();
@@ -65,21 +65,24 @@ final class AuthController extends Controller
             'servidor_id'      => $user->servidor_id,
             'roles'            => $roles,
             'permisos'         => $permisos,
-            'servidor'         => $user->servidor ? [
+            'servidor' => $user->servidor ? [
                 'id'      => $user->servidor->id,
                 'cedula'  => $user->servidor->cedula,
                 'nombre'  => $user->servidor->nombre,
                 'apellido'=> $user->servidor->apellido,
                 'puesto'  => $user->servidor->puesto ? [
-                    'nombre' => $user->servidor->puesto
-                                    ->cargo?->nombre,
+                    'nombre' => $user->servidor
+                                    ->puesto->cargo?->nombre,
+                    'unidad_administrativa' =>
+                        $user->servidor->puesto
+                             ->unidad_administrativa
+                        ? [
+                            'nombre' => $user->servidor
+                                ->puesto
+                                ->unidad_administrativa
+                                ->nombre,
+                        ] : null,
                 ] : null,
-                'unidad_administrativa' =>
-                    $user->servidor->unidad_administrativa
-                    ? [
-                        'nombre' => $user->servidor
-                            ->unidad_administrativa->nombre,
-                    ] : null,
             ] : null,
         ]);
     }
