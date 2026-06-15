@@ -13,9 +13,6 @@ export const ROUTES = {
     EXPEDIENTE: '/sgth/expediente',
     NOMINA:     '/sgth/nomina',
     ASISTENCIA: '/sgth/asistencia',
-    VIATICOS:   '/sgth/viaticos',
-    VIATICO_DETALLE: (codigo: string | number) =>
-      `/sgth/viaticos/${codigo}`,
   },
 
   // ── DISPENSARIO MÉDICO ────────────────
@@ -43,6 +40,9 @@ export const ROUTES = {
     DOCUMENTOS:      '/portal/documentos',
     REPORTES:        '/portal/reportes',
     MI_CV:           '/portal/mi-cv',
+    VIATICOS:        '/portal/viaticos',
+    VIATICO_DETALLE: (codigo: string | number) =>
+      `/portal/viaticos/${codigo}`,
   },
 } as const
 

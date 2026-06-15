@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ROUTES } from "@/config/routes";
 import { Stack, Group, Button, Tabs } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlane, IconPlus } from "@tabler/icons-react";
@@ -38,10 +39,10 @@ export function ViaticoView() {
   const { aprobar } = useViaticoMutations();
 
   const handleVer = (v: ViaticoConRelaciones) =>
-    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`);
+    router.push(ROUTES.PORTAL.VIATICO_DETALLE(v.codigo_viatico ?? v.id));
 
   const handleCreado = (v: Viatico) =>
-    router.push(`/viaticos/${v.codigo_viatico ?? v.id}`);
+    router.push(ROUTES.PORTAL.VIATICO_DETALLE(v.codigo_viatico ?? v.id));
 
   const handleBuscar = () => {
     setCodigoQuery(busquedaCodigo.trim());

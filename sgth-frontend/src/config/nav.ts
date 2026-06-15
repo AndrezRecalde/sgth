@@ -63,11 +63,6 @@ export const NAV_SGTH: NavGroup[] = [
         href:  ROUTES.SGTH.ASISTENCIA,
         icon:  'IconClock',
       },
-      {
-        label: 'Viáticos',
-        href:  ROUTES.SGTH.VIATICOS,
-        icon:  'IconPlane',
-      },
     ],
   },
 ]
@@ -150,6 +145,11 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Vacaciones',
         href:  ROUTES.PORTAL.MIS_VACACIONES,
         icon:  'IconBeach',
+      },
+      {
+        label: 'Viáticos',
+        href:  ROUTES.PORTAL.VIATICOS,
+        icon:  'IconPlane',
       },
       {
         label: 'Certificados',

@@ -14,11 +14,11 @@ interface Props {
 
 export function NavItem({ label, icon, href, collapsed, onClick }: Props) {
   const pathname = usePathname();
-  // Active state: exact match or starts with href/ (except when href is / or #)
-  const isActive =
-    href !== "#" && href !== "/"
-      ? pathname === href || pathname.startsWith(`${href}/`)
-      : pathname === href;
+  // Active state: exact match for root/home pages, prefix match for others
+  const exactPaths = ['/', '#', '/sgth', '/salud', '/portal'];
+  const isActive = exactPaths.includes(href)
+    ? pathname === href
+    : pathname === href || pathname.startsWith(`${href}/`);
 
   const content = (
     <UnstyledButton
