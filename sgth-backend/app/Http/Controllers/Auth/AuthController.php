@@ -47,7 +47,7 @@ final class AuthController extends Controller
         $user = $request->user()->load([
             'roles',
             'servidor.puesto.cargo',
-            'servidor.puesto.unidad_administrativa',
+            'servidor.unidadAdministrativa',
         ]);
 
         $roles    = $user->roles->pluck('name')->toArray();
@@ -56,16 +56,16 @@ final class AuthController extends Controller
                          ->toArray();
 
         return ApiResponse::ok([
-            'id'               => $user->id,
-            'nombre_completo'  => $user->nombre_completo,
-            'email'            => $user->email,
-            'usuario_ti'       => $user->usuario_ti,
-            'activo'           => $user->activo,
-            'primer_login'     => $user->primer_login,
-            'servidor_id'      => $user->servidor_id,
-            'roles'            => $roles,
-            'permisos'         => $permisos,
-            'servidor' => $user->servidor ? [
+            'id'              => $user->id,
+            'nombre_completo' => $user->nombre_completo,
+            'email'           => $user->email,
+            'usuario_ti'      => $user->usuario_ti,
+            'activo'          => $user->activo,
+            'primer_login'    => $user->primer_login,
+            'servidor_id'     => $user->servidor_id,
+            'roles'           => $roles,
+            'permisos'        => $permisos,
+            'servidor'        => $user->servidor ? [
                 'id'      => $user->servidor->id,
                 'cedula'  => $user->servidor->cedula,
                 'nombre'  => $user->servidor->nombre,
@@ -73,16 +73,13 @@ final class AuthController extends Controller
                 'puesto'  => $user->servidor->puesto ? [
                     'nombre' => $user->servidor
                                     ->puesto->cargo?->nombre,
-                    'unidad_administrativa' =>
-                        $user->servidor->puesto
-                             ->unidad_administrativa
-                        ? [
-                            'nombre' => $user->servidor
-                                ->puesto
-                                ->unidad_administrativa
-                                ->nombre,
-                        ] : null,
                 ] : null,
+                'unidad_administrativa' =>
+                    $user->servidor->unidadAdministrativa
+                    ? [
+                        'nombre' => $user->servidor
+                            ->unidadAdministrativa->nombre,
+                    ] : null,
             ] : null,
         ]);
     }
