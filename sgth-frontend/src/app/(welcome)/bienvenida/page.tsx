@@ -17,6 +17,8 @@ import {
   SimpleGrid,
   Button,
   Avatar,
+  Box,
+  Title,
 } from "@mantine/core";
 import {
   IconUsers,
@@ -42,9 +44,9 @@ const SUBSISTEMA_CONFIG = {
     home: ROUTES.SGTH.HOME,
     modulos: [
       { label: "Expediente", icon: IconFolder },
+      { label: "Viáticos", icon: IconPlane },
       { label: "Asistencia", icon: IconCalendarEvent },
       { label: "Nómina", icon: IconUsers },
-      { label: "Estructura", icon: IconUsers },
     ],
   },
   salud: {
@@ -70,7 +72,7 @@ const SUBSISTEMA_CONFIG = {
       { label: "Mi perfil", icon: IconUserCircle },
       { label: "Permisos", icon: IconCalendarEvent },
       { label: "Vacaciones", icon: IconBeach },
-      { label: "Viáticos", icon: IconPlane },
+      { label: "Mis tickets", icon: IconFolder },
     ],
   },
 } as const;
@@ -130,111 +132,170 @@ export default function BienvenidaPage() {
   };
 
   return (
-    <Center py="xl" px="md">
-      <Stack gap="xl" w="100%" maw={720}>
-          {/* Tarjeta de perfil */}
-          <Card withBorder radius="xl" p="xl">
-            <Group gap="lg">
+    <Box
+      style={{
+        minHeight: "calc(100vh - 70px)",
+        backgroundColor: "var(--mantine-color-body)",
+        padding: "2rem",
+      }}
+    >
+      <Center>
+        <Stack gap="xl" w="100%" maw={1000}>
+          {/* Tarjeta de Perfil Horizontal */}
+          <Card 
+            withBorder 
+            radius="md" 
+            p="xl" 
+            style={{ borderColor: 'var(--mantine-color-gray-3)' }}
+          >
+            <Group wrap="nowrap" align="flex-start" gap="xl">
               <Avatar
                 color="emerald"
-                size={72}
-                radius="xl"
-                style={{ fontSize: 24, fontWeight: 700 }}
+                variant="light"
+                size={96}
+                radius="100%"
+                style={{ fontSize: 32, fontWeight: 600 }}
               >
                 {initials}
               </Avatar>
-              <Stack gap={4} style={{ flex: 1 }}>
-                <Text fw={600} size="lg">
+              
+              <Box style={{ flex: 1 }}>
+                <Title order={2} fw={700} size="h3" mb={4}>
                   {nombreCompleto}
+                </Title>
+                <Text size="sm" fw={500} c="dimmed">
+                  {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"}
                 </Text>
-                <Text size="sm" c="dimmed">
-                  {usuario.servidor?.puesto?.nombre ?? usuario.email}
+                <Text size="sm" fw={500} c="dimmed" mb="md">
+                  {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
                 </Text>
-                <Group gap={6} mt={4}>
-                  {roles.map((r) => (
-                    <Badge key={r} size="xs" variant="light" color="emerald">
-                      {r}
+                <Group gap="xs">
+                  {roles.map((r, i) => {
+                    const badgeColors = ["emerald", "blue", "violet", "orange"];
+                    const color = badgeColors[i % badgeColors.length];
+                    return (
+                      <Badge key={r} size="sm" variant="light" color={color} radius="xl" tt="lowercase">
+                        {r}
+                      </Badge>
+                    );
+                  })}
+                  {roles.length === 0 && (
+                    <Badge size="sm" variant="light" color="emerald" radius="xl" tt="lowercase">
+                      servidor
                     </Badge>
-                  ))}
+                  )}
+                  <Badge size="sm" variant="light" color="violet" radius="xl" tt="capitalize">
+                    Activo
+                  </Badge>
                 </Group>
+              </Box>
+              
+              {/* Último acceso */}
+              <Stack gap={4} align="flex-end" display={{ base: 'none', sm: 'flex' }}>
+                <Text size="xs" fw={600} c="dimmed" tt="none">
+                  Último acceso
+                </Text>
+                <Text size="sm" fw={700}>
+                  Hoy, 09:14
+                </Text>
               </Stack>
             </Group>
           </Card>
 
-          {/* Selector de subsistemas */}
-          <Stack gap="xs">
+          {/* Listado de Subsistemas */}
+          <Box>
             <Text
-              size="xs"
-              fw={600}
+              size="sm"
+              fw={800}
               c="dimmed"
               tt="uppercase"
+              mb="md"
               style={{ letterSpacing: "0.05em" }}
             >
-              Selecciona un subsistema
+              SELECCIONA UN SUBSISTEMA
             </Text>
 
             <SimpleGrid
-            cols={{
-              base: 1,
-              sm:   disponibles.length === 1 ? 1
-                  : disponibles.length === 2 ? 2
-                  : 3,
-            }}
-            spacing="md"
-          >
-            {disponibles.map(key => {
-              const cfg  = SUBSISTEMA_CONFIG[key]
-              const Icon = cfg.icon
+              cols={{
+                base: 1,
+                sm: disponibles.length === 1 ? 1 : disponibles.length === 2 ? 2 : 3,
+              }}
+              spacing="lg"
+            >
+              {disponibles.map((key) => {
+                const cfg = SUBSISTEMA_CONFIG[key];
+                const Icon = cfg.icon;
 
-              return (
-                <Card
-                  key={key}
-                  withBorder
-                  radius="xl"
-                  p="xl"
-                  style={{
-                    cursor:     'pointer',
-                    textAlign:  'center',
-                    transition: 'box-shadow 0.15s, border-color 0.15s',
-                  }}
-                  onClick={() => handleIngresar(key)}
-                >
-                  <Stack gap="md" align="center">
-                    <ThemeIcon
-                      color={cfg.color}
-                      variant="light"
-                      size={64}
-                      radius="xl"
-                    >
-                      <Icon size={32} />
-                    </ThemeIcon>
+                return (
+                  <Card
+                    key={key}
+                    withBorder
+                    radius="md"
+                    p="xl"
+                    style={{
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                      transition: "all 0.2s ease",
+                      borderColor: "var(--mantine-color-gray-3)",
+                    }}
+                    onClick={() => handleIngresar(key)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-5)`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "var(--mantine-color-gray-3)";
+                    }}
+                  >
+                    <Group justify="space-between" align="flex-start" mb="xl">
+                      <ThemeIcon
+                        color={cfg.color}
+                        variant="light"
+                        size={56}
+                        radius="md"
+                      >
+                        <Icon size={28} stroke={1.5} />
+                      </ThemeIcon>
+                      {key === 'sgth' && (
+                        <Badge variant="light" color="emerald" radius="xl" size="sm" tt="lowercase">
+                          último acceso
+                        </Badge>
+                      )}
+                    </Group>
 
-                    <Stack gap={4} align="center">
-                      <Text fw={600} size="lg">
-                        {cfg.label}
-                      </Text>
-                      <Text size="sm" c="dimmed" maw={180}>
-                        {cfg.descripcion}
-                      </Text>
+                    <Text fw={800} size="xl" mb={4} style={{ letterSpacing: "-0.01em" }}>
+                      {cfg.label}
+                    </Text>
+                    <Text size="sm" c="dimmed" mb="xl" fw={500}>
+                      {cfg.descripcion}
+                    </Text>
+
+                    <Stack gap="xs" style={{ flex: 1 }}>
+                      {cfg.modulos.map((m) => (
+                        <Text key={m.label} size="sm" fw={600} c="dimmed">
+                          {m.label}
+                        </Text>
+                      ))}
                     </Stack>
 
                     <Button
-                      variant="light"
-                      color={cfg.color}
-                      size="sm"
-                      radius="xl"
+                      variant="default"
+                      size="md"
+                      radius="md"
                       fullWidth
-                      mt="xs"
+                      mt="xl"
+                      style={{ fontWeight: 600 }}
                     >
-                      Ingresar
+                      Ingresar al {cfg.label}
                     </Button>
-                  </Stack>
-                </Card>
-              )
-            })}
-          </SimpleGrid>
-          </Stack>
+                  </Card>
+                );
+              })}
+            </SimpleGrid>
+          </Box>
         </Stack>
       </Center>
+    </Box>
   );
 }
