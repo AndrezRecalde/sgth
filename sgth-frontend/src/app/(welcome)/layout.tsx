@@ -1,13 +1,37 @@
-import type { Metadata } from 'next'
+'use client'
 
-export const metadata: Metadata = {
-  title: 'Bienvenido — GADPE',
-}
+import { AppShell }        from '@mantine/core'
+import { useDisclosure }   from '@mantine/hooks'
+import { Topbar }          from '@/components/layout/Topbar'
+import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
 export default function WelcomeLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  const [mobileOpened, { toggle: toggleMobile }] =
+    useDisclosure(false)
+  const [desktopOpened, { toggle: toggleDesktop }] =
+    useDisclosure(false)
+  const { isMobile } = useMobileBreakpoint()
+
+  return (
+    <AppShell
+      header={{ height: 70 }}
+      padding="md"
+    >
+      <AppShell.Header>
+        <Topbar
+          mobileOpened={mobileOpened}
+          desktopOpened={desktopOpened}
+          onMobileToggle={toggleMobile}
+          onDesktopToggle={toggleDesktop}
+        />
+      </AppShell.Header>
+      <AppShell.Main>
+        {children}
+      </AppShell.Main>
+    </AppShell>
+  )
 }

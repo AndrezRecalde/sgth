@@ -11,8 +11,6 @@ import {
   Text,
   Badge,
   Card,
-  Button,
-  Box,
   Center,
   Loader,
   ThemeIcon,
@@ -30,7 +28,6 @@ import {
   IconStethoscope,
   IconPill,
   IconFolder,
-  IconLogout,
   IconChevronRight,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,54 +126,13 @@ export default function BienvenidaPage() {
       .join("")
       .toUpperCase() || "US";
 
-  const handleLogout = () => {
-    clearAuth();
-    window.location.href = "/login?logout=true";
-  };
-
   const handleIngresar = (key: SubsistemaKey) => {
     router.push(SUBSISTEMA_CONFIG[key].home);
   };
 
   return (
-    <Box
-      style={{
-        minHeight: "100vh",
-        background: "var(--mantine-color-body)",
-      }}
-    >
-      {/* Header mínimo */}
-      <Box
-        px="xl"
-        py="md"
-        style={{
-          borderBottom: "1px solid var(--mantine-color-gray-2)",
-        }}
-      >
-        <Group justify="space-between">
-          <Group gap="xs">
-            <ThemeIcon color="emerald" variant="light" size="lg" radius="md">
-              <IconUsers size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg">
-              GADPE
-            </Text>
-          </Group>
-          <Button
-            variant="subtle"
-            color="gray"
-            size="xs"
-            leftSection={<IconLogout size={14} />}
-            onClick={handleLogout}
-          >
-            Cerrar sesión
-          </Button>
-        </Group>
-      </Box>
-
-      {/* Contenido principal */}
-      <Center py="xl" px="md">
-        <Stack gap="xl" w="100%" maw={720}>
+    <Center py="xl" px="md">
+      <Stack gap="xl" w="100%" maw={720}>
           {/* Tarjeta de perfil */}
           <Card withBorder radius="xl" p="xl">
             <Group gap="lg">
@@ -291,6 +247,5 @@ export default function BienvenidaPage() {
           </Stack>
         </Stack>
       </Center>
-    </Box>
   );
 }

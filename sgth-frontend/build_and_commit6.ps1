@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "fix(welcome): refrescar perfil del usuario con roles al cargar bienvenida"
+    git commit -m "fix(welcome): usar Topbar real en bienvenida y actualizar perfil con roles"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."
