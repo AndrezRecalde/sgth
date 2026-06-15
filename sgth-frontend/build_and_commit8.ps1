@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "fix(auth): corregir endpoint auth/me a auth/perfil en todo el frontend"
+    git commit -m "feat(welcome): rediseño tarjetas subsistemas con icono centrado"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."

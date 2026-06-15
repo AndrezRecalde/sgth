@@ -15,7 +15,7 @@ import {
   Loader,
   ThemeIcon,
   SimpleGrid,
-  Divider,
+  Button,
   Avatar,
 } from "@mantine/core";
 import {
@@ -28,7 +28,6 @@ import {
   IconStethoscope,
   IconPill,
   IconFolder,
-  IconChevronRight,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/config/routes";
@@ -175,75 +174,65 @@ export default function BienvenidaPage() {
             </Text>
 
             <SimpleGrid
-              cols={{
-                base: 1,
-                sm:
-                  disponibles.length === 1
-                    ? 1
-                    : disponibles.length === 2
-                      ? 2
-                      : 3,
-              }}
-              spacing="md"
-            >
-              {disponibles.map((key) => {
-                const cfg = SUBSISTEMA_CONFIG[key];
-                const Icon = cfg.icon;
+            cols={{
+              base: 1,
+              sm:   disponibles.length === 1 ? 1
+                  : disponibles.length === 2 ? 2
+                  : 3,
+            }}
+            spacing="md"
+          >
+            {disponibles.map(key => {
+              const cfg  = SUBSISTEMA_CONFIG[key]
+              const Icon = cfg.icon
 
-                return (
-                  <Card
-                    key={key}
-                    withBorder
-                    radius="xl"
-                    p="lg"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => handleIngresar(key)}
-                  >
-                    <Stack gap="md">
-                      <Group justify="space-between">
-                        <ThemeIcon
-                          color={cfg.color}
-                          variant="light"
-                          size="xl"
-                          radius="lg"
-                        >
-                          <Icon size={24} />
-                        </ThemeIcon>
-                        <IconChevronRight
-                          size={16}
-                          color="var(--mantine-color-dimmed)"
-                        />
-                      </Group>
+              return (
+                <Card
+                  key={key}
+                  withBorder
+                  radius="xl"
+                  p="xl"
+                  style={{
+                    cursor:     'pointer',
+                    textAlign:  'center',
+                    transition: 'box-shadow 0.15s, border-color 0.15s',
+                  }}
+                  onClick={() => handleIngresar(key)}
+                >
+                  <Stack gap="md" align="center">
+                    <ThemeIcon
+                      color={cfg.color}
+                      variant="light"
+                      size={64}
+                      radius="xl"
+                    >
+                      <Icon size={32} />
+                    </ThemeIcon>
 
-                      <Stack gap={2}>
-                        <Text fw={600} size="md">
-                          {cfg.label}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          {cfg.descripcion}
-                        </Text>
-                      </Stack>
-
-                      <Divider />
-
-                      <Stack gap={6}>
-                        {cfg.modulos.map((m) => (
-                          <Group key={m.label} gap="xs">
-                            <m.icon
-                              size={12}
-                              color={`var(--mantine-color-${cfg.color}-6)`}
-                            />
-                            <Text size="xs" c="dimmed">
-                              {m.label}
-                            </Text>
-                          </Group>
-                        ))}
-                      </Stack>
+                    <Stack gap={4} align="center">
+                      <Text fw={600} size="lg">
+                        {cfg.label}
+                      </Text>
+                      <Text size="sm" c="dimmed" maw={180}>
+                        {cfg.descripcion}
+                      </Text>
                     </Stack>
-                  </Card>
-                );
-              })}
-            </SimpleGrid>
+
+                    <Button
+                      variant="light"
+                      color={cfg.color}
+                      size="sm"
+                      radius="xl"
+                      fullWidth
+                      mt="xs"
+                    >
+                      Ingresar
+                    </Button>
+                  </Stack>
+                </Card>
+              )
+            })}
+          </SimpleGrid>
           </Stack>
         </Stack>
       </Center>
