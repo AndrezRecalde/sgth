@@ -31,7 +31,7 @@ export function useLogin() {
         router.push('/cambiar-password')
       } else {
         deleteCookie('sgth_primer_login')
-        router.push('/')
+        router.push('/bienvenida')
       }
     },
     onError: (error: AxiosError<ApiResponse>) => {

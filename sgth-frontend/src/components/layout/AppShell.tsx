@@ -27,9 +27,9 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isHydrated && (!isAuthenticated || !token)) {
-      router.replace("/login");
+      router.replace('/login')
     }
-  }, [isHydrated, isAuthenticated, token, router]);
+  }, [isHydrated, isAuthenticated, token, router])
 
   // Mostrar un loader limpio de pantalla completa si no está hidratado o no está autenticado
   if (!isHydrated || !isAuthenticated || !token) {

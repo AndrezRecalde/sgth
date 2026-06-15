@@ -83,7 +83,7 @@ export function Topbar({
         <Group
           gap="xs"
           style={{ cursor: "pointer" }}
-          onClick={() => router.push("/")}
+          onClick={() => router.push('/bienvenida')}
         >
           {/* <ThemeIcon variant="light" color="emerald" size="md" radius="lg">
             <IconUsers size={16} />
