@@ -20,6 +20,8 @@ import {
   Title,
   Paper,
   ActionIcon,
+  Grid,
+  Divider,
 } from "@mantine/core";
 import {
   IconUsers,
@@ -141,40 +143,85 @@ export default function BienvenidaPage() {
       }}
       bg="var(--mantine-color-body)"
     >
-      <Center>
-        <Stack gap="xl" w="100%" maw={1000}>
-          {/* Saludo Estilo Google */}
-          <Box pt="xl" pb="lg" style={{ textAlign: "center" }}>
-            <Title order={1} fw={400} size={42} mb="xs" style={{ letterSpacing: "-0.5px", color: "var(--mantine-color-text)" }}>
-              Te damos la bienvenida, {nombreCompleto.split(" ")[0]}
-            </Title>
-            <Text size="lg" c="dimmed" fw={400}>
-              {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"} • {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
-            </Text>
-          </Box>
-
-          {/* Listado de Subsistemas */}
-          <Box>
-            <Text
-              size="sm"
-              fw={800}
-              c="dimmed"
-              tt="uppercase"
-              mb="md"
-              style={{ letterSpacing: "0.05em" }}
-            >
-              Tus subsistemas disponibles
-            </Text>
-
-            <SimpleGrid
-              cols={{
-                base: 1,
-                sm: 2,
-                md: 3,
-                lg: 4,
+      <Grid w="100%" maw={1200} mx="auto" align="stretch">
+        {/* COLUMNA IZQUIERDA: PERFIL */}
+        <Grid.Col span={{ base: 12, md: 4, lg: 4 }}>
+          <Card
+            withBorder
+            radius="lg"
+            p={0}
+            shadow="sm"
+            bg="var(--mantine-color-paper)"
+            style={{ borderColor: "var(--mantine-color-default-border)", height: "100%" }}
+          >
+            {/* Cover Photo / Banner Decorativo */}
+            <Box
+              h={100}
+              style={{
+                background: "linear-gradient(135deg, var(--mantine-color-blue-8) 0%, var(--mantine-color-blue-5) 100%)",
               }}
-              spacing="lg"
-            >
+            />
+            <Box p="xl" style={{ position: "relative" }}>
+              <Avatar
+                color="blue"
+                variant="filled"
+                size={84}
+                radius="100%"
+                style={{
+                  fontSize: 28,
+                  fontWeight: 700,
+                  border: "4px solid var(--mantine-color-paper)",
+                  position: "absolute",
+                  top: -42,
+                }}
+              >
+                {initials}
+              </Avatar>
+
+              <Box pt={48} mb="xl">
+                <Title order={2} fw={700} size="h3" mb={4} style={{ letterSpacing: "-0.5px" }}>
+                  {nombreCompleto}
+                </Title>
+                <Text size="sm" fw={500} c="dimmed">
+                  {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"}
+                </Text>
+                <Text size="xs" fw={500} c="dimmed" mt={4}>
+                  {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
+                </Text>
+              </Box>
+
+              <Divider mb="lg" />
+
+              <Stack gap="sm">
+                <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: "0.5px" }}>
+                  Roles y Accesos
+                </Text>
+                <Group gap={6}>
+                  <Badge size="sm" variant="light" color="violet" radius="sm" tt="capitalize">Activo</Badge>
+                  {roles.length === 0 ? (
+                    <Badge size="sm" variant="outline" color="blue" radius="sm" tt="lowercase">servidor</Badge>
+                  ) : (
+                    roles.map((r) => (
+                      <Badge key={r} size="sm" variant="outline" color="blue" radius="sm" tt="lowercase">{r}</Badge>
+                    ))
+                  )}
+                </Group>
+              </Stack>
+            </Box>
+          </Card>
+        </Grid.Col>
+
+        {/* COLUMNA DERECHA: HERRAMIENTAS */}
+        <Grid.Col span={{ base: 12, md: 8, lg: 8 }}>
+          <Box pt={{ base: 0, md: "md" }} pl={{ base: 0, md: "md" }}>
+            <Title order={2} size="h3" fw={700} mb="xs" style={{ letterSpacing: "-0.5px" }}>
+              Tus Herramientas
+            </Title>
+            <Text size="sm" c="dimmed" mb="xl">
+              Selecciona un subsistema para comenzar a trabajar
+            </Text>
+
+            <Stack gap="md">
               {disponibles.map((key) => {
                 const cfg = SUBSISTEMA_CONFIG[key];
                 const Icon = cfg.icon;
@@ -184,19 +231,13 @@ export default function BienvenidaPage() {
                     key={key}
                     withBorder
                     radius="lg"
-                    p="xl"
+                    p="lg"
                     shadow="none"
                     bg="transparent"
                     style={{
                       cursor: "pointer",
-                      transition: "all 0.15s ease",
+                      transition: "all 0.2s ease",
                       borderColor: "var(--mantine-color-default-border)",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      textAlign: "center",
-                      minHeight: 160,
                     }}
                     onClick={() => handleIngresar(key)}
                     onMouseEnter={(e) => {
@@ -206,18 +247,38 @@ export default function BienvenidaPage() {
                       e.currentTarget.style.backgroundColor = "transparent";
                     }}
                   >
-                    <Icon size={48} stroke={1.2} style={{ color: "var(--mantine-color-text)", marginBottom: "1rem" }} />
+                    <Group wrap="nowrap" align="center" justify="space-between">
+                      <Group wrap="nowrap" gap="lg" style={{ flex: 1 }}>
+                        <ThemeIcon
+                          color={cfg.color}
+                          variant="light"
+                          size={56}
+                          radius="md"
+                        >
+                          <Icon size={28} stroke={1.5} />
+                        </ThemeIcon>
 
-                    <Text fw={500} size="md" style={{ color: "var(--mantine-color-text)" }}>
-                      {cfg.label}
-                    </Text>
+                        <Box>
+                          <Text fw={700} size="lg" mb={4} style={{ color: "var(--mantine-color-text)", letterSpacing: "-0.01em" }}>
+                            {cfg.label}
+                          </Text>
+                          <Text size="sm" c="dimmed" lh={1.4}>
+                            {cfg.descripcion}
+                          </Text>
+                        </Box>
+                      </Group>
+                      
+                      <ActionIcon variant="transparent" color="gray" radius="xl" style={{ pointerEvents: 'none' }}>
+                        <IconArrowRight size={24} stroke={1.5} />
+                      </ActionIcon>
+                    </Group>
                   </Card>
                 );
               })}
-            </SimpleGrid>
+            </Stack>
           </Box>
-        </Stack>
-      </Center>
+        </Grid.Col>
+      </Grid>
     </Box>
   );
 }
