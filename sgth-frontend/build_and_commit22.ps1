@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "feat(layout): agregar efecto visual exacto de border y hover a las tarjetas de subsistema"
+    git commit -m "feat(layout): agregar saludo de bienvenida minimalista tipo Google Suite"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."

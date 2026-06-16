@@ -23,20 +23,20 @@ import {
   IconBell,
   IconLogout,
   IconGridDots,
-  IconUsers,
   IconBuildingHospital,
   IconUserCircle,
+  IconContract,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { Popover, SimpleGrid, Title } from "@mantine/core";
+import { Popover, SimpleGrid } from "@mantine/core";
 import { getSubsistemasDisponibles } from "@/config/nav";
 import { ROUTES } from "@/config/routes";
 
 const SUBSISTEMA_CONFIG = {
   sgth: {
     label: "SGTH",
-    icon: IconUsers,
+    icon: IconContract,
     color: "emerald",
     home: ROUTES.SGTH.HOME,
   },
@@ -112,7 +112,7 @@ export function Topbar({
         <Group
           gap="xs"
           style={{ cursor: "pointer" }}
-          onClick={() => router.push('/bienvenida')}
+          onClick={() => router.push("/bienvenida")}
         >
           {/* <ThemeIcon variant="light" color="emerald" size="md" radius="lg">
             <IconUsers size={16} />
@@ -151,7 +151,13 @@ export function Topbar({
             <IconBell size={25} />
           </ActionIcon>
         </Tooltip>
-        <Popover width={320} position="bottom-end" shadow="xl" radius="xl" withArrow>
+        <Popover
+          width={320}
+          position="bottom-end"
+          shadow="xl"
+          radius="xl"
+          withArrow
+        >
           <Popover.Target>
             <Tooltip label="Aplicaciones de GADPE">
               <ActionIcon
@@ -171,7 +177,8 @@ export function Topbar({
             </Text>
             <SimpleGrid cols={3} spacing="md">
               {disponibles.map((key) => {
-                const config = SUBSISTEMA_CONFIG[key as keyof typeof SUBSISTEMA_CONFIG];
+                const config =
+                  SUBSISTEMA_CONFIG[key as keyof typeof SUBSISTEMA_CONFIG];
                 const Icon = config.icon;
                 return (
                   <UnstyledButton
@@ -187,13 +194,20 @@ export function Topbar({
                       transition: "background-color 0.2s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--mantine-color-default-hover)";
+                      e.currentTarget.style.backgroundColor =
+                        "var(--mantine-color-default-hover)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = "transparent";
                     }}
                   >
-                    <Avatar size={50} radius="100%" color={config.color} variant="light" mb={8}>
+                    <Avatar
+                      size={50}
+                      radius="100%"
+                      color={config.color}
+                      variant="light"
+                      mb={8}
+                    >
                       <Icon size={28} stroke={1.5} />
                     </Avatar>
                     <Text size="xs" fw={500} ta="center">

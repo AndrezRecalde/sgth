@@ -141,6 +141,21 @@ export default function BienvenidaPage() {
       bg="var(--mantine-color-body)"
     >
       <Stack gap="xl" w="100%" maw={1000} mx="auto">
+        {/* SALUDO TIPO GOOGLE SUITE */}
+        <Box ta="center" pt="xl" pb="sm">
+          <Title
+            order={1}
+            fw={400}
+            size={42}
+            style={{
+              letterSpacing: "-0.5px",
+              color: "var(--mantine-color-text)",
+            }}
+          >
+            Te damos la bienvenida
+          </Title>
+        </Box>
+
         {/* TARJETA DE PERFIL HORIZONTAL */}
         <Card withBorder p={{ base: "xl", md: 40 }}>
           <Group wrap="nowrap" align="center" justify="space-between">
@@ -242,11 +257,10 @@ export default function BienvenidaPage() {
                 radius="md"
                 p="xl"
                 shadow="sm"
-                bg="var(--mantine-color-paper)"
                 style={{
                   cursor: "pointer",
                   transition: "all 0.2s ease",
-                  border: "2px solid transparent",
+                  border: "1px solid transparent",
                   borderColor: "var(--mantine-color-default-border)",
                   display: "flex",
                   flexDirection: "column",
@@ -263,7 +277,8 @@ export default function BienvenidaPage() {
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.boxShadow = "var(--mantine-shadow-sm)";
-                  e.currentTarget.style.borderColor = "var(--mantine-color-default-border)";
+                  e.currentTarget.style.borderColor =
+                    "var(--mantine-color-default-border)";
                   e.currentTarget.style.transform = "none";
                 }}
               >
