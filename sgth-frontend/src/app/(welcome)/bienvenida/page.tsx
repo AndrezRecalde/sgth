@@ -143,71 +143,15 @@ export default function BienvenidaPage() {
     >
       <Center>
         <Stack gap="xl" w="100%" maw={1000}>
-          {/* Tarjeta de Perfil Horizontal */}
-          <Paper
-            radius="xl"
-            p={{ base: 'xl', sm: 'calc(2rem + 2vw)' }}
-            bg="var(--mantine-color-paper)"
-            withBorder
-            style={{ 
-              borderColor: "var(--mantine-color-default-border)",
-              borderTop: "8px solid var(--mantine-color-blue-filled)",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            {/* Efecto de fondo sutil */}
-            <Box
-              style={{
-                position: "absolute",
-                top: -100,
-                right: -100,
-                width: 300,
-                height: 300,
-                borderRadius: "100%",
-                background: "radial-gradient(circle, var(--mantine-color-blue-light) 0%, transparent 70%)",
-                opacity: 0.5,
-              }}
-            />
-
-            <Group wrap="nowrap" align="center" gap="xl">
-              <Avatar
-                color="blue"
-                variant="filled"
-                size={84}
-                radius="100%"
-                style={{ fontSize: 28, fontWeight: 700, border: "4px solid var(--mantine-color-body)" }}
-              >
-                {initials}
-              </Avatar>
-
-              <Box style={{ flex: 1 }}>
-                <Text size="sm" fw={600} c="blue" tt="uppercase" style={{ letterSpacing: "1px" }} mb={4}>
-                  Panel Principal
-                </Text>
-                <Title order={1} fw={800} size="h2" mb={8} style={{ letterSpacing: "-0.5px" }}>
-                  ¡Hola, {nombreCompleto.split(" ")[0]}!
-                </Title>
-                <Text size="md" fw={500} c="dimmed" lh={1.4}>
-                  {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"} <br/>
-                  {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
-                </Text>
-              </Box>
-
-              <Stack gap={6} align="flex-end" display={{ base: "none", sm: "flex" }}>
-                <Text size="sm" fw={600} c="dimmed">Roles activos</Text>
-                <Group gap={6}>
-                  {roles.length === 0 ? (
-                    <Badge size="sm" variant="light" color="blue" radius="xl" tt="lowercase">servidor</Badge>
-                  ) : (
-                    roles.map((r) => (
-                      <Badge key={r} size="sm" variant="light" color="blue" radius="xl" tt="lowercase">{r}</Badge>
-                    ))
-                  )}
-                </Group>
-              </Stack>
-            </Group>
-          </Paper>
+          {/* Saludo Estilo Google */}
+          <Box pt="xl" pb="lg" style={{ textAlign: "center" }}>
+            <Title order={1} fw={400} size={42} mb="xs" style={{ letterSpacing: "-0.5px", color: "var(--mantine-color-text)" }}>
+              Te damos la bienvenida, {nombreCompleto.split(" ")[0]}
+            </Title>
+            <Text size="lg" c="dimmed" fw={400}>
+              {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"} • {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
+            </Text>
+          </Box>
 
           {/* Listado de Subsistemas */}
           <Box>
@@ -225,58 +169,47 @@ export default function BienvenidaPage() {
             <SimpleGrid
               cols={{
                 base: 1,
-                sm: disponibles.length === 1 ? 1 : 2,
-                lg: disponibles.length <= 2 ? disponibles.length : 3,
+                sm: 2,
+                md: 3,
+                lg: 4,
               }}
-              spacing="xl"
+              spacing="lg"
             >
               {disponibles.map((key) => {
                 const cfg = SUBSISTEMA_CONFIG[key];
                 const Icon = cfg.icon;
 
                 return (
-                    <Card
+                  <Card
                     key={key}
                     withBorder
-                    radius="xl"
+                    radius="lg"
                     p="xl"
-                    shadow="sm"
-                    bg="var(--mantine-color-paper)"
+                    shadow="none"
+                    bg="transparent"
                     style={{
                       cursor: "pointer",
-                      transition: "all 0.3s ease",
+                      transition: "all 0.15s ease",
                       borderColor: "var(--mantine-color-default-border)",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
                       textAlign: "center",
-                      minHeight: 240,
+                      minHeight: 160,
                     }}
                     onClick={() => handleIngresar(key)}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-6px)";
-                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-lg)";
+                      e.currentTarget.style.backgroundColor = "var(--mantine-color-default-hover)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-sm)";
+                      e.currentTarget.style.backgroundColor = "transparent";
                     }}
                   >
-                    <ThemeIcon
-                      color="gray"
-                      variant="transparent"
-                      size={64}
-                      mb="lg"
-                    >
-                      <Icon size={40} stroke={1.2} style={{ color: "var(--mantine-color-text)" }} />
-                    </ThemeIcon>
+                    <Icon size={48} stroke={1.2} style={{ color: "var(--mantine-color-text)", marginBottom: "1rem" }} />
 
-                    <Text fw={700} size="xl" mb={8} style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-text)" }}>
+                    <Text fw={500} size="md" style={{ color: "var(--mantine-color-text)" }}>
                       {cfg.label}
-                    </Text>
-                    <Text size="sm" c="dimmed" lh={1.6}>
-                      {cfg.descripcion}
                     </Text>
                   </Card>
                 );
