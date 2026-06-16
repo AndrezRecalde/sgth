@@ -23,10 +23,36 @@ import {
   IconBell,
   IconLogout,
   IconGridDots,
+  IconUsers,
+  IconBuildingHospital,
+  IconUserCircle,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { SubsistemaHeader } from "./SubsistemaHeader";
+import { Popover, SimpleGrid, Title } from "@mantine/core";
+import { getSubsistemasDisponibles } from "@/config/nav";
+import { ROUTES } from "@/config/routes";
+
+const SUBSISTEMA_CONFIG = {
+  sgth: {
+    label: "SGTH",
+    icon: IconUsers,
+    color: "emerald",
+    home: ROUTES.SGTH.HOME,
+  },
+  salud: {
+    label: "Salud",
+    icon: IconBuildingHospital,
+    color: "blue",
+    home: ROUTES.SALUD.HOME,
+  },
+  portal: {
+    label: "Portal",
+    icon: IconUserCircle,
+    color: "violet",
+    home: ROUTES.PORTAL.HOME,
+  },
+} as const;
 
 interface TopbarProps {
   mobileOpened: boolean;
@@ -54,6 +80,9 @@ export function Topbar({
       .map((w: string) => w[0] ?? "")
       .join("")
       .toUpperCase() || "US";
+
+  const roles = (usuario?.roles as string[]) ?? [];
+  const disponibles = getSubsistemasDisponibles(roles);
 
   const handleLogout = (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -106,8 +135,8 @@ export function Topbar({
         </Group>
       </Group>
 
-      {/* Centro: Selector de subsistemas */}
-      <SubsistemaHeader />
+      {/* Centro: Vacío para separar */}
+      <Group style={{ flex: 1 }} />
 
       {/* Sección Derecha: Notificaciones y Menú de Usuario */}
       <Group gap="md">
@@ -122,17 +151,60 @@ export function Topbar({
             <IconBell size={25} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="Aplicaciones">
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="lg"
-            radius="xl"
-            aria-label="Aplicaciones"
-          >
-            <IconGridDots size={25} />
-          </ActionIcon>
-        </Tooltip>
+        <Popover width={320} position="bottom-end" shadow="xl" radius="xl" withArrow>
+          <Popover.Target>
+            <Tooltip label="Aplicaciones de GADPE">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                radius="xl"
+                aria-label="Aplicaciones"
+              >
+                <IconGridDots size={25} />
+              </ActionIcon>
+            </Tooltip>
+          </Popover.Target>
+          <Popover.Dropdown p="lg">
+            <Text size="sm" fw={700} mb="lg" c="dimmed">
+              Tus aplicaciones
+            </Text>
+            <SimpleGrid cols={3} spacing="md">
+              {disponibles.map((key) => {
+                const config = SUBSISTEMA_CONFIG[key as keyof typeof SUBSISTEMA_CONFIG];
+                const Icon = config.icon;
+                return (
+                  <UnstyledButton
+                    key={key}
+                    onClick={() => router.push(config.home)}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "8px",
+                      borderRadius: "var(--mantine-radius-md)",
+                      transition: "background-color 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--mantine-color-default-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <Avatar size={50} radius="100%" color={config.color} variant="light" mb={8}>
+                      <Icon size={28} stroke={1.5} />
+                    </Avatar>
+                    <Text size="xs" fw={500} ta="center">
+                      {config.label}
+                    </Text>
+                  </UnstyledButton>
+                );
+              })}
+            </SimpleGrid>
+          </Popover.Dropdown>
+        </Popover>
         <Menu
           width={340}
           position="bottom-end"

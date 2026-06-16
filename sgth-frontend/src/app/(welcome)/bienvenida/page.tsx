@@ -15,11 +15,9 @@ import {
   Loader,
   ThemeIcon,
   SimpleGrid,
-  Button,
   Avatar,
   Box,
   Title,
-  Grid,
 } from "@mantine/core";
 import {
   IconUsers,
@@ -85,20 +83,20 @@ export default function BienvenidaPage() {
   const { usuario, clearAuth, setAuth, token } = useAuth();
 
   useQuery({
-    queryKey: ['mi-perfil-bienvenida'],
+    queryKey: ["mi-perfil-bienvenida"],
     queryFn: async () => {
       const res = await api.get<{
-        datos: UsuarioAuth
-      }>('/auth/perfil')
-      const perfil = res.data.datos
+        datos: UsuarioAuth;
+      }>("/auth/perfil");
+      const perfil = res.data.datos;
       if (perfil && token) {
-        setAuth(token, perfil)
+        setAuth(token, perfil);
       }
-      return perfil
+      return perfil;
     },
     enabled: !!token && !!usuario,
     staleTime: 0,
-  })
+  });
 
   useEffect(() => {
     if (!usuario) {
@@ -133,21 +131,25 @@ export default function BienvenidaPage() {
   };
 
   return (
-    <Box
-      style={{
-        minHeight: "calc(100vh - 70px)",
-        backgroundColor: "var(--mantine-color-body)",
-        padding: "2rem",
+    <Box 
+      style={{ 
+        minHeight: "100dvh", 
+        padding: "2rem"
       }}
+      bg="var(--mantine-color-body)"
     >
       <Center>
         <Stack gap="xl" w="100%" maw={1000}>
           {/* Tarjeta de Perfil Horizontal */}
-          <Card 
-            withBorder 
-            radius="md" 
-            p="xl" 
-            style={{ borderColor: 'var(--mantine-color-gray-3)' }}
+          <Card
+            withBorder
+            radius="xl"
+            p="xl"
+            shadow="xs"
+            bg="var(--mantine-color-paper)"
+            style={{ 
+              borderColor: "var(--mantine-color-default-border)",
+            }}
           >
             <Group wrap="nowrap" align="flex-start" gap="xl">
               <Avatar
@@ -159,40 +161,65 @@ export default function BienvenidaPage() {
               >
                 {initials}
               </Avatar>
-              
+
               <Box style={{ flex: 1 }}>
                 <Title order={2} fw={700} size="h3" mb={4}>
                   {nombreCompleto}
                 </Title>
                 <Text size="sm" fw={500} c="dimmed">
-                  {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"}
+                  {usuario.servidor?.puesto?.nombre ??
+                    "Analista de Talento Humano 2"}
                 </Text>
                 <Text size="sm" fw={500} c="dimmed" mb="md">
-                  {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
+                  {usuario.servidor?.unidad_administrativa?.nombre ??
+                    "Dirección de Gestión de Talento Humano"}
                 </Text>
                 <Group gap="xs">
                   {roles.map((r, i) => {
                     const badgeColors = ["emerald", "blue", "violet", "orange"];
                     const color = badgeColors[i % badgeColors.length];
                     return (
-                      <Badge key={r} size="sm" variant="light" color={color} radius="xl" tt="lowercase">
+                      <Badge
+                        key={r}
+                        size="sm"
+                        variant="light"
+                        color={color}
+                        radius="xl"
+                        tt="lowercase"
+                      >
                         {r}
                       </Badge>
                     );
                   })}
                   {roles.length === 0 && (
-                    <Badge size="sm" variant="light" color="emerald" radius="xl" tt="lowercase">
+                    <Badge
+                      size="sm"
+                      variant="light"
+                      color="emerald"
+                      radius="xl"
+                      tt="lowercase"
+                    >
                       servidor
                     </Badge>
                   )}
-                  <Badge size="sm" variant="light" color="violet" radius="xl" tt="capitalize">
+                  <Badge
+                    size="sm"
+                    variant="light"
+                    color="violet"
+                    radius="xl"
+                    tt="capitalize"
+                  >
                     Activo
                   </Badge>
                 </Group>
               </Box>
-              
+
               {/* Último acceso */}
-              <Stack gap={4} align="flex-end" display={{ base: 'none', sm: 'flex' }}>
+              <Stack
+                gap={4}
+                align="flex-end"
+                display={{ base: "none", sm: "flex" }}
+              >
                 <Text size="xs" fw={600} c="dimmed" tt="none">
                   Último acceso
                 </Text>
@@ -231,28 +258,33 @@ export default function BienvenidaPage() {
                   <Card
                     key={key}
                     withBorder
-                    radius="lg"
+                    radius="xl"
                     p={0}
+                    shadow="xs"
+                    bg="var(--mantine-color-paper)"
                     style={{
                       cursor: "pointer",
                       transition: "all 0.2s ease",
-                      borderColor: "var(--mantine-color-gray-2)",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+                      borderColor: "var(--mantine-color-default-border)",
                       overflow: "hidden",
                     }}
                     onClick={() => handleIngresar(key)}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-4)`;
                       e.currentTarget.style.transform = "translateY(-4px)";
-                      e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.08)";
+                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--mantine-color-gray-2)";
+                      e.currentTarget.style.borderColor = "var(--mantine-color-default-border)";
                       e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
+                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-xs)";
                     }}
                   >
-                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={0} style={{ minHeight: 220 }}>
+                    <SimpleGrid
+                      cols={{ base: 1, sm: 2 }}
+                      spacing={0}
+                      style={{ minHeight: 220 }}
+                    >
                       <Box p="xl">
                         <Stack align="center" justify="center" h="100%">
                           <ThemeIcon
@@ -269,7 +301,10 @@ export default function BienvenidaPage() {
                             fw={800}
                             size="xl"
                             ta="center"
-                            style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-dark-8)" }}
+                            style={{
+                              letterSpacing: "-0.01em",
+                              color: "var(--mantine-color-text)",
+                            }}
                           >
                             {cfg.label}
                           </Text>
@@ -279,22 +314,33 @@ export default function BienvenidaPage() {
                         </Stack>
                       </Box>
 
-                      <Box 
-                        p="xl" 
-                        style={{ 
-                          backgroundColor: "var(--mantine-color-gray-0)", 
-                          display: "flex", 
-                          flexDirection: "column", 
-                          justifyContent: "center" 
+                      <Box
+                        p="xl"
+                        bg="var(--mantine-color-default-hover)"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
                         }}
                       >
-                        <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="md">
+                        <Text
+                          size="xs"
+                          fw={700}
+                          tt="uppercase"
+                          c="dimmed"
+                          mb="md"
+                        >
                           Módulos disponibles
                         </Text>
                         <Stack gap="sm">
                           {cfg.modulos.map((m) => (
                             <Group key={m.label} gap="sm" wrap="nowrap">
-                              <ThemeIcon color={cfg.color} variant="light" size={32} radius="md">
+                              <ThemeIcon
+                                color={cfg.color}
+                                variant="light"
+                                size={32}
+                                radius="md"
+                              >
                                 <m.icon size={16} />
                               </ThemeIcon>
                               <Text size="sm" fw={600} c="dark.7">
