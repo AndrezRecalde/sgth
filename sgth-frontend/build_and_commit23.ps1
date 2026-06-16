@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "feat(layout): agregar saludo de bienvenida minimalista tipo Google Suite"
+    git commit -m "fix(layout): corregir extraccion de iniciales de nombre y apellido"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."

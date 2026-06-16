@@ -71,15 +71,19 @@ export function Topbar({
   const { usuario, clearAuth } = useAuth();
   const router = useRouter();
 
-  const displayName = usuario?.usuario_ti || "Usuario";
+  const displayName = usuario?.nombre_completo || usuario?.usuario_ti || "Usuario";
 
-  const initials =
-    displayName
-      .split(" ")
-      .slice(0, 2)
-      .map((w: string) => w[0] ?? "")
-      .join("")
-      .toUpperCase() || "US";
+  let initials = "US";
+  if (displayName && displayName !== "Usuario") {
+    const parts = displayName.trim().split(/\s+/);
+    if (parts.length >= 3) {
+      initials = (parts[0][0] + parts[2][0]).toUpperCase();
+    } else if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[1][0]).toUpperCase();
+    } else if (parts.length === 1) {
+      initials = parts[0].slice(0, 2).toUpperCase();
+    }
+  }
 
   const roles = (usuario?.roles as string[]) ?? [];
   const disponibles = getSubsistemasDisponibles(roles);

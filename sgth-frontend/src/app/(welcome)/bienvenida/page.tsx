@@ -120,13 +120,17 @@ export default function BienvenidaPage() {
   const nombreCompleto =
     usuario.nombre_completo || usuario.usuario_ti || usuario.email;
 
-  const initials =
-    (nombreCompleto ?? "")
-      .split(" ")
-      .slice(0, 2)
-      .map((w: string) => w[0] ?? "")
-      .join("")
-      .toUpperCase() || "US";
+  let initials = "US";
+  if (nombreCompleto) {
+    const parts = nombreCompleto.trim().split(/\s+/);
+    if (parts.length >= 3) {
+      initials = (parts[0][0] + parts[2][0]).toUpperCase();
+    } else if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[1][0]).toUpperCase();
+    } else if (parts.length === 1) {
+      initials = parts[0].slice(0, 2).toUpperCase();
+    }
+  }
 
   const handleIngresar = (key: SubsistemaKey) => {
     router.push(SUBSISTEMA_CONFIG[key].home);
