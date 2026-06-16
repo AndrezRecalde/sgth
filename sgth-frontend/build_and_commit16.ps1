@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "feat(layout): rediseño corporativo estilo bento grid para la bienvenida"
+    git commit -m "feat(layout): diseño minimalista sin módulos ni acentos de color en las tarjetas de subsistemas"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."

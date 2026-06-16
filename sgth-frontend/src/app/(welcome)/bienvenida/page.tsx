@@ -235,7 +235,7 @@ export default function BienvenidaPage() {
                 const Icon = cfg.icon;
 
                 return (
-                  <Card
+                    <Card
                     key={key}
                     withBorder
                     radius="xl"
@@ -244,62 +244,40 @@ export default function BienvenidaPage() {
                     bg="var(--mantine-color-paper)"
                     style={{
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
+                      transition: "all 0.3s ease",
                       borderColor: "var(--mantine-color-default-border)",
-                      borderTop: `4px solid var(--mantine-color-${cfg.color}-filled)`,
                       display: "flex",
                       flexDirection: "column",
-                      minHeight: 280,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      minHeight: 240,
                     }}
                     onClick={() => handleIngresar(key)}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-4px)";
-                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
-                      e.currentTarget.style.backgroundColor = "var(--mantine-color-default-hover)";
+                      e.currentTarget.style.transform = "translateY(-6px)";
+                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-lg)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = "none";
                       e.currentTarget.style.boxShadow = "var(--mantine-shadow-sm)";
-                      e.currentTarget.style.backgroundColor = "var(--mantine-color-paper)";
                     }}
                   >
-                    <Group justify="space-between" align="flex-start" mb="md">
-                      <ThemeIcon
-                        color={cfg.color}
-                        variant="light"
-                        size={56}
-                        radius="xl"
-                      >
-                        <Icon size={28} stroke={1.5} />
-                      </ThemeIcon>
-                      <ActionIcon variant="subtle" color="gray" radius="xl" style={{ pointerEvents: 'none' }}>
-                        <IconArrowRight size={20} />
-                      </ActionIcon>
-                    </Group>
+                    <ThemeIcon
+                      color="gray"
+                      variant="transparent"
+                      size={64}
+                      mb="lg"
+                    >
+                      <Icon size={40} stroke={1.2} style={{ color: "var(--mantine-color-text)" }} />
+                    </ThemeIcon>
 
-                    <Text fw={800} size="xl" mb={8} style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-text)" }}>
+                    <Text fw={700} size="xl" mb={8} style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-text)" }}>
                       {cfg.label}
                     </Text>
-                    <Text size="sm" c="dimmed" lh={1.5} style={{ flex: 1 }}>
+                    <Text size="sm" c="dimmed" lh={1.6}>
                       {cfg.descripcion}
                     </Text>
-
-                    <Box mt="xl">
-                      <Group gap="xs">
-                        {cfg.modulos.map((m) => (
-                          <Badge 
-                            key={m.label} 
-                            variant="dot" 
-                            color={cfg.color} 
-                            size="md" 
-                            radius="sm"
-                            style={{ backgroundColor: "var(--mantine-color-body)" }}
-                          >
-                            {m.label}
-                          </Badge>
-                        ))}
-                      </Group>
-                    </Box>
                   </Card>
                 );
               })}
