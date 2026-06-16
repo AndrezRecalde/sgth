@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "feat(layout): replicar diseño exacto de la imagen de referencia con perfil superior y grilla centralizada"
+    git commit -m "feat(layout): agregar efecto visual exacto de border y hover a las tarjetas de subsistema"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."

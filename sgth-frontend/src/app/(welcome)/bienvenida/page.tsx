@@ -18,10 +18,6 @@ import {
   Avatar,
   Box,
   Title,
-  Paper,
-  ActionIcon,
-  Grid,
-  Divider,
   Button,
 } from "@mantine/core";
 import {
@@ -34,7 +30,7 @@ import {
   IconStethoscope,
   IconPill,
   IconFolder,
-  IconArrowRight,
+  IconContract,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/config/routes";
@@ -45,7 +41,7 @@ const SUBSISTEMA_CONFIG = {
     label: "SGTH",
     descripcion: "Gestión de Talento Humano",
     color: "emerald" as const,
-    icon: IconUsers,
+    icon: IconContract,
     home: ROUTES.SGTH.HOME,
     modulos: [
       { label: "Expediente", icon: IconFolder },
@@ -86,7 +82,7 @@ type SubsistemaKey = keyof typeof SUBSISTEMA_CONFIG;
 
 export default function BienvenidaPage() {
   const router = useRouter();
-  const { usuario, clearAuth, setAuth, token } = useAuth();
+  const { usuario, setAuth, token } = useAuth();
 
   useQuery({
     queryKey: ["mi-perfil-bienvenida"],
@@ -137,26 +133,20 @@ export default function BienvenidaPage() {
   };
 
   return (
-    <Box 
-      style={{ 
-        minHeight: "100dvh", 
-        padding: "2rem"
+    <Box
+      style={{
+        minHeight: "100dvh",
+        padding: "2rem",
       }}
       bg="var(--mantine-color-body)"
     >
       <Stack gap="xl" w="100%" maw={1000} mx="auto">
         {/* TARJETA DE PERFIL HORIZONTAL */}
-        <Card
-          withBorder
-          radius="md"
-          p={{ base: 'xl', md: 40 }}
-          bg="var(--mantine-color-paper)"
-          style={{ borderColor: "var(--mantine-color-default-border)" }}
-        >
+        <Card withBorder p={{ base: "xl", md: 40 }}>
           <Group wrap="nowrap" align="center" justify="space-between">
             <Group wrap="nowrap" gap="xl">
               <Avatar
-                color="teal"
+                color="emerald"
                 variant="light"
                 size={96}
                 radius="100%"
@@ -165,30 +155,61 @@ export default function BienvenidaPage() {
                 {initials}
               </Avatar>
               <Box>
-                <Title order={2} fw={700} size="h3" mb={4} style={{ color: "var(--mantine-color-text)" }}>
+                <Title order={2} fw={700} size="h3" mb={4}>
                   {nombreCompleto}
                 </Title>
                 <Text size="md" c="dimmed" fw={500}>
-                  {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"}
+                  {usuario.servidor?.puesto?.nombre ??
+                    "Analista de Talento Humano"}
                 </Text>
                 <Text size="md" c="dimmed" fw={500} mb="md">
-                  {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
+                  {usuario.servidor?.unidad_administrativa?.nombre ??
+                    "Dirección de Gestión de Talento Humano"}
                 </Text>
                 <Group gap={8}>
-                  <Badge size="md" variant="light" color="teal" radius="xl" tt="lowercase">admin-uath</Badge>
                   {roles.length === 0 ? (
-                    <Badge size="md" variant="light" color="blue" radius="xl" tt="lowercase">servidor</Badge>
+                    <Badge
+                      size="md"
+                      variant="light"
+                      color="blue"
+                      radius="xl"
+                      tt="lowercase"
+                    >
+                      servidor
+                    </Badge>
                   ) : (
                     roles.map((r) => (
-                      <Badge key={r} size="md" variant="light" color="blue" radius="xl" tt="lowercase">{r}</Badge>
+                      <Badge
+                        key={r}
+                        size="md"
+                        variant="light"
+                        color="blue"
+                        radius="xl"
+                        tt="lowercase"
+                      >
+                        {r}
+                      </Badge>
                     ))
                   )}
-                  <Badge size="md" variant="light" color="violet" radius="xl" tt="capitalize">Activo</Badge>
+                  <Badge
+                    size="md"
+                    variant="light"
+                    color="emerald"
+                    radius="xl"
+                    tt="capitalize"
+                  >
+                    Activo
+                  </Badge>
                 </Group>
               </Box>
             </Group>
-            
-            <Stack align="flex-end" justify="flex-start" h="100%" display={{ base: 'none', sm: 'flex' }}>
+
+            <Stack
+              align="flex-end"
+              justify="flex-start"
+              h="100%"
+              display={{ base: "none", sm: "flex" }}
+            >
               <Button variant="subtle" color="gray" radius="xl" size="md">
                 Ver perfil
               </Button>
@@ -209,10 +230,7 @@ export default function BienvenidaPage() {
         </Text>
 
         {/* GRID DE SUBSISTEMAS */}
-        <SimpleGrid
-          cols={{ base: 1, sm: 2, md: 3 }}
-          spacing="lg"
-        >
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
           {disponibles.map((key) => {
             const cfg = SUBSISTEMA_CONFIG[key];
             const Icon = cfg.icon;
@@ -223,25 +241,30 @@ export default function BienvenidaPage() {
                 withBorder
                 radius="md"
                 p="xl"
-                shadow="none"
+                shadow="sm"
                 bg="var(--mantine-color-paper)"
                 style={{
                   cursor: "pointer",
-                  transition: "box-shadow 0.2s ease, transform 0.2s ease",
+                  transition: "all 0.2s ease",
+                  border: "2px solid transparent",
                   borderColor: "var(--mantine-color-default-border)",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center",
                   textAlign: "center",
-                  minHeight: 240,
+                  minHeight: 220,
                 }}
                 onClick={() => handleIngresar(key)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
+                  e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-filled)`;
+                  e.currentTarget.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.boxShadow = "var(--mantine-shadow-sm)";
+                  e.currentTarget.style.borderColor = "var(--mantine-color-default-border)";
+                  e.currentTarget.style.transform = "none";
                 }}
               >
                 <ThemeIcon
@@ -251,13 +274,21 @@ export default function BienvenidaPage() {
                   radius="100%"
                   mb="xl"
                 >
-                  <Icon size={36} stroke={2} />
+                  <Icon size={36} stroke={1.5} />
                 </ThemeIcon>
 
-                <Text fw={700} size="xl" mb={8} style={{ color: "var(--mantine-color-text)", letterSpacing: "-0.01em" }}>
+                <Text
+                  fw={700}
+                  size="lg"
+                  mb={8}
+                  style={{
+                    color: "var(--mantine-color-text)",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
                   {cfg.label}
                 </Text>
-                <Text size="sm" c="dimmed">
+                <Text size="md" c="dimmed">
                   {cfg.descripcion}
                 </Text>
               </Card>
