@@ -18,6 +18,8 @@ import {
   Avatar,
   Box,
   Title,
+  Paper,
+  ActionIcon,
 } from "@mantine/core";
 import {
   IconUsers,
@@ -29,6 +31,7 @@ import {
   IconStethoscope,
   IconPill,
   IconFolder,
+  IconArrowRight,
 } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/config/routes";
@@ -141,94 +144,70 @@ export default function BienvenidaPage() {
       <Center>
         <Stack gap="xl" w="100%" maw={1000}>
           {/* Tarjeta de Perfil Horizontal */}
-          <Card
-            withBorder
+          <Paper
             radius="xl"
-            p="xl"
-            shadow="xs"
+            p={{ base: 'xl', sm: 'calc(2rem + 2vw)' }}
             bg="var(--mantine-color-paper)"
+            withBorder
             style={{ 
               borderColor: "var(--mantine-color-default-border)",
+              borderTop: "8px solid var(--mantine-color-blue-filled)",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            <Group wrap="nowrap" align="flex-start" gap="xl">
+            {/* Efecto de fondo sutil */}
+            <Box
+              style={{
+                position: "absolute",
+                top: -100,
+                right: -100,
+                width: 300,
+                height: 300,
+                borderRadius: "100%",
+                background: "radial-gradient(circle, var(--mantine-color-blue-light) 0%, transparent 70%)",
+                opacity: 0.5,
+              }}
+            />
+
+            <Group wrap="nowrap" align="center" gap="xl">
               <Avatar
-                color="emerald"
-                variant="light"
-                size={96}
+                color="blue"
+                variant="filled"
+                size={84}
                 radius="100%"
-                style={{ fontSize: 32, fontWeight: 600 }}
+                style={{ fontSize: 28, fontWeight: 700, border: "4px solid var(--mantine-color-body)" }}
               >
                 {initials}
               </Avatar>
 
               <Box style={{ flex: 1 }}>
-                <Title order={2} fw={700} size="h3" mb={4}>
-                  {nombreCompleto}
+                <Text size="sm" fw={600} c="blue" tt="uppercase" style={{ letterSpacing: "1px" }} mb={4}>
+                  Panel Principal
+                </Text>
+                <Title order={1} fw={800} size="h2" mb={8} style={{ letterSpacing: "-0.5px" }}>
+                  ¡Hola, {nombreCompleto.split(" ")[0]}!
                 </Title>
-                <Text size="sm" fw={500} c="dimmed">
-                  {usuario.servidor?.puesto?.nombre ??
-                    "Analista de Talento Humano 2"}
+                <Text size="md" fw={500} c="dimmed" lh={1.4}>
+                  {usuario.servidor?.puesto?.nombre ?? "Analista de Talento Humano 2"} <br/>
+                  {usuario.servidor?.unidad_administrativa?.nombre ?? "Dirección de Gestión de Talento Humano"}
                 </Text>
-                <Text size="sm" fw={500} c="dimmed" mb="md">
-                  {usuario.servidor?.unidad_administrativa?.nombre ??
-                    "Dirección de Gestión de Talento Humano"}
-                </Text>
-                <Group gap="xs">
-                  {roles.map((r, i) => {
-                    const badgeColors = ["emerald", "blue", "violet", "orange"];
-                    const color = badgeColors[i % badgeColors.length];
-                    return (
-                      <Badge
-                        key={r}
-                        size="sm"
-                        variant="light"
-                        color={color}
-                        radius="xl"
-                        tt="lowercase"
-                      >
-                        {r}
-                      </Badge>
-                    );
-                  })}
-                  {roles.length === 0 && (
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color="emerald"
-                      radius="xl"
-                      tt="lowercase"
-                    >
-                      servidor
-                    </Badge>
-                  )}
-                  <Badge
-                    size="sm"
-                    variant="light"
-                    color="violet"
-                    radius="xl"
-                    tt="capitalize"
-                  >
-                    Activo
-                  </Badge>
-                </Group>
               </Box>
 
-              {/* Último acceso */}
-              <Stack
-                gap={4}
-                align="flex-end"
-                display={{ base: "none", sm: "flex" }}
-              >
-                <Text size="xs" fw={600} c="dimmed" tt="none">
-                  Último acceso
-                </Text>
-                <Text size="sm" fw={700}>
-                  Hoy, 09:14
-                </Text>
+              <Stack gap={6} align="flex-end" display={{ base: "none", sm: "flex" }}>
+                <Text size="sm" fw={600} c="dimmed">Roles activos</Text>
+                <Group gap={6}>
+                  {roles.length === 0 ? (
+                    <Badge size="sm" variant="light" color="blue" radius="xl" tt="lowercase">servidor</Badge>
+                  ) : (
+                    roles.map((r) => (
+                      <Badge key={r} size="sm" variant="light" color="blue" radius="xl" tt="lowercase">{r}</Badge>
+                    ))
+                  )}
+                </Group>
               </Stack>
             </Group>
-          </Card>
+          </Paper>
 
           {/* Listado de Subsistemas */}
           <Box>
@@ -240,15 +219,16 @@ export default function BienvenidaPage() {
               mb="md"
               style={{ letterSpacing: "0.05em" }}
             >
-              SELECCIONA UN SUBSISTEMA
+              Tus subsistemas disponibles
             </Text>
 
             <SimpleGrid
               cols={{
                 base: 1,
-                xl: disponibles.length === 1 ? 1 : 2,
+                sm: disponibles.length === 1 ? 1 : 2,
+                lg: disponibles.length <= 2 ? disponibles.length : 3,
               }}
-              spacing="lg"
+              spacing="xl"
             >
               {disponibles.map((key) => {
                 const cfg = SUBSISTEMA_CONFIG[key];
@@ -259,98 +239,67 @@ export default function BienvenidaPage() {
                     key={key}
                     withBorder
                     radius="xl"
-                    p={0}
-                    shadow="xs"
+                    p="xl"
+                    shadow="sm"
                     bg="var(--mantine-color-paper)"
                     style={{
                       cursor: "pointer",
                       transition: "all 0.2s ease",
                       borderColor: "var(--mantine-color-default-border)",
-                      overflow: "hidden",
+                      borderTop: `4px solid var(--mantine-color-${cfg.color}-filled)`,
+                      display: "flex",
+                      flexDirection: "column",
+                      minHeight: 280,
                     }}
                     onClick={() => handleIngresar(key)}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-4)`;
                       e.currentTarget.style.transform = "translateY(-4px)";
                       e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
+                      e.currentTarget.style.backgroundColor = "var(--mantine-color-default-hover)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--mantine-color-default-border)";
                       e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-xs)";
+                      e.currentTarget.style.boxShadow = "var(--mantine-shadow-sm)";
+                      e.currentTarget.style.backgroundColor = "var(--mantine-color-paper)";
                     }}
                   >
-                    <SimpleGrid
-                      cols={{ base: 1, sm: 2 }}
-                      spacing={0}
-                      style={{ minHeight: 220 }}
-                    >
-                      <Box p="xl">
-                        <Stack align="center" justify="center" h="100%">
-                          <ThemeIcon
-                            color={cfg.color}
-                            variant="light"
-                            size={72}
-                            radius="100%"
-                            mb="sm"
-                          >
-                            <Icon size={36} stroke={1.8} />
-                          </ThemeIcon>
-
-                          <Text
-                            fw={800}
-                            size="xl"
-                            ta="center"
-                            style={{
-                              letterSpacing: "-0.01em",
-                              color: "var(--mantine-color-text)",
-                            }}
-                          >
-                            {cfg.label}
-                          </Text>
-                          <Text size="sm" c="dimmed" ta="center" lh={1.4}>
-                            {cfg.descripcion}
-                          </Text>
-                        </Stack>
-                      </Box>
-
-                      <Box
-                        p="xl"
-                        bg="var(--mantine-color-default-hover)"
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                        }}
+                    <Group justify="space-between" align="flex-start" mb="md">
+                      <ThemeIcon
+                        color={cfg.color}
+                        variant="light"
+                        size={56}
+                        radius="xl"
                       >
-                        <Text
-                          size="xs"
-                          fw={700}
-                          tt="uppercase"
-                          c="dimmed"
-                          mb="md"
-                        >
-                          Módulos disponibles
-                        </Text>
-                        <Stack gap="sm">
-                          {cfg.modulos.map((m) => (
-                            <Group key={m.label} gap="sm" wrap="nowrap">
-                              <ThemeIcon
-                                color={cfg.color}
-                                variant="light"
-                                size={32}
-                                radius="md"
-                              >
-                                <m.icon size={16} />
-                              </ThemeIcon>
-                              <Text size="sm" fw={600} c="dark.7">
-                                {m.label}
-                              </Text>
-                            </Group>
-                          ))}
-                        </Stack>
-                      </Box>
-                    </SimpleGrid>
+                        <Icon size={28} stroke={1.5} />
+                      </ThemeIcon>
+                      <ActionIcon variant="subtle" color="gray" radius="xl" style={{ pointerEvents: 'none' }}>
+                        <IconArrowRight size={20} />
+                      </ActionIcon>
+                    </Group>
+
+                    <Text fw={800} size="xl" mb={8} style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-text)" }}>
+                      {cfg.label}
+                    </Text>
+                    <Text size="sm" c="dimmed" lh={1.5} style={{ flex: 1 }}>
+                      {cfg.descripcion}
+                    </Text>
+
+                    <Box mt="xl">
+                      <Group gap="xs">
+                        {cfg.modulos.map((m) => (
+                          <Badge 
+                            key={m.label} 
+                            variant="dot" 
+                            color={cfg.color} 
+                            size="md" 
+                            radius="sm"
+                            style={{ backgroundColor: "var(--mantine-color-body)" }}
+                          >
+                            {m.label}
+                          </Badge>
+                        ))}
+                      </Group>
+                    </Box>
                   </Card>
                 );
               })}

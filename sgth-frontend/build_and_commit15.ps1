@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "fix(layout): corregir error de sintaxis en importaciones de Topbar"
+    git commit -m "feat(layout): rediseño corporativo estilo bento grid para la bienvenida"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."
