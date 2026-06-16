@@ -19,7 +19,7 @@ import {
   Avatar,
   Box,
   Title,
-  Tooltip,
+  Grid,
 } from "@mantine/core";
 import {
   IconUsers,
@@ -219,7 +219,7 @@ export default function BienvenidaPage() {
             <SimpleGrid
               cols={{
                 base: 1,
-                sm: disponibles.length === 1 ? 1 : disponibles.length === 2 ? 2 : 3,
+                xl: disponibles.length === 1 ? 1 : 2,
               }}
               spacing="lg"
             >
@@ -227,83 +227,85 @@ export default function BienvenidaPage() {
                 const cfg = SUBSISTEMA_CONFIG[key];
                 const Icon = cfg.icon;
 
-                const tooltipContent = (
-                  <Box p={4}>
-                    <Text size="xs" fw={700} tt="uppercase" c="gray.4" mb={8}>
-                      Módulos incluidos
-                    </Text>
-                    {cfg.modulos.map((m) => (
-                      <Group key={m.label} gap="xs" wrap="nowrap" mb={4}>
-                        <m.icon size={14} style={{ color: "var(--mantine-color-white)" }} />
-                        <Text size="sm" fw={500} style={{ color: "var(--mantine-color-white)" }}>
-                          {m.label}
-                        </Text>
-                      </Group>
-                    ))}
-                  </Box>
-                );
-
                 return (
-                  <Tooltip
+                  <Card
                     key={key}
-                    label={tooltipContent}
-                    position="top"
-                    withArrow
-                    transitionProps={{ transition: "pop", duration: 200 }}
-                    color="dark"
+                    withBorder
+                    radius="lg"
+                    p={0}
+                    style={{
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      borderColor: "var(--mantine-color-gray-2)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+                      overflow: "hidden",
+                    }}
+                    onClick={() => handleIngresar(key)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-4)`;
+                      e.currentTarget.style.transform = "translateY(-4px)";
+                      e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.08)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "var(--mantine-color-gray-2)";
+                      e.currentTarget.style.transform = "none";
+                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
+                    }}
                   >
-                    <Card
-                      withBorder
-                      radius="lg"
-                      p="xl"
-                      style={{
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        minHeight: 240,
-                        transition: "all 0.2s ease",
-                        borderColor: "var(--mantine-color-gray-2)",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
-                      }}
-                      onClick={() => handleIngresar(key)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = `var(--mantine-color-${cfg.color}-4)`;
-                        e.currentTarget.style.transform = "translateY(-4px)";
-                        e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.08)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "var(--mantine-color-gray-2)";
-                        e.currentTarget.style.transform = "none";
-                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
-                      }}
-                    >
-                      <ThemeIcon
-                        color={cfg.color}
-                        variant="light"
-                        size={64}
-                        radius="100%"
-                        mb="lg"
-                      >
-                        <Icon size={32} stroke={1.8} />
-                      </ThemeIcon>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={0} style={{ minHeight: 220 }}>
+                      <Box p="xl">
+                        <Stack align="center" justify="center" h="100%">
+                          <ThemeIcon
+                            color={cfg.color}
+                            variant="light"
+                            size={72}
+                            radius="100%"
+                            mb="sm"
+                          >
+                            <Icon size={36} stroke={1.8} />
+                          </ThemeIcon>
 
-                      <Text
-                        fw={800}
-                        size="lg"
-                        mb={8}
-                        ta="center"
-                        style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-dark-8)" }}
+                          <Text
+                            fw={800}
+                            size="xl"
+                            ta="center"
+                            style={{ letterSpacing: "-0.01em", color: "var(--mantine-color-dark-8)" }}
+                          >
+                            {cfg.label}
+                          </Text>
+                          <Text size="sm" c="dimmed" ta="center" lh={1.4}>
+                            {cfg.descripcion}
+                          </Text>
+                        </Stack>
+                      </Box>
+
+                      <Box 
+                        p="xl" 
+                        style={{ 
+                          backgroundColor: "var(--mantine-color-gray-0)", 
+                          display: "flex", 
+                          flexDirection: "column", 
+                          justifyContent: "center" 
+                        }}
                       >
-                        {cfg.label}
-                      </Text>
-                      <Text size="sm" c="dimmed" ta="center" lh={1.4} px="sm">
-                        {cfg.descripcion}
-                      </Text>
-                    </Card>
-                  </Tooltip>
+                        <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="md">
+                          Módulos disponibles
+                        </Text>
+                        <Stack gap="sm">
+                          {cfg.modulos.map((m) => (
+                            <Group key={m.label} gap="sm" wrap="nowrap">
+                              <ThemeIcon color={cfg.color} variant="light" size={32} radius="md">
+                                <m.icon size={16} />
+                              </ThemeIcon>
+                              <Text size="sm" fw={600} c="dark.7">
+                                {m.label}
+                              </Text>
+                            </Group>
+                          ))}
+                        </Stack>
+                      </Box>
+                    </SimpleGrid>
+                  </Card>
                 );
               })}
             </SimpleGrid>
