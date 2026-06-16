@@ -1,26 +1,19 @@
-'use client'
+"use client";
 
-import { AppShell }        from '@mantine/core'
-import { useDisclosure }   from '@mantine/hooks'
-import { Topbar }          from '@/components/layout/Topbar'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { AppShell } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { Topbar } from "@/components/layout/Topbar";
 
 export default function WelcomeLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const [mobileOpened, { toggle: toggleMobile }] =
-    useDisclosure(false)
-  const [desktopOpened, { toggle: toggleDesktop }] =
-    useDisclosure(false)
-  const { isMobile } = useMobileBreakpoint()
+  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure(false);
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(false);
 
   return (
-    <AppShell
-      header={{ height: 70 }}
-      padding="md"
-    >
+    <AppShell header={{ height: 70 }} padding="md">
       <AppShell.Header>
         <Topbar
           mobileOpened={mobileOpened}
@@ -29,9 +22,7 @@ export default function WelcomeLayout({
           onDesktopToggle={toggleDesktop}
         />
       </AppShell.Header>
-      <AppShell.Main>
-        {children}
-      </AppShell.Main>
+      <AppShell.Main>{children}</AppShell.Main>
     </AppShell>
-  )
+  );
 }

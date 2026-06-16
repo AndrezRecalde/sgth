@@ -5,7 +5,7 @@ Remove-Item build_out.txt
 
 if ($LASTEXITCODE -eq 0) {
     git add .
-    git commit -m "fix(layout): corregir extraccion de iniciales de nombre y apellido"
+    git commit -m "fix(routing): eliminar redireccion en sgth/page.tsx para permitir acceso al modulo"
     git push origin main
 } else {
     Write-Output "Build failed. Git commit skipped."
