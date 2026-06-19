@@ -28,6 +28,8 @@ use App\Contracts\Dispensario\EstadisticasDispensarioServiceInterface;
 use App\Services\Dispensario\EstadisticasDispensarioService;
 use App\Contracts\Dispensario\AgendaServiceInterface;
 use App\Services\Dispensario\AgendaService;
+use App\Contracts\Dispensario\PacienteServiceInterface;
+use App\Services\Dispensario\PacienteService;
 use App\Contracts\Dispensario\InventarioMedicinasServiceInterface;
 use App\Services\Dispensario\InventarioMedicinasService;
 use App\Contracts\InventarioTi\InventarioTiServiceInterface;
@@ -111,6 +113,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             AgendaServiceInterface::class,
             AgendaService::class
+        );
+        $this->app->bind(
+            PacienteServiceInterface::class,
+            PacienteService::class
         );
         $this->app->bind(
             InventarioMedicinasServiceInterface::class,

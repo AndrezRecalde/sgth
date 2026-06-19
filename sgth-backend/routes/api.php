@@ -585,6 +585,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('dashboard/kpis', [\App\Http\Controllers\Dispensario\DashboardDispensarioController::class, 'kpis'])
             ->middleware('role:admin-dispensario|maxima-autoridad');
 
+        Route::get('pacientes/buscar',
+            [\App\Http\Controllers\Dispensario\PacienteController::class, 'buscar']
+        )->name('dispensario.pacientes.buscar');
+
         // Historias clínicas — SOLO personal médico
         Route::prefix('historias-clinicas')
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
