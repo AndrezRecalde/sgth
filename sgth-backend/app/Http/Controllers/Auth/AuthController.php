@@ -55,6 +55,8 @@ final class AuthController extends Controller
                          ->pluck('name')
                          ->toArray();
 
+        $servidor = $user->servidor;
+
         return ApiResponse::ok([
             'id'              => $user->id,
             'nombre_completo' => $user->nombre_completo,
@@ -65,19 +67,23 @@ final class AuthController extends Controller
             'servidor_id'     => $user->servidor_id,
             'roles'           => $roles,
             'permisos'        => $permisos,
-            'servidor'        => $user->servidor ? [
-                'id'      => $user->servidor->id,
-                'cedula'  => $user->servidor->cedula,
-                'nombre'  => $user->servidor->nombre,
-                'apellido'=> $user->servidor->apellido,
-                'puesto'  => $user->servidor->puesto ? [
-                    'nombre' => $user->servidor
-                                    ->puesto->cargo?->nombre,
+            'servidor'        => $servidor ? [
+                'id'        => $servidor->id,
+                'cedula'    => $servidor->cedula,
+                'nombre'    => $servidor->nombre,
+                'apellido'  => $servidor->apellido,
+                'activo'    => $servidor->activo,
+                'tipo_nombramiento' =>
+                    $servidor->tipo_nombramiento?->value,
+                'tipo_nombramiento_label' =>
+                    $servidor->tipo_nombramiento?->etiqueta(),
+                'puesto' => $servidor->puesto ? [
+                    'nombre' => $servidor->puesto
+                                    ->cargo?->nombre,
                 ] : null,
                 'unidad_administrativa' =>
-                    $user->servidor->unidadAdministrativa
-                    ? [
-                        'nombre' => $user->servidor
+                    $servidor->unidadAdministrativa ? [
+                        'nombre' => $servidor
                             ->unidadAdministrativa->nombre,
                     ] : null,
             ] : null,
