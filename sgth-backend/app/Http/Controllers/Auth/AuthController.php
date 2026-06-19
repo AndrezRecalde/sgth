@@ -72,7 +72,6 @@ final class AuthController extends Controller
                 'cedula'    => $servidor->cedula,
                 'nombre'    => $servidor->nombre,
                 'apellido'  => $servidor->apellido,
-                'activo'    => $servidor->activo,
                 'tipo_nombramiento' =>
                     $servidor->tipo_nombramiento?->value,
                 'tipo_nombramiento_label' =>
