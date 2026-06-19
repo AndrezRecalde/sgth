@@ -1,54 +1,46 @@
-'use client'
+"use client";
 
 import {
-  Card, Group, Stack, Text,
-  Avatar, Badge, Divider,
-} from '@mantine/core'
-import type { UsuarioAuth } from '@/store/auth.store'
+  Card,
+  Group,
+  Stack,
+  Text,
+  Avatar,
+  Badge,
+  Divider,
+} from "@mantine/core";
+import type { UsuarioAuth } from "@/store/auth.store";
 
 interface Props {
-  usuario: UsuarioAuth
+  usuario: UsuarioAuth;
 }
 
 export function PerfilServidorCard({ usuario }: Props) {
-  const servidor = usuario.servidor
+  const servidor = usuario.servidor;
 
-  const nombreCompleto = usuario.nombre_completo
-    || [servidor?.nombre, servidor?.apellido]
-         .filter(Boolean).join(' ')
-    || usuario.email
+  const nombreCompleto =
+    usuario.nombre_completo ||
+    [servidor?.nombre, servidor?.apellido].filter(Boolean).join(" ") ||
+    usuario.email;
 
-  const initials = nombreCompleto
-    .split(' ')
-    .slice(0, 2)
-    .map((w: string) => w[0] ?? '')
-    .join('')
-    .toUpperCase() || 'US'
+  const initials =
+    nombreCompleto
+      .split(" ")
+      .slice(0, 2)
+      .map((w: string) => w[0] ?? "")
+      .join("")
+      .toUpperCase() || "US";
 
-  const activo = servidor?.activo ?? usuario.activo ?? false
+  const activo = usuario.activo ?? false;
 
   return (
-    <Card withBorder radius="xl" p="xl">
+    <Card withBorder radius="xl" p="md">
       <Stack gap="lg">
         <Stack gap={2} align="center">
-          <Text
-            size="xs"
-            fw={600}
-            c="dimmed"
-            tt="uppercase"
-            ta="center"
-            style={{ letterSpacing: '0.04em' }}
-          >
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center">
             Gobierno Autónomo Descentralizado
           </Text>
-          <Text
-            size="xs"
-            fw={600}
-            c="dimmed"
-            tt="uppercase"
-            ta="center"
-            style={{ letterSpacing: '0.04em' }}
-          >
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center">
             de la Provincia de Esmeraldas
           </Text>
         </Stack>
@@ -91,14 +83,14 @@ export function PerfilServidorCard({ usuario }: Props) {
               <Badge
                 size="sm"
                 variant="light"
-                color={activo ? 'emerald' : 'red'}
+                color={activo ? "emerald" : "red"}
               >
-                {activo ? 'Activo' : 'Inactivo'}
+                {activo ? "Activo" : "Inactivo"}
               </Badge>
             </Group>
           </Stack>
         </Group>
       </Stack>
     </Card>
-  )
+  );
 }

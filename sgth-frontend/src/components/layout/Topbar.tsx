@@ -17,43 +17,10 @@ import {
   Stack,
   Button,
 } from "@mantine/core";
-import {
-  IconSun,
-  IconMoon,
-  IconBell,
-  IconLogout,
-  IconGridDots,
-  IconBuildingHospital,
-  IconUserCircle,
-  IconContract,
-} from "@tabler/icons-react";
+import { IconSun, IconMoon, IconBell, IconLogout } from "@tabler/icons-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { Popover, SimpleGrid } from "@mantine/core";
-import { getSubsistemasDisponibles } from "@/config/nav";
-import { ROUTES } from "@/config/routes";
 import { AppGridSelector } from "./AppGridSelector";
-
-const SUBSISTEMA_CONFIG = {
-  sgth: {
-    label: "SGTH",
-    icon: IconContract,
-    color: "emerald",
-    home: ROUTES.SGTH.HOME,
-  },
-  salud: {
-    label: "Salud",
-    icon: IconBuildingHospital,
-    color: "blue",
-    home: ROUTES.SALUD.HOME,
-  },
-  portal: {
-    label: "Portal",
-    icon: IconUserCircle,
-    color: "violet",
-    home: ROUTES.PORTAL.HOME,
-  },
-} as const;
 
 interface TopbarProps {
   mobileOpened: boolean;
@@ -72,7 +39,8 @@ export function Topbar({
   const { usuario, clearAuth } = useAuth();
   const router = useRouter();
 
-  const displayName = usuario?.nombre_completo || usuario?.usuario_ti || "Usuario";
+  const displayName =
+    usuario?.nombre_completo || usuario?.usuario_ti || "Usuario";
 
   let initials = "US";
   if (displayName && displayName !== "Usuario") {
@@ -85,9 +53,6 @@ export function Topbar({
       initials = parts[0].slice(0, 2).toUpperCase();
     }
   }
-
-  const roles = (usuario?.roles as string[]) ?? [];
-  const disponibles = getSubsistemasDisponibles(roles);
 
   const handleLogout = (e?: React.MouseEvent) => {
     e?.preventDefault();
