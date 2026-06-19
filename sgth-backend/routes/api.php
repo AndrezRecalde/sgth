@@ -618,6 +618,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::get('{id}', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'show']);
             });
 
+        Route::get('certificados-medicos',
+            [\App\Http\Controllers\Dispensario\CertificadoMedicoController::class, 'index']
+        )->name('dispensario.certificados.index');
+
+        Route::post('certificados-medicos',
+            [\App\Http\Controllers\Dispensario\CertificadoMedicoController::class, 'store']
+        )->name('dispensario.certificados.store');
+
+        Route::get('certificados-medicos/{id}',
+            [\App\Http\Controllers\Dispensario\CertificadoMedicoController::class, 'show']
+        )->name('dispensario.certificados.show');
+
         // Recetas — médicos emiten, enfermeras y admin despachan
         Route::prefix('recetas')->group(function () {
             Route::post('/', [\App\Http\Controllers\Dispensario\RecetaController::class, 'store'])
