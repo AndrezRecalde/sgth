@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Http\Controllers\Dispensario;
 
-use App\Http\Controllers\Controller;
-use App\Http\Responses\ApiResponse;
 use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Dispensario\StoreHistoriaClinicaRequest;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 final class HistoriaClinicaController extends Controller
 {
@@ -15,17 +17,29 @@ final class HistoriaClinicaController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        return ApiResponse::ok([], 'Listado de historias');
+        $historias = $this->historiaService->listar(
+            $request->all()
+        );
+
+        return ApiResponse::ok($historias, 'Listado de historias.');
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        $historia = $this->historiaService->crearHistoria($request->all());
-        return ApiResponse::created($historia, 'Historia clínica creada');
+    public function store(
+        StoreHistoriaClinicaRequest $request
+    ): JsonResponse {
+        $historia = $this->historiaService->crearHistoria(
+            $request->validated()
+        );
+
+        return ApiResponse::created(
+            $historia, 'Historia clínica creada.'
+        );
     }
 
     public function show(int $id): JsonResponse
     {
-        return ApiResponse::ok(['id' => $id], 'Detalle de historia');
+        $historia = $this->historiaService->obtener($id);
+
+        return ApiResponse::ok($historia);
     }
 }

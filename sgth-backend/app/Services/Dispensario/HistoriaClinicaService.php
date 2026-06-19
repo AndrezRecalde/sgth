@@ -1,33 +1,85 @@
 <?php
+
 namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
-use App\Models\Dispensario\HistoriaClinica;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\ConsultaMedica;
-use Illuminate\Support\Facades\DB;
+use App\Models\Dispensario\HistoriaClinica;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
 {
+    public function listar(array $filtros): LengthAwarePaginator
+    {
+        $query = HistoriaClinica::with([
+            'servidor', 'beneficiario.servidor',
+        ])->orderBy('created_at', 'desc');
+
+        if (!empty($filtros['servidor_id'])) {
+            $query->where('servidor_id', $filtros['servidor_id']);
+        }
+
+        if (!empty($filtros['beneficiario_id'])) {
+            $query->where(
+                'beneficiario_id', $filtros['beneficiario_id']
+            );
+        }
+
+        return $query->paginate($filtros['per_page'] ?? 20);
+    }
+
+    public function obtener(int $id): HistoriaClinica
+    {
+        return HistoriaClinica::with([
+            'servidor', 'beneficiario.servidor',
+            'alergias', 'antecedentes',
+            'consultasMedicas' => fn($q) => $q
+                ->orderBy('fecha_consulta', 'desc')
+                ->limit(10),
+        ])->findOrFail($id);
+    }
+
     public function crearHistoria(array $datos): HistoriaClinica
     {
+        $existente = HistoriaClinica::where(
+            'servidor_id', $datos['servidor_id'] ?? null
+        )->orWhere(
+            'beneficiario_id', $datos['beneficiario_id'] ?? null
+        )->first();
+
+        if ($existente) {
+            throw new ReglaNegocioException(
+                'Este paciente ya cuenta con una historia ' .
+                'clínica registrada.'
+            );
+        }
+
         return HistoriaClinica::create($datos);
     }
 
     public function registrarConsulta(array $datos): ConsultaMedica
     {
         return DB::transaction(function () use ($datos) {
-            $datosConsulta = Arr::except($datos, ['agenda_medica_id']);
+            $datosConsulta = Arr::except(
+                $datos, ['agenda_medica_id']
+            );
+
             $consulta = ConsultaMedica::create($datosConsulta);
-            
-            // Si la consulta atiende una agenda, actualizar el estado de la cita
-            if (isset($datos['agenda_medica_id'])) {
+
+            if (!empty($datos['agenda_medica_id'])) {
                 DB::table('agendas_medicas')
                     ->where('id', $datos['agenda_medica_id'])
                     ->update(['estado' => 'atendida']);
             }
-            
-            return $consulta;
+
+            return $consulta->load([
+                'historiaClinica.servidor',
+                'historiaClinica.beneficiario',
+                'medico',
+            ]);
         });
     }
 }
