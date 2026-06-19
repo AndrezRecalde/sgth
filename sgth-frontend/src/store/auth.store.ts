@@ -7,16 +7,20 @@ export interface UsuarioAuth {
   email:            string
   usuario_ti?:      string
   servidor_id?:     number | null
+  activo?:          boolean
   servidor?: {
-    id:             number
-    cedula?:        string
-    nombre?:        string
-    apellido?:      string
-    puede_marcar?:  boolean
-    regimen_laboral?: string
+    id:                 number
+    cedula?:            string
+    nombre?:            string
+    apellido?:          string
+    activo?:            boolean
+    puede_marcar?:      boolean
+    regimen_laboral?:   string
+    tipo_nombramiento?: string | null
+    tipo_nombramiento_label?: string | null
     unidad_administrativa_id?: number | null
     unidad_administrativa?: {
-      id:     number
+      id:      number
       nombre?: string
     } | null
     puesto?: {

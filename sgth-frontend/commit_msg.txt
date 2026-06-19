@@ -1,0 +1,8 @@
+feat(portal): pagina de perfil del servidor + AppGridSelector
+
+- AppGridSelector: dropdown de subsistemas en Topbar (solo si rol adicional)
+- PerfilServidorCard: institución, nombre, puesto, unidad, nombramiento, estado
+- NoticiasCard: placeholder de comunicados de Talento Humano
+- /portal: página de inicio con perfil del servidor
+- Eliminado /bienvenida — login redirige directo a /portal
+- SubsistemaHeader eliminado, reemplazado por AppGridSelector

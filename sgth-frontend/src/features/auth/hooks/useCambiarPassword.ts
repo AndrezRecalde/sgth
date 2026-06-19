@@ -28,7 +28,7 @@ export function useCambiarPassword() {
         color: 'emerald',
         icon: React.createElement(IconCheck, { size: 16 }),
       })
-      router.push('/bienvenida')
+      router.push('/portal')
     },
     onError: (error: AxiosError<ApiResponse>) => {
       notifications.show({

@@ -32,6 +32,7 @@ import { useRouter } from "next/navigation";
 import { Popover, SimpleGrid } from "@mantine/core";
 import { getSubsistemasDisponibles } from "@/config/nav";
 import { ROUTES } from "@/config/routes";
+import { AppGridSelector } from "./AppGridSelector";
 
 const SUBSISTEMA_CONFIG = {
   sgth: {
@@ -155,74 +156,7 @@ export function Topbar({
             <IconBell size={25} />
           </ActionIcon>
         </Tooltip>
-        <Popover
-          width={320}
-          position="bottom-end"
-          shadow="xl"
-          radius="xl"
-          withArrow
-        >
-          <Popover.Target>
-            <Tooltip label="Aplicaciones de GADPE">
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="lg"
-                radius="xl"
-                aria-label="Aplicaciones"
-              >
-                <IconGridDots size={25} />
-              </ActionIcon>
-            </Tooltip>
-          </Popover.Target>
-          <Popover.Dropdown p="lg">
-            <Text size="sm" fw={700} mb="lg" c="dimmed">
-              Tus aplicaciones
-            </Text>
-            <SimpleGrid cols={3} spacing="md">
-              {disponibles.map((key) => {
-                const config =
-                  SUBSISTEMA_CONFIG[key as keyof typeof SUBSISTEMA_CONFIG];
-                const Icon = config.icon;
-                return (
-                  <UnstyledButton
-                    key={key}
-                    onClick={() => router.push(config.home)}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "8px",
-                      borderRadius: "var(--mantine-radius-md)",
-                      transition: "background-color 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "var(--mantine-color-default-hover)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    <Avatar
-                      size={50}
-                      radius="100%"
-                      color={config.color}
-                      variant="light"
-                      mb={8}
-                    >
-                      <Icon size={28} stroke={1.5} />
-                    </Avatar>
-                    <Text size="xs" fw={500} ta="center">
-                      {config.label}
-                    </Text>
-                  </UnstyledButton>
-                );
-              })}
-            </SimpleGrid>
-          </Popover.Dropdown>
-        </Popover>
+        <AppGridSelector />
         <Menu
           width={340}
           position="bottom-end"
