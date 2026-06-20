@@ -7,7 +7,7 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
-  IconNurse, IconCheck, IconList, IconUserPlus,
+  IconNurse, IconCheck, IconList, IconUserPlus, IconVaccine,
 } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { BuscarPacienteForm } from
@@ -22,6 +22,10 @@ import type { PacienteEncontrado } from
   '@/features/dispensario/services/pacienteService'
 import type { AgendaMedica } from
   '@/features/dispensario/services/agendaService'
+import { AtencionEnfermeriaForm } from
+  '@/features/dispensario/components/AtencionEnfermeriaForm'
+import type { AtencionEnfermeria } from
+  '@/features/dispensario/services/atencionEnfermeriaService'
 
 type Paso = 'buscar' | 'turno' | 'creado'
 
@@ -144,6 +148,71 @@ function ColaDelDia() {
   )
 }
 
+type PasoServicio = 'buscar' | 'formulario' | 'creado'
+
+function ServicioEnfermeria() {
+  const [paso, setPaso] = useState<PasoServicio>('buscar')
+  const [paciente, setPaciente] = useState<PacienteEncontrado | null>(null)
+  const [atencionCreada, setAtencionCreada] =
+    useState<AtencionEnfermeria | null>(null)
+
+  const handleReiniciar = () => {
+    setPaso('buscar')
+    setPaciente(null)
+    setAtencionCreada(null)
+  }
+
+  return (
+    <Stack gap="md" maw={600}>
+      {paso === 'buscar' && (
+        <BuscarPacienteForm
+          onPacienteListo={(p) => {
+            setPaciente(p)
+            setPaso('formulario')
+          }}
+        />
+      )}
+
+      {paso === 'formulario' && paciente && (
+        <AtencionEnfermeriaForm
+          paciente={paciente}
+          onCreado={(atencion) => {
+            setAtencionCreada(atencion)
+            setPaso('creado')
+          }}
+          onCancelar={handleReiniciar}
+        />
+      )}
+
+      {paso === 'creado' && atencionCreada && (
+        <Card withBorder radius="lg" p="lg">
+          <Stack gap="md" align="center">
+            <Alert
+              icon={<IconCheck size={16} />}
+              color="emerald"
+              variant="light"
+              w="100%"
+            >
+              <Text size="sm" fw={600}>
+                Atención {atencionCreada.folio} registrada
+              </Text>
+            </Alert>
+            <Card.Section
+              p="sm"
+              onClick={handleReiniciar}
+              style={{ cursor: 'pointer', textAlign: 'center' }}
+            >
+              <Text size="sm" c="violet" fw={600}>
+                Atender otro paciente
+              </Text>
+            </Card.Section>
+          </Stack>
+        </Card>
+      )}
+    </Stack>
+  )
+}
+
 export default function EnfermeriaPage() {
   return (
     <Stack gap="md">
@@ -167,6 +236,12 @@ export default function EnfermeriaPage() {
           >
             Cola del día
           </Tabs.Tab>
+          <Tabs.Tab
+            value="servicio-enfermeria"
+            leftSection={<IconVaccine size={14} />}
+          >
+            Servicio de enfermería
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="admision" pt="md">
@@ -175,6 +250,10 @@ export default function EnfermeriaPage() {
 
         <Tabs.Panel value="cola" pt="md">
           <ColaDelDia />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="servicio-enfermeria" pt="md">
+          <ServicioEnfermeria />
         </Tabs.Panel>
       </Tabs>
     </Stack>
