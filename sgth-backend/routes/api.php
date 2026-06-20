@@ -580,6 +580,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('dashboard/kpis', [\App\Http\Controllers\Dispensario\DashboardDispensarioController::class, 'kpis'])
             ->middleware('role:admin-dispensario|maxima-autoridad');
 
+        Route::get('personal-medico',
+            [\App\Http\Controllers\Dispensario\PersonalMedicoController::class, 'index']
+        )->name('dispensario.personal-medico');
+
         Route::get('pacientes/buscar',
             [\App\Http\Controllers\Dispensario\PacienteController::class, 'buscar']
         )->name('dispensario.pacientes.buscar');
