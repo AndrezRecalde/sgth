@@ -34,6 +34,19 @@ export function usePersonalDisponible(
   })
 }
 
+export function useColaTurnos(filtros: {
+  medico_id?: number
+  fecha?:     string
+  estado?:    string
+}) {
+  return useQuery({
+    queryKey: ['agenda', 'cola', filtros],
+    queryFn:  () => agendaService.listar(filtros),
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 30,
+  })
+}
+
 export function useCrearTurno() {
   const qc = useQueryClient()
 
@@ -45,6 +58,30 @@ export function useCrearTurno() {
         title:   'Turno creado',
         message: 'El turno fue registrado correctamente.',
         color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['agenda'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function useCancelarTurno() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => agendaService.cancelar(id),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Turno cancelado',
+        message: 'El turno fue cancelado correctamente.',
+        color:   'orange',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       qc.invalidateQueries({ queryKey: ['agenda'] })
