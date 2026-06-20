@@ -91,12 +91,17 @@ function NuevaAdmision() {
   )
 }
 
+function formatFechaLocal(d: Date): string {
+  const year  = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day   = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function ColaDelDia() {
   const [fecha, setFecha] = useState<Date | null>(new Date())
 
-  const fechaStr = fecha
-    ? fecha.toISOString().slice(0, 10)
-    : new Date().toISOString().slice(0, 10)
+  const fechaStr = formatFechaLocal(fecha ?? new Date())
 
   const { data, isLoading } = useColaTurnos({ fecha: fechaStr })
   const cancelar = useCancelarTurno()
@@ -109,7 +114,18 @@ function ColaDelDia() {
         <DatePickerInput
           label="Fecha"
           value={fecha}
-          onChange={(v) => setFecha(v ? new Date(v) : new Date())}
+          onChange={(v) => {
+            if (!v) {
+              setFecha(new Date())
+              return
+            }
+            // Evita desfase de zona horaria: construye
+            // la fecha local a partir de los componentes
+            // año/mes/día del string recibido (YYYY-MM-DD)
+            const str = typeof v === 'string' ? v : String(v)
+            const [y, m, d] = str.slice(0, 10).split('-').map(Number)
+            setFecha(new Date(y, m - 1, d))
+          }}
           valueFormat="DD/MM/YYYY"
           maw={200}
         />
