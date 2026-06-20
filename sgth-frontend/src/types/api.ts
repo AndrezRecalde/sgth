@@ -517,15 +517,17 @@ export type HistorialAcademicoParams = {
 export type TipoParentesco = 'conyugue' | 'hijo'
 
 export type CargaFamiliar = {
-  id: number
+  id:          number
   servidor_id: number
-  apellidos: string
-  nombres: string
-  parentesco: TipoParentesco
+  cedula:      string
+  apellidos:   string
+  nombres:     string
+  parentesco:  TipoParentesco
   fecha_nacimiento: string
-  persona_con_discapacidad: boolean
+  persona_con_discapacidad:      boolean
   posee_enfermedad_catastrofica: boolean
   observaciones: string | null
+  estado:        boolean
   discapacidades?:              DiscapacidadCargaFamiliar[]
   enfermedades_catastroficas?:  EnfermedadCatastroficaCargaFamiliar[]
   created_at?: string

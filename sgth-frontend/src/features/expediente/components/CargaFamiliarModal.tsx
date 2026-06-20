@@ -72,6 +72,7 @@ export function CargaFamiliarModal({
   } = useForm<CargaFamiliarFormData>({
     resolver: zodResolver(cargaFamiliarSchema),
     defaultValues: {
+      cedula: "",
       nombres: "",
       apellidos: "",
       parentesco: "hijo",
@@ -85,6 +86,7 @@ export function CargaFamiliarModal({
   useEffect(() => {
     if (initialValues) {
       reset({
+        cedula: initialValues.cedula ?? "",
         nombres: initialValues.nombres ?? "",
         apellidos: initialValues.apellidos ?? "",
         parentesco: initialValues.parentesco ?? "hijo",
@@ -99,6 +101,7 @@ export function CargaFamiliarModal({
       });
     } else {
       reset({
+        cedula: "",
         nombres: "",
         apellidos: "",
         parentesco: "hijo",
@@ -141,6 +144,19 @@ export function CargaFamiliarModal({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
+          <TextInput
+            label="Cédula"
+            placeholder="Ej: 0801234567"
+            maxLength={10}
+            disabled={isEditing}
+            description={isEditing
+              ? 'La cédula no se puede modificar'
+              : undefined}
+            {...contained}
+            {...register("cedula")}
+            error={errors.cedula?.message}
+          />
+
           <TextInput
             label="Nombres"
             placeholder="Nombres del familiar"
