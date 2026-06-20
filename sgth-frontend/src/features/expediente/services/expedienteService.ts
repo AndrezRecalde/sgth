@@ -133,6 +133,13 @@ export const expedienteService = {
       >(`/expediente/servidores/${servidorId}/cargas-familiares/${id}`)
       .then((r) => r.data),
 
+  toggleEstadoCarga: (servidorId: number, id: number) =>
+    api
+      .post<ApiResponse<CargaFamiliar>>(
+        `/expediente/servidores/${servidorId}/cargas-familiares/${id}/toggle-estado`
+      )
+      .then((r) => r.data.datos),
+
   // ── Declaraciones juramentadas ──────────────────
   listarDeclaraciones: (servidorId: number) =>
     api

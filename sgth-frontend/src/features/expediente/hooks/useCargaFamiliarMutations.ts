@@ -59,5 +59,21 @@ export function useCargaFamiliarMutations(servidorId: number) {
     onError,
   })
 
-  return { crear, editar, eliminar }
+  const toggleEstado = useMutation({
+    mutationFn: (id: number) =>
+      expedienteService.toggleEstadoCarga(servidorId, id),
+    onSuccess: (data) => {
+      const estado = data?.estado ? 'activada' : 'desactivada'
+      notifications.show({
+        title:   `Carga familiar ${estado}`,
+        message: `La carga familiar fue ${estado} correctamente.`,
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  return { crear, editar, eliminar, toggleEstado }
 }

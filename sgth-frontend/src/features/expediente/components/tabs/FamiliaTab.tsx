@@ -11,6 +11,7 @@ import {
   Skeleton,
   ActionIcon,
   Tooltip,
+  Switch,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -62,9 +63,14 @@ interface CargaRowProps {
   servidorId: number;
   onEdit: (c: CargaFamiliar) => void;
   onDelete: (id: number) => void;
+  onToggleEstado: (id: number) => void;
+  togglePending: boolean;
 }
 
-function CargaRow({ carga, servidorId, onEdit, onDelete }: CargaRowProps) {
+function CargaRow({
+  carga, servidorId, onEdit, onDelete,
+  onToggleEstado, togglePending,
+}: CargaRowProps) {
   const [expanded, setExpanded] = useState(false);
   const qc = useQueryClient();
 
@@ -154,6 +160,9 @@ function CargaRow({ carga, servidorId, onEdit, onDelete }: CargaRowProps) {
             <Text size="sm" fw={600}>
               {carga.apellidos} {carga.nombres}
             </Text>
+            <Text size="xs" c="dimmed" ff="monospace">
+              CI: {carga.cedula}
+            </Text>
             <Group gap="xs" mt={2}>
               <Badge size="xs" variant="light" color="blue">
                 {PARENTESCO_LABELS[carga.parentesco ?? ""] ??
@@ -175,6 +184,18 @@ function CargaRow({ carga, servidorId, onEdit, onDelete }: CargaRowProps) {
         </Group>
 
         <Group gap="xs" onClick={(e) => e.stopPropagation()}>
+          <Tooltip
+            label={carga.estado ? 'Desactivar' : 'Activar'}
+            withArrow
+          >
+            <Switch
+              checked={carga.estado}
+              onChange={() => onToggleEstado(Number(carga.id))}
+              disabled={togglePending}
+              color="emerald"
+              size="sm"
+            />
+          </Tooltip>
           <Tooltip label="Editar" withArrow>
             <ActionIcon
               variant="subtle"
@@ -366,7 +387,7 @@ export function FamiliaTab({ servidorId }: Props) {
   const [editItem, setEditItem] = useState<CargaFamiliar | null>(null);
 
   const { data: cargas = [], isLoading } = useCargasFamiliares(servidorId);
-  const { eliminar } = useCargaFamiliarMutations(servidorId);
+  const { eliminar, toggleEstado } = useCargaFamiliarMutations(servidorId);
 
   const handleClose = () => {
     setEditItem(null);
@@ -417,6 +438,8 @@ export function FamiliaTab({ servidorId }: Props) {
                 open();
               }}
               onDelete={handleDelete}
+              onToggleEstado={(id) => toggleEstado.mutate(id)}
+              togglePending={toggleEstado.isPending}
             />
           ))}
         </Stack>
