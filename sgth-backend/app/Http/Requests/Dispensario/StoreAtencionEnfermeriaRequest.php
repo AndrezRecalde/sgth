@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Dispensario;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class StoreAgendaMedicaRequest extends FormRequest
+class StoreAtencionEnfermeriaRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,12 +14,10 @@ class StoreAgendaMedicaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'medico_id'          => ['required', 'integer', 'exists:users,id'],
-            'servidor_id'        => ['nullable', 'integer', 'exists:servidores,id'],
-            'carga_familiar_id'  => ['nullable', 'integer', 'exists:cargas_familiares,id'],
-            'tipo_atencion'      => ['required', Rule::in(['medicina_general', 'odontologia'])],
-            'motivo_solicitud'   => ['nullable', 'string', 'max:500'],
-            'requiere_triaje'    => ['boolean'],
+            'servidor_id'          => ['nullable', 'integer', 'exists:servidores,id'],
+            'carga_familiar_id'    => ['nullable', 'integer', 'exists:cargas_familiares,id'],
+            'catalogo_servicio_id' => ['required', 'integer', 'exists:catalogo_servicios_enfermeria,id'],
+            'descripcion'          => ['nullable', 'string', 'max:1000'],
         ];
     }
 

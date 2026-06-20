@@ -596,6 +596,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             [\App\Http\Controllers\Dispensario\PacienteController::class, 'buscar']
         )->name('dispensario.pacientes.buscar');
 
+        Route::get('atenciones-enfermeria',
+            [\App\Http\Controllers\Dispensario\AtencionEnfermeriaController::class, 'index']
+        )->name('dispensario.atenciones-enfermeria.index');
+
+        Route::post('atenciones-enfermeria',
+            [\App\Http\Controllers\Dispensario\AtencionEnfermeriaController::class, 'store']
+        )->name('dispensario.atenciones-enfermeria.store');
+
+        Route::get('catalogo-servicios-enfermeria',
+            [\App\Http\Controllers\Dispensario\AtencionEnfermeriaController::class, 'catalogo']
+        )->name('dispensario.catalogo-servicios-enfermeria');
+
         // Historias clínicas — SOLO personal médico
         Route::prefix('historias-clinicas')
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')

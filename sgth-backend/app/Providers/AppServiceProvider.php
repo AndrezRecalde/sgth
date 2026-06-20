@@ -32,6 +32,8 @@ use App\Contracts\Dispensario\PacienteServiceInterface;
 use App\Services\Dispensario\PacienteService;
 use App\Contracts\Dispensario\DisponibilidadServiceInterface;
 use App\Services\Dispensario\DisponibilidadService;
+use App\Contracts\Dispensario\AtencionEnfermeriaServiceInterface;
+use App\Services\Dispensario\AtencionEnfermeriaService;
 use App\Contracts\Dispensario\InventarioMedicinasServiceInterface;
 use App\Services\Dispensario\InventarioMedicinasService;
 use App\Contracts\InventarioTi\InventarioTiServiceInterface;
@@ -123,6 +125,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             DisponibilidadServiceInterface::class,
             DisponibilidadService::class
+        );
+        $this->app->bind(
+            AtencionEnfermeriaServiceInterface::class,
+            AtencionEnfermeriaService::class
         );
         $this->app->bind(
             InventarioMedicinasServiceInterface::class,

@@ -14,22 +14,24 @@ final class AgendaService implements AgendaServiceInterface
     {
         $query = AgendaMedica::with([
             'medico', 'servidor', 'cargaFamiliar.servidor', 'triaje',
-        ])->orderBy('fecha', 'desc')
-          ->orderBy('hora_inicio', 'desc');
+        ])->orderBy('registrado_en', 'asc');
 
         if (!empty($filtros['medico_id'])) {
             $query->where('medico_id', $filtros['medico_id']);
         }
 
-        if (!empty($filtros['fecha'])) {
-            $query->whereDate('fecha', $filtros['fecha']);
-        }
+        $fecha = $filtros['fecha'] ?? now()->toDateString();
+        $query->whereDate('fecha', $fecha);
 
         if (!empty($filtros['estado'])) {
             $query->where('estado', $filtros['estado']);
         }
 
-        return $query->paginate($filtros['per_page'] ?? 20);
+        if (!empty($filtros['tipo_atencion'])) {
+            $query->where('tipo_atencion', $filtros['tipo_atencion']);
+        }
+
+        return $query->paginate($filtros['per_page'] ?? 50);
     }
 
     public function obtener(int $id): AgendaMedica
@@ -44,11 +46,18 @@ final class AgendaService implements AgendaServiceInterface
         int $creadoPor
     ): AgendaMedica {
         return DB::transaction(function () use ($datos, $creadoPor) {
+            $fecha = now()->toDateString();
+
+            $folio = $this->generarFolio($fecha);
+
             return AgendaMedica::create([
                 ...$datos,
-                'estado'         => 'programada',
+                'folio'           => $folio,
+                'fecha'           => $fecha,
+                'registrado_en'   => now(),
+                'estado'          => 'en_espera',
                 'estado_registro' => true,
-                'created_by'     => $creadoPor,
+                'created_by'      => $creadoPor,
             ]);
         });
     }
@@ -66,11 +75,23 @@ final class AgendaService implements AgendaServiceInterface
 
         if ($agenda->estado === 'atendida') {
             throw new ReglaNegocioException(
-                'No se puede cancelar una cita ya atendida.'
+                'No se puede cancelar un turno ya atendido.'
             );
         }
 
         $agenda->update(['estado' => 'cancelada']);
         return $agenda;
+    }
+
+    private function generarFolio(string $fecha): string
+    {
+        $anio = substr($fecha, 0, 4);
+        $cantidadActual = AgendaMedica::whereYear(
+            'fecha', $anio
+        )->count();
+        $secuencial = str_pad(
+            $cantidadActual + 1, 5, '0', STR_PAD_LEFT
+        );
+        return "TUR-{$anio}-{$secuencial}";
     }
 }
