@@ -584,6 +584,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             [\App\Http\Controllers\Dispensario\PersonalMedicoController::class, 'index']
         )->name('dispensario.personal-medico');
 
+        Route::get('disponibilidad/mi-estado',
+            [\App\Http\Controllers\Dispensario\DisponibilidadController::class, 'miEstado']
+        )->name('dispensario.disponibilidad.miEstado');
+
+        Route::post('disponibilidad/alternar',
+            [\App\Http\Controllers\Dispensario\DisponibilidadController::class, 'alternar']
+        )->name('dispensario.disponibilidad.alternar');
+
         Route::get('pacientes/buscar',
             [\App\Http\Controllers\Dispensario\PacienteController::class, 'buscar']
         )->name('dispensario.pacientes.buscar');

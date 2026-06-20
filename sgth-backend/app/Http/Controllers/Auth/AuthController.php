@@ -9,11 +9,13 @@ use App\Http\Responses\ApiResponse;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Contracts\Dispensario\DisponibilidadServiceInterface;
 
 final class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService,
+        private readonly DisponibilidadServiceInterface $disponibilidadService,
     ) {}
 
     public function login(LoginRequest $request): JsonResponse
@@ -28,6 +30,10 @@ final class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        $userId = $request->user()->id;
+
+        $this->disponibilidadService->marcarNoDisponible($userId);
+
         $request->user()->currentAccessToken()->delete();
         return ApiResponse::noContent('Sesión cerrada exitosamente.');
     }

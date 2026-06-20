@@ -38,6 +38,13 @@ class User extends Authenticatable
         );
     }
 
+    public function disponibilidadMedico(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(
+            \App\Models\Dispensario\DisponibilidadMedico::class
+        );
+    }
+
     public function getNombreCompletoAttribute(): string
     {
         if ($this->servidor) {
