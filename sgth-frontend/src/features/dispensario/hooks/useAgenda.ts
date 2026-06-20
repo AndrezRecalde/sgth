@@ -17,6 +17,23 @@ export function usePersonalMedico(
   })
 }
 
+export function usePersonalDisponible(
+  tipoAtencion: 'medicina_general' | 'odontologia'
+) {
+  const rolMap = {
+    medicina_general: 'medico',
+    odontologia:       'odontologo',
+  } as const
+
+  return useQuery({
+    queryKey: ['personal-medico', 'disponible', tipoAtencion],
+    queryFn:  () => personalMedicoService.listar(
+      rolMap[tipoAtencion]
+    ),
+    staleTime: 1000 * 30,
+  })
+}
+
 export function useCrearTurno() {
   const qc = useQueryClient()
 

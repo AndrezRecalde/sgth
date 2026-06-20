@@ -3,14 +3,17 @@ import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
 export interface AgendaMedica {
   id:                 number
+  folio?:             string | null
   medico_id:          number
   servidor_id?:       number | null
   carga_familiar_id?: number | null
+  tipo_atencion:      'medicina_general' | 'odontologia'
   fecha:              string
-  hora_inicio:        string
-  hora_fin:           string
+  hora_inicio?:       string | null
+  hora_fin?:          string | null
+  registrado_en?:     string | null
   estado:             string
-  motivo_solicitud:   string
+  motivo_solicitud?:  string | null
   medico?: {
     id: number
     nombre_completo?: string
@@ -33,10 +36,9 @@ export interface CrearAgendaData {
   medico_id:          number
   servidor_id?:       number | null
   carga_familiar_id?: number | null
-  fecha:              string
-  hora_inicio:        string
-  hora_fin:           string
-  motivo_solicitud:   string
+  tipo_atencion:      'medicina_general' | 'odontologia'
+  motivo_solicitud?:  string | null
+  requiere_triaje:    boolean
 }
 
 export const agendaService = {
