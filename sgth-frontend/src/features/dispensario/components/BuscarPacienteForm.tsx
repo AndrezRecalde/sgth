@@ -41,7 +41,13 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
         : { beneficiario_id: paciente.id }
     )
 
-    onPacienteListo(paciente, data.id)
+    // Pasamos el paciente actualizado con el flag en true
+    // para que la UI no dependa de una nueva búsqueda
+    onPacienteListo(
+      { ...paciente, tiene_historia_clinica: true,
+        historia_clinica_id: data.id },
+      data.id
+    )
   }
 
   const handleContinuar = () => {
