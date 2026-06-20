@@ -3,104 +3,52 @@
 import { useState } from 'react'
 import {
   Stack, Card, Alert, Text, Tabs,
-  Select, Group,
+  Select, Group, Badge,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
-  IconNurse, IconCheck, IconList, IconUserPlus, IconVaccine,
+  IconNurse, IconCheck, IconList,
+  IconUserPlus, IconClipboardCheck,
 } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { BuscarPacienteForm } from
   '@/features/dispensario/components/BuscarPacienteForm'
+import { SeleccionarAccionPaciente, type AccionPaciente } from
+  '@/features/dispensario/components/SeleccionarAccionPaciente'
 import { CrearTurnoForm } from
   '@/features/dispensario/components/CrearTurnoForm'
+import { AtencionEnfermeriaForm } from
+  '@/features/dispensario/components/AtencionEnfermeriaForm'
+import { OfrecerTriajeInmediato } from
+  '@/features/dispensario/components/OfrecerTriajeInmediato'
+import { TriajeForm } from
+  '@/features/dispensario/components/TriajeForm'
 import { ColaTurnosTable } from
   '@/features/dispensario/components/ColaTurnosTable'
-import { useColaTurnos, useCancelarTurno } from
-  '@/features/dispensario/hooks/useAgenda'
+import { TriajePendientesList } from
+  '@/features/dispensario/components/TriajePendientesList'
+import {
+  useColaTurnos, useCancelarTurno,
+} from '@/features/dispensario/hooks/useAgenda'
+import { useTriajesPendientes } from
+  '@/features/dispensario/hooks/useTriaje'
 import type { PacienteEncontrado } from
   '@/features/dispensario/services/pacienteService'
 import type { AgendaMedica } from
   '@/features/dispensario/services/agendaService'
-import { AtencionEnfermeriaForm } from
-  '@/features/dispensario/components/AtencionEnfermeriaForm'
 import type { AtencionEnfermeria } from
   '@/features/dispensario/services/atencionEnfermeriaService'
-import { TriajeForm } from
-  '@/features/dispensario/components/TriajeForm'
-import { TriajePendientesList } from
-  '@/features/dispensario/components/TriajePendientesList'
 import type { Triaje } from
   '@/features/dispensario/services/triajeService'
-import { IconHeartbeat } from '@tabler/icons-react'
 
-type Paso = 'buscar' | 'turno' | 'creado'
-
-function NuevaAdmision() {
-  const [paso, setPaso] = useState<Paso>('buscar')
-  const [paciente, setPaciente] = useState<PacienteEncontrado | null>(null)
-  const [agendaCreada, setAgendaCreada] = useState<AgendaMedica | null>(null)
-
-  const handleReiniciar = () => {
-    setPaso('buscar')
-    setPaciente(null)
-    setAgendaCreada(null)
-  }
-
-  return (
-    <Stack gap="md" maw={600}>
-      {paso === 'buscar' && (
-        <BuscarPacienteForm
-          onPacienteListo={(p) => {
-            setPaciente(p)
-            setPaso('turno')
-          }}
-        />
-      )}
-
-      {paso === 'turno' && paciente && (
-        <CrearTurnoForm
-          paciente={paciente}
-          onCreado={(agenda) => {
-            setAgendaCreada(agenda)
-            setPaso('creado')
-          }}
-          onCancelar={handleReiniciar}
-        />
-      )}
-
-      {paso === 'creado' && agendaCreada && (
-        <Card withBorder radius="lg" p="lg">
-          <Stack gap="md" align="center">
-            <Alert
-              icon={<IconCheck size={16} />}
-              color="emerald"
-              variant="light"
-              w="100%"
-            >
-              <Text size="sm" fw={600}>
-                Turno {agendaCreada.folio} creado
-              </Text>
-              <Text size="xs" mt={4}>
-                El paciente puede dirigirse a triaje o
-                directamente a consulta según corresponda.
-              </Text>
-            </Alert>
-            <Card.Section
-              p="sm"
-              onClick={handleReiniciar}
-              style={{ cursor: 'pointer', textAlign: 'center' }}
-            >
-              <Text size="sm" c="emerald" fw={600}>
-                Atender otro paciente
-              </Text>
-            </Card.Section>
-          </Stack>
-        </Card>
-      )}
-    </Stack>
-  )
-}
+type Paso =
+  | 'buscar'
+  | 'elegir_accion'
+  | 'crear_turno'
+  | 'servicio_enfermeria'
+  | 'ofrecer_triaje'
+  | 'tomar_triaje'
+  | 'finalizado'
 
 function formatFechaLocal(d: Date): string {
   const year  = d.getFullYear()
@@ -109,89 +57,98 @@ function formatFechaLocal(d: Date): string {
   return `${year}-${month}-${day}`
 }
 
-function ColaDelDia() {
-  const [fecha, setFecha] = useState<Date | null>(new Date())
-
-  const fechaStr = formatFechaLocal(fecha ?? new Date())
-
-  const { data, isLoading } = useColaTurnos({ fecha: fechaStr })
-  const cancelar = useCancelarTurno()
-
-  const turnos = data?.data ?? []
-
-  return (
-    <Stack gap="md">
-      <Group justify="flex-end">
-        <DatePickerInput
-          label="Fecha"
-          value={fecha}
-          onChange={(v) => {
-            if (!v) {
-              setFecha(new Date())
-              return
-            }
-            // Evita desfase de zona horaria: construye
-            // la fecha local a partir de los componentes
-            // año/mes/día del string recibido (YYYY-MM-DD)
-            const str = typeof v === 'string' ? v : String(v)
-            const [y, m, d] = str.slice(0, 10).split('-').map(Number)
-            setFecha(new Date(y, m - 1, d))
-          }}
-          valueFormat="DD/MM/YYYY"
-          maw={200}
-        />
-      </Group>
-
-      <ColaTurnosTable
-        turnos={turnos}
-        isLoading={isLoading}
-        onCancelar={(id) => {
-          if (confirm('¿Cancelar este turno?')) {
-            cancelar.mutate(id)
-          }
-        }}
-      />
-    </Stack>
-  )
-}
-
-type PasoServicio = 'buscar' | 'formulario' | 'creado'
-
-function ServicioEnfermeria() {
-  const [paso, setPaso] = useState<PasoServicio>('buscar')
+function AtenderPaciente() {
+  const [paso, setPaso] = useState<Paso>('buscar')
   const [paciente, setPaciente] = useState<PacienteEncontrado | null>(null)
-  const [atencionCreada, setAtencionCreada] =
-    useState<AtencionEnfermeria | null>(null)
+  const [agendaCreada, setAgendaCreada] = useState<AgendaMedica | null>(null)
+  const [mensajeFinal, setMensajeFinal] = useState('')
 
   const handleReiniciar = () => {
     setPaso('buscar')
     setPaciente(null)
-    setAtencionCreada(null)
+    setAgendaCreada(null)
+    setMensajeFinal('')
+  }
+
+  const handleElegirAccion = (accion: AccionPaciente) => {
+    setPaso(accion === 'turno' ? 'crear_turno' : 'servicio_enfermeria')
+  }
+
+  const handleTurnoCreado = (agenda: AgendaMedica) => {
+    setAgendaCreada(agenda)
+    setPaso('ofrecer_triaje')
+  }
+
+  const handleServicioCreado = (atencion: AtencionEnfermeria) => {
+    setMensajeFinal(`Atención ${atencion.folio} registrada`)
+    setPaso('finalizado')
+  }
+
+  const handleTriajeCreado = (_triaje: Triaje) => {
+    setMensajeFinal(
+      `Turno ${agendaCreada?.folio} — triaje registrado`
+    )
+    setPaso('finalizado')
   }
 
   return (
-    <Stack gap="md" maw={600}>
+    <Stack gap="md" maw={620}>
       {paso === 'buscar' && (
         <BuscarPacienteForm
           onPacienteListo={(p) => {
             setPaciente(p)
-            setPaso('formulario')
+            setPaso('elegir_accion')
           }}
         />
       )}
 
-      {paso === 'formulario' && paciente && (
+      {paso === 'elegir_accion' && paciente && (
+        <SeleccionarAccionPaciente
+          paciente={paciente}
+          onElegir={handleElegirAccion}
+          onVolver={handleReiniciar}
+        />
+      )}
+
+      {paso === 'crear_turno' && paciente && (
+        <CrearTurnoForm
+          paciente={paciente}
+          onCreado={handleTurnoCreado}
+          onCancelar={() => setPaso('elegir_accion')}
+        />
+      )}
+
+      {paso === 'servicio_enfermeria' && paciente && (
         <AtencionEnfermeriaForm
           paciente={paciente}
-          onCreado={(atencion) => {
-            setAtencionCreada(atencion)
-            setPaso('creado')
-          }}
-          onCancelar={handleReiniciar}
+          onCreado={handleServicioCreado}
+          onCancelar={() => setPaso('elegir_accion')}
         />
       )}
 
-      {paso === 'creado' && atencionCreada && (
+      {paso === 'ofrecer_triaje' && agendaCreada && (
+        <OfrecerTriajeInmediato
+          agenda={agendaCreada}
+          onTomarTriaje={() => setPaso('tomar_triaje')}
+          onMasTarde={() => {
+            setMensajeFinal(`Turno ${agendaCreada.folio} en cola de espera`)
+            setPaso('finalizado')
+          }}
+        />
+      )}
+
+      {paso === 'tomar_triaje' && agendaCreada && (
+        <TriajeForm
+          turno={agendaCreada}
+          onCreado={handleTriajeCreado}
+          onCancelar={() => {
+            setMensajeFinal(`Turno ${agendaCreada.folio} en cola de espera`)
+            setPaso('finalizado')
+          }}
+        />
+      )}
+
+      {paso === 'finalizado' && (
         <Card withBorder radius="lg" p="lg">
           <Stack gap="md" align="center">
             <Alert
@@ -200,8 +157,8 @@ function ServicioEnfermeria() {
               variant="light"
               w="100%"
             >
-              <Text size="sm" fw={600}>
-                Atención {atencionCreada.folio} registrada
+              <Text size="sm" fw={600} ta="center">
+                {mensajeFinal}
               </Text>
             </Alert>
             <Card.Section
@@ -209,7 +166,7 @@ function ServicioEnfermeria() {
               onClick={handleReiniciar}
               style={{ cursor: 'pointer', textAlign: 'center' }}
             >
-              <Text size="sm" c="violet" fw={600}>
+              <Text size="sm" c="emerald" fw={600}>
                 Atender otro paciente
               </Text>
             </Card.Section>
@@ -220,121 +177,112 @@ function ServicioEnfermeria() {
   )
 }
 
-type PasoTriaje = 'lista' | 'formulario' | 'creado'
+function ColaYMonitoreo() {
+  const [fecha, setFecha] = useState<Date | null>(new Date())
+  const [vista, setVista] = useState<'todos' | 'pendientes_triaje'>('todos')
 
-function SeccionTriaje() {
-  const [paso, setPaso] = useState<PasoTriaje>('lista')
-  const [turno, setTurno] = useState<AgendaMedica | null>(null)
-  const [triajeCreado, setTriajeCreado] = useState<Triaje | null>(null)
+  const fechaStr = formatFechaLocal(fecha ?? new Date())
 
-  const handleReiniciar = () => {
-    setPaso('lista')
-    setTurno(null)
-    setTriajeCreado(null)
-  }
+  const { data, isLoading } = useColaTurnos({ fecha: fechaStr })
+  const { data: pendientesTriaje = [] } = useTriajesPendientes()
+  const cancelar = useCancelarTurno()
+
+  const turnos = data?.data ?? []
 
   return (
-    <Stack gap="md" maw={600}>
-      {paso === 'lista' && (
+    <Stack gap="md">
+      <Group justify="space-between">
+        <Select
+          value={vista}
+          onChange={(v) => setVista((v as typeof vista) ?? 'todos')}
+          data={[
+            { value: 'todos', label: 'Todos los turnos' },
+            {
+              value: 'pendientes_triaje',
+              label: `Pendientes de triaje (${pendientesTriaje.length})`,
+            },
+          ]}
+          maw={260}
+        />
+        {vista === 'todos' && (
+          <DatePickerInput
+            label="Fecha"
+            value={fecha}
+            onChange={(v) => {
+              if (!v) { setFecha(new Date()); return }
+              const str = typeof v === 'string' ? v : String(v)
+              const [y, m, d] = str.slice(0, 10).split('-').map(Number)
+              setFecha(new Date(y, m - 1, d))
+            }}
+            valueFormat="DD/MM/YYYY"
+            maw={200}
+          />
+        )}
+      </Group>
+
+      {vista === 'todos' ? (
+        <ColaTurnosTable
+          turnos={turnos}
+          isLoading={isLoading}
+          onCancelar={(id) => {
+            if (confirm('¿Cancelar este turno?')) {
+              cancelar.mutate(id)
+            }
+          }}
+        />
+      ) : (
         <TriajePendientesList
-          onSeleccionar={(t) => {
-            setTurno(t)
-            setPaso('formulario')
+          onSeleccionar={() => {
+            // La toma de triaje completa se hace
+            // desde "Atender paciente" para mantener
+            // el flujo guiado único
           }}
         />
-      )}
-
-      {paso === 'formulario' && turno && (
-        <TriajeForm
-          turno={turno}
-          onCreado={(triaje) => {
-            setTriajeCreado(triaje)
-            setPaso('creado')
-          }}
-          onCancelar={handleReiniciar}
-        />
-      )}
-
-      {paso === 'creado' && triajeCreado && (
-        <Card withBorder radius="lg" p="lg">
-          <Stack gap="md" align="center">
-            <Alert
-              icon={<IconCheck size={16} />}
-              color="emerald"
-              variant="light"
-              w="100%"
-            >
-              <Text size="sm" fw={600}>
-                Triaje registrado exitosamente
-              </Text>
-            </Alert>
-            <Card.Section
-              p="sm"
-              onClick={handleReiniciar}
-              style={{ cursor: 'pointer', textAlign: 'center' }}
-            >
-              <Text size="sm" c="emerald" fw={600}>
-                Tomar otro triaje
-              </Text>
-            </Card.Section>
-          </Stack>
-        </Card>
       )}
     </Stack>
   )
 }
 
 export default function EnfermeriaPage() {
+  const { data: pendientesTriaje = [] } = useTriajesPendientes()
+
   return (
     <Stack gap="md">
       <PageHeader
         title="Enfermería"
-        subtitle="Admisión de pacientes y cola de turnos"
+        subtitle="Admisión, triaje y servicios de enfermería"
         icon={<IconNurse size={24} />}
       />
 
-      <Tabs defaultValue="admision">
+      <Tabs defaultValue="atender">
         <Tabs.List>
           <Tabs.Tab
-            value="admision"
+            value="atender"
             leftSection={<IconUserPlus size={14} />}
           >
-            Nueva admisión
+            Atender paciente
           </Tabs.Tab>
           <Tabs.Tab
-            value="cola"
+            value="monitoreo"
             leftSection={<IconList size={14} />}
+            rightSection={
+              pendientesTriaje.length > 0 ? (
+                <Badge size="xs" color="orange" circle>
+                  {pendientesTriaje.length}
+                </Badge>
+              ) : null
+            }
           >
-            Cola del día
-          </Tabs.Tab>
-          <Tabs.Tab
-            value="servicio-enfermeria"
-            leftSection={<IconVaccine size={14} />}
-          >
-            Servicio de enfermería
-          </Tabs.Tab>
-          <Tabs.Tab
-            value="triaje"
-            leftSection={<IconHeartbeat size={14} />}
-          >
-            Triaje
+            Cola y monitoreo
           </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="admision" pt="md">
-          <NuevaAdmision />
+        <Tabs.Panel value="atender" pt="md">
+          <AtenderPaciente />
         </Tabs.Panel>
 
-        <Tabs.Panel value="cola" pt="md">
-          <ColaDelDia />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="servicio-enfermeria" pt="md">
-          <ServicioEnfermeria />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="triaje" pt="md">
-          <SeccionTriaje />
+        <Tabs.Panel value="monitoreo" pt="md">
+          <ColaYMonitoreo />
         </Tabs.Panel>
       </Tabs>
     </Stack>

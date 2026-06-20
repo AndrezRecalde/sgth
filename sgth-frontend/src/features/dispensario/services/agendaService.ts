@@ -13,6 +13,7 @@ export interface AgendaMedica {
   hora_fin?:          string | null
   registrado_en?:     string | null
   estado:             string
+  requiere_triaje?:   boolean
   motivo_solicitud?:  string | null
   medico?: {
     id: number
