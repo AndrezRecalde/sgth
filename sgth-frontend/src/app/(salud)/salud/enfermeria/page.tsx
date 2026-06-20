@@ -26,6 +26,13 @@ import { AtencionEnfermeriaForm } from
   '@/features/dispensario/components/AtencionEnfermeriaForm'
 import type { AtencionEnfermeria } from
   '@/features/dispensario/services/atencionEnfermeriaService'
+import { TriajeForm } from
+  '@/features/dispensario/components/TriajeForm'
+import { TriajePendientesList } from
+  '@/features/dispensario/components/TriajePendientesList'
+import type { Triaje } from
+  '@/features/dispensario/services/triajeService'
+import { IconHeartbeat } from '@tabler/icons-react'
 
 type Paso = 'buscar' | 'turno' | 'creado'
 
@@ -213,6 +220,70 @@ function ServicioEnfermeria() {
   )
 }
 
+type PasoTriaje = 'lista' | 'formulario' | 'creado'
+
+function SeccionTriaje() {
+  const [paso, setPaso] = useState<PasoTriaje>('lista')
+  const [turno, setTurno] = useState<AgendaMedica | null>(null)
+  const [triajeCreado, setTriajeCreado] = useState<Triaje | null>(null)
+
+  const handleReiniciar = () => {
+    setPaso('lista')
+    setTurno(null)
+    setTriajeCreado(null)
+  }
+
+  return (
+    <Stack gap="md" maw={600}>
+      {paso === 'lista' && (
+        <TriajePendientesList
+          onSeleccionar={(t) => {
+            setTurno(t)
+            setPaso('formulario')
+          }}
+        />
+      )}
+
+      {paso === 'formulario' && turno && (
+        <TriajeForm
+          turno={turno}
+          onCreado={(triaje) => {
+            setTriajeCreado(triaje)
+            setPaso('creado')
+          }}
+          onCancelar={handleReiniciar}
+        />
+      )}
+
+      {paso === 'creado' && triajeCreado && (
+        <Card withBorder radius="lg" p="lg">
+          <Stack gap="md" align="center">
+            <Alert
+              icon={<IconCheck size={16} />}
+              color="emerald"
+              variant="light"
+              w="100%"
+            >
+              <Text size="sm" fw={600}>
+                Triaje registrado exitosamente
+              </Text>
+            </Alert>
+            <Card.Section
+              p="sm"
+              onClick={handleReiniciar}
+              style={{ cursor: 'pointer', textAlign: 'center' }}
+            >
+              <Text size="sm" c="emerald" fw={600}>
+                Tomar otro triaje
+              </Text>
+            </Card.Section>
+          </Stack>
+        </Card>
+      )}
+    </Stack>
+  )
+}
+
 export default function EnfermeriaPage() {
   return (
     <Stack gap="md">
@@ -242,6 +313,12 @@ export default function EnfermeriaPage() {
           >
             Servicio de enfermería
           </Tabs.Tab>
+          <Tabs.Tab
+            value="triaje"
+            leftSection={<IconHeartbeat size={14} />}
+          >
+            Triaje
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="admision" pt="md">
@@ -254,6 +331,10 @@ export default function EnfermeriaPage() {
 
         <Tabs.Panel value="servicio-enfermeria" pt="md">
           <ServicioEnfermeria />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="triaje" pt="md">
+          <SeccionTriaje />
         </Tabs.Panel>
       </Tabs>
     </Stack>
