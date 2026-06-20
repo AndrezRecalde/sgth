@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\User;
 use App\Models\Expediente\Servidor;
+use App\Models\Expediente\CargaFamiliar;
 
 class AgendaMedica extends Model
 {
@@ -16,7 +17,7 @@ class AgendaMedica extends Model
     protected $table = 'agendas_medicas';
 
     protected $fillable = [
-        'medico_id', 'servidor_id', 'beneficiario_id', 'fecha', 'hora_inicio',
+        'medico_id', 'servidor_id', 'carga_familiar_id', 'fecha', 'hora_inicio',
         'hora_fin', 'estado', 'motivo_solicitud', 'estado_registro',
         'created_by', 'updated_by'
     ];
@@ -39,14 +40,14 @@ class AgendaMedica extends Model
         return $this->belongsTo(Servidor::class);
     }
 
-    public function beneficiario(): BelongsTo
+    public function cargaFamiliar(): BelongsTo
     {
-        return $this->belongsTo(Beneficiario::class);
+        return $this->belongsTo(CargaFamiliar::class);
     }
 
-    public function paciente()
+    public function paciente(): Servidor|CargaFamiliar|null
     {
-        return $this->servidor ?? $this->beneficiario;
+        return $this->servidor ?? $this->cargaFamiliar;
     }
 
     public function triaje(): HasOne

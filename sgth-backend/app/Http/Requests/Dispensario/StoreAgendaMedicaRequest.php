@@ -15,8 +15,8 @@ class StoreAgendaMedicaRequest extends FormRequest
     {
         return [
             'medico_id'        => ['required', 'integer', 'exists:users,id'],
-            'servidor_id'      => ['nullable', 'integer', 'exists:servidores,id'],
-            'beneficiario_id'  => ['nullable', 'integer', 'exists:beneficiarios,id'],
+            'servidor_id'        => ['nullable', 'integer', 'exists:servidores,id'],
+            'carga_familiar_id'  => ['nullable', 'integer', 'exists:cargas_familiares,id'],
             'fecha'            => ['required', 'date'],
             'hora_inicio'      => ['required', 'date_format:H:i'],
             'hora_fin'         => ['required', 'date_format:H:i', 'after:hora_inicio'],
@@ -28,10 +28,10 @@ class StoreAgendaMedicaRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $tieneServidor     = !empty($this->servidor_id);
-            $tieneBeneficiario = !empty($this->beneficiario_id);
+            $tieneServidor      = !empty($this->servidor_id);
+            $tieneCargaFamiliar = !empty($this->carga_familiar_id);
 
-            if ($tieneServidor === $tieneBeneficiario) {
+            if ($tieneServidor === $tieneCargaFamiliar) {
                 $validator->errors()->add(
                     'servidor_id',
                     'Debe indicar exactamente un paciente: ' .

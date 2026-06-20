@@ -20,7 +20,7 @@ final class ConsultaMedicaController extends Controller
     {
         $query = ConsultaMedica::with([
             'historiaClinica.servidor',
-            'historiaClinica.beneficiario',
+            'historiaClinica.cargaFamiliar',
             'medico',
             'recetaMedica',
         ])->orderBy('fecha_consulta', 'desc');
@@ -66,7 +66,7 @@ final class ConsultaMedicaController extends Controller
     {
         $consulta = ConsultaMedica::with([
             'historiaClinica.servidor',
-            'historiaClinica.beneficiario',
+            'historiaClinica.cargaFamiliar',
             'historiaClinica.alergias',
             'historiaClinica.antecedentes',
             'medico',

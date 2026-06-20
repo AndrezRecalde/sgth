@@ -5,7 +5,6 @@ namespace App\Models\Expediente;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoDiscapacidad;
 use App\Enums\TipoNombramiento;
-use App\Models\Dispensario\Beneficiario;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -138,15 +137,7 @@ class Servidor extends Model
         return $this->hasOne(HistoriaClinica::class, 'servidor_id');
     }
 
-    public function beneficiarios(): HasMany
-    {
-        return $this->hasMany(Beneficiario::class);
-    }
 
-    public function beneficiariosActivos(): HasMany
-    {
-        return $this->hasMany(Beneficiario::class)->activos();
-    }
 
     public function discapacidades(): HasMany
     {

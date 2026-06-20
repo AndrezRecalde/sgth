@@ -16,7 +16,7 @@ class StoreHistoriaClinicaRequest extends FormRequest
     {
         return [
             'servidor_id'         => ['nullable', 'integer', 'exists:servidores,id'],
-            'beneficiario_id'     => ['nullable', 'integer', 'exists:beneficiarios,id'],
+            'carga_familiar_id'   => ['nullable', 'integer', 'exists:cargas_familiares,id'],
             'grupo_sanguineo'     => ['nullable', 'string', 'max:5'],
             'medicacion_habitual' => ['nullable', 'string', 'max:1000'],
         ];
@@ -25,14 +25,14 @@ class StoreHistoriaClinicaRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $tieneServidor     = !empty($this->servidor_id);
-            $tieneBeneficiario = !empty($this->beneficiario_id);
+            $tieneServidor      = !empty($this->servidor_id);
+            $tieneCargaFamiliar = !empty($this->carga_familiar_id);
 
-            if ($tieneServidor === $tieneBeneficiario) {
+            if ($tieneServidor === $tieneCargaFamiliar) {
                 $validator->errors()->add(
                     'servidor_id',
                     'Debe indicar exactamente un paciente: ' .
-                    'servidor O beneficiario, no ambos ni ninguno.'
+                    'servidor O carga familiar, no ambos ni ninguno.'
                 );
             }
         });

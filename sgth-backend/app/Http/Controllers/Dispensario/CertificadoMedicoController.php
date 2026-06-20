@@ -19,7 +19,7 @@ class CertificadoMedicoController extends Controller
     {
         $query = CertificadoMedico::with([
             'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.beneficiario',
+            'consultaMedica.historiaClinica.cargaFamiliar',
             'emisor',
             'diagnosticoCie10',
             'permisoServidor',
@@ -67,7 +67,7 @@ class CertificadoMedicoController extends Controller
     {
         $certificado = CertificadoMedico::with([
             'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.beneficiario',
+            'consultaMedica.historiaClinica.cargaFamiliar',
             'emisor',
             'diagnosticoCie10',
             'permisoServidor',

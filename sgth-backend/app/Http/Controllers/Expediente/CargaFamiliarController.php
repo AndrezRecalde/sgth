@@ -50,4 +50,77 @@ class CargaFamiliarController extends Controller
         $carga->delete();
         return ApiResponse::ok(null, 'Carga familiar eliminada.');
     }
+
+    public function misCargas(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $servidorId = $request->user()->servidor_id;
+
+        if (!$servidorId) {
+            return ApiResponse::error(
+                'El usuario no tiene un servidor vinculado.',
+                422
+            );
+        }
+
+        $cargas = CargaFamiliar::where('servidor_id', $servidorId)
+            ->with(['discapacidades', 'enfermedadesCatastroficas'])
+            ->orderBy('apellidos')
+            ->get();
+
+        return ApiResponse::ok($cargas, 'Mis cargas familiares.');
+    }
+
+    public function storeMisCargas(
+        StoreCargaFamiliarRequest $request
+    ): JsonResponse {
+        $servidorId = $request->user()->servidor_id;
+
+        if (!$servidorId) {
+            return ApiResponse::error(
+                'El usuario no tiene un servidor vinculado.',
+                422
+            );
+        }
+
+        $carga = CargaFamiliar::create(
+            array_merge(
+                $request->validated(),
+                ['servidor_id' => $servidorId]
+            )
+        );
+
+        return ApiResponse::created(
+            $carga, 'Carga familiar registrada.'
+        );
+    }
+
+    public function updateMisCargas(
+        StoreCargaFamiliarRequest $request,
+        int $id
+    ): JsonResponse {
+        $servidorId = $request->user()->servidor_id;
+
+        $carga = CargaFamiliar::where('servidor_id', $servidorId)
+            ->findOrFail($id);
+
+        $carga->update($request->validated());
+
+        return ApiResponse::ok(
+            $carga, 'Carga familiar actualizada.'
+        );
+    }
+
+    public function destroyMisCargas(
+        \Illuminate\Http\Request $request,
+        int $id
+    ): JsonResponse {
+        $servidorId = $request->user()->servidor_id;
+
+        $carga = CargaFamiliar::where('servidor_id', $servidorId)
+            ->findOrFail($id);
+
+        $carga->delete();
+
+        return ApiResponse::ok(null, 'Carga familiar eliminada.');
+    }
 }

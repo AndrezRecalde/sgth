@@ -4,7 +4,7 @@ namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\PacienteServiceInterface;
 use App\Exceptions\ReglaNegocioException;
-use App\Models\Dispensario\Beneficiario;
+use App\Models\Expediente\CargaFamiliar;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Expediente\Servidor;
 
@@ -17,14 +17,16 @@ final class PacienteService implements PacienteServiceInterface
             return $servidor;
         }
 
-        $beneficiario = $this->buscarBeneficiario($cedula);
-        if ($beneficiario) {
-            return $beneficiario;
+        $cargaFamiliar = $this->buscarCargaFamiliar($cedula);
+        if ($cargaFamiliar) {
+            return $cargaFamiliar;
         }
 
         throw new ReglaNegocioException(
             'No se encontró ningún servidor o familiar ' .
-            'registrado con esa cédula.',
+            'registrado con esa cédula. Si es un familiar, ' .
+            'debe estar registrado como carga familiar con ' .
+            'su número de cédula en el Expediente del servidor.',
             404
         );
     }
@@ -59,33 +61,34 @@ final class PacienteService implements PacienteServiceInterface
         ];
     }
 
-    private function buscarBeneficiario(string $cedula): ?array
+    private function buscarCargaFamiliar(string $cedula): ?array
     {
-        $beneficiario = Beneficiario::where('cedula', $cedula)
+        $cargaFamiliar = CargaFamiliar::where('cedula', $cedula)
             ->activos()
             ->with('servidor')
             ->first();
 
-        if (!$beneficiario) {
+        if (!$cargaFamiliar) {
             return null;
         }
 
         $historia = HistoriaClinica::where(
-            'beneficiario_id', $beneficiario->id
+            'carga_familiar_id', $cargaFamiliar->id
         )->first();
 
         return [
             'tipo'                   => 'beneficiario',
-            'id'                     => $beneficiario->id,
-            'cedula'                 => $beneficiario->cedula,
+            'id'                     => $cargaFamiliar->id,
+            'cedula'                 => $cargaFamiliar->cedula,
             'nombre_completo'        => trim(
-                "{$beneficiario->nombre} {$beneficiario->apellido}"
+                "{$cargaFamiliar->nombres} {$cargaFamiliar->apellidos}"
             ),
-            'tipo_familiar'          => $beneficiario->tipo_familiar,
-            'servidor_titular'       => $beneficiario->servidor
+            'tipo_familiar'          => $cargaFamiliar->parentesco?->value
+                ?? (string) $cargaFamiliar->parentesco,
+            'servidor_titular'       => $cargaFamiliar->servidor
                 ? trim(
-                    "{$beneficiario->servidor->nombre} " .
-                    "{$beneficiario->servidor->apellido}"
+                    "{$cargaFamiliar->servidor->nombre} " .
+                    "{$cargaFamiliar->servidor->apellido}"
                 ) : null,
             'tiene_historia_clinica' => (bool) $historia,
             'historia_clinica_id'    => $historia?->id,

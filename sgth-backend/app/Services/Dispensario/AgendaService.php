@@ -13,7 +13,7 @@ final class AgendaService implements AgendaServiceInterface
     public function listar(array $filtros): LengthAwarePaginator
     {
         $query = AgendaMedica::with([
-            'medico', 'servidor', 'beneficiario.servidor', 'triaje',
+            'medico', 'servidor', 'cargaFamiliar.servidor', 'triaje',
         ])->orderBy('fecha', 'desc')
           ->orderBy('hora_inicio', 'desc');
 
@@ -35,7 +35,7 @@ final class AgendaService implements AgendaServiceInterface
     public function obtener(int $id): AgendaMedica
     {
         return AgendaMedica::with([
-            'medico', 'servidor', 'beneficiario.servidor', 'triaje',
+            'medico', 'servidor', 'cargaFamiliar.servidor', 'triaje',
         ])->findOrFail($id);
     }
 

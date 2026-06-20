@@ -21,7 +21,7 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
         $pacientes = DB::table('consultas_medicas')
             ->join('historias_clinicas', 'consultas_medicas.historia_clinica_id', '=', 'historias_clinicas.id')
             ->selectRaw("
-                SUM(CASE WHEN historias_clinicas.beneficiario_id IS NULL THEN 1 ELSE 0 END) as titulares,
+                SUM(CASE WHEN historias_clinicas.carga_familiar_id IS NULL THEN 1 ELSE 0 END) as titulares,
                 SUM(CASE WHEN historias_clinicas.servidor_id IS NULL THEN 1 ELSE 0 END) as beneficiarios
             ")
             ->first();

@@ -31,7 +31,7 @@ final class HistoriaClinicaPolicy
             return true;
         }
 
-        if ($model->beneficiario_id && $user->servidor_id === $model->beneficiario->servidor_id) {
+        if ($model->carga_familiar_id && $user->servidor_id === $model->cargaFamiliar->servidor_id) {
             return true;
         }
 

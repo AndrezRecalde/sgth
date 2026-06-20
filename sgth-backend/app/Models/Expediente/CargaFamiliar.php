@@ -17,6 +17,7 @@ class CargaFamiliar extends Model
 
     protected $fillable = [
         'servidor_id',
+        'cedula',
         'apellidos',
         'nombres',
         'parentesco',
@@ -24,6 +25,7 @@ class CargaFamiliar extends Model
         'persona_con_discapacidad',
         'posee_enfermedad_catastrofica',
         'observaciones',
+        'estado',
     ];
 
     protected function casts(): array
@@ -33,6 +35,7 @@ class CargaFamiliar extends Model
             'fecha_nacimiento'             => 'date',
             'persona_con_discapacidad'     => 'boolean',
             'posee_enfermedad_catastrofica' => 'boolean',
+            'estado'                        => 'boolean',
         ];
     }
 
@@ -49,5 +52,18 @@ class CargaFamiliar extends Model
     public function enfermedadesCatastroficas(): HasMany
     {
         return $this->hasMany(EnfermedadCatastroficaCargaFamiliar::class);
+    }
+
+    public function scopeActivos(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('estado', true);
+    }
+
+    public function historiaClinica(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(
+            \App\Models\Dispensario\HistoriaClinica::class,
+            'carga_familiar_id'
+        );
     }
 }

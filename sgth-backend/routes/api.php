@@ -163,13 +163,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::get('declaraciones-juramentadas/{id}/documento', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'verDocumento']);
                 Route::put('declaraciones-juramentadas/{id}', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'update'])->name('declaraciones.update');
 
-                // Beneficiarios (Dispensario) gestionados por UATH
-                Route::prefix('beneficiarios')->group(function () {
-                    Route::get('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'indexUath']);
-                    Route::post('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'storeUath']);
-                    Route::put('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'updateUath']);
-                    Route::delete('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'destroyUath']);
-                });
+
             });
 
         // Cuentas bancarias
@@ -310,12 +304,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::post('solicitar-cita', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'solicitarCita']);
         Route::get('mi-historia-clinica', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'miHistoriaClinica']);
 
-        // Beneficiarios Familiares
-        Route::prefix('mis-beneficiarios')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'misBeneficiarios']);
-            Route::post('/', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'storeMisBeneficiarios']);
-            Route::put('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'updateMisBeneficiarios']);
-            Route::delete('{id}', [\App\Http\Controllers\Dispensario\BeneficiarioController::class, 'destroyMisBeneficiarios']);
+        // Cargas familiares (autoservicio)
+        Route::prefix('mis-cargas-familiares')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'misCargas']);
+            Route::post('/', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'storeMisCargas']);
+            Route::put('{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'updateMisCargas']);
+            Route::delete('{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'destroyMisCargas']);
         });
     });
 

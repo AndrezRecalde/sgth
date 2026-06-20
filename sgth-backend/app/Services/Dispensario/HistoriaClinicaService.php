@@ -15,16 +15,16 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
     public function listar(array $filtros): LengthAwarePaginator
     {
         $query = HistoriaClinica::with([
-            'servidor', 'beneficiario.servidor',
+            'servidor', 'cargaFamiliar.servidor',
         ])->orderBy('created_at', 'desc');
 
         if (!empty($filtros['servidor_id'])) {
             $query->where('servidor_id', $filtros['servidor_id']);
         }
 
-        if (!empty($filtros['beneficiario_id'])) {
+        if (!empty($filtros['carga_familiar_id'])) {
             $query->where(
-                'beneficiario_id', $filtros['beneficiario_id']
+                'carga_familiar_id', $filtros['carga_familiar_id']
             );
         }
 
@@ -34,7 +34,7 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
     public function obtener(int $id): HistoriaClinica
     {
         return HistoriaClinica::with([
-            'servidor', 'beneficiario.servidor',
+            'servidor', 'cargaFamiliar.servidor',
             'alergias', 'antecedentes',
             'consultasMedicas' => fn($q) => $q
                 ->orderBy('fecha_consulta', 'desc')
@@ -47,7 +47,7 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         $existente = HistoriaClinica::where(
             'servidor_id', $datos['servidor_id'] ?? null
         )->orWhere(
-            'beneficiario_id', $datos['beneficiario_id'] ?? null
+            'carga_familiar_id', $datos['carga_familiar_id'] ?? null
         )->first();
 
         if ($existente) {

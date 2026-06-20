@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Expediente\Servidor;
+use App\Models\Expediente\CargaFamiliar;
 
 class HistoriaClinica extends Model
 {
@@ -15,7 +16,7 @@ class HistoriaClinica extends Model
     protected $table = 'historias_clinicas';
 
     protected $fillable = [
-        'servidor_id', 'beneficiario_id',
+        'servidor_id', 'carga_familiar_id',
         'medicacion_habitual', 'grupo_sanguineo', 'estado',
         'created_by', 'updated_by'
     ];
@@ -23,9 +24,8 @@ class HistoriaClinica extends Model
     protected function casts(): array
     {
         return [
-            // Cifrado estricto de campos de salud
-            'medicacion_habitual'     => 'encrypted',
-            'estado'                  => 'boolean',
+            'medicacion_habitual' => 'encrypted',
+            'estado'              => 'boolean',
         ];
     }
 
@@ -34,19 +34,19 @@ class HistoriaClinica extends Model
         return $this->belongsTo(Servidor::class);
     }
 
+    public function cargaFamiliar(): BelongsTo
+    {
+        return $this->belongsTo(CargaFamiliar::class);
+    }
+
     public function consultasMedicas(): HasMany
     {
         return $this->hasMany(ConsultaMedica::class);
     }
 
-    public function beneficiario(): BelongsTo
+    public function propietario(): Servidor|CargaFamiliar|null
     {
-        return $this->belongsTo(Beneficiario::class);
-    }
-
-    public function propietario()
-    {
-        return $this->servidor ?? $this->beneficiario;
+        return $this->servidor ?? $this->cargaFamiliar;
     }
 
     public function alergias(): HasMany
