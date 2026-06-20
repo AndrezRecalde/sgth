@@ -38,7 +38,7 @@ class TriajeController extends Controller
             ]
         );
 
-        if ($agenda->estado === 'programada') {
+        if ($agenda->estado === 'en_espera') {
             $agenda->update(['estado' => 'en_sala']);
         }
 
@@ -65,12 +65,26 @@ class TriajeController extends Controller
             )->value('id');
         }
 
-        if ($agenda->beneficiario_id) {
+        if ($agenda->carga_familiar_id) {
             return \App\Models\Dispensario\HistoriaClinica::where(
-                'beneficiario_id', $agenda->beneficiario_id
+                'carga_familiar_id', $agenda->carga_familiar_id
             )->value('id');
         }
 
         return null;
+    }
+
+    public function pendientes(): JsonResponse
+    {
+        $turnos = AgendaMedica::with([
+            'medico', 'servidor', 'cargaFamiliar.servidor',
+        ])->where('estado', 'en_espera')
+          ->where('requiere_triaje', true)
+          ->whereDoesntHave('triaje')
+          ->whereDate('fecha', now()->toDateString())
+          ->orderBy('registrado_en', 'asc')
+          ->get();
+
+        return ApiResponse::ok($turnos);
     }
 }

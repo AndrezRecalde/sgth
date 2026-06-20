@@ -568,6 +568,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::apiResource('agenda', \App\Http\Controllers\Dispensario\AgendaController::class)
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 
+        Route::get('triaje/pendientes',
+            [\App\Http\Controllers\Dispensario\TriajeController::class, 'pendientes']
+        )->name('dispensario.triaje.pendientes');
+
         // Triaje
         Route::prefix('agenda/{agendaId}/triaje')->group(function () {
             Route::post('/', [\App\Http\Controllers\Dispensario\TriajeController::class, 'store'])

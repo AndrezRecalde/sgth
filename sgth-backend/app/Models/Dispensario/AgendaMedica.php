@@ -18,9 +18,9 @@ class AgendaMedica extends Model
 
     protected $fillable = [
         'medico_id', 'servidor_id', 'carga_familiar_id',
-        'folio', 'tipo_atencion', 'fecha', 'hora_inicio',
-        'hora_fin', 'estado', 'motivo_solicitud',
-        'registrado_en', 'estado_registro',
+        'folio', 'tipo_atencion', 'requiere_triaje',
+        'fecha', 'hora_inicio', 'hora_fin', 'estado',
+        'motivo_solicitud', 'registrado_en', 'estado_registro',
         'created_by', 'updated_by'
     ];
 
@@ -28,7 +28,8 @@ class AgendaMedica extends Model
     {
         return [
             'fecha'           => 'date',
-            'registrado_en'  => 'datetime',
+            'registrado_en'   => 'datetime',
+            'requiere_triaje' => 'boolean',
             'estado_registro' => 'boolean',
         ];
     }
