@@ -51,6 +51,22 @@ class CargaFamiliarController extends Controller
         return ApiResponse::ok(null, 'Carga familiar eliminada.');
     }
 
+    public function toggleEstado(
+        int $servidorId,
+        int $id
+    ): JsonResponse {
+        $carga = CargaFamiliar::where('servidor_id', $servidorId)
+            ->findOrFail($id);
+
+        $carga->update(['estado' => !$carga->estado]);
+
+        $mensaje = $carga->estado
+            ? 'Carga familiar activada.'
+            : 'Carga familiar desactivada.';
+
+        return ApiResponse::ok($carga, $mensaje);
+    }
+
     public function misCargas(\Illuminate\Http\Request $request): JsonResponse
     {
         $servidorId = $request->user()->servidor_id;

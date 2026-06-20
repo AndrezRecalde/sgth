@@ -154,6 +154,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::post('cargas-familiares', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'store']);
                 Route::put('cargas-familiares/{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'update']);
                 Route::delete('cargas-familiares/{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'destroy']);
+                Route::post('cargas-familiares/{id}/toggle-estado', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'toggleEstado']);
 
                 // Declaraciones juramentadas
                 Route::get('declaraciones-juramentadas', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'index']);
