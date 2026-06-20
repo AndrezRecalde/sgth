@@ -3,9 +3,13 @@
 import { useState } from 'react'
 import {
   Stack, Group, TextInput, Button,
-  Alert, Text, ActionIcon,
+  Alert, Text, ActionIcon, Card,
+  ThemeIcon, Center,
 } from '@mantine/core'
-import { IconSearch, IconX, IconInfoCircle } from '@tabler/icons-react'
+import {
+  IconSearch, IconX, IconInfoCircle,
+  IconUserSearch,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useBuscarPaciente } from '../hooks/usePaciente'
 import { useCrearHistoriaClinica } from '../hooks/useHistoriaClinica'
@@ -41,8 +45,6 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
         : { beneficiario_id: paciente.id }
     )
 
-    // Pasamos el paciente actualizado con el flag en true
-    // para que la UI no dependa de una nueva búsqueda
     onPacienteListo(
       { ...paciente, tiene_historia_clinica: true,
         historia_clinica_id: data.id },
@@ -57,67 +59,91 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
   }
 
   return (
-    <Stack gap="md">
-      <Group gap="xs" align="flex-end">
-        <TextInput
-          label="Cédula del paciente"
-          placeholder="Ej: 0801234567"
-          leftSection={<IconSearch size={14} />}
-          {...contained}
-          value={cedula}
-          onChange={(e) => setCedula(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              handleBuscar()
+    <Card withBorder radius="lg" p="xl">
+      <Stack gap="lg">
+        <Center>
+          <Stack gap={4} align="center">
+            <ThemeIcon
+              color="blue"
+              variant="light"
+              size={56}
+              radius="xl"
+            >
+              <IconUserSearch size={28} />
+            </ThemeIcon>
+            <Text fw={600} size="md" mt={4}>
+              Buscar paciente
+            </Text>
+            <Text size="xs" c="dimmed" ta="center" maw={320}>
+              Ingresa la cédula del servidor o de un
+              familiar registrado como carga familiar
+            </Text>
+          </Stack>
+        </Center>
+
+        <Group gap="xs" align="flex-end">
+          <TextInput
+            label="Cédula del paciente"
+            placeholder="Ej: 0801234567"
+            leftSection={<IconSearch size={14} />}
+            size="md"
+            {...contained}
+            value={cedula}
+            onChange={(e) => setCedula(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleBuscar()
+              }
+            }}
+            style={{ flex: 1 }}
+            rightSection={
+              cedula ? (
+                <ActionIcon
+                  size="sm" variant="subtle" color="gray"
+                  onClick={() => {
+                    setCedula('')
+                    buscar.reset()
+                  }}
+                >
+                  <IconX size={12} />
+                </ActionIcon>
+              ) : null
             }
-          }}
-          style={{ flex: 1 }}
-          rightSection={
-            cedula ? (
-              <ActionIcon
-                size="sm" variant="subtle" color="gray"
-                onClick={() => {
-                  setCedula('')
-                  buscar.reset()
-                }}
-              >
-                <IconX size={12} />
-              </ActionIcon>
-            ) : null
-          }
-        />
-        <Button
-          color="blue"
-          leftSection={<IconSearch size={14} />}
-          loading={buscar.isPending}
-          onClick={handleBuscar}
-        >
-          Buscar
-        </Button>
-      </Group>
+          />
+          <Button
+            color="blue"
+            size="md"
+            leftSection={<IconSearch size={14} />}
+            loading={buscar.isPending}
+            onClick={handleBuscar}
+          >
+            Buscar
+          </Button>
+        </Group>
 
-      {buscar.isError && (
-        <Alert
-          icon={<IconInfoCircle size={14} />}
-          color="red"
-          variant="light"
-        >
-          <Text size="xs">
-            No se encontró ningún servidor o familiar
-            registrado con esa cédula.
-          </Text>
-        </Alert>
-      )}
+        {buscar.isError && (
+          <Alert
+            icon={<IconInfoCircle size={14} />}
+            color="red"
+            variant="light"
+          >
+            <Text size="xs">
+              No se encontró ningún servidor o familiar
+              registrado con esa cédula.
+            </Text>
+          </Alert>
+        )}
 
-      {buscar.data && (
-        <PacienteCard
-          paciente={buscar.data}
-          onCrearHistoria={handleCrearHistoria}
-          onContinuar={handleContinuar}
-          creandoHistoria={crearHistoria.isPending}
-        />
-      )}
-    </Stack>
+        {buscar.data && (
+          <PacienteCard
+            paciente={buscar.data}
+            onCrearHistoria={handleCrearHistoria}
+            onContinuar={handleContinuar}
+            creandoHistoria={crearHistoria.isPending}
+          />
+        )}
+      </Stack>
+    </Card>
   )
 }

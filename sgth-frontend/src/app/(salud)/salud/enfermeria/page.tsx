@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import {
   Stack, Card, Alert, Text, Tabs,
-  Select, Group, Badge,
+  Chip, Button, Group, Badge,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
   IconNurse, IconCheck, IconList,
-  IconUserPlus, IconClipboardCheck,
+  IconUserPlus, IconClipboardCheck, IconVaccine,
 } from '@tabler/icons-react'
+import { useDisclosure } from '@mantine/hooks'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { BuscarPacienteForm } from
   '@/features/dispensario/components/BuscarPacienteForm'
@@ -23,8 +24,8 @@ import { OfrecerTriajeInmediato } from
   '@/features/dispensario/components/OfrecerTriajeInmediato'
 import { TriajeForm } from
   '@/features/dispensario/components/TriajeForm'
-import { AtencionesEnfermeriaTable } from
-  '@/features/dispensario/components/AtencionesEnfermeriaTable'
+import { AtencionesEnfermeriaDrawer } from
+  '@/features/dispensario/components/AtencionesEnfermeriaDrawer'
 import { ColaTurnosTable } from
   '@/features/dispensario/components/ColaTurnosTable'
 import { TriajePendientesList } from
@@ -94,7 +95,7 @@ function AtenderPaciente() {
   }
 
   return (
-    <Stack gap="md" maw={620}>
+    <Stack gap="lg" maw={720}>
       {paso === 'buscar' && (
         <BuscarPacienteForm
           onPacienteListo={(p) => {
@@ -179,12 +180,14 @@ function AtenderPaciente() {
   )
 }
 
-type VistaMonitoreo = 'todos' | 'pendientes_triaje' | 'enfermeria'
+type VistaMonitoreo = 'todos' | 'pendientes_triaje'
 
 function ColaYMonitoreo() {
   const [fecha, setFecha] = useState<Date | null>(new Date())
   const [vista, setVista] = useState<VistaMonitoreo>('todos')
   const [turnoTriaje, setTurnoTriaje] = useState<AgendaMedica | null>(null)
+  const [drawerOpened,
+    { open: abrirDrawer, close: cerrarDrawer }] = useDisclosure(false)
 
   const fechaStr = formatFechaLocal(fecha ?? new Date())
 
@@ -210,24 +213,38 @@ function ColaYMonitoreo() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between">
-        <Select
-          value={vista}
-          onChange={(v) => setVista((v as VistaMonitoreo) ?? 'todos')}
-          data={[
-            { value: 'todos', label: 'Todos los turnos' },
-            {
-              value: 'pendientes_triaje',
-              label: `Pendientes de triaje (${pendientesTriaje.length})`,
-            },
-            {
-              value: 'enfermeria',
-              label: 'Servicios de enfermería',
-            },
-          ]}
-          maw={280}
-        />
-        {vista !== 'pendientes_triaje' && (
+      <Group justify="space-between" wrap="wrap">
+        <Group gap="xs">
+          <Chip
+            checked={vista === 'todos'}
+            onChange={() => setVista('todos')}
+            color="blue"
+            size="sm"
+          >
+            Todos los turnos
+          </Chip>
+          <Chip
+            checked={vista === 'pendientes_triaje'}
+            onChange={() => setVista('pendientes_triaje')}
+            color="orange"
+            size="sm"
+          >
+            Pendientes de triaje
+            {pendientesTriaje.length > 0
+              ? ` (${pendientesTriaje.length})` : ''}
+          </Chip>
+          <Button
+            size="xs"
+            variant="light"
+            color="violet"
+            leftSection={<IconVaccine size={14} />}
+            onClick={abrirDrawer}
+          >
+            Servicios de enfermería
+          </Button>
+        </Group>
+
+        {vista === 'todos' && (
           <DatePickerInput
             label="Fecha"
             value={fecha}
@@ -261,9 +278,10 @@ function ColaYMonitoreo() {
         />
       )}
 
-      {vista === 'enfermeria' && (
-        <AtencionesEnfermeriaTable fecha={fechaStr} />
-      )}
+      <AtencionesEnfermeriaDrawer
+        opened={drawerOpened}
+        onClose={cerrarDrawer}
+      />
     </Stack>
   )
 }
