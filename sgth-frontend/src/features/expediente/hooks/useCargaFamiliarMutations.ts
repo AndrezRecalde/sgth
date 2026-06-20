@@ -62,6 +62,29 @@ export function useCargaFamiliarMutations(servidorId: number) {
   const toggleEstado = useMutation({
     mutationFn: (id: number) =>
       expedienteService.toggleEstadoCarga(servidorId, id),
+    onMutate: async (id: number) => {
+      await qc.cancelQueries({
+        queryKey: ['cargas-familiares', servidorId],
+      })
+
+      const snapshot = qc.getQueriesData({
+        queryKey: ['cargas-familiares', servidorId],
+      })
+
+      qc.setQueriesData(
+        { queryKey: ['cargas-familiares', servidorId] },
+        (old: unknown) => {
+          if (!Array.isArray(old)) return old
+          return old.map((c: { id: number; estado: boolean }) =>
+            Number(c.id) === id
+              ? { ...c, estado: !c.estado }
+              : c
+          )
+        }
+      )
+
+      return { snapshot }
+    },
     onSuccess: (data) => {
       const estado = data?.estado ? 'activada' : 'desactivada'
       notifications.show({
@@ -70,9 +93,18 @@ export function useCargaFamiliarMutations(servidorId: number) {
         color:   'emerald',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
+    },
+    onError: (error, _id, context) => {
+      if (context?.snapshot) {
+        context.snapshot.forEach(([queryKey, data]) => {
+          qc.setQueryData(queryKey, data)
+        })
+      }
+      onError(error as AxiosError<ApiResponse>)
+    },
+    onSettled: () => {
       invalidar()
     },
-    onError,
   })
 
   return { crear, editar, eliminar, toggleEstado }
