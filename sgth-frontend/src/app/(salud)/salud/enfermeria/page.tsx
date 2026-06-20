@@ -23,6 +23,8 @@ import { OfrecerTriajeInmediato } from
   '@/features/dispensario/components/OfrecerTriajeInmediato'
 import { TriajeForm } from
   '@/features/dispensario/components/TriajeForm'
+import { AtencionesEnfermeriaTable } from
+  '@/features/dispensario/components/AtencionesEnfermeriaTable'
 import { ColaTurnosTable } from
   '@/features/dispensario/components/ColaTurnosTable'
 import { TriajePendientesList } from
@@ -177,9 +179,12 @@ function AtenderPaciente() {
   )
 }
 
+type VistaMonitoreo = 'todos' | 'pendientes_triaje' | 'enfermeria'
+
 function ColaYMonitoreo() {
   const [fecha, setFecha] = useState<Date | null>(new Date())
-  const [vista, setVista] = useState<'todos' | 'pendientes_triaje'>('todos')
+  const [vista, setVista] = useState<VistaMonitoreo>('todos')
+  const [turnoTriaje, setTurnoTriaje] = useState<AgendaMedica | null>(null)
 
   const fechaStr = formatFechaLocal(fecha ?? new Date())
 
@@ -189,22 +194,40 @@ function ColaYMonitoreo() {
 
   const turnos = data?.data ?? []
 
+  // Si se eligió tomar el triaje de un turno
+  // desde la lista de pendientes
+  if (turnoTriaje) {
+    return (
+      <Stack gap="md" maw={620}>
+        <TriajeForm
+          turno={turnoTriaje}
+          onCreado={() => setTurnoTriaje(null)}
+          onCancelar={() => setTurnoTriaje(null)}
+        />
+      </Stack>
+    )
+  }
+
   return (
     <Stack gap="md">
       <Group justify="space-between">
         <Select
           value={vista}
-          onChange={(v) => setVista((v as typeof vista) ?? 'todos')}
+          onChange={(v) => setVista((v as VistaMonitoreo) ?? 'todos')}
           data={[
             { value: 'todos', label: 'Todos los turnos' },
             {
               value: 'pendientes_triaje',
               label: `Pendientes de triaje (${pendientesTriaje.length})`,
             },
+            {
+              value: 'enfermeria',
+              label: 'Servicios de enfermería',
+            },
           ]}
-          maw={260}
+          maw={280}
         />
-        {vista === 'todos' && (
+        {vista !== 'pendientes_triaje' && (
           <DatePickerInput
             label="Fecha"
             value={fecha}
@@ -220,7 +243,7 @@ function ColaYMonitoreo() {
         )}
       </Group>
 
-      {vista === 'todos' ? (
+      {vista === 'todos' && (
         <ColaTurnosTable
           turnos={turnos}
           isLoading={isLoading}
@@ -230,14 +253,16 @@ function ColaYMonitoreo() {
             }
           }}
         />
-      ) : (
+      )}
+
+      {vista === 'pendientes_triaje' && (
         <TriajePendientesList
-          onSeleccionar={() => {
-            // La toma de triaje completa se hace
-            // desde "Atender paciente" para mantener
-            // el flujo guiado único
-          }}
+          onSeleccionar={(turno) => setTurnoTriaje(turno)}
         />
+      )}
+
+      {vista === 'enfermeria' && (
+        <AtencionesEnfermeriaTable fecha={fechaStr} />
       )}
     </Stack>
   )

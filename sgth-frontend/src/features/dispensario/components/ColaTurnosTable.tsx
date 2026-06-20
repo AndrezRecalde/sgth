@@ -114,6 +114,21 @@ export function ColaTurnosTable({
                     · {hora}
                   </Text>
                 </Group>
+                <Group gap={6} mt={2}>
+                  <Badge
+                    size="xs"
+                    variant="dot"
+                    color={turno.tipo_atencion === 'odontologia'
+                      ? 'cyan' : 'blue'}
+                  >
+                    {turno.tipo_atencion === 'odontologia'
+                      ? 'Odontología' : 'Medicina General'}
+                  </Badge>
+                  <Text size="xs" c="dimmed">
+                    Dr(a). {turno.medico?.nombre_completo
+                      ?? turno.medico?.usuario_ti ?? '—'}
+                  </Text>
+                </Group>
               </Stack>
             </Group>
 
