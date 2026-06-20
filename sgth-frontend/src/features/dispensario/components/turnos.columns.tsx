@@ -1,7 +1,10 @@
 'use client'
 
-import { Text, Badge, Stack, Group, ActionIcon, Tooltip } from '@mantine/core'
-import { IconUser, IconUsers, IconX } from '@tabler/icons-react'
+import { Text, Badge, Group } from '@mantine/core'
+import {
+  IconUser, IconUsers, IconX, IconClipboardCheck,
+} from '@tabler/icons-react'
+import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { AgendaMedica } from '../services/agendaService'
 
@@ -20,10 +23,11 @@ const ESTADO_LABELS: Record<string, string> = {
 }
 
 interface ColumnActions {
-  onCancelar: (id: number) => void
+  onCancelar?:    (id: number) => void
+  onTomarTriaje?: (turno: AgendaMedica) => void
 }
 
-export function getColaTurnosColumns(
+export function getTurnosColumns(
   actions: ColumnActions
 ): DataTableColumn<AgendaMedica>[] {
   return [
@@ -59,7 +63,7 @@ export function getColaTurnosColumns(
     {
       accessor: 'tipo_atencion',
       title:    'Atención',
-      width:    140,
+      width:    150,
       render: (turno) => (
         <Badge
           size="sm"
@@ -112,20 +116,27 @@ export function getColaTurnosColumns(
     {
       accessor: 'acciones',
       title:    '',
-      width:    60,
+      width:    50,
       render: (turno) => (
-        turno.estado === 'en_espera' ? (
-          <Tooltip label="Cancelar turno" withArrow>
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              size="sm"
-              onClick={() => actions.onCancelar(turno.id)}
-            >
-              <IconX size={14} />
-            </ActionIcon>
-          </Tooltip>
-        ) : null
+        <TableActions actions={[
+          {
+            label:   'Tomar triaje',
+            icon:    <IconClipboardCheck size={14} />,
+            color:   'emerald',
+            onClick: () => actions.onTomarTriaje?.(turno),
+            hidden:  !actions.onTomarTriaje
+              || turno.estado !== 'en_espera'
+              || !turno.requiere_triaje,
+          },
+          {
+            label:   'Cancelar turno',
+            icon:    <IconX size={14} />,
+            color:   'red',
+            onClick: () => actions.onCancelar?.(turno.id),
+            hidden:  !actions.onCancelar
+              || turno.estado !== 'en_espera',
+          },
+        ]} />
       ),
     },
   ]

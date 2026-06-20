@@ -2,7 +2,7 @@
 
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useTriajesPendientes } from '../hooks/useTriaje'
-import { getTriajePendientesColumns } from './triajePendientes.columns'
+import { getTurnosColumns } from './turnos.columns'
 import type { AgendaMedica } from '../services/agendaService'
 
 interface Props {
@@ -15,7 +15,7 @@ export function TriajePendientesList({ onSeleccionar }: Props) {
   return (
     <SgthTable
       records={turnos}
-      columns={getTriajePendientesColumns({ onSeleccionar })}
+      columns={getTurnosColumns({ onTomarTriaje: onSeleccionar })}
       fetching={isLoading}
       minHeight={200}
       noRecordsText="Sin pacientes pendientes de triaje"
