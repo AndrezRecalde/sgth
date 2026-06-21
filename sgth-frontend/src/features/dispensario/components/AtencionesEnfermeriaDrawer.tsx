@@ -5,6 +5,7 @@ import {
   Drawer, Stack, Group, Text, ThemeIcon,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
 import { IconVaccine } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { AtencionesEnfermeriaTable } from './AtencionesEnfermeriaTable'
