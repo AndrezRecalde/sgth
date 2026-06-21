@@ -211,13 +211,13 @@ function ColaYMonitoreo() {
   // desde la lista de pendientes
   if (turnoTriaje) {
     return (
-      <Stack gap="md" maw={620}>
+      <Container size="sm" px={0}>
         <TriajeForm
           turno={turnoTriaje}
           onCreado={() => setTurnoTriaje(null)}
           onCancelar={() => setTurnoTriaje(null)}
         />
-      </Stack>
+      </Container>
     );
   }
 
