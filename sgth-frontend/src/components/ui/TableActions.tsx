@@ -8,7 +8,8 @@ export type TableAction = {
   icon: React.ReactNode
   color?: string
   onClick: () => void
-  hidden?: boolean
+  hidden?:   boolean
+  disabled?: boolean
 }
 
 interface TableActionsProps {
@@ -40,7 +41,8 @@ export function TableActions({ actions }: TableActionsProps) {
           <Menu.Item
             key={i}
             leftSection={action.icon}
-            color={action.color}
+            color={action.disabled ? 'gray' : action.color}
+            disabled={action.disabled}
             onClick={action.onClick}
           >
             {action.label}

@@ -117,27 +117,36 @@ export function getTurnosColumns(
       accessor: 'acciones',
       title:    '',
       width:    50,
-      render: (turno) => (
-        <TableActions actions={[
-          {
-            label:   'Tomar triaje',
-            icon:    <IconClipboardCheck size={14} />,
-            color:   'emerald',
-            onClick: () => actions.onTomarTriaje?.(turno),
-            hidden:  !actions.onTomarTriaje
-              || turno.estado !== 'en_espera'
-              || !turno.requiere_triaje,
-          },
-          {
-            label:   'Cancelar turno',
-            icon:    <IconX size={14} />,
-            color:   'red',
-            onClick: () => actions.onCancelar?.(turno.id),
-            hidden:  !actions.onCancelar
-              || turno.estado !== 'en_espera',
-          },
-        ]} />
-      ),
+      render: (turno) => {
+        const tieneTriaje = !!turno.triaje
+        const yaNoEstaEnEspera = turno.estado !== 'en_espera'
+
+        return (
+          <TableActions actions={[
+            {
+              label:    tieneTriaje
+                ? 'Triaje ya registrado'
+                : 'Tomar triaje',
+              icon:     <IconClipboardCheck size={14} />,
+              color:    tieneTriaje ? 'gray' : 'emerald',
+              onClick:  () => actions.onTomarTriaje?.(turno),
+              disabled: tieneTriaje || yaNoEstaEnEspera,
+              hidden:   !actions.onTomarTriaje
+                || !turno.requiere_triaje,
+            },
+            {
+              label:    tieneTriaje
+                ? 'No se puede cancelar (ya con triaje)'
+                : 'Cancelar turno',
+              icon:     <IconX size={14} />,
+              color:    tieneTriaje ? 'gray' : 'red',
+              onClick:  () => actions.onCancelar?.(turno.id),
+              disabled: tieneTriaje || yaNoEstaEnEspera,
+              hidden:   !actions.onCancelar,
+            },
+          ]} />
+        )
+      },
     },
   ]
 }
