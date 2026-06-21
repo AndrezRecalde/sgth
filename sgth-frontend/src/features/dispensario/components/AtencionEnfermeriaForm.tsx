@@ -65,7 +65,10 @@ export function AtencionEnfermeriaForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="md">
-        <Card withBorder radius="md" p="sm" bg="blue.0">
+        <Card
+          withBorder radius="md" p="sm"
+          style={{ backgroundColor: 'var(--mantine-color-blue-light)' }}
+        >
           <Group gap="sm">
             <Avatar
               color={paciente.tipo === 'servidor' ? 'emerald' : 'blue'}

@@ -27,7 +27,7 @@ export function UltimoTriajeReferencia({ agendaId }: Props) {
 
   if (!triaje) {
     return (
-      <Card withBorder radius="md" p="sm" bg="gray.0">
+      <Card withBorder radius="md" p="sm">
         <Group gap="xs">
           <ThemeIcon color="gray" variant="light" size="sm">
             <IconInfoCircle size={13} />
@@ -42,7 +42,14 @@ export function UltimoTriajeReferencia({ agendaId }: Props) {
   }
 
   return (
-    <Card withBorder radius="md" p="sm" bg="blue.0">
+    <Card
+      withBorder
+      radius="md"
+      p="sm"
+      style={{
+        backgroundColor: 'var(--mantine-color-blue-light)',
+      }}
+    >
       <Group gap="xs" mb="xs">
         <ThemeIcon color="blue" variant="light" size="sm">
           <IconHistory size={13} />

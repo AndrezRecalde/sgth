@@ -25,7 +25,10 @@ export function SeleccionarAccionPaciente({
 
   return (
     <Stack gap="md">
-      <Card withBorder radius="md" p="sm" bg="blue.0">
+      <Card
+        withBorder radius="md" p="sm"
+        style={{ backgroundColor: 'var(--mantine-color-blue-light)' }}
+      >
         <Group justify="space-between">
           <Group gap="sm">
             <Avatar
