@@ -15,8 +15,7 @@ class TriajeController extends Controller
         StoreTriajeRequest $request,
         int $agendaId
     ): JsonResponse {
-        $agenda = AgendaMedica::with('historiaClinica')
-            ->findOrFail($agendaId);
+        $agenda = AgendaMedica::findOrFail($agendaId);
 
         $datos = $request->validated();
 
