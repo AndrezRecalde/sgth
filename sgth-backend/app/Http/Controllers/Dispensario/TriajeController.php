@@ -81,7 +81,6 @@ class TriajeController extends Controller
         ])->where('estado', 'en_espera')
           ->where('requiere_triaje', true)
           ->whereDoesntHave('triaje')
-          ->whereDate('fecha', now()->toDateString())
           ->orderBy('registrado_en', 'asc')
           ->get();
 
