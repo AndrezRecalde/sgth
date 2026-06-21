@@ -578,6 +578,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 ->middleware('role:enfermera|admin-dispensario');
             Route::get('/', [\App\Http\Controllers\Dispensario\TriajeController::class, 'show'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            Route::get('ultimo', [\App\Http\Controllers\Dispensario\TriajeController::class, 'ultimoPorAgenda'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
         });
 
         // Dashboard Estadístico — SOLO admin-dispensario (y máxima autoridad)

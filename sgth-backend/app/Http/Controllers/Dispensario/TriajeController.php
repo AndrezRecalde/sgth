@@ -55,6 +55,26 @@ class TriajeController extends Controller
         return ApiResponse::ok($triaje);
     }
 
+    public function ultimoPorAgenda(int $agendaId): JsonResponse
+    {
+        $agenda = AgendaMedica::findOrFail($agendaId);
+
+        $historiaClinicaId = $this->resolverHistoriaClinicaId($agenda);
+
+        if (!$historiaClinicaId) {
+            return ApiResponse::ok(null);
+        }
+
+        $ultimoTriaje = Triaje::where(
+            'historia_clinica_id', $historiaClinicaId
+        )
+            ->where('agenda_medica_id', '!=', $agendaId)
+            ->orderBy('registrado_en', 'desc')
+            ->first();
+
+        return ApiResponse::ok($ultimoTriaje);
+    }
+
     private function resolverHistoriaClinicaId(
         AgendaMedica $agenda
     ): ?int {
