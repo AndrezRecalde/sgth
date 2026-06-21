@@ -281,6 +281,7 @@ function ColaYMonitoreo() {
               cancelar.mutate(id);
             }
           }}
+          onTomarTriaje={(turno) => setTurnoTriaje(turno)}
         />
       )}
 

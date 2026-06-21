@@ -1,8 +1,9 @@
 'use client'
 
-import { Text, Badge, Group } from '@mantine/core'
+import { Text, Badge, Group, Stack } from '@mantine/core'
 import {
   IconUser, IconUsers, IconX, IconClipboardCheck,
+  IconStethoscope,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -77,27 +78,44 @@ export function getTurnosColumns(
     },
     {
       accessor: 'medico',
-      title:    'Profesional',
+      title:    'Médico asignado',
       render: (turno) => (
-        <Text size="sm" c="dimmed">
-          {turno.medico?.nombre_completo
-            ?? turno.medico?.usuario_ti ?? '—'}
-        </Text>
+        <Group gap={6} wrap="nowrap">
+          <IconStethoscope
+            size={14}
+            color="var(--mantine-color-dimmed)"
+          />
+          <Text size="sm" c="dimmed">
+            {turno.medico?.nombre_completo
+              ?? turno.medico?.usuario_ti ?? '—'}
+          </Text>
+        </Group>
       ),
     },
     {
       accessor: 'registrado_en',
-      title:    'Hora',
-      width:    90,
-      render: (turno) => (
-        <Text size="sm" ff="monospace">
-          {turno.registrado_en
-            ? new Date(turno.registrado_en).toLocaleTimeString(
-                'es-EC', { hour: '2-digit', minute: '2-digit' }
-              )
-            : '—'}
-        </Text>
-      ),
+      title:    'Fecha y hora',
+      width:    130,
+      render: (turno) => {
+        if (!turno.registrado_en) {
+          return <Text size="sm" c="dimmed">—</Text>
+        }
+        const fecha = new Date(turno.registrado_en)
+        return (
+          <Stack gap={0}>
+            <Text size="sm" ff="monospace">
+              {fecha.toLocaleTimeString('es-EC', {
+                hour: '2-digit', minute: '2-digit',
+              })}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {fecha.toLocaleDateString('es-EC', {
+                day: '2-digit', month: 'short', year: 'numeric',
+              })}
+            </Text>
+          </Stack>
+        )
+      },
     },
     {
       accessor: 'estado',
