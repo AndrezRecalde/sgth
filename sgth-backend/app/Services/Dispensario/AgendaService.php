@@ -14,7 +14,7 @@ final class AgendaService implements AgendaServiceInterface
     {
         $query = AgendaMedica::with([
             'medico', 'servidor', 'cargaFamiliar.servidor', 'triaje',
-        ])->orderBy('registrado_en', 'asc');
+        ])->orderBy('registrado_en', 'desc');
 
         if (!empty($filtros['medico_id'])) {
             $query->where('medico_id', $filtros['medico_id']);
