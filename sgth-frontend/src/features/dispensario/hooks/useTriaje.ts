@@ -15,6 +15,14 @@ export function useTriajesPendientes() {
   })
 }
 
+export function useUltimoTriaje(agendaId: number) {
+  return useQuery({
+    queryKey: ['triaje', 'ultimo', agendaId],
+    queryFn:  () => triajeService.ultimoPorAgenda(agendaId),
+    staleTime: 1000 * 60,
+  })
+}
+
 export function useRegistrarTriaje() {
   const qc = useQueryClient()
 

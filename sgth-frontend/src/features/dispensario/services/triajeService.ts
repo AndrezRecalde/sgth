@@ -45,6 +45,11 @@ export const triajeService = {
       `/dispensario/agenda/${agendaId}/triaje`
     ).then(r => r.data.datos),
 
+  ultimoPorAgenda: (agendaId: number) =>
+    api.get<ApiResponse<Triaje | null>>(
+      `/dispensario/agenda/${agendaId}/triaje/ultimo`
+    ).then(r => r.data.datos),
+
   registrar: (agendaId: number, data: CrearTriajeData) =>
     api.post<ApiResponse<Triaje>>(
       `/dispensario/agenda/${agendaId}/triaje`, data

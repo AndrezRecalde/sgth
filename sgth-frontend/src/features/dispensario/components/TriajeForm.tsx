@@ -14,6 +14,7 @@ import {
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarTriaje } from '../hooks/useTriaje'
+import { UltimoTriajeReferencia } from './UltimoTriajeReferencia'
 import { triajeSchema, type TriajeFormData } from '../schemas/triaje.schema'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
@@ -114,6 +115,8 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 ? 'Medicina General' : 'Odontología'}
             </Badge>
           </Group>
+
+          <UltimoTriajeReferencia agendaId={turno.id} />
 
           <Divider
             label={
