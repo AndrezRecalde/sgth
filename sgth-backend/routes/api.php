@@ -565,6 +565,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('dispensario')->group(function () {
 
         // Agenda — accesible para todo el personal del dispensario
+        Route::get('agenda/listos-para-consulta',
+            [\App\Http\Controllers\Dispensario\AgendaController::class, 'listosParaConsulta']
+        )->name('agenda.listosParaConsulta');
         Route::apiResource('agenda', \App\Http\Controllers\Dispensario\AgendaController::class)
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 

@@ -83,6 +83,22 @@ final class AgendaService implements AgendaServiceInterface
         return $agenda;
     }
 
+    public function listosParaConsulta(
+        int $medicoId
+    ): \Illuminate\Database\Eloquent\Collection {
+        return AgendaMedica::with([
+            'servidor', 'cargaFamiliar.servidor', 'triaje',
+        ])
+            ->where('medico_id', $medicoId)
+            ->whereIn('estado', ['en_espera', 'en_sala'])
+            ->where(function ($q) {
+                $q->where('requiere_triaje', false)
+                  ->orWhereHas('triaje');
+            })
+            ->orderBy('registrado_en', 'asc')
+            ->get();
+    }
+
     private function generarFolio(string $fecha): string
     {
         $anio = substr($fecha, 0, 4);
