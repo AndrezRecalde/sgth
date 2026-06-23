@@ -77,7 +77,7 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
 
             return $consulta->load([
                 'historiaClinica.servidor',
-                'historiaClinica.beneficiario',
+                'historiaClinica.cargaFamiliar',
                 'medico',
             ]);
         });
