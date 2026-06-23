@@ -1,0 +1,107 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { IconCheck, IconX } from '@tabler/icons-react'
+import React from 'react'
+import { inventarioMedicinaService } from '../services/inventarioMedicinaService'
+import { getApiErrorMessage } from '@/types/api'
+import type {
+  CrearMedicinaData, ActualizarMedicinaData,
+} from '../services/inventarioMedicinaService'
+
+export function useInventarioMedicinas(
+  params?: Record<string, unknown>
+) {
+  return useQuery({
+    queryKey: ['inventario-medicinas', params],
+    queryFn:  () => inventarioMedicinaService.listar(params),
+    staleTime: 1000 * 30,
+  })
+}
+
+export function useKardexMedicina(id: number | null) {
+  return useQuery({
+    queryKey: ['inventario-medicinas', 'kardex', id],
+    queryFn:  () => inventarioMedicinaService.kardex(id!),
+    enabled:  !!id,
+  })
+}
+
+export function useInventarioMutations() {
+  const qc = useQueryClient()
+
+  const invalidar = () =>
+    qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
+
+  const onError = (error: unknown) =>
+    notifications.show({
+      title:   'Error',
+      message: getApiErrorMessage(error),
+      color:   'red',
+      icon:    React.createElement(IconX, { size: 16 }),
+    })
+
+  const crear = useMutation({
+    mutationFn: (data: CrearMedicinaData) =>
+      inventarioMedicinaService.crear(data),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Medicina registrada',
+        message: 'La medicina fue agregada al inventario.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  const actualizar = useMutation({
+    mutationFn: ({ id, data }: {
+      id: number; data: ActualizarMedicinaData
+    }) => inventarioMedicinaService.actualizar(id, data),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Medicina actualizada',
+        message: 'Los datos fueron actualizados.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  const ingresarStock = useMutation({
+    mutationFn: ({ id, cantidad, motivo }: {
+      id: number; cantidad: number; motivo: string
+    }) => inventarioMedicinaService.ingresarStock(id, cantidad, motivo),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Stock ingresado',
+        message: 'El stock fue actualizado correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  const toggleEstado = useMutation({
+    mutationFn: (id: number) =>
+      inventarioMedicinaService.toggleEstado(id),
+    onSuccess: (data) => {
+      const estado = data?.estado ? 'reactivada' : 'dada de baja'
+      notifications.show({
+        title:   `Medicina ${estado}`,
+        message: `La medicina fue ${estado} correctamente.`,
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  return { crear, actualizar, ingresarStock, toggleEstado }
+}
