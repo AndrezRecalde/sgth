@@ -86,7 +86,7 @@ final class AgendaService implements AgendaServiceInterface
     public function listosParaConsulta(
         int $medicoId
     ): \Illuminate\Database\Eloquent\Collection {
-        return AgendaMedica::with([
+        $turnos = AgendaMedica::with([
             'servidor', 'cargaFamiliar.servidor', 'triaje',
         ])
             ->where('medico_id', $medicoId)
@@ -97,6 +97,18 @@ final class AgendaService implements AgendaServiceInterface
             })
             ->orderBy('registrado_en', 'asc')
             ->get();
+
+        $turnos->each(function (AgendaMedica $turno) {
+            $turno->historia_clinica_id = $turno->servidor_id
+                ? \App\Models\Dispensario\HistoriaClinica::where(
+                    'servidor_id', $turno->servidor_id
+                )->value('id')
+                : \App\Models\Dispensario\HistoriaClinica::where(
+                    'carga_familiar_id', $turno->carga_familiar_id
+                )->value('id');
+        });
+
+        return $turnos;
     }
 
     private function generarFolio(string $fecha): string
