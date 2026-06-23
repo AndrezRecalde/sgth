@@ -42,4 +42,16 @@ final class HistoriaClinicaController extends Controller
 
         return ApiResponse::ok($historia);
     }
+
+    public function contextoConsulta(
+        int $id,
+        Request $request
+    ): JsonResponse {
+        $contexto = $this->historiaService->obtenerContextoConsulta(
+            $id,
+            $request->integer('agenda_medica_id') ?: null
+        );
+
+        return ApiResponse::ok($contexto);
+    }
 }

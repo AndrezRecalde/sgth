@@ -22,7 +22,7 @@ final class ConsultaMedicaController extends Controller
             'historiaClinica.servidor',
             'historiaClinica.cargaFamiliar',
             'medico',
-            'recetaMedica',
+            'recetasMedicas',
         ])->orderBy('fecha_consulta', 'desc');
 
         if ($request->filled('historia_clinica_id')) {
@@ -70,7 +70,7 @@ final class ConsultaMedicaController extends Controller
             'historiaClinica.alergias',
             'historiaClinica.antecedentes',
             'medico',
-            'recetaMedica.items',
+            'recetasMedicas.items',
         ])->findOrFail($id);
 
         return ApiResponse::ok($consulta);

@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\User;
 
 class ConsultaMedica extends Model
@@ -24,7 +24,6 @@ class ConsultaMedica extends Model
     protected function casts(): array
     {
         return [
-            // Cifrado estricto de notas de la consulta
             'motivo_consulta'       => 'encrypted',
             'examen_fisico'         => 'encrypted',
             'diagnostico_detallado' => 'encrypted',
@@ -45,8 +44,8 @@ class ConsultaMedica extends Model
         return $this->belongsTo(User::class, 'medico_id');
     }
 
-    public function recetaMedica(): HasOne
+    public function recetasMedicas(): HasMany
     {
-        return $this->hasOne(RecetaMedica::class);
+        return $this->hasMany(RecetaMedica::class);
     }
 }

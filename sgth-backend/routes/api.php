@@ -624,6 +624,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::get('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'index']);
                 Route::post('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'store']);
                 Route::get('{id}', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'show']);
+                Route::get('{id}/contexto-consulta', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'contextoConsulta']);
 
                 // Alergias
                 Route::prefix('{id}/alergias')->group(function () {

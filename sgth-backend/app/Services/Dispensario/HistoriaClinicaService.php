@@ -82,4 +82,35 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             ]);
         });
     }
+
+    public function obtenerContextoConsulta(
+        int $historiaClinicaId,
+        ?int $agendaMedicaId = null
+    ): array {
+        $historia = HistoriaClinica::with([
+            'servidor',
+            'cargaFamiliar.servidor',
+            'alergias',
+            'antecedentes',
+        ])->findOrFail($historiaClinicaId);
+
+        $triajeActual = null;
+        if ($agendaMedicaId) {
+            $triajeActual = \App\Models\Dispensario\Triaje::where(
+                'agenda_medica_id', $agendaMedicaId
+            )->first();
+        }
+
+        $consultasAnteriores = ConsultaMedica::with('medico')
+            ->where('historia_clinica_id', $historiaClinicaId)
+            ->orderBy('fecha_consulta', 'desc')
+            ->limit(3)
+            ->get();
+
+        return [
+            'historia_clinica'      => $historia,
+            'triaje_actual'         => $triajeActual,
+            'consultas_anteriores'  => $consultasAnteriores,
+        ];
+    }
 }

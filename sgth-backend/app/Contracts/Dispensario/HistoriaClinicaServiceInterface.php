@@ -15,4 +15,9 @@ interface HistoriaClinicaServiceInterface
     public function crearHistoria(array $datos): HistoriaClinica;
 
     public function registrarConsulta(array $datos): ConsultaMedica;
+
+    public function obtenerContextoConsulta(
+        int $historiaClinicaId,
+        ?int $agendaMedicaId = null
+    ): array;
 }
