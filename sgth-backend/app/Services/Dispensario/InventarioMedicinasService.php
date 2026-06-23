@@ -1,17 +1,71 @@
 <?php
+
 namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\InventarioMedicinasServiceInterface;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\MovimientoInventarioMed;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class InventarioMedicinasService implements InventarioMedicinasServiceInterface
 {
-    public function ingresarMedicina(array $datos): InventarioMedicina
+    public function listar(array $filtros): LengthAwarePaginator
     {
-        return DB::transaction(function () use ($datos) {
-            $medicina = InventarioMedicina::create($datos);
+        $query = InventarioMedicina::orderBy('nombre');
+
+        if (!empty($filtros['search'])) {
+            $termino = $filtros['search'];
+            $query->where(function ($q) use ($termino) {
+                $q->where('nombre', 'ilike', "%{$termino}%")
+                  ->orWhere('codigo', 'ilike', "%{$termino}%")
+                  ->orWhere('principio_activo', 'ilike', "%{$termino}%");
+            });
+        }
+
+        if (isset($filtros['estado'])) {
+            $query->where('estado', filter_var(
+                $filtros['estado'], FILTER_VALIDATE_BOOLEAN
+            ));
+        }
+
+        if (!empty($filtros['stock_bajo'])) {
+            $query->whereColumn('stock_actual', '<=', 'stock_minimo');
+        }
+
+        return $query->paginate($filtros['per_page'] ?? 20);
+    }
+
+    public function obtener(int $id): InventarioMedicina
+    {
+        return InventarioMedicina::findOrFail($id);
+    }
+
+    public function buscar(string $termino): Collection
+    {
+        return InventarioMedicina::where('estado', true)
+            ->where('stock_actual', '>', 0)
+            ->where(function ($q) use ($termino) {
+                $q->where('nombre', 'ilike', "%{$termino}%")
+                  ->orWhere('principio_activo', 'ilike', "%{$termino}%")
+                  ->orWhere('codigo', 'ilike', "%{$termino}%");
+            })
+            ->orderBy('nombre')
+            ->limit(20)
+            ->get();
+    }
+
+    public function ingresarMedicina(
+        array $datos,
+        int $registradoPor
+    ): InventarioMedicina {
+        return DB::transaction(function () use ($datos, $registradoPor) {
+            $medicina = InventarioMedicina::create([
+                ...$datos,
+                'created_by' => $registradoPor,
+            ]);
 
             if ($medicina->stock_actual > 0) {
                 MovimientoInventarioMed::create([
@@ -20,11 +74,73 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
                     'cantidad'               => $medicina->stock_actual,
                     'stock_resultante'       => $medicina->stock_actual,
                     'motivo'                 => 'Ingreso inicial al inventario',
-                    'registrado_por'         => auth()->id(),
+                    'registrado_por'         => $registradoPor,
                 ]);
             }
 
             return $medicina;
         });
+    }
+
+    public function actualizar(
+        int $id,
+        array $datos
+    ): InventarioMedicina {
+        $medicina = InventarioMedicina::findOrFail($id);
+        $medicina->update($datos);
+        return $medicina;
+    }
+
+    public function ingresarStock(
+        int $id,
+        int $cantidad,
+        string $motivo,
+        int $registradoPor
+    ): InventarioMedicina {
+        if ($cantidad <= 0) {
+            throw new ReglaNegocioException(
+                'La cantidad a ingresar debe ser mayor a cero.'
+            );
+        }
+
+        return DB::transaction(function () use (
+            $id, $cantidad, $motivo, $registradoPor
+        ) {
+            $medicina = InventarioMedicina::lockForUpdate()
+                ->findOrFail($id);
+
+            $medicina->stock_actual += $cantidad;
+            $medicina->save();
+
+            MovimientoInventarioMed::create([
+                'inventario_medicina_id' => $medicina->id,
+                'tipo_movimiento'        => 'ingreso',
+                'cantidad'               => $cantidad,
+                'stock_resultante'       => $medicina->stock_actual,
+                'motivo'                 => $motivo,
+                'registrado_por'         => $registradoPor,
+            ]);
+
+            return $medicina;
+        });
+    }
+
+    public function darDeBaja(int $id): InventarioMedicina
+    {
+        $medicina = InventarioMedicina::findOrFail($id);
+        $medicina->update(['estado' => !$medicina->estado]);
+        return $medicina;
+    }
+
+    public function kardex(int $id): Collection
+    {
+        InventarioMedicina::findOrFail($id);
+
+        return MovimientoInventarioMed::where(
+            'inventario_medicina_id', $id
+        )
+            ->with('registrador')
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 }

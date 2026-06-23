@@ -3,8 +3,35 @@
 namespace App\Contracts\Dispensario;
 
 use App\Models\Dispensario\InventarioMedicina;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface InventarioMedicinasServiceInterface
 {
-    public function ingresarMedicina(array $datos): InventarioMedicina;
+    public function listar(array $filtros): LengthAwarePaginator;
+
+    public function obtener(int $id): InventarioMedicina;
+
+    public function buscar(string $termino): Collection;
+
+    public function ingresarMedicina(
+        array $datos,
+        int $registradoPor
+    ): InventarioMedicina;
+
+    public function actualizar(
+        int $id,
+        array $datos
+    ): InventarioMedicina;
+
+    public function ingresarStock(
+        int $id,
+        int $cantidad,
+        string $motivo,
+        int $registradoPor
+    ): InventarioMedicina;
+
+    public function darDeBaja(int $id): InventarioMedicina;
+
+    public function kardex(int $id): Collection;
 }

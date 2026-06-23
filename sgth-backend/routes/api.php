@@ -677,9 +677,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::prefix('inventario')
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
+                Route::get('medicinas/buscar',
+                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'buscar']);
                 Route::apiResource('medicinas', \App\Http\Controllers\Dispensario\InventarioMedicinasController::class);
                 Route::get('medicinas/{id}/kardex',
                     [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'kardex']);
+                Route::post('medicinas/{medicina}/ingresar-stock',
+                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'ingresarStock']);
             });
 
         // Fichas de salud ocupacional
