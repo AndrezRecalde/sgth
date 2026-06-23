@@ -31,6 +31,7 @@ export interface AgendaMedica {
     apellidos: string
   } | null
   triaje?: unknown | null
+  historia_clinica_id?: number | null
 }
 
 export interface CrearAgendaData {
@@ -61,5 +62,10 @@ export const agendaService = {
   cancelar: (id: number) =>
     api.delete<ApiResponse<AgendaMedica>>(
       `/dispensario/agenda/${id}`
+    ).then(r => r.data.datos),
+
+  listosParaConsulta: () =>
+    api.get<ApiResponse<AgendaMedica[]>>(
+      '/dispensario/agenda/listos-para-consulta'
     ).then(r => r.data.datos),
 }

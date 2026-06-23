@@ -11,11 +11,15 @@ import {
   Button,
   Group,
   Badge,
+  ActionIcon,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
 import { Container } from "@mantine/core";
-import { FlujoStepper, type PasoStepper } from "@/features/dispensario/components/FlujoStepper";
+import {
+  FlujoStepper,
+  type PasoStepper,
+} from "@/features/dispensario/components/FlujoStepper";
 import {
   IconNurse,
   IconCheck,
@@ -242,16 +246,16 @@ function ColaYMonitoreo() {
             Pendientes de triaje
             {pendientesTriaje.length > 0 ? ` (${pendientesTriaje.length})` : ""}
           </Chip>
-          <Button
-            size="xs"
-            variant="light"
-            color="violet"
-            leftSection={<IconVaccine size={14} />}
-            onClick={abrirDrawer}
-          >
-            Servicios de enfermería
-          </Button>
         </Group>
+        <ActionIcon
+          size="xl"
+          variant="light"
+          color="violet"
+          onClick={abrirDrawer}
+          title="Servicios de enfermería"
+        >
+          <IconVaccine size={14} />
+        </ActionIcon>
 
         {vista === "todos" && (
           <DatePickerInput

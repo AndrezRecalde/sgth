@@ -95,3 +95,12 @@ export function useCancelarTurno() {
       }),
   })
 }
+
+export function useListosParaConsulta() {
+  return useQuery({
+    queryKey: ['agenda', 'listos-para-consulta'],
+    queryFn:  agendaService.listosParaConsulta,
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 30,
+  })
+}
