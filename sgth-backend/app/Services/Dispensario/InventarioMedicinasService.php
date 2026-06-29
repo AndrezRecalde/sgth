@@ -85,9 +85,16 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
 
     private function generarCodigo(): string
     {
-        $cantidadActual = InventarioMedicina::count();
+        $ultimoCodigo = InventarioMedicina::withTrashed()
+            ->orderByDesc('id')
+            ->value('codigo');
+
+        $ultimoSecuencial = $ultimoCodigo
+            ? (int) str_replace('MED-', '', $ultimoCodigo)
+            : 0;
+
         $secuencial = str_pad(
-            (string)($cantidadActual + 1), 4, '0', STR_PAD_LEFT
+            (string)($ultimoSecuencial + 1), 4, '0', STR_PAD_LEFT
         );
         return "MED-{$secuencial}";
     }
