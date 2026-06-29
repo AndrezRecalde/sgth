@@ -29,7 +29,6 @@ export interface MovimientoInventario {
 }
 
 export interface CrearMedicinaData {
-  codigo:            string
   nombre:            string
   principio_activo:  string
   presentacion:      string
@@ -41,7 +40,6 @@ export interface CrearMedicinaData {
 }
 
 export interface ActualizarMedicinaData {
-  codigo:            string
   nombre:            string
   principio_activo:  string
   presentacion:      string

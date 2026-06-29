@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import {
   Modal, Stack, Group, TextInput,
-  NumberInput, Button,
+  NumberInput, Button, Select,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
@@ -15,6 +15,7 @@ import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useInventarioMutations } from '../hooks/useInventarioMedicina'
 import {
   medicinaSchema, type MedicinaFormData,
+  PRESENTACION_OPTIONS,
 } from '../schemas/inventarioMedicina.schema'
 import type { InventarioMedicina } from '../services/inventarioMedicinaService'
 
@@ -54,7 +55,7 @@ export function MedicinaModal({
   } = useForm<MedicinaFormData>({
     resolver: zodResolver(medicinaSchema),
     defaultValues: {
-      codigo: '', nombre: '', principio_activo: '',
+      nombre: '', principio_activo: '',
       presentacion: '', concentracion: '',
       stock_actual: 0, stock_minimo: 0,
       fecha_caducidad: '', lote: '',
@@ -64,7 +65,6 @@ export function MedicinaModal({
   useEffect(() => {
     if (opened) {
       reset(initialValues ? {
-        codigo:           initialValues.codigo,
         nombre:           initialValues.nombre,
         principio_activo: initialValues.principio_activo,
         presentacion:     initialValues.presentacion,
@@ -74,7 +74,7 @@ export function MedicinaModal({
         fecha_caducidad:  initialValues.fecha_caducidad ?? '',
         lote:             initialValues.lote ?? '',
       } : {
-        codigo: '', nombre: '', principio_activo: '',
+        nombre: '', principio_activo: '',
         presentacion: '', concentracion: '',
         stock_actual: 0, stock_minimo: 0,
         fecha_caducidad: '', lote: '',
@@ -87,7 +87,6 @@ export function MedicinaModal({
       ? actualizar.mutateAsync({
           id: initialValues.id,
           data: {
-            codigo:           values.codigo,
             nombre:           values.nombre,
             principio_activo: values.principio_activo,
             presentacion:     values.presentacion,
@@ -118,19 +117,14 @@ export function MedicinaModal({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
-          <Group grow>
+          {isEditing && initialValues && (
             <TextInput
               label="Código"
-              {...contained}
-              {...register('codigo')}
-              error={errors.codigo?.message}
+              value={initialValues.codigo}
+              disabled
+              description="Generado automáticamente"
             />
-            <TextInput
-              label="Lote (opcional)"
-              {...contained}
-              {...register('lote')}
-            />
-          </Group>
+          )}
 
           <TextInput
             label="Nombre comercial"
@@ -147,12 +141,20 @@ export function MedicinaModal({
           />
 
           <Group grow>
-            <TextInput
-              label="Presentación"
-              placeholder="Ej: Tableta, Jarabe, Inyectable"
-              {...contained}
-              {...register('presentacion')}
-              error={errors.presentacion?.message}
+            <Controller
+              name="presentacion"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Presentación"
+                  placeholder="Seleccione"
+                  data={PRESENTACION_OPTIONS}
+                  {...contained}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v ?? '')}
+                  error={errors.presentacion?.message}
+                />
+              )}
             />
             <TextInput
               label="Concentración (opcional)"
@@ -161,6 +163,12 @@ export function MedicinaModal({
               {...register('concentracion')}
             />
           </Group>
+
+          <TextInput
+            label="Lote (opcional)"
+            {...contained}
+            {...register('lote')}
+          />
 
           <Group grow>
             <Controller
