@@ -28,7 +28,9 @@ class ItemAdquisicion extends Model
 
     public function adquisicion(): BelongsTo
     {
-        return $this->belongsTo(AdquisicionMedicamento::class);
+        return $this->belongsTo(
+            AdquisicionMedicamento::class, 'adquisicion_id'
+        );
     }
 
     public function medicina(): BelongsTo

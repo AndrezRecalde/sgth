@@ -31,7 +31,9 @@ class AdquisicionMedicamento extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(ItemAdquisicion::class);
+        return $this->hasMany(
+            ItemAdquisicion::class, 'adquisicion_id'
+        );
     }
 
     public function registrador(): BelongsTo
