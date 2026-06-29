@@ -686,6 +686,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                     [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'ingresarStock']);
             });
 
+        Route::prefix('adquisiciones')
+            ->middleware('role:admin-dispensario')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'index']);
+                Route::post('/', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'store']);
+                Route::get('{id}', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'show']);
+                Route::post('{id}/documento', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'subirDocumento']);
+            });
+
         // Fichas de salud ocupacional
         Route::prefix('fichas-sso')
             ->middleware('role:medico|admin-dispensario')
