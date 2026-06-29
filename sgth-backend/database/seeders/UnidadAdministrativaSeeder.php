@@ -264,13 +264,22 @@ class UnidadAdministrativaSeeder extends Seeder
 
     private function crear(array $datos): UnidadAdministrativa
     {
-        return UnidadAdministrativa::firstOrCreate(
+        $unidadPadreId = $datos['unidad_padre_id'] ?? null;
+        
+        $nivel = 1;
+        if ($unidadPadreId == 1) {
+            $nivel = 2;
+        } elseif ($unidadPadreId != null && $unidadPadreId != 1) {
+            $nivel = 3;
+        }
+
+        return UnidadAdministrativa::updateOrCreate(
             ['nombre' => $datos['nombre']],
             array_merge($datos, [
                 'codigo'          => strtoupper(substr(\Illuminate\Support\Str::slug($datos['nombre']), 0, 15)) . '-' . rand(10, 99),
-                'nivel'           => 1,
+                'nivel'           => $nivel,
                 'descripcion'     => $datos['descripcion'] ?? null,
-                'unidad_padre_id' => $datos['unidad_padre_id'] ?? null,
+                'unidad_padre_id' => $unidadPadreId,
             ])
         );
     }

@@ -64,6 +64,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return DB::transaction(function () use ($datos, $registradoPor) {
             $medicina = InventarioMedicina::create([
                 ...$datos,
+                'codigo'     => $this->generarCodigo(),
                 'created_by' => $registradoPor,
             ]);
 
@@ -80,6 +81,15 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
 
             return $medicina;
         });
+    }
+
+    private function generarCodigo(): string
+    {
+        $cantidadActual = InventarioMedicina::count();
+        $secuencial = str_pad(
+            (string)($cantidadActual + 1), 4, '0', STR_PAD_LEFT
+        );
+        return "MED-{$secuencial}";
     }
 
     public function actualizar(

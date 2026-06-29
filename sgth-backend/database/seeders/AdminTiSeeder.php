@@ -13,14 +13,19 @@ class AdminTiSeeder extends Seeder
     {
         // Se crea usando los campos nativos de Laravel por ahora.
         // En el Sprint 1 se añadirán los campos usuario_ti y primer_login a la tabla users.
-        $admin = User::firstOrCreate(
-            ['email' => 'admin.ti@gadpe.gob.ec'],
+        $admin = User::updateOrCreate(
+            ['email' => 'crecalde@gadpe.gob.ec'],
             [
-                'name'     => 'Administrador TI',
-                'password' => Hash::make('0801234567'), // Contraseña inicial: Cédula
+                'usuario_ti' => 'crecalde',
+                //'name'     => 'Administrador TI',
+                'password' => Hash::make('0802704171a'), // Contraseña inicial actualizada
             ]
         );
 
-        $admin->assignRole(Rol::ADMIN_TI->value);
+        $admin->assignRole([
+            Rol::ADMIN_TI->value,
+            Rol::ADMIN_UATH->value,
+            Rol::ASISTENTE_UATH->value,
+        ]);
     }
 }

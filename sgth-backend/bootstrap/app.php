@@ -46,8 +46,12 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (AuthenticationException $e) {
+            $mensaje = $e->getMessage() === 'Unauthenticated.' 
+                ? 'No autenticado. Por favor inicie sesión.' 
+                : $e->getMessage();
+
             return ApiResponse::error(
-                'No autenticado. Por favor inicie sesión.',
+                $mensaje,
                 null,
                 401,
             );

@@ -105,6 +105,10 @@ final class UsuarioService implements UsuarioServiceInterface
                 $updateData['email'] = $datos['email'];
             }
 
+            if (isset($datos['usuario_ti'])) {
+                $updateData['usuario_ti'] = $datos['usuario_ti'];
+            }
+
             if (!empty($updateData)) {
                 $user->update($updateData);
             }

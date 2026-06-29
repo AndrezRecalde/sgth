@@ -1,6 +1,6 @@
 <?php
 namespace App\Models\Dispensario;
-
+use App\Enums\PresentacionMedicamento;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,6 +23,7 @@ class InventarioMedicina extends Model
     protected function casts(): array
     {
         return [
+            'presentacion'    => PresentacionMedicamento::class,
             'fecha_caducidad' => 'date',
             'estado'          => 'boolean',
         ];

@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests\Dispensario;
 
+use App\Enums\PresentacionMedicamento;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
 
 class UpdateInventarioMedicinaRequest extends FormRequest
 {
@@ -14,17 +15,10 @@ class UpdateInventarioMedicinaRequest extends FormRequest
 
     public function rules(): array
     {
-        $medicinaId = $this->route('medicina');
-
         return [
-            'codigo'           => [
-                'required', 'string', 'max:50',
-                Rule::unique('inventario_medicinas', 'codigo')
-                    ->ignore($medicinaId),
-            ],
             'nombre'           => ['required', 'string', 'max:255'],
             'principio_activo' => ['required', 'string', 'max:255'],
-            'presentacion'     => ['required', 'string', 'max:100'],
+            'presentacion'     => ['required', new Enum(PresentacionMedicamento::class)],
             'concentracion'    => ['nullable', 'string', 'max:100'],
             'stock_minimo'     => ['required', 'integer', 'min:0'],
             'fecha_caducidad'  => ['nullable', 'date'],
