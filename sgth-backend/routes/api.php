@@ -684,6 +684,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                     [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'kardex']);
                 Route::post('medicinas/{medicina}/ingresar-stock',
                     [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'ingresarStock']);
+                Route::post('medicinas/{medicina}/ajustar-inventario',
+                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'ajustarInventario']);
             });
 
         Route::prefix('adquisiciones')

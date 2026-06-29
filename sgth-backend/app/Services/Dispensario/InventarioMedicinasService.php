@@ -142,6 +142,48 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         });
     }
 
+    public function ajustarInventario(
+        int $id,
+        int $nuevoStock,
+        string $motivo,
+        int $registradoPor
+    ): InventarioMedicina {
+        if ($nuevoStock < 0) {
+            throw new ReglaNegocioException(
+                'El stock ajustado no puede ser negativo.'
+            );
+        }
+
+        return DB::transaction(function () use (
+            $id, $nuevoStock, $motivo, $registradoPor
+        ) {
+            $medicina = InventarioMedicina::lockForUpdate()
+                ->findOrFail($id);
+
+            $diferencia = $nuevoStock - $medicina->stock_actual;
+
+            if ($diferencia === 0) {
+                throw new ReglaNegocioException(
+                    'El nuevo stock es igual al actual, no hay ajuste que registrar.'
+                );
+            }
+
+            $medicina->stock_actual = $nuevoStock;
+            $medicina->save();
+
+            MovimientoInventarioMed::create([
+                'inventario_medicina_id' => $medicina->id,
+                'tipo_movimiento'        => 'ajuste',
+                'cantidad'               => $diferencia,
+                'stock_resultante'       => $nuevoStock,
+                'motivo'                 => $motivo,
+                'registrado_por'         => $registradoPor,
+            ]);
+
+            return $medicina;
+        });
+    }
+
     public function darDeBaja(int $id): InventarioMedicina
     {
         $medicina = InventarioMedicina::findOrFail($id);

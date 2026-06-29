@@ -92,6 +92,27 @@ final class InventarioMedicinasController extends Controller
         );
     }
 
+    public function ajustarInventario(
+        Request $request,
+        int $medicina
+    ): JsonResponse {
+        $request->validate([
+            'nuevo_stock' => ['required', 'integer', 'min:0'],
+            'motivo'      => ['required', 'string', 'max:255'],
+        ]);
+
+        $actualizado = $this->inventarioService->ajustarInventario(
+            $medicina,
+            $request->integer('nuevo_stock'),
+            $request->string('motivo')->value(),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok(
+            $actualizado, 'Inventario ajustado correctamente.'
+        );
+    }
+
     public function destroy(int $medicina): JsonResponse
     {
         $actualizado = $this->inventarioService->darDeBaja($medicina);

@@ -31,6 +31,13 @@ interface InventarioMedicinasServiceInterface
         int $registradoPor
     ): InventarioMedicina;
 
+    public function ajustarInventario(
+        int $id,
+        int $nuevoStock,
+        string $motivo,
+        int $registradoPor
+    ): InventarioMedicina;
+
     public function darDeBaja(int $id): InventarioMedicina;
 
     public function kardex(int $id): Collection;
