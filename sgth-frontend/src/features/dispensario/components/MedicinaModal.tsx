@@ -23,6 +23,7 @@ interface Props {
   opened:         boolean
   onClose:        () => void
   initialValues?: InventarioMedicina | null
+  onCreated?:     (medicina: InventarioMedicina) => void
 }
 
 function toDate(v?: string | null): Date | null {
@@ -42,7 +43,7 @@ function fromDate(d: Date | string | null): string | null {
 }
 
 export function MedicinaModal({
-  opened, onClose, initialValues,
+  opened, onClose, initialValues, onCreated,
 }: Props) {
   const { isMobile } = useMobileBreakpoint()
   const contained    = useContainedInput()
@@ -103,7 +104,13 @@ export function MedicinaModal({
           lote:            values.lote || null,
         })
 
-    promise.then(() => { reset(); onClose() }).catch(() => {})
+    promise.then((medicina) => {
+      reset()
+      onClose()
+      if (!isEditing && onCreated) {
+        onCreated(medicina as InventarioMedicina)
+      }
+    }).catch(() => {})
   }
 
   return (

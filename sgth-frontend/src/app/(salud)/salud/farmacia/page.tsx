@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   Stack, Group, Button, TextInput,
   ActionIcon,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  IconPill, IconPlus, IconSearch, IconX,
+  IconPill, IconPlus, IconSearch, IconX, IconShoppingCart,
 } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -72,6 +73,17 @@ export default function FarmaciaPage() {
         title="Farmacia"
         subtitle="Gestión del inventario de medicinas"
         icon={<IconPill size={24} />}
+        actions={
+          <Button
+            component={Link}
+            href="/salud/farmacia/adquisiciones"
+            variant="light"
+            color="blue"
+            leftSection={<IconShoppingCart size={14} />}
+          >
+            Adquisiciones
+          </Button>
+        }
       />
 
       <Group justify="space-between">
