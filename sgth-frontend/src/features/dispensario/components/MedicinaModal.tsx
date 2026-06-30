@@ -36,10 +36,11 @@ function fromDate(d: Date | string | null): string | null {
   if (!d) return null
   const date = typeof d === 'string' ? toDate(d) : d
   if (!date || isNaN(date.getTime())) return null
-  const year  = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day   = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-')
 }
 
 export function MedicinaModal({
@@ -118,7 +119,7 @@ export function MedicinaModal({
       opened={opened}
       onClose={onClose}
       title={isEditing ? 'Editar medicina' : 'Registrar medicina'}
-      size="md"
+      size="lg"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
@@ -130,24 +131,26 @@ export function MedicinaModal({
               value={initialValues.codigo}
               disabled
               description="Generado automáticamente"
+              {...contained}
             />
           )}
 
-          <TextInput
-            label="Nombre comercial"
-            {...contained}
-            {...register('nombre')}
-            error={errors.nombre?.message}
-          />
+          <Group grow align="flex-start">
+            <TextInput
+              label="Nombre comercial"
+              {...contained}
+              {...register('nombre')}
+              error={errors.nombre?.message}
+            />
+            <TextInput
+              label="Principio activo"
+              {...contained}
+              {...register('principio_activo')}
+              error={errors.principio_activo?.message}
+            />
+          </Group>
 
-          <TextInput
-            label="Principio activo"
-            {...contained}
-            {...register('principio_activo')}
-            error={errors.principio_activo?.message}
-          />
-
-          <Group grow>
+          <Group grow align="flex-start">
             <Controller
               name="presentacion"
               control={control}
@@ -171,13 +174,29 @@ export function MedicinaModal({
             />
           </Group>
 
-          <TextInput
-            label="Lote (opcional)"
-            {...contained}
-            {...register('lote')}
-          />
+          <Group grow align="flex-start">
+            <TextInput
+              label="Lote (opcional)"
+              {...contained}
+              {...register('lote')}
+            />
+            <Controller
+              name="fecha_caducidad"
+              control={control}
+              render={({ field }) => (
+                <DatePickerInput
+                  label="Fecha de caducidad (opcional)"
+                  valueFormat="DD/MM/YYYY"
+                  clearable
+                  {...contained}
+                  value={toDate(field.value)}
+                  onChange={(d) => field.onChange(fromDate(d))}
+                />
+              )}
+            />
+          </Group>
 
-          <Group grow>
+          <Group grow align="flex-start">
             <Controller
               name="stock_actual"
               control={control}
@@ -210,21 +229,6 @@ export function MedicinaModal({
               )}
             />
           </Group>
-
-          <Controller
-            name="fecha_caducidad"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                label="Fecha de caducidad (opcional)"
-                valueFormat="DD/MM/YYYY"
-                clearable
-                {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d))}
-              />
-            )}
-          />
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>

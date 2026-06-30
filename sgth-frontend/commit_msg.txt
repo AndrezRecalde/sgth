@@ -1,1 +1,15 @@
-fix(dispensario): usar Indicator de Mantine para badge de stock bajo en Chip
+feat(dispensario): remodelacion visual Farmacia y detalle de adquisicion
+
+FARMACIA - VISUAL:
+- FarmaciaPage: layout limpio con busqueda y botones
+  consistentes con el resto del sistema
+- MedicinaModal: size='lg', campos en Group grow de 2
+  columnas (nombre+principio, presentacion+concentracion,
+  lote+caducidad, stock_inicial+stock_minimo)
+
+ADQUISICIONES - DETALLE:
+- adquisiciones.columns: TableActions con Ver detalle /
+  Subir documento, columna Respaldo como Badge dot
+- DetalleAdquisicionDrawer: panel lateral con informacion
+  completa de la adquisicion y tabla de items
+  (medicina, cantidad, lote, caducidad, precio unitario)

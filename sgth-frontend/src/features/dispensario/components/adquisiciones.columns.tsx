@@ -1,12 +1,15 @@
 'use client'
 
-import { Text, Badge, Stack, ActionIcon, Tooltip } from '@mantine/core'
-import { IconFileText, IconUpload } from '@tabler/icons-react'
+import { Text, Badge, Group } from '@mantine/core'
+import {
+  IconFileText, IconUpload, IconEye,
+} from '@tabler/icons-react'
+import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Adquisicion } from '../services/adquisicionService'
 
 interface ColumnActions {
-  onVerDetalle: (a: Adquisicion) => void
+  onVerDetalle:     (a: Adquisicion) => void
   onSubirDocumento: (a: Adquisicion) => void
 }
 
@@ -23,7 +26,7 @@ export function getAdquisicionesColumns(
     {
       accessor: 'folio',
       title:    'Folio',
-      width:    140,
+      width:    150,
       render: (a) => (
         <Text size="sm" ff="monospace" fw={500}>{a.folio}</Text>
       ),
@@ -57,18 +60,18 @@ export function getAdquisicionesColumns(
     {
       accessor: 'fecha_adquisicion',
       title:    'Fecha',
-      width:    110,
+      width:    120,
       render: (a) => (
         <Text size="sm">{formatFecha(a.fecha_adquisicion)}</Text>
       ),
     },
     {
       accessor: 'items',
-      title:    'Medicinas',
-      width:    100,
+      title:    'Ítems',
+      width:    80,
       render: (a) => (
         <Badge size="sm" variant="light" color="gray">
-          {a.items?.length ?? 0} ítem(s)
+          {a.items?.length ?? 0}
         </Badge>
       ),
     },
@@ -77,23 +80,45 @@ export function getAdquisicionesColumns(
       title:    'Respaldo',
       width:    90,
       render: (a) => (
-        <Tooltip
-          label={a.documento_respaldo
-            ? 'Documento adjunto'
-            : 'Subir documento de respaldo'}
-          withArrow
-        >
-          <ActionIcon
+        <Group gap={4} justify="center">
+          <Badge
             size="sm"
-            variant="subtle"
+            variant="dot"
             color={a.documento_respaldo ? 'emerald' : 'gray'}
-            onClick={() => actions.onSubirDocumento(a)}
           >
-            {a.documento_respaldo
-              ? <IconFileText size={16} />
-              : <IconUpload size={16} />}
-          </ActionIcon>
-        </Tooltip>
+            {a.documento_respaldo ? 'Adjunto' : 'Pendiente'}
+          </Badge>
+        </Group>
+      ),
+    },
+    {
+      accessor: 'acciones',
+      title:    '',
+      width:    50,
+      render: (a) => (
+        <TableActions actions={[
+          {
+            label:   'Ver detalle',
+            icon:    <IconEye size={14} />,
+            color:   'blue',
+            onClick: () => actions.onVerDetalle(a),
+          },
+          {
+            label:   a.documento_respaldo
+              ? 'Reemplazar documento'
+              : 'Subir documento de respaldo',
+            icon:    <IconFileText size={14} />,
+            color:   a.documento_respaldo ? 'gray' : 'emerald',
+            onClick: () => actions.onSubirDocumento(a),
+          },
+          {
+            label:   'Subir documento',
+            icon:    <IconUpload size={14} />,
+            color:   'emerald',
+            onClick: () => actions.onSubirDocumento(a),
+            hidden:  !!a.documento_respaldo,
+          },
+        ]} />
       ),
     },
   ]

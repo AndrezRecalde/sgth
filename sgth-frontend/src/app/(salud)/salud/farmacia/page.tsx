@@ -4,18 +4,19 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Stack, Group, Button, TextInput,
-  ActionIcon, Chip, Indicator
+  ActionIcon, Chip, Indicator,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  IconPill, IconPlus, IconSearch, IconX, IconShoppingCart,
+  IconPill, IconPlus, IconSearch,
+  IconX, IconShoppingCart,
 } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useInventarioMedicinas, useInventarioMutations,
-  useStockBajoCount
+  useStockBajoCount,
 } from '@/features/dispensario/hooks/useInventarioMedicina'
 import { MedicinaModal } from
   '@/features/dispensario/components/MedicinaModal'
@@ -32,9 +33,9 @@ import type { InventarioMedicina } from
 
 export default function FarmaciaPage() {
   const contained = useContainedInput()
-  const [page, setPage]         = useState(1)
-  const [search, setSearch]     = useState('')
-  const [query, setQuery]       = useState('')
+  const [page, setPage]     = useState(1)
+  const [search, setSearch] = useState('')
+  const [query, setQuery]   = useState('')
   const [filtroEstado, setFiltroEstado] =
     useState<'todos' | 'activos' | 'inactivos'>('activos')
   const [filtroStockBajo, setFiltroStockBajo] = useState(false)
@@ -51,17 +52,16 @@ export default function FarmaciaPage() {
   const [kardexOpened,
     { open: abrirKardex, close: cerrarKardex }] = useDisclosure(false)
 
-  const { data: stockBajoCount = 0 } = useStockBajoCount()
-
   const { data, isLoading } = useInventarioMedicinas({
     page,
-    per_page: 15,
-    search:     query || undefined,
-    estado:     filtroEstado === 'todos'
+    per_page:  15,
+    search:    query || undefined,
+    estado:    filtroEstado === 'todos'
       ? undefined
       : filtroEstado === 'activos' ? 'true' : 'false',
     stock_bajo: filtroStockBajo || undefined,
   })
+  const { data: stockBajoCount = 0 } = useStockBajoCount()
   const { toggleEstado } = useInventarioMutations()
 
   const medicinas = data?.data ?? []
@@ -72,11 +72,11 @@ export default function FarmaciaPage() {
   }
 
   const columns = getMedicinasColumns({
-    onEditar: (m) => { setMedicinaSel(m); abrirModal() },
+    onEditar:        (m) => { setMedicinaSel(m); abrirModal() },
     onIngresarStock: (m) => { setMedicinaSel(m); abrirStock() },
-    onAjustar: (m) => { setMedicinaSel(m); abrirAjustar() },
-    onVerKardex: (m) => { setMedicinaSel(m); abrirKardex() },
-    onToggleEstado: (m) => {
+    onAjustar:       (m) => { setMedicinaSel(m); abrirAjustar() },
+    onVerKardex:     (m) => { setMedicinaSel(m); abrirKardex() },
+    onToggleEstado:  (m) => {
       const accion = m.estado ? 'dar de baja' : 'reactivar'
       if (confirm(`¿Deseas ${accion} esta medicina?`)) {
         toggleEstado.mutate(m.id)
@@ -103,7 +103,7 @@ export default function FarmaciaPage() {
         }
       />
 
-      <Group justify="space-between">
+      <Group justify="space-between" wrap="wrap" gap="sm">
         <Group gap="xs">
           <TextInput
             placeholder="Buscar por nombre, código o principio activo"
@@ -111,10 +111,8 @@ export default function FarmaciaPage() {
             {...contained}
             value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleBuscar()
-            }}
-            style={{ width: 320 }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleBuscar() }}
+            style={{ width: 300 }}
             rightSection={
               search ? (
                 <ActionIcon
@@ -130,7 +128,6 @@ export default function FarmaciaPage() {
           />
           <Button
             variant="light"
-            color="blue"
             leftSection={<IconSearch size={14} />}
             onClick={handleBuscar}
           >
@@ -183,10 +180,7 @@ export default function FarmaciaPage() {
         >
           <Chip
             checked={filtroStockBajo}
-            onChange={() => {
-              setFiltroStockBajo(v => !v)
-              setPage(1)
-            }}
+            onChange={() => { setFiltroStockBajo(v => !v); setPage(1) }}
             color="red"
             size="sm"
           >

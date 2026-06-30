@@ -13,6 +13,8 @@ import { SubirDocumentoModal } from
   '@/features/dispensario/components/SubirDocumentoModal'
 import { getAdquisicionesColumns } from
   '@/features/dispensario/components/adquisiciones.columns'
+import { DetalleAdquisicionDrawer } from
+  '@/features/dispensario/components/DetalleAdquisicionDrawer'
 import { useAdquisiciones } from
   '@/features/dispensario/hooks/useAdquisicion'
 import { useDisclosure } from '@mantine/hooks'
@@ -67,6 +69,8 @@ function HistorialAdquisiciones() {
     useState<Adquisicion | null>(null)
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
+  const [detalleOpened,
+    { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
 
   const { data, isLoading } = useAdquisiciones({
     page, per_page: 15,
@@ -75,7 +79,7 @@ function HistorialAdquisiciones() {
   const adquisiciones = data?.data ?? []
 
   const columns = getAdquisicionesColumns({
-    onVerDetalle: () => {},
+    onVerDetalle: (a) => { setAdquisicionSel(a); abrirDetalle() },
     onSubirDocumento: (a) => {
       setAdquisicionSel(a)
       abrirModal()
@@ -98,6 +102,12 @@ function HistorialAdquisiciones() {
       <SubirDocumentoModal
         opened={modalOpened}
         onClose={() => { setAdquisicionSel(null); cerrarModal() }}
+        adquisicion={adquisicionSel}
+      />
+
+      <DetalleAdquisicionDrawer
+        opened={detalleOpened}
+        onClose={() => { setAdquisicionSel(null); cerrarDetalle() }}
         adquisicion={adquisicionSel}
       />
     </Stack>
