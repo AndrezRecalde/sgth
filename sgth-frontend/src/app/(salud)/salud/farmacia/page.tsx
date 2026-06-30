@@ -20,6 +20,8 @@ import { MedicinaModal } from
   '@/features/dispensario/components/MedicinaModal'
 import { IngresarStockModal } from
   '@/features/dispensario/components/IngresarStockModal'
+import { AjustarInventarioModal } from
+  '@/features/dispensario/components/AjustarInventarioModal'
 import { KardexDrawer } from
   '@/features/dispensario/components/KardexDrawer'
 import { getMedicinasColumns } from
@@ -40,6 +42,8 @@ export default function FarmaciaPage() {
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const [stockOpened,
     { open: abrirStock, close: cerrarStock }] = useDisclosure(false)
+  const [ajustarOpened,
+    { open: abrirAjustar, close: cerrarAjustar }] = useDisclosure(false)
   const [kardexOpened,
     { open: abrirKardex, close: cerrarKardex }] = useDisclosure(false)
 
@@ -58,6 +62,7 @@ export default function FarmaciaPage() {
   const columns = getMedicinasColumns({
     onEditar: (m) => { setMedicinaSel(m); abrirModal() },
     onIngresarStock: (m) => { setMedicinaSel(m); abrirStock() },
+    onAjustar: (m) => { setMedicinaSel(m); abrirAjustar() },
     onVerKardex: (m) => { setMedicinaSel(m); abrirKardex() },
     onToggleEstado: (m) => {
       const accion = m.estado ? 'dar de baja' : 'reactivar'
@@ -150,6 +155,12 @@ export default function FarmaciaPage() {
       <IngresarStockModal
         opened={stockOpened}
         onClose={() => { setMedicinaSel(null); cerrarStock() }}
+        medicina={medicinaSel}
+      />
+
+      <AjustarInventarioModal
+        opened={ajustarOpened}
+        onClose={() => { setMedicinaSel(null); cerrarAjustar() }}
         medicina={medicinaSel}
       />
 

@@ -3,7 +3,7 @@
 import { Text, Badge, Group } from '@mantine/core'
 import {
   IconEdit, IconPlus, IconHistory,
-  IconBan, IconCircleCheck,
+  IconBan, IconCircleCheck, IconAdjustments,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -12,6 +12,7 @@ import type { InventarioMedicina } from '../services/inventarioMedicinaService'
 interface ColumnActions {
   onEditar:        (m: InventarioMedicina) => void
   onIngresarStock: (m: InventarioMedicina) => void
+  onAjustar:       (m: InventarioMedicina) => void
   onVerKardex:     (m: InventarioMedicina) => void
   onToggleEstado:  (m: InventarioMedicina) => void
 }
@@ -100,6 +101,12 @@ export function getMedicinasColumns(
             icon:    <IconPlus size={14} />,
             color:   'emerald',
             onClick: () => actions.onIngresarStock(m),
+          },
+          {
+            label:   'Ajustar inventario',
+            icon:    <IconAdjustments size={14} />,
+            color:   'blue',
+            onClick: () => actions.onAjustar(m),
           },
           {
             label:   'Ver kardex',
