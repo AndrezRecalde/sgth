@@ -1,0 +1,22 @@
+feat(dispensario): nested links en sidebar y mejoras UX de Farmacia
+
+SIDEBAR:
+- NavItem interface: soporta children (nested links) y
+  badge dinamico
+- NavItemNested: sub-menu colapsable con badge opcional,
+  se expande automaticamente si ruta activa es un sub-item
+- Sidebar: inyecta badge de stock bajo en sub-item
+  Inventario usando useStockBajoCount
+
+FARMACIA - MEJORAS UX:
+- Columna Caducidad con semaforo visual (verde >90d,
+  naranja <=90d, rojo <=30d o vencido)
+- Chips de filtro: Solo activas / Inactivas / Stock bajo
+  con badge contador en el chip de Stock bajo
+- Por defecto muestra solo medicinas activas (no todas)
+- useStockBajoCount: hook con refetch cada 5min para
+  mantener el badge actualizado
+
+NAV:
+- Farmacia ahora tiene sub-items: Inventario y
+  Adquisiciones (navegacion directa desde el sidebar)

@@ -1,16 +1,23 @@
-'use client'
+"use client";
 
-import { TextInput, PasswordInput, Button, Stack } from '@mantine/core'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { IconLogin } from '@tabler/icons-react'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { loginSchema, type LoginFormData } from '../schemas/login.schema'
-import { useLogin } from '../hooks/useLogin'
+import {
+  TextInput,
+  PasswordInput,
+  Button,
+  Stack,
+  Checkbox,
+  Anchor,
+  Group,
+} from "@mantine/core";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useContainedInput } from "@/hooks/useContainedInput";
+import { loginSchema, type LoginFormData } from "../schemas/login.schema";
+import { useLogin } from "../hooks/useLogin";
 
 export function LoginForm() {
-  const { mutate, isPending } = useLogin()
-  const contained = useContainedInput()
+  const { mutate, isPending } = useLogin();
+  const contained = useContainedInput();
 
   const {
     register,
@@ -18,36 +25,43 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { usuario: '', contrasena: '' },
-  })
+    defaultValues: { usuario: "", contrasena: "" },
+  });
 
   return (
     <form onSubmit={handleSubmit((v) => mutate(v))}>
-      <Stack gap="sm">
+      <Stack gap="md">
         <TextInput
           label="Usuario"
-          placeholder="Ingrese su usuario"
+          placeholder="admin@fusetheme.com"
           {...contained}
-          {...register('usuario')}
+          {...register("usuario")}
           error={errors.usuario?.message}
         />
         <PasswordInput
           label="Contraseña"
-          placeholder="Ingrese su contraseña"
+          placeholder="••••••••••••"
           {...contained}
-          {...register('contrasena')}
+          {...register("contrasena")}
           error={errors.contrasena?.message}
         />
-        <Button
-          type="submit"
-          fullWidth
-          mt="xs"
-          loading={isPending}
-          leftSection={<IconLogin size={16} />}
-        >
+
+        <Group justify="space-between" align="center">
+          <Checkbox label="Recordarme" size="sm" />
+          <Anchor
+            size="sm"
+            href="https://www.gadpe.gob.ec/webmail"
+            target="_blank"
+            c="dimmed"
+          >
+            ¿Olvidaste tu contraseña?
+          </Anchor>
+        </Group>
+
+        <Button type="submit" fullWidth mt="xs" loading={isPending} radius="xl">
           Iniciar sesión
         </Button>
       </Stack>
     </form>
-  )
+  );
 }

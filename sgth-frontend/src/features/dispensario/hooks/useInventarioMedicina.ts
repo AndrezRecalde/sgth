@@ -26,6 +26,15 @@ export function useKardexMedicina(id: number | null) {
   })
 }
 
+export function useStockBajoCount() {
+  return useQuery({
+    queryKey: ['inventario-medicinas', 'stock-bajo-count'],
+    queryFn:  () => inventarioMedicinaService.contarStockBajo(),
+    staleTime: 1000 * 60,
+    refetchInterval: 1000 * 60 * 5,
+  })
+}
+
 export function useInventarioMutations() {
   const qc = useQueryClient()
 

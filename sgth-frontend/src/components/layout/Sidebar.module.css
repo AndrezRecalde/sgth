@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: var(--mantine-color-body);
+  background-color: #f1f5f9; /* Light gray similar to FUSE react */
 }
 
 .userRow {
@@ -48,39 +48,42 @@
   align-items: center;
   width: 100%;
   padding: 10px 16px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   border-radius: 8px;
-  border-left: 3px solid transparent;
-  color: var(--mantine-color-text);
+  color: #475569; /* Slate 600 */
   background-color: transparent;
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease;
   text-decoration: none;
   cursor: pointer;
   border: none;
 }
 
 .navItem:hover {
-  background-color: var(--mantine-color-default-hover);
+  background-color: #e2e8f0; /* Slate 200 */
+  color: #0f172a; /* Slate 900 */
 }
 
 .navItemActive {
-  background-color: var(--mantine-color-emerald-light);
-  color: var(--mantine-color-emerald-filled);
-  border-left: 3px solid var(--mantine-color-emerald-6);
-  font-weight: 600;
+  background-color: #e2e8f0; /* Slate 200 */
+  color: #0f172a; /* Slate 900 */
+  font-weight: 500;
 }
 
 .navGroup {
-  margin-top: 16px;
+  margin-top: 24px;
   margin-bottom: 8px;
   padding: 0 16px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--mantine-color-dimmed);
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d4ed8; /* Blue 700 */
+}
+
+.navGroupSubtitle {
+  padding: 0 16px;
+  font-size: 12px;
+  color: #64748b; /* Slate 500 */
+  margin-top: -6px;
+  margin-bottom: 12px;
 }
 
 .navGroupCollapsed {
@@ -89,6 +92,12 @@
 }
 
 .footer {
-  padding: 12px;
-  border-top: 1px solid var(--mantine-color-default-border);
+  padding: 16px;
+}
+
+.helpCard {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }

@@ -1,0 +1,54 @@
+.pageContainer {
+  height: 100vh;
+}
+
+.leftColumn {
+  /* Using mantine flex props for most of it, but we can keep it clean */
+}
+
+.formContainer {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.rightColumn {
+  flex: 1;
+  background-color: #00674F;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 4rem;
+}
+
+@media (max-width: 992px) {
+  .rightColumn {
+    display: none;
+  }
+}
+
+
+.rightContent {
+  z-index: 1;
+  max-width: 600px;
+  padding-left: 4rem;
+}
+
+@media (max-width: 1200px) {
+  .rightContent {
+    padding-left: 2rem;
+  }
+}
+
+.welcomeTitle {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.welcomeText {
+  line-height: 1.6;
+}

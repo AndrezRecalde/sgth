@@ -68,41 +68,16 @@ export function Topbar({
           opened={mobileOpened}
           onClick={onMobileToggle}
           hiddenFrom="md"
-          lineSize={2}
+          lineSize={1.5}
           size="sm"
         />
         <Burger
           opened={desktopOpened}
           onClick={onDesktopToggle}
           visibleFrom="md"
-          lineSize={2}
+          lineSize={1.5}
           size="sm"
         />
-
-        <Group
-          gap="xs"
-          style={{ cursor: "pointer" }}
-          onClick={() => router.push("/bienvenida")}
-        >
-          {/* <ThemeIcon variant="light" color="emerald" size="md" radius="lg">
-            <IconUsers size={16} />
-          </ThemeIcon> */}
-          <Image
-            radius="lg"
-            mx="auto"
-            h={40}
-            w={60}
-            fit="contain"
-            alt="logo"
-            src={
-              "https://prefecturadeesmeraldas.gob.ec/wp-content/uploads/2026/05/LogoCompleto-2.png"
-            }
-            fallbackSrc="https://placehold.co/600x400?text=Placeholder"
-          />
-          <Text fw={800} size="lg" style={{ letterSpacing: "-0.5px" }}>
-            GADPE
-          </Text>
-        </Group>
       </Group>
 
       {/* Centro: Vacío para separar */}
@@ -118,7 +93,7 @@ export function Topbar({
             radius="xl"
             aria-label="Notificaciones"
           >
-            <IconBell size={25} />
+            <IconBell size={20} stroke={1.5} />
           </ActionIcon>
         </Tooltip>
         <AppGridSelector />
@@ -202,9 +177,9 @@ export function Topbar({
                 closeMenuOnClick={false}
                 leftSection={
                   colorScheme === "dark" ? (
-                    <IconSun size={20} />
+                    <IconSun size={18} stroke={1.5} />
                   ) : (
-                    <IconMoon size={20} />
+                    <IconMoon size={18} stroke={1.5} />
                   )
                 }
                 rightSection={
@@ -225,7 +200,7 @@ export function Topbar({
               </Menu.Item>
 
               <Menu.Item
-                leftSection={<IconLogout size={20} />}
+                leftSection={<IconLogout size={18} stroke={1.5} />}
                 color="red"
                 onClick={handleLogout}
                 style={{ borderRadius: "var(--mantine-radius-xl)" }}

@@ -71,6 +71,44 @@ export function getMedicinasColumns(
       },
     },
     {
+      accessor: 'fecha_caducidad',
+      title:    'Caducidad',
+      width:    120,
+      render: (m) => {
+        if (!m.fecha_caducidad) {
+          return <Text size="sm" c="dimmed">—</Text>
+        }
+
+        const hoy    = new Date()
+        const caduca = new Date(m.fecha_caducidad)
+        const dias   = Math.floor(
+          (caduca.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
+        )
+
+        let color = 'emerald'
+        let label = 'OK'
+
+        if (dias < 0) {
+          color = 'red'; label = 'Vencido'
+        } else if (dias <= 30) {
+          color = 'red'; label = `${dias}d`
+        } else if (dias <= 90) {
+          color = 'orange'; label = `${dias}d`
+        } else {
+          color = 'emerald'
+          label = caduca.toLocaleDateString('es-EC', {
+            day: '2-digit', month: 'short', year: 'numeric',
+          })
+        }
+
+        return (
+          <Badge size="sm" variant="light" color={color}>
+            {label}
+          </Badge>
+        )
+      },
+    },
+    {
       accessor: 'estado',
       title:    'Estado',
       width:    100,

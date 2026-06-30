@@ -97,4 +97,10 @@ export const inventarioMedicinaService = {
     api.get<ApiResponse<MovimientoInventario[]>>(
       `/dispensario/inventario/medicinas/${id}/kardex`
     ).then(r => r.data.datos),
+
+  contarStockBajo: () =>
+    api.get<ApiResponse<{ total: number }>>(
+      '/dispensario/inventario/medicinas',
+      { params: { stock_bajo: true, per_page: 1 } }
+    ).then(r => (r.data.datos as { total?: number })?.total ?? 0),
 }

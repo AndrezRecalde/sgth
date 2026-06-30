@@ -1,15 +1,17 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import {
   Box,
-  Card,
   Text,
   Title,
   Divider,
-  Anchor,
-  Stack,
-  Center,
+  Flex,
+  Button,
+  Container,
 } from "@mantine/core";
+import { IconMail } from "@tabler/icons-react";
 import { LoginForm } from "@/features/auth/components/LoginForm";
+import classes from "./login.module.css";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión",
@@ -17,121 +19,92 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <Box
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--mantine-color-gray-0)",
-      }}
-      p="md"
-    >
-      <Stack w="100%" maw={500} gap={0}>
-        <Card radius="lg" withBorder p={0} style={{ overflow: "hidden" }}>
-          {/* Header Navy */}
-          <Box p="xl" ta="center" style={{ background: "#0D1F2D" }}>
-            <Title
-              order={1}
-              style={{
-                fontSize: "36px",
-                fontWeight: 800,
-                color: "#10B981",
-                letterSpacing: "-1px",
-                lineHeight: 1,
-              }}
-            >
-              INTRANET
-            </Title>
-            <Text
-              size="xs"
-              mt={6}
-              style={{
-                color: "rgba(255,255,255,0.5)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                fontWeight: 500,
-              }}
-            >
-              GAD Provincial de Esmeraldas
-            </Text>
-            <Box
-              mt={10}
-              mx="auto"
-              style={{
-                width: 32,
-                height: 2,
-                background: "#059669",
-                borderRadius: 1,
-              }}
+    <Flex className={classes.pageContainer}>
+      {/* Left Column */}
+      <Flex
+        direction="column"
+        w={{ base: "100%", md: 600, lg: 650 }}
+        p={{ base: "xl", md: 60 }}
+        justify="center"
+        align="flex-end"
+        wrap="wrap"
+      >
+        <Container size={400} px={0} w="100%">
+          {/* Logo or Icon */}
+          <Box mb="md">
+            <Image
+              src="/logo.png"
+              alt="Logo Institucional"
+              width={80}
+              height={80}
+              priority
             />
           </Box>
 
-          {/* Body */}
-          <Box p="xl">
-            <Text size="sm" c="dimmed" mb="md" fw={500}>
-              Inicia sesión para continuar
-            </Text>
-            <LoginForm />
-          </Box>
+          <Title order={1} size="h2" fw={800} mb="xs">
+            Iniciar sesión
+          </Title>
+          <LoginForm />
+          <Divider label="O continuar con" labelPosition="center" my="lg" />
+          <Button
+            component="a"
+            href="https://www.gadpe.gob.ec/webmail"
+            target="_blank"
+            variant="default"
+            fullWidth
+            radius="xl"
+            leftSection={<IconMail size={20} />}
+          >
+            Correo Institucional
+          </Button>
 
-          {/* Footer */}
-          <Divider />
-          <Box p="md" ta="center">
+          <Box mt={60}>
             <Text size="xs" c="dimmed">
-              Sistema de Gestión de{" "}
-              <Text span c="emerald.6" fw={500}>
-                Talento Humano
+              Estás navegando en{" "}
+              <Text span fw={700} c="dark">
+                GADPE
               </Text>
+              . Solo para uso institucional.
             </Text>
-            <Center mt={8} style={{ gap: 8 }}>
-              <Box
-                component="span"
-                style={{
-                  fontSize: 10,
-                  padding: "2px 10px",
-                  borderRadius: 100,
-                  background: "var(--mantine-color-emerald-0)",
-                  color: "var(--mantine-color-emerald-8)",
-                  border: "0.5px solid var(--mantine-color-emerald-2)",
-                  fontWeight: 500,
-                }}
-              >
-                v1.0
-              </Box>
-              <Box
-                component="span"
-                style={{
-                  fontSize: 10,
-                  padding: "2px 10px",
-                  borderRadius: 100,
-                  background: "var(--mantine-color-emerald-0)",
-                  color: "var(--mantine-color-emerald-8)",
-                  border: "0.5px solid var(--mantine-color-emerald-2)",
-                  fontWeight: 500,
-                }}
-              >
-                Solo uso institucional
-              </Box>
-            </Center>
-            <Anchor
-              href="https://www.gadpe.gob.ec/webmail"
-              target="_blank"
-              rel="noopener noreferrer"
-              size="xs"
-              c="dimmed"
-              mt={10}
-              display="block"
-              style={{ textDecoration: "none" }}
-            >
-              ¿Olvidaste tu contraseña? Accede a tu{" "}
-              <Text span c="emerald.6" style={{ textDecoration: "underline" }}>
-                correo institucional
-              </Text>
-            </Anchor>
           </Box>
-        </Card>
-      </Stack>
-    </Box>
+        </Container>
+      </Flex>
+
+      {/* Right Column */}
+      <Box className={classes.rightColumn}>
+        {/* Abstract SVG Background */}
+        <svg
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+          viewBox="0 0 1000 1000"
+          preserveAspectRatio="xMidYMid slice"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Círculo enorme superior izquierdo */}
+          <circle cx="150" cy="150" r="600" fill="rgba(0, 0, 0, 0.12)" />
+          {/* Círculo gigante inferior derecho */}
+          <circle cx="850" cy="850" r="700" fill="rgba(0, 0, 0, 0.18)" />
+          {/* Círculo de acento centro-derecha */}
+          <circle cx="1000" cy="400" r="350" fill="rgba(0, 0, 0, 0.08)" />
+        </svg>
+
+        <Box className={classes.rightContent}>
+          <Title order={2} className={classes.welcomeTitle}>
+            Bienvenido a nuestra intranet
+          </Title>
+          <Text c="gray.4" size="lg" mb="xl" className={classes.welcomeText}>
+            El Sistema de Gestión de Talento Humano ayuda a organizar de forma
+            eficiente los procesos del GAD Provincial de Esmeraldas.
+          </Text>
+        </Box>
+      </Box>
+    </Flex>
   );
 }

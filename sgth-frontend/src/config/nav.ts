@@ -1,10 +1,12 @@
 import { ROUTES } from './routes'
 
 export interface NavItem {
-  label:    string
-  href:     string
-  icon:     string
-  permiso?: string
+  label:      string
+  href:       string
+  icon:       string
+  permiso?:   string
+  badge?:     string
+  children?:  Omit<NavItem, 'children'>[]
 }
 
 export interface NavGroup {
@@ -93,9 +95,21 @@ export const NAV_SALUD: NavGroup[] = [
         icon:  'IconHeartbeat',
       },
       {
-        label: 'Farmacia',
-        href:  ROUTES.SALUD.FARMACIA,
-        icon:  'IconPill',
+        label:    'Farmacia',
+        href:     ROUTES.SALUD.FARMACIA,
+        icon:     'IconPill',
+        children: [
+          {
+            label: 'Inventario',
+            href:  ROUTES.SALUD.FARMACIA,
+            icon:  'IconPackage',
+          },
+          {
+            label: 'Adquisiciones',
+            href:  ROUTES.SALUD.FARMACIA + '/adquisiciones',
+            icon:  'IconShoppingCart',
+          },
+        ],
       },
       {
         label: 'SSO',

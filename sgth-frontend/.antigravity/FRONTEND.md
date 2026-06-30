@@ -119,7 +119,7 @@ Info:     #3B82F6
 ### 3.2 Tipografía
 
 ```
-fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 Display:  28px / weight 700  — títulos de página
 H1:       20px / weight 600  — títulos de sección

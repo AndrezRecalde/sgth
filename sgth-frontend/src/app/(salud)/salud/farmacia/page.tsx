@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Stack, Group, Button, TextInput,
-  ActionIcon,
+  ActionIcon, Chip, Badge as MantineBadge
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
@@ -15,6 +15,7 @@ import { SgthTable } from '@/components/ui/SgthTable'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useInventarioMedicinas, useInventarioMutations,
+  useStockBajoCount
 } from '@/features/dispensario/hooks/useInventarioMedicina'
 import { MedicinaModal } from
   '@/features/dispensario/components/MedicinaModal'
@@ -31,9 +32,12 @@ import type { InventarioMedicina } from
 
 export default function FarmaciaPage() {
   const contained = useContainedInput()
-  const [page, setPage]     = useState(1)
-  const [search, setSearch] = useState('')
-  const [query, setQuery]   = useState('')
+  const [page, setPage]         = useState(1)
+  const [search, setSearch]     = useState('')
+  const [query, setQuery]       = useState('')
+  const [filtroEstado, setFiltroEstado] =
+    useState<'todos' | 'activos' | 'inactivos'>('activos')
+  const [filtroStockBajo, setFiltroStockBajo] = useState(false)
 
   const [medicinaSel, setMedicinaSel] =
     useState<InventarioMedicina | null>(null)
@@ -47,8 +51,16 @@ export default function FarmaciaPage() {
   const [kardexOpened,
     { open: abrirKardex, close: cerrarKardex }] = useDisclosure(false)
 
+  const { data: stockBajoCount = 0 } = useStockBajoCount()
+
   const { data, isLoading } = useInventarioMedicinas({
-    page, per_page: 15, search: query || undefined,
+    page,
+    per_page: 15,
+    search:     query || undefined,
+    estado:     filtroEstado === 'todos'
+      ? undefined
+      : filtroEstado === 'activos' ? 'true' : 'false',
+    stock_bajo: filtroStockBajo || undefined,
   })
   const { toggleEstado } = useInventarioMutations()
 
@@ -133,6 +145,56 @@ export default function FarmaciaPage() {
         >
           Nueva medicina
         </Button>
+      </Group>
+
+      <Group gap="xs">
+        <Chip
+          checked={filtroEstado === 'activos'}
+          onChange={() => {
+            setFiltroEstado(
+              filtroEstado === 'activos' ? 'todos' : 'activos'
+            )
+            setPage(1)
+          }}
+          color="emerald"
+          size="sm"
+        >
+          Solo activas
+        </Chip>
+        <Chip
+          checked={filtroEstado === 'inactivos'}
+          onChange={() => {
+            setFiltroEstado(
+              filtroEstado === 'inactivos' ? 'todos' : 'inactivos'
+            )
+            setPage(1)
+          }}
+          color="gray"
+          size="sm"
+        >
+          Inactivas
+        </Chip>
+        <Chip
+          checked={filtroStockBajo}
+          onChange={() => {
+            setFiltroStockBajo(v => !v)
+            setPage(1)
+          }}
+          color="red"
+          size="sm"
+        >
+          Stock bajo
+          {stockBajoCount > 0 && (
+            <MantineBadge
+              size="xs"
+              color="red"
+              circle
+              ml={4}
+            >
+              {stockBajoCount}
+            </MantineBadge>
+          )}
+        </Chip>
       </Group>
 
       <SgthTable
