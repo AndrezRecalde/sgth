@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Stack, Group, Button, TextInput,
-  ActionIcon, Chip, Badge as MantineBadge
+  ActionIcon, Chip, Indicator
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
@@ -174,7 +174,13 @@ export default function FarmaciaPage() {
         >
           Inactivas
         </Chip>
-        <Group gap={4} align="center">
+        <Indicator
+          label={stockBajoCount > 0 ? stockBajoCount : undefined}
+          disabled={stockBajoCount === 0}
+          color="red"
+          size={16}
+          offset={4}
+        >
           <Chip
             checked={filtroStockBajo}
             onChange={() => {
@@ -186,17 +192,7 @@ export default function FarmaciaPage() {
           >
             Stock bajo
           </Chip>
-          {stockBajoCount > 0 && (
-            <MantineBadge
-              size="sm"
-              color="red"
-              variant="filled"
-              circle
-            >
-              {stockBajoCount}
-            </MantineBadge>
-          )}
-        </Group>
+        </Indicator>
       </Group>
 
       <SgthTable

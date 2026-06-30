@@ -1,1 +1,1 @@
-fix(dispensario): mover badge de stock bajo fuera del Chip para evitar superposicion
+fix(dispensario): usar Indicator de Mantine para badge de stock bajo en Chip
