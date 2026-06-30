@@ -17,7 +17,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
     {
         $query = AdquisicionMedicamento::with([
             'registrador', 'items.medicina',
-        ])->orderBy('fecha_adquisicion', 'desc');
+        ])->orderBy('created_at', 'desc');
 
         if (!empty($filtros['tipo'])) {
             $query->where('tipo', $filtros['tipo']);

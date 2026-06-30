@@ -14,7 +14,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
 {
     public function listar(array $filtros): LengthAwarePaginator
     {
-        $query = InventarioMedicina::orderBy('nombre');
+        $query = InventarioMedicina::orderBy('created_at', 'desc');
 
         if (!empty($filtros['search'])) {
             $termino = $filtros['search'];
