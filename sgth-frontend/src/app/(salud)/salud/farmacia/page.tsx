@@ -174,27 +174,29 @@ export default function FarmaciaPage() {
         >
           Inactivas
         </Chip>
-        <Chip
-          checked={filtroStockBajo}
-          onChange={() => {
-            setFiltroStockBajo(v => !v)
-            setPage(1)
-          }}
-          color="red"
-          size="sm"
-        >
-          Stock bajo
+        <Group gap={4} align="center">
+          <Chip
+            checked={filtroStockBajo}
+            onChange={() => {
+              setFiltroStockBajo(v => !v)
+              setPage(1)
+            }}
+            color="red"
+            size="sm"
+          >
+            Stock bajo
+          </Chip>
           {stockBajoCount > 0 && (
             <MantineBadge
-              size="xs"
+              size="sm"
               color="red"
+              variant="filled"
               circle
-              ml={4}
             >
               {stockBajoCount}
             </MantineBadge>
           )}
-        </Chip>
+        </Group>
       </Group>
 
       <SgthTable

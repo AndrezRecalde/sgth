@@ -1,8 +1,1 @@
-fix(dispensario): corregir active state en nested nav y estilos de stock
-
-- NavItemNested: sub-item Inventario ya no se marca activo
-  cuando la ruta es /salud/farmacia/adquisiciones (antes
-  pathname.startsWith coincídia con ambos sub-items)
-- medicinas.columns: stock bajo ahora muestra el numero
-  en rojo + icono de alerta con tooltip del stock minimo
-  en vez de badge que se veia mal visualmente
+fix(dispensario): mover badge de stock bajo fuera del Chip para evitar superposicion
