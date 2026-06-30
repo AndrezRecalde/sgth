@@ -998,9 +998,21 @@ export function getApiErrorMessage(
   fallback = 'Operación fallida.'
 ): string {
   const e = error as ApiError
+  const data = e?.response?.data
+
+  // Si hay errores de validación específicos (422),
+  // mostramos el primero de ellos en vez del mensaje
+  // genérico "Los datos enviados no son válidos."
+  if (data?.errores) {
+    const primerCampo = Object.values(data.errores)[0]
+    if (Array.isArray(primerCampo) && primerCampo.length > 0) {
+      return primerCampo[0]
+    }
+  }
+
   return (
-    e?.response?.data?.mensaje ??
-    e?.response?.data?.error ??
+    data?.mensaje ??
+    data?.error ??
     e?.message ??
     fallback
   )
