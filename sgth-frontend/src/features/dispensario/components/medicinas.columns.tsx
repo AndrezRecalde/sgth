@@ -1,9 +1,10 @@
 'use client'
 
-import { Text, Badge, Group } from '@mantine/core'
+import { Text, Badge, Group, Tooltip } from '@mantine/core'
 import {
   IconEdit, IconPlus, IconHistory,
   IconBan, IconCircleCheck, IconAdjustments,
+  IconAlertTriangle,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -56,17 +57,31 @@ export function getMedicinasColumns(
     {
       accessor: 'stock_actual',
       title:    'Stock',
-      width:    100,
+      width:    110,
       render: (m) => {
         const stockBajo = m.stock_actual <= m.stock_minimo
         return (
-          <Badge
-            size="sm"
-            variant="light"
-            color={stockBajo ? 'red' : 'emerald'}
-          >
-            {m.stock_actual} unid.
-          </Badge>
+          <Group gap={4} wrap="nowrap">
+            <Text
+              size="sm"
+              fw={stockBajo ? 600 : 400}
+              c={stockBajo ? 'red' : undefined}
+            >
+              {m.stock_actual}
+            </Text>
+            {stockBajo && (
+              <Tooltip
+                label={`Stock mínimo: ${m.stock_minimo}`}
+                withArrow
+              >
+                <IconAlertTriangle
+                  size={14}
+                  color="var(--mantine-color-red-6)"
+                />
+              </Tooltip>
+            )}
+            <Text size="xs" c="dimmed">unid.</Text>
+          </Group>
         )
       },
     },
