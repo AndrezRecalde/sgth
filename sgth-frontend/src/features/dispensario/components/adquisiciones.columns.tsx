@@ -111,13 +111,6 @@ export function getAdquisicionesColumns(
             color:   a.documento_respaldo ? 'gray' : 'emerald',
             onClick: () => actions.onSubirDocumento(a),
           },
-          {
-            label:   'Subir documento',
-            icon:    <IconUpload size={14} />,
-            color:   'emerald',
-            onClick: () => actions.onSubirDocumento(a),
-            hidden:  !!a.documento_respaldo,
-          },
         ]} />
       ),
     },

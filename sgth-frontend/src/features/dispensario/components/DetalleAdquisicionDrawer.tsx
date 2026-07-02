@@ -58,58 +58,78 @@ export function DetalleAdquisicionDrawer({
     >
       {adquisicion && (
         <Stack gap="md">
-          <Stack gap={4}>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">Tipo</Text>
-              <Badge
-                size="sm"
-                variant="light"
-                color={adquisicion.tipo === 'donacion' ? 'violet' : 'blue'}
-              >
-                {adquisicion.tipo === 'donacion' ? 'Donación' : 'Compra'}
-              </Badge>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">N° documento</Text>
-              <Text size="sm" ff="monospace">
-                {adquisicion.numero_documento}
-              </Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">Proveedor / Donante</Text>
-              <Text size="sm">{adquisicion.proveedor_o_donante}</Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">Fecha</Text>
-              <Text size="sm">
-                {formatFecha(adquisicion.fecha_adquisicion)}
-              </Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">Registrado por</Text>
-              <Text size="sm">
-                {adquisicion.registrador?.nombre_completo
-                  ?? adquisicion.registrador?.usuario_ti ?? '—'}
-              </Text>
-            </Group>
-            {adquisicion.observaciones && (
-              <Stack gap={2}>
-                <Text size="xs" c="dimmed">Observaciones</Text>
-                <Text size="sm">{adquisicion.observaciones}</Text>
-              </Stack>
-            )}
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">Documento de respaldo</Text>
-              <Badge
-                size="sm"
-                variant="dot"
-                color={adquisicion.documento_respaldo ? 'emerald' : 'gray'}
-                leftSection={<IconFileText size={12} />}
-              >
-                {adquisicion.documento_respaldo ? 'Adjunto' : 'Pendiente'}
-              </Badge>
-            </Group>
-          </Stack>
+          <Table variant="vertical" layout="fixed" verticalSpacing="sm">
+            <Table.Tbody>
+              <Table.Tr>
+                <Table.Th w={180}>Tipo</Table.Th>
+                <Table.Td>
+                  <Group justify="flex-end">
+                    <Badge
+                      size="sm"
+                      variant="light"
+                      color={adquisicion.tipo === 'donacion' ? 'violet' : 'blue'}
+                    >
+                      {adquisicion.tipo === 'donacion' ? 'DONACIÓN' : 'COMPRA'}
+                    </Badge>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Th>N° documento</Table.Th>
+                <Table.Td>
+                  <Text size="sm" ff="monospace" ta="right">
+                    {adquisicion.numero_documento}
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Th>Proveedor / Donante</Table.Th>
+                <Table.Td>
+                  <Text size="sm" ta="right">{adquisicion.proveedor_o_donante}</Text>
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Th>Fecha</Table.Th>
+                <Table.Td>
+                  <Text size="sm" ta="right">
+                    {formatFecha(adquisicion.fecha_adquisicion)}
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Th>Registrado por</Table.Th>
+                <Table.Td>
+                  <Text size="sm" ta="right">
+                    {adquisicion.registrador?.nombre_completo
+                      ?? adquisicion.registrador?.usuario_ti ?? '—'}
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+              {adquisicion.observaciones && (
+                <Table.Tr>
+                  <Table.Th>Observaciones</Table.Th>
+                  <Table.Td>
+                    <Text size="sm" ta="right">{adquisicion.observaciones}</Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+              <Table.Tr>
+                <Table.Th>Documento de respaldo</Table.Th>
+                <Table.Td>
+                  <Group justify="flex-end">
+                    <Badge
+                      size="sm"
+                      variant="outline"
+                      color={adquisicion.documento_respaldo ? 'emerald' : 'gray'}
+                      rightSection={<IconFileText size={12} />}
+                    >
+                      {adquisicion.documento_respaldo ? 'ADJUNTO' : 'PENDIENTE'}
+                    </Badge>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            </Table.Tbody>
+          </Table>
 
           <Divider
             label={

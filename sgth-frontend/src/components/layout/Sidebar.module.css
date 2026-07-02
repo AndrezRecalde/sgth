@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #f1f5f9; /* Light gray similar to FUSE react */
+  background-color: var(--mantine-color-body);
 }
 
 .userRow {
@@ -47,43 +47,43 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 10px 16px;
+  padding: 8px;
   margin-bottom: 4px;
   border-radius: 8px;
-  color: #475569; /* Slate 600 */
+  color: var(--mantine-color-text);
   background-color: transparent;
   transition: background-color 150ms ease, color 150ms ease;
   text-decoration: none;
   cursor: pointer;
   border: none;
+  font-size: 13px;
 }
 
 .navItem:hover {
-  background-color: #e2e8f0; /* Slate 200 */
-  color: #0f172a; /* Slate 900 */
+  background-color: var(--mantine-color-default-hover);
 }
 
 .navItemActive {
-  background-color: #e2e8f0; /* Slate 200 */
-  color: #0f172a; /* Slate 900 */
+  background-color: light-dark(#e2e8f0, rgba(255, 255, 255, 0.08));
+  color: light-dark(#0f172a, var(--mantine-color-text));
   font-weight: 500;
 }
 
 .navGroup {
-  margin-top: 24px;
-  margin-bottom: 8px;
+  margin-top: 12px;
+  margin-bottom: 4px;
   padding: 0 16px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1d4ed8; /* Blue 700 */
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mantine-color-blue-filled);
 }
 
 .navGroupSubtitle {
   padding: 0 16px;
   font-size: 12px;
-  color: #64748b; /* Slate 500 */
-  margin-top: -6px;
-  margin-bottom: 12px;
+  color: var(--mantine-color-dimmed);
+  margin-top: -2px;
+  margin-bottom: 8px;
 }
 
 .navGroupCollapsed {
@@ -96,8 +96,9 @@
 }
 
 .helpCard {
-  background-color: white;
+  background-color: var(--mantine-color-default);
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: var(--mantine-shadow-xs);
+  border: 1px solid var(--mantine-color-default-border);
 }

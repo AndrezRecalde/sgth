@@ -13,6 +13,8 @@ import {
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarConsulta } from '../hooks/useConsultaMedica'
+import { RecetaModal } from './RecetaModal'
+import { useDisclosure } from '@mantine/hooks'
 import { BuscarCie10Input } from './BuscarCie10Input'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import {
@@ -44,6 +46,10 @@ export function ConsultaMedicaForm({
   const registrar  = useRegistrarConsulta()
   const [diagnosticoCie10, setDiagnosticoCie10] =
     useState<DiagnosticoCie10 | null>(null)
+  const [consultaGuardada, setConsultaGuardada] =
+    useState<ConsultaMedica | null>(null)
+  const [recetaOpened,
+    { open: abrirReceta, close: cerrarReceta }] = useDisclosure(false)
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
@@ -80,7 +86,12 @@ export function ConsultaMedicaForm({
         plan_tratamiento:     values.plan_tratamiento || null,
         notas_medico:         values.notas_medico || null,
       },
-      { onSuccess: (consulta) => onGuardada(consulta) }
+      {
+        onSuccess: (consulta) => {
+          setConsultaGuardada(consulta)
+          onGuardada(consulta)
+        },
+      }
     )
   }
 
@@ -211,10 +222,12 @@ export function ConsultaMedicaForm({
               <Group justify="space-between" mt="sm">
                 <Group gap="xs">
                   <Button
-                    variant="default"
+                    variant="light"
+                    color="emerald"
                     size="sm"
                     leftSection={<IconPill size={14} />}
-                    disabled
+                    onClick={abrirReceta}
+                    disabled={!consultaGuardada}
                   >
                     Recetar
                   </Button>
@@ -246,6 +259,13 @@ export function ConsultaMedicaForm({
           </form>
         </Card>
       </Grid.Col>
+      <RecetaModal
+        opened={recetaOpened}
+        onClose={cerrarReceta}
+        turno={turno}
+        consulta={consultaGuardada}
+        onEmitida={cerrarReceta}
+      />
     </Grid>
   )
 }

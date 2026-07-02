@@ -1,48 +1,56 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
-  UnstyledButton, Group, Text, Tooltip,
-  Box, Collapse, Badge,
-} from '@mantine/core'
-import { IconChevronRight } from '@tabler/icons-react'
-import { usePathname } from 'next/navigation'
-import { getNavIcon } from '@/lib/tablerIcons'
-import type { NavItem } from '@/config/nav'
-import classes from './Sidebar.module.css'
+  UnstyledButton,
+  Group,
+  Text,
+  Tooltip,
+  Box,
+  Collapse,
+  Badge,
+} from "@mantine/core";
+import { IconChevronRight } from "@tabler/icons-react";
+import { usePathname } from "next/navigation";
+import { getNavIcon } from "@/lib/tablerIcons";
+import type { NavItem } from "@/config/nav";
+import classes from "./Sidebar.module.css";
 
 interface Props {
-  item:      NavItem
-  collapsed: boolean
-  onClick?:  () => void
+  item: NavItem;
+  collapsed: boolean;
+  onClick?: () => void;
 }
 
 export function NavItemNested({ item, collapsed, onClick }: Props) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
-  const isChildActive = item.children?.some(
-    child => pathname === child.href || pathname.startsWith(`${child.href}/`)
-  ) ?? false
+  const isChildActive =
+    item.children?.some(
+      (child) =>
+        pathname === child.href || pathname.startsWith(`${child.href}/`),
+    ) ?? false;
 
-  const [opened, setOpened] = useState(isChildActive)
+  const [opened, setOpened] = useState(isChildActive);
 
   useEffect(() => {
-    if (isChildActive) setOpened(true)
-  }, [isChildActive])
+    if (isChildActive) setOpened(true);
+  }, [isChildActive]);
 
   const content = (
     <UnstyledButton
-      onClick={() => setOpened(o => !o)}
-      className={`${classes.navItem} ${isChildActive ? classes.navItemActive : ''}`}
+      onClick={() => setOpened((o) => !o)}
+      className={`${classes.navItem} ${isChildActive ? classes.navItemActive : ""}`}
     >
       <Group
         wrap="nowrap"
-        justify={collapsed ? 'center' : 'space-between'}
+        justify={collapsed ? "center" : "space-between"}
         gap="lg"
+        w="100%"
       >
         <Group wrap="nowrap" gap="lg">
-          <Box style={{ display: 'flex', alignItems: 'center' }}>
+          <Box style={{ display: "flex", alignItems: "center" }}>
             {getNavIcon(item.icon)}
           </Box>
           {!collapsed && (
@@ -55,21 +63,21 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
           <IconChevronRight
             size={14}
             style={{
-              transform: opened ? 'rotate(90deg)' : 'rotate(0deg)',
-              transition: 'transform 200ms ease',
+              transform: opened ? "rotate(90deg)" : "rotate(0deg)",
+              transition: "transform 200ms ease",
             }}
           />
         )}
       </Group>
     </UnstyledButton>
-  )
+  );
 
   if (collapsed) {
     return (
       <Tooltip label={item.label} position="right">
         {content}
       </Tooltip>
-    )
+    );
   }
 
   return (
@@ -80,12 +88,13 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
           {item.children?.map((child) => {
             const isActive = (child as NavItem).children
               ? (child as NavItem).children!.some(
-                  c => pathname === c.href || pathname.startsWith(`${c.href}/`)
+                  (c) =>
+                    pathname === c.href || pathname.startsWith(`${c.href}/`),
                 )
               : pathname === child.href ||
-                (child.href !== '/salud/farmacia'
+                (child.href !== "/salud/farmacia"
                   ? pathname.startsWith(`${child.href}/`)
-                  : pathname === child.href)
+                  : pathname === child.href);
 
             return (
               <UnstyledButton
@@ -93,15 +102,18 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
                 component={Link}
                 href={child.href}
                 onClick={onClick}
-                className={`${classes.navItem} ${isActive ? classes.navItemActive : ''}`}
-                style={{ paddingLeft: '0.75rem' }}
+                className={`${classes.navItem} ${isActive ? classes.navItemActive : ""}`}
+                style={{ paddingLeft: "0.75rem" }}
               >
-                <Group wrap="nowrap" gap="sm" justify="space-between">
+                <Group wrap="nowrap" gap="sm" justify="space-between" w="100%">
                   <Group wrap="nowrap" gap="sm">
-                    <Box style={{
-                      display: 'flex', alignItems: 'center',
-                      opacity: 0.7,
-                    }}>
+                    <Box
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        opacity: 0.7,
+                      }}
+                    >
                       {getNavIcon(child.icon)}
                     </Box>
                     <Text size="sm" fw="inherit">
@@ -115,10 +127,10 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
                   )}
                 </Group>
               </UnstyledButton>
-            )
+            );
           })}
         </Box>
       </Collapse>
     </>
-  )
+  );
 }

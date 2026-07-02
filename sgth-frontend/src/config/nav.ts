@@ -87,7 +87,7 @@ export const NAV_SALUD: NavGroup[] = [
       {
         label: 'Odontología',
         href:  ROUTES.SALUD.ODONTOLOGIA,
-        icon:  'IconTooth',
+        icon:  'IconDental',
       },
       {
         label: 'Enfermería',

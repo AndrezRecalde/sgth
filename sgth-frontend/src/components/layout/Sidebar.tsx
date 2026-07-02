@@ -46,25 +46,24 @@ export function Sidebar({ collapsed, onNavClick }: Props) {
 
   const groups = buildNav(subsistema, permisos);
 
-  const groupsConBadges = groups.map(group => ({
+  const groupsConBadges = groups.map((group) => ({
     ...group,
-    items: group.items.map(item => {
-      if (item.href === '/salud/farmacia' && item.children) {
+    items: group.items.map((item) => {
+      if (item.href === "/salud/farmacia" && item.children) {
         return {
           ...item,
-          children: item.children.map(child =>
-            child.href === '/salud/farmacia'
+          children: item.children.map((child) =>
+            child.href === "/salud/farmacia"
               ? {
                   ...child,
-                  badge: stockBajoCount > 0
-                    ? String(stockBajoCount)
-                    : undefined,
+                  badge:
+                    stockBajoCount > 0 ? String(stockBajoCount) : undefined,
                 }
-              : child
+              : child,
           ),
-        }
+        };
       }
-      return item
+      return item;
     }),
   }));
 
@@ -82,7 +81,12 @@ export function Sidebar({ collapsed, onNavClick }: Props) {
           }}
         >
           <Box
-            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
+            }}
             onClick={() => router.push("/bienvenida")}
           >
             <Image
@@ -96,7 +100,12 @@ export function Sidebar({ collapsed, onNavClick }: Props) {
               }
               fallbackSrc="https://placehold.co/600x400?text=Placeholder"
             />
-            <Text fw={800} size="lg" style={{ letterSpacing: "-0.5px" }} color="#0f172a">
+            <Text
+              fw={600}
+              size="lg"
+              style={{ letterSpacing: "-0.5px" }}
+              color="#0f172a"
+            >
               GADPE
             </Text>
           </Box>
@@ -122,7 +131,7 @@ export function Sidebar({ collapsed, onNavClick }: Props) {
                   collapsed={collapsed}
                   onClick={onNavClick}
                 />
-              )
+              ),
             )}
           </Box>
         ))}
