@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Card, Alert, Text } from '@mantine/core'
-import { IconStethoscope, IconCheck } from '@tabler/icons-react'
+import {
+  Stack, Card, Alert, Text, Button, Group,
+} from '@mantine/core'
+import {
+  IconStethoscope, IconCheck, IconArrowRight,
+} from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { PacientesListosTable } from
   '@/features/dispensario/components/PacientesListosTable'
@@ -16,8 +20,8 @@ import type { ConsultaMedica } from
 type Paso = 'lista' | 'consulta' | 'finalizado'
 
 export default function ConsultasPage() {
-  const [paso, setPaso] = useState<Paso>('lista')
-  const [turno, setTurno] = useState<AgendaMedica | null>(null)
+  const [paso, setPaso]             = useState<Paso>('lista')
+  const [turno, setTurno]           = useState<AgendaMedica | null>(null)
   const [consultaCreada, setConsultaCreada] =
     useState<ConsultaMedica | null>(null)
 
@@ -27,8 +31,6 @@ export default function ConsultasPage() {
     setConsultaCreada(null)
   }
 
-  // Se necesita el historia_clinica_id del paciente.
-  // Se resuelve a partir del turno cuando se "Atiende".
   const handleAtender = (t: AgendaMedica) => {
     setTurno(t)
     setPaso('consulta')
@@ -47,15 +49,40 @@ export default function ConsultasPage() {
       )}
 
       {paso === 'consulta' && turno && turno.historia_clinica_id && (
-        <ConsultaMedicaForm
-          turno={turno}
-          historiaClinicaId={turno.historia_clinica_id}
-          onGuardada={(consulta) => {
-            setConsultaCreada(consulta)
-            setPaso('finalizado')
-          }}
-          onCancelar={handleReiniciar}
-        />
+        <>
+          {consultaCreada && (
+            <Alert
+              icon={<IconCheck size={14} />}
+              color="emerald"
+              variant="light"
+            >
+              <Group justify="space-between" wrap="nowrap">
+                <Text size="sm" fw={600}>
+                  Consulta guardada — puede recetar o emitir
+                  un certificado antes de finalizar.
+                </Text>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="emerald"
+                  rightSection={<IconArrowRight size={13} />}
+                  onClick={handleReiniciar}
+                >
+                  Finalizar y atender otro
+                </Button>
+              </Group>
+            </Alert>
+          )}
+
+          <ConsultaMedicaForm
+            turno={turno}
+            historiaClinicaId={turno.historia_clinica_id}
+            onGuardada={(consulta) => {
+              setConsultaCreada(consulta)
+            }}
+            onCancelar={handleReiniciar}
+          />
+        </>
       )}
 
       {paso === 'finalizado' && (
