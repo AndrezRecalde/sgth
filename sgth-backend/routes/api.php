@@ -690,6 +690,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::post('{id}/despachar', [\App\Http\Controllers\Dispensario\RecetaController::class, 'despachar'])
                 ->middleware('role:enfermera|admin-dispensario');
+            Route::patch('{recetaId}/items/{itemId}',
+                [\App\Http\Controllers\Dispensario\ItemRecetaController::class, 'update']
+            )->middleware('role:medico|odontologo');
+            Route::delete('{recetaId}/items/{itemId}',
+                [\App\Http\Controllers\Dispensario\ItemRecetaController::class, 'destroy']
+            )->middleware('role:medico|odontologo');
         });
 
         // Inventario — todo el personal del dispensario

@@ -1,1 +1,0 @@
-feat(dispensario): agregar GET /recetas con filtro por consulta_medica_id
