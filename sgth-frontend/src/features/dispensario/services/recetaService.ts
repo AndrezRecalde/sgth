@@ -12,6 +12,11 @@ export interface ItemReceta {
   frecuencia:              string
   duracion:                string
   observaciones?:          string | null
+  inventario?: {
+    nombre:         string
+    presentacion?:  string
+    concentracion?: string | null
+  } | null
 }
 
 export interface RecetaMedica {

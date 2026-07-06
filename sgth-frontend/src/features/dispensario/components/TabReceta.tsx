@@ -58,9 +58,16 @@ function ItemsRecetaTable({
       accessor: 'nombre_medicina',
       title:    'Medicina',
       render: (item: ItemReceta) => (
-        <Text size="sm" fw={500}>
-          {item.nombre_medicina ?? '—'}
-        </Text>
+        <Stack gap={0}>
+          <Text size="sm" fw={500}>
+            {item.inventario?.nombre ?? item.nombre_medicina ?? '—'}
+          </Text>
+          {item.inventario?.concentracion && (
+            <Text size="xs" c="dimmed">
+              {item.inventario.concentracion}
+            </Text>
+          )}
+        </Stack>
       ),
     },
     {
