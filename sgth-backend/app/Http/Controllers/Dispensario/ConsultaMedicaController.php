@@ -79,7 +79,9 @@ final class ConsultaMedicaController extends Controller
             'historiaClinica.alergias',
             'historiaClinica.antecedentes',
             'medico',
-            'recetasMedicas.items',
+            'recetasMedicas.items.inventario',
+            'diagnosticosSecundarios.diagnostico',
+            'resultados',
         ])->findOrFail($id);
 
         return ApiResponse::ok($consulta);

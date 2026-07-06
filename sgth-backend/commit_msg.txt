@@ -1,7 +1,0 @@
-fix(dispensario): turnosDelDia no inyectaba historia_clinica_id
-
-Mismo bug que listosParaConsulta: el campo historia_clinica_id
-no se resuelve automaticamente — se debe inyectar manualmente
-por cada turno igual que se hace en listosParaConsulta.
-Sin esto, el panel de contexto no cargaba triaje ni alergias
-porque historiaClinicaId llegaba como 0 al componente.
