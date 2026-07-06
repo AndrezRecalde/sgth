@@ -1,20 +1,31 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
+export type EstadoAgenda =
+  | 'en_espera'
+  | 'en_sala'
+  | 'en_consulta'
+  | 'atendido'
+  | 'no_presentado'
+  | 'cancelado'
+
 export interface AgendaMedica {
-  id:                 number
-  folio?:             string | null
-  medico_id:          number
-  servidor_id?:       number | null
-  carga_familiar_id?: number | null
-  tipo_atencion:      'medicina_general' | 'odontologia'
-  fecha:              string
-  hora_inicio?:       string | null
-  hora_fin?:          string | null
-  registrado_en?:     string | null
-  estado:             string
-  requiere_triaje?:   boolean
-  motivo_solicitud?:  string | null
+  id:                           number
+  folio?:                       string | null
+  medico_id:                    number
+  servidor_id?:                 number | null
+  carga_familiar_id?:           number | null
+  tipo_atencion:                'medicina_general' | 'odontologia'
+  fecha:                        string
+  hora_inicio?:                 string | null
+  hora_fin?:                    string | null
+  registrado_en?:               string | null
+  estado:                       EstadoAgenda
+  requiere_triaje?:             boolean
+  motivo_solicitud?:            string | null
+  historia_clinica_id?:         number | null
+  marcado_no_presentado_en?:    string | null
+  reactivado_en?:               string | null
   medico?: {
     id: number
     nombre_completo?: string
@@ -31,7 +42,12 @@ export interface AgendaMedica {
     apellidos: string
   } | null
   triaje?: unknown | null
-  historia_clinica_id?: number | null
+  consulta_medica?: {
+    id: number
+    tipo_atencion?: string
+    tipo_diagnostico?: string
+    diagnostico_detallado?: string
+  } | null
 }
 
 export interface CrearAgendaData {
@@ -67,5 +83,25 @@ export const agendaService = {
   listosParaConsulta: () =>
     api.get<ApiResponse<AgendaMedica[]>>(
       '/dispensario/agenda/listos-para-consulta'
+    ).then(r => r.data.datos),
+
+  turnosDelDia: () =>
+    api.get<ApiResponse<AgendaMedica[]>>(
+      '/dispensario/agenda/turnos-del-dia'
+    ).then(r => r.data.datos),
+
+  marcarNoPresentado: (id: number) =>
+    api.patch<ApiResponse<AgendaMedica>>(
+      `/dispensario/agenda/${id}/no-presentado`
+    ).then(r => r.data.datos),
+
+  reactivar: (id: number) =>
+    api.patch<ApiResponse<AgendaMedica>>(
+      `/dispensario/agenda/${id}/reactivar`
+    ).then(r => r.data.datos),
+
+  marcarEnConsulta: (id: number) =>
+    api.patch<ApiResponse<AgendaMedica>>(
+      `/dispensario/agenda/${id}/en-consulta`
     ).then(r => r.data.datos),
 }
