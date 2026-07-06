@@ -96,6 +96,44 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         });
     }
 
+    public function actualizarConsulta(
+        int $consultaId,
+        array $datos
+    ): ConsultaMedica {
+        return DB::transaction(function () use (
+            $consultaId, $datos
+        ) {
+            $consulta = ConsultaMedica::findOrFail($consultaId);
+
+            $secundarios = $datos['diagnosticos_secundarios'] ?? null;
+            $datosConsulta = Arr::except(
+                $datos, ['diagnosticos_secundarios']
+            );
+
+            $consulta->update($datosConsulta);
+
+            if ($secundarios !== null) {
+                \App\Models\Dispensario\DiagnosticoSecundarioConsulta::where(
+                    'consulta_medica_id', $consultaId
+                )->delete();
+
+                foreach ($secundarios as $cie10Id) {
+                    \App\Models\Dispensario\DiagnosticoSecundarioConsulta::create([
+                        'consulta_medica_id'   => $consulta->id,
+                        'diagnostico_cie10_id' => $cie10Id,
+                    ]);
+                }
+            }
+
+            return $consulta->load([
+                'historiaClinica.servidor',
+                'historiaClinica.cargaFamiliar',
+                'medico',
+                'diagnosticosSecundarios.diagnostico',
+            ]);
+        });
+    }
+
     public function obtenerContextoConsulta(
         int $historiaClinicaId,
         ?int $agendaMedicaId = null

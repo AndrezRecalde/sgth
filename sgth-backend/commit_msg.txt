@@ -1,6 +1,9 @@
-feat(dispensario): endpoint para obtener turno por folio
+feat(dispensario): endpoint PATCH para actualizar consulta medica
 
-Permite cargar un turno directamente por su folio
-(ej: TUR-2026-00006) con historia_clinica_id ya
-inyectado, para soportar rutas URL dinamicas en el
-frontend (/salud/consultas/TUR-2026-00006)
+- UpdateConsultaMedicaRequest: valida mismos campos que
+  Store excepto historia_clinica_id y agenda_medica_id
+- HistoriaClinicaService::actualizarConsulta: actualiza
+  la consulta y reemplaza los diagnosticos secundarios
+  transaccionalmente
+- ConsultaMedicaController::update: PATCH /consultas/{id}
+  solo para medico/odontologo

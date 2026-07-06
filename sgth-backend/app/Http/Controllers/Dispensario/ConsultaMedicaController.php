@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dispensario;
 use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreConsultaMedicaRequest;
+use App\Http\Requests\Dispensario\UpdateConsultaMedicaRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Http\JsonResponse;
@@ -59,6 +60,20 @@ final class ConsultaMedicaController extends Controller
 
         return ApiResponse::created(
             $consulta, 'Consulta registrada.'
+        );
+    }
+
+    public function update(
+        UpdateConsultaMedicaRequest $request,
+        int $id
+    ): JsonResponse {
+        $consulta = $this->historiaService->actualizarConsulta(
+            $id,
+            $request->validated()
+        );
+
+        return ApiResponse::ok(
+            $consulta, 'Consulta actualizada.'
         );
     }
 

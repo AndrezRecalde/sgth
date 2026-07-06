@@ -664,6 +664,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::get('/', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'index']);
                 Route::post('/', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'store']);
                 Route::get('{id}', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'show']);
+                Route::patch('{id}', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'update'])
+                    ->middleware('role:medico|odontologo');
             });
 
         Route::get('certificados-medicos',

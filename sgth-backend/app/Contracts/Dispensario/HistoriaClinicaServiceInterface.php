@@ -16,6 +16,11 @@ interface HistoriaClinicaServiceInterface
 
     public function registrarConsulta(array $datos): ConsultaMedica;
 
+    public function actualizarConsulta(
+        int $consultaId,
+        array $datos
+    ): ConsultaMedica;
+
     public function obtenerContextoConsulta(
         int $historiaClinicaId,
         ?int $agendaMedicaId = null
