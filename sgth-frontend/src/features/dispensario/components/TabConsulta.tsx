@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarConsulta } from '../hooks/useConsultaMedica'
 import { BuscarCie10Input } from './BuscarCie10Input'
+import { RichTextInput } from './RichTextInput'
 import {
   consultaMedicaSchema,
   type ConsultaMedicaFormData,
@@ -204,23 +205,31 @@ export function TabConsulta({
           ))}
         </Stack>
 
-        <Textarea
-          label="Diagnóstico detallado"
-          placeholder="Descripción clínica del diagnóstico"
-          autosize
-          minRows={4}
-          {...contained}
-          {...register('diagnostico_detallado')}
-          error={errors.diagnostico_detallado?.message}
+        <Controller
+          name="diagnostico_detallado"
+          control={control}
+          render={({ field }) => (
+            <RichTextInput
+              label="Diagnóstico detallado"
+              required
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              error={errors.diagnostico_detallado?.message}
+            />
+          )}
         />
 
-        <Textarea
-          label="Plan de tratamiento (opcional)"
-          placeholder="Indicaciones y tratamiento a seguir"
-          autosize
-          minRows={4}
-          {...contained}
-          {...register('plan_tratamiento')}
+        <Controller
+          name="plan_tratamiento"
+          control={control}
+          render={({ field }) => (
+            <RichTextInput
+              label="Plan de tratamiento"
+              description="Opcional"
+              value={field.value ?? ''}
+              onChange={field.onChange}
+            />
+          )}
         />
 
         <Group justify="flex-end" pt="sm">

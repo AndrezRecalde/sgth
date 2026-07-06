@@ -32,12 +32,20 @@ function Campo({
   valor?: string | null
 }) {
   if (!valor) return null
+  const esHtml = valor.startsWith('<')
   return (
     <Stack gap={2}>
       <Text size="xs" fw={600} tt="uppercase" c="dimmed">
         {label}
       </Text>
-      <Text size="sm">{valor}</Text>
+      {esHtml ? (
+        <div
+          style={{ fontSize: 'var(--mantine-font-size-sm)' }}
+          dangerouslySetInnerHTML={{ __html: valor }}
+        />
+      ) : (
+        <Text size="sm">{valor}</Text>
+      )}
     </Stack>
   )
 }
