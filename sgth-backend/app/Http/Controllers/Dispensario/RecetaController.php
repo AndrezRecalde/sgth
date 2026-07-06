@@ -17,7 +17,7 @@ final class RecetaController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = \App\Models\Dispensario\RecetaMedica::with([
-            'items',
+            'items.inventario',
         ])->orderBy('created_at', 'desc');
 
         if ($request->filled('consulta_medica_id')) {
