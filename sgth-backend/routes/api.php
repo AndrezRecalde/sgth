@@ -580,6 +580,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::patch('agenda/{agenda}/en-consulta',
             [\App\Http\Controllers\Dispensario\AgendaController::class, 'marcarEnConsulta']
         )->name('agenda.enConsulta');
+        Route::get('agenda/por-folio/{folio}',
+            [\App\Http\Controllers\Dispensario\AgendaController::class, 'porFolio']
+        )->name('agenda.porFolio');
         Route::apiResource('agenda', \App\Http\Controllers\Dispensario\AgendaController::class)
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 

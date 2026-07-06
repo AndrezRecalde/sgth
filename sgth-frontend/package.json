@@ -27,6 +27,7 @@
     "@tanstack/react-query-devtools": "^5.100.10",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.24",
+    "@tiptap/extension-highlight": "^3.27.2",
     "@tiptap/extension-link": "^3.27.2",
     "@tiptap/pm": "^3.27.2",
     "@tiptap/react": "^3.27.2",

@@ -28,4 +28,9 @@ interface AgendaServiceInterface
     public function marcarEnConsulta(int $id): AgendaMedica;
 
     public function marcarAtendido(int $id): AgendaMedica;
+
+    public function obtenerPorFolio(
+        string $folio,
+        int $medicoId
+    ): AgendaMedica;
 }

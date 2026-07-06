@@ -209,6 +209,29 @@ final class AgendaService implements AgendaServiceInterface
         return $turno;
     }
 
+    public function obtenerPorFolio(
+        string $folio,
+        int $medicoId
+    ): AgendaMedica {
+        $turno = AgendaMedica::with([
+            'servidor', 'cargaFamiliar.servidor', 'triaje',
+            'consultaMedica',
+        ])
+            ->where('folio', $folio)
+            ->where('medico_id', $medicoId)
+            ->firstOrFail();
+
+        $turno->historia_clinica_id = $turno->servidor_id
+            ? \App\Models\Dispensario\HistoriaClinica::where(
+                'servidor_id', $turno->servidor_id
+            )->value('id')
+            : \App\Models\Dispensario\HistoriaClinica::where(
+                'carga_familiar_id', $turno->carga_familiar_id
+            )->value('id');
+
+        return $turno;
+    }
+
 
     private function generarFolio(string $fecha): string
     {

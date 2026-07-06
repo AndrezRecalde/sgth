@@ -76,6 +76,18 @@ final class AgendaController extends Controller
         return ApiResponse::ok($turnos);
     }
 
+    public function porFolio(
+        Request $request,
+        string $folio
+    ): JsonResponse {
+        $turno = $this->agendaService->obtenerPorFolio(
+            strtoupper($folio),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok($turno);
+    }
+
     public function noPresentado(
         Request $request,
         int $agenda

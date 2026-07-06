@@ -3,6 +3,7 @@
 import { RichTextEditor, Link } from '@mantine/tiptap'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import Highlight from '@tiptap/extension-highlight'
 import '@mantine/tiptap/styles.css'
 import { Text, Stack } from '@mantine/core'
 import { useEffect } from 'react'
@@ -15,16 +16,21 @@ interface Props {
   required?:    boolean
   error?:       string
   description?: string
+  minHeight?:   number
+  maxHeight?:   number
 }
 
 export function RichTextInput({
   label, placeholder, value, onChange,
   required, error, description,
+  minHeight = 120,
+  maxHeight = 400,
 }: Props) {
   const editor = useEditor({
     extensions: [
       StarterKit,
       Link.configure({ openOnClick: false }),
+      Highlight.configure({ multicolor: false }),
     ],
     content: value || '',
     onUpdate: ({ editor }) => {
@@ -63,6 +69,7 @@ export function RichTextInput({
             <RichTextEditor.Bold />
             <RichTextEditor.Italic />
             <RichTextEditor.Underline />
+            <RichTextEditor.Highlight />
           </RichTextEditor.ControlsGroup>
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.BulletList />
@@ -73,7 +80,11 @@ export function RichTextInput({
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>
         <RichTextEditor.Content
-          mih={120}
+          style={{
+            minHeight,
+            maxHeight,
+            overflowY: 'auto',
+          }}
         />
       </RichTextEditor>
       {error && (
