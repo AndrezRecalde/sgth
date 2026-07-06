@@ -4,6 +4,7 @@ import {
   Modal, Stack, NumberInput, TextInput,
   Textarea, Button, Group, Text,
 } from '@mantine/core'
+import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -37,13 +38,25 @@ export function EditarItemRecetaModal({
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      cantidad_prescrita: item?.cantidad_prescrita ?? 1,
-      dosis:              item?.dosis ?? '',
-      frecuencia:         item?.frecuencia ?? '',
-      duracion:           item?.duracion ?? '',
-      observaciones:      item?.observaciones ?? '',
+      cantidad_prescrita: 1,
+      dosis:              '',
+      frecuencia:         '',
+      duracion:           '',
+      observaciones:      '',
     },
   })
+
+  useEffect(() => {
+    if (opened && item) {
+      reset({
+        cantidad_prescrita: item.cantidad_prescrita ?? 1,
+        dosis:              item.dosis ?? '',
+        frecuencia:         item.frecuencia ?? '',
+        duracion:           item.duracion ?? '',
+        observaciones:      item.observaciones ?? '',
+      })
+    }
+  }, [opened, item, reset])
 
   const onSubmit = (values: FormData) => {
     if (!item?.id) return
