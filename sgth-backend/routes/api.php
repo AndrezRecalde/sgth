@@ -682,6 +682,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
         // Recetas — médicos emiten, enfermeras y admin despachan
         Route::prefix('recetas')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Dispensario\RecetaController::class, 'index'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::post('/', [\App\Http\Controllers\Dispensario\RecetaController::class, 'store'])
                 ->middleware('role:medico|odontologo');
             Route::get('{id}', [\App\Http\Controllers\Dispensario\RecetaController::class, 'show'])

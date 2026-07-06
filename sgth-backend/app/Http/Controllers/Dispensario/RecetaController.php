@@ -14,6 +14,24 @@ final class RecetaController extends Controller
         private readonly RecetaServiceInterface $recetaService
     ) {}
 
+    public function index(Request $request): JsonResponse
+    {
+        $query = \App\Models\Dispensario\RecetaMedica::with([
+            'items',
+        ])->orderBy('created_at', 'desc');
+
+        if ($request->filled('consulta_medica_id')) {
+            $query->where(
+                'consulta_medica_id',
+                $request->integer('consulta_medica_id')
+            );
+        }
+
+        $recetas = $query->get();
+
+        return ApiResponse::ok($recetas);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $request->validate([

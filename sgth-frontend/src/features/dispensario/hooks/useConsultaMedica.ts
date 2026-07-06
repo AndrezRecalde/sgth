@@ -31,3 +31,30 @@ export function useRegistrarConsulta() {
       }),
   })
 }
+
+export function useActualizarConsulta() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: {
+      id: number
+      data: Partial<CrearConsultaData>
+    }) => consultaMedicaService.actualizar(id, data),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Consulta actualizada',
+        message: 'Los cambios fueron guardados correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['consultas'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}

@@ -1,9 +1,1 @@
-feat(dispensario): endpoint PATCH para actualizar consulta medica
-
-- UpdateConsultaMedicaRequest: valida mismos campos que
-  Store excepto historia_clinica_id y agenda_medica_id
-- HistoriaClinicaService::actualizarConsulta: actualiza
-  la consulta y reemplaza los diagnosticos secundarios
-  transaccionalmente
-- ConsultaMedicaController::update: PATCH /consultas/{id}
-  solo para medico/odontologo
+feat(dispensario): agregar GET /recetas con filtro por consulta_medica_id

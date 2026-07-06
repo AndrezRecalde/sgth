@@ -100,4 +100,9 @@ export const consultaMedicaService = {
         per_page: 50
       }}
     ).then(r => r.data.datos?.data ?? []),
+
+  actualizar: (id: number, data: Partial<CrearConsultaData>) =>
+    api.patch<ApiResponse<ConsultaMedica>>(
+      `/dispensario/consultas/${id}`, data
+    ).then(r => r.data.datos),
 }
