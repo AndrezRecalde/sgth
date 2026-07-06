@@ -1,27 +1,7 @@
-feat(dispensario): fase 2 backend consulta medica completa
+fix(dispensario): turnosDelDia no inyectaba historia_clinica_id
 
-AGENDAS MEDICAS:
-- Nuevos estados: en_consulta, atendido, no_presentado
-- Campos de trazabilidad: marcado_no_presentado_en/por,
-  reactivado_en/por
-- AgendaService: turnosDelDia (ordenados por estado y hora),
-  marcarNoPresentado (con validacion 6h), reactivar,
-  marcarEnConsulta, marcarAtendido
-- Nuevas rutas: turnos-del-dia, no-presentado, reactivar,
-  en-consulta
-
-CONSULTAS MEDICAS:
-- Nuevos campos: agenda_medica_id (FK), enfermedad_actual
-  (encrypted), tipo_atencion, tipo_diagnostico
-- Nueva tabla: diagnosticos_secundarios_consulta
-- Nueva tabla: resultados_medicos
-- StoreConsultaMedicaRequest: valida todos los campos nuevos
-- HistoriaClinicaService: guarda diagnosticos secundarios,
-  marca turno como atendido automaticamente al guardar
-- AgendaMedica: relacion consultaMedica, marcadoPor,
-  reactivadoPor
-
-MODELOS:
-- DiagnosticoSecundarioConsulta
-- ResultadoMedico
-- ConsultaMedica/AgendaMedica actualizados
+Mismo bug que listosParaConsulta: el campo historia_clinica_id
+no se resuelve automaticamente — se debe inyectar manualmente
+por cada turno igual que se hace en listosParaConsulta.
+Sin esto, el panel de contexto no cargaba triaje ni alergias
+porque historiaClinicaId llegaba como 0 al componente.

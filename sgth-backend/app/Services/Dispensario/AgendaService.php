@@ -114,7 +114,7 @@ final class AgendaService implements AgendaServiceInterface
     public function turnosDelDia(
         int $medicoId
     ): \Illuminate\Database\Eloquent\Collection {
-        return AgendaMedica::with([
+        $turnos = AgendaMedica::with([
             'servidor', 'cargaFamiliar.servidor',
             'triaje', 'consultaMedica',
         ])
@@ -132,6 +132,18 @@ final class AgendaService implements AgendaServiceInterface
                 registrado_en ASC
             ")
             ->get();
+
+        $turnos->each(function (AgendaMedica $turno) {
+            $turno->historia_clinica_id = $turno->servidor_id
+                ? \App\Models\Dispensario\HistoriaClinica::where(
+                    'servidor_id', $turno->servidor_id
+                )->value('id')
+                : \App\Models\Dispensario\HistoriaClinica::where(
+                    'carga_familiar_id', $turno->carga_familiar_id
+                )->value('id');
+        });
+
+        return $turnos;
     }
 
     public function marcarNoPresentado(
