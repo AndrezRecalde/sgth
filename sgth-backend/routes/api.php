@@ -568,6 +568,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('agenda/listos-para-consulta',
             [\App\Http\Controllers\Dispensario\AgendaController::class, 'listosParaConsulta']
         )->name('agenda.listosParaConsulta');
+        Route::get('agenda/turnos-del-dia',
+            [\App\Http\Controllers\Dispensario\AgendaController::class, 'turnosDelDia']
+        )->name('agenda.turnosDelDia');
+        Route::patch('agenda/{agenda}/no-presentado',
+            [\App\Http\Controllers\Dispensario\AgendaController::class, 'noPresentado']
+        )->name('agenda.noPresentado');
+        Route::patch('agenda/{agenda}/reactivar',
+            [\App\Http\Controllers\Dispensario\AgendaController::class, 'reactivar']
+        )->name('agenda.reactivar');
+        Route::patch('agenda/{agenda}/en-consulta',
+            [\App\Http\Controllers\Dispensario\AgendaController::class, 'marcarEnConsulta']
+        )->name('agenda.enConsulta');
         Route::apiResource('agenda', \App\Http\Controllers\Dispensario\AgendaController::class)
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 

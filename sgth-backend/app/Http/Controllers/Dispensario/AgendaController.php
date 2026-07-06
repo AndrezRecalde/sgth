@@ -66,4 +66,35 @@ final class AgendaController extends Controller
 
         return ApiResponse::ok($turnos);
     }
+
+    public function turnosDelDia(Request $request): JsonResponse
+    {
+        $turnos = $this->agendaService->turnosDelDia(
+            $request->user()->id
+        );
+
+        return ApiResponse::ok($turnos);
+    }
+
+    public function noPresentado(
+        Request $request,
+        int $agenda
+    ): JsonResponse {
+        $turno = $this->agendaService->marcarNoPresentado(
+            $agenda, $request->user()->id
+        );
+
+        return ApiResponse::ok($turno, 'Turno marcado como no presentado.');
+    }
+
+    public function reactivar(
+        Request $request,
+        int $agenda
+    ): JsonResponse {
+        $turno = $this->agendaService->reactivar(
+            $agenda, $request->user()->id
+        );
+
+        return ApiResponse::ok($turno, 'Turno reactivado correctamente.');
+    }
 }

@@ -111,6 +111,93 @@ final class AgendaService implements AgendaServiceInterface
         return $turnos;
     }
 
+    public function turnosDelDia(
+        int $medicoId
+    ): \Illuminate\Database\Eloquent\Collection {
+        return AgendaMedica::with([
+            'servidor', 'cargaFamiliar.servidor',
+            'triaje', 'consultaMedica',
+        ])
+            ->where('medico_id', $medicoId)
+            ->whereDate('fecha', today())
+            ->orderByRaw("
+                CASE estado
+                    WHEN 'en_consulta'    THEN 1
+                    WHEN 'en_sala'        THEN 2
+                    WHEN 'en_espera'      THEN 3
+                    WHEN 'no_presentado'  THEN 4
+                    WHEN 'atendido'       THEN 5
+                    ELSE 6
+                END,
+                registrado_en ASC
+            ")
+            ->get();
+    }
+
+    public function marcarNoPresentado(
+        int $id,
+        int $usuarioId
+    ): AgendaMedica {
+        $turno = AgendaMedica::findOrFail($id);
+
+        if ($turno->estado === 'atendido') {
+            throw new \App\Exceptions\ReglaNegocioException(
+                'No se puede marcar como no presentado un turno ya atendido.'
+            );
+        }
+
+        $turno->update([
+            'estado'                    => 'no_presentado',
+            'marcado_no_presentado_en'  => now(),
+            'marcado_no_presentado_por' => $usuarioId,
+        ]);
+
+        return $turno;
+    }
+
+    public function reactivar(
+        int $id,
+        int $usuarioId
+    ): AgendaMedica {
+        $turno = AgendaMedica::findOrFail($id);
+
+        if ($turno->estado !== 'no_presentado') {
+            throw new \App\Exceptions\ReglaNegocioException(
+                'Solo se pueden reactivar turnos marcados como no presentado.'
+            );
+        }
+
+        $horas = now()->diffInHours($turno->marcado_no_presentado_en);
+        if ($horas > 6) {
+            throw new \App\Exceptions\ReglaNegocioException(
+                'No se puede reactivar un turno con más de 6 horas de ausencia.'
+            );
+        }
+
+        $turno->update([
+            'estado'         => 'en_espera',
+            'reactivado_en'  => now(),
+            'reactivado_por' => $usuarioId,
+        ]);
+
+        return $turno;
+    }
+
+    public function marcarEnConsulta(int $id): AgendaMedica
+    {
+        $turno = AgendaMedica::findOrFail($id);
+        $turno->update(['estado' => 'en_consulta']);
+        return $turno;
+    }
+
+    public function marcarAtendido(int $id): AgendaMedica
+    {
+        $turno = AgendaMedica::findOrFail($id);
+        $turno->update(['estado' => 'atendido']);
+        return $turno;
+    }
+
+
     private function generarFolio(string $fecha): string
     {
         $anio = substr($fecha, 0, 4);

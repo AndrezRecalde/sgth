@@ -62,6 +62,15 @@ final class ConsultaMedicaController extends Controller
         );
     }
 
+    public function marcarEnConsulta(
+        Request $request,
+        int $id
+    ): JsonResponse {
+        $agenda = \App\Models\Dispensario\AgendaMedica::findOrFail($id);
+        $agenda->update(['estado' => 'en_consulta']);
+        return ApiResponse::ok($agenda, 'Turno en consulta.');
+    }
+
     public function show(int $id): JsonResponse
     {
         $consulta = ConsultaMedica::with([

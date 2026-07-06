@@ -1,0 +1,7 @@
+fix(dispensario): completar RecetaController con validacion y show real
+
+- store: agrega validacion de items (inventario_medicina_id,
+  cantidad_prescrita, dosis, frecuencia, duracion)
+- show: ahora carga la receta real con items e inventario
+  (antes solo devolvia el id hardcodeado)
+- despachar: agrega validacion de items

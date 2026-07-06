@@ -7,11 +7,15 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Contracts\Dispensario\AgendaServiceInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
 {
+    public function __construct(
+        private readonly AgendaServiceInterface $agendaService
+    ) {}
     public function listar(array $filtros): LengthAwarePaginator
     {
         $query = HistoriaClinica::with([
@@ -63,22 +67,31 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
     public function registrarConsulta(array $datos): ConsultaMedica
     {
         return DB::transaction(function () use ($datos) {
+            $secundarios = $datos['diagnosticos_secundarios'] ?? [];
             $datosConsulta = Arr::except(
-                $datos, ['agenda_medica_id']
+                $datos, ['diagnosticos_secundarios']
             );
 
             $consulta = ConsultaMedica::create($datosConsulta);
 
+            foreach ($secundarios as $cie10Id) {
+                \App\Models\Dispensario\DiagnosticoSecundarioConsulta::create([
+                    'consulta_medica_id'  => $consulta->id,
+                    'diagnostico_cie10_id' => $cie10Id,
+                ]);
+            }
+
             if (!empty($datos['agenda_medica_id'])) {
-                DB::table('agendas_medicas')
-                    ->where('id', $datos['agenda_medica_id'])
-                    ->update(['estado' => 'atendida']);
+                $this->agendaService->marcarAtendido(
+                    $datos['agenda_medica_id']
+                );
             }
 
             return $consulta->load([
                 'historiaClinica.servidor',
                 'historiaClinica.cargaFamiliar',
                 'medico',
+                'diagnosticosSecundarios.diagnostico',
             ]);
         });
     }

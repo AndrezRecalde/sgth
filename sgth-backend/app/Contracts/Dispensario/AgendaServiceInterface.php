@@ -18,4 +18,14 @@ interface AgendaServiceInterface
     public function cancelar(int $id): AgendaMedica;
 
     public function listosParaConsulta(int $medicoId): \Illuminate\Database\Eloquent\Collection;
+
+    public function turnosDelDia(int $medicoId): \Illuminate\Database\Eloquent\Collection;
+
+    public function marcarNoPresentado(int $id, int $usuarioId): AgendaMedica;
+
+    public function reactivar(int $id, int $usuarioId): AgendaMedica;
+
+    public function marcarEnConsulta(int $id): AgendaMedica;
+
+    public function marcarAtendido(int $id): AgendaMedica;
 }

@@ -21,16 +21,20 @@ class AgendaMedica extends Model
         'folio', 'tipo_atencion', 'requiere_triaje',
         'fecha', 'hora_inicio', 'hora_fin', 'estado',
         'motivo_solicitud', 'registrado_en', 'estado_registro',
+        'marcado_no_presentado_en', 'marcado_no_presentado_por',
+        'reactivado_en', 'reactivado_por',
         'created_by', 'updated_by'
     ];
 
     protected function casts(): array
     {
         return [
-            'fecha'           => 'date',
-            'registrado_en'   => 'datetime',
-            'requiere_triaje' => 'boolean',
-            'estado_registro' => 'boolean',
+            'fecha'                      => 'date',
+            'registrado_en'              => 'datetime',
+            'marcado_no_presentado_en'   => 'datetime',
+            'reactivado_en'              => 'datetime',
+            'requiere_triaje'            => 'boolean',
+            'estado_registro'            => 'boolean',
         ];
     }
 
@@ -57,5 +61,22 @@ class AgendaMedica extends Model
     public function triaje(): HasOne
     {
         return $this->hasOne(Triaje::class);
+    }
+
+    public function consultaMedica(): HasOne
+    {
+        return $this->hasOne(ConsultaMedica::class);
+    }
+
+    public function marcadoPor(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class, 'marcado_no_presentado_por'
+        );
+    }
+
+    public function reactivadoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reactivado_por');
     }
 }

@@ -15,9 +15,13 @@ class ConsultaMedica extends Model
     protected $table = 'consultas_medicas';
 
     protected $fillable = [
-        'historia_clinica_id', 'medico_id', 'fecha_consulta', 'hora_consulta',
-        'motivo_consulta', 'examen_fisico', 'diagnostico_detallado',
-        'diagnostico_cie10', 'plan_tratamiento', 'notas_medico', 'estado',
+        'historia_clinica_id', 'agenda_medica_id',
+        'medico_id', 'fecha_consulta', 'hora_consulta',
+        'motivo_consulta', 'enfermedad_actual',
+        'examen_fisico', 'diagnostico_detallado',
+        'diagnostico_cie10', 'diagnostico_cie10_id',
+        'tipo_atencion', 'tipo_diagnostico',
+        'plan_tratamiento', 'notas_medico', 'estado',
         'created_by', 'updated_by'
     ];
 
@@ -25,6 +29,7 @@ class ConsultaMedica extends Model
     {
         return [
             'motivo_consulta'       => 'encrypted',
+            'enfermedad_actual'     => 'encrypted',
             'examen_fisico'         => 'encrypted',
             'diagnostico_detallado' => 'encrypted',
             'plan_tratamiento'      => 'encrypted',
@@ -39,6 +44,11 @@ class ConsultaMedica extends Model
         return $this->belongsTo(HistoriaClinica::class);
     }
 
+    public function agendaMedica(): BelongsTo
+    {
+        return $this->belongsTo(AgendaMedica::class);
+    }
+
     public function medico(): BelongsTo
     {
         return $this->belongsTo(User::class, 'medico_id');
@@ -47,5 +57,17 @@ class ConsultaMedica extends Model
     public function recetasMedicas(): HasMany
     {
         return $this->hasMany(RecetaMedica::class);
+    }
+
+    public function diagnosticosSecundarios(): HasMany
+    {
+        return $this->hasMany(
+            DiagnosticoSecundarioConsulta::class
+        );
+    }
+
+    public function resultados(): HasMany
+    {
+        return $this->hasMany(ResultadoMedico::class);
     }
 }
