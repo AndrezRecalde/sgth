@@ -10,6 +10,8 @@ import {
   IconChevronDown, IconChevronUp,
 } from '@tabler/icons-react'
 import { useState } from 'react'
+import { useDisclosure } from '@mantine/hooks'
+import { DetalleConsultaDrawer } from './DetalleConsultaDrawer'
 import { useQuery } from '@tanstack/react-query'
 import { consultaMedicaService } from '../services/consultaMedicaService'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -25,9 +27,12 @@ function formatFecha(fecha: string): string {
   })
 }
 
-function ConsultaItem({ consulta }: { consulta: ConsultaMedica }) {
-  const [abierta, setAbierta] = useState(false)
-
+function ConsultaItem({
+  consulta, onVerDetalle
+}: {
+  consulta: ConsultaMedica
+  onVerDetalle: (id: number) => void
+}) {
   return (
     <Card withBorder radius="md" p="sm">
       <Stack gap="xs">
@@ -58,81 +63,26 @@ function ConsultaItem({ consulta }: { consulta: ConsultaMedica }) {
           <Button
             size="compact-xs"
             variant="subtle"
-            color="gray"
-            rightSection={abierta
-              ? <IconChevronUp size={12} />
-              : <IconChevronDown size={12} />}
-            onClick={() => setAbierta(v => !v)}
+            color="blue"
+            onClick={() => onVerDetalle(consulta.id)}
           >
-            {abierta ? 'Cerrar' : 'Ver detalle'}
+            Ver detalle
           </Button>
         </Group>
 
         <Text size="xs" c="dimmed">
           Dr. {consulta.medico?.nombre_completo ?? '—'}
         </Text>
-
-        <Collapse expanded={abierta}>
-          <Stack gap="xs" pt="xs">
-            {consulta.motivo_consulta && (
-              <Stack gap={2}>
-                <Text size="xs" fw={500} c="dimmed" tt="uppercase">
-                  Motivo
-                </Text>
-                <Text size="xs">{consulta.motivo_consulta}</Text>
-              </Stack>
-            )}
-
-            {consulta.enfermedad_actual && (
-              <Stack gap={2}>
-                <Text size="xs" fw={500} c="dimmed" tt="uppercase">
-                  Enfermedad actual
-                </Text>
-                <Text size="xs">{consulta.enfermedad_actual}</Text>
-              </Stack>
-            )}
-
-            {consulta.examen_fisico && (
-              <Stack gap={2}>
-                <Text size="xs" fw={500} c="dimmed" tt="uppercase">
-                  Examen físico
-                </Text>
-                <Text size="xs">{consulta.examen_fisico}</Text>
-              </Stack>
-            )}
-
-            <Stack gap={2}>
-              <Text size="xs" fw={500} c="dimmed" tt="uppercase">
-                Diagnóstico
-              </Text>
-              <Text size="xs">{consulta.diagnostico_detallado}</Text>
-            </Stack>
-
-            {consulta.plan_tratamiento && (
-              <Stack gap={2}>
-                <Text size="xs" fw={500} c="dimmed" tt="uppercase">
-                  Plan de tratamiento
-                </Text>
-                <Text size="xs">{consulta.plan_tratamiento}</Text>
-              </Stack>
-            )}
-
-            {consulta.notas_medico && (
-              <Stack gap={2}>
-                <Text size="xs" fw={500} c="dimmed" tt="uppercase">
-                  Notas
-                </Text>
-                <Text size="xs">{consulta.notas_medico}</Text>
-              </Stack>
-            )}
-          </Stack>
-        </Collapse>
       </Stack>
     </Card>
   )
 }
 
 export function TabHistorial({ historiaClinicaId }: Props) {
+  const [consultaSelId, setConsultaSelId] = useState<number | null>(null)
+  const [drawerOpened,
+    { open: abrirDrawer, close: cerrarDrawer }] = useDisclosure(false)
+
   const { data: consultas = [], isLoading } = useQuery({
     queryKey: ['consultas', 'historial', historiaClinicaId],
     queryFn:  () =>
@@ -170,8 +120,21 @@ export function TabHistorial({ historiaClinicaId }: Props) {
         {' '}registrada{consultas.length !== 1 ? 's' : ''}
       </Text>
       {consultas.map((consulta) => (
-        <ConsultaItem key={consulta.id} consulta={consulta} />
+        <ConsultaItem
+          key={consulta.id}
+          consulta={consulta}
+          onVerDetalle={(id) => {
+            setConsultaSelId(id)
+            abrirDrawer()
+          }}
+        />
       ))}
+
+      <DetalleConsultaDrawer
+        opened={drawerOpened}
+        onClose={cerrarDrawer}
+        consultaId={consultaSelId}
+      />
     </Stack>
   )
 }

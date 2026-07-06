@@ -8,6 +8,32 @@ export interface DiagnosticoSecundario {
   diagnostico?:        DiagnosticoCie10
 }
 
+export interface ItemRecetaDetalle {
+  id:                     number
+  inventario_medicina_id: number
+  cantidad_prescrita:     number
+  cantidad_despachada:    number
+  estado:                 string
+  dosis:                  string
+  frecuencia:             string
+  duracion:               string
+  observaciones?:         string | null
+  inventario?: {
+    nombre:         string
+    presentacion:   string
+    concentracion?: string | null
+  }
+}
+
+export interface RecetaDetalle {
+  id:                      number
+  consulta_medica_id:      number
+  fecha_emision:           string
+  estado:                  string
+  indicaciones_generales?: string | null
+  items:                   ItemRecetaDetalle[]
+}
+
 export interface ConsultaMedica {
   id:                       number
   historia_clinica_id:      number
@@ -24,6 +50,7 @@ export interface ConsultaMedica {
   diagnostico_cie10?:       number | null
   diagnostico_cie10_id?:    number | null
   diagnosticos_secundarios?: DiagnosticoSecundario[]
+  recetas_medicas?:         RecetaDetalle[]
   plan_tratamiento?:        string | null
   notas_medico?:            string | null
   medico?: {
