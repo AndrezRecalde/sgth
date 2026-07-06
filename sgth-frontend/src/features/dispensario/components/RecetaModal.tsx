@@ -35,7 +35,7 @@ export function RecetaModal({
 }: Props) {
   const { isMobile } = useMobileBreakpoint()
   const contained    = useContainedInput()
-  const emitir       = useEmitirReceta()
+  const emitir       = useEmitirReceta(consulta?.id)
 
   const [stockMap, setStockMap] = useState<Record<number, number>>({})
 

@@ -1,37 +1,42 @@
-'use client'
+"use client";
 
 import {
-  Stack, Text, Card, Group, Badge,
-  Skeleton, Collapse, Button,
-  Divider, ThemeIcon,
-} from '@mantine/core'
-import {
-  IconStethoscope, IconPill,
-  IconChevronDown, IconChevronUp,
-} from '@tabler/icons-react'
-import { useState } from 'react'
-import { useDisclosure } from '@mantine/hooks'
-import { DetalleConsultaDrawer } from './DetalleConsultaDrawer'
-import { useQuery } from '@tanstack/react-query'
-import { consultaMedicaService } from '../services/consultaMedicaService'
-import { EmptyState } from '@/components/ui/EmptyState'
-import type { ConsultaMedica } from '../services/consultaMedicaService'
+  Stack,
+  Text,
+  Card,
+  Group,
+  Badge,
+  Skeleton,
+  Button,
+  ThemeIcon,
+} from "@mantine/core";
+import { IconStethoscope } from "@tabler/icons-react";
+import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { consultaMedicaService } from "../services/consultaMedicaService";
+import { DetalleConsultaDrawer } from "./DetalleConsultaDrawer";
+import { EmptyState } from "@/components/ui/EmptyState";
+import type { ConsultaMedica } from "../services/consultaMedicaService";
 
 interface Props {
-  historiaClinicaId: number
+  historiaClinicaId: number;
 }
 
 function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
+  return new Date(fecha).toLocaleDateString("es-EC", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function ConsultaItem({
-  consulta, onVerDetalle
+  consulta,
+  onVerDetalle,
 }: {
-  consulta: ConsultaMedica
-  onVerDetalle: (id: number) => void
+  consulta: ConsultaMedica;
+  onVerDetalle: (id: number) => void;
 }) {
   return (
     <Card withBorder radius="md" p="sm">
@@ -46,15 +51,18 @@ function ConsultaItem({
             </Text>
             {consulta.tipo_atencion && (
               <Badge size="xs" variant="light" color="gray">
-                {consulta.tipo_atencion.replace('_', ' ')}
+                {consulta.tipo_atencion.replace("_", " ")}
               </Badge>
             )}
             {consulta.tipo_diagnostico && (
               <Badge
                 size="xs"
                 variant="light"
-                color={consulta.tipo_diagnostico === 'definitivo'
-                  ? 'emerald' : 'orange'}
+                color={
+                  consulta.tipo_diagnostico === "definitivo"
+                    ? "emerald"
+                    : "orange"
+                }
               >
                 {consulta.tipo_diagnostico}
               </Badge>
@@ -71,25 +79,24 @@ function ConsultaItem({
         </Group>
 
         <Text size="xs" c="dimmed">
-          Dr. {consulta.medico?.nombre_completo ?? '—'}
+          Dr. {consulta.medico?.nombre_completo ?? "—"}
         </Text>
       </Stack>
     </Card>
-  )
+  );
 }
 
 export function TabHistorial({ historiaClinicaId }: Props) {
-  const [consultaSelId, setConsultaSelId] = useState<number | null>(null)
-  const [drawerOpened,
-    { open: abrirDrawer, close: cerrarDrawer }] = useDisclosure(false)
+  const [consultaSelId, setConsultaSelId] = useState<number | null>(null);
+  const [drawerOpened, { open: abrirDrawer, close: cerrarDrawer }] =
+    useDisclosure(false);
 
   const { data: consultas = [], isLoading } = useQuery({
-    queryKey: ['consultas', 'historial', historiaClinicaId],
-    queryFn:  () =>
-      consultaMedicaService.listarPorHistoria(historiaClinicaId),
-    enabled:  !!historiaClinicaId,
+    queryKey: ["consultas", "historial", historiaClinicaId],
+    queryFn: () => consultaMedicaService.listarPorHistoria(historiaClinicaId),
+    enabled: !!historiaClinicaId,
     staleTime: 1000 * 30,
-  })
+  });
 
   if (isLoading) {
     return (
@@ -97,7 +104,7 @@ export function TabHistorial({ historiaClinicaId }: Props) {
         <Skeleton height={80} radius="md" />
         <Skeleton height={80} radius="md" />
       </Stack>
-    )
+    );
   }
 
   if (consultas.length === 0) {
@@ -110,22 +117,22 @@ export function TabHistorial({ historiaClinicaId }: Props) {
             consultas anteriores registradas."
         />
       </Stack>
-    )
+    );
   }
 
   return (
     <Stack gap="sm" p="md">
       <Text size="xs" c="dimmed">
-        {consultas.length} consulta{consultas.length !== 1 ? 's' : ''}
-        {' '}registrada{consultas.length !== 1 ? 's' : ''}
+        {consultas.length} consulta{consultas.length !== 1 ? "s" : ""}{" "}
+        registrada{consultas.length !== 1 ? "s" : ""}
       </Text>
       {consultas.map((consulta) => (
         <ConsultaItem
           key={consulta.id}
           consulta={consulta}
           onVerDetalle={(id) => {
-            setConsultaSelId(id)
-            abrirDrawer()
+            setConsultaSelId(id);
+            abrirDrawer();
           }}
         />
       ))}
@@ -136,5 +143,5 @@ export function TabHistorial({ historiaClinicaId }: Props) {
         consultaId={consultaSelId}
       />
     </Stack>
-  )
+  );
 }

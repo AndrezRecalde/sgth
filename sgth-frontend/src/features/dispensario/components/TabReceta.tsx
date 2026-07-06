@@ -2,17 +2,25 @@
 
 import {
   Stack, Text, Button, Group, Badge,
-  Card, Table, Skeleton, Divider,
-  ThemeIcon,
+  Card, ThemeIcon,
 } from '@mantine/core'
 import { IconPill, IconPlus } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { recetaService } from '../services/recetaService'
 import { RecetaModal } from './RecetaModal'
+import { EditarItemRecetaModal } from './EditarItemRecetaModal'
+import { SgthTable } from '@/components/ui/SgthTable'
+import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { useEmitirReceta, useAccionesItem } from '../hooks/useReceta'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
+import type { ItemReceta, RecetaMedica } from '../services/recetaService'
+import {
+  IconEdit, IconTrash,
+} from '@tabler/icons-react'
 
 interface Props {
   turno:    AgendaMedica
@@ -26,29 +34,126 @@ function formatFecha(fecha: string): string {
 }
 
 const ESTADO_RECETA: Record<string, { label: string; color: string }> = {
-  pendiente:          { label: 'Pendiente',   color: 'gray'   },
-  despachada_parcial: { label: 'Parcial',     color: 'orange' },
-  despachada_completa:{ label: 'Despachada',  color: 'emerald'},
-  anulada:            { label: 'Anulada',     color: 'red'    },
+  pendiente:           { label: 'Pendiente',  color: 'gray'   },
+  despachada_parcial:  { label: 'Parcial',    color: 'orange' },
+  despachada_completa: { label: 'Despachada', color: 'emerald'},
+  anulada:             { label: 'Anulada',    color: 'red'    },
+}
+
+function ItemsRecetaTable({
+  receta,
+  consulta,
+}: {
+  receta:   RecetaMedica
+  consulta: ConsultaMedica
+}) {
+  const [itemSel, setItemSel] = useState<ItemReceta | null>(null)
+  const [editOpened,
+    { open: abrirEdit, close: cerrarEdit }] = useDisclosure(false)
+  const { quitarItem } = useAccionesItem(consulta.id)
+  const esPendiente = receta.estado === 'pendiente'
+
+  const columns = [
+    {
+      accessor: 'nombre_medicina',
+      title:    'Medicina',
+      render: (item: ItemReceta) => (
+        <Text size="sm" fw={500}>
+          {item.nombre_medicina ?? '—'}
+        </Text>
+      ),
+    },
+    {
+      accessor: 'cantidad_prescrita',
+      title:    'Cant.',
+      width:    70,
+      render: (item: ItemReceta) => (
+        <Text size="sm" ta="center">{item.cantidad_prescrita}</Text>
+      ),
+    },
+    {
+      accessor: 'dosis',
+      title:    'Dosis',
+      width:    110,
+      render: (item: ItemReceta) => (
+        <Text size="sm">{item.dosis}</Text>
+      ),
+    },
+    {
+      accessor: 'frecuencia',
+      title:    'Frecuencia',
+      width:    130,
+      render: (item: ItemReceta) => (
+        <Text size="sm">{item.frecuencia}</Text>
+      ),
+    },
+    {
+      accessor: 'duracion',
+      title:    'Duración',
+      width:    100,
+      render: (item: ItemReceta) => (
+        <Text size="sm">{item.duracion}</Text>
+      ),
+    },
+    ...(esPendiente ? [{
+      accessor: 'acciones',
+      title:    '',
+      width:    50,
+      render: (item: ItemReceta) => (
+        <TableActions actions={[
+          {
+            label:   'Editar',
+            icon:    <IconEdit size={14} />,
+            color:   'blue',
+            onClick: () => { setItemSel(item); abrirEdit() },
+          },
+          {
+            label:   'Quitar',
+            icon:    <IconTrash size={14} />,
+            color:   'red',
+            onClick: () => {
+              if (confirm('¿Quitar este medicamento de la receta?')) {
+                quitarItem.mutate({
+                  recetaId: receta.id,
+                  itemId:   item.id!,
+                })
+              }
+            },
+          },
+        ]} />
+      ),
+    }] : []),
+  ]
+
+  return (
+    <>
+      <SgthTable
+        records={receta.items}
+        columns={columns}
+        minHeight={60}
+      />
+      <EditarItemRecetaModal
+        opened={editOpened}
+        onClose={() => { setItemSel(null); cerrarEdit() }}
+        item={itemSel}
+        recetaId={receta.id}
+        consultaId={consulta.id}
+      />
+    </>
+  )
 }
 
 export function TabReceta({ turno, consulta }: Props) {
+  const qc = useQueryClient()
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
+  const emitir = useEmitirReceta(consulta.id)
 
   const { data: recetas = [], isLoading } = useQuery({
     queryKey: ['recetas', 'consulta', consulta.id],
     queryFn:  () => recetaService.listarPorConsulta(consulta.id),
     staleTime: 1000 * 30,
   })
-
-  if (isLoading) {
-    return (
-      <Stack gap="sm" p="md">
-        <Skeleton height={80} radius="md" />
-      </Stack>
-    )
-  }
 
   return (
     <Stack gap="md" p="md">
@@ -66,12 +171,15 @@ export function TabReceta({ turno, consulta }: Props) {
           color="emerald"
           leftSection={<IconPlus size={13} />}
           onClick={abrirModal}
+          loading={emitir.isPending}
         >
           Nueva receta
         </Button>
       </Group>
 
-      {recetas.length === 0 ? (
+      {isLoading ? (
+        <Text size="sm" c="dimmed">Cargando recetas...</Text>
+      ) : recetas.length === 0 ? (
         <EmptyState
           icon={IconPill}
           title="Sin recetas"
@@ -93,7 +201,7 @@ export function TabReceta({ turno, consulta }: Props) {
                         <IconPill size={12} />
                       </ThemeIcon>
                       <Text size="sm" fw={500}>
-                        Receta — {formatFecha(receta.fecha_emision)}
+                        {formatFecha(receta.fecha_emision)}
                       </Text>
                     </Group>
                     <Badge
@@ -111,44 +219,10 @@ export function TabReceta({ turno, consulta }: Props) {
                     </Text>
                   )}
 
-                  {receta.items.length > 0 && (
-                    <Table withTableBorder withColumnBorders>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>Medicina</Table.Th>
-                          <Table.Th w={70}>Cant.</Table.Th>
-                          <Table.Th w={110}>Dosis</Table.Th>
-                          <Table.Th w={120}>Frecuencia</Table.Th>
-                          <Table.Th w={90}>Duración</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {receta.items.map((item) => (
-                          <Table.Tr key={item.id}>
-                            <Table.Td>
-                              <Text size="xs" fw={500}>
-                                {item.nombre_medicina ?? '—'}
-                              </Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="xs" ta="center">
-                                {item.cantidad_prescrita}
-                              </Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="xs">{item.dosis}</Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="xs">{item.frecuencia}</Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="xs">{item.duracion}</Text>
-                            </Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
-                  )}
+                  <ItemsRecetaTable
+                    receta={receta}
+                    consulta={consulta}
+                  />
                 </Stack>
               </Card>
             )
@@ -161,9 +235,7 @@ export function TabReceta({ turno, consulta }: Props) {
         onClose={cerrarModal}
         turno={turno}
         consulta={consulta}
-        onEmitida={() => {
-          cerrarModal()
-        }}
+        onEmitida={cerrarModal}
       />
     </Stack>
   )

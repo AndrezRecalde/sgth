@@ -47,4 +47,30 @@ export const recetaService = {
       `/dispensario/recetas`,
       { params: { consulta_medica_id: consultaId } }
     ).then(r => r.data.datos),
+
+  anular: (id: number) =>
+    api.patch<ApiResponse<RecetaMedica>>(
+      `/dispensario/recetas/${id}/anular`
+    ).then(r => r.data.datos),
+
+  actualizarItem: (
+    recetaId: number,
+    itemId: number,
+    data: {
+      cantidad_prescrita: number
+      dosis:       string
+      frecuencia:  string
+      duracion:    string
+      observaciones?: string | null
+    }
+  ) =>
+    api.patch<ApiResponse<ItemReceta>>(
+      `/dispensario/recetas/${recetaId}/items/${itemId}`,
+      data
+    ).then(r => r.data.datos),
+
+  quitarItem: (recetaId: number, itemId: number) =>
+    api.delete<ApiResponse<unknown>>(
+      `/dispensario/recetas/${recetaId}/items/${itemId}`
+    ).then(r => r.data.datos),
 }

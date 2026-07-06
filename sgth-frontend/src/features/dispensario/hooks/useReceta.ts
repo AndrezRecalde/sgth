@@ -6,7 +6,7 @@ import { recetaService } from '../services/recetaService'
 import { getApiErrorMessage } from '@/types/api'
 import type { EmitirRecetaData } from '../services/recetaService'
 
-export function useEmitirReceta() {
+export function useEmitirReceta(consultaId?: number) {
   const qc = useQueryClient()
 
   return useMutation({
@@ -33,6 +33,11 @@ export function useEmitirReceta() {
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       qc.invalidateQueries({ queryKey: ['consultas'] })
+      if (consultaId) {
+        qc.invalidateQueries({
+          queryKey: ['recetas', 'consulta', consultaId],
+        })
+      }
     },
     onError: (error: unknown) =>
       notifications.show({
@@ -42,4 +47,63 @@ export function useEmitirReceta() {
         icon:    React.createElement(IconX, { size: 16 }),
       }),
   })
+}
+
+export function useAccionesItem(consultaId: number) {
+  const qc = useQueryClient()
+
+  const invalidar = () =>
+    qc.invalidateQueries({
+      queryKey: ['recetas', 'consulta', consultaId],
+    })
+
+  const onError = (error: unknown) =>
+    notifications.show({
+      title:   'Error',
+      message: getApiErrorMessage(error),
+      color:   'red',
+      icon:    React.createElement(IconX, { size: 16 }),
+    })
+
+  const actualizarItem = useMutation({
+    mutationFn: ({ recetaId, itemId, data }: {
+      recetaId: number
+      itemId:   number
+      data: {
+        cantidad_prescrita: number
+        dosis:       string
+        frecuencia:  string
+        duracion:    string
+        observaciones?: string | null
+      }
+    }) => recetaService.actualizarItem(recetaId, itemId, data),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Ítem actualizado',
+        message: 'El medicamento fue actualizado.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  const quitarItem = useMutation({
+    mutationFn: ({ recetaId, itemId }: {
+      recetaId: number; itemId: number
+    }) => recetaService.quitarItem(recetaId, itemId),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Ítem eliminado',
+        message: 'El medicamento fue removido de la receta.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  return { actualizarItem, quitarItem }
 }
