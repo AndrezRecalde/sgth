@@ -177,6 +177,7 @@ export function RecetaModal({
                     <Table.Th w={120}>Dosis</Table.Th>
                     <Table.Th w={130}>Frecuencia</Table.Th>
                     <Table.Th w={100}>Duración</Table.Th>
+                    <Table.Th w={130}>Observaciones</Table.Th>
                     <Table.Th w={40}></Table.Th>
                   </Table.Tr>
                 </Table.Thead>

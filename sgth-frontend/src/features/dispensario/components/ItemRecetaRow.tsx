@@ -91,6 +91,21 @@ export function ItemRecetaRow({
         />
       </Table.Td>
       <Table.Td>
+        <Controller
+          name={`items.${index}.observaciones`}
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              size="xs"
+              placeholder="Opcional"
+              {...contained}
+              value={field.value ?? ''}
+              onChange={(e) => field.onChange(e.currentTarget.value)}
+            />
+          )}
+        />
+      </Table.Td>
+      <Table.Td>
         <ActionIcon
           size="sm" color="red" variant="subtle"
           onClick={onEliminar}
