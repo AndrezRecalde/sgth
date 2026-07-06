@@ -9,8 +9,9 @@ import {
   IconCertificate, IconHistory,
   IconUser, IconUsers, IconArrowRight,
 } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccionesTurno } from '../hooks/useAgenda'
+import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
 import { TabReceta } from './TabReceta'
@@ -37,11 +38,23 @@ export function AtencionMedicaPanel({
   turno, historiaClinicaId,
   totalEnEspera, onFinalizar,
 }: Props) {
+  const consultaExistenteId = turno.consulta_medica?.id ?? null
+  const { data: consultaCargada } = useConsultaMedicaDetalle(
+    consultaExistenteId
+  )
+
   const [consultaGuardada, setConsultaGuardada] =
     useState<ConsultaMedica | null>(null)
   const [activeTab, setActiveTab] = useState<string>('consulta')
-
   const { enConsulta } = useAccionesTurno()
+
+  const consultaActiva = consultaGuardada ?? consultaCargada ?? null
+
+  useEffect(() => {
+    if (consultaCargada && !consultaGuardada) {
+      setActiveTab('consulta')
+    }
+  }, [consultaCargada, consultaGuardada])
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
@@ -143,7 +156,7 @@ export function AtencionMedicaPanel({
                   <Tabs.Tab
                     value="receta"
                     leftSection={<IconPill size={13} />}
-                    disabled={!consultaGuardada}
+                    disabled={!consultaActiva}
                   >
                     Receta
                   </Tabs.Tab>
@@ -156,7 +169,7 @@ export function AtencionMedicaPanel({
                   <Tabs.Tab
                     value="certificado"
                     leftSection={<IconCertificate size={13} />}
-                    disabled={!consultaGuardada}
+                    disabled={!consultaActiva}
                   >
                     Certificado
                   </Tabs.Tab>
@@ -166,16 +179,16 @@ export function AtencionMedicaPanel({
                   <TabConsulta
                     turno={turno}
                     historiaClinicaId={historiaClinicaId}
-                    consultaPrevia={consultaGuardada}
+                    consultaPrevia={consultaActiva}
                     onGuardada={handleGuardada}
                   />
                 </Tabs.Panel>
 
                 <Tabs.Panel value="receta">
-                  {consultaGuardada ? (
+                  {consultaActiva ? (
                     <TabReceta
                       turno={turno}
-                      consulta={consultaGuardada}
+                      consulta={consultaActiva}
                     />
                   ) : (
                     <Stack gap="sm" p="md">

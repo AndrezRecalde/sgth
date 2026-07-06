@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import React from 'react'
@@ -29,6 +29,15 @@ export function useRegistrarConsulta() {
         color:   'red',
         icon:    React.createElement(IconX, { size: 16 }),
       }),
+  })
+}
+
+export function useConsultaMedicaDetalle(id: number | null) {
+  return useQuery({
+    queryKey: ['consulta-detalle-panel', id],
+    queryFn:  () => consultaMedicaService.obtener(id!),
+    enabled:  !!id,
+    staleTime: 1000 * 60,
   })
 }
 
