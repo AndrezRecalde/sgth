@@ -66,8 +66,11 @@ export const consultaMedicaService = {
     ).then(r => r.data.datos),
 
   listarPorHistoria: (historiaClinicaId: number) =>
-    api.get<ApiResponse<ConsultaMedica[]>>(
+    api.get<ApiResponse<PaginatedResponse<ConsultaMedica>>>(
       '/dispensario/consultas',
-      { params: { historia_clinica_id: historiaClinicaId } }
-    ).then(r => r.data.datos),
+      { params: {
+        historia_clinica_id: historiaClinicaId,
+        per_page: 50
+      }}
+    ).then(r => r.data.datos?.data ?? []),
 }
