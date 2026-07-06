@@ -81,7 +81,12 @@ export function EditarItemRecetaModal({
       onClose={onClose}
       title={
         <Text size="sm" fw={600}>
-          Editar — {item.nombre_medicina ?? '—'}
+          Editar medicamento
+          {(item.inventario?.nombre || item.nombre_medicina) && (
+            <Text span c="dimmed" ml={4}>
+              — {item.inventario?.nombre ?? item.nombre_medicina}
+            </Text>
+          )}
         </Text>
       }
       size="sm"
