@@ -104,4 +104,9 @@ export const agendaService = {
     api.patch<ApiResponse<AgendaMedica>>(
       `/dispensario/agenda/${id}/en-consulta`
     ).then(r => r.data.datos),
+
+  obtenerPorFolio: (folio: string) =>
+    api.get<ApiResponse<AgendaMedica>>(
+      `/dispensario/agenda/por-folio/${folio}`
+    ).then(r => r.data.datos),
 }
