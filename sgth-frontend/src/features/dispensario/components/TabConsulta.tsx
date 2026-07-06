@@ -147,7 +147,7 @@ export function TabConsulta({
           label="Enfermedad actual / Anamnesis (opcional)"
           placeholder="Inicio, duración, características, factores que agravan o alivian..."
           autosize
-          minRows={2}
+          minRows={4}
           {...contained}
           {...register('enfermedad_actual')}
         />
@@ -156,7 +156,7 @@ export function TabConsulta({
           label="Examen físico (opcional)"
           placeholder="Hallazgos relevantes del examen físico"
           autosize
-          minRows={2}
+          minRows={4}
           {...contained}
           {...register('examen_fisico')}
         />
@@ -208,7 +208,7 @@ export function TabConsulta({
           label="Diagnóstico detallado"
           placeholder="Descripción clínica del diagnóstico"
           autosize
-          minRows={2}
+          minRows={4}
           {...contained}
           {...register('diagnostico_detallado')}
           error={errors.diagnostico_detallado?.message}
@@ -218,7 +218,7 @@ export function TabConsulta({
           label="Plan de tratamiento (opcional)"
           placeholder="Indicaciones y tratamiento a seguir"
           autosize
-          minRows={2}
+          minRows={4}
           {...contained}
           {...register('plan_tratamiento')}
         />

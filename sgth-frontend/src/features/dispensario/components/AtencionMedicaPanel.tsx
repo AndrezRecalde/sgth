@@ -14,6 +14,7 @@ import { useAccionesTurno } from '../hooks/useAgenda'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
 import { RecetaModal } from './RecetaModal'
+import { TabHistorial } from './TabHistorial'
 import { useDisclosure } from '@mantine/hooks'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
@@ -190,11 +191,9 @@ export function AtencionMedicaPanel({
                 </Tabs.Panel>
 
                 <Tabs.Panel value="historial">
-                  <Stack gap="sm" p="md">
-                    <Text size="sm" c="dimmed">
-                      Historial de consultas anteriores del paciente.
-                    </Text>
-                  </Stack>
+                  <TabHistorial
+                    historiaClinicaId={historiaClinicaId}
+                  />
                 </Tabs.Panel>
 
                 <Tabs.Panel value="certificado">
