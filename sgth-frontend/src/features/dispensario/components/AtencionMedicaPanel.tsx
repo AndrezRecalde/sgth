@@ -13,9 +13,8 @@ import { useState } from 'react'
 import { useAccionesTurno } from '../hooks/useAgenda'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
-import { RecetaModal } from './RecetaModal'
+import { TabReceta } from './TabReceta'
 import { TabHistorial } from './TabHistorial'
-import { useDisclosure } from '@mantine/hooks'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 
@@ -41,8 +40,6 @@ export function AtencionMedicaPanel({
   const [consultaGuardada, setConsultaGuardada] =
     useState<ConsultaMedica | null>(null)
   const [activeTab, setActiveTab] = useState<string>('consulta')
-  const [recetaOpened,
-    { open: abrirReceta, close: cerrarReceta }] = useDisclosure(false)
 
   const { enConsulta } = useAccionesTurno()
 
@@ -175,19 +172,19 @@ export function AtencionMedicaPanel({
                 </Tabs.Panel>
 
                 <Tabs.Panel value="receta">
-                  <Stack gap="sm" p="md">
-                    <Text size="sm" c="dimmed">
-                      Emite la receta médica para esta consulta.
-                    </Text>
-                    <Button
-                      color="emerald"
-                      leftSection={<IconPill size={14} />}
-                      onClick={abrirReceta}
-                      disabled={!consultaGuardada}
-                    >
-                      Nueva receta
-                    </Button>
-                  </Stack>
+                  {consultaGuardada ? (
+                    <TabReceta
+                      turno={turno}
+                      consulta={consultaGuardada}
+                    />
+                  ) : (
+                    <Stack gap="sm" p="md">
+                      <Text size="sm" c="dimmed">
+                        Guarda la consulta primero para
+                        poder emitir recetas.
+                      </Text>
+                    </Stack>
+                  )}
                 </Tabs.Panel>
 
                 <Tabs.Panel value="historial">
@@ -209,13 +206,6 @@ export function AtencionMedicaPanel({
         </Grid>
       </Stack>
 
-      <RecetaModal
-        opened={recetaOpened}
-        onClose={cerrarReceta}
-        turno={turno}
-        consulta={consultaGuardada}
-        onEmitida={cerrarReceta}
-      />
     </>
   )
 }

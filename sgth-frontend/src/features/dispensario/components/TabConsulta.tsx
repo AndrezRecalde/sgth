@@ -2,14 +2,17 @@
 
 import {
   Stack, Textarea, Select, Group,
-  Button, Text,
+  Button, Text, Badge, Divider,
+  ActionIcon, Tooltip,
 } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconCheck } from '@tabler/icons-react'
-import { useState } from 'react'
+import { IconCheck, IconEdit, IconX } from '@tabler/icons-react'
+import { useState, useEffect } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useRegistrarConsulta } from '../hooks/useConsultaMedica'
+import {
+  useRegistrarConsulta, useActualizarConsulta,
+} from '../hooks/useConsultaMedica'
 import { BuscarCie10Input } from './BuscarCie10Input'
 import { RichTextInput } from './RichTextInput'
 import {
@@ -37,65 +40,172 @@ function formatFechaLocal(d: Date): string {
   ].join('-')
 }
 
+function CampoVista({
+  label, valor,
+}: { label: string; valor?: string | null }) {
+  if (!valor) return null
+  const esHtml = valor.startsWith('<')
+  return (
+    <Stack gap={2}>
+      <Text size="xs" fw={600} tt="uppercase" c="dimmed">{label}</Text>
+      {esHtml ? (
+        <div
+          style={{ fontSize: 'var(--mantine-font-size-sm)' }}
+          dangerouslySetInnerHTML={{ __html: valor }}
+        />
+      ) : (
+        <Text size="sm">{valor}</Text>
+      )}
+    </Stack>
+  )
+}
+
 export function TabConsulta({
   turno, historiaClinicaId, consultaPrevia, onGuardada,
 }: Props) {
-  const contained = useContainedInput()
-  const registrar = useRegistrarConsulta()
+  const contained  = useContainedInput()
+  const registrar  = useRegistrarConsulta()
+  const actualizar = useActualizarConsulta()
+  const [modoEdicion, setModoEdicion] = useState(!consultaPrevia)
   const [cie10Principal, setCie10Principal] =
     useState<DiagnosticoCie10 | null>(null)
   const [cie10Secundarios, setCie10Secundarios] =
     useState<DiagnosticoCie10[]>([])
 
-  const yaGuardada = !!consultaPrevia
-
   const {
-    control, register, handleSubmit,
+    control, register, handleSubmit, reset,
     formState: { errors },
   } = useForm<ConsultaMedicaFormData>({
     resolver: zodResolver(consultaMedicaSchema),
     defaultValues: {
-      tipo_atencion:    'primera_vez',
-      tipo_diagnostico: 'presuntivo',
-      motivo_consulta:  turno.motivo_solicitud ?? '',
-      enfermedad_actual: '',
-      examen_fisico:    '',
+      tipo_atencion:         'primera_vez',
+      tipo_diagnostico:      'presuntivo',
+      motivo_consulta:       turno.motivo_solicitud ?? '',
+      enfermedad_actual:     '',
+      examen_fisico:         '',
       diagnostico_detallado: '',
-      plan_tratamiento: '',
-      notas_medico:     '',
+      plan_tratamiento:      '',
+      notas_medico:          '',
     },
   })
 
+  useEffect(() => {
+    if (consultaPrevia) {
+      setModoEdicion(false)
+      reset({
+        tipo_atencion:         (consultaPrevia.tipo_atencion as ConsultaMedicaFormData['tipo_atencion']) ?? 'primera_vez',
+        tipo_diagnostico:      (consultaPrevia.tipo_diagnostico as ConsultaMedicaFormData['tipo_diagnostico']) ?? 'presuntivo',
+        motivo_consulta:       consultaPrevia.motivo_consulta ?? '',
+        enfermedad_actual:     consultaPrevia.enfermedad_actual ?? '',
+        examen_fisico:         consultaPrevia.examen_fisico ?? '',
+        diagnostico_detallado: consultaPrevia.diagnostico_detallado ?? '',
+        plan_tratamiento:      consultaPrevia.plan_tratamiento ?? '',
+        notas_medico:          consultaPrevia.notas_medico ?? '',
+      })
+    }
+  }, [consultaPrevia, reset])
+
   const onSubmit = (values: ConsultaMedicaFormData) => {
-    const ahora = new Date()
-    registrar.mutate(
-      {
-        historia_clinica_id:      historiaClinicaId,
-        agenda_medica_id:         turno.id,
-        fecha_consulta:           formatFechaLocal(ahora),
-        hora_consulta:            ahora.toTimeString().slice(0, 5),
-        tipo_atencion:            values.tipo_atencion,
-        tipo_diagnostico:         values.tipo_diagnostico,
-        motivo_consulta:          values.motivo_consulta,
-        enfermedad_actual:        values.enfermedad_actual || null,
-        examen_fisico:            values.examen_fisico || null,
-        diagnostico_cie10_id:     cie10Principal?.id ?? null,
-        diagnosticos_secundarios: cie10Secundarios.map(d => d.id),
-        diagnostico_detallado:    values.diagnostico_detallado,
-        plan_tratamiento:         values.plan_tratamiento || null,
-        notas_medico:             values.notas_medico || null,
-      },
-      { onSuccess: (consulta) => onGuardada(consulta) }
-    )
+    if (consultaPrevia) {
+      actualizar.mutate(
+        {
+          id: consultaPrevia.id,
+          data: {
+            tipo_atencion:            values.tipo_atencion,
+            tipo_diagnostico:         values.tipo_diagnostico,
+            motivo_consulta:          values.motivo_consulta,
+            enfermedad_actual:        values.enfermedad_actual || null,
+            examen_fisico:            values.examen_fisico || null,
+            diagnostico_cie10_id:     cie10Principal?.id ?? null,
+            diagnosticos_secundarios: cie10Secundarios.map(d => d.id),
+            diagnostico_detallado:    values.diagnostico_detallado,
+            plan_tratamiento:         values.plan_tratamiento || null,
+            notas_medico:             values.notas_medico || null,
+          },
+        },
+        { onSuccess: () => setModoEdicion(false) }
+      )
+    } else {
+      const ahora = new Date()
+      registrar.mutate(
+        {
+          historia_clinica_id:      historiaClinicaId,
+          agenda_medica_id:         turno.id,
+          fecha_consulta:           formatFechaLocal(ahora),
+          hora_consulta:            ahora.toTimeString().slice(0, 5),
+          tipo_atencion:            values.tipo_atencion,
+          tipo_diagnostico:         values.tipo_diagnostico,
+          motivo_consulta:          values.motivo_consulta,
+          enfermedad_actual:        values.enfermedad_actual || null,
+          examen_fisico:            values.examen_fisico || null,
+          diagnostico_cie10_id:     cie10Principal?.id ?? null,
+          diagnosticos_secundarios: cie10Secundarios.map(d => d.id),
+          diagnostico_detallado:    values.diagnostico_detallado,
+          plan_tratamiento:         values.plan_tratamiento || null,
+          notas_medico:             values.notas_medico || null,
+        },
+        { onSuccess: (consulta) => onGuardada(consulta) }
+      )
+    }
   }
 
-  if (yaGuardada) {
+  if (!modoEdicion && consultaPrevia) {
     return (
       <Stack gap="sm" p="md">
-        <Text size="sm" c="dimmed">
-          Consulta registrada correctamente. Use los tabs
-          "Receta", "Historial" o "Certificado" para continuar.
-        </Text>
+        <Group justify="space-between">
+          <Group gap="xs">
+            <Badge size="sm" variant="light" color="emerald">
+              Guardada
+            </Badge>
+            <Badge size="sm" variant="light" color="blue">
+              {consultaPrevia.tipo_atencion?.replace('_', ' ')}
+            </Badge>
+            <Badge
+              size="sm"
+              variant="light"
+              color={consultaPrevia.tipo_diagnostico === 'definitivo'
+                ? 'emerald' : 'orange'}
+            >
+              {consultaPrevia.tipo_diagnostico}
+            </Badge>
+          </Group>
+          <Tooltip label="Editar consulta" withArrow>
+            <ActionIcon
+              variant="light"
+              color="blue"
+              onClick={() => setModoEdicion(true)}
+            >
+              <IconEdit size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+
+        <Divider />
+
+        <CampoVista
+          label="Motivo de consulta"
+          valor={consultaPrevia.motivo_consulta}
+        />
+        <CampoVista
+          label="Enfermedad actual"
+          valor={consultaPrevia.enfermedad_actual}
+        />
+        <CampoVista
+          label="Examen físico"
+          valor={consultaPrevia.examen_fisico}
+        />
+        <CampoVista
+          label="Diagnóstico detallado"
+          valor={consultaPrevia.diagnostico_detallado}
+        />
+        <CampoVista
+          label="Plan de tratamiento"
+          valor={consultaPrevia.plan_tratamiento}
+        />
+        <CampoVista
+          label="Notas del médico"
+          valor={consultaPrevia.notas_medico}
+        />
       </Stack>
     )
   }
@@ -103,6 +213,20 @@ export function TabConsulta({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="sm" p="md">
+        {consultaPrevia && (
+          <Group justify="flex-end">
+            <Button
+              size="xs"
+              variant="subtle"
+              color="gray"
+              leftSection={<IconX size={13} />}
+              onClick={() => setModoEdicion(false)}
+            >
+              Cancelar edición
+            </Button>
+          </Group>
+        )}
+
         <Group grow align="flex-start">
           <Controller
             name="tipo_atencion"
@@ -146,7 +270,7 @@ export function TabConsulta({
 
         <Textarea
           label="Enfermedad actual / Anamnesis (opcional)"
-          placeholder="Inicio, duración, características, factores que agravan o alivian..."
+          placeholder="Inicio, duración, características..."
           autosize
           minRows={4}
           {...contained}
@@ -167,9 +291,7 @@ export function TabConsulta({
             value={cie10Principal}
             onChange={setCie10Principal}
           />
-          <Text size="xs" c="dimmed">
-            Diagnóstico principal (CIE-10)
-          </Text>
+          <Text size="xs" c="dimmed">Diagnóstico principal (CIE-10)</Text>
         </Stack>
 
         <Stack gap="xs">
@@ -198,9 +320,7 @@ export function TabConsulta({
                 onClick={() => setCie10Secundarios(
                   prev => prev.filter(s => s.id !== d.id)
                 )}
-              >
-                ×
-              </Button>
+              >×</Button>
             </Group>
           ))}
         </Stack>
@@ -237,9 +357,9 @@ export function TabConsulta({
             type="submit"
             color="emerald"
             leftSection={<IconCheck size={14} />}
-            loading={registrar.isPending}
+            loading={registrar.isPending || actualizar.isPending}
           >
-            Guardar consulta
+            {consultaPrevia ? 'Guardar cambios' : 'Guardar consulta'}
           </Button>
         </Group>
       </Stack>
