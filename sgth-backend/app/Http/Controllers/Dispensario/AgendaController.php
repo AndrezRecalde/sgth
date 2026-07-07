@@ -69,8 +69,15 @@ final class AgendaController extends Controller
 
     public function turnosDelDia(Request $request): JsonResponse
     {
+        $request->validate([
+            'fecha_desde' => ['nullable', 'date'],
+            'fecha_hasta' => ['nullable', 'date', 'after_or_equal:fecha_desde'],
+        ]);
+
         $turnos = $this->agendaService->turnosDelDia(
-            $request->user()->id
+            $request->user()->id,
+            $request->input('fecha_desde'),
+            $request->input('fecha_hasta'),
         );
 
         return ApiResponse::ok($turnos);

@@ -1,1 +1,6 @@
-fix(dispensario): pasar fecha_fin a crearPermisoAutomatico para vence_en NOT NULL
+feat(dispensario): turnosDelDia soporta filtro por rango de fechas
+
+Permite filtrar los turnos del medico por un rango de fechas
+(fecha_desde, fecha_hasta). Si no se pasan parametros,
+devuelve los turnos de hoy como antes. Ordena por estado
+primero y luego por fecha + hora de registro.

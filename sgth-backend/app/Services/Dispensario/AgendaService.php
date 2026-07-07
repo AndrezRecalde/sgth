@@ -7,6 +7,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 final class AgendaService implements AgendaServiceInterface
 {
@@ -112,14 +113,19 @@ final class AgendaService implements AgendaServiceInterface
     }
 
     public function turnosDelDia(
-        int $medicoId
+        int $medicoId,
+        ?string $fechaDesde = null,
+        ?string $fechaHasta = null
     ): \Illuminate\Database\Eloquent\Collection {
+        $desde = $fechaDesde ? Carbon::parse($fechaDesde) : today();
+        $hasta = $fechaHasta ? Carbon::parse($fechaHasta) : $desde;
+
         $turnos = AgendaMedica::with([
             'servidor', 'cargaFamiliar.servidor',
             'triaje', 'consultaMedica',
         ])
             ->where('medico_id', $medicoId)
-            ->whereDate('fecha', today())
+            ->whereBetween('fecha', [$desde, $hasta])
             ->orderByRaw("
                 CASE estado
                     WHEN 'en_consulta'    THEN 1
@@ -129,6 +135,7 @@ final class AgendaService implements AgendaServiceInterface
                     WHEN 'atendido'       THEN 5
                     ELSE 6
                 END,
+                fecha ASC,
                 registrado_en ASC
             ")
             ->get();

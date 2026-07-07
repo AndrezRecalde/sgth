@@ -19,7 +19,11 @@ interface AgendaServiceInterface
 
     public function listosParaConsulta(int $medicoId): \Illuminate\Database\Eloquent\Collection;
 
-    public function turnosDelDia(int $medicoId): \Illuminate\Database\Eloquent\Collection;
+    public function turnosDelDia(
+        int $medicoId,
+        ?string $fechaDesde = null,
+        ?string $fechaHasta = null
+    ): \Illuminate\Database\Eloquent\Collection;
 
     public function marcarNoPresentado(int $id, int $usuarioId): AgendaMedica;
 
