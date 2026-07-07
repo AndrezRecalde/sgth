@@ -24,6 +24,8 @@ final class ConsultaMedicaController extends Controller
             'historiaClinica.cargaFamiliar',
             'medico',
             'recetasMedicas',
+            'diagnosticoCie10Principal',
+            'diagnosticosSecundarios.diagnostico',
         ])->orderBy('fecha_consulta', 'desc');
 
         if ($request->filled('historia_clinica_id')) {
@@ -95,6 +97,7 @@ final class ConsultaMedicaController extends Controller
             'historiaClinica.antecedentes',
             'medico',
             'recetasMedicas.items.inventario',
+            'diagnosticoCie10Principal',
             'diagnosticosSecundarios.diagnostico',
             'resultados',
         ])->findOrFail($id);

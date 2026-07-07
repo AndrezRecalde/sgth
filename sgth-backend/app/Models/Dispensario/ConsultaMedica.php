@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\User;
+use App\Models\Dispensario\DiagnosticoCie10;
 
 class ConsultaMedica extends Model
 {
@@ -63,6 +64,13 @@ class ConsultaMedica extends Model
     {
         return $this->hasMany(
             DiagnosticoSecundarioConsulta::class
+        );
+    }
+
+    public function diagnosticoCie10Principal(): BelongsTo
+    {
+        return $this->belongsTo(
+            DiagnosticoCie10::class, 'diagnostico_cie10_id'
         );
     }
 

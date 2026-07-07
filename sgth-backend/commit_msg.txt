@@ -1,1 +1,1 @@
-fix(dispensario): index recetas incluye items.inventario para mostrar nombre del medicamento
+feat(dispensario): incluir diagnostico CIE10 principal como objeto en show consulta
