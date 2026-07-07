@@ -15,6 +15,7 @@ import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
 import { TabReceta } from './TabReceta'
+import { TabCertificado } from './TabCertificado'
 import { TabHistorial } from './TabHistorial'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
@@ -207,11 +208,19 @@ export function AtencionMedicaPanel({
                 </Tabs.Panel>
 
                 <Tabs.Panel value="certificado">
-                  <Stack gap="sm" p="md">
-                    <Text size="sm" c="dimmed">
-                      Emite un certificado médico para esta consulta.
-                    </Text>
-                  </Stack>
+                  {consultaActiva ? (
+                    <TabCertificado
+                      turno={turno}
+                      consulta={consultaActiva}
+                    />
+                  ) : (
+                    <Stack gap="sm" p="md">
+                      <Text size="sm" c="dimmed">
+                        Guarda la consulta primero para
+                        poder emitir certificados.
+                      </Text>
+                    </Stack>
+                  )}
                 </Tabs.Panel>
               </Tabs>
             </Card>
