@@ -153,12 +153,12 @@ export function TabConsulta({
     return (
       <Stack gap="sm" p="md">
         <Group justify="space-between">
-          <Group gap="xs">
+          <Group gap="xs" wrap="wrap">
             <Badge size="sm" variant="light" color="emerald">
               Guardada
             </Badge>
             <Badge size="sm" variant="light" color="blue">
-              {consultaPrevia.tipo_atencion?.replace('_', ' ')}
+              {consultaPrevia.tipo_atencion?.replace(/_/g, ' ')}
             </Badge>
             <Badge
               size="sm"
@@ -187,13 +187,55 @@ export function TabConsulta({
           valor={consultaPrevia.motivo_consulta}
         />
         <CampoVista
-          label="Enfermedad actual"
+          label="Enfermedad actual / Anamnesis"
           valor={consultaPrevia.enfermedad_actual}
         />
         <CampoVista
           label="Examen físico"
           valor={consultaPrevia.examen_fisico}
         />
+
+        {consultaPrevia.diagnostico_cie10_principal && (
+          <Stack gap={2}>
+            <Text size="xs" fw={600} tt="uppercase" c="dimmed">
+              Diagnóstico principal (CIE-10)
+            </Text>
+            <Group gap="xs">
+              <Badge size="sm" variant="light" color="blue" ff="monospace">
+                {consultaPrevia.diagnostico_cie10_principal.codigo}
+              </Badge>
+              <Text size="sm">
+                {consultaPrevia.diagnostico_cie10_principal.descripcion}
+              </Text>
+            </Group>
+          </Stack>
+        )}
+
+        {(consultaPrevia.diagnosticos_secundarios?.length ?? 0) > 0 && (
+          <Stack gap={2}>
+            <Text size="xs" fw={600} tt="uppercase" c="dimmed">
+              Diagnósticos secundarios
+            </Text>
+            <Group gap="xs" wrap="wrap">
+              {consultaPrevia.diagnosticos_secundarios?.map((ds) => (
+                <Group key={ds.id} gap={4}>
+                  <Badge
+                    size="sm"
+                    variant="outline"
+                    color="blue"
+                    ff="monospace"
+                  >
+                    {ds.diagnostico?.codigo}
+                  </Badge>
+                  <Text size="xs" c="dimmed">
+                    {ds.diagnostico?.descripcion}
+                  </Text>
+                </Group>
+              ))}
+            </Group>
+          </Stack>
+        )}
+
         <CampoVista
           label="Diagnóstico detallado"
           valor={consultaPrevia.diagnostico_detallado}

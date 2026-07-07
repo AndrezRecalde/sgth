@@ -49,14 +49,19 @@ export interface ConsultaMedica {
   diagnostico_detallado:    string
   diagnostico_cie10?:       number | null
   diagnostico_cie10_id?:    number | null
+  diagnostico_cie10_principal?: {
+    id:          number
+    codigo:      string
+    descripcion: string
+  } | null
   diagnosticos_secundarios?: DiagnosticoSecundario[]
-  recetas_medicas?:         RecetaDetalle[]
   plan_tratamiento?:        string | null
   notas_medico?:            string | null
   medico?: {
     id: number
     nombre_completo?: string
   }
+  recetas_medicas?: RecetaDetalle[]
 }
 
 export interface CrearConsultaData {
