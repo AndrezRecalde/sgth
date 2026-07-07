@@ -85,9 +85,13 @@ export const agendaService = {
       '/dispensario/agenda/listos-para-consulta'
     ).then(r => r.data.datos),
 
-  turnosDelDia: () =>
+  turnosDelDia: (params?: {
+    fecha_desde?: string
+    fecha_hasta?: string
+  }) =>
     api.get<ApiResponse<AgendaMedica[]>>(
-      '/dispensario/agenda/turnos-del-dia'
+      '/dispensario/agenda/turnos-del-dia',
+      { params }
     ).then(r => r.data.datos),
 
   marcarNoPresentado: (id: number) =>

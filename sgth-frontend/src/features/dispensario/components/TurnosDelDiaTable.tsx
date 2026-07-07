@@ -1,34 +1,38 @@
 'use client'
 
 import {
-  Card, Group, Text, Badge, Button,
-  Stack, ActionIcon, Tooltip, Menu,
-  ThemeIcon,
+  Stack, Group, Text, Badge, Button,
+  ActionIcon, Tooltip,
 } from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
+import '@mantine/dates/styles.css'
 import {
   IconStethoscope, IconUserOff,
-  IconRefresh, IconDotsVertical,
-  IconEye, IconClockHour4,
+  IconRefresh, IconEye, IconX,
 } from '@tabler/icons-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTurnosDelDia, useAccionesTurno } from '../hooks/useAgenda'
+import { SgthTable } from '@/components/ui/SgthTable'
+import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { AgendaMedica, EstadoAgenda } from '../services/agendaService'
+import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
-  onAtender:    (turno: AgendaMedica) => void
+  onAtender:     (turno: AgendaMedica) => void
   onVerConsulta: (turno: AgendaMedica) => void
 }
 
 const ESTADO_CONFIG: Record<EstadoAgenda, {
-  label:  string
-  color:  string
+  label: string; color: string
 }> = {
-  en_espera:     { label: 'En espera',     color: 'gray'   },
-  en_sala:       { label: 'En sala',       color: 'blue'   },
-  en_consulta:   { label: 'En consulta',   color: 'blue'   },
-  atendido:      { label: 'Atendido',      color: 'emerald'},
-  no_presentado: { label: 'No se presentó',color: 'orange' },
-  cancelado:     { label: 'Cancelado',     color: 'red'    },
+  en_espera:     { label: 'En espera',      color: 'gray'   },
+  en_sala:       { label: 'En sala',        color: 'blue'   },
+  en_consulta:   { label: 'En consulta',    color: 'blue'   },
+  atendido:      { label: 'Atendido',       color: 'emerald'},
+  no_presentado: { label: 'No se presentó', color: 'orange' },
+  cancelado:     { label: 'Cancelado',      color: 'red'    },
 }
 
 function getNombrePaciente(turno: AgendaMedica): string {
@@ -41,40 +45,202 @@ function getNombrePaciente(turno: AgendaMedica): string {
   return '—'
 }
 
-function getTipoPaciente(turno: AgendaMedica): string {
-  return turno.servidor_id ? 'Servidor' : 'Familiar'
+function fromDate(d: Date | null): string | undefined {
+  if (!d) return undefined
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-')
 }
 
 export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
-  const { data: turnos = [], isLoading } = useTurnosDelDia()
+  const router = useRouter()
+  const [rango, setRango] = useState<[Date | null, Date | null]>([null, null])
+  const [filtroActivo, setFiltroActivo] =
+    useState<{ fecha_desde?: string; fecha_hasta?: string } | undefined>(undefined)
+
+  const params = filtroActivo ?? undefined
+  const { data: turnos = [], isLoading } = useTurnosDelDia(params)
   const { noPresentado, reactivar } = useAccionesTurno()
 
-  const atendidos   = turnos.filter(t => t.estado === 'atendido').length
-  const enEspera    = turnos.filter(t =>
+  const atendidos = turnos.filter(t => t.estado === 'atendido').length
+  const enEspera  = turnos.filter(t =>
     ['en_espera', 'en_sala', 'en_consulta'].includes(t.estado)
   ).length
 
-  if (isLoading) {
-    return (
-      <Card withBorder radius="lg" p="md">
-        <Text size="sm" c="dimmed">Cargando turnos...</Text>
-      </Card>
-    )
+  const handleFiltrar = () => {
+    const [inicio, fin] = rango
+    if (inicio) {
+      setFiltroActivo({
+        fecha_desde: fromDate(inicio),
+        fecha_hasta: fromDate(fin ?? inicio),
+      })
+    }
   }
 
-  if (turnos.length === 0) {
-    return (
-      <EmptyState
-        icon={IconStethoscope}
-        title="Sin turnos para hoy"
-        description="No tienes pacientes asignados para el día de hoy."
-      />
-    )
+  const handleLimpiar = () => {
+    setRango([null, null])
+    setFiltroActivo(undefined)
   }
+
+  const columns: DataTableColumn<AgendaMedica>[] = [
+    {
+      accessor: 'fecha',
+      title:    'Fecha',
+      width:    110,
+      render: (t) => (
+        <Text size="sm">
+          {new Date(t.fecha).toLocaleDateString('es-EC', {
+            day: '2-digit', month: 'short', year: 'numeric',
+          })}
+        </Text>
+      ),
+    },
+    {
+      accessor: 'folio',
+      title:    'Folio',
+      width:    140,
+      render: (t) => (
+        <Text size="sm" ff="monospace">{t.folio ?? '—'}</Text>
+      ),
+    },
+    {
+      accessor: 'paciente',
+      title:    'Paciente',
+      render: (t) => (
+        <Stack gap={0}>
+          <Text size="sm" fw={500}>
+            {getNombrePaciente(t)}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t.servidor_id ? 'Servidor' : 'Familiar'}
+          </Text>
+        </Stack>
+      ),
+    },
+    {
+      accessor: 'tipo_atencion',
+      title:    'Tipo',
+      width:    130,
+      render: (t) => (
+        <Badge size="sm" variant="light" color="blue">
+          {t.tipo_atencion === 'medicina_general'
+            ? 'General' : 'Odontología'}
+        </Badge>
+      ),
+    },
+    {
+      accessor: 'triaje',
+      title:    'Triaje',
+      width:    90,
+      render: (t) => (
+        <Text
+          size="xs"
+          c={t.triaje ? 'emerald' : t.requiere_triaje ? 'orange' : 'dimmed'}
+        >
+          {t.triaje ? '✓ Listo' : t.requiere_triaje ? '⏳ Pendiente' : '—'}
+        </Text>
+      ),
+    },
+    {
+      accessor: 'estado',
+      title:    'Estado',
+      width:    130,
+      render: (t) => {
+        const cfg = ESTADO_CONFIG[t.estado]
+          ?? { label: t.estado, color: 'gray' }
+        return (
+          <Badge size="sm" variant="light" color={cfg.color}>
+            {cfg.label}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessor: 'acciones',
+      title:    '',
+      width:    50,
+      render: (t) => {
+        const esPendiente    = ['en_espera', 'en_sala'].includes(t.estado)
+        const enConsulta     = t.estado === 'en_consulta'
+        const esAtendido     = t.estado === 'atendido'
+        const esNoPresentado = t.estado === 'no_presentado'
+        const tieneTriaje    = !!t.triaje
+        const puedeAtender   = (esPendiente || enConsulta) &&
+          (tieneTriaje || !t.requiere_triaje)
+
+        return (
+          <TableActions actions={[
+            ...(puedeAtender ? [{
+              label:   enConsulta ? 'Continuar consulta' : 'Atender',
+              icon:    <IconStethoscope size={14} />,
+              color:   'emerald',
+              onClick: () => onAtender(t),
+            }] : []),
+            ...((esAtendido || enConsulta) ? [{
+              label:   'Ver consulta',
+              icon:    <IconEye size={14} />,
+              color:   'blue',
+              onClick: () => onVerConsulta(t),
+            }] : []),
+            ...(esPendiente ? [{
+              label:   'No se presentó',
+              icon:    <IconUserOff size={14} />,
+              color:   'orange',
+              onClick: () => {
+                if (confirm('¿Marcar como no presentado?')) {
+                  noPresentado.mutate(t.id)
+                }
+              },
+            }] : []),
+            ...(esNoPresentado ? [{
+              label:   'Reactivar turno',
+              icon:    <IconRefresh size={14} />,
+              color:   'blue',
+              onClick: () => {
+                if (confirm('¿Reactivar este turno?')) {
+                  reactivar.mutate(t.id)
+                }
+              },
+            }] : []),
+          ]} />
+        )
+      },
+    },
+  ]
 
   return (
-    <Stack gap="sm">
-      <Group justify="space-between">
+    <Stack gap="md">
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Group gap="xs">
+          <DatePickerInput
+            type="range"
+            placeholder="Filtrar por rango de fechas"
+            valueFormat="DD/MM/YYYY"
+            clearable
+            value={rango}
+            onChange={(v) => setRango(v as [Date | null, Date | null])}
+            style={{ width: 280 }}
+          />
+          <Button
+            variant="light"
+            onClick={handleFiltrar}
+            disabled={!rango[0]}
+          >
+            Filtrar
+          </Button>
+          {filtroActivo && (
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={handleLimpiar}
+            >
+              <IconX size={14} />
+            </ActionIcon>
+          )}
+        </Group>
+
         <Group gap="xs">
           <Badge size="sm" variant="light" color="emerald">
             {atendidos} atendido{atendidos !== 1 ? 's' : ''}
@@ -85,152 +251,22 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
         </Group>
       </Group>
 
-      {turnos.map((turno, i) => {
-        const estado  = ESTADO_CONFIG[turno.estado]
-          ?? { label: turno.estado, color: 'gray' }
-        const nombre  = getNombrePaciente(turno)
-        const tipo    = getTipoPaciente(turno)
-        const esPendiente = ['en_espera', 'en_sala'].includes(turno.estado)
-        const esAtendido  = turno.estado === 'atendido'
-        const esNoPresentado = turno.estado === 'no_presentado'
-        const enConsulta  = turno.estado === 'en_consulta'
-        const tieneTriaje = !!turno.triaje
-        const puedeAtender = (esPendiente || enConsulta) &&
-          (tieneTriaje || !turno.requiere_triaje)
-
-        return (
-          <Card
-            key={turno.id}
-            withBorder
-            radius="md"
-            p="sm"
-            style={{
-              borderLeft: enConsulta
-                ? '3px solid var(--mantine-color-blue-6)'
-                : esAtendido
-                  ? '3px solid var(--mantine-color-emerald-6)'
-                  : '3px solid transparent',
-              opacity: esNoPresentado ? 0.6 : 1,
-            }}
-          >
-            <Group justify="space-between" wrap="nowrap">
-              <Group gap="sm" wrap="nowrap">
-                <ThemeIcon
-                  size="md"
-                  radius="xl"
-                  variant="light"
-                  color={esAtendido ? 'emerald'
-                    : enConsulta ? 'blue' : 'gray'}
-                >
-                  <Text size="xs" fw={600}>{i + 1}</Text>
-                </ThemeIcon>
-
-                <Stack gap={0}>
-                  <Text size="sm" fw={600}>{nombre}</Text>
-                  <Group gap={4}>
-                    <Text size="xs" c="dimmed">{tipo}</Text>
-                    {turno.folio && (
-                      <Text size="xs" c="dimmed" ff="monospace">
-                        · {turno.folio}
-                      </Text>
-                    )}
-                  </Group>
-                </Stack>
-              </Group>
-
-              <Group gap="xs" wrap="nowrap">
-                {!tieneTriaje && turno.requiere_triaje && !esAtendido && (
-                  <Tooltip label="Sin triaje" withArrow>
-                    <ThemeIcon
-                      size="xs" color="orange" variant="light"
-                    >
-                      <IconClockHour4 size={11} />
-                    </ThemeIcon>
-                  </Tooltip>
-                )}
-
-                <Badge
-                  size="sm"
-                  variant="light"
-                  color={estado.color}
-                >
-                  {estado.label}
-                </Badge>
-
-                {puedeAtender && (
-                  <Button
-                    size="xs"
-                    color={enConsulta ? 'blue' : 'emerald'}
-                    variant={enConsulta ? 'light' : 'filled'}
-                    leftSection={<IconStethoscope size={12} />}
-                    onClick={() => onAtender(turno)}
-                  >
-                    {enConsulta ? 'Continuar' : 'Atender'}
-                  </Button>
-                )}
-
-                {esAtendido && (
-                  <Button
-                    size="xs"
-                    variant="light"
-                    color="blue"
-                    leftSection={<IconEye size={12} />}
-                    onClick={() => onVerConsulta(turno)}
-                  >
-                    Ver consulta
-                  </Button>
-                )}
-
-                <Menu shadow="md" width={180}>
-                  <Menu.Target>
-                    <ActionIcon
-                      size="sm" variant="subtle" color="gray"
-                    >
-                      <IconDotsVertical size={14} />
-                    </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    {esPendiente && (
-                      <Menu.Item
-                        color="orange"
-                        leftSection={<IconUserOff size={13} />}
-                        onClick={() => {
-                          if (confirm('¿Marcar como no presentado?')) {
-                            noPresentado.mutate(turno.id)
-                          }
-                        }}
-                      >
-                        No se presentó
-                      </Menu.Item>
-                    )}
-                    {esNoPresentado && (
-                      <Menu.Item
-                        color="emerald"
-                        leftSection={<IconRefresh size={13} />}
-                        onClick={() => {
-                          if (confirm('¿Reactivar este turno?')) {
-                            reactivar.mutate(turno.id)
-                          }
-                        }}
-                      >
-                        Reactivar turno
-                      </Menu.Item>
-                    )}
-                    {(esAtendido || enConsulta) && (
-                      <Menu.Item
-                        leftSection={<IconEye size={13} />}
-                        onClick={() => onVerConsulta(turno)}
-                      >
-                        Ver consulta
-                      </Menu.Item>
-                    )}
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
-            </Group>
-          </Card>
-        )
-      })}
+      {turnos.length === 0 && !isLoading ? (
+        <EmptyState
+          icon={IconStethoscope}
+          title="Sin turnos"
+          description={filtroActivo
+            ? "No hay turnos en el rango seleccionado."
+            : "No tienes pacientes asignados para hoy."}
+        />
+      ) : (
+        <SgthTable
+          records={turnos}
+          columns={columns}
+          fetching={isLoading}
+          minHeight={200}
+        />
+      )}
     </Stack>
   )
 }

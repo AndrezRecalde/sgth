@@ -105,12 +105,15 @@ export function useListosParaConsulta() {
   })
 }
 
-export function useTurnosDelDia() {
+export function useTurnosDelDia(params?: {
+  fecha_desde?: string
+  fecha_hasta?: string
+}) {
   return useQuery({
-    queryKey: ['agenda', 'turnos-del-dia'],
-    queryFn:  agendaService.turnosDelDia,
+    queryKey: ['agenda', 'turnos-del-dia', params],
+    queryFn:  () => agendaService.turnosDelDia(params),
     staleTime: 1000 * 15,
-    refetchInterval: 1000 * 30,
+    refetchInterval: params ? undefined : 1000 * 30,
   })
 }
 
