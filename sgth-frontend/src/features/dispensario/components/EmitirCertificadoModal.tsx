@@ -1,49 +1,45 @@
 'use client'
 
 import {
-  Modal, Stack, NumberInput, Textarea,
+  Modal, Stack, Textarea,
   Button, Group, Text, Alert,
-  Badge,
+  Badge, NumberInput,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
-import { useForm, Controller } from 'react-hook-form'
+import { useState } from 'react'
 import { IconCheck, IconAlertCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useEmitirCertificado } from '../hooks/useCertificado'
 import { BuscarCie10Input } from './BuscarCie10Input'
-import { useState } from 'react'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { DiagnosticoCie10 } from '../services/cie10Service'
 
 interface Props {
-  opened:   boolean
-  onClose:  () => void
-  consulta: ConsultaMedica
+  opened:     boolean
+  onClose:    () => void
+  consulta:   ConsultaMedica
   esFamiliar: boolean
 }
 
-type FormData = {
-  dias_reposo:   number
-  fecha_inicio?: string | null
-  observaciones?: string
-}
+const DIAS_MAX = 3
 
-function toDate(v?: string | null): Date | null {
-  if (!v) return null
-  const [y, m, d] = v.slice(0, 10).split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
+function fromDate(d: Date | null): string {
+  if (!d) return ''
   return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, '0'),
-    String(date.getDate()).padStart(2, '0'),
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
   ].join('-')
+}
+
+function calcularDias(
+  inicio: Date | null,
+  fin: Date | null
+): number {
+  if (!inicio || !fin) return 0
+  const diff = fin.getTime() - inicio.getTime()
+  return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1
 }
 
 export function EmitirCertificadoModal({
@@ -51,36 +47,55 @@ export function EmitirCertificadoModal({
 }: Props) {
   const contained = useContainedInput()
   const emitir    = useEmitirCertificado(consulta.id)
+
+  const [rango, setRango] = useState<[Date | null, Date | null]>(
+    [null, null]
+  )
   const [cie10Sel, setCie10Sel] =
     useState<DiagnosticoCie10 | null>(null)
+  const [observaciones, setObservaciones] = useState('')
+  const [errorRango, setErrorRango] = useState<string | null>(null)
 
-  const {
-    control, register, handleSubmit, reset,
-    watch,
-    formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: {
-      dias_reposo:   1,
-      fecha_inicio:  null,
-      observaciones: '',
-    },
-  })
+  const [fechaInicio, fechaFin] = rango
+  const dias = calcularDias(fechaInicio, fechaFin)
+  const rangoExcede = dias > DIAS_MAX
 
-  const diasReposo = watch('dias_reposo')
+  const handleRangoChange = (
+    value: any
+  ) => {
+    setRango(value)
+    const d = calcularDias(value[0], value[1])
+    if (d > DIAS_MAX) {
+      setErrorRango(
+        `El rango seleccionado es de ${d} días. Máximo permitido: ${DIAS_MAX}.`
+      )
+    } else {
+      setErrorRango(null)
+    }
+  }
 
-  const onSubmit = (values: FormData) => {
+  const handleSubmit = () => {
+    if (!fechaInicio || !fechaFin) {
+      setErrorRango('Selecciona el rango de fechas del reposo.')
+      return
+    }
+    if (rangoExcede) return
+
     emitir.mutate(
       {
-        consulta_medica_id:    consulta.id,
-        dias_reposo:           values.dias_reposo,
-        fecha_inicio:          values.fecha_inicio || null,
-        diagnostico_cie10_id:  cie10Sel?.id ?? null,
-        observaciones:         values.observaciones || null,
+        consulta_medica_id:   consulta.id,
+        dias_reposo:          dias,
+        fecha_inicio:         fromDate(fechaInicio),
+        fecha_fin:            fromDate(fechaFin),
+        diagnostico_cie10_id: cie10Sel?.id ?? null,
+        observaciones:        observaciones || null,
       },
       {
         onSuccess: () => {
-          reset()
+          setRango([null, null])
           setCie10Sel(null)
+          setObservaciones('')
+          setErrorRango(null)
           onClose()
         },
       }
@@ -95,85 +110,92 @@ export function EmitirCertificadoModal({
       size="md"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack gap="sm">
-          <Alert
-            icon={<IconAlertCircle size={14} />}
-            color="blue"
-            variant="light"
-          >
-            <Text size="xs">
-              Máximo <Text span fw={600}>3 días de reposo</Text> por
-              certificado (normativa MSP Ecuador).
-              {!esFamiliar && (
-                <> El permiso de asistencia se generará
-                automáticamente en el sistema.</>
-              )}
-            </Text>
-          </Alert>
-
-          <Controller
-            name="dias_reposo"
-            control={control}
-            rules={{ required: true, min: 1, max: 3 }}
-            render={({ field }) => (
-              <NumberInput
-                label="Días de reposo"
-                min={1}
-                max={3}
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(Number(v) || 1)}
-                error={errors.dias_reposo?.message}
-              />
+      <Stack gap="sm">
+        <Alert
+          icon={<IconAlertCircle size={14} />}
+          color="blue"
+          variant="light"
+        >
+          <Text size="xs">
+            Máximo <Text span fw={600}>{DIAS_MAX} días de reposo</Text>
+            {' '}por certificado (normativa MSP Ecuador).
+            {!esFamiliar && (
+              <> El permiso de asistencia se generará
+              automáticamente.</>
             )}
-          />
+          </Text>
+        </Alert>
 
-          <Controller
-            name="fecha_inicio"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                label="Fecha de inicio del reposo"
-                description="Por defecto: fecha de la consulta"
-                valueFormat="DD/MM/YYYY"
-                clearable
-                {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d))}
-              />
-            )}
-          />
-
-          <BuscarCie10Input
-            value={cie10Sel}
-            onChange={setCie10Sel}
-          />
-
-          <Textarea
-            label="Observaciones (opcional)"
-            placeholder="Indicaciones adicionales del reposo"
-            autosize
-            minRows={2}
+        <Stack gap={4}>
+          <DatePickerInput
+            type="range"
+            label="Rango de reposo"
+            placeholder="Selecciona fecha inicio y fin"
+            valueFormat="DD/MM/YYYY"
+            maxDate={
+              fechaInicio
+                ? new Date(
+                    fechaInicio.getFullYear(),
+                    fechaInicio.getMonth(),
+                    fechaInicio.getDate() + DIAS_MAX - 1
+                  )
+                : undefined
+            }
             {...contained}
-            {...register('observaciones')}
+            value={rango}
+            onChange={handleRangoChange}
+            error={errorRango}
           />
 
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              leftSection={<IconCheck size={14} />}
-              loading={emitir.isPending}
-            >
-              Emitir certificado
-            </Button>
-          </Group>
+          {dias > 0 && !rangoExcede && (
+            <Group gap="xs">
+              <Text size="xs" c="dimmed">Días de reposo:</Text>
+              <Badge size="sm" variant="light" color="emerald">
+                {dias} día{dias !== 1 ? 's' : ''}
+              </Badge>
+            </Group>
+          )}
         </Stack>
-      </form>
+
+        <BuscarCie10Input
+          value={cie10Sel}
+          onChange={setCie10Sel}
+        />
+
+        <Textarea
+          label="Observaciones (opcional)"
+          placeholder="Indicaciones adicionales del reposo"
+          autosize
+          minRows={2}
+          {...contained}
+          value={observaciones}
+          onChange={(e) => setObservaciones(e.currentTarget.value)}
+        />
+
+        <Group justify="flex-end" mt="sm">
+          <Button
+            variant="default"
+            onClick={() => {
+              setRango([null, null])
+              setCie10Sel(null)
+              setObservaciones('')
+              setErrorRango(null)
+              onClose()
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            color="emerald"
+            leftSection={<IconCheck size={14} />}
+            loading={emitir.isPending}
+            disabled={!fechaInicio || !fechaFin || rangoExcede}
+            onClick={handleSubmit}
+          >
+            Emitir certificado
+          </Button>
+        </Group>
+      </Stack>
     </Modal>
   )
 }

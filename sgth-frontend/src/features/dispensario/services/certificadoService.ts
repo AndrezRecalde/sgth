@@ -27,7 +27,8 @@ export interface CertificadoMedico {
 export interface EmitirCertificadoData {
   consulta_medica_id:    number
   dias_reposo:           number
-  fecha_inicio?:         string | null
+  fecha_inicio:          string
+  fecha_fin:             string
   diagnostico_cie10_id?: number | null
   observaciones?:        string | null
 }
