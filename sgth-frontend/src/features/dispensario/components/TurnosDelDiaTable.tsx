@@ -45,8 +45,10 @@ function getNombrePaciente(turno: AgendaMedica): string {
   return '—'
 }
 
-function fromDate(d: Date | null): string | undefined {
+function fromDate(d: Date | string | null): string | undefined {
   if (!d) return undefined
+  if (typeof d === 'string') return d.slice(0, 10)
+  if (!(d instanceof Date) || isNaN(d.getTime())) return undefined
   return [
     d.getFullYear(),
     String(d.getMonth() + 1).padStart(2, '0'),
@@ -71,10 +73,12 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
 
   const handleFiltrar = () => {
     const [inicio, fin] = rango
-    if (inicio) {
+    const desde = fromDate(inicio as Date | string | null)
+    if (desde) {
       setFiltroActivo({
-        fecha_desde: fromDate(inicio),
-        fecha_hasta: fromDate(fin ?? inicio),
+        fecha_desde: desde,
+        fecha_hasta: fromDate((fin ?? inicio) as Date | string | null)
+          ?? desde,
       })
     }
   }
