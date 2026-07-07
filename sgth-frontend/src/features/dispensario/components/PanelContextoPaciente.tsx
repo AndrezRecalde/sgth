@@ -17,8 +17,9 @@ import { AgregarAlergiaModal } from './AgregarAlergiaModal'
 import { AgregarAntecedenteModal } from './AgregarAntecedenteModal'
 import { useContextoConsulta } from '../hooks/useContextoConsulta'
 import {
-  useEliminarAlergia, useEliminarAntecedente,
+  useAnularAlergia, useAnularAntecedente,
 } from '../hooks/useHistoriaClinica'
+import { AnularRegistroModal } from './AnularRegistroModal'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
@@ -64,12 +65,17 @@ export function PanelContextoPaciente({
       close: cerrarAntecedenteFamiliar }] =
     useDisclosure(false)
 
-  const eliminarAlergia = useEliminarAlergia(
-    historiaClinicaId, turno.id
-  )
-  const eliminarAntecedente = useEliminarAntecedente(
-    historiaClinicaId, turno.id
-  )
+  const anularAlergia     = useAnularAlergia(historiaClinicaId, turno.id)
+  const anularAntecedente = useAnularAntecedente(historiaClinicaId, turno.id)
+
+  const [registroAnular, setRegistroAnular] = useState<{
+    id:   number
+    tipo: 'alergia' | 'antecedente'
+    desc: string
+  } | null>(null)
+
+  const [anularOpened,
+    { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
@@ -196,11 +202,13 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="red"
+                  color="orange"
                   onClick={() => {
-                    if (confirm('¿Eliminar esta alergia?')) {
-                      eliminarAlergia.mutate(a.id)
-                    }
+                    setRegistroAnular({
+                      id: a.id, tipo: 'alergia',
+                      desc: a.descripcion,
+                    })
+                    abrirAnular()
                   }}
                 >
                   <IconTrash size={10} />
@@ -241,11 +249,13 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="red"
+                  color="orange"
                   onClick={() => {
-                    if (confirm('¿Eliminar este antecedente?')) {
-                      eliminarAntecedente.mutate(a.id)
-                    }
+                    setRegistroAnular({
+                      id: a.id, tipo: 'antecedente',
+                      desc: a.descripcion,
+                    })
+                    abrirAnular()
                   }}
                 >
                   <IconTrash size={10} />
@@ -285,11 +295,13 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="red"
+                  color="orange"
                   onClick={() => {
-                    if (confirm('¿Eliminar este antecedente?')) {
-                      eliminarAntecedente.mutate(a.id)
-                    }
+                    setRegistroAnular({
+                      id: a.id, tipo: 'antecedente',
+                      desc: a.descripcion,
+                    })
+                    abrirAnular()
                   }}
                 >
                   <IconTrash size={10} />
@@ -324,6 +336,29 @@ export function PanelContextoPaciente({
           />
         </Collapse>
       </Stack>
+      <AnularRegistroModal
+        opened={anularOpened}
+        onClose={() => { setRegistroAnular(null); cerrarAnular() }}
+        titulo={registroAnular?.tipo === 'alergia'
+          ? 'Anular alergia'
+          : 'Anular antecedente'}
+        descripcion={`${registroAnular?.desc ?? ''}`}
+        loading={anularAlergia.isPending || anularAntecedente.isPending}
+        onConfirmar={(motivo) => {
+          if (!registroAnular) return
+          const mutate = registroAnular.tipo === 'alergia'
+            ? anularAlergia
+            : anularAntecedente
+          mutate.mutate(
+            { id: registroAnular.id, motivo },
+            { onSuccess: () => {
+              setRegistroAnular(null)
+              cerrarAnular()
+            }}
+          )
+        }}
+      />
+
       <AgregarAlergiaModal
         opened={alergiaOpened}
         onClose={cerrarAlergia}

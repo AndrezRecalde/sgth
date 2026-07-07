@@ -92,19 +92,19 @@ export function useAgregarAntecedente(
   })
 }
 
-export function useEliminarAlergia(
+export function useAnularAlergia(
   historiaId: number,
   agendaId: number
 ) {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (alergiaId: number) =>
-      historiaClinicaService.eliminarAlergia(historiaId, alergiaId),
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      historiaClinicaService.anularAlergia(historiaId, id, motivo),
     onSuccess: () => {
       notifications.show({
-        title:   'Alergia eliminada',
-        message: 'La alergia fue removida del historial.',
+        title:   'Alergia anulada',
+        message: 'La alergia fue anulada con trazabilidad.',
         color:   'orange',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
@@ -122,21 +122,19 @@ export function useEliminarAlergia(
   })
 }
 
-export function useEliminarAntecedente(
+export function useAnularAntecedente(
   historiaId: number,
   agendaId: number
 ) {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (antecedenteId: number) =>
-      historiaClinicaService.eliminarAntecedente(
-        historiaId, antecedenteId
-      ),
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      historiaClinicaService.anularAntecedente(historiaId, id, motivo),
     onSuccess: () => {
       notifications.show({
-        title:   'Antecedente eliminado',
-        message: 'El antecedente fue removido del historial.',
+        title:   'Antecedente anulado',
+        message: 'El antecedente fue anulado con trazabilidad.',
         color:   'orange',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })

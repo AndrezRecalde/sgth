@@ -69,9 +69,14 @@ export const historiaClinicaService = {
       data
     ).then(r => r.data.datos),
 
-  eliminarAlergia: (historiaId: number, alergiaId: number) =>
-    api.delete<ApiResponse<unknown>>(
-      `/dispensario/historias-clinicas/${historiaId}/alergias/${alergiaId}`
+  anularAlergia: (
+    historiaId: number,
+    alergiaId: number,
+    motivo: string
+  ) =>
+    api.patch<ApiResponse<unknown>>(
+      `/dispensario/historias-clinicas/${historiaId}/alergias/${alergiaId}/anular`,
+      { motivo_anulacion: motivo }
     ).then(r => r.data.datos),
 
   agregarAntecedente: (
@@ -83,12 +88,14 @@ export const historiaClinicaService = {
       data
     ).then(r => r.data.datos),
 
-  eliminarAntecedente: (
+  anularAntecedente: (
     historiaId: number,
-    antecedenteId: number
+    antecedenteId: number,
+    motivo: string
   ) =>
-    api.delete<ApiResponse<unknown>>(
-      `/dispensario/historias-clinicas/${historiaId}/antecedentes/${antecedenteId}`
+    api.patch<ApiResponse<unknown>>(
+      `/dispensario/historias-clinicas/${historiaId}/antecedentes/${antecedenteId}/anular`,
+      { motivo_anulacion: motivo }
     ).then(r => r.data.datos),
 
   listar: (params?: Record<string, unknown>) =>
