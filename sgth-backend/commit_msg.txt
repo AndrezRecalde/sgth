@@ -1,6 +1,18 @@
-feat(dispensario): turnosDelDia soporta filtro por rango de fechas
+feat(dispensario): anulacion clinica de alergias y antecedentes con motivo
 
-Permite filtrar los turnos del medico por un rango de fechas
-(fecha_desde, fecha_hasta). Si no se pasan parametros,
-devuelve los turnos de hoy como antes. Ordena por estado
-primero y luego por fecha + hora de registro.
+ARQUITECTURA:
+  Se usa campo anulado_en (timestamp) separado de
+  deleted_at para diferenciar anulacion clinica
+  (decision medica con motivo) de borrado tecnico
+  (admin elimina por error). Estandar MSP Ecuador:
+  ningun dato clinico se elimina, se anula.
+
+BACKEND:
+  - alergias_paciente/antecedentes_paciente: campos
+    anulado_en, anulado_por, motivo_anulacion
+  - AlergiaPaciente/AntecedentePaciente: scope activas/
+    activos, relacion anuladoPor
+  - Controllers: metodo anular (PATCH) con validacion
+    de motivo, solo para medico/odontologo
+  - HistoriaClinicaService: contexto filtra solo activos
+  - Rutas: PATCH {id}/anular con middleware de rol

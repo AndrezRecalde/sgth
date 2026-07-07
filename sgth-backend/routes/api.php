@@ -645,14 +645,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::prefix('{id}/alergias')->group(function () {
                     Route::get('/', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'index']);
                     Route::post('/', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'store']);
-                    Route::delete('{alergia}', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'destroy']);
+                    Route::patch('{alergia}/anular',
+                        [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'anular']
+                    )->middleware('role:medico|odontologo');
                 });
 
                 // Antecedentes
                 Route::prefix('{id}/antecedentes')->group(function () {
                     Route::get('/', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'index']);
                     Route::post('/', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'store']);
-                    Route::delete('{antecedente}', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'destroy']);
+                    Route::patch('{antecedente}/anular',
+                        [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'anular']
+                    )->middleware('role:medico|odontologo');
                 });
             });
 

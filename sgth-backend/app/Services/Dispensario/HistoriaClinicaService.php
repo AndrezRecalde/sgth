@@ -39,7 +39,8 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
     {
         return HistoriaClinica::with([
             'servidor', 'cargaFamiliar.servidor',
-            'alergias', 'antecedentes',
+            'alergias' => fn($q) => $q->whereNull('anulado_en'),
+            'antecedentes' => fn($q) => $q->whereNull('anulado_en'),
             'consultasMedicas' => fn($q) => $q
                 ->orderBy('fecha_consulta', 'desc')
                 ->limit(10),
@@ -141,8 +142,8 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         $historia = HistoriaClinica::with([
             'servidor',
             'cargaFamiliar.servidor',
-            'alergias',
-            'antecedentes',
+            'alergias' => fn($q) => $q->whereNull('anulado_en'),
+            'antecedentes' => fn($q) => $q->whereNull('anulado_en'),
         ])->findOrFail($historiaClinicaId);
 
         $triajeActual = null;
