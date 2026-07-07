@@ -34,6 +34,13 @@ class CertificadoMedicoController extends Controller
             );
         }
 
+        if ($request->filled('consulta_medica_id')) {
+            $query->where(
+                'consulta_medica_id',
+                $request->integer('consulta_medica_id')
+            );
+        }
+
         $certificados = $query->paginate(
             $request->integer('per_page', 20)
         );

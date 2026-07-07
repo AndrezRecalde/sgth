@@ -1,1 +1,1 @@
-feat(dispensario): incluir diagnostico CIE10 principal como objeto en show consulta
+feat(dispensario): filtrar certificados por consulta_medica_id
