@@ -2,7 +2,7 @@
 
 import {
   Stack, Textarea, Select, Group,
-  Button, Text, Badge, Divider,
+  Button, Text, Badge, Card,
   ActionIcon, Tooltip,
 } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
@@ -41,22 +41,42 @@ function formatFechaLocal(d: Date): string {
 }
 
 function CampoVista({
-  label, valor,
-}: { label: string; valor?: string | null }) {
+  label, valor, destacado = false,
+}: {
+  label:       string
+  valor?:      string | null
+  destacado?:  boolean
+}) {
   if (!valor) return null
   const esHtml = valor.startsWith('<')
   return (
-    <Stack gap={2}>
-      <Text size="xs" fw={600} tt="uppercase" c="dimmed">{label}</Text>
-      {esHtml ? (
-        <div
-          style={{ fontSize: 'var(--mantine-font-size-sm)' }}
-          dangerouslySetInnerHTML={{ __html: valor }}
-        />
-      ) : (
-        <Text size="sm">{valor}</Text>
-      )}
-    </Stack>
+    <Card
+      withBorder
+      radius="md"
+      p="sm"
+      style={destacado ? {
+        borderLeft: '3px solid var(--mantine-color-blue-6)',
+      } : undefined}
+    >
+      <Stack gap={4}>
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+          style={{ letterSpacing: '0.04em' }}
+        >
+          {label}
+        </Text>
+        {esHtml ? (
+          <div
+            style={{
+              fontSize: 'var(--mantine-font-size-sm)',
+              lineHeight: 1.6,
+            }}
+            dangerouslySetInnerHTML={{ __html: valor }}
+          />
+        ) : (
+          <Text size="sm" style={{ lineHeight: 1.6 }}>{valor}</Text>
+        )}
+      </Stack>
+    </Card>
   )
 }
 
@@ -152,7 +172,7 @@ export function TabConsulta({
   if (!modoEdicion && consultaPrevia) {
     return (
       <Stack gap="sm" p="md">
-        <Group justify="space-between">
+        <Group justify="space-between" align="center">
           <Group gap="xs" wrap="wrap">
             <Badge size="sm" variant="light" color="emerald">
               Guardada
@@ -180,8 +200,6 @@ export function TabConsulta({
           </Tooltip>
         </Group>
 
-        <Divider />
-
         <CampoVista
           label="Motivo de consulta"
           valor={consultaPrevia.motivo_consulta}
@@ -196,53 +214,72 @@ export function TabConsulta({
         />
 
         {consultaPrevia.diagnostico_cie10_principal && (
-          <Stack gap={2}>
-            <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-              Diagnóstico principal (CIE-10)
-            </Text>
-            <Group gap="xs">
-              <Badge size="sm" variant="light" color="blue" ff="monospace">
-                {consultaPrevia.diagnostico_cie10_principal.codigo}
-              </Badge>
-              <Text size="sm">
-                {consultaPrevia.diagnostico_cie10_principal.descripcion}
+          <Card withBorder radius="md" p="sm"
+            style={{
+              borderLeft: '3px solid var(--mantine-color-blue-6)',
+            }}
+          >
+            <Stack gap={6}>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+                style={{ letterSpacing: '0.04em' }}
+              >
+                Diagnóstico principal (CIE-10)
               </Text>
-            </Group>
-          </Stack>
+              <Group gap="xs" align="flex-start">
+                <Badge
+                  size="md"
+                  variant="light"
+                  color="blue"
+                  ff="monospace"
+                >
+                  {consultaPrevia.diagnostico_cie10_principal.codigo}
+                </Badge>
+                <Text size="sm" style={{ flex: 1, lineHeight: 1.5 }}>
+                  {consultaPrevia.diagnostico_cie10_principal.descripcion}
+                </Text>
+              </Group>
+            </Stack>
+          </Card>
         )}
 
         {(consultaPrevia.diagnosticos_secundarios?.length ?? 0) > 0 && (
-          <Stack gap={2}>
-            <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-              Diagnósticos secundarios
-            </Text>
-            <Group gap="xs" wrap="wrap">
-              {consultaPrevia.diagnosticos_secundarios?.map((ds) => (
-                <Group key={ds.id} gap={4}>
-                  <Badge
-                    size="sm"
-                    variant="outline"
-                    color="blue"
-                    ff="monospace"
-                  >
-                    {ds.diagnostico?.codigo}
-                  </Badge>
-                  <Text size="xs" c="dimmed">
-                    {ds.diagnostico?.descripcion}
-                  </Text>
-                </Group>
-              ))}
-            </Group>
-          </Stack>
+          <Card withBorder radius="md" p="sm">
+            <Stack gap={6}>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+                style={{ letterSpacing: '0.04em' }}
+              >
+                Diagnósticos secundarios
+              </Text>
+              <Stack gap={4}>
+                {consultaPrevia.diagnosticos_secundarios?.map((ds) => (
+                  <Group key={ds.id} gap="xs" align="flex-start">
+                    <Badge
+                      size="sm"
+                      variant="outline"
+                      color="blue"
+                      ff="monospace"
+                    >
+                      {ds.diagnostico?.codigo}
+                    </Badge>
+                    <Text size="sm" c="dimmed" style={{ flex: 1 }}>
+                      {ds.diagnostico?.descripcion}
+                    </Text>
+                  </Group>
+                ))}
+              </Stack>
+            </Stack>
+          </Card>
         )}
 
         <CampoVista
           label="Diagnóstico detallado"
           valor={consultaPrevia.diagnostico_detallado}
+          destacado
         />
         <CampoVista
           label="Plan de tratamiento"
           valor={consultaPrevia.plan_tratamiento}
+          destacado
         />
         <CampoVista
           label="Notas del médico"
