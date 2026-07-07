@@ -60,11 +60,20 @@ export function EmitirCertificadoModal({
   const dias = calcularDias(fechaInicio, fechaFin)
   const rangoExcede = dias > DIAS_MAX
 
+  const toDateObj = (v: Date | string | null): Date | null => {
+    if (!v) return null
+    if (v instanceof Date) return v
+    const [y, m, d] = String(v).slice(0, 10).split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+
   const handleRangoChange = (
     value: any
   ) => {
-    setRango(value)
-    const d = calcularDias(value[0], value[1])
+    const inicio = toDateObj(value[0])
+    const fin    = toDateObj(value[1])
+    setRango([inicio, fin])
+    const d = calcularDias(inicio, fin)
     if (d > DIAS_MAX) {
       setErrorRango(
         `El rango seleccionado es de ${d} días. Máximo permitido: ${DIAS_MAX}.`
@@ -133,7 +142,7 @@ export function EmitirCertificadoModal({
             placeholder="Selecciona fecha inicio y fin"
             valueFormat="DD/MM/YYYY"
             maxDate={
-              fechaInicio
+              fechaInicio instanceof Date
                 ? new Date(
                     fechaInicio.getFullYear(),
                     fechaInicio.getMonth(),
