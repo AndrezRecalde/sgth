@@ -91,3 +91,65 @@ export function useAgregarAntecedente(
       }),
   })
 }
+
+export function useEliminarAlergia(
+  historiaId: number,
+  agendaId: number
+) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: (alergiaId: number) =>
+      historiaClinicaService.eliminarAlergia(historiaId, alergiaId),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Alergia eliminada',
+        message: 'La alergia fue removida del historial.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({
+        queryKey: ['contexto-consulta', historiaId, agendaId],
+      })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function useEliminarAntecedente(
+  historiaId: number,
+  agendaId: number
+) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: (antecedenteId: number) =>
+      historiaClinicaService.eliminarAntecedente(
+        historiaId, antecedenteId
+      ),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Antecedente eliminado',
+        message: 'El antecedente fue removido del historial.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({
+        queryKey: ['contexto-consulta', historiaId, agendaId],
+      })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}

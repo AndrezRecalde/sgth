@@ -9,12 +9,16 @@ import {
 import {
   IconUser, IconUsers, IconAlertTriangle,
   IconPlus, IconChevronDown, IconChevronUp,
+  IconTrash,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDisclosure } from '@mantine/hooks'
 import { AgregarAlergiaModal } from './AgregarAlergiaModal'
 import { AgregarAntecedenteModal } from './AgregarAntecedenteModal'
 import { useContextoConsulta } from '../hooks/useContextoConsulta'
+import {
+  useEliminarAlergia, useEliminarAntecedente,
+} from '../hooks/useHistoriaClinica'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
@@ -59,6 +63,13 @@ export function PanelContextoPaciente({
     { open: abrirAntecedenteFamiliar,
       close: cerrarAntecedenteFamiliar }] =
     useDisclosure(false)
+
+  const eliminarAlergia = useEliminarAlergia(
+    historiaClinicaId, turno.id
+  )
+  const eliminarAntecedente = useEliminarAntecedente(
+    historiaClinicaId, turno.id
+  )
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
@@ -169,15 +180,31 @@ export function PanelContextoPaciente({
         ) : (
           <Stack gap={3}>
             {alergias.map((a) => (
-              <Group key={a.id} gap={5} wrap="nowrap">
-                <Badge
+              <Group key={a.id} gap={5} wrap="nowrap"
+                justify="space-between"
+              >
+                <Group gap={5} wrap="nowrap" style={{ flex: 1 }}>
+                  <Badge
+                    size="xs"
+                    variant="light"
+                    color={SEVERIDAD_COLORS[a.severidad] ?? 'gray'}
+                  >
+                    {a.severidad}
+                  </Badge>
+                  <Text size="xs" lineClamp={1}>{a.descripcion}</Text>
+                </Group>
+                <ActionIcon
                   size="xs"
-                  variant="light"
-                  color={SEVERIDAD_COLORS[a.severidad] ?? 'gray'}
+                  variant="subtle"
+                  color="red"
+                  onClick={() => {
+                    if (confirm('¿Eliminar esta alergia?')) {
+                      eliminarAlergia.mutate(a.id)
+                    }
+                  }}
                 >
-                  {a.severidad}
-                </Badge>
-                <Text size="xs" lineClamp={1}>{a.descripcion}</Text>
+                  <IconTrash size={10} />
+                </ActionIcon>
               </Group>
             ))}
           </Stack>
@@ -204,10 +231,26 @@ export function PanelContextoPaciente({
         ) : (
           <Stack gap={3}>
             {antecedentesPersonales.map((a) => (
-              <Text key={a.id} size="xs">
-                <Text span fw={500} c="dimmed">{a.tipo}: </Text>
-                {a.descripcion}
-              </Text>
+              <Group key={a.id} justify="space-between"
+                wrap="nowrap" align="flex-start"
+              >
+                <Text size="xs" style={{ flex: 1 }}>
+                  <Text span fw={500} c="dimmed">{a.tipo}: </Text>
+                  {a.descripcion}
+                </Text>
+                <ActionIcon
+                  size="xs"
+                  variant="subtle"
+                  color="red"
+                  onClick={() => {
+                    if (confirm('¿Eliminar este antecedente?')) {
+                      eliminarAntecedente.mutate(a.id)
+                    }
+                  }}
+                >
+                  <IconTrash size={10} />
+                </ActionIcon>
+              </Group>
             ))}
           </Stack>
         )}
@@ -233,10 +276,25 @@ export function PanelContextoPaciente({
         ) : (
           <Stack gap={3}>
             {antecedentesFamiliares.map((a) => (
-              <Text key={a.id} size="xs">
-                <Text span fw={500} c="dimmed">{a.tipo}: </Text>
-                {a.descripcion}
-              </Text>
+              <Group key={a.id} justify="space-between"
+                wrap="nowrap" align="flex-start"
+              >
+                <Text size="xs" style={{ flex: 1 }}>
+                  {a.descripcion}
+                </Text>
+                <ActionIcon
+                  size="xs"
+                  variant="subtle"
+                  color="red"
+                  onClick={() => {
+                    if (confirm('¿Eliminar este antecedente?')) {
+                      eliminarAntecedente.mutate(a.id)
+                    }
+                  }}
+                >
+                  <IconTrash size={10} />
+                </ActionIcon>
+              </Group>
             ))}
           </Stack>
         )}
