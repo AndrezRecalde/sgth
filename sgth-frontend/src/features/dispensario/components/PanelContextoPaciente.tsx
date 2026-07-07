@@ -11,6 +11,9 @@ import {
   IconPlus, IconChevronDown, IconChevronUp,
 } from '@tabler/icons-react'
 import { useState } from 'react'
+import { useDisclosure } from '@mantine/hooks'
+import { AgregarAlergiaModal } from './AgregarAlergiaModal'
+import { AgregarAntecedenteModal } from './AgregarAntecedenteModal'
 import { useContextoConsulta } from '../hooks/useContextoConsulta'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { AgendaMedica } from '../services/agendaService'
@@ -45,6 +48,17 @@ export function PanelContextoPaciente({
     historiaClinicaId, turno.id
   )
   const [notasAbiertas, setNotasAbiertas] = useState(false)
+  const [alergiaOpened,
+    { open: abrirAlergia, close: cerrarAlergia }] =
+    useDisclosure(false)
+  const [antecedentePersonalOpened,
+    { open: abrirAntecedentePersonal,
+      close: cerrarAntecedentePersonal }] =
+    useDisclosure(false)
+  const [antecedenteFamiliarOpened,
+    { open: abrirAntecedenteFamiliar,
+      close: cerrarAntecedenteFamiliar }] =
+    useDisclosure(false)
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
@@ -138,7 +152,12 @@ export function PanelContextoPaciente({
           label={
             <Group gap={4}>
               <Text size="xs" fw={600} tt="uppercase" c="dimmed">Alergias</Text>
-              <ActionIcon size="xs" variant="subtle" color="blue">
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                color="blue"
+                onClick={abrirAlergia}
+              >
                 <IconPlus size={10} />
               </ActionIcon>
             </Group>
@@ -168,7 +187,12 @@ export function PanelContextoPaciente({
           label={
             <Group gap={4}>
               <Text size="xs" fw={600} tt="uppercase" c="dimmed">Antecedentes personales</Text>
-              <ActionIcon size="xs" variant="subtle" color="blue">
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                color="blue"
+                onClick={abrirAntecedentePersonal}
+              >
                 <IconPlus size={10} />
               </ActionIcon>
             </Group>
@@ -192,7 +216,12 @@ export function PanelContextoPaciente({
           label={
             <Group gap={4}>
               <Text size="xs" fw={600} tt="uppercase" c="dimmed">Antecedentes familiares</Text>
-              <ActionIcon size="xs" variant="subtle" color="blue">
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                color="blue"
+                onClick={abrirAntecedenteFamiliar}
+              >
                 <IconPlus size={10} />
               </ActionIcon>
             </Group>
@@ -237,6 +266,26 @@ export function PanelContextoPaciente({
           />
         </Collapse>
       </Stack>
+      <AgregarAlergiaModal
+        opened={alergiaOpened}
+        onClose={cerrarAlergia}
+        historiaId={historiaClinicaId}
+        agendaId={turno.id}
+      />
+      <AgregarAntecedenteModal
+        opened={antecedentePersonalOpened}
+        onClose={cerrarAntecedentePersonal}
+        historiaId={historiaClinicaId}
+        agendaId={turno.id}
+        tipo="personal"
+      />
+      <AgregarAntecedenteModal
+        opened={antecedenteFamiliarOpened}
+        onClose={cerrarAntecedenteFamiliar}
+        historiaId={historiaClinicaId}
+        agendaId={turno.id}
+        tipo="familiar"
+      />
     </Card>
   )
 }

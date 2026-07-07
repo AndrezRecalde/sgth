@@ -2,6 +2,22 @@ import api from '@/lib/axios'
 import type {
   ApiResponse, PaginatedResponse,
 } from '@/types/api'
+import type {
+  Alergia, Antecedente,
+} from './contextoConsultaService'
+
+export interface CrearAlergiaData {
+  tipo:        string
+  descripcion: string
+  severidad:   string
+  observacion?: string | null
+}
+
+export interface CrearAntecedenteData {
+  tipo:              string
+  descripcion:       string
+  fecha_aproximada?: number | null
+}
 
 export interface HistoriaClinica {
   id:                  number
@@ -44,6 +60,37 @@ export interface AntecedentePaciente {
 }
 
 export const historiaClinicaService = {
+  agregarAlergia: (
+    historiaId: number,
+    data: CrearAlergiaData
+  ) =>
+    api.post<ApiResponse<Alergia>>(
+      `/dispensario/historias-clinicas/${historiaId}/alergias`,
+      data
+    ).then(r => r.data.datos),
+
+  eliminarAlergia: (historiaId: number, alergiaId: number) =>
+    api.delete<ApiResponse<unknown>>(
+      `/dispensario/historias-clinicas/${historiaId}/alergias/${alergiaId}`
+    ).then(r => r.data.datos),
+
+  agregarAntecedente: (
+    historiaId: number,
+    data: CrearAntecedenteData
+  ) =>
+    api.post<ApiResponse<Antecedente>>(
+      `/dispensario/historias-clinicas/${historiaId}/antecedentes`,
+      data
+    ).then(r => r.data.datos),
+
+  eliminarAntecedente: (
+    historiaId: number,
+    antecedenteId: number
+  ) =>
+    api.delete<ApiResponse<unknown>>(
+      `/dispensario/historias-clinicas/${historiaId}/antecedentes/${antecedenteId}`
+    ).then(r => r.data.datos),
+
   listar: (params?: Record<string, unknown>) =>
     api.get<ApiResponse<PaginatedResponse<HistoriaClinica>>>(
       '/dispensario/historias-clinicas', { params }
