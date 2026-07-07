@@ -58,6 +58,7 @@ class CertificadoMedicoService
                 $permiso = $this->crearPermisoAutomatico(
                     $historia->servidor_id,
                     $fechaInicio,
+                    $fechaFin,
                     $emisorId,
                     $datos['observaciones'] ?? null,
                 );
@@ -93,6 +94,7 @@ class CertificadoMedicoService
     private function crearPermisoAutomatico(
         int $servidorId,
         Carbon $fecha,
+        Carbon $fechaFin,
         int $emisorId,
         ?string $observacion,
     ): PermisoServidor {
@@ -111,6 +113,7 @@ class CertificadoMedicoService
             'fecha'       => $fecha,
             'hora_inicio' => '00:00',
             'hora_fin'    => '23:59',
+            'vence_en'    => $fechaFin->copy()->endOfDay(),
             'observacion' => $observacion
                 ?? 'Certificado médico emitido por el dispensario.',
             // Activo directo: el médico es fuente

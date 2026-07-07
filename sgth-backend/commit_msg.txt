@@ -1,5 +1,1 @@
-feat(dispensario): certificado acepta fecha_fin directo para DateRangePicker
-
-El frontend enviara fecha_inicio + fecha_fin del range
-picker. El backend calcula dias_reposo del rango y valida
-que no exceda 3 dias (normativa MSP Ecuador).
+fix(dispensario): pasar fecha_fin a crearPermisoAutomatico para vence_en NOT NULL
