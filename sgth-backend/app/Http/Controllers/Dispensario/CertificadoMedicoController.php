@@ -56,6 +56,7 @@ class CertificadoMedicoController extends Controller
             'consulta_medica_id'   => ['required', 'exists:consultas_medicas,id'],
             'dias_reposo'          => ['required', 'integer', 'min:1', 'max:3'],
             'fecha_inicio'         => ['nullable', 'date'],
+            'fecha_fin'            => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
             'diagnostico_cie10_id' => ['nullable', 'exists:diagnosticos_cie10,id'],
             'observaciones'        => ['nullable', 'string', 'max:1000'],
         ]);

@@ -37,8 +37,17 @@ class CertificadoMedicoService
             $fechaInicio = Carbon::parse(
                 $datos['fecha_inicio'] ?? $consulta->fecha_consulta
             );
-            $fechaFin = $fechaInicio->copy()
-                ->addDays($dias - 1);
+            $fechaFin = isset($datos['fecha_fin'])
+                ? Carbon::parse($datos['fecha_fin'])
+                : $fechaInicio->copy()->addDays($dias - 1);
+
+            $diasCalculados = $fechaInicio->diffInDays($fechaFin) + 1;
+            if ($diasCalculados > self::DIAS_MAX_REPOSO) {
+                throw new ReglaNegocioException(
+                    'El rango seleccionado excede el máximo de ' .
+                    self::DIAS_MAX_REPOSO . ' días de reposo.'
+                );
+            }
 
             $permisoId = null;
             $folio     = null;
