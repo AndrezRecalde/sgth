@@ -141,7 +141,8 @@ export function FiltroDespachoBar({
   })
 
   return (
-    <Group justify="center">
+    <Stack gap="xs">
+      <Group justify="center">
       <div style={{
         border: '1px solid var(--mantine-color-gray-3)',
         borderRadius: 40,
@@ -332,22 +333,6 @@ export function FiltroDespachoBar({
         </Popover>
 
         <div style={{ padding: '6px 8px 6px 4px' }}>
-          {hayFiltros && (
-            <UnstyledButton
-              onClick={onReset}
-              style={{
-                borderRadius: '50%',
-                width: 32,
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 4,
-              }}
-            >
-              <IconX size={14} color="var(--mantine-color-dark-4)" />
-            </UnstyledButton>
-          )}
           <UnstyledButton
             onClick={onSearch}
             style={{
@@ -367,6 +352,26 @@ export function FiltroDespachoBar({
           </UnstyledButton>
         </div>
       </div>
-    </Group>
+      </Group>
+      {hayFiltros && (
+        <Group justify="center">
+          <div style={{ width: '100%', maxWidth: 680 }}>
+            <Group justify="flex-end">
+              <UnstyledButton
+                onClick={onReset}
+                style={{
+                  fontSize: 13,
+                  color: 'var(--mantine-color-dark-4)',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                }}
+              >
+                Limpiar filtros
+              </UnstyledButton>
+            </Group>
+          </div>
+        </Group>
+      )}
+    </Stack>
   )
 }
