@@ -17,6 +17,8 @@ import { TabConsulta } from './TabConsulta'
 import { TabReceta } from './TabReceta'
 import { TabCertificado } from './TabCertificado'
 import { TabHistorial } from './TabHistorial'
+import { TabResultados } from './TabResultados'
+import { IconMicroscope } from '@tabler/icons-react'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 
@@ -174,6 +176,13 @@ export function AtencionMedicaPanel({
                   >
                     Certificado
                   </Tabs.Tab>
+                  <Tabs.Tab
+                    value="resultados"
+                    leftSection={<IconMicroscope size={13} />}
+                    disabled={!consultaActiva}
+                  >
+                    Resultados
+                  </Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="consulta">
@@ -218,6 +227,23 @@ export function AtencionMedicaPanel({
                       <Text size="sm" c="dimmed">
                         Guarda la consulta primero para
                         poder emitir certificados.
+                      </Text>
+                    </Stack>
+                  )}
+                </Tabs.Panel>
+
+                <Tabs.Panel value="resultados">
+                  {consultaActiva ? (
+                    <TabResultados
+                      turno={turno}
+                      consulta={consultaActiva}
+                      historiaClinicaId={historiaClinicaId}
+                    />
+                  ) : (
+                    <Stack gap="sm" p="md">
+                      <Text size="sm" c="dimmed">
+                        Guarda la consulta primero para
+                        poder subir resultados.
                       </Text>
                     </Stack>
                   )}
