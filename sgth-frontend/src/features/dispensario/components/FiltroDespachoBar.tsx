@@ -335,6 +335,18 @@ export function FiltroDespachoBar({
         <div style={{ padding: '6px 8px 6px 4px' }}>
           <UnstyledButton
             onClick={onSearch}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                'var(--mantine-color-red-7)';
+              (e.currentTarget as HTMLButtonElement).style.transform =
+                'scale(1.03)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                'var(--mantine-color-red-6)';
+              (e.currentTarget as HTMLButtonElement).style.transform =
+                'scale(1)';
+            }}
             style={{
               borderRadius: 24,
               background: 'var(--mantine-color-red-6)',
@@ -345,6 +357,7 @@ export function FiltroDespachoBar({
               padding: '10px 16px',
               fontSize: 14,
               fontWeight: 500,
+              transition: 'background 0.15s, transform 0.15s',
             }}
           >
             <IconSearch size={15} />
