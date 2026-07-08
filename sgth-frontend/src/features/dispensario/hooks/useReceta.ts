@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX, IconAlertTriangle } from '@tabler/icons-react'
 import React from 'react'
@@ -106,4 +106,43 @@ export function useAccionesItem(consultaId: number) {
   })
 
   return { actualizarItem, quitarItem }
+}
+
+export function useRecetasPendientes(params?: {
+  fecha_desde?: string
+  fecha_hasta?: string
+}) {
+  return useQuery({
+    queryKey: ['recetas', 'pendientes', params],
+    queryFn:  () => recetaService.listarPendientes(params),
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 30,
+  })
+}
+
+export function useDespacharReceta() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: {
+      id:   number
+      data: import('../services/recetaService').DespacharRecetaData
+    }) => recetaService.despachar(id, data),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Receta despachada',
+        message: 'Los medicamentos fueron despachados correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['recetas'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error al despachar',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
 }

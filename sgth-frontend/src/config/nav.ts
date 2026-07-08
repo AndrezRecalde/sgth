@@ -109,6 +109,11 @@ export const NAV_SALUD: NavGroup[] = [
             href:  ROUTES.SALUD.FARMACIA + '/adquisiciones',
             icon:  'IconShoppingCart',
           },
+          {
+            label: 'Despacho',
+            href:  ROUTES.SALUD.FARMACIA + '/despacho',
+            icon:  'IconTruck',
+          },
         ],
       },
       {

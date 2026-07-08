@@ -12,6 +12,7 @@ export interface ItemReceta {
   frecuencia:              string
   duracion:                string
   observaciones?:          string | null
+  estado?:                 string
   inventario?: {
     nombre:         string
     presentacion?:  string
@@ -27,6 +28,35 @@ export interface RecetaMedica {
   indicaciones_generales?: string | null
   items:                   ItemReceta[]
   alertas_alergias?:       string[]
+  consulta_medica?: {
+    id: number
+    historia_clinica?: {
+      servidor?: {
+        nombre:   string
+        apellido: string
+        cedula?:  string
+      } | null
+      carga_familiar?: {
+        nombres:   string
+        apellidos: string
+      } | null
+    } | null
+    medico?: {
+      servidor?: {
+        nombre:   string
+        apellido: string
+      } | null
+    } | null
+  } | null
+}
+
+export interface DespachoItem {
+  item_receta_id: number
+  cantidad:       number
+}
+
+export interface DespacharRecetaData {
+  items: DespachoItem[]
 }
 
 export interface EmitirRecetaData {
@@ -37,6 +67,22 @@ export interface EmitirRecetaData {
 }
 
 export const recetaService = {
+  listarPendientes: (params?: {
+    estados?:      string
+    fecha_desde?:  string
+    fecha_hasta?:  string
+  }) =>
+    api.get<ApiResponse<RecetaMedica[]>>(
+      '/dispensario/recetas',
+      { params: { estados: 'pendiente,despachada_parcial', ...params } }
+    ).then(r => r.data.datos),
+
+  despachar: (id: number, data: DespacharRecetaData) =>
+    api.post<ApiResponse<RecetaMedica>>(
+      `/dispensario/recetas/${id}/despachar`,
+      data
+    ).then(r => r.data.datos),
+
   emitir: (data: EmitirRecetaData) =>
     api.post<ApiResponse<{ receta: RecetaMedica; alertas_alergias: string[] }>>(
       '/dispensario/recetas', data
