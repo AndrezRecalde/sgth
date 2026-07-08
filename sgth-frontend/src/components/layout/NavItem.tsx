@@ -15,7 +15,11 @@ interface Props {
 export function NavItem({ label, icon, href, collapsed, onClick }: Props) {
   const pathname = usePathname();
   // Active state: exact match for root/home pages, prefix match for others
-  const exactPaths = ["/", "#", "/sgth", "/salud", "/portal"];
+  const exactPaths = [
+    "/", "#", "/sgth", "/salud", "/portal",
+    "/salud/sso",
+    "/salud/farmacia",
+  ];
   const isActive = exactPaths.includes(href)
     ? pathname === href
     : pathname === href || pathname.startsWith(`${href}/`);
