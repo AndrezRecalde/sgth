@@ -133,9 +133,9 @@ export function FiltroDespachoBar({
     borderRadius: 40,
     cursor: 'pointer' as const,
     background: seccionActiva(sec)
-      ? 'var(--mantine-color-gray-1)'
+      ? 'var(--mantine-color-gray-2)'
       : 'transparent',
-    transition: 'background 0.15s',
+    transition: 'background 0.2s, box-shadow 0.2s',
     flex: sec === 'fechas' ? 1.4 : 1,
     minWidth: 0,
   })
@@ -168,6 +168,18 @@ export function FiltroDespachoBar({
               onClick={() => setPopoverAbierto(
                 popoverAbierto === 'medico' ? null : 'medico'
               )}
+              onMouseEnter={(e) => {
+                if (popoverAbierto !== 'medico') {
+                  (e.currentTarget as HTMLElement).style.background =
+                    'var(--mantine-color-gray-1)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (popoverAbierto !== 'medico') {
+                  (e.currentTarget as HTMLElement).style.background =
+                    'transparent'
+                }
+              }}
             >
               <Text size="xs" fw={600} c="dark" style={{ lineHeight: 1.3 }}>
                 Médico
@@ -234,6 +246,18 @@ export function FiltroDespachoBar({
               onClick={() => setPopoverAbierto(
                 popoverAbierto === 'fechas' ? null : 'fechas'
               )}
+              onMouseEnter={(e) => {
+                if (popoverAbierto !== 'fechas') {
+                  (e.currentTarget as HTMLElement).style.background =
+                    'var(--mantine-color-gray-1)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (popoverAbierto !== 'fechas') {
+                  (e.currentTarget as HTMLElement).style.background =
+                    'transparent'
+                }
+              }}
             >
               <Text size="xs" fw={600} c="dark" style={{ lineHeight: 1.3 }}>
                 Fechas
@@ -293,6 +317,18 @@ export function FiltroDespachoBar({
               onClick={() => setPopoverAbierto(
                 popoverAbierto === 'estado' ? null : 'estado'
               )}
+              onMouseEnter={(e) => {
+                if (popoverAbierto !== 'estado') {
+                  (e.currentTarget as HTMLElement).style.background =
+                    'var(--mantine-color-gray-1)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (popoverAbierto !== 'estado') {
+                  (e.currentTarget as HTMLElement).style.background =
+                    'transparent'
+                }
+              }}
             >
               <Text size="xs" fw={600} c="dark" style={{ lineHeight: 1.3 }}>
                 Estado
