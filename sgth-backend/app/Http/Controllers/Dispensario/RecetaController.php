@@ -18,6 +18,10 @@ final class RecetaController extends Controller
     {
         $query = \App\Models\Dispensario\RecetaMedica::with([
             'items.inventario',
+            'consultaMedica.historiaClinica.servidor',
+            'consultaMedica.historiaClinica.cargaFamiliar.servidor',
+            'consultaMedica.medico:id,usuario_ti,servidor_id',
+            'consultaMedica.medico.servidor:id,nombre,apellido',
         ])->orderBy('created_at', 'desc');
 
         if ($request->filled('consulta_medica_id')) {
@@ -25,6 +29,22 @@ final class RecetaController extends Controller
                 'consulta_medica_id',
                 $request->integer('consulta_medica_id')
             );
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->input('estado'));
+        }
+
+        if ($request->filled('estados')) {
+            $query->whereIn('estado', explode(',', $request->input('estados')));
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
         }
 
         $recetas = $query->get();

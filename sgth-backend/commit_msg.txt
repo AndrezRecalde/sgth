@@ -1,1 +1,1 @@
-fix(dispensario): corregir relacion subidoPor en ResultadoMedico, users no tiene nombre/apellido
+feat(dispensario): index recetas con filtros por estado y fecha para farmacia
