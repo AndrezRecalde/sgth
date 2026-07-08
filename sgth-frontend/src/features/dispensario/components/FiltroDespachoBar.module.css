@@ -75,7 +75,7 @@
 }
 
 .btnBuscar:hover {
-  background: #2e8b66;
+  background: #236b45 !important;
   transform: scale(1.03);
 }
 
@@ -118,4 +118,8 @@
 
 .btnLimpiar:hover {
   color: var(--mantine-color-dark-7);
+}
+
+.seccion:hover:not(.seccionActiva) {
+  background: var(--mantine-color-gray-1);
 }
