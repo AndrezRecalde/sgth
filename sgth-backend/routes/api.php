@@ -734,6 +734,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::post('/', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'store']);
                 Route::get('{id}', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'show']);
             });
+
+        // Resultados médicos
+        Route::prefix('resultados-medicos')
+            ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Dispensario\ResultadoMedicoController::class, 'index']);
+                Route::post('/', [\App\Http\Controllers\Dispensario\ResultadoMedicoController::class, 'store']);
+                Route::delete('{id}', [\App\Http\Controllers\Dispensario\ResultadoMedicoController::class, 'destroy'])
+                    ->middleware('role:medico|odontologo|admin-dispensario');
+            });
     });
 
         // Admin TI

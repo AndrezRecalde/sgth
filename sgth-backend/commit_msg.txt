@@ -1,18 +1,10 @@
-feat(dispensario): anulacion clinica de alergias y antecedentes con motivo
+feat(dispensario): backend de resultados medicos
 
-ARQUITECTURA:
-  Se usa campo anulado_en (timestamp) separado de
-  deleted_at para diferenciar anulacion clinica
-  (decision medica con motivo) de borrado tecnico
-  (admin elimina por error). Estandar MSP Ecuador:
-  ningun dato clinico se elimina, se anula.
-
-BACKEND:
-  - alergias_paciente/antecedentes_paciente: campos
-    anulado_en, anulado_por, motivo_anulacion
-  - AlergiaPaciente/AntecedentePaciente: scope activas/
-    activos, relacion anuladoPor
-  - Controllers: metodo anular (PATCH) con validacion
-    de motivo, solo para medico/odontologo
-  - HistoriaClinicaService: contexto filtra solo activos
-  - Rutas: PATCH {id}/anular con middleware de rol
+- ResultadoMedicoController: index con filtros por
+  historia_clinica_id y consulta_medica_id, store con
+  subida de archivo (PDF/JPG/PNG max 10MB), destroy con
+  eliminacion del archivo fisico
+- Tipos: laboratorio, imagen, ecografia, rayos_x,
+  electrocardiograma, otro
+- Rutas: GET/POST /resultados-medicos + DELETE con
+  restriccion a medico/odontologo/admin
