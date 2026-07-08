@@ -1,20 +1,9 @@
-feat(dispensario): estructura completa FEMO Opcion A
+feat(dispensario): FemoService y Controller completos
 
-MIGRACIONES:
-- expand_fichas_salud_ocupacional: agrega numero_archivo,
-  puesto_trabajo, ciuo, fecha_ingreso, grupos prioritarios,
-  enfermedad_actual, recomendaciones, tratamiento,
-  condicion_relacionada_trabajo, observacion_retiro
-- femo_constantes_vitales: signos vitales y antropometria
-- femo_antecedentes: clinicos/quirurgicos/familiares/
-  ginecologicos/reproductivos
-- femo_factores_riesgo: fisico/seguridad/quimico/biologico/
-  ergonomico/psicosocial con medida preventiva
-- femo_diagnosticos: hasta 6 CIE-10 con tipo y orden
-- femo_examenes: laboratorio/imagen/otro con resultado
-- femo_empleos_anteriores: historial laboral previo
-
-MODELOS:
-- FemoConstantesVitales, FemoAntecedente, FemoFactorRiesgo
-- FemoDiagnostico, FemoExamen, FemoEmpleoAnterior
-- FichaSaludOcupacional actualizado con todas las relaciones
+- FemoService: listar (filtros por servidor/tipo/aptitud/
+  fechas), obtener (eager loading completo), registrar
+  (transaccion atomica todas las secciones), actualizar
+  (reemplaza secciones relacionadas)
+- FichaSaludOcupacionalController: index/store/show/update
+  con validacion completa de todas las secciones del FEMO
+- Ruta PATCH /fichas-sso/{id} para actualizar
