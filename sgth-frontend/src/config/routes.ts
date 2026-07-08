@@ -23,6 +23,7 @@ export const ROUTES = {
     ENFERMERIA:   '/salud/enfermeria',
     FARMACIA:     '/salud/farmacia',
     SSO:          '/salud/sso',
+    FEMO:         '/salud/sso/femo',
     REPORTES:     '/salud/reportes',
   },
 

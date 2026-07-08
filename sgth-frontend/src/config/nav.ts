@@ -117,9 +117,21 @@ export const NAV_SALUD: NavGroup[] = [
         ],
       },
       {
-        label: 'SSO',
-        href:  ROUTES.SALUD.SSO,
-        icon:  'IconShieldCheck',
+        label:    'SSO',
+        href:     ROUTES.SALUD.SSO,
+        icon:     'IconShieldCheck',
+        children: [
+          {
+            label: 'Dashboard',
+            href:  ROUTES.SALUD.SSO,
+            icon:  'IconShieldCheck',
+          },
+          {
+            label: 'FEMO',
+            href:  ROUTES.SALUD.FEMO,
+            icon:  'IconClipboardHeart',
+          },
+        ],
       },
       {
         label: 'Reportes',
