@@ -7,10 +7,11 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
-import { IconSearch, IconX } from '@tabler/icons-react'
+import { IconSearch } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { usePersonalMedico } from '../hooks/useAgenda'
+import styles from './FiltroDespachoBar.module.css'
 
 export interface FiltroDespacho {
   medico_id?:   number | null
@@ -73,11 +74,9 @@ export function FiltroDespachoBar({
     value.fecha_hasta || value.estado
   )
 
-  const medicoSeleccionado = medicos.find(
-    m => m.id === value.medico_id
-  )
+  const medicoSeleccionado = medicos.find(m => m.id === value.medico_id)
   const labelMedico = medicoSeleccionado
-    ? medicoSeleccionado.nombre_completo ?? 'Dr.'
+    ? (medicoSeleccionado.nombre_completo ?? 'Dr.')
     : 'Todos los médicos'
 
   const labelFechas = value.fecha_desde
@@ -92,8 +91,8 @@ export function FiltroDespachoBar({
 
   const medicosFiltrados = medicos.filter(m => {
     if (!busquedaMedico) return true
-    const nombre = (m.nombre_completo ?? '').toLowerCase()
-    return nombre.includes(busquedaMedico.toLowerCase())
+    return (m.nombre_completo ?? '').toLowerCase()
+      .includes(busquedaMedico.toLowerCase())
   })
 
   const setHoy = () => {
@@ -125,301 +124,216 @@ export function FiltroDespachoBar({
     })
   }
 
-  const seccionActiva = (sec: 'medico' | 'fechas' | 'estado') =>
-    popoverAbierto === sec
+  const seccionClass = (sec: 'medico' | 'fechas' | 'estado') => {
+    const base = [
+      styles.seccion,
+      sec === 'medico' ? styles.seccionMedico
+        : sec === 'fechas' ? styles.seccionFechas
+        : styles.seccionEstado,
+    ]
+    if (popoverAbierto === sec) base.push(styles.seccionActiva)
+    return base.join(' ')
+  }
 
-  const seccionStyle = (sec: 'medico' | 'fechas' | 'estado') => ({
-    padding: '12px 20px',
-    borderRadius: 40,
-    cursor: 'pointer' as const,
-    background: seccionActiva(sec)
-      ? 'var(--mantine-color-gray-2)'
-      : 'transparent',
-    transition: 'background 0.2s, box-shadow 0.2s',
-    flex: sec === 'fechas' ? 1.4 : 1,
-    minWidth: 0,
-  })
+  const opcionClass = (esActivo: boolean) =>
+    [styles.opcionLista, esActivo ? styles.opcionListaActiva : ''].join(' ')
 
   return (
     <Stack gap="xs">
-      <Group justify="center">
-      <div style={{
-        border: '1px solid var(--mantine-color-gray-3)',
-        borderRadius: 40,
-        background: 'var(--mantine-color-white)',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-        display: 'flex',
-        alignItems: 'center',
-        width: '100%',
-        maxWidth: 680,
-        overflow: 'visible',
-      }}>
-        <Popover
-          opened={popoverAbierto === 'medico'}
-          onClose={() => setPopoverAbierto(null)}
-          position="bottom-start"
-          shadow="md"
-          width={280}
-          withArrow={false}
-        >
-          <Popover.Target>
-            <UnstyledButton
-              style={seccionStyle('medico')}
-              onClick={() => setPopoverAbierto(
-                popoverAbierto === 'medico' ? null : 'medico'
-              )}
-              onMouseEnter={(e) => {
-                if (popoverAbierto !== 'medico') {
-                  (e.currentTarget as HTMLElement).style.background =
-                    'var(--mantine-color-gray-1)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (popoverAbierto !== 'medico') {
-                  (e.currentTarget as HTMLElement).style.background =
-                    'transparent'
-                }
-              }}
-            >
-              <Text size="xs" fw={600} c="dark" style={{ lineHeight: 1.3 }}>
-                Médico
-              </Text>
-              <Text size="sm" c={value.medico_id ? 'dark' : 'dimmed'}
-                style={{ lineHeight: 1.3 }} truncate>
-                {labelMedico}
-              </Text>
-            </UnstyledButton>
-          </Popover.Target>
-          <Popover.Dropdown p="xs">
-            <Stack gap="xs">
-              <TextInput
-                placeholder="Buscar médico..."
-                size="xs"
-                {...contained}
-                value={busquedaMedico}
-                onChange={(e) =>
-                  setBusquedaMedico(e.currentTarget.value)}
-              />
-              {[{ id: null, nombre_completo: 'Todos los médicos' }, ...medicosFiltrados].map((m, i) => (
-                <UnstyledButton
-                  key={m.id ?? 'todos'}
-                  onClick={() => {
-                    onChange({ ...value, medico_id: m.id })
-                    setPopoverAbierto(null)
-                    setBusquedaMedico('')
-                  }}
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: 8,
-                    background: value.medico_id === m.id ||
-                      (!value.medico_id && m.id === null)
-                      ? 'var(--mantine-color-gray-1)'
-                      : 'transparent',
-                    fontWeight: value.medico_id === m.id ||
-                      (!value.medico_id && m.id === null) ? 600 : 400,
-                    fontSize: 13,
-                    width: '100%',
-                    textAlign: 'left',
-                    color: 'var(--mantine-color-dark-7)',
-                  }}
-                >
-                  {m.nombre_completo}
-                </UnstyledButton>
-              ))}
-            </Stack>
-          </Popover.Dropdown>
-        </Popover>
+      <div className={styles.wrapper}>
+        <div className={styles.barra}>
 
-        <Divider orientation="vertical" style={{ height: 32 }} />
-
-        <Popover
-          opened={popoverAbierto === 'fechas'}
-          onClose={() => setPopoverAbierto(null)}
-          position="bottom"
-          shadow="md"
-          width={320}
-          withArrow={false}
-        >
-          <Popover.Target>
-            <UnstyledButton
-              style={seccionStyle('fechas')}
-              onClick={() => setPopoverAbierto(
-                popoverAbierto === 'fechas' ? null : 'fechas'
-              )}
-              onMouseEnter={(e) => {
-                if (popoverAbierto !== 'fechas') {
-                  (e.currentTarget as HTMLElement).style.background =
-                    'var(--mantine-color-gray-1)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (popoverAbierto !== 'fechas') {
-                  (e.currentTarget as HTMLElement).style.background =
-                    'transparent'
-                }
-              }}
-            >
-              <Text size="xs" fw={600} c="dark" style={{ lineHeight: 1.3 }}>
-                Fechas
-              </Text>
-              <Text size="sm" c={value.fecha_desde ? 'dark' : 'dimmed'}
-                style={{ lineHeight: 1.3 }} truncate>
-                {labelFechas}
-              </Text>
-            </UnstyledButton>
-          </Popover.Target>
-          <Popover.Dropdown p="sm">
-            <Stack gap="sm">
-              <DatePickerInput
-                type="range"
-                label="Rango de fechas"
-                valueFormat="DD/MM/YYYY"
-                clearable
-                {...contained}
-                value={[
-                  toDate(value.fecha_desde),
-                  toDate(value.fecha_hasta),
-                ]}
-                onChange={(v) => {
-                  const [ini, fin] = v as [Date | null, Date | null]
-                  onChange({
-                    ...value,
-                    fecha_desde: fromDate(ini),
-                    fecha_hasta: fromDate(fin),
-                  })
-                }}
-              />
-              <Group gap="xs">
-                <Button size="compact-xs" variant="outline"
-                  radius="xl" onClick={setHoy}>Hoy</Button>
-                <Button size="compact-xs" variant="outline"
-                  radius="xl" onClick={setSemana}>Esta semana</Button>
-                <Button size="compact-xs" variant="outline"
-                  radius="xl" onClick={setMes}>Este mes</Button>
-              </Group>
-            </Stack>
-          </Popover.Dropdown>
-        </Popover>
-
-        <Divider orientation="vertical" style={{ height: 32 }} />
-
-        <Popover
-          opened={popoverAbierto === 'estado'}
-          onClose={() => setPopoverAbierto(null)}
-          position="bottom-end"
-          shadow="md"
-          width={220}
-          withArrow={false}
-        >
-          <Popover.Target>
-            <UnstyledButton
-              style={seccionStyle('estado')}
-              onClick={() => setPopoverAbierto(
-                popoverAbierto === 'estado' ? null : 'estado'
-              )}
-              onMouseEnter={(e) => {
-                if (popoverAbierto !== 'estado') {
-                  (e.currentTarget as HTMLElement).style.background =
-                    'var(--mantine-color-gray-1)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (popoverAbierto !== 'estado') {
-                  (e.currentTarget as HTMLElement).style.background =
-                    'transparent'
-                }
-              }}
-            >
-              <Text size="xs" fw={600} c="dark" style={{ lineHeight: 1.3 }}>
-                Estado
-              </Text>
-              <Text size="sm" c="dark" style={{ lineHeight: 1.3 }}>
-                {labelEstado}
-              </Text>
-            </UnstyledButton>
-          </Popover.Target>
-          <Popover.Dropdown p="xs">
-            <Stack gap={2}>
-              {ESTADO_OPTIONS.map(o => (
-                <UnstyledButton
-                  key={o.value}
-                  onClick={() => {
-                    onChange({ ...value, estado: o.value || null })
-                    setPopoverAbierto(null)
-                  }}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    background: (value.estado ?? '') === o.value
-                      ? 'var(--mantine-color-gray-1)'
-                      : 'transparent',
-                    fontWeight: (value.estado ?? '') === o.value
-                      ? 600 : 400,
-                    fontSize: 13,
-                    width: '100%',
-                    textAlign: 'left',
-                    color: 'var(--mantine-color-dark-7)',
-                  }}
-                >
-                  {o.label}
-                </UnstyledButton>
-              ))}
-            </Stack>
-          </Popover.Dropdown>
-        </Popover>
-
-        <div style={{ padding: '6px 8px 6px 4px' }}>
-          <UnstyledButton
-            onClick={onSearch}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                'var(--mantine-color-red-7)';
-              (e.currentTarget as HTMLButtonElement).style.transform =
-                'scale(1.03)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                'var(--mantine-color-red-6)';
-              (e.currentTarget as HTMLButtonElement).style.transform =
-                'scale(1)';
-            }}
-            style={{
-              borderRadius: 24,
-              background: 'var(--mantine-color-red-6)',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '10px 16px',
-              fontSize: 14,
-              fontWeight: 500,
-              transition: 'background 0.15s, transform 0.15s',
-            }}
+          <Popover
+            opened={popoverAbierto === 'medico'}
+            onClose={() => setPopoverAbierto(null)}
+            position="bottom-start"
+            shadow="md"
+            width={280}
+            withArrow={false}
           >
-            <IconSearch size={15} />
-            Buscar
-          </UnstyledButton>
+            <Popover.Target>
+              <UnstyledButton
+                className={seccionClass('medico')}
+                onClick={() => setPopoverAbierto(
+                  popoverAbierto === 'medico' ? null : 'medico'
+                )}
+              >
+                <div className={styles.seccionLabel}>Médico</div>
+                <div className={[
+                  styles.seccionValor,
+                  value.medico_id
+                    ? styles.seccionValorActivo
+                    : styles.seccionValorPlaceholder,
+                ].join(' ')}>
+                  {labelMedico}
+                </div>
+              </UnstyledButton>
+            </Popover.Target>
+            <Popover.Dropdown p="xs">
+              <Stack gap="xs">
+                <TextInput
+                  placeholder="Buscar médico..."
+                  size="xs"
+                  {...contained}
+                  value={busquedaMedico}
+                  onChange={(e) =>
+                    setBusquedaMedico(e.currentTarget.value)}
+                />
+                {[
+                  { id: null, nombre_completo: 'Todos los médicos' },
+                  ...medicosFiltrados,
+                ].map((m) => (
+                  <button
+                    key={m.id ?? 'todos'}
+                    className={opcionClass(
+                      value.medico_id === m.id ||
+                      (!value.medico_id && m.id === null)
+                    )}
+                    onClick={() => {
+                      onChange({ ...value, medico_id: m.id })
+                      setPopoverAbierto(null)
+                      setBusquedaMedico('')
+                    }}
+                  >
+                    {m.nombre_completo}
+                  </button>
+                ))}
+              </Stack>
+            </Popover.Dropdown>
+          </Popover>
+
+          <Divider orientation="vertical" style={{ height: 32 }} />
+
+          <Popover
+            opened={popoverAbierto === 'fechas'}
+            onClose={() => setPopoverAbierto(null)}
+            position="bottom"
+            shadow="md"
+            width={320}
+            withArrow={false}
+          >
+            <Popover.Target>
+              <UnstyledButton
+                className={seccionClass('fechas')}
+                onClick={() => setPopoverAbierto(
+                  popoverAbierto === 'fechas' ? null : 'fechas'
+                )}
+              >
+                <div className={styles.seccionLabel}>Fechas</div>
+                <div className={[
+                  styles.seccionValor,
+                  value.fecha_desde
+                    ? styles.seccionValorActivo
+                    : styles.seccionValorPlaceholder,
+                ].join(' ')}>
+                  {labelFechas}
+                </div>
+              </UnstyledButton>
+            </Popover.Target>
+            <Popover.Dropdown p="sm">
+              <Stack gap="sm">
+                <DatePickerInput
+                  type="range"
+                  label="Rango de fechas"
+                  valueFormat="DD/MM/YYYY"
+                  clearable
+                  {...contained}
+                  value={[
+                    toDate(value.fecha_desde),
+                    toDate(value.fecha_hasta),
+                  ]}
+                  onChange={(v) => {
+                    const [ini, fin] = v as [Date | null, Date | null]
+                    onChange({
+                      ...value,
+                      fecha_desde: fromDate(ini),
+                      fecha_hasta: fromDate(fin),
+                    })
+                  }}
+                />
+                <Group gap="xs">
+                  <Button size="compact-xs" variant="outline"
+                    radius="xl" onClick={setHoy}>Hoy</Button>
+                  <Button size="compact-xs" variant="outline"
+                    radius="xl" onClick={setSemana}>Esta semana</Button>
+                  <Button size="compact-xs" variant="outline"
+                    radius="xl" onClick={setMes}>Este mes</Button>
+                </Group>
+              </Stack>
+            </Popover.Dropdown>
+          </Popover>
+
+          <Divider orientation="vertical" style={{ height: 32 }} />
+
+          <Popover
+            opened={popoverAbierto === 'estado'}
+            onClose={() => setPopoverAbierto(null)}
+            position="bottom-end"
+            shadow="md"
+            width={220}
+            withArrow={false}
+          >
+            <Popover.Target>
+              <UnstyledButton
+                className={seccionClass('estado')}
+                onClick={() => setPopoverAbierto(
+                  popoverAbierto === 'estado' ? null : 'estado'
+                )}
+              >
+                <div className={styles.seccionLabel}>Estado</div>
+                <div className={[
+                  styles.seccionValor,
+                  styles.seccionValorActivo,
+                ].join(' ')}>
+                  {labelEstado}
+                </div>
+              </UnstyledButton>
+            </Popover.Target>
+            <Popover.Dropdown p="xs">
+              <Stack gap={2}>
+                {ESTADO_OPTIONS.map(o => (
+                  <button
+                    key={o.value}
+                    className={opcionClass(
+                      (value.estado ?? '') === o.value
+                    )}
+                    onClick={() => {
+                      onChange({ ...value, estado: o.value || null })
+                      setPopoverAbierto(null)
+                    }}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </Stack>
+            </Popover.Dropdown>
+          </Popover>
+
+          <div className={styles.buscadorWrapper}>
+            <button
+              className={styles.btnBuscar}
+              onClick={onSearch}
+            >
+              <IconSearch size={15} />
+              Buscar
+            </button>
+          </div>
         </div>
       </div>
-      </Group>
+
       {hayFiltros && (
-        <Group justify="center">
-          <div style={{ width: '100%', maxWidth: 680 }}>
+        <div className={styles.wrapper}>
+          <div className={styles.limpiarWrapper}>
             <Group justify="flex-end">
-              <UnstyledButton
+              <button
+                className={styles.btnLimpiar}
                 onClick={onReset}
-                style={{
-                  fontSize: 13,
-                  color: 'var(--mantine-color-dark-4)',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                }}
               >
                 Limpiar filtros
-              </UnstyledButton>
+              </button>
             </Group>
           </div>
-        </Group>
+        </div>
       )}
     </Stack>
   )

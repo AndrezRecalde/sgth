@@ -1,0 +1,121 @@
+.wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.barra {
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 0;
+  background: var(--mantine-color-white);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 680px;
+  overflow: visible;
+}
+
+.seccion {
+  padding: 12px 20px;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.2s;
+  min-width: 0;
+}
+
+.seccionMedico  { flex: 1; }
+.seccionFechas  { flex: 1.4; }
+.seccionEstado  { flex: 1; }
+
+.seccionActiva {
+  background: var(--mantine-color-gray-2);
+}
+
+.seccionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mantine-color-dark-7);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.seccionValor {
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seccionValorPlaceholder {
+  color: var(--mantine-color-gray-5);
+}
+
+.seccionValorActivo {
+  color: var(--mantine-color-dark-7);
+}
+
+.buscadorWrapper {
+  padding: 6px 8px 6px 4px;
+}
+
+.btnBuscar {
+  border-radius: 5px;
+  background: #2e8b57;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.btnBuscar:hover {
+  background: #2e8b66;
+  transform: scale(1.03);
+}
+
+.opcionLista {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  color: var(--mantine-color-dark-7);
+  transition: background 0.15s;
+  border: none;
+}
+
+.opcionLista:hover {
+  background: var(--mantine-color-gray-0);
+}
+
+.opcionListaActiva {
+  background: var(--mantine-color-gray-1);
+  font-weight: 600;
+}
+
+.limpiarWrapper {
+  width: 100%;
+  max-width: 680px;
+}
+
+.btnLimpiar {
+  font-size: 13px;
+  color: var(--mantine-color-dark-4);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.btnLimpiar:hover {
+  color: var(--mantine-color-dark-7);
+}
