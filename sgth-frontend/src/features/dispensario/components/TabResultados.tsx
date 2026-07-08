@@ -34,7 +34,9 @@ function getLabelTipo(tipo: string): string {
 }
 
 function getArchivoUrl(ruta: string): string {
-  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/storage/${ruta}`
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://sgth.test/api/v1')
+    .replace('/api/v1', '')
+  return `${base}/storage/${ruta}`
 }
 
 function formatFecha(fecha: string): string {
