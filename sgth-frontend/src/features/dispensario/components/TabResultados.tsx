@@ -114,9 +114,10 @@ export function TabResultados({
                       </Text>
                     </Group>
                     <Text size="sm">{r.descripcion}</Text>
-                    {r.subido_por && (
+                    {r.subido_por?.servidor && (
                       <Text size="xs" c="dimmed">
-                        Dr. {r.subido_por.nombre} {r.subido_por.apellido}
+                        Dr. {r.subido_por.servidor.nombre}{' '}
+                        {r.subido_por.servidor.apellido}
                       </Text>
                     )}
                   </Stack>

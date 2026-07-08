@@ -10,9 +10,12 @@ export interface ResultadoMedico {
   archivo:              string
   fecha_resultado:      string
   subido_por?: {
-    id:      number
-    nombre:  string
-    apellido: string
+    id:         number
+    usuario_ti?: string
+    servidor?: {
+      nombre:   string
+      apellido: string
+    } | null
   } | null
 }
 
