@@ -1,10 +1,1 @@
-feat(dispensario): backend de resultados medicos
-
-- ResultadoMedicoController: index con filtros por
-  historia_clinica_id y consulta_medica_id, store con
-  subida de archivo (PDF/JPG/PNG max 10MB), destroy con
-  eliminacion del archivo fisico
-- Tipos: laboratorio, imagen, ecografia, rayos_x,
-  electrocardiograma, otro
-- Rutas: GET/POST /resultados-medicos + DELETE con
-  restriccion a medico/odontologo/admin
+fix(dispensario): corregir relacion subidoPor en ResultadoMedico, users no tiene nombre/apellido

@@ -15,7 +15,10 @@ final class ResultadoMedicoController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = ResultadoMedico::with(['subidoPor:id,nombre,apellido'])
+        $query = ResultadoMedico::with([
+            'subidoPor:id,usuario_ti,servidor_id',
+            'subidoPor.servidor:id,nombre,apellido',
+        ])
             ->orderBy('fecha_resultado', 'desc');
 
         if ($request->filled('historia_clinica_id')) {
@@ -67,7 +70,10 @@ final class ResultadoMedicoController extends Controller
         ]);
 
         return ApiResponse::created(
-            $resultado->load('subidoPor:id,nombre,apellido'),
+            $resultado->load([
+                'subidoPor:id,usuario_ti,servidor_id',
+                'subidoPor.servidor:id,nombre,apellido',
+            ]),
             'Resultado médico registrado correctamente.'
         );
     }
