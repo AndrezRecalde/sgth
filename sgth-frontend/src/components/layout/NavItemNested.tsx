@@ -86,15 +86,19 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
       <Collapse expanded={opened}>
         <Box pl="md" pt={2} pb={2}>
           {item.children?.map((child) => {
+            const exactChildPaths = [
+              '/salud/farmacia',
+              '/salud/sso',
+            ]
             const isActive = (child as NavItem).children
               ? (child as NavItem).children!.some(
                   (c) =>
                     pathname === c.href || pathname.startsWith(`${c.href}/`),
                 )
-              : pathname === child.href ||
-                (child.href !== "/salud/farmacia"
-                  ? pathname.startsWith(`${child.href}/`)
-                  : pathname === child.href);
+              : exactChildPaths.includes(child.href)
+                ? pathname === child.href
+                : pathname === child.href ||
+                  pathname.startsWith(`${child.href}/`);
 
             return (
               <UnstyledButton
