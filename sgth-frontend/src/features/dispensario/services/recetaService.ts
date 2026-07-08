@@ -70,6 +70,8 @@ export const recetaService = {
   listarFarmacia: (params?: {
     fecha_desde?:  string
     fecha_hasta?:  string
+    medico_id?:    number
+    estado?:       string
   }) =>
     api.get<ApiResponse<RecetaMedica[]>>(
       '/dispensario/recetas',
