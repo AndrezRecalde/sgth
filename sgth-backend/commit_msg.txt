@@ -1,1 +1,1 @@
-feat(dispensario): index recetas con filtros por estado y fecha para farmacia
+feat(dispensario): filtro por medico_id en index de recetas

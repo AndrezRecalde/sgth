@@ -47,6 +47,12 @@ final class RecetaController extends Controller
             $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
         }
 
+        if ($request->filled('medico_id')) {
+            $query->whereHas('consultaMedica', fn($q) =>
+                $q->where('medico_id', $request->integer('medico_id'))
+            );
+        }
+
         $recetas = $query->get();
 
         return ApiResponse::ok($recetas);
