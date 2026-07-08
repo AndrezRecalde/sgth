@@ -108,13 +108,13 @@ export function useAccionesItem(consultaId: number) {
   return { actualizarItem, quitarItem }
 }
 
-export function useRecetasPendientes(params?: {
+export function useRecetasFarmacia(params?: {
   fecha_desde?: string
   fecha_hasta?: string
 }) {
   return useQuery({
-    queryKey: ['recetas', 'pendientes', params],
-    queryFn:  () => recetaService.listarPendientes(params),
+    queryKey: ['recetas', 'farmacia', params],
+    queryFn:  () => recetaService.listarFarmacia(params),
     staleTime: 1000 * 15,
     refetchInterval: 1000 * 30,
   })

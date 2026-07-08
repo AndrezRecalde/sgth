@@ -67,14 +67,13 @@ export interface EmitirRecetaData {
 }
 
 export const recetaService = {
-  listarPendientes: (params?: {
-    estados?:      string
+  listarFarmacia: (params?: {
     fecha_desde?:  string
     fecha_hasta?:  string
   }) =>
     api.get<ApiResponse<RecetaMedica[]>>(
       '/dispensario/recetas',
-      { params: { estados: 'pendiente,despachada_parcial', ...params } }
+      { params }
     ).then(r => r.data.datos),
 
   despachar: (id: number, data: DespacharRecetaData) =>

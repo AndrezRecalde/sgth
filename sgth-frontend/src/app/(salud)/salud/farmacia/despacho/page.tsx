@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import {
-  Stack, Group, Badge, Text,
-  Button, Card,
+  Stack, Group, Badge, Text, Button,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
-import { IconPill, IconCheck } from '@tabler/icons-react'
+import {
+  IconPill, IconCheck, IconEye,
+} from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -15,7 +16,7 @@ import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { DespacharRecetaModal } from
   '@/features/dispensario/components/DespacharRecetaModal'
-import { useRecetasPendientes } from
+import { useRecetasFarmacia } from
   '@/features/dispensario/hooks/useReceta'
 import type { RecetaMedica } from
   '@/features/dispensario/services/recetaService'
@@ -44,10 +45,10 @@ function fromDate(d: Date | string | null): string | undefined {
 }
 
 const ESTADO_CONFIG: Record<string, { label: string; color: string }> = {
-  pendiente:          { label: 'Pendiente',   color: 'orange' },
-  despachada_parcial: { label: 'Parcial',     color: 'blue'   },
-  despachada_completa:{ label: 'Completada',  color: 'emerald'},
-  anulada:            { label: 'Anulada',     color: 'red'    },
+  pendiente:           { label: 'Pendiente',  color: 'orange' },
+  despachada_parcial:  { label: 'Parcial',    color: 'blue'   },
+  despachada_completa: { label: 'Completada', color: 'emerald'},
+  anulada:             { label: 'Anulada',    color: 'red'    },
 }
 
 export default function DespachoPage() {
@@ -58,9 +59,15 @@ export default function DespachoPage() {
   const [rango, setRango] =
     useState<[Date | null, Date | null]>([null, null])
   const [filtro, setFiltro] =
-    useState<{ fecha_desde?: string; fecha_hasta?: string } | undefined>(undefined)
+    useState<{ fecha_desde?: string; fecha_hasta?: string } | undefined>(
+      undefined
+    )
 
-  const { data: recetas = [], isLoading } = useRecetasPendientes(filtro)
+  const { data: recetas = [], isLoading } = useRecetasFarmacia(filtro)
+
+  const pendientes  = recetas.filter(r => r.estado === 'pendiente').length
+  const parciales   = recetas.filter(r => r.estado === 'despachada_parcial').length
+  const completadas = recetas.filter(r => r.estado === 'despachada_completa').length
 
   const handleFiltrar = () => {
     const [inicio, fin] = rango
@@ -68,7 +75,9 @@ export default function DespachoPage() {
     if (desde) {
       setFiltro({
         fecha_desde: desde,
-        fecha_hasta: fromDate((fin ?? inicio) as Date | string | null) ?? desde,
+        fecha_hasta: fromDate(
+          (fin ?? inicio) as Date | string | null
+        ) ?? desde,
       })
     }
   }
@@ -121,18 +130,16 @@ export default function DespachoPage() {
     },
     {
       accessor: 'items',
-      title:    'Medicamentos',
-      width:    100,
+      title:    'Ítems',
+      width:    80,
       render: (r) => (
-        <Text size="sm" ta="center">
-          {r.items.length} ítem{r.items.length !== 1 ? 's' : ''}
-        </Text>
+        <Text size="sm" ta="center">{r.items.length}</Text>
       ),
     },
     {
       accessor: 'estado',
       title:    'Estado',
-      width:    120,
+      width:    130,
       render: (r) => {
         const cfg = ESTADO_CONFIG[r.estado]
           ?? { label: r.estado, color: 'gray' }
@@ -147,19 +154,33 @@ export default function DespachoPage() {
       accessor: 'acciones',
       title:    '',
       width:    50,
-      render: (r) => (
-        <TableActions actions={[
-          {
-            label:   'Despachar',
-            icon:    <IconCheck size={14} />,
-            color:   'emerald',
-            onClick: () => {
-              setRecetaSel(r)
-              abrirModal()
-            },
-          },
-        ]} />
-      ),
+      render: (r) => {
+        const esCompletada = r.estado === 'despachada_completa'
+        const esAnulada    = r.estado === 'anulada'
+
+        return (
+          <TableActions actions={[
+            ...((!esCompletada && !esAnulada) ? [{
+              label:   'Despachar',
+              icon:    <IconCheck size={14} />,
+              color:   'emerald',
+              onClick: () => {
+                setRecetaSel(r)
+                abrirModal()
+              },
+            }] : []),
+            ...((esCompletada || esAnulada) ? [{
+              label:   'Ver detalle',
+              icon:    <IconEye size={14} />,
+              color:   'blue',
+              onClick: () => {
+                setRecetaSel(r)
+                abrirModal()
+              },
+            }] : []),
+          ]} />
+        )
+      },
     },
   ]
 
@@ -167,46 +188,65 @@ export default function DespachoPage() {
     <Stack gap="md">
       <PageHeader
         title="Despacho de recetas"
-        subtitle="Recetas pendientes de despacho"
+        subtitle="Gestión de recetas médicas"
         icon={<IconPill size={24} />}
       />
 
-      <Group gap="sm" wrap="wrap">
-        <DatePickerInput
-          type="range"
-          placeholder="Filtrar por rango de fechas"
-          valueFormat="DD/MM/YYYY"
-          clearable
-          value={rango}
-          onChange={(v) => setRango(v as [Date | null, Date | null])}
-          style={{ width: 280 }}
-        />
-        <Button
-          variant="light"
-          onClick={handleFiltrar}
-          disabled={!rango[0]}
-        >
-          Filtrar
-        </Button>
-        {filtro && (
+      <Group gap="sm" wrap="wrap" justify="space-between">
+        <Group gap="sm">
+          <DatePickerInput
+            type="range"
+            placeholder="Filtrar por rango de fechas"
+            valueFormat="DD/MM/YYYY"
+            clearable
+            value={rango}
+            onChange={(v) =>
+              setRango(v as [Date | null, Date | null])}
+            style={{ width: 280 }}
+          />
           <Button
-            variant="subtle"
-            color="gray"
-            onClick={handleLimpiar}
+            variant="light"
+            onClick={handleFiltrar}
+            disabled={!rango[0]}
           >
-            Limpiar
+            Filtrar
           </Button>
-        )}
-        <Badge size="sm" variant="light" color="orange">
-          {recetas.length} receta{recetas.length !== 1 ? 's' : ''} pendiente{recetas.length !== 1 ? 's' : ''}
-        </Badge>
+          {filtro && (
+            <Button
+              variant="subtle"
+              color="gray"
+              onClick={handleLimpiar}
+            >
+              Limpiar
+            </Button>
+          )}
+        </Group>
+
+        <Group gap="xs">
+          {pendientes > 0 && (
+            <Badge size="sm" variant="light" color="orange">
+              {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
+            </Badge>
+          )}
+          {parciales > 0 && (
+            <Badge size="sm" variant="light" color="blue">
+              {parciales} parcial{parciales !== 1 ? 'es' : ''}
+            </Badge>
+          )}
+          {completadas > 0 && (
+            <Badge size="sm" variant="light" color="emerald">
+              {completadas} completada{completadas !== 1 ? 's' : ''}
+            </Badge>
+          )}
+        </Group>
       </Group>
 
       {recetas.length === 0 && !isLoading ? (
         <EmptyState
           icon={IconPill}
-          title="Sin recetas pendientes"
-          description="No hay recetas pendientes de despacho."
+          title="Sin recetas"
+          description="No hay recetas registradas para
+            el período seleccionado."
         />
       ) : (
         <SgthTable
