@@ -1,9 +1,0 @@
-feat(dispensario): FemoService y Controller completos
-
-- FemoService: listar (filtros por servidor/tipo/aptitud/
-  fechas), obtener (eager loading completo), registrar
-  (transaccion atomica todas las secciones), actualizar
-  (reemplaza secciones relacionadas)
-- FichaSaludOcupacionalController: index/store/show/update
-  con validacion completa de todas las secciones del FEMO
-- Ruta PATCH /fichas-sso/{id} para actualizar

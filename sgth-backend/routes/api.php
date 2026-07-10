@@ -58,6 +58,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         );
         Route::apiResource('unidades-administrativas', \App\Http\Controllers\Estructura\UnidadAdministrativaController::class);
         Route::apiResource('puestos', \App\Http\Controllers\Estructura\PuestoController::class);
+        Route::prefix('puestos/{puestoId}/actividades')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'index']);
+                Route::post('/', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'store']);
+                Route::patch('{actividadId}', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'update']);
+                Route::delete('{actividadId}', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'destroy']);
+                Route::post('reordenar', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'reordenar']);
+            });
 
         Route::get('cargos', [\App\Http\Controllers\Estructura\CargoController::class, 'index'])
             ->name('estructura.cargos.index');

@@ -67,6 +67,19 @@ class Puesto extends Model
         )->where('estado', 'vigente');
     }
 
+    public function actividades(): HasMany
+    {
+        return $this->hasMany(PuestoActividad::class)
+            ->orderBy('orden');
+    }
+
+    public function actividadesActivas(): HasMany
+    {
+        return $this->hasMany(PuestoActividad::class)
+            ->where('activo', true)
+            ->orderBy('orden');
+    }
+
     public function plazasOcupadas(): int
     {
         return $this->contratosVigentes()->count();
