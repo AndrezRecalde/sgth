@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Box, Button, Group, Select } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -13,31 +12,29 @@ import {
 } from '../hooks/useUnidades'
 import { getPuestoColumns } from "./puesto.columns";
 import { PuestoModal } from "./PuestoModal";
+import { PuestoActividadesDrawer } from "./PuestoActividadesDrawer";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import type { PuestoConRelaciones, UnidadConRelaciones } from "@/types/api";
 
 export function PuestosTab() {
   const [page, setPage] = useState(1);
   const [unidadIds, setUnidadIds] = useState<string[]>([]);
-  const [editPuesto, setEditPuesto] = useState<PuestoConRelaciones | null>(
-    null,
-  );
+  const [editPuesto, setEditPuesto] = useState<PuestoConRelaciones | null>(null);
+  const [actividadesPuesto, setActividadesPuesto] =
+    useState<PuestoConRelaciones | null>(null);
   const [modalOpened, { open, close }] = useDisclosure(false);
-
+  const [drawerOpened,
+    { open: abrirDrawer, close: cerrarDrawer }] = useDisclosure(false);
   const contained = useContainedInput();
   const { eliminar } = usePuestoMutations();
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 });
-
   const unidadIdNum = unidadIds.length > 0 ? Number(unidadIds[0]) : undefined;
-
   const { data, isLoading } = usePuestos({
     page,
     per_page: 15,
     unidad_administrativa_id: unidadIdNum,
   });
-
   const records = (data?.data ?? []) as PuestoConRelaciones[];
-
   const unidadOptions = ((unidades ?? []) as UnidadConRelaciones[]).map(
     (u) => ({
       value: String(u.id),
@@ -56,9 +53,19 @@ export function PuestosTab() {
     }
   };
 
+  const handleActividades = (puesto: PuestoConRelaciones) => {
+    setActividadesPuesto(puesto);
+    abrirDrawer();
+  };
+
   const handleClose = () => {
     setEditPuesto(null);
     close();
+  };
+
+  const handleCerrarDrawer = () => {
+    setActividadesPuesto(null);
+    cerrarDrawer();
   };
 
   return (
@@ -87,11 +94,13 @@ export function PuestosTab() {
           Nuevo puesto
         </Button>
       </Group>
+
       <SgthTable
         records={records}
         columns={getPuestoColumns({
           onEdit: handleEdit,
           onDelete: handleDelete,
+          onActividades: handleActividades,
         })}
         fetching={isLoading}
         totalRecords={data?.total || records.length || 0}
@@ -100,10 +109,17 @@ export function PuestosTab() {
         onPageChange={setPage}
         minHeight={200}
       />
+
       <PuestoModal
         opened={modalOpened}
         onClose={handleClose}
         puesto={editPuesto}
+      />
+
+      <PuestoActividadesDrawer
+        opened={drawerOpened}
+        onClose={handleCerrarDrawer}
+        puesto={actividadesPuesto}
       />
     </Box>
   );

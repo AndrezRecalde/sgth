@@ -1,5 +1,5 @@
 import { Text, Badge } from '@mantine/core'
-import { IconEdit, IconTrash } from '@tabler/icons-react'
+import { IconEdit, IconTrash, IconList } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PuestoConRelaciones } from '@/types/api'
@@ -21,12 +21,13 @@ const CLASIFICACION_COLORS: Record<string, string> = {
 }
 
 type Handlers = {
-  onEdit:   (puesto: PuestoConRelaciones) => void
-  onDelete: (puesto: PuestoConRelaciones) => void
+  onEdit:        (puesto: PuestoConRelaciones) => void
+  onDelete:      (puesto: PuestoConRelaciones) => void
+  onActividades: (puesto: PuestoConRelaciones) => void
 }
 
 export const getPuestoColumns = (
-  { onEdit, onDelete }: Handlers
+  { onEdit, onDelete, onActividades }: Handlers
 ): DataTableColumn<PuestoConRelaciones>[] => [
   {
     accessor: 'cargo',
@@ -98,6 +99,12 @@ export const getPuestoColumns = (
     width: 50,
     render: (puesto) => (
       <TableActions actions={[
+        {
+          label: 'Actividades del puesto',
+          icon: <IconList size={14} />,
+          color: 'emerald',
+          onClick: () => onActividades(puesto),
+        },
         {
           label: 'Editar puesto',
           icon: <IconEdit size={14} />,
