@@ -40,11 +40,21 @@ final class PostulanteController extends Controller
         }
 
         $datos = $request->validate([
-            'cedula'    => ['required', 'string', 'max:20'],
-            'nombres'   => ['required', 'string', 'max:150'],
-            'apellidos' => ['required', 'string', 'max:150'],
-            'correo'    => ['required', 'email', 'max:150'],
-            'telefono'  => ['nullable', 'string', 'max:20'],
+            'cedula'                  => ['required', 'string', 'max:20'],
+            'nombres'                 => ['required', 'string', 'max:150'],
+            'segundo_nombre'          => ['nullable', 'string', 'max:150'],
+            'apellidos'               => ['required', 'string', 'max:150'],
+            'segundo_apellido'        => ['nullable', 'string', 'max:150'],
+            'correo'                  => ['required', 'email', 'max:150'],
+            'telefono'                => ['nullable', 'string', 'max:20'],
+            'genero'                  => ['nullable', 'string', 'in:masculino,femenino,otro'],
+            'estado_civil'            => ['nullable', 'string', 'in:soltero,casado,union_libre,divorciado,viudo'],
+            'fecha_nacimiento'        => ['nullable', 'date'],
+            'tipo_sangre'             => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
+            'tiene_discapacidad'      => ['nullable', 'boolean'],
+            'porcentaje_discapacidad' => ['nullable', 'string', 'max:10'],
+            'provincia_nacimiento_id' => ['nullable', 'integer', 'exists:provincias,id'],
+            'canton_nacimiento_id'    => ['nullable', 'integer', 'exists:cantones,id'],
         ]);
 
         $existe = Postulante::where('convocatoria_id', $convocatoriaId)

@@ -23,9 +23,19 @@ class Postulante extends Model
         'convocatoria_id',
         'cedula',
         'nombres',
+        'segundo_nombre',
         'apellidos',
+        'segundo_apellido',
         'correo',
         'telefono',
+        'genero',
+        'estado_civil',
+        'fecha_nacimiento',
+        'tipo_sangre',
+        'tiene_discapacidad',
+        'porcentaje_discapacidad',
+        'provincia_nacimiento_id',
+        'canton_nacimiento_id',
         'cv_ruta',
         'estado',
         'created_by',
@@ -35,7 +45,9 @@ class Postulante extends Model
     protected function casts(): array
     {
         return [
-            'estado' => EstadoPostulante::class,
+            'estado'              => EstadoPostulante::class,
+            'fecha_nacimiento'    => 'date',
+            'tiene_discapacidad'  => 'boolean',
         ];
     }
 

@@ -67,12 +67,22 @@ final class SeleccionService implements SeleccionServiceInterface
 
             // 2. Crear al servidor como pre-ingreso (para expediente)
             $servidor = Servidor::create([
-                'cedula'    => $ganador->cedula,
-                'nombres'   => $ganador->nombres,
-                'apellidos' => $ganador->apellidos,
-
-                'puesto_id' => $convocatoria->puesto_id,
-                'estado'    => true, // Inicia activo
+                'cedula'                  => $ganador->cedula,
+                'nombre'                  => $ganador->nombres,
+                'segundo_nombre'          => $ganador->segundo_nombre,
+                'apellido'                => $ganador->apellidos,
+                'segundo_apellido'        => $ganador->segundo_apellido,
+                'genero'                  => $ganador->genero,
+                'estado_civil'            => $ganador->estado_civil,
+                'fecha_nacimiento'        => $ganador->fecha_nacimiento?->toDateString(),
+                'tipo_sangre'             => $ganador->tipo_sangre,
+                'tiene_discapacidad'      => $ganador->tiene_discapacidad ?? false,
+                'correo_personal'         => $ganador->correo,
+                'telefono_celular'        => $ganador->telefono,
+                'provincia_nacimiento_id' => $ganador->provincia_nacimiento_id,
+                'canton_nacimiento_id'    => $ganador->canton_nacimiento_id,
+                'puesto_id'               => $convocatoria->puesto_id,
+                'estado'                  => true,
             ]);
 
             // 3. Crear el Onboarding vinculado
