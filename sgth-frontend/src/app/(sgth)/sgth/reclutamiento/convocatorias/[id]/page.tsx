@@ -74,14 +74,20 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
     {
       accessor: 'nombres',
       title:    'Candidato',
-      render: (p) => (
-        <Stack gap={0}>
-          <Text size="sm" fw={500}>
-            {p.apellidos} {p.nombres}
-          </Text>
-          <Text size="xs" c="dimmed">{p.correo}</Text>
-        </Stack>
-      ),
+      render: (p) => {
+        const nombreCompleto = [
+          p.apellidos,
+          p.segundo_apellido,
+          p.nombres,
+          p.segundo_nombre,
+        ].filter(Boolean).join(' ')
+        return (
+          <Stack gap={0}>
+            <Text size="sm" fw={500}>{nombreCompleto}</Text>
+            <Text size="xs" c="dimmed">{p.correo}</Text>
+          </Stack>
+        )
+      },
     },
     {
       accessor: 'telefono',
