@@ -90,7 +90,7 @@ final class ConvocatoriaController extends Controller
     {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        if ($convocatoria->estado === 'cerrada') {
+        if ($convocatoria->estado->value === 'cerrada') {
             return ApiResponse::error(
                 'No se puede modificar una convocatoria cerrada.', null, 422
             );
@@ -124,7 +124,7 @@ final class ConvocatoriaController extends Controller
     {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        if ($convocatoria->estado !== 'borrador') {
+        if ($convocatoria->estado->value !== 'borrador') {
             return ApiResponse::error(
                 'Solo se pueden eliminar convocatorias en borrador.', null, 422
             );
@@ -138,7 +138,7 @@ final class ConvocatoriaController extends Controller
     {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        if ($convocatoria->estado !== 'borrador') {
+        if ($convocatoria->estado->value !== 'borrador') {
             return ApiResponse::error(
                 'Solo se pueden publicar convocatorias en borrador.', null, 422
             );
