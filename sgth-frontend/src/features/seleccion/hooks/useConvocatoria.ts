@@ -1,0 +1,155 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { IconCheck, IconX } from '@tabler/icons-react'
+import React from 'react'
+import { convocatoriaService } from '../services/convocatoriaService'
+import { getApiErrorMessage } from '@/types/api'
+import type { CrearConvocatoriaData } from '../services/convocatoriaService'
+
+export function useConvocatorias(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: ['convocatorias', params],
+    queryFn:  () => convocatoriaService.listar(params),
+    staleTime: 1000 * 60,
+  })
+}
+
+export function useConvocatoriaDetalle(id: number | null) {
+  return useQuery({
+    queryKey: ['convocatoria', id],
+    queryFn:  () => convocatoriaService.obtener(id!),
+    enabled:  !!id,
+    staleTime: 1000 * 60,
+  })
+}
+
+export function useCrearConvocatoria() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: CrearConvocatoriaData) =>
+      convocatoriaService.crear(data),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Convocatoria creada',
+        message: 'La convocatoria fue registrada correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['convocatorias'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function useActualizarConvocatoria() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: {
+      id:   number
+      data: Partial<CrearConvocatoriaData & { estado: string }>
+    }) => convocatoriaService.actualizar(id, data),
+    onSuccess: (_, { id }) => {
+      notifications.show({
+        title:   'Convocatoria actualizada',
+        message: 'Los cambios fueron guardados.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['convocatorias'] })
+      qc.invalidateQueries({ queryKey: ['convocatoria', id] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function usePublicarConvocatoria() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => convocatoriaService.publicar(id),
+    onSuccess: (_, id) => {
+      notifications.show({
+        title:   'Convocatoria publicada',
+        message: 'La convocatoria ya es visible para los postulantes.',
+        color:   'blue',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['convocatorias'] })
+      qc.invalidateQueries({ queryKey: ['convocatoria', id] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function useEliminarConvocatoria() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => convocatoriaService.eliminar(id),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Convocatoria eliminada',
+        message: 'La convocatoria fue eliminada.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['convocatorias'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function usePostulantes(convocatoriaId: number | null) {
+  return useQuery({
+    queryKey: ['postulantes', convocatoriaId],
+    queryFn:  () => convocatoriaService.listarPostulantes(convocatoriaId!),
+    enabled:  !!convocatoriaId,
+    staleTime: 1000 * 30,
+  })
+}
+
+export function useInscribirPostulante(convocatoriaId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Parameters<typeof convocatoriaService.inscribirPostulante>[1]) =>
+      convocatoriaService.inscribirPostulante(convocatoriaId, data),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Postulante inscrito',
+        message: 'El postulante fue inscrito correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}

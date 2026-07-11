@@ -67,6 +67,28 @@ export const NAV_SGTH: NavGroup[] = [
       },
     ],
   },
+  {
+    label: 'Reclutamiento',
+    items: [
+      {
+        label:    'Convocatorias',
+        href:     ROUTES.SGTH.CONVOCATORIAS,
+        icon:     'IconSpeakerphone',
+        children: [
+          {
+            label: 'Todas las convocatorias',
+            href:  ROUTES.SGTH.CONVOCATORIAS,
+            icon:  'IconList',
+          },
+          {
+            label: 'Nueva convocatoria',
+            href:  ROUTES.SGTH.CONVOCATORIAS + '/nueva',
+            icon:  'IconPlus',
+          },
+        ],
+      },
+    ],
+  },
 ]
 
 // ── DISPENSARIO MÉDICO ────────────────

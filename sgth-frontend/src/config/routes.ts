@@ -6,13 +6,15 @@ export const ROUTES = {
 
   // ── SGTH (Talento Humano) ─────────────
   SGTH: {
-    HOME:       '/sgth',
-    SERVIDORES: '/sgth/servidores',
-    USUARIOS:   '/sgth/usuarios',
-    ESTRUCTURA: '/sgth/estructura',
-    EXPEDIENTE: '/sgth/expediente',
-    NOMINA:     '/sgth/nomina',
-    ASISTENCIA: '/sgth/asistencia',
+    HOME:             '/sgth',
+    SERVIDORES:       '/sgth/servidores',
+    USUARIOS:         '/sgth/usuarios',
+    ESTRUCTURA:       '/sgth/estructura',
+    EXPEDIENTE:       '/sgth/expediente',
+    NOMINA:           '/sgth/nomina',
+    ASISTENCIA:       '/sgth/asistencia',
+    RECLUTAMIENTO:    '/sgth/reclutamiento',
+    CONVOCATORIAS:    '/sgth/reclutamiento/convocatorias',
   },
 
   // ── DISPENSARIO MÉDICO ────────────────
