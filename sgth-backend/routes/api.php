@@ -323,10 +323,32 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     });
 
     // Módulo 07: Selección e Incorporación
-    Route::prefix('seleccion')->group(function () {
-        Route::post('postulantes/{id}/calificar', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'calificar']);
-        Route::post('convocatorias/{id}/declarar-ganador', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'declararGanador']);
-    });
+    Route::prefix('seleccion')
+        ->middleware('role:admin-uath|analista-uath|admin-ti')
+        ->group(function () {
+            // Convocatorias
+            Route::get('convocatorias', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'index']);
+            Route::post('convocatorias', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'store']);
+            Route::get('convocatorias/{id}', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'show']);
+            Route::patch('convocatorias/{id}', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'update']);
+            Route::delete('convocatorias/{id}', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'destroy']);
+            Route::patch('convocatorias/{id}/publicar', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'publicar']);
+
+            // Postulantes por convocatoria
+            Route::get('convocatorias/{convocatoriaId}/postulantes', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'index']);
+            Route::post('convocatorias/{convocatoriaId}/postulantes', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'store']);
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'show']);
+            Route::patch('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'update']);
+            Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'destroy']);
+
+            // Documentos del postulante
+            Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'subirDocumento']);
+            Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'eliminarDocumento']);
+
+            // Evaluación y selección
+            Route::post('postulantes/{id}/calificar', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'calificar']);
+            Route::post('convocatorias/{id}/declarar-ganador', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'declararGanador']);
+        });
 
     // Módulo 12 — Inventario de Bienes Informáticos
     Route::prefix('inventario')

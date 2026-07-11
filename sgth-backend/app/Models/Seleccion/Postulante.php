@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Seleccion\DocumentoPostulante;
 
 #[ObservedBy(PostulanteObserver::class)]
 class Postulante extends Model
@@ -50,6 +52,11 @@ class Postulante extends Model
     public function onboarding(): HasOne
     {
         return $this->hasOne(Onboarding::class);
+    }
+
+    public function documentos(): HasMany
+    {
+        return $this->hasMany(DocumentoPostulante::class);
     }
 
     public function createdBy(): BelongsTo
