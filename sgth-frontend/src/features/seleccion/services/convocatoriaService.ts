@@ -2,17 +2,27 @@ import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
 export interface Postulante {
-  id:              number
-  convocatoria_id: number
-  cedula:          string
-  nombres:         string
-  apellidos:       string
-  correo:          string
-  telefono?:       string | null
-  cv_ruta?:        string | null
-  estado:          string
-  evaluacion?:     EvaluacionSeleccion | null
-  documentos?:     DocumentoPostulante[]
+  id:                      number
+  convocatoria_id:         number
+  cedula:                  string
+  nombres:                 string
+  segundo_nombre?:         string | null
+  apellidos:               string
+  segundo_apellido?:       string | null
+  correo:                  string
+  telefono?:               string | null
+  genero?:                 string | null
+  estado_civil?:           string | null
+  fecha_nacimiento?:       string | null
+  tipo_sangre?:            string | null
+  tiene_discapacidad?:     boolean
+  porcentaje_discapacidad?: string | null
+  provincia_nacimiento_id?: number | null
+  canton_nacimiento_id?:   number | null
+  cv_ruta?:                string | null
+  estado:                  string
+  evaluacion?:             EvaluacionSeleccion | null
+  documentos?:             DocumentoPostulante[]
 }
 
 export interface EvaluacionSeleccion {
