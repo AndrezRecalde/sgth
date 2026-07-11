@@ -51,8 +51,6 @@ final class PostulanteController extends Controller
             'estado_civil'            => ['nullable', 'string', 'in:soltero,casado,union_libre,divorciado,viudo'],
             'fecha_nacimiento'        => ['nullable', 'date'],
             'tipo_sangre'             => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
-            'tiene_discapacidad'      => ['nullable', 'boolean'],
-            'porcentaje_discapacidad' => ['nullable', 'string', 'max:10'],
             'provincia_nacimiento_id' => ['nullable', 'integer', 'exists:provincias,id'],
             'canton_nacimiento_id'    => ['nullable', 'integer', 'exists:cantones,id'],
         ]);

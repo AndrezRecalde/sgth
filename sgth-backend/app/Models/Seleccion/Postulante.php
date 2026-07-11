@@ -32,8 +32,6 @@ class Postulante extends Model
         'estado_civil',
         'fecha_nacimiento',
         'tipo_sangre',
-        'tiene_discapacidad',
-        'porcentaje_discapacidad',
         'provincia_nacimiento_id',
         'canton_nacimiento_id',
         'cv_ruta',
@@ -47,7 +45,6 @@ class Postulante extends Model
         return [
             'estado'              => EstadoPostulante::class,
             'fecha_nacimiento'    => 'date',
-            'tiene_discapacidad'  => 'boolean',
         ];
     }
 
