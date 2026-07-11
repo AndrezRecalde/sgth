@@ -15,8 +15,6 @@ export interface Postulante {
   estado_civil?:           string | null
   fecha_nacimiento?:       string | null
   tipo_sangre?:            string | null
-  tiene_discapacidad?:     boolean
-  porcentaje_discapacidad?: string | null
   provincia_nacimiento_id?: number | null
   canton_nacimiento_id?:   number | null
   cv_ruta?:                string | null

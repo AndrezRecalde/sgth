@@ -3,7 +3,7 @@
 import {
   Modal, Stack, TextInput, Button,
   Group, Text, Alert, Select,
-  Grid, Checkbox, Divider,
+  Grid, Divider,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
@@ -52,8 +52,6 @@ const schema = z.object({
   estado_civil:     z.string().optional().nullable(),
   fecha_nacimiento: z.string().optional().nullable(),
   tipo_sangre:      z.string().optional().nullable(),
-  tiene_discapacidad: z.boolean().optional(),
-  porcentaje_discapacidad: z.string().optional().nullable(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -82,14 +80,11 @@ export function InscribirPostulanteModal({
 
   const {
     control, register, handleSubmit,
-    watch, reset,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { tiene_discapacidad: false },
   })
-
-  const tieneDiscapacidad = watch('tiene_discapacidad')
 
   const handleClose = () => {
     reset()
@@ -284,32 +279,6 @@ export function InscribirPostulanteModal({
                     />
                   )}
                 />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 8 }}>
-                <Stack gap="xs" pt="xl">
-                  <Controller
-                    name="tiene_discapacidad"
-                    control={control}
-                    render={({ field }) => (
-                      <Checkbox
-                        label="El candidato tiene discapacidad"
-                        checked={field.value ?? false}
-                        onChange={(e) =>
-                          field.onChange(e.currentTarget.checked)
-                        }
-                      />
-                    )}
-                  />
-                  {tieneDiscapacidad && (
-                    <TextInput
-                      label="Porcentaje de discapacidad"
-                      placeholder="Ej: 45%"
-                      size="xs"
-                      {...contained}
-                      {...register('porcentaje_discapacidad')}
-                    />
-                  )}
-                </Stack>
               </Grid.Col>
             </Grid>
           </Stack>
