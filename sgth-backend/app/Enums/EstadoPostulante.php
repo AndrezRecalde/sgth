@@ -4,9 +4,12 @@ namespace App\Enums;
 
 enum EstadoPostulante: string
 {
-    case POSTULADO     = 'postulado';
-    case EN_PROCESO    = 'en_proceso';
-    case APROBADO      = 'aprobado';
-    case REPROBADO     = 'reprobado';
-    case DESCALIFICADO = 'descalificado';
+    case INSCRITO         = 'inscrito';
+    case EN_EVALUACION    = 'en_evaluacion';
+    case SELECCIONADO     = 'seleccionado';
+    case NO_SELECCIONADO  = 'no_seleccionado';
+    case LISTA_ESPERA     = 'lista_espera';
+    case APROBADO         = 'aprobado';
+    case REPROBADO        = 'reprobado';
+    case DESCALIFICADO    = 'descalificado';
 }
