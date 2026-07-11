@@ -35,6 +35,9 @@ import type { DataTableColumn } from 'mantine-datatable'
 import { InscribirPostulanteModal } from
   '@/features/seleccion/components/InscribirPostulanteModal'
 import { useDisclosure } from '@mantine/hooks'
+import { CalificarPostulanteModal } from
+  '@/features/seleccion/components/CalificarPostulanteModal'
+import { IconStar } from '@tabler/icons-react'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -47,6 +50,11 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
   const publicar = usePublicarConvocatoria()
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
+  const [postulanteSel, setPostulanteSel] =
+    useState<Postulante | null>(null)
+  const [calModalOpened,
+    { open: abrirCalModal, close: cerrarCalModal }] =
+    useDisclosure(false)
 
   const { data: convocatoria, isLoading } =
     useConvocatoriaDetalle(convocatoriaId)
@@ -125,6 +133,15 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
       width:    50,
       render: (p) => (
         <TableActions actions={[
+          {
+            label:   'Calificar',
+            icon:    <IconStar size={14} />,
+            color:   'orange',
+            onClick: () => {
+              setPostulanteSel(p)
+              abrirCalModal()
+            },
+          },
           {
             label:   'Ver perfil',
             icon:    <IconUsers size={14} />,
@@ -345,6 +362,16 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
       <InscribirPostulanteModal
         opened={modalOpened}
         onClose={cerrarModal}
+        convocatoriaId={convocatoriaId}
+      />
+
+      <CalificarPostulanteModal
+        opened={calModalOpened}
+        onClose={() => {
+          cerrarCalModal()
+          setPostulanteSel(null)
+        }}
+        postulante={postulanteSel}
         convocatoriaId={convocatoriaId}
       />
     </Stack>

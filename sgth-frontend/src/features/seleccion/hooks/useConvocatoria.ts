@@ -1,3 +1,5 @@
+import api from '@/lib/axios'
+import type { ApiResponse } from '@/types/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
 import { IconCheck, IconX } from '@tabler/icons-react'
@@ -139,6 +141,40 @@ export function useInscribirPostulante(convocatoriaId: number) {
       notifications.show({
         title:   'Postulante inscrito',
         message: 'El postulante fue inscrito correctamente.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function useCalificarPostulante(convocatoriaId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postulanteId, data }: {
+      postulanteId: number
+      data: {
+        puntaje_meritos:   number
+        puntaje_oposicion: number
+        observaciones?:    string | null
+      }
+    }) =>
+      api.post<ApiResponse<unknown>>(
+        `/seleccion/postulantes/${postulanteId}/calificar`,
+        data
+      ).then(r => r.data.datos),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Calificación registrada',
+        message: 'El puntaje del candidato fue guardado.',
         color:   'emerald',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
