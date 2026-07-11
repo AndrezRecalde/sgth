@@ -27,6 +27,8 @@ class Convocatoria extends Model
         'fecha_inicio',
         'fecha_fin',
         'estado',
+        'tipo',
+        'vacantes',
         'created_by',
         'updated_by',
     ];
@@ -38,6 +40,7 @@ class Convocatoria extends Model
             'fecha_inicio'   => 'date',
             'fecha_fin'      => 'date',
             'estado'         => EstadoConvocatoria::class,
+            'vacantes'       => 'integer',
         ];
     }
 
