@@ -33,7 +33,7 @@ final class PostulanteController extends Controller
     ): JsonResponse {
         $convocatoria = Convocatoria::findOrFail($convocatoriaId);
 
-        if (!in_array($convocatoria->estado, ['publicada', 'en_proceso'])) {
+        if (!in_array($convocatoria->estado->value, ['publicada', 'en_proceso'])) {
             throw new ReglaNegocioException(
                 'La convocatoria no está abierta para inscripciones.'
             );
