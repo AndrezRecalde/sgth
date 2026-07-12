@@ -12,6 +12,8 @@ export interface SolicitudCertificacion {
   estado:            string
   fecha_limite?:     string | null
   created_at:        string
+  dictamen?:           string | null
+  observacion_medica?: string | null
   servidor?: {
     id:      number
     nombre:  string
@@ -81,9 +83,21 @@ export const solicitudCertificacionService = {
       `/dispensario/solicitudes-certificacion/${id}/iniciar`
     ).then(r => r.data.datos),
 
-  completar: (id: number, fichaFemoId?: number) =>
+  completar: (
+    id: number,
+    data: {
+      dictamen:           'apto' | 'apto_con_restricciones' | 'no_apto'
+      observacion_medica?: string | null
+      ficha_femo_id?:     number | null
+    }
+  ) =>
     api.patch<ApiResponse<SolicitudCertificacion>>(
       `/dispensario/solicitudes-certificacion/${id}/completar`,
-      { ficha_femo_id: fichaFemoId ?? null }
+      data
+    ).then(r => r.data.datos),
+
+  confirmarIncorporacion: (id: number) =>
+    api.post<ApiResponse<{ servidor_id: number }>>(
+      `/dispensario/solicitudes-certificacion/${id}/confirmar-incorporacion`
     ).then(r => r.data.datos),
 }

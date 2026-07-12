@@ -11,6 +11,9 @@ import {
   IconArrowLeft, IconArrowRight, IconCheck,
   IconInfoCircle,
 } from '@tabler/icons-react'
+import { useDisclosure } from '@mantine/hooks'
+import { DictamenMedicoModal } from
+  '@/features/dispensario/components/DictamenMedicoModal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { FemoPaso1 } from
   '@/features/dispensario/components/femo/FemoPaso1'
@@ -58,6 +61,18 @@ export default function NuevaFemoPage() {
   const crear        = useCrearFemo()
   const completar    = useCompletarSolicitud()
 
+const [dictamenOpened,
+  { open: abrirDictamen, close: cerrarDictamen }] =
+  useDisclosure(false)
+const [fichaGuardadaId, setFichaGuardadaId] =
+  useState<number | null>(null)
+const [solicitudData, setSolicitudData] = useState<{
+  id: number
+  nombres_paciente: string
+  cedula_paciente: string
+  puesto_solicitado?: string | null
+} | null>(null)
+
   const solicitudId    = searchParams.get('solicitud')
   const cedulaParam    = searchParams.get('cedula')
   const nombresParam   = searchParams.get('nombres')
@@ -93,6 +108,15 @@ export default function NuevaFemoPage() {
 
   useEffect(() => {
     if (!cedulaParam) return
+    const esIngreso = tipoEventoParam === 'ingreso'
+
+    if (esIngreso) {
+      api.get('/seleccion/convocatorias', {
+        params: { all: true },
+      }).then(() => {}).catch(() => {})
+      return
+    }
+
     api.get('/expediente/servidores', {
       params: { search: cedulaParam, per_page: 1 },
     }).then(res => {
@@ -111,7 +135,7 @@ export default function NuevaFemoPage() {
         }))
       }
     }).catch(() => {})
-  }, [cedulaParam])
+  }, [cedulaParam, tipoEventoParam])
 
   const pasos = [
     {
@@ -181,16 +205,16 @@ export default function NuevaFemoPage() {
       {
         onSuccess: (ficha) => {
           if (solicitudId) {
-            completar.mutate(
-              {
-                id:          Number(solicitudId),
-                fichaFemoId: ficha?.id,
-              },
-              {
-                onSuccess: () =>
-                  router.push('/salud/sso'),
-              }
-            )
+            setFichaGuardadaId(ficha?.id ?? null)
+            setSolicitudData({
+              id:               Number(solicitudId),
+              nombres_paciente: nombresParam
+                ? decodeURIComponent(nombresParam)
+                : '',
+              cedula_paciente:  cedulaParam ?? '',
+              puesto_solicitado: null,
+            })
+            abrirDictamen()
           } else {
             router.push('/salud/sso/femo')
           }
@@ -319,6 +343,16 @@ export default function NuevaFemoPage() {
           </Button>
         )}
       </Group>
+
+      <DictamenMedicoModal
+        opened={dictamenOpened}
+        onClose={() => {
+          cerrarDictamen()
+          router.push('/salud/sso')
+        }}
+        solicitud={solicitudData as Parameters<typeof DictamenMedicoModal>[0]['solicitud']}
+        fichaFemoId={fichaGuardadaId}
+      />
     </Stack>
   )
 }

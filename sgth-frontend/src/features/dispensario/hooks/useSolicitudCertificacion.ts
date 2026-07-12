@@ -47,16 +47,47 @@ export function useIniciarProceso() {
 export function useCompletarSolicitud() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, fichaFemoId }: {
-      id:          number
-      fichaFemoId?: number
-    }) => solicitudCertificacionService.completar(id, fichaFemoId),
+    mutationFn: ({ id, data }: {
+      id:   number
+      data: {
+        dictamen:           'apto' | 'apto_con_restricciones' | 'no_apto'
+        observacion_medica?: string | null
+        ficha_femo_id?:     number | null
+      }
+    }) => solicitudCertificacionService.completar(id, data),
     onSuccess: () => {
       notifications.show({
         title:   'Solicitud completada',
         message: 'La certificación médica fue emitida.',
         color:   'emerald',
         icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({
+        queryKey: ['solicitudes-certificacion'],
+      })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function useConfirmarIncorporacion() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) =>
+      solicitudCertificacionService.confirmarIncorporacion(id),
+    onSuccess: () => {
+      notifications.show({
+        title:   '✅ Servidor incorporado',
+        message: 'El expediente del servidor fue creado correctamente en el sistema.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+        autoClose: 6000,
       })
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
