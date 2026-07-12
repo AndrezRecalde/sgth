@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CalificacionPostulante extends Model
 {
-    protected $table = 'calificaciones_postulante';
+    protected $table = 'seleccion_calificaciones';
 
     protected $fillable = [
         'postulante_id', 'criterio_id', 'opcion_id',

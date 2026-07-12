@@ -8,10 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('opciones_criterio', function (Blueprint $table) {
+        Schema::create('seleccion_opciones', function (Blueprint $table) {
             $table->id();
             $table->foreignId('criterio_id')
-                  ->constrained('criterios_evaluacion')
+                  ->constrained('seleccion_criterios')
                   ->cascadeOnDelete();
             $table->string('etiqueta', 200);
             $table->decimal('puntaje', 5, 2);
@@ -24,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('opciones_criterio');
+        Schema::dropIfExists('seleccion_opciones');
     }
 };

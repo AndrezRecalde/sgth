@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CriterioEvaluacion extends Model
 {
-    protected $table = 'criterios_evaluacion';
+    protected $table = 'seleccion_criterios';
 
     protected $fillable = [
         'convocatoria_id', 'seccion', 'nombre',

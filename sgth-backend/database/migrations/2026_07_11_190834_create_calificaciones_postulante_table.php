@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('calificaciones_postulante', function (Blueprint $table) {
+        Schema::create('seleccion_calificaciones', function (Blueprint $table) {
             $table->id();
             $table->foreignId('postulante_id')
                   ->constrained('postulantes')
                   ->cascadeOnDelete();
             $table->foreignId('criterio_id')
-                  ->constrained('criterios_evaluacion')
+                  ->constrained('seleccion_criterios')
                   ->cascadeOnDelete();
             $table->foreignId('opcion_id')
                   ->nullable()
-                  ->constrained('opciones_criterio')
+                  ->constrained('seleccion_opciones')
                   ->nullOnDelete();
             $table->decimal('valor_numerico', 5, 2)->nullable();
             $table->decimal('puntaje_obtenido', 5, 2)->default(0);
@@ -34,6 +34,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('calificaciones_postulante');
+        Schema::dropIfExists('seleccion_calificaciones');
     }
 };

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OpcionCriterio extends Model
 {
-    protected $table = 'opciones_criterio';
+    protected $table = 'seleccion_opciones';
 
     protected $fillable = [
         'criterio_id', 'etiqueta', 'puntaje', 'orden',

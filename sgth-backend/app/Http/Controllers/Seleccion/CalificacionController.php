@@ -45,8 +45,8 @@ final class CalificacionController extends Controller
 
         $request->validate([
             'calificaciones'                    => ['required', 'array'],
-            'calificaciones.*.criterio_id'      => ['required', 'integer', 'exists:criterios_evaluacion,id'],
-            'calificaciones.*.opcion_id'        => ['nullable', 'integer', 'exists:opciones_criterio,id'],
+            'calificaciones.*.criterio_id'      => ['required', 'integer', 'exists:seleccion_criterios,id'],
+            'calificaciones.*.opcion_id'        => ['nullable', 'integer', 'exists:seleccion_opciones,id'],
             'calificaciones.*.valor_numerico'   => ['nullable', 'numeric', 'min:0'],
             'calificaciones.*.observacion'      => ['nullable', 'string'],
         ]);
