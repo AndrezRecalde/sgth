@@ -96,11 +96,11 @@ final class SeleccionService implements SeleccionServiceInterface
 
             // 4. Registrar Movimiento de Personal (Ingreso)
             MovimientoPersonal::create([
-                'servidor_id'    => $servidor->id,
-                'tipo'           => 'ingreso',
-                'fecha_efectiva' => now()->toDateString(),
-                'motivo'         => "Ganador del concurso de méritos y oposición {$convocatoria->codigo}.",
-                'created_by'     => $userId,
+                'servidor_id'      => $servidor->id,
+                'tipo_movimiento'  => 'ingreso',
+                'descripcion'      => "Ganador del concurso de méritos y oposición {$convocatoria->codigo}.",
+                'fecha_efectiva'   => now()->toDateString(),
+                'autorizado_por'   => $userId,
             ]);
 
             // 5. Generar solicitud de certificación médica
