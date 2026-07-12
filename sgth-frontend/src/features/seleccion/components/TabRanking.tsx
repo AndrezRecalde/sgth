@@ -221,7 +221,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria }: Props) {
                         loading={declarar.isPending}
                         onClick={() => {
                           if (confirm(
-                            `¿Declarar a ${getNombreCompleto(p)} como ganador del concurso?\n\nEsta acción:\n· Cierra la convocatoria\n· Crea el expediente del servidor\n· Genera solicitud FEMO en el Dispensario`
+                            `¿Declarar a ${getNombreCompleto(p)} como ganador potencial del concurso?\n\nEsta acción:\n· Cierra la convocatoria\n· Envía solicitud de certificación médica al Dispensario\n\nNota: El expediente del servidor se creará DESPUÉS de que el médico emita el dictamen de aptitud y RRHH confirme la incorporación.`
                           )) {
                             declarar.mutate(p.id)
                           }
