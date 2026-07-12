@@ -178,7 +178,7 @@ export function CalificarPostulanteModal({
   )
 
   useEffect(() => {
-    if (!opened) return
+    if (!opened || cargandoCriterios || cargandoCal) return
     const init: EstadoCal = {}
     criterios.forEach(c => {
       const prev = calPrevias?.calificaciones?.[c.id]
@@ -194,7 +194,8 @@ export function CalificarPostulanteModal({
       }
     })
     setEstados(init)
-  }, [opened, criterios, calPrevias])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, cargandoCriterios, cargandoCal])
 
   if (!postulante) return null
 

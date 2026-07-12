@@ -39,7 +39,7 @@ import { InscribirPostulanteModal } from
 import { useDisclosure } from '@mantine/hooks'
 import { CalificarPostulanteModal } from
   '@/features/seleccion/components/CalificarPostulanteModal'
-import { IconStar, IconClipboardList } from '@tabler/icons-react'
+import { IconStar, IconClipboardList, IconEdit } from '@tabler/icons-react'
 import { TabCriterios } from
   '@/features/seleccion/components/TabCriterios'
 
@@ -138,9 +138,11 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
       render: (p) => (
         <TableActions actions={[
           {
-            label:   'Calificar',
-            icon:    <IconStar size={14} />,
-            color:   'orange',
+            label:   p.evaluacion ? 'Editar calificación' : 'Calificar',
+            icon:    p.evaluacion
+              ? <IconEdit size={14} />
+              : <IconStar size={14} />,
+            color:   p.evaluacion ? 'blue' : 'orange',
             onClick: () => {
               setPostulanteSel(p)
               abrirCalModal()
