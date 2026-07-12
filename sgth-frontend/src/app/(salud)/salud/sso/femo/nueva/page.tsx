@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Stepper, Button, Group, Stack,
-  Card, Text, Paper,
+  Card, Text, Alert, Badge,
 } from '@mantine/core'
 import {
   IconUser, IconBriefcase, IconStethoscope,
   IconArrowLeft, IconArrowRight, IconCheck,
+  IconInfoCircle,
 } from '@tabler/icons-react'
-import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { FemoPaso1 } from
   '@/features/dispensario/components/femo/FemoPaso1'
@@ -19,23 +20,64 @@ import { FemoPaso3 } from
   '@/features/dispensario/components/femo/FemoPaso3'
 import { useCrearFemo } from
   '@/features/dispensario/hooks/useFemo'
+import { useCompletarSolicitud } from
+  '@/features/dispensario/hooks/useSolicitudCertificacion'
 import type {
   FichaBaseForm, AntecedenteForm, FactorRiesgoForm,
   ExamenForm, DiagnosticoFemoForm, EmpleoAnteriorForm,
 } from '@/features/dispensario/schemas/femo.schema'
+import api from '@/lib/axios'
+
+const TIPO_FICHA_POR_EVENTO: Record<string, FichaBaseForm['tipo_ficha']> = {
+  ingreso:   'ingreso',
+  reintegro: 'reintegro',
+  periodica: 'periodica',
+  retiro:    'retiro',
+  especial:  'ingreso',
+}
+
+const TIPO_EVENTO_LABELS: Record<string, string> = {
+  ingreso:   'Ingreso / Pre-ocupacional',
+  reintegro: 'Reintegro',
+  periodica: 'Periódica',
+  retiro:    'Retiro',
+  especial:  'Especial',
+}
+
+function fromDate(d: Date): string {
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-')
+}
 
 export default function NuevaFemoPage() {
-  const router  = useRouter()
-  const crear   = useCrearFemo()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const crear        = useCrearFemo()
+  const completar    = useCompletarSolicitud()
+
+  const solicitudId    = searchParams.get('solicitud')
+  const cedulaParam    = searchParams.get('cedula')
+  const nombresParam   = searchParams.get('nombres')
+  const tipoEventoParam = searchParams.get('tipo_evento')
+    ?? 'ingreso'
+
   const [active, setActive] = useState(0)
+  const [servidorId, setServidorId] =
+    useState<number | null>(null)
 
   const [fichaData, setFichaData] =
     useState<Partial<FichaBaseForm>>({
-      tipo_ficha:       'ingreso',
-      aptitud:          'apto',
-      grupo_embarazada: false,
+      tipo_ficha:        TIPO_FICHA_POR_EVENTO[tipoEventoParam]
+        ?? 'ingreso',
+      aptitud:           'apto',
+      grupo_embarazada:  false,
       grupo_discapacidad: false,
+      fecha_evaluacion:  fromDate(new Date()),
     })
+
   const [constantesData, setConstantesData] =
     useState<Record<string, number | null>>({})
   const [antecedentes, setAntecedentes] =
@@ -48,6 +90,28 @@ export default function NuevaFemoPage() {
     useState<ExamenForm[]>([])
   const [diagnosticos, setDiagnosticos] =
     useState<DiagnosticoFemoForm[]>([])
+
+  useEffect(() => {
+    if (!cedulaParam) return
+    api.get('/expediente/servidores', {
+      params: { search: cedulaParam, per_page: 1 },
+    }).then(res => {
+      const datos = res.data?.datos
+      const items = Array.isArray(datos)
+        ? datos
+        : Array.isArray(datos?.data)
+          ? datos.data
+          : []
+      const srv = items[0]
+      if (srv) {
+        setServidorId(srv.id)
+        setFichaData(prev => ({
+          ...prev,
+          servidor_id: srv.id,
+        }))
+      }
+    }).catch(() => {})
+  }, [cedulaParam])
 
   const pasos = [
     {
@@ -105,15 +169,32 @@ export default function NuevaFemoPage() {
           condicion_relacionada_trabajo:
             fichaData.condicion_relacionada_trabajo ?? null,
         },
-        constantes_vitales: hayConstantes ? constantesData as Parameters<typeof crear.mutate>[0]['constantes_vitales'] : null,
-        antecedentes:       antecedentes,
+        constantes_vitales: hayConstantes
+          ? constantesData as Parameters<typeof crear.mutate>[0]['constantes_vitales']
+          : null,
+        antecedentes,
         factores_riesgo:    factoresRiesgo,
-        diagnosticos:       diagnosticos,
-        examenes:           examenes,
+        diagnosticos,
+        examenes,
         empleos_anteriores: empleosAnteriores,
       },
       {
-        onSuccess: () => router.push('/salud/sso/femo'),
+        onSuccess: (ficha) => {
+          if (solicitudId) {
+            completar.mutate(
+              {
+                id:          Number(solicitudId),
+                fichaFemoId: ficha?.id,
+              },
+              {
+                onSuccess: () =>
+                  router.push('/salud/sso'),
+              }
+            )
+          } else {
+            router.push('/salud/sso/femo')
+          }
+        },
       }
     )
   }
@@ -125,6 +206,33 @@ export default function NuevaFemoPage() {
         subtitle="Ficha de evaluación médica ocupacional"
         icon={<IconStethoscope size={24} />}
       />
+
+      {solicitudId && (
+        <Alert
+          color="blue"
+          variant="light"
+          icon={<IconInfoCircle size={16} />}
+        >
+          <Group gap="xs">
+            <Text size="xs">
+              Solicitud de Talento Humano —
+            </Text>
+            <Badge size="xs" variant="light" color="blue">
+              {TIPO_EVENTO_LABELS[tipoEventoParam]}
+            </Badge>
+            {nombresParam && (
+              <Text size="xs" fw={600}>
+                {decodeURIComponent(nombresParam)}
+              </Text>
+            )}
+            {cedulaParam && (
+              <Text size="xs" c="dimmed" ff="monospace">
+                {cedulaParam}
+              </Text>
+            )}
+          </Group>
+        </Alert>
+      )}
 
       <Stepper
         active={active}
@@ -177,8 +285,13 @@ export default function NuevaFemoPage() {
           variant="default"
           leftSection={<IconArrowLeft size={14} />}
           onClick={() => {
-            if (active === 0) router.push('/salud/sso/femo')
-            else setActive(a => a - 1)
+            if (active === 0) {
+              router.push(
+                solicitudId ? '/salud/sso' : '/salud/sso/femo'
+              )
+            } else {
+              setActive(a => a - 1)
+            }
           }}
         >
           {active === 0 ? 'Cancelar' : 'Anterior'}
@@ -197,10 +310,12 @@ export default function NuevaFemoPage() {
           <Button
             color="emerald"
             leftSection={<IconCheck size={14} />}
-            loading={crear.isPending}
+            loading={crear.isPending || completar.isPending}
             onClick={handleGuardar}
           >
-            Guardar ficha
+            {solicitudId
+              ? 'Guardar FEMO y completar solicitud'
+              : 'Guardar ficha'}
           </Button>
         )}
       </Group>
