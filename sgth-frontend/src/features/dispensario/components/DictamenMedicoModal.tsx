@@ -12,25 +12,16 @@ import type { SolicitudCertificacion } from
   '../services/solicitudCertificacionService'
 
 interface Props {
-  opened:    boolean
-  onClose:   () => void
-  solicitud: SolicitudCertificacion | null
+  opened:       boolean
+  onClose:      () => void
+  solicitud:    SolicitudCertificacion | null
   fichaFemoId?: number | null
 }
 
 const DICTAMEN_OPTIONS = [
-  {
-    value: 'apto',
-    label: '✅ Apto — Sin restricciones',
-  },
-  {
-    value: 'apto_con_restricciones',
-    label: '⚠️ Apto con restricciones',
-  },
-  {
-    value: 'no_apto',
-    label: '❌ No apto',
-  },
+  { value: 'apto',                    label: '✅ Apto — Sin restricciones'   },
+  { value: 'apto_con_restricciones',  label: '⚠️ Apto con restricciones'     },
+  { value: 'no_apto',                 label: '❌ No apto'                     },
 ]
 
 const DICTAMEN_COLORS: Record<string, string> = {
@@ -42,8 +33,8 @@ const DICTAMEN_COLORS: Record<string, string> = {
 export function DictamenMedicoModal({
   opened, onClose, solicitud, fichaFemoId,
 }: Props) {
-  const contained  = useContainedInput()
-  const completar  = useCompletarSolicitud()
+  const contained = useContainedInput()
+  const completar = useCompletarSolicitud()
   const [dictamen, setDictamen] =
     useState<'apto' | 'apto_con_restricciones' | 'no_apto' | null>(null)
   const [observacion, setObservacion] = useState('')
@@ -99,15 +90,15 @@ export function DictamenMedicoModal({
         <Alert color="blue" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
-            El dictamen médico será notificado a Talento
-            Humano. Si el candidato es APTO, RRHH podrá
-            confirmar su incorporación al sistema.
+            El dictamen médico será notificado a Talento Humano.
+            Si el candidato es APTO, RRHH podrá confirmar
+            su incorporación y crear su expediente en el sistema.
           </Text>
         </Alert>
 
         <Select
           label="Dictamen médico"
-          placeholder="Seleccione el resultado"
+          placeholder="Seleccione el resultado de la evaluación"
           data={DICTAMEN_OPTIONS}
           required
           {...contained}
@@ -124,7 +115,7 @@ export function DictamenMedicoModal({
             size="lg"
             variant="light"
             color={DICTAMEN_COLORS[dictamen]}
-            fullWidth
+            style={{ width: '100%', textAlign: 'center' }}
           >
             {DICTAMEN_OPTIONS.find(o => o.value === dictamen)?.label}
           </Badge>
@@ -133,7 +124,7 @@ export function DictamenMedicoModal({
         <Textarea
           label="Observaciones médicas"
           placeholder="Restricciones, recomendaciones o indicaciones adicionales"
-          description="Obligatorio si el dictamen es 'Apto con restricciones' o 'No apto'"
+          description="Requerido si el dictamen es 'Apto con restricciones' o 'No apto'"
           autosize
           minRows={3}
           {...contained}

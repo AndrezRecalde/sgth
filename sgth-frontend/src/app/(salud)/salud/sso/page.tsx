@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import {
   Stack, Group, Badge, Text, Card,
-  Button, Select, ThemeIcon,
-  Skeleton,
+  Select, ThemeIcon, Skeleton,
 } from '@mantine/core'
 import {
   IconShieldCheck, IconClipboardHeart,
   IconPlayerPlay, IconCheck,
-  IconFileText,
+  IconFileText, IconUserCheck,
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -20,20 +19,28 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useSolicitudesCertificacion,
   useIniciarProceso,
-  useCompletarSolicitud,
+  useConfirmarIncorporacion,
 } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import {
   TIPO_EVENTO_OPTIONS,
   ESTADO_SOLICITUD_COLORS,
   ESTADO_SOLICITUD_LABELS,
 } from '@/features/dispensario/services/solicitudCertificacionService'
-import {
-  useConfirmarIncorporacion,
-} from '@/features/dispensario/hooks/useSolicitudCertificacion'
-import { IconUserCheck } from '@tabler/icons-react'
 import type { SolicitudCertificacion } from
   '@/features/dispensario/services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
+
+const DICTAMEN_COLORS: Record<string, string> = {
+  apto:                   'emerald',
+  apto_con_restricciones: 'orange',
+  no_apto:                'red',
+}
+
+const DICTAMEN_LABELS: Record<string, string> = {
+  apto:                   'Apto',
+  apto_con_restricciones: 'Apto c/restricciones',
+  no_apto:                'No apto',
+}
 
 export default function SsoPage() {
   const router    = useRouter()
@@ -47,10 +54,9 @@ export default function SsoPage() {
   })
   const solicitudes = data?.data ?? []
   const iniciar     = useIniciarProceso()
-  const completar   = useCompletarSolicitud()
-  const confirmar = useConfirmarIncorporacion()
+  const confirmar   = useConfirmarIncorporacion()
 
-  const pendientes = (data?.data ?? []).filter(
+  const pendientes = solicitudes.filter(
     s => s.estado === 'pendiente'
   ).length
 
@@ -73,9 +79,7 @@ export default function SsoPage() {
       title:    'Servidor / Candidato',
       render: (s) => (
         <Stack gap={0}>
-          <Text size="sm" fw={500}>
-            {s.nombres_paciente}
-          </Text>
+          <Text size="sm" fw={500}>{s.nombres_paciente}</Text>
           <Text size="xs" c="dimmed" ff="monospace">
             {s.cedula_paciente}
           </Text>
@@ -94,11 +98,9 @@ export default function SsoPage() {
       render: (s) => (
         <Stack gap={0}>
           <Text size="xs" c="dimmed" tt="capitalize">
-            {s.origen === 'reclutamiento'
-              ? 'Reclutamiento'
-              : s.origen === 'expediente'
-                ? 'Expediente'
-                : 'Automático'}
+            {s.origen === 'reclutamiento' ? 'Reclutamiento'
+              : s.origen === 'expediente' ? 'Expediente'
+              : 'Automático'}
           </Text>
           {s.convocatoria && (
             <Text size="xs" ff="monospace" c="dimmed">
@@ -117,12 +119,12 @@ export default function SsoPage() {
     {
       accessor: 'fecha_limite',
       title:    'Fecha límite',
-      width:    120,
+      width:    110,
       render: (s) => {
         if (!s.fecha_limite) return <Text size="sm">—</Text>
-        const fecha    = new Date(s.fecha_limite)
-        const hoy      = new Date()
-        const urgente  = fecha <= hoy
+        const fecha   = new Date(s.fecha_limite)
+        const hoy     = new Date()
+        const urgente = fecha <= hoy && s.estado !== 'completada'
         return (
           <Text
             size="sm"
@@ -140,7 +142,7 @@ export default function SsoPage() {
     {
       accessor: 'estado',
       title:    'Estado',
-      width:    150,
+      width:    160,
       render: (s) => (
         <Stack gap={4}>
           <Badge
@@ -154,15 +156,9 @@ export default function SsoPage() {
             <Badge
               size="xs"
               variant="dot"
-              color={
-                s.dictamen === 'apto' ? 'emerald'
-                  : s.dictamen === 'apto_con_restricciones'
-                    ? 'orange' : 'red'
-              }
+              color={DICTAMEN_COLORS[s.dictamen] ?? 'gray'}
             >
-              {s.dictamen === 'apto' ? 'Apto'
-                : s.dictamen === 'apto_con_restricciones'
-                  ? 'Apto c/restricciones' : 'No apto'}
+              {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
             </Badge>
           )}
         </Stack>
@@ -182,9 +178,11 @@ export default function SsoPage() {
               iniciar.mutate(s.id, {
                 onSuccess: () =>
                   router.push(
-                    `/salud/sso/femo/nueva?solicitud=${s.id}`+
-                    `&cedula=${s.cedula_paciente}`+
-                    `&nombres=${encodeURIComponent(s.nombres_paciente)}`
+                    `/salud/sso/femo/nueva` +
+                    `?solicitud=${s.id}` +
+                    `&cedula=${s.cedula_paciente}` +
+                    `&nombres=${encodeURIComponent(s.nombres_paciente)}` +
+                    `&tipo_evento=${s.tipo_evento}`
                   ),
               })
             },
@@ -195,23 +193,12 @@ export default function SsoPage() {
             color:   'blue',
             onClick: () =>
               router.push(
-                `/salud/sso/femo/nueva?solicitud=${s.id}`+
-                `&cedula=${s.cedula_paciente}`+
-                `&nombres=${encodeURIComponent(s.nombres_paciente)}`
+                `/salud/sso/femo/nueva` +
+                `?solicitud=${s.id}` +
+                `&cedula=${s.cedula_paciente}` +
+                `&nombres=${encodeURIComponent(s.nombres_paciente)}` +
+                `&tipo_evento=${s.tipo_evento}`
               ),
-          }, {
-            label:   'Marcar completada',
-            icon:    <IconCheck size={14} />,
-            color:   'emerald',
-            onClick: () => {
-              if (confirm(
-                '¿Marcar esta solicitud como completada?\n' +
-                'Confirme que el FEMO fue emitido correctamente.'
-              )) {
-                // FIXME: Bypass temporal. El modal debería usarse o la API debería permitir esto opcional.
-                completar.mutate({ id: s.id, data: { dictamen: 'apto' } as any })
-              }
-            },
           }] : []),
           ...(s.estado === 'completada' &&
             (s.dictamen === 'apto' ||

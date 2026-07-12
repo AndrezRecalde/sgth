@@ -12,8 +12,6 @@ import {
   IconInfoCircle,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { DictamenMedicoModal } from
-  '@/features/dispensario/components/DictamenMedicoModal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { FemoPaso1 } from
   '@/features/dispensario/components/femo/FemoPaso1'
@@ -23,12 +21,14 @@ import { FemoPaso3 } from
   '@/features/dispensario/components/femo/FemoPaso3'
 import { useCrearFemo } from
   '@/features/dispensario/hooks/useFemo'
-import { useCompletarSolicitud } from
-  '@/features/dispensario/hooks/useSolicitudCertificacion'
+import { DictamenMedicoModal } from
+  '@/features/dispensario/components/DictamenMedicoModal'
 import type {
   FichaBaseForm, AntecedenteForm, FactorRiesgoForm,
   ExamenForm, DiagnosticoFemoForm, EmpleoAnteriorForm,
 } from '@/features/dispensario/schemas/femo.schema'
+import type { SolicitudCertificacion } from
+  '@/features/dispensario/services/solicitudCertificacionService'
 import api from '@/lib/axios'
 
 const TIPO_FICHA_POR_EVENTO: Record<string, FichaBaseForm['tipo_ficha']> = {
@@ -56,41 +56,32 @@ function fromDate(d: Date): string {
 }
 
 export default function NuevaFemoPage() {
-  const router       = useRouter()
-  const searchParams = useSearchParams()
-  const crear        = useCrearFemo()
-  const completar    = useCompletarSolicitud()
+  const router        = useRouter()
+  const searchParams  = useSearchParams()
+  const crear         = useCrearFemo()
 
-const [dictamenOpened,
-  { open: abrirDictamen, close: cerrarDictamen }] =
-  useDisclosure(false)
-const [fichaGuardadaId, setFichaGuardadaId] =
-  useState<number | null>(null)
-const [solicitudData, setSolicitudData] = useState<{
-  id: number
-  nombres_paciente: string
-  cedula_paciente: string
-  puesto_solicitado?: string | null
-} | null>(null)
+  const solicitudId     = searchParams.get('solicitud')
+  const cedulaParam     = searchParams.get('cedula')
+  const nombresParam    = searchParams.get('nombres')
+  const tipoEventoParam = searchParams.get('tipo_evento') ?? 'ingreso'
 
-  const solicitudId    = searchParams.get('solicitud')
-  const cedulaParam    = searchParams.get('cedula')
-  const nombresParam   = searchParams.get('nombres')
-  const tipoEventoParam = searchParams.get('tipo_evento')
-    ?? 'ingreso'
+  const [dictamenOpened,
+    { open: abrirDictamen, close: cerrarDictamen }] =
+    useDisclosure(false)
+  const [fichaGuardadaId, setFichaGuardadaId] =
+    useState<number | null>(null)
+  const [solicitudData, setSolicitudData] =
+    useState<SolicitudCertificacion | null>(null)
 
   const [active, setActive] = useState(0)
-  const [servidorId, setServidorId] =
-    useState<number | null>(null)
 
   const [fichaData, setFichaData] =
     useState<Partial<FichaBaseForm>>({
-      tipo_ficha:        TIPO_FICHA_POR_EVENTO[tipoEventoParam]
-        ?? 'ingreso',
-      aptitud:           'apto',
-      grupo_embarazada:  false,
+      tipo_ficha:         TIPO_FICHA_POR_EVENTO[tipoEventoParam] ?? 'ingreso',
+      aptitud:            'apto',
+      grupo_embarazada:   false,
       grupo_discapacidad: false,
-      fecha_evaluacion:  fromDate(new Date()),
+      fecha_evaluacion:   fromDate(new Date()),
     })
 
   const [constantesData, setConstantesData] =
@@ -109,13 +100,7 @@ const [solicitudData, setSolicitudData] = useState<{
   useEffect(() => {
     if (!cedulaParam) return
     const esIngreso = tipoEventoParam === 'ingreso'
-
-    if (esIngreso) {
-      api.get('/seleccion/convocatorias', {
-        params: { all: true },
-      }).then(() => {}).catch(() => {})
-      return
-    }
+    if (esIngreso) return
 
     api.get('/expediente/servidores', {
       params: { search: cedulaParam, per_page: 1 },
@@ -128,7 +113,6 @@ const [solicitudData, setSolicitudData] = useState<{
           : []
       const srv = items[0]
       if (srv) {
-        setServidorId(srv.id)
         setFichaData(prev => ({
           ...prev,
           servidor_id: srv.id,
@@ -208,11 +192,13 @@ const [solicitudData, setSolicitudData] = useState<{
             setFichaGuardadaId(ficha?.id ?? null)
             setSolicitudData({
               id:               Number(solicitudId),
-              nombres_paciente: nombresParam
-                ? decodeURIComponent(nombresParam)
-                : '',
+              tipo_evento:      tipoEventoParam,
+              origen:           'reclutamiento',
               cedula_paciente:  cedulaParam ?? '',
-              puesto_solicitado: null,
+              nombres_paciente: nombresParam
+                ? decodeURIComponent(nombresParam) : '',
+              estado:           'en_proceso',
+              created_at:       new Date().toISOString(),
             })
             abrirDictamen()
           } else {
@@ -237,10 +223,8 @@ const [solicitudData, setSolicitudData] = useState<{
           variant="light"
           icon={<IconInfoCircle size={16} />}
         >
-          <Group gap="xs">
-            <Text size="xs">
-              Solicitud de Talento Humano —
-            </Text>
+          <Group gap="xs" wrap="wrap">
+            <Text size="xs">Solicitud de Talento Humano —</Text>
             <Badge size="xs" variant="light" color="blue">
               {TIPO_EVENTO_LABELS[tipoEventoParam]}
             </Badge>
@@ -258,11 +242,7 @@ const [solicitudData, setSolicitudData] = useState<{
         </Alert>
       )}
 
-      <Stepper
-        active={active}
-        onStepClick={setActive}
-        size="sm"
-      >
+      <Stepper active={active} onStepClick={setActive} size="sm">
         {pasos.map((paso, i) => (
           <Stepper.Step
             key={i}
@@ -334,11 +314,11 @@ const [solicitudData, setSolicitudData] = useState<{
           <Button
             color="emerald"
             leftSection={<IconCheck size={14} />}
-            loading={crear.isPending || completar.isPending}
+            loading={crear.isPending}
             onClick={handleGuardar}
           >
             {solicitudId
-              ? 'Guardar FEMO y completar solicitud'
+              ? 'Guardar FEMO y emitir dictamen'
               : 'Guardar ficha'}
           </Button>
         )}
@@ -350,7 +330,7 @@ const [solicitudData, setSolicitudData] = useState<{
           cerrarDictamen()
           router.push('/salud/sso')
         }}
-        solicitud={solicitudData as Parameters<typeof DictamenMedicoModal>[0]['solicitud']}
+        solicitud={solicitudData}
         fichaFemoId={fichaGuardadaId}
       />
     </Stack>
