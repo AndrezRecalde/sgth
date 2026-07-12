@@ -3,16 +3,25 @@
 import {
   Modal, Stack, Text, NumberInput,
   Textarea, Button, Group, Card,
-  Badge, Progress, Divider, Alert, Grid,
+  Badge, Progress, Divider, Alert,
+  Radio, Checkbox, ScrollArea,
+  Skeleton, ThemeIcon,
 } from '@mantine/core'
 import {
   IconCheck, IconTrophy, IconInfoCircle,
+  IconList, IconHash, IconCheckbox,
 } from '@tabler/icons-react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
+import { useState, useEffect } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useCalificarPostulante } from '../hooks/useConvocatoria'
+import {
+  useCriterios,
+  useCalificaciones,
+  useGuardarCalificaciones,
+} from '../hooks/useCriterio'
+import type {
+  CriterioEvaluacion,
+  CalificacionItem,
+} from '../services/criterioService'
 import type { Postulante } from '../services/convocatoriaService'
 
 interface Props {
@@ -22,49 +31,170 @@ interface Props {
   convocatoriaId: number
 }
 
-const schema = z.object({
-  puntaje_meritos:   z.number().min(0).max(40),
-  puntaje_oposicion: z.number().min(0).max(60),
-  observaciones:     z.string().optional().nullable(),
-})
+type EstadoCal = Record<number, {
+  opcion_id?:      number | null
+  opciones_ids?:   number[]
+  valor_numerico?: number | null
+  observacion?:    string | null
+}>
 
-type FormData = z.infer<typeof schema>
+const TIPO_ICONS: Record<string, React.ReactNode> = {
+  radio:     <IconList size={14} />,
+  checklist: <IconCheckbox size={14} />,
+  numero:    <IconHash size={14} />,
+}
+
+function CriterioInput({
+  criterio,
+  estado,
+  onChange,
+}: {
+  criterio: CriterioEvaluacion
+  estado:   EstadoCal[number]
+  onChange: (val: Partial<EstadoCal[number]>) => void
+}) {
+  const contained = useContainedInput()
+
+  if (criterio.tipo_input === 'numero') {
+    return (
+      <NumberInput
+        placeholder={`0 — ${criterio.puntaje_maximo} pts`}
+        min={0}
+        max={Number(criterio.puntaje_maximo)}
+        decimalScale={2}
+        size="sm"
+        {...contained}
+        value={estado.valor_numerico ?? undefined}
+        onChange={(v) =>
+          onChange({ valor_numerico: Number(v) || null })
+        }
+      />
+    )
+  }
+
+  if (criterio.tipo_input === 'radio') {
+    return (
+      <Radio.Group
+        value={String(estado.opcion_id ?? '')}
+        onChange={(v) =>
+          onChange({ opcion_id: v ? Number(v) : null })
+        }
+      >
+        <Stack gap="xs">
+          {criterio.opciones.map(op => (
+            <Radio
+              key={op.id}
+              value={String(op.id)}
+              label={
+                <Group gap="xs">
+                  <Text size="sm">{op.etiqueta}</Text>
+                  <Badge size="xs" variant="light" color="blue">
+                    {op.puntaje} pts
+                  </Badge>
+                </Group>
+              }
+              size="sm"
+            />
+          ))}
+        </Stack>
+      </Radio.Group>
+    )
+  }
+
+  if (criterio.tipo_input === 'checklist') {
+    const seleccionados = estado.opciones_ids ?? []
+    return (
+      <Stack gap="xs">
+        {criterio.opciones.map(op => (
+          <Checkbox
+            key={op.id}
+            checked={seleccionados.includes(op.id)}
+            label={
+              <Group gap="xs">
+                <Text size="sm">{op.etiqueta}</Text>
+                <Badge size="xs" variant="light" color="orange">
+                  +{op.puntaje} pts
+                </Badge>
+              </Group>
+            }
+            size="sm"
+            onChange={(e) => {
+              const nuevos = e.currentTarget.checked
+                ? [...seleccionados, op.id]
+                : seleccionados.filter(id => id !== op.id)
+              onChange({ opciones_ids: nuevos })
+            }}
+          />
+        ))}
+      </Stack>
+    )
+  }
+
+  return null
+}
+
+function calcularPuntajeCriterio(
+  criterio: CriterioEvaluacion,
+  estado: EstadoCal[number]
+): number {
+  if (criterio.tipo_input === 'numero') {
+    return Math.min(
+      Number(estado.valor_numerico ?? 0),
+      Number(criterio.puntaje_maximo)
+    )
+  }
+  if (criterio.tipo_input === 'radio') {
+    const op = criterio.opciones.find(
+      o => o.id === estado.opcion_id
+    )
+    return Number(op?.puntaje ?? 0)
+  }
+  if (criterio.tipo_input === 'checklist') {
+    const ids = estado.opciones_ids ?? []
+    const sum = criterio.opciones
+      .filter(o => ids.includes(o.id))
+      .reduce((acc, o) => acc + Number(o.puntaje), 0)
+    return Math.min(sum, Number(criterio.puntaje_maximo))
+  }
+  return 0
+}
 
 export function CalificarPostulanteModal({
   opened, onClose, postulante, convocatoriaId,
 }: Props) {
-  const contained  = useContainedInput()
-  const calificar  = useCalificarPostulante(convocatoriaId)
+  const [estados, setEstados] = useState<EstadoCal>({})
 
-  const {
-    control, register, handleSubmit, watch, reset,
-    formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      puntaje_meritos:   postulante?.evaluacion?.puntaje_meritos ?? 0,
-      puntaje_oposicion: postulante?.evaluacion?.puntaje_oposicion ?? 0,
-      observaciones:     null,
-    },
-  })
+  const { data: criterios = [], isLoading: cargandoCriterios } =
+    useCriterios(opened ? convocatoriaId : null)
 
-  const meritos   = watch('puntaje_meritos') ?? 0
-  const oposicion = watch('puntaje_oposicion') ?? 0
-  const total     = Number(meritos) + Number(oposicion)
-  const aprueba   = total >= 70
-
-  const handleClose = () => {
-    reset()
-    onClose()
-  }
-
-  const onSubmit = (values: FormData) => {
-    if (!postulante) return
-    calificar.mutate(
-      { postulanteId: postulante.id, data: values },
-      { onSuccess: handleClose }
+  const { data: calPrevias, isLoading: cargandoCal } =
+    useCalificaciones(
+      opened ? convocatoriaId : null,
+      opened ? postulante?.id ?? null : null
     )
-  }
+
+  const guardar = useGuardarCalificaciones(
+    convocatoriaId, postulante?.id ?? 0
+  )
+
+  useEffect(() => {
+    if (!opened) return
+    const init: EstadoCal = {}
+    criterios.forEach(c => {
+      const prev = calPrevias?.calificaciones?.[c.id]
+      if (prev) {
+        init[c.id] = {
+          opcion_id:      prev.opcion_id ?? null,
+          valor_numerico: prev.valor_numerico
+            ? Number(prev.valor_numerico)
+            : null,
+        }
+      } else {
+        init[c.id] = {}
+      }
+    })
+    setEstados(init)
+  }, [opened, criterios, calPrevias])
 
   if (!postulante) return null
 
@@ -75,132 +205,245 @@ export function CalificarPostulanteModal({
     postulante.segundo_nombre,
   ].filter(Boolean).join(' ')
 
+  const meritos   = criterios.filter(c => c.seccion === 'meritos')
+  const oposicion = criterios.filter(c => c.seccion === 'oposicion')
+
+  const totalMeritos = meritos.reduce(
+    (acc, c) => acc + calcularPuntajeCriterio(c, estados[c.id] ?? {}),
+    0
+  )
+  const totalOposicion = oposicion.reduce(
+    (acc, c) => acc + calcularPuntajeCriterio(c, estados[c.id] ?? {}),
+    0
+  )
+  const total   = totalMeritos + totalOposicion
+  const aprueba = total >= 70
+
+  const handleGuardar = () => {
+    const items: CalificacionItem[] = criterios.map(c => {
+      const est = estados[c.id] ?? {}
+      if (c.tipo_input === 'checklist') {
+        const ids = est.opciones_ids ?? []
+        return ids.length > 0
+          ? ids.map(oid => ({
+              criterio_id:    c.id,
+              opcion_id:      oid,
+              valor_numerico: null,
+              observacion:    est.observacion ?? null,
+            }))
+          : [{ criterio_id: c.id, opcion_id: null,
+               valor_numerico: null, observacion: null }]
+      }
+      return {
+        criterio_id:    c.id,
+        opcion_id:      est.opcion_id ?? null,
+        valor_numerico: est.valor_numerico ?? null,
+        observacion:    est.observacion ?? null,
+      }
+    }).flat()
+
+    guardar.mutate(items, { onSuccess: onClose })
+  }
+
+  const isLoading = cargandoCriterios || cargandoCal
+
   return (
     <Modal
       opened={opened}
-      onClose={handleClose}
+      onClose={onClose}
       title="Calificar candidato"
-      size="md"
+      size="xl"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack gap="md">
-          <Card withBorder radius="md" p="sm">
-            <Stack gap={4}>
+      <Stack gap="md">
+        <Card withBorder radius="md" p="sm">
+          <Group justify="space-between">
+            <Stack gap={2}>
               <Text size="sm" fw={600}>{nombreCompleto}</Text>
-              <Text size="xs" c="dimmed">{postulante.cedula}</Text>
-              <Text size="xs" c="dimmed">{postulante.correo}</Text>
+              <Text size="xs" c="dimmed">
+                {postulante.cedula} · {postulante.correo}
+              </Text>
             </Stack>
-          </Card>
+            <Badge
+              size="lg"
+              color={aprueba ? 'emerald' : 'red'}
+              variant="light"
+            >
+              {total.toFixed(2)} / 100 pts
+            </Badge>
+          </Group>
+          <Progress
+            value={total}
+            color={aprueba ? 'emerald' : 'red'}
+            size="sm"
+            radius="xl"
+            mt="xs"
+          />
+          <Text size="xs" c={aprueba ? 'emerald' : 'red'} mt={4}>
+            {aprueba
+              ? '✓ Aprueba (≥ 70 puntos)'
+              : '✗ No aprueba (< 70 puntos)'}
+          </Text>
+        </Card>
 
-          <Alert color="blue" variant="light"
+        {criterios.length === 0 && !isLoading && (
+          <Alert color="orange" variant="light"
             icon={<IconInfoCircle size={16} />}>
             <Text size="xs">
-              Méritos (máx. 40 pts) + Oposición (máx. 60 pts).
-              El candidato aprueba con puntaje total ≥ 70 puntos.
+              Esta convocatoria no tiene criterios de evaluación
+              configurados. Configure los criterios primero en
+              el tab "Criterios".
             </Text>
           </Alert>
+        )}
 
-          <Grid>
-            <Grid.Col span={6}>
-              <Controller
-                name="puntaje_meritos"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Méritos"
-                    description="Máximo 40 puntos"
-                    min={0}
-                    max={40}
-                    decimalScale={2}
-                    required
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) =>
-                      field.onChange(Number(v) || 0)
-                    }
-                    error={errors.puntaje_meritos?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <Controller
-                name="puntaje_oposicion"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Oposición"
-                    description="Máximo 60 puntos"
-                    min={0}
-                    max={60}
-                    decimalScale={2}
-                    required
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) =>
-                      field.onChange(Number(v) || 0)
-                    }
-                    error={errors.puntaje_oposicion?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-          </Grid>
-
-          <Divider label="Resultado" labelPosition="center" />
-
-          <Stack gap="xs">
-            <Group justify="space-between">
-              <Text size="sm" fw={600}>Puntaje total</Text>
-              <Badge
-                size="lg"
-                color={aprueba ? 'emerald' : 'red'}
-                variant="light"
-                leftSection={aprueba
-                  ? <IconTrophy size={12} />
-                  : undefined}
-              >
-                {total.toFixed(2)} / 100
-              </Badge>
-            </Group>
-            <Progress
-              value={total}
-              color={aprueba ? 'emerald' : 'red'}
-              size="md"
-              radius="xl"
-            />
-            <Text size="xs" c={aprueba ? 'emerald' : 'red'} ta="center">
-              {aprueba
-                ? '✓ Aprueba el proceso de selección'
-                : '✗ No alcanza el puntaje mínimo (70 puntos)'}
-            </Text>
+        {isLoading ? (
+          <Stack gap="sm">
+            <Skeleton height={80} radius="md" />
+            <Skeleton height={80} radius="md" />
+            <Skeleton height={80} radius="md" />
           </Stack>
+        ) : (
+          <ScrollArea h={450} offsetScrollbars>
+            <Stack gap="md" pr="sm">
+              {meritos.length > 0 && (
+                <Stack gap="sm">
+                  <Group gap="xs">
+                    <Text size="sm" fw={700}>
+                      📋 Méritos
+                    </Text>
+                    <Badge size="sm" variant="light" color="blue">
+                      {totalMeritos.toFixed(2)} pts
+                    </Badge>
+                  </Group>
+                  {meritos.map((c, i) => (
+                    <Card key={c.id} withBorder radius="md" p="sm">
+                      <Stack gap="sm">
+                        <Group justify="space-between" wrap="nowrap">
+                          <Group gap="xs">
+                            <ThemeIcon
+                              size="xs" color="blue" variant="light"
+                            >
+                              {TIPO_ICONS[c.tipo_input]}
+                            </ThemeIcon>
+                            <Text size="sm" fw={500}>
+                              {i + 1}. {c.nombre}
+                            </Text>
+                          </Group>
+                          <Badge size="xs" variant="light" color="blue">
+                            Máx: {c.puntaje_maximo} pts
+                          </Badge>
+                        </Group>
+                        {c.descripcion && (
+                          <Text size="xs" c="dimmed">
+                            {c.descripcion}
+                          </Text>
+                        )}
+                        <CriterioInput
+                          criterio={c}
+                          estado={estados[c.id] ?? {}}
+                          onChange={(val) =>
+                            setEstados(prev => ({
+                              ...prev,
+                              [c.id]: { ...prev[c.id], ...val },
+                            }))
+                          }
+                        />
+                        <Text size="xs" c="blue" ta="right">
+                          Puntaje: {calcularPuntajeCriterio(
+                            c, estados[c.id] ?? {}
+                          ).toFixed(2)} pts
+                        </Text>
+                      </Stack>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
 
-          <Textarea
-            label="Observaciones"
-            placeholder="Notas adicionales sobre la evaluación (opcional)"
-            autosize
-            minRows={2}
-            {...contained}
-            {...register('observaciones')}
-          />
+              {oposicion.length > 0 && (
+                <>
+                  <Divider />
+                  <Stack gap="sm">
+                    <Group gap="xs">
+                      <Text size="sm" fw={700}>
+                        🎯 Oposición
+                      </Text>
+                      <Badge size="sm" variant="light" color="orange">
+                        {totalOposicion.toFixed(2)} pts
+                      </Badge>
+                    </Group>
+                    {oposicion.map((c, i) => (
+                      <Card key={c.id} withBorder radius="md" p="sm">
+                        <Stack gap="sm">
+                          <Group justify="space-between" wrap="nowrap">
+                            <Group gap="xs">
+                              <ThemeIcon
+                                size="xs" color="orange" variant="light"
+                              >
+                                {TIPO_ICONS[c.tipo_input]}
+                              </ThemeIcon>
+                              <Text size="sm" fw={500}>
+                                {i + 1}. {c.nombre}
+                              </Text>
+                            </Group>
+                            <Badge size="xs" variant="light" color="orange">
+                              Máx: {c.puntaje_maximo} pts
+                            </Badge>
+                          </Group>
+                          {c.descripcion && (
+                            <Text size="xs" c="dimmed">
+                              {c.descripcion}
+                            </Text>
+                          )}
+                          <CriterioInput
+                            criterio={c}
+                            estado={estados[c.id] ?? {}}
+                            onChange={(val) =>
+                              setEstados(prev => ({
+                                ...prev,
+                                [c.id]: { ...prev[c.id], ...val },
+                              }))
+                            }
+                          />
+                          <Text size="xs" c="orange" ta="right">
+                            Puntaje: {calcularPuntajeCriterio(
+                              c, estados[c.id] ?? {}
+                            ).toFixed(2)} pts
+                          </Text>
+                        </Stack>
+                      </Card>
+                    ))}
+                  </Stack>
+                </>
+              )}
+            </Stack>
+          </ScrollArea>
+        )}
 
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={handleClose}>
+        <Group justify="space-between" mt="sm">
+          <Text size="xs" c="dimmed">
+            Méritos: {totalMeritos.toFixed(2)} +
+            Oposición: {totalOposicion.toFixed(2)} =
+            <Text span fw={700} c={aprueba ? 'emerald' : 'red'}>
+              {' '}{total.toFixed(2)} pts
+            </Text>
+          </Text>
+          <Group gap="xs">
+            <Button variant="default" onClick={onClose}>
               Cancelar
             </Button>
             <Button
-              type="submit"
               color="emerald"
               leftSection={<IconCheck size={14} />}
-              loading={calificar.isPending}
+              loading={guardar.isPending}
+              disabled={criterios.length === 0}
+              onClick={handleGuardar}
             >
               Guardar calificación
             </Button>
           </Group>
-        </Stack>
-      </form>
+        </Group>
+      </Stack>
     </Modal>
   )
 }

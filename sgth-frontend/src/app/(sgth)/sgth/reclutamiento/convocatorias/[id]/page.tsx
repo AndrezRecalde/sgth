@@ -37,7 +37,9 @@ import { InscribirPostulanteModal } from
 import { useDisclosure } from '@mantine/hooks'
 import { CalificarPostulanteModal } from
   '@/features/seleccion/components/CalificarPostulanteModal'
-import { IconStar } from '@tabler/icons-react'
+import { IconStar, IconClipboardList } from '@tabler/icons-react'
+import { TabCriterios } from
+  '@/features/seleccion/components/TabCriterios'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -315,49 +317,77 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
         </Grid.Col>
       </Grid>
 
-      <Card withBorder radius="lg" p="lg">
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-              style={{ letterSpacing: '0.05em' }}>
-              Candidatos inscritos
-            </Text>
-            {['publicada', 'en_proceso'].includes(
-              convocatoria.estado
-            ) && (
-              <Button
-                size="xs"
-                color="emerald"
-                leftSection={<IconPlus size={13} />}
-                onClick={abrirModal}
-              >
-                Inscribir candidato
-              </Button>
-            )}
-          </Group>
+      <Tabs defaultValue="candidatos" radius="lg">
+        <Tabs.List>
+          <Tabs.Tab
+            value="candidatos"
+            leftSection={<IconUsers size={14} />}
+          >
+            Candidatos ({postulantes.length})
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="criterios"
+            leftSection={<IconClipboardList size={14} />}
+          >
+            Criterios de evaluación
+          </Tabs.Tab>
+        </Tabs.List>
 
-          {cargandoPostulantes ? (
-            <Skeleton height={100} radius="md" />
-          ) : postulantes.length === 0 ? (
-            <EmptyState
-              icon={IconUsers}
-              title="Sin candidatos"
-              description={
-                convocatoria.estado === 'borrador'
-                  ? 'Publica la convocatoria para empezar a inscribir candidatos.'
-                  : 'No hay candidatos inscritos aún.'
-              }
+        <Tabs.Panel value="candidatos">
+          <Card withBorder radius="lg" p="lg" mt="sm">
+            <Stack gap="md">
+              <Group justify="space-between">
+                <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+                  style={{ letterSpacing: '0.05em' }}>
+                  Candidatos inscritos
+                </Text>
+                {['publicada', 'en_proceso'].includes(
+                  convocatoria.estado
+                ) && (
+                  <Button
+                    size="xs"
+                    color="emerald"
+                    leftSection={<IconPlus size={13} />}
+                    onClick={abrirModal}
+                  >
+                    Inscribir candidato
+                  </Button>
+                )}
+              </Group>
+
+              {cargandoPostulantes ? (
+                <Skeleton height={100} radius="md" />
+              ) : postulantes.length === 0 ? (
+                <EmptyState
+                  icon={IconUsers}
+                  title="Sin candidatos"
+                  description={
+                    convocatoria.estado === 'borrador'
+                      ? 'Publica la convocatoria para empezar a inscribir candidatos.'
+                      : 'No hay candidatos inscritos aún.'
+                  }
+                />
+              ) : (
+                <SgthTable
+                  records={postulantes}
+                  columns={columnsPostulantes}
+                  fetching={cargandoPostulantes}
+                  minHeight={150}
+                />
+              )}
+            </Stack>
+          </Card>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="criterios">
+          <Card withBorder radius="lg" mt="sm">
+            <TabCriterios
+              convocatoriaId={convocatoriaId}
+              editable={convocatoria.estado === 'borrador'}
             />
-          ) : (
-            <SgthTable
-              records={postulantes}
-              columns={columnsPostulantes}
-              fetching={cargandoPostulantes}
-              minHeight={150}
-            />
-          )}
-        </Stack>
-      </Card>
+          </Card>
+        </Tabs.Panel>
+      </Tabs>
 
       <InscribirPostulanteModal
         opened={modalOpened}
