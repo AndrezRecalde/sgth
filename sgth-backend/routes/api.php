@@ -784,6 +784,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::get('{id}', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'show']);
                 Route::patch('{id}/iniciar', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'iniciarProceso']);
                 Route::patch('{id}/completar', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'completar']);
+                Route::post('{id}/confirmar-incorporacion', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'confirmarIncorporacion']);
             });
 
         // Fichas de salud ocupacional

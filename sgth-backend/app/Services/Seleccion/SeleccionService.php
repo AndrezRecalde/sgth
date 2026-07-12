@@ -68,43 +68,21 @@ final class SeleccionService implements SeleccionServiceInterface
             $convocatoria->updated_by = $userId;
             $convocatoria->save();
 
-            // 2. Crear al servidor como pre-ingreso
-            $servidor = Servidor::create([
-                'cedula'                  => $ganador->cedula,
-                'nombre'                  => $ganador->nombres,
-                'segundo_nombre'          => $ganador->segundo_nombre,
-                'apellido'                => $ganador->apellidos,
-                'segundo_apellido'        => $ganador->segundo_apellido,
-                'genero'                  => $ganador->genero,
-                'estado_civil'            => $ganador->estado_civil,
-                'fecha_nacimiento'        => $ganador->fecha_nacimiento?->toDateString(),
-                'tipo_sangre'             => $ganador->tipo_sangre,
-                'correo_personal'         => $ganador->correo,
-                'telefono_celular'        => $ganador->telefono,
-                'provincia_nacimiento_id' => $ganador->provincia_nacimiento_id,
-                'canton_nacimiento_id'    => $ganador->canton_nacimiento_id,
-                'puesto_id'               => $convocatoria->puesto_id,
-                'estado'                  => true,
+            // 2. Marcar ganador como GANADOR_POTENCIAL
+            //    (NO crear expediente todavía —
+            //    esperar confirmación médica)
+            $ganador->update([
+                'estado' => EstadoPostulante::GANADOR_POTENCIAL,
             ]);
 
-            // 3. Crear el Onboarding vinculado
-            Onboarding::create([
-                'postulante_id' => $ganador->id,
-                'servidor_id'   => $servidor->id,
-                'created_by'    => $userId,
-            ]);
+            // 3. Marcar aprobados restantes como lista_espera
+            Postulante::where('convocatoria_id', $convocatoriaId)
+                ->where('id', '!=', $ganador->id)
+                ->where('estado', EstadoPostulante::APROBADO->value)
+                ->update(['estado' => 'lista_espera']);
 
-            // 4. Registrar Movimiento de Personal (Ingreso)
-            MovimientoPersonal::create([
-                'servidor_id'      => $servidor->id,
-                'tipo_movimiento'  => 'ingreso',
-                'descripcion'      => "Ganador del concurso de méritos y oposición {$convocatoria->codigo}.",
-                'fecha_efectiva'   => now()->toDateString(),
-                'autorizado_por'   => $userId,
-            ]);
-
-            // 5. Generar solicitud de certificación médica
-            //    de ingreso en el Dispensario
+            // 4. Generar solicitud de certificación médica
+            //    con datos del CANDIDATO (no del servidor)
             $nombreCompleto = trim(implode(' ', array_filter([
                 $ganador->nombres,
                 $ganador->segundo_nombre,
@@ -115,7 +93,6 @@ final class SeleccionService implements SeleccionServiceInterface
             SolicitudCertificacionMedica::create([
                 'tipo_evento'      => 'ingreso',
                 'origen'           => 'reclutamiento',
-                'servidor_id'      => $servidor->id,
                 'postulante_id'    => $ganador->id,
                 'convocatoria_id'  => $convocatoria->id,
                 'cedula_paciente'  => $ganador->cedula,
@@ -127,17 +104,7 @@ final class SeleccionService implements SeleccionServiceInterface
                 'fecha_limite'     => now()->addDays(7)->toDateString(),
             ]);
 
-            // 6. Marcar al ganador como seleccionado
-            $ganador->update(['estado' => EstadoPostulante::SELECCIONADO]);
-
-            // 7. Marcar resto como no seleccionados
-            Postulante::where('convocatoria_id', $convocatoriaId)
-                ->where('id', '!=', $ganador->id)
-                ->where('estado', EstadoPostulante::APROBADO)
-                ->update(['estado' => 'lista_espera']);
-
             DB::commit();
-
             return $ganador->fresh();
         } catch (\Exception $e) {
             DB::rollBack();

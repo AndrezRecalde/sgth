@@ -19,7 +19,9 @@ class SolicitudCertificacionMedica extends Model
         'cedula_paciente', 'nombres_paciente',
         'correo_paciente', 'puesto_solicitado',
         'solicitado_por', 'estado',
-        'fecha_limite', 'ficha_femo_id', 'observaciones',
+        'fecha_limite', 'ficha_femo_id',
+        'dictamen', 'observacion_medica',
+        'observaciones',
     ];
 
     protected function casts(): array
