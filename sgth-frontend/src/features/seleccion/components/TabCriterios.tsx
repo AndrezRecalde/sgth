@@ -15,6 +15,8 @@ import { useDisclosure } from '@mantine/hooks'
 import { useCriterios, useEliminarCriterio } from '../hooks/useCriterio'
 import { AgregarCriterioModal } from './AgregarCriterioModal'
 import type { CriterioEvaluacion, SeccionCriterio } from '../services/criterioService'
+import { SeleccionarPlantillaModal } from './SeleccionarPlantillaModal'
+import { IconTemplate } from '@tabler/icons-react'
 
 interface Props {
   convocatoriaId: number
@@ -150,6 +152,9 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [seccionModal, setSeccionModal] =
     useState<SeccionCriterio>('meritos')
+  const [plantillaModalOpened,
+    { open: abrirPlantilla, close: cerrarPlantilla }] =
+    useDisclosure(false)
 
   const meritos   = criterios.filter(c => c.seccion === 'meritos')
   const oposicion = criterios.filter(c => c.seccion === 'oposicion')
@@ -189,13 +194,26 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
           style={{ letterSpacing: '0.05em' }}>
           Criterios configurados
         </Text>
-        <Badge
-          size="md"
-          variant="light"
-          color={totalPts === 100 ? 'emerald' : 'orange'}
-        >
-          Total: {totalPts.toFixed(0)} / 100 pts
-        </Badge>
+        <Group gap="xs">
+          <Badge
+            size="md"
+            variant="light"
+            color={totalPts === 100 ? 'emerald' : 'orange'}
+          >
+            Total: {totalPts.toFixed(0)} / 100 pts
+          </Badge>
+          {editable && (
+            <Button
+              size="compact-xs"
+              variant="light"
+              color="blue"
+              leftSection={<IconTemplate size={12} />}
+              onClick={abrirPlantilla}
+            >
+              Usar plantilla
+            </Button>
+          )}
+        </Group>
       </Group>
 
       {totalPts !== 100 && criterios.length > 0 && (
@@ -233,6 +251,12 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
         onClose={close}
         convocatoriaId={convocatoriaId}
         seccionInicial={seccionModal}
+      />
+      <SeleccionarPlantillaModal
+        opened={plantillaModalOpened}
+        onClose={cerrarPlantilla}
+        convocatoriaId={convocatoriaId}
+        tieneCriterios={criterios.length > 0}
       />
     </Stack>
   )

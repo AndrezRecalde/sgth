@@ -15,6 +15,7 @@ export const ROUTES = {
     ASISTENCIA:       '/sgth/asistencia',
     RECLUTAMIENTO:    '/sgth/reclutamiento',
     CONVOCATORIAS:    '/sgth/reclutamiento/convocatorias',
+    PLANTILLAS:       '/sgth/reclutamiento/plantillas',
   },
 
   // ── DISPENSARIO MÉDICO ────────────────

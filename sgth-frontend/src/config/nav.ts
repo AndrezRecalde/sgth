@@ -87,6 +87,11 @@ export const NAV_SGTH: NavGroup[] = [
           },
         ],
       },
+      {
+        label: 'Plantillas',
+        href:  ROUTES.SGTH.PLANTILLAS,
+        icon:  'IconTemplate',
+      },
     ],
   },
 ]
