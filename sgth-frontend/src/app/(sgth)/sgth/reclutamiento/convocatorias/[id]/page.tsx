@@ -17,6 +17,8 @@ import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SgthTable } from '@/components/ui/SgthTable'
+import { TabRanking } from '@/features/seleccion/components/TabRanking'
+import { IconChartBar } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import {
   useConvocatoriaDetalle,
@@ -331,6 +333,12 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
           >
             Criterios de evaluación
           </Tabs.Tab>
+          <Tabs.Tab
+            value="ranking"
+            leftSection={<IconChartBar size={14} />}
+          >
+            Ranking
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="candidatos">
@@ -384,6 +392,15 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
             <TabCriterios
               convocatoriaId={convocatoriaId}
               editable={convocatoria.estado === 'borrador'}
+            />
+          </Card>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="ranking">
+          <Card withBorder radius="lg" mt="sm">
+            <TabRanking
+              convocatoriaId={convocatoriaId}
+              estadoConvocatoria={convocatoria.estado}
             />
           </Card>
         </Tabs.Panel>

@@ -189,3 +189,32 @@ export function useCalificarPostulante(convocatoriaId: number) {
       }),
   })
 }
+
+export function useDeclararGanador(convocatoriaId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (postulanteId: number) =>
+      api.post<ApiResponse<unknown>>(
+        `/seleccion/convocatorias/${convocatoriaId}/declarar-ganador`,
+        { postulante_ganador_id: postulanteId }
+      ).then(r => r.data),
+    onSuccess: () => {
+      notifications.show({
+        title:   '🏆 Ganador declarado',
+        message: 'El candidato fue seleccionado y se generó la solicitud de certificación médica en el Dispensario.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+        autoClose: 6000,
+      })
+      qc.invalidateQueries({ queryKey: ['convocatoria', convocatoriaId] })
+      qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
