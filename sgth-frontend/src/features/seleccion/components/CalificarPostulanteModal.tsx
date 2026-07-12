@@ -178,16 +178,40 @@ export function CalificarPostulanteModal({
   )
 
   useEffect(() => {
-    if (!opened || cargandoCriterios || cargandoCal) return
+    if (!opened) return
+    if (cargandoCriterios || cargandoCal) return
+    if (criterios.length === 0) return
+
     const init: EstadoCal = {}
     criterios.forEach(c => {
       const prev = calPrevias?.calificaciones?.[c.id]
       if (prev) {
-        init[c.id] = {
-          opcion_id:      prev.opcion_id ?? null,
-          valor_numerico: prev.valor_numerico
-            ? Number(prev.valor_numerico)
-            : null,
+        if (c.tipo_input === 'numero') {
+          init[c.id] = {
+            valor_numerico: prev.valor_numerico
+              ? Number(prev.valor_numerico)
+              : null,
+          }
+        } else if (c.tipo_input === 'radio') {
+          init[c.id] = {
+            opcion_id: prev.opcion_id ?? null,
+          }
+        } else if (c.tipo_input === 'checklist') {
+          const todasCalif = Object.values(
+            calPrevias?.calificaciones ?? {}
+          ).filter(
+            (cal: { criterio_id: number; opcion_id?: number | null }) =>
+              cal.criterio_id === c.id && cal.opcion_id != null
+          )
+          init[c.id] = {
+            opciones_ids: todasCalif
+              .map((cal: { opcion_id?: number | null }) =>
+                cal.opcion_id as number
+              )
+              .filter(Boolean),
+          }
+        } else {
+          init[c.id] = {}
         }
       } else {
         init[c.id] = {}
@@ -195,7 +219,12 @@ export function CalificarPostulanteModal({
     })
     setEstados(init)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened, cargandoCriterios, cargandoCal])
+  }, [
+    opened,
+    cargandoCriterios,
+    cargandoCal,
+    postulante?.id,
+  ])
 
   if (!postulante) return null
 
