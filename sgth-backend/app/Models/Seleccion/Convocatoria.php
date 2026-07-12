@@ -54,6 +54,41 @@ class Convocatoria extends Model
         return $this->hasMany(Postulante::class);
     }
 
+    public function criterios(): HasMany
+    {
+        return $this->hasMany(CriterioEvaluacion::class)
+            ->orderBy('seccion')
+            ->orderBy('orden');
+    }
+
+    public function criteriosMeritos(): HasMany
+    {
+        return $this->hasMany(CriterioEvaluacion::class)
+            ->where('seccion', 'meritos')
+            ->where('activo', true)
+            ->orderBy('orden');
+    }
+
+    public function criteriosOposicion(): HasMany
+    {
+        return $this->hasMany(CriterioEvaluacion::class)
+            ->where('seccion', 'oposicion')
+            ->where('activo', true)
+            ->orderBy('orden');
+    }
+
+    public function puntajeTotalMeritos(): float
+    {
+        return (float) $this->criteriosMeritos()
+            ->sum('puntaje_maximo');
+    }
+
+    public function puntajeTotalOposicion(): float
+    {
+        return (float) $this->criteriosOposicion()
+            ->sum('puntaje_maximo');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

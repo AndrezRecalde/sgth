@@ -345,6 +345,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'subirDocumento']);
             Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'eliminarDocumento']);
 
+            // Criterios de evaluación
+            Route::get('convocatorias/{convocatoriaId}/criterios', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'index']);
+            Route::post('convocatorias/{convocatoriaId}/criterios', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'store']);
+            Route::patch('convocatorias/{convocatoriaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'update']);
+            Route::delete('convocatorias/{convocatoriaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'destroy']);
+
+            // Calificaciones por postulante
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [\App\Http\Controllers\Seleccion\CalificacionController::class, 'obtener']);
+            Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [\App\Http\Controllers\Seleccion\CalificacionController::class, 'guardar']);
+
             // Evaluación y selección
             Route::post('postulantes/{id}/calificar', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'calificar']);
             Route::post('convocatorias/{id}/declarar-ganador', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'declararGanador']);
