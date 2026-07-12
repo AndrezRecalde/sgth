@@ -351,6 +351,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::patch('convocatorias/{convocatoriaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'update']);
             Route::delete('convocatorias/{convocatoriaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'destroy']);
 
+            // Plantillas de evaluación
+            Route::get('plantillas', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'index']);
+            Route::post('plantillas', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'store']);
+            Route::get('plantillas/{id}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'show']);
+            Route::patch('plantillas/{id}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'update']);
+            Route::delete('plantillas/{id}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'destroy']);
+            Route::post('plantillas/{plantillaId}/criterios', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'agregarCriterio']);
+            Route::delete('plantillas/{plantillaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'eliminarCriterio']);
+            Route::post('plantillas/{plantillaId}/aplicar/{convocatoriaId}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'aplicarAConvocatoria']);
+
             // Calificaciones por postulante
             Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [\App\Http\Controllers\Seleccion\CalificacionController::class, 'obtener']);
             Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [\App\Http\Controllers\Seleccion\CalificacionController::class, 'guardar']);
