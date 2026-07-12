@@ -776,6 +776,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::post('{id}/documento', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'subirDocumento']);
             });
 
+        // Solicitudes de certificación médica
+        Route::prefix('solicitudes-certificacion')
+            ->middleware('role:medico|admin-dispensario|admin-uath|analista-uath')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'index']);
+                Route::get('{id}', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'show']);
+                Route::patch('{id}/iniciar', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'iniciarProceso']);
+                Route::patch('{id}/completar', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'completar']);
+            });
+
         // Fichas de salud ocupacional
         Route::prefix('fichas-sso')
             ->middleware('role:medico|admin-dispensario')
