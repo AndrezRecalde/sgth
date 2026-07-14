@@ -100,8 +100,19 @@ export default function NuevaFemoPage() {
   useEffect(() => {
     if (!cedulaParam) return
     const esIngreso = tipoEventoParam === 'ingreso'
-    if (esIngreso) return
 
+    if (esIngreso) {
+      // Para candidatos de ingreso: crear HCE por cédula
+      // El médico aún debe buscar el servidor manualmente
+      // ya que el candidato no tiene expediente todavía
+      api.post('/dispensario/historias-clinicas/crear-por-cedula', {
+        cedula_paciente: cedulaParam,
+        tipo_paciente:   'candidato',
+      }).catch(() => {})
+      return
+    }
+
+    // Para periódica/reintegro/retiro: buscar en expediente
     api.get('/expediente/servidores', {
       params: { search: cedulaParam, per_page: 1 },
     }).then(res => {

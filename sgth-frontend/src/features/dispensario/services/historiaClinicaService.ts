@@ -21,6 +21,9 @@ export interface CrearAntecedenteData {
 
 export interface HistoriaClinica {
   id:                  number
+  numero_historia?:    string | null
+  cedula_paciente?:    string | null
+  tipo_paciente?:      'servidor' | 'familiar' | 'candidato'
   servidor_id?:        number | null
   beneficiario_id?:    number | null
   grupo_sanguineo?:    string | null
@@ -115,5 +118,20 @@ export const historiaClinicaService = {
   }) =>
     api.post<ApiResponse<HistoriaClinica>>(
       '/dispensario/historias-clinicas', data
+    ).then(r => r.data.datos),
+
+  buscarPorCedula: (cedula: string) =>
+    api.get<ApiResponse<HistoriaClinica | null>>(
+      '/dispensario/historias-clinicas/buscar-por-cedula',
+      { params: { cedula } }
+    ).then(r => r.data.datos),
+
+  crearPorCedula: (data: {
+    cedula_paciente: string
+    tipo_paciente?:  'servidor' | 'familiar' | 'candidato'
+  }) =>
+    api.post<ApiResponse<HistoriaClinica>>(
+      '/dispensario/historias-clinicas/crear-por-cedula',
+      data
     ).then(r => r.data.datos),
 }
