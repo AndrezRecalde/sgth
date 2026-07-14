@@ -76,19 +76,23 @@ export interface CrearConvocatoriaData {
 }
 
 export const ESTADO_CONVOCATORIA_OPTIONS = [
-  { value: 'borrador',    label: 'Borrador'    },
-  { value: 'publicada',   label: 'Publicada'   },
-  { value: 'en_proceso',  label: 'En proceso'  },
-  { value: 'cerrada',     label: 'Cerrada'     },
-  { value: 'desierta',    label: 'Desierta'    },
+  { value: 'borrador',              label: 'Borrador'              },
+  { value: 'publicada',             label: 'Publicada'             },
+  { value: 'en_proceso',            label: 'En proceso'            },
+  { value: 'en_evaluacion_medica',  label: 'En evaluación médica'  },
+  { value: 'finalizada',            label: 'Finalizada'            },
+  { value: 'cerrada',               label: 'Cerrada'               },
+  { value: 'desierta',              label: 'Desierta'              },
 ]
 
 export const ESTADO_CONVOCATORIA_COLORS: Record<string, string> = {
-  borrador:   'gray',
-  publicada:  'blue',
-  en_proceso: 'orange',
-  cerrada:    'emerald',
-  desierta:   'red',
+  borrador:             'gray',
+  publicada:            'blue',
+  en_proceso:           'orange',
+  en_evaluacion_medica: 'violet',
+  finalizada:           'emerald',
+  cerrada:              'emerald',
+  desierta:             'red',
 }
 
 export const TIPO_CONVOCATORIA_OPTIONS = [
@@ -98,11 +102,15 @@ export const TIPO_CONVOCATORIA_OPTIONS = [
 ]
 
 export const ESTADO_POSTULANTE_OPTIONS = [
-  { value: 'inscrito',         label: 'Inscrito'         },
-  { value: 'en_evaluacion',    label: 'En evaluación'    },
-  { value: 'seleccionado',     label: 'Seleccionado'     },
-  { value: 'no_seleccionado',  label: 'No seleccionado'  },
-  { value: 'lista_espera',     label: 'Lista de espera'  },
+  { value: 'inscrito',           label: 'Inscrito'            },
+  { value: 'en_evaluacion',      label: 'En evaluación'       },
+  { value: 'aprobado',           label: 'Aprobado'            },
+  { value: 'reprobado',          label: 'Reprobado'           },
+  { value: 'seleccionado',       label: 'Seleccionado'        },
+  { value: 'ganador_potencial',  label: 'En evaluación médica'},
+  { value: 'no_seleccionado',    label: 'No seleccionado'     },
+  { value: 'lista_espera',       label: 'Lista de espera'     },
+  { value: 'incorporado',        label: 'Incorporado'         },
 ]
 
 export const convocatoriaService = {
@@ -173,4 +181,9 @@ export const convocatoriaService = {
     api.delete<ApiResponse<unknown>>(
       `/seleccion/convocatorias/${convocatoriaId}/postulantes/${postulanteId}/documentos/${documentoId}`
     ).then(r => r.data.datos),
+
+  confirmarGanador: (convocatoriaId: number) =>
+    api.post<ApiResponse<unknown>>(
+      `/seleccion/convocatorias/${convocatoriaId}/confirmar-ganador`
+    ).then(r => r.data),
 }

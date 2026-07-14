@@ -190,7 +190,7 @@ export function useCalificarPostulante(convocatoriaId: number) {
   })
 }
 
-export function useDeclararGanador(convocatoriaId: number) {
+export function useEnviarAlDispensario(convocatoriaId: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (postulanteId: number) =>
@@ -200,8 +200,34 @@ export function useDeclararGanador(convocatoriaId: number) {
       ).then(r => r.data),
     onSuccess: () => {
       notifications.show({
-        title:   '🏆 Ganador declarado',
-        message: 'El candidato fue seleccionado y se generó la solicitud de certificación médica en el Dispensario.',
+        title:   '📋 Enviado al Dispensario',
+        message: 'El candidato fue enviado al Dispensario Médico para evaluación. El ganador será confirmado tras el dictamen médico.',
+        color:   'blue',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+        autoClose: 8000,
+      })
+      qc.invalidateQueries({ queryKey: ['convocatoria', convocatoriaId] })
+      qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+export function useConfirmarGanador(convocatoriaId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      convocatoriaService.confirmarGanador(convocatoriaId),
+    onSuccess: () => {
+      notifications.show({
+        title:   '🏆 Ganador confirmado',
+        message: 'El candidato fue declarado ganador oficial. La convocatoria ha sido finalizada.',
         color:   'emerald',
         icon:    React.createElement(IconCheck, { size: 16 }),
         autoClose: 6000,
