@@ -53,18 +53,26 @@ final class SeleccionService implements SeleccionServiceInterface
         $ganador = Postulante::where('convocatoria_id', $convocatoriaId)
             ->findOrFail($postulanteGanadorId);
 
-        if ($convocatoria->estado === EstadoConvocatoria::FINALIZADA) {
-            throw new ReglaNegocioException('Esta convocatoria ya fue finalizada previamente.');
+        if (in_array($convocatoria->estado, [
+            EstadoConvocatoria::FINALIZADA,
+            EstadoConvocatoria::EN_EVALUACION_MEDICA,
+        ])) {
+            throw new ReglaNegocioException(
+                'Esta convocatoria ya tiene un candidato en evaluación médica o fue finalizada.'
+            );
         }
 
         if ($ganador->estado->value !== EstadoPostulante::APROBADO->value) {
-            throw new ReglaNegocioException('El postulante debe estar aprobado (puntaje >= 70) para ganar el concurso.');
+            throw new ReglaNegocioException(
+                'El postulante debe estar aprobado (puntaje >= 70) para ser enviado al dispensario.'
+            );
         }
 
         DB::beginTransaction();
         try {
-            // 1. Finalizar la convocatoria
-            $convocatoria->estado = EstadoConvocatoria::FINALIZADA;
+            // 1. Cambiar convocatoria a EN_EVALUACION_MEDICA
+            //    (NO finalizar todavía — esperar dictamen)
+            $convocatoria->estado = EstadoConvocatoria::EN_EVALUACION_MEDICA;
             $convocatoria->updated_by = $userId;
             $convocatoria->save();
 

@@ -34,4 +34,47 @@ class SeleccionController extends Controller
 
         return ApiResponse::ok($ganador, 'Concurso finalizado. Ganador declarado, onboarding y movimiento de personal (ingreso) generados automáticamente.');
     }
+
+    public function confirmarGanador(
+        int $convocatoriaId,
+        Request $request
+    ): JsonResponse {
+        $convocatoria = \App\Models\Seleccion\Convocatoria::findOrFail(
+            $convocatoriaId
+        );
+
+        if ($convocatoria->estado !== \App\Enums\EstadoConvocatoria::EN_EVALUACION_MEDICA) {
+            return \App\Http\Responses\ApiResponse::error(
+                'La convocatoria debe estar en evaluación médica para confirmar al ganador.',
+                null, 422
+            );
+        }
+
+        $ganador = \App\Models\Seleccion\Postulante::where(
+            'convocatoria_id', $convocatoriaId
+        )->where(
+            'estado', \App\Enums\EstadoPostulante::GANADOR_POTENCIAL->value
+        )->first();
+
+        if (!$ganador) {
+            return \App\Http\Responses\ApiResponse::error(
+                'No se encontró un ganador potencial para esta convocatoria.',
+                null, 422
+            );
+        }
+
+        $convocatoria->update([
+            'estado'     => \App\Enums\EstadoConvocatoria::FINALIZADA,
+            'updated_by' => $request->user()->id,
+        ]);
+
+        $ganador->update([
+            'estado' => \App\Enums\EstadoPostulante::SELECCIONADO,
+        ]);
+
+        return \App\Http\Responses\ApiResponse::ok(
+            $ganador->fresh(),
+            'Ganador confirmado. La convocatoria ha sido finalizada.'
+        );
+    }
 }
