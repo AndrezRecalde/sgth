@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\Dispensario;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,9 +17,16 @@ class HistoriaClinica extends Model
     protected $table = 'historias_clinicas';
 
     protected $fillable = [
-        'servidor_id', 'carga_familiar_id',
-        'medicacion_habitual', 'grupo_sanguineo', 'estado',
-        'created_by', 'updated_by'
+        'numero_historia',
+        'cedula_paciente',
+        'tipo_paciente',
+        'servidor_id',
+        'carga_familiar_id',
+        'medicacion_habitual',
+        'grupo_sanguineo',
+        'estado',
+        'created_by',
+        'updated_by',
     ];
 
     protected function casts(): array
@@ -44,11 +52,6 @@ class HistoriaClinica extends Model
         return $this->hasMany(ConsultaMedica::class);
     }
 
-    public function propietario(): Servidor|CargaFamiliar|null
-    {
-        return $this->servidor ?? $this->cargaFamiliar;
-    }
-
     public function alergias(): HasMany
     {
         return $this->hasMany(AlergiaPaciente::class);
@@ -57,5 +60,43 @@ class HistoriaClinica extends Model
     public function antecedentes(): HasMany
     {
         return $this->hasMany(AntecedentePaciente::class);
+    }
+
+    public function propietario(): Servidor|CargaFamiliar|null
+    {
+        return $this->servidor ?? $this->cargaFamiliar;
+    }
+
+    public function getNombrePacienteAttribute(): string
+    {
+        if ($this->servidor) {
+            return trim("{$this->servidor->nombre} {$this->servidor->apellido}");
+        }
+        if ($this->cargaFamiliar) {
+            return trim("{$this->cargaFamiliar->nombres} {$this->cargaFamiliar->apellidos}");
+        }
+        return $this->cedula_paciente ?? '—';
+    }
+
+    public static function buscarOCrearPorCedula(
+        string $cedula,
+        string $tipoPaciente = 'servidor',
+        ?int   $servidorId   = null,
+        ?int   $cargaId      = null,
+        ?int   $userId       = null
+    ): self {
+        $hce = self::where('cedula_paciente', $cedula)->first();
+
+        if ($hce) return $hce;
+
+        return self::create([
+            'numero_historia'  => $cedula,
+            'cedula_paciente'  => $cedula,
+            'tipo_paciente'    => $tipoPaciente,
+            'servidor_id'      => $servidorId,
+            'carga_familiar_id'=> $cargaId,
+            'estado'           => true,
+            'created_by'       => $userId,
+        ]);
     }
 }
