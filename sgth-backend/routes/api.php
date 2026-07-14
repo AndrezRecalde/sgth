@@ -689,6 +689,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->group(function () {
                 Route::get('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'index']);
                 Route::post('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'store']);
+                Route::get('buscar-por-cedula', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'buscarPorCedula']);
+                Route::post('crear-por-cedula', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'crearPorCedula']);
                 Route::get('{id}', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'show']);
                 Route::get('{id}/contexto-consulta', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'contextoConsulta']);
 

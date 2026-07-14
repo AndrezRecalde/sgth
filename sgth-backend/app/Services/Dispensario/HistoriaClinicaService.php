@@ -32,6 +32,29 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             );
         }
 
+        if (!empty($filtros['cedula_paciente'])) {
+            $query->where(
+                'cedula_paciente', $filtros['cedula_paciente']
+            );
+        }
+
+        if (!empty($filtros['search'])) {
+            $search = $filtros['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('cedula_paciente', 'ilike', "%{$search}%")
+                  ->orWhereHas('servidor', fn($sq) =>
+                      $sq->where('nombre', 'ilike', "%{$search}%")
+                         ->orWhere('apellido', 'ilike', "%{$search}%")
+                         ->orWhere('cedula', 'ilike', "%{$search}%")
+                  )
+                  ->orWhereHas('cargaFamiliar', fn($sq) =>
+                      $sq->where('nombres', 'ilike', "%{$search}%")
+                         ->orWhere('apellidos', 'ilike', "%{$search}%")
+                         ->orWhere('cedula', 'ilike', "%{$search}%")
+                  );
+            });
+        }
+
         return $query->paginate($filtros['per_page'] ?? 20);
     }
 
@@ -49,6 +72,20 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
 
     public function crearHistoria(array $datos): HistoriaClinica
     {
+        $cedula = $datos['cedula_paciente']
+            ?? $datos['cedula']
+            ?? null;
+
+        if ($cedula) {
+            return HistoriaClinica::buscarOCrearPorCedula(
+                cedula:       $cedula,
+                tipoPaciente: $datos['tipo_paciente'] ?? 'servidor',
+                servidorId:   $datos['servidor_id']       ?? null,
+                cargaId:      $datos['carga_familiar_id'] ?? null,
+                userId:       $datos['created_by']        ?? null,
+            );
+        }
+
         $existente = HistoriaClinica::where(
             'servidor_id', $datos['servidor_id'] ?? null
         )->orWhere(
@@ -63,6 +100,32 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         }
 
         return HistoriaClinica::create($datos);
+    }
+
+    public function buscarPorCedula(string $cedula): ?HistoriaClinica
+    {
+        return HistoriaClinica::with([
+            'servidor',
+            'cargaFamiliar.servidor',
+            'alergias'    => fn($q) => $q->whereNull('anulado_en'),
+            'antecedentes'=> fn($q) => $q->whereNull('anulado_en'),
+        ])->where('cedula_paciente', $cedula)->first();
+    }
+
+    public function buscarOCrearPorCedula(
+        string  $cedula,
+        string  $tipoPaciente = 'candidato',
+        ?int    $servidorId   = null,
+        ?int    $cargaId      = null,
+        ?int    $userId       = null
+    ): HistoriaClinica {
+        return HistoriaClinica::buscarOCrearPorCedula(
+            cedula:       $cedula,
+            tipoPaciente: $tipoPaciente,
+            servidorId:   $servidorId,
+            cargaId:      $cargaId,
+            userId:       $userId,
+        );
     }
 
     public function registrarConsulta(array $datos): ConsultaMedica

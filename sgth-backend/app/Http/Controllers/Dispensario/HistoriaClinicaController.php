@@ -43,6 +43,44 @@ final class HistoriaClinicaController extends Controller
         return ApiResponse::ok($historia);
     }
 
+    public function buscarPorCedula(
+        Request $request
+    ): JsonResponse {
+        $cedula = $request->string('cedula')->trim()->value();
+
+        if (strlen($cedula) < 5) {
+            return ApiResponse::error(
+                'Ingrese al menos 5 caracteres de la cédula.', null, 422
+            );
+        }
+
+        $historia = $this->historiaService->buscarPorCedula($cedula);
+
+        if (!$historia) {
+            return ApiResponse::ok(null, 'No se encontró historia clínica.');
+        }
+
+        return ApiResponse::ok($historia);
+    }
+
+    public function crearPorCedula(Request $request): JsonResponse
+    {
+        $request->validate([
+            'cedula_paciente' => ['required', 'string', 'min:5', 'max:20'],
+            'tipo_paciente'   => ['sometimes', 'in:servidor,familiar,candidato'],
+        ]);
+
+        $historia = $this->historiaService->buscarOCrearPorCedula(
+            cedula:       $request->string('cedula_paciente')->value(),
+            tipoPaciente: $request->input('tipo_paciente', 'candidato'),
+            userId:       $request->user()->id,
+        );
+
+        return ApiResponse::ok(
+            $historia, 'Historia clínica lista.'
+        );
+    }
+
     public function contextoConsulta(
         int $id,
         Request $request
