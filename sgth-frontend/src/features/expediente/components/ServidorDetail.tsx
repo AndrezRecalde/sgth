@@ -21,6 +21,7 @@ import {
   IconPaperclip,
   IconFileDescription,
   IconHeart,
+  IconStethoscope,
   IconEdit,
 } from "@tabler/icons-react";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
@@ -32,6 +33,7 @@ import { CuentasBancariasTab } from "./tabs/CuentasBancariasTab";
 import { DocumentosTab } from "./tabs/DocumentosTab";
 import { DeclaracionesTab } from "./tabs/DeclaracionesTab";
 import { CondicionTab } from "./tabs/CondicionTab";
+import { SaludOcupacionalTab } from "./tabs/SaludOcupacionalTab";
 import type { ServidorConRelaciones } from "@/types/api";
 
 interface Props {
@@ -192,6 +194,12 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
               <Tabs.Tab value="condicion" leftSection={<IconHeart size={13} />}>
                 Condición
               </Tabs.Tab>
+              <Tabs.Tab
+                value="salud"
+                leftSection={<IconStethoscope size={13} />}
+              >
+                Salud
+              </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="personal" pt="md">
@@ -217,6 +225,9 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
             </Tabs.Panel>
             <Tabs.Panel value="condicion" pt="md">
               <CondicionTab servidorId={servidorId} />
+            </Tabs.Panel>
+            <Tabs.Panel value="salud" pt="md">
+              <SaludOcupacionalTab servidorId={servidorId} />
             </Tabs.Panel>
           </Tabs>
         </Stack>

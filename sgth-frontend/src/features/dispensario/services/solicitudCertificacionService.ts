@@ -1,6 +1,35 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
+export interface SolicitudConstantesVitales {
+  id?:                       number
+  peso_kg?:                  number | null
+  talla_cm?:                 number | null
+  imc?:                      number | null
+  temperatura_c?:            number | null
+  presion_sistolica?:        number | null
+  presion_diastolica?:       number | null
+  frecuencia_cardiaca?:      number | null
+  frecuencia_respiratoria?:  number | null
+  saturacion_oxigeno?:       number | null
+  glucosa?:                  number | null
+  observaciones_enfermera?:  string | null
+  registrado_en?:            string | null
+}
+
+export interface CrearSolicitudSignosVitalesData {
+  peso_kg:                  number
+  talla_cm:                 number
+  temperatura_c:            number
+  presion_sistolica:        number
+  presion_diastolica:       number
+  frecuencia_cardiaca:      number
+  frecuencia_respiratoria:  number
+  saturacion_oxigeno:       number
+  glucosa?:                 number | null
+  observaciones_enfermera?: string | null
+}
+
 export interface SolicitudCertificacion {
   id:                number
   tipo_evento:       string
@@ -12,13 +41,19 @@ export interface SolicitudCertificacion {
   estado:            string
   fecha_limite?:     string | null
   created_at:        string
+  ficha_femo_id?:      number | null
   dictamen?:           string | null
   observacion_medica?: string | null
+  constantes_vitales?: SolicitudConstantesVitales | null
   servidor?: {
     id:      number
     nombre:  string
     apellido: string
     cedula:  string
+    unidad_administrativa?: {
+      id:     number
+      nombre: string
+    } | null
   } | null
   postulante?: {
     id:       number
@@ -31,6 +66,16 @@ export interface SolicitudCertificacion {
     id:     number
     codigo: string
     titulo: string
+    puesto?: {
+      id:      number
+      cargo?: {
+        nombre: string
+      } | null
+      unidad_administrativa?: {
+        id:     number
+        nombre: string
+      } | null
+    } | null
   } | null
   solicitado_por?: {
     servidor?: {
@@ -62,15 +107,41 @@ export const ESTADO_SOLICITUD_LABELS: Record<string, string> = {
   cancelada:   'Cancelada',
 }
 
+export interface CrearSolicitudLoteData {
+  servidor_ids:   number[]
+  tipo_evento:    'periodica' | 'reintegro' | 'retiro'
+  fecha_limite?:  string | null
+  observaciones?: string | null
+}
+
+export interface SolicitudLoteOmitida {
+  servidor_id: number
+  motivo:      string
+}
+
+export interface SolicitudLoteResultado {
+  creadas:  SolicitudCertificacion[]
+  omitidas: SolicitudLoteOmitida[]
+}
+
 export const solicitudCertificacionService = {
   listar: (params?: {
     estado?:      string
     tipo_evento?: string
+    servidor_id?: number
+    origen?:      string
+    unidad_administrativa_id?: number
+    anio?:        number
     per_page?:    number
   }) =>
     api.get<ApiResponse<PaginatedResponse<SolicitudCertificacion>>>(
       '/dispensario/solicitudes-certificacion',
       { params }
+    ).then(r => r.data.datos),
+
+  crearLote: (data: CrearSolicitudLoteData) =>
+    api.post<ApiResponse<SolicitudLoteResultado>>(
+      '/dispensario/solicitudes-certificacion/lote', data
     ).then(r => r.data.datos),
 
   obtener: (id: number) =>
@@ -99,5 +170,15 @@ export const solicitudCertificacionService = {
   confirmarIncorporacion: (id: number) =>
     api.post<ApiResponse<{ servidor_id: number }>>(
       `/dispensario/solicitudes-certificacion/${id}/confirmar-incorporacion`
+    ).then(r => r.data.datos),
+
+  pendientesTriaje: () =>
+    api.get<ApiResponse<SolicitudCertificacion[]>>(
+      '/dispensario/solicitudes-certificacion/pendientes-triaje'
+    ).then(r => r.data.datos),
+
+  registrarSignosVitales: (id: number, data: CrearSolicitudSignosVitalesData) =>
+    api.post<ApiResponse<SolicitudConstantesVitales>>(
+      `/dispensario/solicitudes-certificacion/${id}/signos-vitales`, data
     ).then(r => r.data.datos),
 }

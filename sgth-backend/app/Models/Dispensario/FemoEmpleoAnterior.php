@@ -2,6 +2,7 @@
 
 namespace App\Models\Dispensario;
 
+use App\Enums\TipoEventoLaboral;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -13,13 +14,18 @@ class FemoEmpleoAnterior extends Model
         'ficha_id', 'centro_trabajo',
         'actividades_desempenadas',
         'fecha_inicio', 'fecha_fin', 'observaciones',
+        'tipo_evento_laboral', 'calificado_iess',
+        'fecha_evento', 'especificar',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha_inicio' => 'date',
-            'fecha_fin'    => 'date',
+            'fecha_fin' => 'date',
+            'tipo_evento_laboral' => TipoEventoLaboral::class,
+            'calificado_iess' => 'boolean',
+            'fecha_evento' => 'date',
         ];
     }
 

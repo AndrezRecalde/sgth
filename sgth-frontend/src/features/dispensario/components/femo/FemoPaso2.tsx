@@ -1,95 +1,34 @@
 'use client'
 
 import {
-  Stack, Grid, TextInput, Checkbox,
+  Stack, Grid, TextInput,
   Group, Text, Button, Card,
-  ActionIcon, Divider, Modal,
-  Badge, Textarea,
+  ActionIcon, Divider, Badge,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
 import { useDisclosure } from '@mantine/hooks'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
-  empleoAnteriorSchema,
-  type FactorRiesgoForm,
-  type EmpleoAnteriorForm,
+  type FichaBaseForm, type FactorRiesgoForm,
+  type ActividadRiesgoForm, type EmpleoAnteriorForm,
 } from '../../schemas/femo.schema'
+import { FemoEmpleoAnteriorModal } from './FemoEmpleoAnteriorModal'
+import { FemoMatrizRiesgos } from './FemoMatrizRiesgos'
+import { TIPO_EVENTO_LABORAL_OPTIONS } from '../../services/femoOptions'
 
 interface Props {
+  fichaData:            Partial<FichaBaseForm>
+  puestoId:             number | null
+  actividadesRiesgo:    ActividadRiesgoForm[]
   factoresRiesgo:       FactorRiesgoForm[]
   empleosAnteriores:    EmpleoAnteriorForm[]
+  onFichaChange:        (data: Partial<FichaBaseForm>) => void
+  onActividadesChange:  (data: ActividadRiesgoForm[]) => void
   onFactoresChange:     (data: FactorRiesgoForm[]) => void
   onEmpleosChange:      (data: EmpleoAnteriorForm[]) => void
 }
-
-const CATEGORIAS_RIESGO: {
-  key:     string
-  label:   string
-  color:   string
-  factores: string[]
-}[] = [
-  {
-    key:   'fisico',
-    label: 'Físico',
-    color: 'blue',
-    factores: [
-      'Ruido', 'Vibración', 'Iluminación deficiente',
-      'Temperatura extrema', 'Radiación ionizante',
-      'Radiación no ionizante', 'Presión anormal',
-    ],
-  },
-  {
-    key:   'seguridad',
-    label: 'Seguridad',
-    color: 'orange',
-    factores: [
-      'Locativos', 'Mecánicos', 'Eléctricos',
-      'Trabajo en alturas', 'Espacios confinados',
-    ],
-  },
-  {
-    key:   'quimico',
-    label: 'Químico',
-    color: 'grape',
-    factores: [
-      'Polvos', 'Humos', 'Gases y vapores',
-      'Líquidos', 'Aerosoles',
-    ],
-  },
-  {
-    key:   'biologico',
-    label: 'Biológico',
-    color: 'teal',
-    factores: [
-      'Virus', 'Bacterias', 'Hongos',
-      'Parásitos', 'Fluidos corporales',
-    ],
-  },
-  {
-    key:   'ergonomico',
-    label: 'Ergonómico',
-    color: 'yellow',
-    factores: [
-      'Posturas forzadas', 'Carga física',
-      'Movimientos repetitivos', 'PVD',
-      'Trabajo de pie prolongado',
-    ],
-  },
-  {
-    key:   'psicosocial',
-    label: 'Psicosocial',
-    color: 'red',
-    factores: [
-      'Monotonía', 'Sobrecarga laboral',
-      'Relaciones interpersonales', 'Trabajo nocturno',
-      'Alta responsabilidad',
-    ],
-  },
-]
 
 function fromDate(d: Date | string | null): string | null {
   if (!d) return null
@@ -109,52 +48,12 @@ function toDate(s: string | null | undefined): Date | null {
 }
 
 export function FemoPaso2({
-  factoresRiesgo, empleosAnteriores,
-  onFactoresChange, onEmpleosChange,
+  fichaData, puestoId, actividadesRiesgo, factoresRiesgo, empleosAnteriores,
+  onFichaChange, onActividadesChange, onFactoresChange, onEmpleosChange,
 }: Props) {
   const contained = useContainedInput()
   const [empleoModalOpened,
     { open: abrirEmpleo, close: cerrarEmpleo }] = useDisclosure(false)
-
-  const empleoForm = useForm<EmpleoAnteriorForm>({
-    resolver: zodResolver(empleoAnteriorSchema),
-    defaultValues: {
-      centro_trabajo: '',
-      actividades_desempenadas: '',
-      fecha_inicio: null,
-      fecha_fin:    null,
-      observaciones: null,
-    },
-  })
-
-  const isFactorActivo = (categoria: string, factor: string) =>
-    factoresRiesgo.some(
-      f => f.categoria === categoria && f.factor === factor && f.presente
-    )
-
-  const toggleFactor = (categoria: string, factor: string) => {
-    const existe = factoresRiesgo.find(
-      f => f.categoria === categoria && f.factor === factor
-    )
-    if (existe) {
-      onFactoresChange(
-        factoresRiesgo.filter(
-          f => !(f.categoria === categoria && f.factor === factor)
-        )
-      )
-    } else {
-      onFactoresChange([
-        ...factoresRiesgo,
-        { categoria, factor, presente: true, medida_preventiva: null },
-      ])
-    }
-  }
-
-  const handleAgregarEmpleo = (values: EmpleoAnteriorForm) => {
-    onEmpleosChange([...empleosAnteriores, values])
-    empleoForm.reset()
-    cerrarEmpleo()
-  }
 
   const handleEliminarEmpleo = (idx: number) => {
     onEmpleosChange(empleosAnteriores.filter((_, i) => i !== idx))
@@ -162,50 +61,13 @@ export function FemoPaso2({
 
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-          style={{ letterSpacing: '0.05em' }}>
-          D. Factores de riesgo laboral
-        </Text>
-        <Stack gap="sm">
-          {CATEGORIAS_RIESGO.map((cat) => {
-            const activos = factoresRiesgo.filter(
-              f => f.categoria === cat.key
-            ).length
-            return (
-              <Card key={cat.key} withBorder radius="md" p="sm">
-                <Group justify="space-between" mb="xs">
-                  <Group gap="xs">
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color={cat.color}
-                    >
-                      {cat.label}
-                    </Badge>
-                    {activos > 0 && (
-                      <Text size="xs" c="dimmed">
-                        {activos} seleccionado{activos !== 1 ? 's' : ''}
-                      </Text>
-                    )}
-                  </Group>
-                </Group>
-                <Group gap="sm" wrap="wrap">
-                  {cat.factores.map((factor) => (
-                    <Checkbox
-                      key={factor}
-                      label={factor}
-                      size="sm"
-                      checked={isFactorActivo(cat.key, factor)}
-                      onChange={() => toggleFactor(cat.key, factor)}
-                    />
-                  ))}
-                </Group>
-              </Card>
-            )
-          })}
-        </Stack>
-      </Stack>
+      <FemoMatrizRiesgos
+        puestoId={puestoId}
+        actividadesRiesgo={actividadesRiesgo}
+        factoresRiesgo={factoresRiesgo}
+        onActividadesChange={onActividadesChange}
+        onFactoresChange={onFactoresChange}
+      />
 
       <Divider />
 
@@ -213,7 +75,7 @@ export function FemoPaso2({
         <Group justify="space-between">
           <Text size="xs" fw={600} c="dimmed" tt="uppercase"
             style={{ letterSpacing: '0.05em' }}>
-            E. Empleos anteriores
+            E. Empleos anteriores / historial laboral
           </Text>
           <Button
             size="compact-xs"
@@ -235,9 +97,18 @@ export function FemoPaso2({
               <Card key={i} withBorder radius="md" p="sm">
                 <Group justify="space-between" wrap="nowrap">
                   <Stack gap={0}>
-                    <Text size="sm" fw={500}>
-                      {emp.centro_trabajo}
-                    </Text>
+                    <Group gap="xs">
+                      <Text size="sm" fw={500}>
+                        {emp.centro_trabajo}
+                      </Text>
+                      {emp.tipo_evento_laboral && emp.tipo_evento_laboral !== 'ninguno' && (
+                        <Badge size="xs" variant="light" color="red">
+                          {TIPO_EVENTO_LABORAL_OPTIONS.find(
+                            o => o.value === emp.tipo_evento_laboral
+                          )?.label}
+                        </Badge>
+                      )}
+                    </Group>
                     {emp.actividades_desempenadas && (
                       <Text size="xs" c="dimmed">
                         {emp.actividades_desempenadas}
@@ -264,77 +135,44 @@ export function FemoPaso2({
         )}
       </Stack>
 
-      <Modal
+      <Divider />
+
+      <Stack gap="xs">
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+          style={{ letterSpacing: '0.05em' }}>
+          I. Actividades extra laborales
+        </Text>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 8 }}>
+            <TextInput
+              label="Descripción"
+              {...contained}
+              value={fichaData.actividad_extralaboral_descripcion ?? ''}
+              onChange={(e) => onFichaChange({
+                ...fichaData, actividad_extralaboral_descripcion: e.currentTarget.value,
+              })}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <DatePickerInput
+              label="Fecha"
+              valueFormat="DD/MM/YYYY"
+              clearable
+              {...contained}
+              value={toDate(fichaData.actividad_extralaboral_fecha)}
+              onChange={(d) => onFichaChange({
+                ...fichaData, actividad_extralaboral_fecha: fromDate(d as Date | null),
+              })}
+            />
+          </Grid.Col>
+        </Grid>
+      </Stack>
+
+      <FemoEmpleoAnteriorModal
         opened={empleoModalOpened}
         onClose={cerrarEmpleo}
-        title="Agregar empleo anterior"
-        size="md"
-        radius="xl"
-      >
-        <form onSubmit={empleoForm.handleSubmit(handleAgregarEmpleo)}>
-          <Stack gap="sm">
-            <TextInput
-              label="Centro de trabajo"
-              required
-              {...contained}
-              {...empleoForm.register('centro_trabajo')}
-              error={empleoForm.formState.errors.centro_trabajo?.message}
-            />
-            <Textarea
-              label="Actividades desempeñadas"
-              autosize
-              minRows={2}
-              {...contained}
-              {...empleoForm.register('actividades_desempenadas')}
-            />
-            <Grid>
-              <Grid.Col span={6}>
-                <DatePickerInput
-                  label="Fecha inicio"
-                  valueFormat="DD/MM/YYYY"
-                  clearable
-                  {...contained}
-                  value={toDate(empleoForm.watch('fecha_inicio'))}
-                  onChange={(d) =>
-                    empleoForm.setValue('fecha_inicio', fromDate(d as Date | null))
-                  }
-                />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <DatePickerInput
-                  label="Fecha fin"
-                  valueFormat="DD/MM/YYYY"
-                  clearable
-                  {...contained}
-                  value={toDate(empleoForm.watch('fecha_fin'))}
-                  onChange={(d) =>
-                    empleoForm.setValue('fecha_fin', fromDate(d as Date | null))
-                  }
-                />
-              </Grid.Col>
-            </Grid>
-            <Textarea
-              label="Observaciones"
-              autosize
-              minRows={2}
-              {...contained}
-              {...empleoForm.register('observaciones')}
-            />
-            <Group justify="flex-end" mt="sm">
-              <Button variant="default" onClick={cerrarEmpleo}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                color="emerald"
-                leftSection={<IconCheck size={14} />}
-              >
-                Agregar
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      </Modal>
+        onAgregar={(values) => onEmpleosChange([...empleosAnteriores, values])}
+      />
     </Stack>
   )
 }

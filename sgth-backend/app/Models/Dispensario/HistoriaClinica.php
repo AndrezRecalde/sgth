@@ -2,13 +2,14 @@
 
 namespace App\Models\Dispensario;
 
+use App\Models\Expediente\CargaFamiliar;
+use App\Models\Expediente\Servidor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Expediente\Servidor;
-use App\Models\Expediente\CargaFamiliar;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 class HistoriaClinica extends Model
 {
@@ -33,7 +34,7 @@ class HistoriaClinica extends Model
     {
         return [
             'medicacion_habitual' => 'encrypted',
-            'estado'              => 'boolean',
+            'estado' => 'boolean',
         ];
     }
 
@@ -75,28 +76,37 @@ class HistoriaClinica extends Model
         if ($this->cargaFamiliar) {
             return trim("{$this->cargaFamiliar->nombres} {$this->cargaFamiliar->apellidos}");
         }
+
         return $this->cedula_paciente ?? '—';
     }
 
     public static function buscarOCrearPorCedula(
         string $cedula,
         string $tipoPaciente = 'servidor',
-        ?int   $servidorId   = null,
-        ?int   $cargaId      = null,
-        ?int   $userId       = null
+        ?int $servidorId = null,
+        ?int $cargaId = null,
+        ?int $userId = null
     ): self {
         $hce = self::where('cedula_paciente', $cedula)->first();
 
-        if ($hce) return $hce;
+        if ($hce) {
+            return $hce;
+        }
 
-        return self::create([
-            'numero_historia'  => $cedula,
-            'cedula_paciente'  => $cedula,
-            'tipo_paciente'    => $tipoPaciente,
-            'servidor_id'      => $servidorId,
-            'carga_familiar_id'=> $cargaId,
-            'estado'           => true,
-            'created_by'       => $userId,
-        ]);
+        try {
+            return self::create([
+                'numero_historia' => $cedula,
+                'cedula_paciente' => $cedula,
+                'tipo_paciente' => $tipoPaciente,
+                'servidor_id' => $servidorId,
+                'carga_familiar_id' => $cargaId,
+                'estado' => true,
+                'created_by' => $userId,
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            // Petición concurrente ya creó la HCE para esta cédula
+            // (ej. doble invocación de efectos en el cliente).
+            return self::where('cedula_paciente', $cedula)->firstOrFail();
+        }
     }
 }

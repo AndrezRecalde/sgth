@@ -65,6 +65,12 @@ export const NAV_SGTH: NavGroup[] = [
         href:  ROUTES.SGTH.ASISTENCIA,
         icon:  'IconClock',
       },
+      {
+        label:   'Certificaciones médicas',
+        href:    ROUTES.SGTH.CERTIFICACIONES_MEDICAS,
+        icon:    'IconStethoscope',
+        permiso: 'solicitar-certificacion-medica',
+      },
     ],
   },
   {
@@ -117,9 +123,26 @@ export const NAV_SALUD: NavGroup[] = [
         icon:  'IconDental',
       },
       {
-        label: 'Enfermería',
-        href:  ROUTES.SALUD.ENFERMERIA,
-        icon:  'IconHeartbeat',
+        label:    'Enfermería',
+        href:     ROUTES.SALUD.ENFERMERIA,
+        icon:     'IconHeartbeat',
+        children: [
+          {
+            label: 'Atender paciente',
+            href:  ROUTES.SALUD.ENFERMERIA,
+            icon:  'IconUserPlus',
+          },
+          {
+            label: 'Cola y monitoreo',
+            href:  ROUTES.SALUD.ENFERMERIA + '/cola',
+            icon:  'IconList',
+          },
+          {
+            label: 'Atención SSO',
+            href:  ROUTES.SALUD.ENFERMERIA + '/sso',
+            icon:  'IconShieldCheck',
+          },
+        ],
       },
       {
         label:    'Farmacia',

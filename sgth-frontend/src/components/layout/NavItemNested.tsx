@@ -89,6 +89,7 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
             const exactChildPaths = [
               '/salud/farmacia',
               '/salud/sso',
+              '/salud/enfermeria',
               '/sgth/reclutamiento/convocatorias',
               '/sgth/reclutamiento/plantillas',
             ]

@@ -2,6 +2,7 @@
 
 namespace App\Models\Dispensario;
 
+use App\Enums\TipoExamenFemo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,6 +19,7 @@ class FemoExamen extends Model
     {
         return [
             'fecha_examen' => 'date',
+            'tipo' => TipoExamenFemo::class,
         ];
     }
 

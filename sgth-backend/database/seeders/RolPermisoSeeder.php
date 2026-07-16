@@ -15,7 +15,7 @@ class RolPermisoSeeder extends Seeder
         // 1. Crear todos los permisos del Enum
         foreach (Permiso::cases() as $permiso) {
             Permission::firstOrCreate([
-                'name'       => $permiso->value,
+                'name' => $permiso->value,
                 'guard_name' => 'sanctum',
             ]);
         }
@@ -43,7 +43,7 @@ class RolPermisoSeeder extends Seeder
         ];
 
         // 2. Crear roles y asignar permisos según la matriz
-        
+
         // ADMIN_TI
         $this->crearRol(Rol::ADMIN_TI, array_merge($permisosBase, [
             Permiso::ACTIVAR_USUARIO,
@@ -108,6 +108,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_AUDITORIA,
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::PUEDE_MARCAR_ONLINE,
+            Permiso::SOLICITAR_CERTIFICACION_MEDICA,
         ]));
 
         // ASISTENTE_UATH
@@ -129,6 +130,18 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_VIATICOS,
             Permiso::GENERAR_REPORTES,
             Permiso::PUEDE_MARCAR_ONLINE,
+            Permiso::SOLICITAR_CERTIFICACION_MEDICA,
+        ]));
+
+        // ANALISTA_UATH
+        $this->crearRol(Rol::ANALISTA_UATH, array_merge($permisosBase, [
+            Permiso::VER_EXPEDIENTE_UNIDAD,
+            Permiso::VER_EXPEDIENTE_TODOS,
+            Permiso::GESTIONAR_CONVOCATORIAS,
+            Permiso::VER_POSTULANTES,
+            Permiso::EVALUAR_POSTULANTES,
+            Permiso::GESTIONAR_ONBOARDING,
+            Permiso::SOLICITAR_CERTIFICACION_MEDICA,
         ]));
 
         // MAXIMA_AUTORIDAD
@@ -253,12 +266,12 @@ class RolPermisoSeeder extends Seeder
     private function crearRol(Rol $rol, array $permisos): void
     {
         $rolModel = Role::firstOrCreate([
-            'name'       => $rol->value,
+            'name' => $rol->value,
             'guard_name' => 'sanctum',
         ]);
 
         $rolModel->syncPermissions(
-            array_unique(array_map(fn(Permiso $p) => $p->value, $permisos))
+            array_unique(array_map(fn (Permiso $p) => $p->value, $permisos))
         );
     }
 }

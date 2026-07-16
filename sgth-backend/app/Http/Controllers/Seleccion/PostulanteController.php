@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Seleccion;
 
+use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Seleccion\Convocatoria;
-use App\Models\Seleccion\Postulante;
 use App\Models\Seleccion\DocumentoPostulante;
-use App\Exceptions\ReglaNegocioException;
+use App\Models\Seleccion\Postulante;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -33,26 +33,26 @@ final class PostulanteController extends Controller
     ): JsonResponse {
         $convocatoria = Convocatoria::findOrFail($convocatoriaId);
 
-        if (!in_array($convocatoria->estado->value, ['publicada', 'en_proceso'])) {
+        if (! in_array($convocatoria->estado->value, ['publicada', 'en_proceso'])) {
             throw new ReglaNegocioException(
                 'La convocatoria no está abierta para inscripciones.'
             );
         }
 
         $datos = $request->validate([
-            'cedula'                  => ['required', 'string', 'max:20'],
-            'nombres'                 => ['required', 'string', 'max:150'],
-            'segundo_nombre'          => ['nullable', 'string', 'max:150'],
-            'apellidos'               => ['required', 'string', 'max:150'],
-            'segundo_apellido'        => ['nullable', 'string', 'max:150'],
-            'correo'                  => ['required', 'email', 'max:150'],
-            'telefono'                => ['nullable', 'string', 'max:20'],
-            'genero'                  => ['nullable', 'string', 'in:masculino,femenino,otro'],
-            'estado_civil'            => ['nullable', 'string', 'in:soltero,casado,union_libre,divorciado,viudo'],
-            'fecha_nacimiento'        => ['nullable', 'date'],
-            'tipo_sangre'             => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
+            'cedula' => ['required', 'string', 'max:20'],
+            'nombres' => ['required', 'string', 'max:150'],
+            'segundo_nombre' => ['nullable', 'string', 'max:150'],
+            'apellidos' => ['required', 'string', 'max:150'],
+            'segundo_apellido' => ['nullable', 'string', 'max:150'],
+            'correo' => ['required', 'email', 'max:150'],
+            'telefono' => ['nullable', 'string', 'max:20'],
+            'genero' => ['nullable', 'string', 'in:masculino,femenino,otro'],
+            'estado_civil' => ['nullable', 'string', 'in:soltero,casado,union_libre,divorciado,viudo'],
+            'fecha_nacimiento' => ['nullable', 'date'],
+            'tipo_sangre' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
             'provincia_nacimiento_id' => ['nullable', 'integer', 'exists:provincias,id'],
-            'canton_nacimiento_id'    => ['nullable', 'integer', 'exists:cantones,id'],
+            'canton_nacimiento_id' => ['nullable', 'integer', 'exists:cantones,id'],
         ]);
 
         $existe = Postulante::where('convocatoria_id', $convocatoriaId)
@@ -68,8 +68,8 @@ final class PostulanteController extends Controller
         $postulante = Postulante::create([
             ...$datos,
             'convocatoria_id' => $convocatoriaId,
-            'estado'          => 'inscrito',
-            'created_by'      => $request->user()->id,
+            'estado' => 'inscrito',
+            'created_by' => $request->user()->id,
         ]);
 
         return ApiResponse::created(
@@ -95,11 +95,11 @@ final class PostulanteController extends Controller
             ->findOrFail($postulanteId);
 
         $datos = $request->validate([
-            'nombres'   => ['sometimes', 'string', 'max:150'],
+            'nombres' => ['sometimes', 'string', 'max:150'],
             'apellidos' => ['sometimes', 'string', 'max:150'],
-            'correo'    => ['sometimes', 'email', 'max:150'],
-            'telefono'  => ['nullable', 'string', 'max:20'],
-            'estado'    => ['sometimes', Rule::in([
+            'correo' => ['sometimes', 'email', 'max:150'],
+            'telefono' => ['nullable', 'string', 'max:20'],
+            'estado' => ['sometimes', Rule::in([
                 'inscrito', 'en_evaluacion',
                 'seleccionado', 'no_seleccionado', 'lista_espera',
             ])],
@@ -125,6 +125,7 @@ final class PostulanteController extends Controller
         });
 
         $postulante->delete();
+
         return ApiResponse::ok([], 'Postulante eliminado.');
     }
 
@@ -137,25 +138,25 @@ final class PostulanteController extends Controller
             ->findOrFail($postulanteId);
 
         $request->validate([
-            'tipo'     => ['required', 'string', 'max:100'],
-            'archivo'  => ['required', 'file',
+            'tipo' => ['required', 'string', 'max:100'],
+            'archivo' => ['required', 'file',
                 'mimes:pdf,jpg,jpeg,png,doc,docx',
                 'max:10240',
             ],
         ]);
 
         $archivo = $request->file('archivo');
-        $ruta    = $archivo->store(
+        $ruta = $archivo->store(
             "seleccion/postulantes/{$postulanteId}", 'public'
         );
 
         $documento = DocumentoPostulante::create([
-            'postulante_id'  => $postulanteId,
-            'tipo'           => $request->input('tipo'),
+            'postulante_id' => $postulanteId,
+            'tipo' => $request->input('tipo'),
             'nombre_archivo' => $archivo->getClientOriginalName(),
-            'ruta'           => $ruta,
-            'extension'      => $archivo->getClientOriginalExtension(),
-            'tamano_bytes'   => $archivo->getSize(),
+            'ruta' => $ruta,
+            'extension' => $archivo->getClientOriginalExtension(),
+            'tamano_bytes' => $archivo->getSize(),
         ]);
 
         return ApiResponse::created(

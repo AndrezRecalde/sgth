@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import {
-  Stack, Group, Badge, Text, Button,
+  Stack, Group, Badge, Text,
 } from '@mantine/core'
 import {
-  IconClipboardHeart, IconPlus, IconEye,
+  IconClipboardHeart, IconEye,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
@@ -50,16 +50,18 @@ export default function FemoPage() {
     },
     {
       accessor: 'servidor',
-      title:    'Servidor',
+      title:    'Servidor / Aspirante',
       render: (f) => (
         <Stack gap={0}>
           <Text size="sm" fw={500}>
             {f.servidor
               ? `${f.servidor.nombre} ${f.servidor.apellido}`
-              : '—'}
+              : f.postulante
+                ? `${f.postulante.nombres} ${f.postulante.apellidos}`
+                : '—'}
           </Text>
           <Text size="xs" c="dimmed" ff="monospace">
-            {f.servidor?.cedula ?? ''}
+            {f.servidor?.cedula ?? f.postulante?.cedula ?? ''}
           </Text>
         </Stack>
       ),
@@ -133,17 +135,6 @@ export default function FemoPage() {
         title="Fichas de Salud Ocupacional"
         subtitle="FEMO — Evaluaciones médicas ocupacionales"
         icon={<IconClipboardHeart size={24} />}
-        actions={
-          <Button
-            color="emerald"
-            leftSection={<IconPlus size={14} />}
-            onClick={() =>
-              router.push('/salud/sso/femo/nueva')
-            }
-          >
-            Nueva ficha
-          </Button>
-        }
       />
 
       {fichas.length === 0 && !isLoading ? (

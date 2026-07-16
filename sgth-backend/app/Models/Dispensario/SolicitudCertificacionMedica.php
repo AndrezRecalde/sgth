@@ -3,11 +3,12 @@
 namespace App\Models\Dispensario;
 
 use App\Models\Expediente\Servidor;
-use App\Models\Seleccion\Postulante;
 use App\Models\Seleccion\Convocatoria;
+use App\Models\Seleccion\Postulante;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SolicitudCertificacionMedica extends Model
 {
@@ -54,5 +55,10 @@ class SolicitudCertificacionMedica extends Model
     public function fichaSaludOcupacional(): BelongsTo
     {
         return $this->belongsTo(FichaSaludOcupacional::class, 'ficha_femo_id');
+    }
+
+    public function constantesVitales(): HasOne
+    {
+        return $this->hasOne(SolicitudConstantesVitales::class, 'solicitud_id');
     }
 }

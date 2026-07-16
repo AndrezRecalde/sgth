@@ -23,10 +23,20 @@ export interface FemoAntecedente {
 
 export interface FemoFactorRiesgo {
   id?:                number
+  ficha_actividad_id?: number | null
   categoria:          string
   factor:             string
   presente:           boolean
   medida_preventiva?: string | null
+}
+
+export interface FemoFichaActividad {
+  id?:                   number
+  puesto_actividad_id?:  number | null
+  actividad:             string
+  medida_preventiva?:    string | null
+  orden?:                number | null
+  factores_riesgo?:      FemoFactorRiesgo[]
 }
 
 export interface FemoDiagnostico {
@@ -55,12 +65,48 @@ export interface FemoEmpleoAnterior {
   fecha_inicio?:             string | null
   fecha_fin?:                string | null
   observaciones?:            string | null
+  tipo_evento_laboral?:      'ninguno' | 'incidente' | 'accidente' | 'enfermedad_profesional'
+  calificado_iess?:          boolean | null
+  fecha_evento?:             string | null
+  especificar?:              string | null
+}
+
+export interface FemoExamenFisicoItem {
+  id?:          number
+  region:       string
+  item:         string
+  normal:       boolean
+  observacion?: string | null
+}
+
+export interface FemoAntecedenteReproductivo {
+  fecha_ultima_menstruacion?: string | null
+  gestas?:                    number | null
+  partos?:                    number | null
+  cesareas?:                  number | null
+  abortos?:                   number | null
+  usa_metodo_planificacion?:  'si' | 'no' | 'no_responde' | null
+  metodo_planificacion_cual?: string | null
+  examenes_realizados?:       string | null
+  examenes_tiempo_anios?:     number | null
+}
+
+export interface FemoConsumoSustancia {
+  id?:                        number
+  sustancia:                  'tabaco' | 'alcohol' | 'otra'
+  sustancia_otra_detalle?:    string | null
+  tiempo_consumo_meses?:      number | null
+  ex_consumidor?:             boolean
+  tiempo_abstinencia_meses?:  number | null
+  no_consume?:                boolean
 }
 
 export interface FichaSaludOcupacional {
   id:                            number
-  servidor_id:                   number
+  servidor_id?:                  number | null
+  postulante_id?:                number | null
   evaluador_id:                  number
+  accidente_trabajo_id?:         number | null
   numero_archivo?:               string | null
   fecha_evaluacion:              string
   tipo_ficha:                    string
@@ -78,26 +124,46 @@ export interface FichaSaludOcupacional {
   tratamiento?:                  string | null
   condicion_relacionada_trabajo?: boolean | null
   observacion_retiro?:           string | null
+  actividad_extralaboral_descripcion?: string | null
+  actividad_extralaboral_fecha?: string | null
+  se_realiza_evaluacion_retiro?: boolean | null
+  actividad_fisica_cual?:        string | null
+  actividad_fisica_tiempo?:      string | null
+  medicacion_habitual_cual?:     string | null
+  medicacion_habitual_cantidad?: string | null
   servidor?: {
     id:       number
     nombre:   string
     apellido: string
     cedula?:  string
   }
+  postulante?: {
+    id:        number
+    cedula:    string
+    nombres:   string
+    apellidos: string
+  }
   evaluador?: {
     servidor?: { nombre: string; apellido: string }
   }
-  constantes_vitales?: FemoConstantesVitales | null
-  antecedentes?:       FemoAntecedente[]
-  factores_riesgo?:    FemoFactorRiesgo[]
-  diagnosticos?:       FemoDiagnostico[]
-  examenes?:           FemoExamen[]
-  empleos_anteriores?: FemoEmpleoAnterior[]
+  constantes_vitales?:       FemoConstantesVitales | null
+  antecedentes?:             FemoAntecedente[]
+  factores_riesgo?:          FemoFactorRiesgo[]
+  actividades?:              FemoFichaActividad[]
+  diagnosticos?:             FemoDiagnostico[]
+  examenes?:                 FemoExamen[]
+  empleos_anteriores?:       FemoEmpleoAnterior[]
+  examen_fisico?:            FemoExamenFisicoItem[]
+  antecedente_reproductivo?: FemoAntecedenteReproductivo | null
+  consumo_sustancias?:       FemoConsumoSustancia[]
 }
 
 export interface CrearFemoData {
   ficha: {
-    servidor_id:              number
+    servidor_id?:             number | null
+    postulante_id?:           number | null
+    accidente_trabajo_id?:    number | null
+    numero_archivo?:          string | null
     fecha_evaluacion:         string
     tipo_ficha:               string
     aptitud:                  string
@@ -113,35 +179,25 @@ export interface CrearFemoData {
     recomendaciones?:         string | null
     tratamiento?:             string | null
     condicion_relacionada_trabajo?: boolean | null
+    observacion_retiro?:      string | null
+    actividad_extralaboral_descripcion?: string | null
+    actividad_extralaboral_fecha?: string | null
+    se_realiza_evaluacion_retiro?: boolean | null
+    actividad_fisica_cual?:   string | null
+    actividad_fisica_tiempo?: string | null
+    medicacion_habitual_cual?: string | null
+    medicacion_habitual_cantidad?: string | null
   }
-  constantes_vitales?:  FemoConstantesVitales | null
-  antecedentes?:        Omit<FemoAntecedente, 'id'>[]
-  factores_riesgo?:     Omit<FemoFactorRiesgo, 'id'>[]
-  diagnosticos?:        Omit<FemoDiagnostico, 'id' | 'diagnostico'>[]
-  examenes?:            Omit<FemoExamen, 'id'>[]
-  empleos_anteriores?:  Omit<FemoEmpleoAnterior, 'id'>[]
-}
-
-export const TIPO_FICHA_OPTIONS = [
-  { value: 'ingreso',    label: 'Ingreso / Pre-ocupacional' },
-  { value: 'periodica',  label: 'Periódica'                 },
-  { value: 'reintegro',  label: 'Reintegro'                 },
-  { value: 'retiro',     label: 'Retiro'                    },
-  { value: 'especial',   label: 'Especial'                  },
-]
-
-export const APTITUD_OPTIONS = [
-  { value: 'apto',                  label: 'Apto'                    },
-  { value: 'apto_con_restricciones',label: 'Apto con restricciones'  },
-  { value: 'en_observacion',        label: 'En observación'          },
-  { value: 'no_apto',               label: 'No apto'                 },
-]
-
-export const APTITUD_COLORS: Record<string, string> = {
-  apto:                   'emerald',
-  apto_con_restricciones: 'orange',
-  en_observacion:         'blue',
-  no_apto:                'red',
+  constantes_vitales?:       FemoConstantesVitales | null
+  antecedentes?:             Omit<FemoAntecedente, 'id'>[]
+  factores_riesgo?:          Omit<FemoFactorRiesgo, 'id'>[]
+  actividades?:              Omit<FemoFichaActividad, 'id' | 'factores_riesgo'>[]
+  diagnosticos?:             Omit<FemoDiagnostico, 'id' | 'diagnostico'>[]
+  examenes?:                 Omit<FemoExamen, 'id'>[]
+  empleos_anteriores?:       Omit<FemoEmpleoAnterior, 'id'>[]
+  examen_fisico?:            Omit<FemoExamenFisicoItem, 'id'>[]
+  antecedente_reproductivo?: FemoAntecedenteReproductivo | null
+  consumo_sustancias?:       Omit<FemoConsumoSustancia, 'id'>[]
 }
 
 export const femoService = {
@@ -164,4 +220,15 @@ export const femoService = {
     api.patch<ApiResponse<FichaSaludOcupacional>>(
       `/dispensario/fichas-sso/${id}`, data
     ).then(r => r.data.datos),
+
+  descargarPdf: (id: number) =>
+    api.get(`/dispensario/fichas-sso/${id}/pdf`, {
+      responseType: 'blob',
+    }).then(r => r.data as Blob),
 }
+
+export {
+  TIPO_FICHA_OPTIONS,
+  APTITUD_OPTIONS,
+  APTITUD_COLORS,
+} from './femoOptions'

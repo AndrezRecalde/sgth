@@ -12,11 +12,14 @@ interface Props {
   onPageChange: (page: number) => void
   onView: (servidor: ServidorConRelaciones) => void
   onEdit: (servidor: ServidorConRelaciones) => void
+  selectedRecords?: ServidorConRelaciones[]
+  onSelectedRecordsChange?: (records: ServidorConRelaciones[]) => void
 }
 
 export function ServidorTable({
   data, isLoading, total, page,
   onPageChange, onView, onEdit,
+  selectedRecords, onSelectedRecordsChange,
 }: Props) {
   return (
     <SgthTable
@@ -28,6 +31,8 @@ export function ServidorTable({
       page={page}
       onPageChange={onPageChange}
       minHeight={200}
+      selectedRecords={selectedRecords}
+      onSelectedRecordsChange={onSelectedRecordsChange}
     />
   )
 }

@@ -13,6 +13,7 @@ export const ROUTES = {
     EXPEDIENTE:       '/sgth/expediente',
     NOMINA:           '/sgth/nomina',
     ASISTENCIA:       '/sgth/asistencia',
+    CERTIFICACIONES_MEDICAS: '/sgth/certificaciones-medicas',
     RECLUTAMIENTO:    '/sgth/reclutamiento',
     CONVOCATORIAS:    '/sgth/reclutamiento/convocatorias',
     PLANTILLAS:       '/sgth/reclutamiento/plantillas',

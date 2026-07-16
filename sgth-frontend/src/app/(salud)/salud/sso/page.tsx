@@ -7,8 +7,9 @@ import {
 } from '@mantine/core'
 import {
   IconShieldCheck, IconClipboardHeart,
-  IconPlayerPlay, IconCheck,
+  IconPlayerPlay,
   IconFileText, IconUserCheck,
+  IconDownload,
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -16,11 +17,13 @@ import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useAuth } from '@/hooks/useAuth'
 import {
   useSolicitudesCertificacion,
   useIniciarProceso,
   useConfirmarIncorporacion,
 } from '@/features/dispensario/hooks/useSolicitudCertificacion'
+import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
 import {
   TIPO_EVENTO_OPTIONS,
   ESTADO_SOLICITUD_COLORS,
@@ -45,6 +48,7 @@ const DICTAMEN_LABELS: Record<string, string> = {
 export default function SsoPage() {
   const router    = useRouter()
   const contained = useContainedInput()
+  const { hasPermiso } = useAuth()
   const [filtroEstado, setFiltroEstado] =
     useState<string>('pendiente')
 
@@ -55,6 +59,8 @@ export default function SsoPage() {
   const solicitudes = data?.data ?? []
   const iniciar     = useIniciarProceso()
   const confirmar   = useConfirmarIncorporacion()
+  const { descargarFemo, loading: descargando } = usePdfFemo()
+  const puedeConfirmarIncorporacion = hasPermiso('gestionar-onboarding')
 
   const pendientes = solicitudes.filter(
     s => s.estado === 'pendiente'
@@ -140,6 +146,20 @@ export default function SsoPage() {
       },
     },
     {
+      accessor: 'signos_vitales',
+      title:    'Signos vitales',
+      width:    150,
+      render: (s) => (
+        <Badge
+          size="sm"
+          variant="light"
+          color={s.constantes_vitales ? 'emerald' : 'orange'}
+        >
+          {s.constantes_vitales ? 'Tomados' : 'Pendiente'}
+        </Badge>
+      ),
+    },
+    {
       accessor: 'estado',
       title:    'Estado',
       width:    160,
@@ -171,36 +191,42 @@ export default function SsoPage() {
       render: (s) => (
         <TableActions actions={[
           ...(s.estado === 'pendiente' ? [{
-            label:   'Iniciar y crear FEMO',
+            label:   s.constantes_vitales
+              ? 'Iniciar y crear FEMO'
+              : 'Pendiente signos vitales (Enfermería)',
             icon:    <IconPlayerPlay size={14} />,
             color:   'blue',
+            disabled: !s.constantes_vitales,
             onClick: () => {
               iniciar.mutate(s.id, {
                 onSuccess: () =>
-                  router.push(
-                    `/salud/sso/femo/nueva` +
-                    `?solicitud=${s.id}` +
-                    `&cedula=${s.cedula_paciente}` +
-                    `&nombres=${encodeURIComponent(s.nombres_paciente)}` +
-                    `&tipo_evento=${s.tipo_evento}`
-                  ),
+                  router.push(`/salud/sso/femo/nueva/${s.id}`),
               })
             },
           }] : []),
           ...(s.estado === 'en_proceso' ? [{
-            label:   'Continuar FEMO',
+            label:   s.constantes_vitales
+              ? 'Continuar FEMO'
+              : 'Pendiente signos vitales (Enfermería)',
             icon:    <IconFileText size={14} />,
             color:   'blue',
+            disabled: !s.constantes_vitales,
             onClick: () =>
-              router.push(
-                `/salud/sso/femo/nueva` +
-                `?solicitud=${s.id}` +
-                `&cedula=${s.cedula_paciente}` +
-                `&nombres=${encodeURIComponent(s.nombres_paciente)}` +
-                `&tipo_evento=${s.tipo_evento}`
-              ),
+              router.push(`/salud/sso/femo/nueva/${s.id}`),
+          }] : []),
+          ...(s.ficha_femo_id ? [{
+            label:   'Descargar PDF de la ficha FEMO',
+            icon:    <IconDownload size={14} />,
+            color:   'blue',
+            disabled: descargando,
+            onClick: () => descargarFemo(
+              s.ficha_femo_id!,
+              `femo-${s.cedula_paciente}-${s.id}.pdf`
+            ),
           }] : []),
           ...(s.estado === 'completada' &&
+            !!s.postulante && !s.servidor &&
+            puedeConfirmarIncorporacion &&
             (s.dictamen === 'apto' ||
              s.dictamen === 'apto_con_restricciones') ? [{
             label:   'Confirmar incorporación',

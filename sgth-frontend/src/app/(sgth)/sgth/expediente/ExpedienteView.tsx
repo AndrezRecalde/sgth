@@ -3,23 +3,29 @@
 import { useState } from 'react'
 import { Box, Button, Group } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconFolder, IconUserPlus } from '@tabler/icons-react'
+import { IconFolder, IconUserPlus, IconStethoscope } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ServidorToolbar } from '@/features/expediente/components/ServidorToolbar'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
 import { ServidorModal } from '@/features/expediente/components/ServidorModal'
 import { ServidorDetail } from '@/features/expediente/components/ServidorDetail'
+import { SolicitarCertificacionLoteModal } from '@/features/expediente/components/SolicitarCertificacionLoteModal'
 import { useServidores } from '@/features/expediente/hooks/useServidores'
+import { useAuth } from '@/hooks/useAuth'
 import type { ServidorConRelaciones, EstadoContrato } from '@/types/api'
 
 export function ExpedienteView() {
+  const { hasPermiso } = useAuth()
   const [page, setPage]     = useState(1)
   const [search, setSearch] = useState('')
   const [estado, setEstado] = useState<string | null>(null)
+  const [selectedRecords, setSelectedRecords] =
+    useState<ServidorConRelaciones[]>([])
 
   const [modalOpened,  { open: openModal,  close: closeModal  }] = useDisclosure(false)
   const [detailOpened, { open: openDetail, close: closeDetail }] = useDisclosure(false)
+  const [loteOpened,   { open: openLote,   close: closeLote   }] = useDisclosure(false)
 
   const [editServidor, setEditServidor] =
     useState<ServidorConRelaciones | null>(null)
@@ -59,6 +65,17 @@ export function ExpedienteView() {
       />
 
       <Group justify="flex-end" mb="md">
+        {hasPermiso('solicitar-certificacion-medica') &&
+          selectedRecords.length > 0 && (
+          <Button
+            color="blue"
+            variant="light"
+            leftSection={<IconStethoscope size={16} />}
+            onClick={openLote}
+          >
+            Solicitar certificación médica ({selectedRecords.length})
+          </Button>
+        )}
         <Button
           color="emerald"
           variant="light"
@@ -96,6 +113,8 @@ export function ExpedienteView() {
           onPageChange={setPage}
           onView={handleView}
           onEdit={handleEdit}
+          selectedRecords={selectedRecords}
+          onSelectedRecordsChange={setSelectedRecords}
         />
       )}
 
@@ -109,6 +128,11 @@ export function ExpedienteView() {
         onClose={closeDetail}
         servidor={viewServidor}
         onEdit={handleEdit}
+      />
+      <SolicitarCertificacionLoteModal
+        opened={loteOpened}
+        onClose={() => { setSelectedRecords([]); closeLote() }}
+        servidores={selectedRecords}
       />
     </Box>
   )

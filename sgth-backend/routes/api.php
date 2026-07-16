@@ -1,29 +1,127 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Viatico\TramoViaticoController;
+use App\Http\Controllers\Actividades\ActividadLaboralController;
+use App\Http\Controllers\Admin\PermisoController;
+use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\Asistencia\ConsolidadoPermisoController;
+use App\Http\Controllers\Asistencia\FolioPermisoController;
+use App\Http\Controllers\Asistencia\MarcacionController;
+use App\Http\Controllers\Asistencia\PeriodoVacacionController;
+use App\Http\Controllers\Asistencia\PermisoServidorController;
+use App\Http\Controllers\Asistencia\VacacionController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Autoservicio\AutoservicioController;
+use App\Http\Controllers\Bienestar\EncuestaClimaController;
+use App\Http\Controllers\Bienestar\PlanBienestarController;
+use App\Http\Controllers\Capacitacion\CertificadoCapacitacionController;
+use App\Http\Controllers\Capacitacion\CursoController;
+use App\Http\Controllers\Capacitacion\PlanCapacitacionController;
+use App\Http\Controllers\Catalogo\CantonController;
+use App\Http\Controllers\Catalogo\EntidadFinancieraController;
+use App\Http\Controllers\Catalogo\ProvinciaController;
+use App\Http\Controllers\Catalogo\TipoUnidadController;
+use App\Http\Controllers\Disciplinario\DisciplinarioController;
+use App\Http\Controllers\Dispensario\AdquisicionController;
+use App\Http\Controllers\Dispensario\AgendaController;
+use App\Http\Controllers\Dispensario\AlergiaPacienteController;
+use App\Http\Controllers\Dispensario\AntecedentePacienteController;
+use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
+use App\Http\Controllers\Dispensario\CertificadoMedicoController;
+use App\Http\Controllers\Dispensario\ConsultaMedicaController;
+use App\Http\Controllers\Dispensario\DashboardDispensarioController;
+use App\Http\Controllers\Dispensario\DiagnosticoCie10Controller;
+use App\Http\Controllers\Dispensario\DisponibilidadController;
+use App\Http\Controllers\Dispensario\FemoPdfController;
+use App\Http\Controllers\Dispensario\FichaSaludOcupacionalController;
+use App\Http\Controllers\Dispensario\HistoriaClinicaController;
+use App\Http\Controllers\Dispensario\InventarioMedicinasController;
+use App\Http\Controllers\Dispensario\ItemRecetaController;
+use App\Http\Controllers\Dispensario\PacienteController;
+use App\Http\Controllers\Dispensario\PersonalMedicoController;
+use App\Http\Controllers\Dispensario\RecetaController;
+use App\Http\Controllers\Dispensario\ResultadoMedicoController;
+use App\Http\Controllers\Dispensario\SolicitudCertificacionController;
+use App\Http\Controllers\Dispensario\TriajeController;
+use App\Http\Controllers\Estructura\CargoController;
+use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
+use App\Http\Controllers\Estructura\GrupoOcupacionalController;
+use App\Http\Controllers\Estructura\OrganigramaController;
+use App\Http\Controllers\Estructura\PuestoActividadController;
+use App\Http\Controllers\Estructura\PuestoController;
+use App\Http\Controllers\Estructura\UnidadAdministrativaController;
+use App\Http\Controllers\Evaluacion\EvaluacionController;
+use App\Http\Controllers\Expediente\CargaFamiliarController;
+use App\Http\Controllers\Expediente\CertificadoLaboralController;
+use App\Http\Controllers\Expediente\ContratoServidorController;
+use App\Http\Controllers\Expediente\CuentaBancariaServidorController;
+use App\Http\Controllers\Expediente\DeclaracionJuramentadaController;
+use App\Http\Controllers\Expediente\DiscapacidadCargaFamiliarController;
+use App\Http\Controllers\Expediente\DiscapacidadServidorController;
+use App\Http\Controllers\Expediente\DocumentoServidorController;
+use App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController;
+use App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController;
+use App\Http\Controllers\Expediente\HistorialAcademicoController;
+use App\Http\Controllers\Expediente\MovimientoPersonalController;
+use App\Http\Controllers\Expediente\ServidorController;
+use App\Http\Controllers\Expediente\SubrogacionController;
+use App\Http\Controllers\Helpdesk\AreaDticController;
+use App\Http\Controllers\Helpdesk\BaseConocimientoController;
+use App\Http\Controllers\Helpdesk\ComentarioTicketController;
+use App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController;
+use App\Http\Controllers\Helpdesk\SlaController;
+use App\Http\Controllers\Helpdesk\TecnicoDticController;
+use App\Http\Controllers\Helpdesk\TicketController;
+use App\Http\Controllers\InventarioTi\AsignacionBienController;
+use App\Http\Controllers\InventarioTi\AuditoriaInventarioController;
+use App\Http\Controllers\InventarioTi\BajaController;
+use App\Http\Controllers\InventarioTi\BienInformaticoController;
+use App\Http\Controllers\InventarioTi\MantenimientoBienController;
+use App\Http\Controllers\Nomina\ConceptoNominaController;
+use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
+use App\Http\Controllers\Nomina\HandoffErpController;
+use App\Http\Controllers\Nomina\NominaController;
+use App\Http\Controllers\Nomina\RolPagoController;
+use App\Http\Controllers\Reporteria\DashboardController;
+use App\Http\Controllers\Reporteria\ReporteController;
+use App\Http\Controllers\Seleccion\CalificacionController;
+use App\Http\Controllers\Seleccion\ConvocatoriaController;
+use App\Http\Controllers\Seleccion\CriterioEvaluacionController;
+use App\Http\Controllers\Seleccion\PlantillaEvaluacionController;
+use App\Http\Controllers\Seleccion\PostulanteController;
+use App\Http\Controllers\Seleccion\SeleccionController;
+use App\Http\Controllers\Sgd\DocumentoInstitucionalController;
+use App\Http\Controllers\Sso\AccidenteTrabajoController;
+use App\Http\Controllers\Sso\EquipoProteccionController;
+use App\Http\Controllers\Sso\RiesgoLaboralController;
+use App\Http\Controllers\Viatico\AutorizacionVueloController;
 use App\Http\Controllers\Viatico\CatalogoViaticoController;
+use App\Http\Controllers\Viatico\FacturaViaticoController;
+use App\Http\Controllers\Viatico\InformeViaticoController;
+use App\Http\Controllers\Viatico\LiquidacionViaticoController;
+use App\Http\Controllers\Viatico\TramoViaticoController;
+use App\Http\Controllers\Viatico\ViaticoController;
+use Illuminate\Support\Facades\Route;
 
 // ── Rutas públicas (sin autenticación) ────────────────────────────
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
-        Route::post('login', [\App\Http\Controllers\Auth\AuthController::class, 'login'])
+        Route::post('login', [AuthController::class, 'login'])
             ->middleware('throttle:5,1');
     });
 
     // Endpoint público para escanear el QR del permiso físico
-    Route::get('permisos/verificar/{folio}', [\App\Http\Controllers\Asistencia\FolioPermisoController::class, 'verificar']);
+    Route::get('permisos/verificar/{folio}', [FolioPermisoController::class, 'verificar']);
 
     // Endpoint público protegido criptográficamente mediante firmas temporales (URL firmada)
-    Route::get('sgd/documentos/{documento}/descargar', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'descargar'])
+    Route::get('sgd/documentos/{documento}/descargar', [DocumentoInstitucionalController::class, 'descargar'])
         ->name('sgd.documentos.descargar');
-        
+
     // Catálogos geográficos públicos
-    Route::get('catalogos/provincias', [\App\Http\Controllers\Catalogo\ProvinciaController::class, 'index']);
-    Route::get('catalogos/provincias/{id}/cantones', [\App\Http\Controllers\Catalogo\CantonController::class, 'porProvincia']);
+    Route::get('catalogos/provincias', [ProvinciaController::class, 'index']);
+    Route::get('catalogos/provincias/{id}/cantones', [CantonController::class, 'porProvincia']);
 
     // Dispensario Médico: Búsqueda pública CIE-10 para autocompletado
-    Route::get('dispensario/cie10/buscar', [\App\Http\Controllers\Dispensario\DiagnosticoCie10Controller::class, 'buscar']);
+    Route::get('dispensario/cie10/buscar', [DiagnosticoCie10Controller::class, 'buscar']);
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
@@ -31,115 +129,115 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
     // Auth
     Route::prefix('auth')->group(function () {
-        Route::post('logout', [\App\Http\Controllers\Auth\AuthController::class, 'logout']);
-        Route::get('perfil', [\App\Http\Controllers\Auth\AuthController::class, 'perfil']);
-        
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('perfil', [AuthController::class, 'perfil']);
+
         // Esta ruta debe ignorar la restricción del primer-login (manejado internamente por el middleware)
         Route::post('cambiar-contrasena',
-            [\App\Http\Controllers\Auth\AuthController::class, 'cambiarContrasenaInicial']
+            [AuthController::class, 'cambiarContrasenaInicial']
         );
     });
 
     // Rutas públicas de catálogo
-    Route::get('catalogos/entidades-financieras', [\App\Http\Controllers\Catalogo\EntidadFinancieraController::class, 'index']);
-    Route::get('catalogos/tipos-unidad', [\App\Http\Controllers\Catalogo\TipoUnidadController::class, 'index']);
+    Route::get('catalogos/entidades-financieras', [EntidadFinancieraController::class, 'index']);
+    Route::get('catalogos/tipos-unidad', [TipoUnidadController::class, 'index']);
 
     // Rutas de administración
-    Route::apiResource('catalogos/entidades-financieras', \App\Http\Controllers\Catalogo\EntidadFinancieraController::class)
+    Route::apiResource('catalogos/entidades-financieras', EntidadFinancieraController::class)
         ->except(['index', 'show'])
         ->middleware('role:admin-ti|admin-uath');
 
     // Módulo 01: Estructura Organizacional
     Route::prefix('estructura')->group(function () {
-        Route::get('organigrama', \App\Http\Controllers\Estructura\OrganigramaController::class);
+        Route::get('organigrama', OrganigramaController::class);
         Route::get(
             'unidades-administrativas/todas',
-            [\App\Http\Controllers\Estructura\UnidadAdministrativaController::class, 'todas']
+            [UnidadAdministrativaController::class, 'todas']
         );
-        Route::apiResource('unidades-administrativas', \App\Http\Controllers\Estructura\UnidadAdministrativaController::class);
-        Route::apiResource('puestos', \App\Http\Controllers\Estructura\PuestoController::class);
+        Route::apiResource('unidades-administrativas', UnidadAdministrativaController::class);
+        Route::apiResource('puestos', PuestoController::class);
         Route::prefix('puestos/{puestoId}/actividades')
             ->group(function () {
-                Route::get('/', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'index']);
-                Route::post('/', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'store']);
-                Route::patch('{actividadId}', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'update']);
-                Route::delete('{actividadId}', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'destroy']);
-                Route::post('reordenar', [\App\Http\Controllers\Estructura\PuestoActividadController::class, 'reordenar']);
+                Route::get('/', [PuestoActividadController::class, 'index']);
+                Route::post('/', [PuestoActividadController::class, 'store']);
+                Route::patch('{actividadId}', [PuestoActividadController::class, 'update']);
+                Route::delete('{actividadId}', [PuestoActividadController::class, 'destroy']);
+                Route::post('reordenar', [PuestoActividadController::class, 'reordenar']);
             });
 
-        Route::get('cargos', [\App\Http\Controllers\Estructura\CargoController::class, 'index'])
+        Route::get('cargos', [CargoController::class, 'index'])
             ->name('estructura.cargos.index');
-        Route::post('cargos', [\App\Http\Controllers\Estructura\CargoController::class, 'store'])
+        Route::post('cargos', [CargoController::class, 'store'])
             ->name('estructura.cargos.store');
-        Route::put('cargos/{id}', [\App\Http\Controllers\Estructura\CargoController::class, 'update'])
+        Route::put('cargos/{id}', [CargoController::class, 'update'])
             ->name('estructura.cargos.update');
-        Route::delete('cargos/{id}', [\App\Http\Controllers\Estructura\CargoController::class, 'destroy'])
+        Route::delete('cargos/{id}', [CargoController::class, 'destroy'])
             ->name('estructura.cargos.destroy');
-        
-        Route::get('grupos-ocupacionales', [\App\Http\Controllers\Estructura\GrupoOcupacionalController::class, 'index'])
+
+        Route::get('grupos-ocupacionales', [GrupoOcupacionalController::class, 'index'])
             ->name('estructura.grupos-ocupacionales');
-        
+
         // Directorio telefónico público para servidores
-        Route::get('directorio-telefonico', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'index']);
-        
+        Route::get('directorio-telefonico', [ExtensionTelefonicaController::class, 'index']);
+
         // Gestión de extensiones (protegida por middleware)
         Route::middleware('role:admin-ti|admin-uath')->group(function () {
-            Route::post('extensiones', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'store']);
-            Route::put('extensiones/{id}', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'update']);
-            Route::delete('extensiones/{id}', [\App\Http\Controllers\Estructura\ExtensionTelefonicaController::class, 'destroy']);
+            Route::post('extensiones', [ExtensionTelefonicaController::class, 'store']);
+            Route::put('extensiones/{id}', [ExtensionTelefonicaController::class, 'update']);
+            Route::delete('extensiones/{id}', [ExtensionTelefonicaController::class, 'destroy']);
         });
     });
 
     // Módulo 02: Expediente Digital
     Route::get('expediente/servidores/sin-usuario',
-        [\App\Http\Controllers\Expediente\ServidorController::class, 'sinUsuario'])
+        [ServidorController::class, 'sinUsuario'])
         ->name('servidores.sinUsuario');
 
     Route::post('expediente/servidores/basico',
-        [\App\Http\Controllers\Expediente\ServidorController::class, 'storeBasico'])
+        [ServidorController::class, 'storeBasico'])
         ->name('servidores.storeBasico');
 
     Route::post(
         'expediente/cargas-familiares/{cargaId}/discapacidades',
-        [\App\Http\Controllers\Expediente\DiscapacidadCargaFamiliarController::class, 'store']
+        [DiscapacidadCargaFamiliarController::class, 'store']
     )->name('carga.discapacidades.store');
 
     Route::delete(
         'expediente/cargas-familiares/{cargaId}/discapacidades/{id}',
-        [\App\Http\Controllers\Expediente\DiscapacidadCargaFamiliarController::class, 'destroy']
+        [DiscapacidadCargaFamiliarController::class, 'destroy']
     )->name('carga.discapacidades.destroy');
 
     Route::post(
         'expediente/cargas-familiares/{cargaId}/enfermedades',
-        [\App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController::class, 'store']
+        [EnfermedadCargaFamiliarController::class, 'store']
     )->name('carga.enfermedades.store');
 
     Route::delete(
         'expediente/cargas-familiares/{cargaId}/enfermedades/{id}',
-        [\App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController::class, 'destroy']
+        [EnfermedadCargaFamiliarController::class, 'destroy']
     )->name('carga.enfermedades.destroy');
 
     Route::prefix('expediente')->group(function () {
-        Route::apiResource('servidores', \App\Http\Controllers\Expediente\ServidorController::class);
-        
+        Route::apiResource('servidores', ServidorController::class);
+
         Route::prefix('servidores/{servidorId}')->group(function () {
             Route::get('documentos',
-                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'index'])
+                [DocumentoServidorController::class, 'index'])
                 ->name('documentos.index');
             Route::post('documentos',
-                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'store'])
+                [DocumentoServidorController::class, 'store'])
                 ->name('documentos.store');
             Route::delete('documentos/{documentoId}',
-                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'destroy'])
+                [DocumentoServidorController::class, 'destroy'])
                 ->name('documentos.destroy');
             Route::get('documentos/{documentoId}/descargar',
-                [\App\Http\Controllers\Expediente\DocumentoServidorController::class, 'descargar'])
+                [DocumentoServidorController::class, 'descargar'])
                 ->name('documentos.descargar');
         });
-        Route::get('servidores/{servidor}/movimientos', [\App\Http\Controllers\Expediente\MovimientoPersonalController::class, 'index']);
+        Route::get('servidores/{servidor}/movimientos', [MovimientoPersonalController::class, 'index']);
 
-        Route::get('servidores/{id}/certificado-laboral', [\App\Http\Controllers\Expediente\CertificadoLaboralController::class, 'generar']);
-        Route::get('certificado-laboral/descargar/{archivo}', [\App\Http\Controllers\Expediente\CertificadoLaboralController::class, 'descargar'])
+        Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar']);
+        Route::get('certificado-laboral/descargar/{archivo}', [CertificadoLaboralController::class, 'descargar'])
             ->name('expediente.certificado.descargar')
             ->middleware('signed');
 
@@ -147,108 +245,107 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::prefix('servidores/{servidorId}')
             ->middleware('role:admin-uath|asistente-uath')
             ->group(function () {
-                Route::apiResource('contratos', \App\Http\Controllers\Expediente\ContratoServidorController::class)->parameters(['contratos' => 'contrato']);
-                Route::apiResource('discapacidades', \App\Http\Controllers\Expediente\DiscapacidadServidorController::class);
-                Route::apiResource('enfermedades', \App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController::class);
+                Route::apiResource('contratos', ContratoServidorController::class)->parameters(['contratos' => 'contrato']);
+                Route::apiResource('discapacidades', DiscapacidadServidorController::class);
+                Route::apiResource('enfermedades', EnfermedadCatastroficaServidorController::class);
 
                 // Historial académico
-                Route::get('historial-academico', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'index']);
-                Route::post('historial-academico', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'store']);
-                Route::put('historial-academico/{id}', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'update']);
-                Route::delete('historial-academico/{id}', [\App\Http\Controllers\Expediente\HistorialAcademicoController::class, 'destroy']);
+                Route::get('historial-academico', [HistorialAcademicoController::class, 'index']);
+                Route::post('historial-academico', [HistorialAcademicoController::class, 'store']);
+                Route::put('historial-academico/{id}', [HistorialAcademicoController::class, 'update']);
+                Route::delete('historial-academico/{id}', [HistorialAcademicoController::class, 'destroy']);
 
                 // Cargas familiares
-                Route::get('cargas-familiares', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'index']);
-                Route::post('cargas-familiares', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'store']);
-                Route::put('cargas-familiares/{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'update']);
-                Route::delete('cargas-familiares/{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'destroy']);
-                Route::post('cargas-familiares/{id}/toggle-estado', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'toggleEstado']);
+                Route::get('cargas-familiares', [CargaFamiliarController::class, 'index']);
+                Route::post('cargas-familiares', [CargaFamiliarController::class, 'store']);
+                Route::put('cargas-familiares/{id}', [CargaFamiliarController::class, 'update']);
+                Route::delete('cargas-familiares/{id}', [CargaFamiliarController::class, 'destroy']);
+                Route::post('cargas-familiares/{id}/toggle-estado', [CargaFamiliarController::class, 'toggleEstado']);
 
                 // Declaraciones juramentadas
-                Route::get('declaraciones-juramentadas', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'index']);
-                Route::post('declaraciones-juramentadas', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'store']);
-                Route::delete('declaraciones-juramentadas/{id}', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'destroy']);
-                Route::get('declaraciones-juramentadas/exportar', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'exportar']);
-                Route::get('declaraciones-juramentadas/{id}/documento', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'verDocumento']);
-                Route::put('declaraciones-juramentadas/{id}', [\App\Http\Controllers\Expediente\DeclaracionJuramentadaController::class, 'update'])->name('declaraciones.update');
-
+                Route::get('declaraciones-juramentadas', [DeclaracionJuramentadaController::class, 'index']);
+                Route::post('declaraciones-juramentadas', [DeclaracionJuramentadaController::class, 'store']);
+                Route::delete('declaraciones-juramentadas/{id}', [DeclaracionJuramentadaController::class, 'destroy']);
+                Route::get('declaraciones-juramentadas/exportar', [DeclaracionJuramentadaController::class, 'exportar']);
+                Route::get('declaraciones-juramentadas/{id}/documento', [DeclaracionJuramentadaController::class, 'verDocumento']);
+                Route::put('declaraciones-juramentadas/{id}', [DeclaracionJuramentadaController::class, 'update'])->name('declaraciones.update');
 
             });
 
         // Cuentas bancarias
         Route::prefix('servidores/{id}/cuentas-bancarias')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'store']);
-            Route::put('{cuenta}', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'update']);
-            Route::delete('{cuenta}', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'destroy']);
-            Route::post('{cuenta}/set-principal', [\App\Http\Controllers\Expediente\CuentaBancariaServidorController::class, 'setPrincipal']);
+            Route::get('/', [CuentaBancariaServidorController::class, 'index']);
+            Route::post('/', [CuentaBancariaServidorController::class, 'store']);
+            Route::put('{cuenta}', [CuentaBancariaServidorController::class, 'update']);
+            Route::delete('{cuenta}', [CuentaBancariaServidorController::class, 'destroy']);
+            Route::post('{cuenta}/set-principal', [CuentaBancariaServidorController::class, 'setPrincipal']);
         });
 
         Route::prefix('subrogaciones')->group(function () {
-            Route::get('activas', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'listarActivas']);
-            Route::get('servidor/{servidorId}', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'listarPorServidor']);
-            Route::post('/', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'registrar']);
-            Route::put('{id}/finalizar', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'finalizar']);
-            Route::put('{id}/cancelar', [\App\Http\Controllers\Expediente\SubrogacionController::class, 'cancelar']);
+            Route::get('activas', [SubrogacionController::class, 'listarActivas']);
+            Route::get('servidor/{servidorId}', [SubrogacionController::class, 'listarPorServidor']);
+            Route::post('/', [SubrogacionController::class, 'registrar']);
+            Route::put('{id}/finalizar', [SubrogacionController::class, 'finalizar']);
+            Route::put('{id}/cancelar', [SubrogacionController::class, 'cancelar']);
         });
     });
 
     // Módulo 03: Nómina y Remuneraciones
     Route::prefix('nomina')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Nomina\NominaController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\Nomina\NominaController::class, 'calcular']);
-        Route::get('{id}', [\App\Http\Controllers\Nomina\NominaController::class, 'show']);
-        Route::post('{id}/cerrar', [\App\Http\Controllers\Nomina\NominaController::class, 'cerrar']);
-        
-        Route::get('{nominaId}/rol-pago/{servidorId}', [\App\Http\Controllers\Nomina\RolPagoController::class, 'show']);
-        
-        Route::get('conceptos', [\App\Http\Controllers\Nomina\ConceptoNominaController::class, 'index']);
-        Route::get('handoffs', [\App\Http\Controllers\Nomina\HandoffErpController::class, 'index']);
-        
-        Route::apiResource('descuentos-recurrentes', \App\Http\Controllers\Nomina\DescuentoRecurrenteController::class)
+        Route::get('/', [NominaController::class, 'index']);
+        Route::post('/', [NominaController::class, 'calcular']);
+        Route::get('{id}', [NominaController::class, 'show']);
+        Route::post('{id}/cerrar', [NominaController::class, 'cerrar']);
+
+        Route::get('{nominaId}/rol-pago/{servidorId}', [RolPagoController::class, 'show']);
+
+        Route::get('conceptos', [ConceptoNominaController::class, 'index']);
+        Route::get('handoffs', [HandoffErpController::class, 'index']);
+
+        Route::apiResource('descuentos-recurrentes', DescuentoRecurrenteController::class)
             ->middleware('role:admin-uath|asistente-uath');
     });
 
     // Módulo 04: Asistencia, Permisos y Vacaciones
     Route::prefix('asistencia')->group(function () {
         // Biométrico (Solo lectura)
-        Route::get('marcaciones', [\App\Http\Controllers\Asistencia\MarcacionController::class, 'index']);
+        Route::get('marcaciones', [MarcacionController::class, 'index']);
 
         Route::post(
             'marcaciones/online',
-            [\App\Http\Controllers\Asistencia\MarcacionController::class,
-             'registrarOnline']
+            [MarcacionController::class,
+                'registrarOnline']
         )->name('asistencia.marcaciones.online');
 
         Route::get(
             'marcaciones/estado-hoy',
-            [\App\Http\Controllers\Asistencia\MarcacionController::class,
-             'estadoHoy']
+            [MarcacionController::class,
+                'estadoHoy']
         )->name('asistencia.marcaciones.estado-hoy');
 
         // Vacaciones
         Route::prefix('vacaciones')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Asistencia\VacacionController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Asistencia\VacacionController::class, 'store']);
-            Route::get('saldo/{servidorId}', [\App\Http\Controllers\Asistencia\VacacionController::class, 'saldo']);
-            Route::get('{id}/exportar', [\App\Http\Controllers\Asistencia\VacacionController::class, 'exportar'])
+            Route::get('/', [VacacionController::class, 'index']);
+            Route::post('/', [VacacionController::class, 'store']);
+            Route::get('saldo/{servidorId}', [VacacionController::class, 'saldo']);
+            Route::get('{id}/exportar', [VacacionController::class, 'exportar'])
                 ->name('asistencia.vacaciones.exportar');
-            Route::put('{id}', [\App\Http\Controllers\Asistencia\VacacionController::class, 'update']);
+            Route::put('{id}', [VacacionController::class, 'update']);
         });
 
         // Permisos
         Route::prefix('permisos')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'store']);
-            Route::get('{id}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'show']);
-            Route::get('{id}/exportar', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'exportar'])
+            Route::get('/', [PermisoServidorController::class, 'index']);
+            Route::post('/', [PermisoServidorController::class, 'store']);
+            Route::get('{id}', [PermisoServidorController::class, 'show']);
+            Route::get('{id}/exportar', [PermisoServidorController::class, 'exportar'])
                 ->name('asistencia.permisos.exportar');
-            Route::put('{id}/anular', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'anular'])
+            Route::put('{id}/anular', [PermisoServidorController::class, 'anular'])
                 ->middleware('role:admin-uath|asistente-uath');
-            
-            Route::post('confirmar/{folio}', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'confirmar'])
+
+            Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar'])
                 ->middleware('role:recepcion|admin-uath|asistente-uath');
-            Route::post('{id}/validar-ts', [\App\Http\Controllers\Asistencia\PermisoServidorController::class, 'validar'])
+            Route::post('{id}/validar-ts', [PermisoServidorController::class, 'validar'])
                 ->middleware('role:trabajo-social|admin-uath');
         });
     });
@@ -257,20 +354,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         ->group(function () {
             Route::get(
                 'servidores/{servidorId}/resumen',
-                [\App\Http\Controllers\Asistencia\PeriodoVacacionController::class,
-                 'resumen']
+                [PeriodoVacacionController::class,
+                    'resumen']
             )->name('periodos.resumen');
 
             Route::post(
                 'servidores/{servidorId}/generar',
-                [\App\Http\Controllers\Asistencia\PeriodoVacacionController::class,
-                 'generar']
+                [PeriodoVacacionController::class,
+                    'generar']
             )->name('periodos.generar');
 
             Route::post(
                 'generar-todos',
-                [\App\Http\Controllers\Asistencia\PeriodoVacacionController::class,
-                 'generarTodos']
+                [PeriodoVacacionController::class,
+                    'generarTodos']
             )->name('periodos.generar-todos');
         });
 
@@ -278,47 +375,47 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         ->group(function () {
             Route::get(
                 '/',
-                [\App\Http\Controllers\Asistencia\ConsolidadoPermisoController::class,
-                 'consolidado']
+                [ConsolidadoPermisoController::class,
+                    'consolidado']
             )->name('asistencia.consolidado');
 
             Route::get(
                 'exportar-excel',
-                [\App\Http\Controllers\Asistencia\ConsolidadoPermisoController::class,
-                 'exportarExcel']
+                [ConsolidadoPermisoController::class,
+                    'exportarExcel']
             )->name('asistencia.consolidado.excel');
 
             Route::get(
                 'exportar-pdf',
-                [\App\Http\Controllers\Asistencia\ConsolidadoPermisoController::class,
-                 'exportarPdf']
+                [ConsolidadoPermisoController::class,
+                    'exportarPdf']
             )->name('asistencia.consolidado.pdf');
         });
 
     // Módulo 05: Sistema de Gestión Documental (SGD)
     Route::prefix('sgd')->group(function () {
-        Route::post('documentos', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'store']);
-        Route::get('documentos/{id}/generar-enlace', [\App\Http\Controllers\Sgd\DocumentoInstitucionalController::class, 'generarEnlace']);
+        Route::post('documentos', [DocumentoInstitucionalController::class, 'store']);
+        Route::get('documentos/{id}/generar-enlace', [DocumentoInstitucionalController::class, 'generarEnlace']);
     });
 
     // Módulo 06: Autoservicio
     Route::prefix('autoservicio')->group(function () {
-        Route::get('mis-permisos', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misPermisos']);
-        Route::get('mis-vacaciones', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misVacaciones']);
-        Route::get('mis-roles-pago', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misRolesPago']);
-        Route::get('mi-expediente', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'miExpediente']);
-        Route::get('mis-actividades', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'misActividades']);
-        
+        Route::get('mis-permisos', [AutoservicioController::class, 'misPermisos']);
+        Route::get('mis-vacaciones', [AutoservicioController::class, 'misVacaciones']);
+        Route::get('mis-roles-pago', [AutoservicioController::class, 'misRolesPago']);
+        Route::get('mi-expediente', [AutoservicioController::class, 'miExpediente']);
+        Route::get('mis-actividades', [AutoservicioController::class, 'misActividades']);
+
         // Integración con Clínica y Módulo Asistencia
-        Route::post('solicitar-cita', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'solicitarCita']);
-        Route::get('mi-historia-clinica', [\App\Http\Controllers\Autoservicio\AutoservicioController::class, 'miHistoriaClinica']);
+        Route::post('solicitar-cita', [AutoservicioController::class, 'solicitarCita']);
+        Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
 
         // Cargas familiares (autoservicio)
         Route::prefix('mis-cargas-familiares')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'misCargas']);
-            Route::post('/', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'storeMisCargas']);
-            Route::put('{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'updateMisCargas']);
-            Route::delete('{id}', [\App\Http\Controllers\Expediente\CargaFamiliarController::class, 'destroyMisCargas']);
+            Route::get('/', [CargaFamiliarController::class, 'misCargas']);
+            Route::post('/', [CargaFamiliarController::class, 'storeMisCargas']);
+            Route::put('{id}', [CargaFamiliarController::class, 'updateMisCargas']);
+            Route::delete('{id}', [CargaFamiliarController::class, 'destroyMisCargas']);
         });
     });
 
@@ -327,82 +424,82 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         ->middleware('role:admin-uath|analista-uath|admin-ti')
         ->group(function () {
             // Convocatorias
-            Route::get('convocatorias', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'index']);
-            Route::post('convocatorias', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'store']);
-            Route::get('convocatorias/{id}', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'show']);
-            Route::patch('convocatorias/{id}', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'update']);
-            Route::delete('convocatorias/{id}', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'destroy']);
-            Route::patch('convocatorias/{id}/publicar', [\App\Http\Controllers\Seleccion\ConvocatoriaController::class, 'publicar']);
+            Route::get('convocatorias', [ConvocatoriaController::class, 'index']);
+            Route::post('convocatorias', [ConvocatoriaController::class, 'store']);
+            Route::get('convocatorias/{id}', [ConvocatoriaController::class, 'show']);
+            Route::patch('convocatorias/{id}', [ConvocatoriaController::class, 'update']);
+            Route::delete('convocatorias/{id}', [ConvocatoriaController::class, 'destroy']);
+            Route::patch('convocatorias/{id}/publicar', [ConvocatoriaController::class, 'publicar']);
 
             // Postulantes por convocatoria
-            Route::get('convocatorias/{convocatoriaId}/postulantes', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'index']);
-            Route::post('convocatorias/{convocatoriaId}/postulantes', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'store']);
-            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'show']);
-            Route::patch('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'update']);
-            Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'destroy']);
+            Route::get('convocatorias/{convocatoriaId}/postulantes', [PostulanteController::class, 'index']);
+            Route::post('convocatorias/{convocatoriaId}/postulantes', [PostulanteController::class, 'store']);
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'show']);
+            Route::patch('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'update']);
+            Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'destroy']);
 
             // Documentos del postulante
-            Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'subirDocumento']);
-            Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [\App\Http\Controllers\Seleccion\PostulanteController::class, 'eliminarDocumento']);
+            Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos', [PostulanteController::class, 'subirDocumento']);
+            Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'eliminarDocumento']);
 
             // Criterios de evaluación
-            Route::get('convocatorias/{convocatoriaId}/criterios', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'index']);
-            Route::post('convocatorias/{convocatoriaId}/criterios', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'store']);
-            Route::patch('convocatorias/{convocatoriaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'update']);
-            Route::delete('convocatorias/{convocatoriaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\CriterioEvaluacionController::class, 'destroy']);
+            Route::get('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'index']);
+            Route::post('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'store']);
+            Route::patch('convocatorias/{convocatoriaId}/criterios/{criterioId}', [CriterioEvaluacionController::class, 'update']);
+            Route::delete('convocatorias/{convocatoriaId}/criterios/{criterioId}', [CriterioEvaluacionController::class, 'destroy']);
 
             // Plantillas de evaluación
-            Route::get('plantillas', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'index']);
-            Route::post('plantillas', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'store']);
-            Route::get('plantillas/{id}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'show']);
-            Route::patch('plantillas/{id}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'update']);
-            Route::delete('plantillas/{id}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'destroy']);
-            Route::post('plantillas/{plantillaId}/criterios', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'agregarCriterio']);
-            Route::delete('plantillas/{plantillaId}/criterios/{criterioId}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'eliminarCriterio']);
-            Route::post('plantillas/{plantillaId}/aplicar/{convocatoriaId}', [\App\Http\Controllers\Seleccion\PlantillaEvaluacionController::class, 'aplicarAConvocatoria']);
+            Route::get('plantillas', [PlantillaEvaluacionController::class, 'index']);
+            Route::post('plantillas', [PlantillaEvaluacionController::class, 'store']);
+            Route::get('plantillas/{id}', [PlantillaEvaluacionController::class, 'show']);
+            Route::patch('plantillas/{id}', [PlantillaEvaluacionController::class, 'update']);
+            Route::delete('plantillas/{id}', [PlantillaEvaluacionController::class, 'destroy']);
+            Route::post('plantillas/{plantillaId}/criterios', [PlantillaEvaluacionController::class, 'agregarCriterio']);
+            Route::delete('plantillas/{plantillaId}/criterios/{criterioId}', [PlantillaEvaluacionController::class, 'eliminarCriterio']);
+            Route::post('plantillas/{plantillaId}/aplicar/{convocatoriaId}', [PlantillaEvaluacionController::class, 'aplicarAConvocatoria']);
 
             // Calificaciones por postulante
-            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [\App\Http\Controllers\Seleccion\CalificacionController::class, 'obtener']);
-            Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [\App\Http\Controllers\Seleccion\CalificacionController::class, 'guardar']);
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [CalificacionController::class, 'obtener']);
+            Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [CalificacionController::class, 'guardar']);
 
             // Evaluación y selección
-            Route::post('postulantes/{id}/calificar', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'calificar']);
-            Route::post('convocatorias/{id}/declarar-ganador', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'declararGanador']);
-            Route::post('convocatorias/{id}/confirmar-ganador', [\App\Http\Controllers\Seleccion\SeleccionController::class, 'confirmarGanador']);
+            Route::post('postulantes/{id}/calificar', [SeleccionController::class, 'calificar']);
+            Route::post('convocatorias/{id}/declarar-ganador', [SeleccionController::class, 'declararGanador']);
+            Route::post('convocatorias/{id}/confirmar-ganador', [SeleccionController::class, 'confirmarGanador']);
         });
 
     // Módulo 12 — Inventario de Bienes Informáticos
     Route::prefix('inventario')
         ->group(function () {
             // Bienes — DTIC gestiona, todos pueden ver el suyo
-            Route::apiResource('bienes', \App\Http\Controllers\InventarioTi\BienInformaticoController::class)
+            Route::apiResource('bienes', BienInformaticoController::class)
                 ->middleware('role:tecnico-dtic|admin-ti');
             Route::get('bienes/{bien}/historial',
-                [\App\Http\Controllers\InventarioTi\BienInformaticoController::class, 'historial'])
+                [BienInformaticoController::class, 'historial'])
                 ->middleware('role:tecnico-dtic|admin-ti|auditor');
 
             // Asignaciones
-            Route::apiResource('asignaciones', \App\Http\Controllers\InventarioTi\AsignacionBienController::class)
+            Route::apiResource('asignaciones', AsignacionBienController::class)
                 ->middleware('role:tecnico-dtic|admin-ti');
 
             // Mantenimientos
-            Route::apiResource('mantenimientos', \App\Http\Controllers\InventarioTi\MantenimientoBienController::class)
+            Route::apiResource('mantenimientos', MantenimientoBienController::class)
                 ->middleware('role:tecnico-dtic|admin-ti');
 
             // Auditoría física por QR
             Route::post('auditoria/escanear',
-                [\App\Http\Controllers\InventarioTi\AuditoriaInventarioController::class, 'escanear'])
+                [AuditoriaInventarioController::class, 'escanear'])
                 ->middleware('role:tecnico-dtic|admin-ti');
             Route::post('auditoria/registrar',
-                [\App\Http\Controllers\InventarioTi\AuditoriaInventarioController::class, 'registrarAuditoria'])
+                [AuditoriaInventarioController::class, 'registrarAuditoria'])
                 ->middleware('role:tecnico-dtic|admin-ti');
 
             // Bajas conforme Contraloría
             Route::get('bajas',
-                [\App\Http\Controllers\InventarioTi\BajaController::class, 'index'])
+                [BajaController::class, 'index'])
                 ->middleware('role:tecnico-dtic|admin-ti|auditor');
             Route::post('bajas',
-                [\App\Http\Controllers\InventarioTi\BajaController::class, 'store'])
+                [BajaController::class, 'store'])
                 ->middleware('role:admin-ti');
         });
 
@@ -411,73 +508,73 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         ->group(function () {
             // Tickets — cualquier servidor autenticado puede crear
             Route::get('tickets',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'index']);
+                [TicketController::class, 'index']);
             Route::post('tickets',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'store']);
+                [TicketController::class, 'store']);
             Route::get('tickets/{ticket}',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'show']);
+                [TicketController::class, 'show']);
             Route::patch('tickets/{ticket}/estado',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'cambiarEstado'])
+                [TicketController::class, 'cambiarEstado'])
                 ->middleware('role:tecnico-dtic|admin-ti');
             Route::post('tickets/{ticket}/asignar',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'asignar'])
+                [TicketController::class, 'asignar'])
                 ->middleware('role:tecnico-dtic|admin-ti');
             Route::post('tickets/{ticket}/escalar',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'escalar'])
+                [TicketController::class, 'escalar'])
                 ->middleware('role:tecnico-dtic|admin-ti');
             Route::post('tickets/{ticket}/cerrar',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'cerrar'])
+                [TicketController::class, 'cerrar'])
                 ->middleware('role:tecnico-dtic|admin-ti');
             Route::post('tickets/{ticket}/vincular-bien',
-                [\App\Http\Controllers\Helpdesk\TicketController::class, 'vincularBien'])
+                [TicketController::class, 'vincularBien'])
                 ->middleware('role:tecnico-dtic|admin-ti');
 
             // Comentarios
             Route::post('tickets/{ticket}/comentarios',
-                [\App\Http\Controllers\Helpdesk\ComentarioTicketController::class, 'store']);
+                [ComentarioTicketController::class, 'store']);
             Route::get('tickets/{ticket}/comentarios',
-                [\App\Http\Controllers\Helpdesk\ComentarioTicketController::class, 'index']);
+                [ComentarioTicketController::class, 'index']);
 
             // Áreas DTIC
-            Route::apiResource('areas', \App\Http\Controllers\Helpdesk\AreaDticController::class)
+            Route::apiResource('areas', AreaDticController::class)
                 ->middleware('role:admin-ti');
 
             // Técnicos
-            Route::apiResource('tecnicos', \App\Http\Controllers\Helpdesk\TecnicoDticController::class)
+            Route::apiResource('tecnicos', TecnicoDticController::class)
                 ->middleware('role:admin-ti');
             Route::get('tecnicos/{tecnico}/carga-trabajo',
-                [\App\Http\Controllers\Helpdesk\TecnicoDticController::class, 'cargaTrabajo'])
+                [TecnicoDticController::class, 'cargaTrabajo'])
                 ->middleware('role:tecnico-dtic|admin-ti');
 
             // SLA
-            Route::apiResource('slas', \App\Http\Controllers\Helpdesk\SlaController::class)
+            Route::apiResource('slas', SlaController::class)
                 ->middleware('role:admin-ti');
 
             // Base de conocimiento
             Route::apiResource('base-conocimiento',
-                \App\Http\Controllers\Helpdesk\BaseConocimientoController::class);
+                BaseConocimientoController::class);
 
             // Encuestas de satisfacción
             Route::get('encuestas-satisfaccion',
-                [\App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController::class, 'index'])
+                [EncuestaSatisfaccionController::class, 'index'])
                 ->middleware('role:admin-ti|auditor');
             Route::get('encuestas-satisfaccion/{encuesta}',
-                [\App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController::class, 'show'])
+                [EncuestaSatisfaccionController::class, 'show'])
                 ->middleware('role:admin-ti');
             Route::get('encuestas-satisfaccion/resultados',
-                [\App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController::class, 'resultados'])
+                [EncuestaSatisfaccionController::class, 'resultados'])
                 ->middleware('role:admin-ti|director|maxima-autoridad');
         });
 
     // Módulo 08: Evaluación del Desempeño
     Route::prefix('evaluacion')->group(function () {
-        Route::post('evaluaciones/{evaluacionId}/servidor/{servidorId}', [\App\Http\Controllers\Evaluacion\EvaluacionController::class, 'registrarResultado']);
+        Route::post('evaluaciones/{evaluacionId}/servidor/{servidorId}', [EvaluacionController::class, 'registrarResultado']);
     });
 
     // Módulo 09: Viáticos
     Route::prefix('viaticos')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\Viatico\ViaticoController::class, 'store']);
+        Route::get('/', [ViaticoController::class, 'index']);
+        Route::post('/', [ViaticoController::class, 'store']);
 
         // Catálogos de viáticos
         Route::get('catalogos/tipos-transporte',
@@ -488,95 +585,95 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             [CatalogoViaticoController::class, 'categoriasFactura']);
 
         Route::prefix('vuelos')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'index']);
-            Route::post('{id}/aprobar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'aprobar']);
-            Route::post('{id}/rechazar', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'rechazar']);
-            Route::post('{id}/documento', [\App\Http\Controllers\Viatico\AutorizacionVueloController::class, 'subirDocumento']);
+            Route::get('/', [AutorizacionVueloController::class, 'index']);
+            Route::post('{id}/aprobar', [AutorizacionVueloController::class, 'aprobar']);
+            Route::post('{id}/rechazar', [AutorizacionVueloController::class, 'rechazar']);
+            Route::post('{id}/documento', [AutorizacionVueloController::class, 'subirDocumento']);
         });
 
-        Route::get('informe/descargar/{archivo}', [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'descargar'])
+        Route::get('informe/descargar/{archivo}', [InformeViaticoController::class, 'descargar'])
             ->name('viaticos.informe.descargar')
             ->middleware('signed');
 
-        Route::get('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'show']);
-        Route::patch('{id}', [\App\Http\Controllers\Viatico\ViaticoController::class, 'update']);
-        
-        Route::post('servidor/{servidorId}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar'])
+        Route::get('{id}', [ViaticoController::class, 'show']);
+        Route::patch('{id}', [ViaticoController::class, 'update']);
+
+        Route::post('servidor/{servidorId}/solicitar', [ViaticoController::class, 'solicitar'])
             ->name('viatico.solicitar.por.servidor');
-        Route::post('{id}/solicitar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'solicitar'])
+        Route::post('{id}/solicitar', [ViaticoController::class, 'solicitar'])
             ->name('viatico.solicitar.propio');
-        Route::post('{id}/aprobar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'aprobar']);
+        Route::post('{id}/aprobar', [ViaticoController::class, 'aprobar']);
 
         Route::post('{id}/entregar-anticipo',
-            [\App\Http\Controllers\Viatico\ViaticoController::class,
-             'entregarAnticipo']);
+            [ViaticoController::class,
+                'entregarAnticipo']);
 
         Route::post('{id}/marcar-en-comision',
-            [\App\Http\Controllers\Viatico\ViaticoController::class,
-             'marcarEnComision']);
+            [ViaticoController::class,
+                'marcarEnComision']);
 
         Route::post('{id}/cancelar',
-            [\App\Http\Controllers\Viatico\ViaticoController::class,
-             'cancelar']
+            [ViaticoController::class,
+                'cancelar']
         )->name('viaticos.cancelar');
 
         Route::post('{id}/rechazar',
-            [\App\Http\Controllers\Viatico\ViaticoController::class,
-             'rechazar']
+            [ViaticoController::class,
+                'rechazar']
         )->name('viaticos.rechazar');
 
         Route::post('{id}/devolver-correccion',
-            [\App\Http\Controllers\Viatico\ViaticoController::class,
-             'devolverCorreccion']
+            [ViaticoController::class,
+                'devolverCorreccion']
         )->name('viaticos.devolver-correccion');
 
         Route::post('{id}/marcar-pendiente-liquidacion',
-            [\App\Http\Controllers\Viatico\ViaticoController::class,
-             'marcarPendienteLiquidacion']);
+            [ViaticoController::class,
+                'marcarPendienteLiquidacion']);
 
         Route::post('{id}/contabilizar',
-            [\App\Http\Controllers\Viatico\ViaticoController::class,
-             'contabilizar']);
+            [ViaticoController::class,
+                'contabilizar']);
 
         Route::prefix('{viaticoId}/liquidacion')
             ->group(function () {
                 Route::get('/',
-                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
-                     'obtenerOCrear']);
+                    [LiquidacionViaticoController::class,
+                        'obtenerOCrear']);
 
                 Route::get('actividades',
-                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
-                     'listarActividades']);
+                    [LiquidacionViaticoController::class,
+                        'listarActividades']);
                 Route::post('actividades',
-                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
-                     'guardarActividades']);
+                    [LiquidacionViaticoController::class,
+                        'guardarActividades']);
 
                 Route::get('facturas',
-                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
-                     'listarFacturas']);
+                    [LiquidacionViaticoController::class,
+                        'listarFacturas']);
                 Route::post('facturas',
-                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
-                     'guardarFacturas']);
+                    [LiquidacionViaticoController::class,
+                        'guardarFacturas']);
 
                 Route::post('confirmar',
-                    [\App\Http\Controllers\Viatico\LiquidacionViaticoController::class,
-                     'confirmar']);
+                    [LiquidacionViaticoController::class,
+                        'confirmar']);
             });
 
-        Route::post('{viaticoId}/liquidar', [\App\Http\Controllers\Viatico\ViaticoController::class, 'liquidar']);
-        
+        Route::post('{viaticoId}/liquidar', [ViaticoController::class, 'liquidar']);
+
         Route::get('{identificador}/solicitud/generar-enlace',
-            [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarSolicitud']
+            [InformeViaticoController::class, 'generarSolicitud']
         )->name('viaticos.solicitud.generar-enlace');
 
         Route::get('{identificador}/informe/generar-enlace',
-            [\App\Http\Controllers\Viatico\InformeViaticoController::class, 'generarEnlace']
+            [InformeViaticoController::class, 'generarEnlace']
         )->name('viaticos.informe.generar-enlace');
 
         Route::get(
             '{identificador}/comprobante/generar',
-            [\App\Http\Controllers\Viatico\InformeViaticoController::class,
-             'generarComprobanteContabilidad']
+            [InformeViaticoController::class,
+                'generarComprobanteContabilidad']
         )->name('viaticos.comprobante.generar');
 
         // Tramos del itinerario
@@ -592,14 +689,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
     // Liquidaciones y Facturas
     Route::prefix('liquidaciones')->group(function () {
-        Route::get('{id}/facturas', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'index']);
-        Route::post('{id}/facturas', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'store']);
-        Route::delete('{id}/facturas/{factura}', [\App\Http\Controllers\Viatico\FacturaViaticoController::class, 'destroy']);
+        Route::get('{id}/facturas', [FacturaViaticoController::class, 'index']);
+        Route::post('{id}/facturas', [FacturaViaticoController::class, 'store']);
+        Route::delete('{id}/facturas/{factura}', [FacturaViaticoController::class, 'destroy']);
     });
 
     // Módulo 14: Disciplinario
     Route::prefix('disciplinario')->group(function () {
-        Route::post('sumarios/{id}/resolver', [\App\Http\Controllers\Disciplinario\DisciplinarioController::class, 'resolver'])
+        Route::post('sumarios/{id}/resolver', [DisciplinarioController::class, 'resolver'])
             ->middleware('role:admin-uath');
     });
 
@@ -607,9 +704,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('sso')
         ->middleware('role:admin-uath|asistente-uath|auditor')
         ->group(function () {
-            Route::apiResource('riesgos', \App\Http\Controllers\Sso\RiesgoLaboralController::class);
-            Route::apiResource('accidentes', \App\Http\Controllers\Sso\AccidenteTrabajoController::class);
-            Route::apiResource('equipos-proteccion', \App\Http\Controllers\Sso\EquipoProteccionController::class);
+            Route::apiResource('riesgos', RiesgoLaboralController::class);
+            Route::apiResource('accidentes', AccidenteTrabajoController::class);
+            Route::apiResource('equipos-proteccion', EquipoProteccionController::class);
         });
 
     // Módulo 11 — Dispensario Médico
@@ -617,98 +714,98 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
         // Agenda — accesible para todo el personal del dispensario
         Route::get('agenda/listos-para-consulta',
-            [\App\Http\Controllers\Dispensario\AgendaController::class, 'listosParaConsulta']
+            [AgendaController::class, 'listosParaConsulta']
         )->name('agenda.listosParaConsulta');
         Route::get('agenda/turnos-del-dia',
-            [\App\Http\Controllers\Dispensario\AgendaController::class, 'turnosDelDia']
+            [AgendaController::class, 'turnosDelDia']
         )->name('agenda.turnosDelDia');
         Route::patch('agenda/{agenda}/no-presentado',
-            [\App\Http\Controllers\Dispensario\AgendaController::class, 'noPresentado']
+            [AgendaController::class, 'noPresentado']
         )->name('agenda.noPresentado');
         Route::patch('agenda/{agenda}/reactivar',
-            [\App\Http\Controllers\Dispensario\AgendaController::class, 'reactivar']
+            [AgendaController::class, 'reactivar']
         )->name('agenda.reactivar');
         Route::patch('agenda/{agenda}/en-consulta',
-            [\App\Http\Controllers\Dispensario\AgendaController::class, 'marcarEnConsulta']
+            [AgendaController::class, 'marcarEnConsulta']
         )->name('agenda.enConsulta');
         Route::get('agenda/por-folio/{folio}',
-            [\App\Http\Controllers\Dispensario\AgendaController::class, 'porFolio']
+            [AgendaController::class, 'porFolio']
         )->name('agenda.porFolio');
-        Route::apiResource('agenda', \App\Http\Controllers\Dispensario\AgendaController::class)
+        Route::apiResource('agenda', AgendaController::class)
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 
         Route::get('triaje/pendientes',
-            [\App\Http\Controllers\Dispensario\TriajeController::class, 'pendientes']
+            [TriajeController::class, 'pendientes']
         )->name('dispensario.triaje.pendientes');
 
         // Triaje
         Route::prefix('agenda/{agendaId}/triaje')->group(function () {
-            Route::post('/', [\App\Http\Controllers\Dispensario\TriajeController::class, 'store'])
+            Route::post('/', [TriajeController::class, 'store'])
                 ->middleware('role:enfermera|admin-dispensario');
-            Route::get('/', [\App\Http\Controllers\Dispensario\TriajeController::class, 'show'])
+            Route::get('/', [TriajeController::class, 'show'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
-            Route::get('ultimo', [\App\Http\Controllers\Dispensario\TriajeController::class, 'ultimoPorAgenda'])
+            Route::get('ultimo', [TriajeController::class, 'ultimoPorAgenda'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
         });
 
         // Dashboard Estadístico — SOLO admin-dispensario (y máxima autoridad)
-        Route::get('dashboard/kpis', [\App\Http\Controllers\Dispensario\DashboardDispensarioController::class, 'kpis'])
+        Route::get('dashboard/kpis', [DashboardDispensarioController::class, 'kpis'])
             ->middleware('role:admin-dispensario|maxima-autoridad');
 
         Route::get('personal-medico',
-            [\App\Http\Controllers\Dispensario\PersonalMedicoController::class, 'index']
+            [PersonalMedicoController::class, 'index']
         )->name('dispensario.personal-medico');
 
         Route::get('disponibilidad/mi-estado',
-            [\App\Http\Controllers\Dispensario\DisponibilidadController::class, 'miEstado']
+            [DisponibilidadController::class, 'miEstado']
         )->name('dispensario.disponibilidad.miEstado');
 
         Route::post('disponibilidad/alternar',
-            [\App\Http\Controllers\Dispensario\DisponibilidadController::class, 'alternar']
+            [DisponibilidadController::class, 'alternar']
         )->name('dispensario.disponibilidad.alternar');
 
         Route::get('pacientes/buscar',
-            [\App\Http\Controllers\Dispensario\PacienteController::class, 'buscar']
+            [PacienteController::class, 'buscar']
         )->name('dispensario.pacientes.buscar');
 
         Route::get('atenciones-enfermeria',
-            [\App\Http\Controllers\Dispensario\AtencionEnfermeriaController::class, 'index']
+            [AtencionEnfermeriaController::class, 'index']
         )->name('dispensario.atenciones-enfermeria.index');
 
         Route::post('atenciones-enfermeria',
-            [\App\Http\Controllers\Dispensario\AtencionEnfermeriaController::class, 'store']
+            [AtencionEnfermeriaController::class, 'store']
         )->name('dispensario.atenciones-enfermeria.store');
 
         Route::get('catalogo-servicios-enfermeria',
-            [\App\Http\Controllers\Dispensario\AtencionEnfermeriaController::class, 'catalogo']
+            [AtencionEnfermeriaController::class, 'catalogo']
         )->name('dispensario.catalogo-servicios-enfermeria');
 
         // Historias clínicas — SOLO personal médico
         Route::prefix('historias-clinicas')
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
-                Route::get('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'index']);
-                Route::post('/', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'store']);
-                Route::get('buscar-por-cedula', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'buscarPorCedula']);
-                Route::post('crear-por-cedula', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'crearPorCedula']);
-                Route::get('{id}', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'show']);
-                Route::get('{id}/contexto-consulta', [\App\Http\Controllers\Dispensario\HistoriaClinicaController::class, 'contextoConsulta']);
+                Route::get('/', [HistoriaClinicaController::class, 'index']);
+                Route::post('/', [HistoriaClinicaController::class, 'store']);
+                Route::get('buscar-por-cedula', [HistoriaClinicaController::class, 'buscarPorCedula']);
+                Route::post('crear-por-cedula', [HistoriaClinicaController::class, 'crearPorCedula']);
+                Route::get('{id}', [HistoriaClinicaController::class, 'show']);
+                Route::get('{id}/contexto-consulta', [HistoriaClinicaController::class, 'contextoConsulta']);
 
                 // Alergias
                 Route::prefix('{id}/alergias')->group(function () {
-                    Route::get('/', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'index']);
-                    Route::post('/', [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'store']);
+                    Route::get('/', [AlergiaPacienteController::class, 'index']);
+                    Route::post('/', [AlergiaPacienteController::class, 'store']);
                     Route::patch('{alergia}/anular',
-                        [\App\Http\Controllers\Dispensario\AlergiaPacienteController::class, 'anular']
+                        [AlergiaPacienteController::class, 'anular']
                     )->middleware('role:medico|odontologo');
                 });
 
                 // Antecedentes
                 Route::prefix('{id}/antecedentes')->group(function () {
-                    Route::get('/', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'index']);
-                    Route::post('/', [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'store']);
+                    Route::get('/', [AntecedentePacienteController::class, 'index']);
+                    Route::post('/', [AntecedentePacienteController::class, 'store']);
                     Route::patch('{antecedente}/anular',
-                        [\App\Http\Controllers\Dispensario\AntecedentePacienteController::class, 'anular']
+                        [AntecedentePacienteController::class, 'anular']
                     )->middleware('role:medico|odontologo');
                 });
             });
@@ -718,40 +815,40 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::prefix('consultas')
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
-                Route::get('/', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'index']);
-                Route::post('/', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'store']);
-                Route::get('{id}', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'show']);
-                Route::patch('{id}', [\App\Http\Controllers\Dispensario\ConsultaMedicaController::class, 'update'])
+                Route::get('/', [ConsultaMedicaController::class, 'index']);
+                Route::post('/', [ConsultaMedicaController::class, 'store']);
+                Route::get('{id}', [ConsultaMedicaController::class, 'show']);
+                Route::patch('{id}', [ConsultaMedicaController::class, 'update'])
                     ->middleware('role:medico|odontologo');
             });
 
         Route::get('certificados-medicos',
-            [\App\Http\Controllers\Dispensario\CertificadoMedicoController::class, 'index']
+            [CertificadoMedicoController::class, 'index']
         )->name('dispensario.certificados.index');
 
         Route::post('certificados-medicos',
-            [\App\Http\Controllers\Dispensario\CertificadoMedicoController::class, 'store']
+            [CertificadoMedicoController::class, 'store']
         )->name('dispensario.certificados.store');
 
         Route::get('certificados-medicos/{id}',
-            [\App\Http\Controllers\Dispensario\CertificadoMedicoController::class, 'show']
+            [CertificadoMedicoController::class, 'show']
         )->name('dispensario.certificados.show');
 
         // Recetas — médicos emiten, enfermeras y admin despachan
         Route::prefix('recetas')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Dispensario\RecetaController::class, 'index'])
+            Route::get('/', [RecetaController::class, 'index'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
-            Route::post('/', [\App\Http\Controllers\Dispensario\RecetaController::class, 'store'])
+            Route::post('/', [RecetaController::class, 'store'])
                 ->middleware('role:medico|odontologo');
-            Route::get('{id}', [\App\Http\Controllers\Dispensario\RecetaController::class, 'show'])
+            Route::get('{id}', [RecetaController::class, 'show'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
-            Route::post('{id}/despachar', [\App\Http\Controllers\Dispensario\RecetaController::class, 'despachar'])
+            Route::post('{id}/despachar', [RecetaController::class, 'despachar'])
                 ->middleware('role:enfermera|admin-dispensario');
             Route::patch('{recetaId}/items/{itemId}',
-                [\App\Http\Controllers\Dispensario\ItemRecetaController::class, 'update']
+                [ItemRecetaController::class, 'update']
             )->middleware('role:medico|odontologo');
             Route::delete('{recetaId}/items/{itemId}',
-                [\App\Http\Controllers\Dispensario\ItemRecetaController::class, 'destroy']
+                [ItemRecetaController::class, 'destroy']
             )->middleware('role:medico|odontologo');
         });
 
@@ -760,146 +857,165 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
                 Route::get('medicinas/buscar',
-                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'buscar']);
-                Route::apiResource('medicinas', \App\Http\Controllers\Dispensario\InventarioMedicinasController::class);
+                    [InventarioMedicinasController::class, 'buscar']);
+                Route::apiResource('medicinas', InventarioMedicinasController::class);
                 Route::get('medicinas/{id}/kardex',
-                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'kardex']);
+                    [InventarioMedicinasController::class, 'kardex']);
                 Route::post('medicinas/{medicina}/ingresar-stock',
-                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'ingresarStock']);
+                    [InventarioMedicinasController::class, 'ingresarStock']);
                 Route::post('medicinas/{medicina}/ajustar-inventario',
-                    [\App\Http\Controllers\Dispensario\InventarioMedicinasController::class, 'ajustarInventario']);
+                    [InventarioMedicinasController::class, 'ajustarInventario']);
             });
 
         Route::prefix('adquisiciones')
             ->middleware('role:admin-dispensario')
             ->group(function () {
-                Route::get('/', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'index']);
-                Route::post('/', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'store']);
-                Route::get('{id}', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'show']);
-                Route::post('{id}/documento', [\App\Http\Controllers\Dispensario\AdquisicionController::class, 'subirDocumento']);
+                Route::get('/', [AdquisicionController::class, 'index']);
+                Route::post('/', [AdquisicionController::class, 'store']);
+                Route::get('{id}', [AdquisicionController::class, 'show']);
+                Route::post('{id}/documento', [AdquisicionController::class, 'subirDocumento']);
+            });
+
+        // Signos vitales de la solicitud (enfermería, previo al FEMO)
+        // NOTA: debe registrarse antes que GET {id} para que "pendientes-triaje"
+        // no sea capturado por la ruta comodín {id}.
+        Route::prefix('solicitudes-certificacion')
+            ->middleware('role:enfermera|admin-dispensario')
+            ->group(function () {
+                Route::get('pendientes-triaje', [SolicitudCertificacionController::class, 'pendientesTriaje']);
+                Route::post('{id}/signos-vitales', [SolicitudCertificacionController::class, 'registrarSignosVitales']);
+            });
+
+        // Creación de solicitudes en lote desde Expediente (RRHH, no médico)
+        // NOTA: debe registrarse antes que GET {id} de la ruta wildcard.
+        Route::prefix('solicitudes-certificacion')
+            ->middleware('role:admin-uath|analista-uath|admin-dispensario')
+            ->group(function () {
+                Route::post('lote', [SolicitudCertificacionController::class, 'storeLote']);
             });
 
         // Solicitudes de certificación médica
         Route::prefix('solicitudes-certificacion')
             ->middleware('role:medico|admin-dispensario|admin-uath|analista-uath')
             ->group(function () {
-                Route::get('/', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'index']);
-                Route::get('{id}', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'show']);
-                Route::patch('{id}/iniciar', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'iniciarProceso']);
-                Route::patch('{id}/completar', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'completar']);
-                Route::post('{id}/confirmar-incorporacion', [\App\Http\Controllers\Dispensario\SolicitudCertificacionController::class, 'confirmarIncorporacion']);
+                Route::get('/', [SolicitudCertificacionController::class, 'index']);
+                Route::get('{id}', [SolicitudCertificacionController::class, 'show']);
+                Route::patch('{id}/iniciar', [SolicitudCertificacionController::class, 'iniciarProceso']);
+                Route::patch('{id}/completar', [SolicitudCertificacionController::class, 'completar']);
+                Route::post('{id}/confirmar-incorporacion', [SolicitudCertificacionController::class, 'confirmarIncorporacion']);
             });
 
         // Fichas de salud ocupacional
         Route::prefix('fichas-sso')
             ->middleware('role:medico|admin-dispensario')
             ->group(function () {
-                Route::get('/', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'index']);
-                Route::post('/', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'store']);
-                Route::get('{id}', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'show']);
-                Route::patch('{id}', [\App\Http\Controllers\Dispensario\FichaSaludOcupacionalController::class, 'update']);
+                Route::get('/', [FichaSaludOcupacionalController::class, 'index']);
+                Route::post('/', [FichaSaludOcupacionalController::class, 'store']);
+                Route::get('{id}', [FichaSaludOcupacionalController::class, 'show']);
+                Route::patch('{id}', [FichaSaludOcupacionalController::class, 'update']);
+                Route::get('{id}/pdf', [FemoPdfController::class, 'generar']);
             });
 
         // Resultados médicos
         Route::prefix('resultados-medicos')
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
-                Route::get('/', [\App\Http\Controllers\Dispensario\ResultadoMedicoController::class, 'index']);
-                Route::post('/', [\App\Http\Controllers\Dispensario\ResultadoMedicoController::class, 'store']);
-                Route::delete('{id}', [\App\Http\Controllers\Dispensario\ResultadoMedicoController::class, 'destroy'])
+                Route::get('/', [ResultadoMedicoController::class, 'index']);
+                Route::post('/', [ResultadoMedicoController::class, 'store']);
+                Route::delete('{id}', [ResultadoMedicoController::class, 'destroy'])
                     ->middleware('role:medico|odontologo|admin-dispensario');
             });
     });
 
-        // Admin TI
+    // Admin TI
     Route::prefix('admin')
         ->middleware('role:admin-ti|admin-uath')
         ->group(function () {
             Route::get('usuarios/sugerir-usuario-ti',
-                [\App\Http\Controllers\Admin\UsuarioController::class, 'sugerirUsuarioTi'])
+                [UsuarioController::class, 'sugerirUsuarioTi'])
                 ->name('usuarios.sugerirUsuarioTi');
 
             Route::get('usuarios/sin-servidor',
-                [\App\Http\Controllers\Admin\UsuarioController::class, 'sinServidor'])
+                [UsuarioController::class, 'sinServidor'])
                 ->name('usuarios.sinServidor');
             Route::post('usuarios/{usuario}/toggle-activo',
-                [\App\Http\Controllers\Admin\UsuarioController::class, 'toggleActivo'])
+                [UsuarioController::class, 'toggleActivo'])
                 ->name('usuarios.toggleActivo');
 
             Route::post('usuarios/{id}/desvincular-servidor',
-                [\App\Http\Controllers\Admin\UsuarioController::class, 'desvincularServidor'])
+                [UsuarioController::class, 'desvincularServidor'])
                 ->name('usuarios.desvincularServidor');
 
             Route::post('usuarios/{id}/asignar-servidor',
-                [\App\Http\Controllers\Admin\UsuarioController::class, 'asignarServidor'])
+                [UsuarioController::class, 'asignarServidor'])
                 ->name('usuarios.asignarServidor');
-            
+
             Route::get('usuarios-roles',
-                [\App\Http\Controllers\Admin\UsuarioController::class, 'roles'])
+                [UsuarioController::class, 'roles'])
                 ->name('usuarios.roles');
-            Route::apiResource('usuarios', \App\Http\Controllers\Admin\UsuarioController::class);
+            Route::apiResource('usuarios', UsuarioController::class);
             Route::post('usuarios/{usuario}/restablecer-contrasena',
-                [\App\Http\Controllers\Admin\UsuarioController::class, 'restablecerContrasena']
+                [UsuarioController::class, 'restablecerContrasena']
             );
 
             Route::get('permisos',
-                [\App\Http\Controllers\Admin\PermisoController::class, 'index'])
+                [PermisoController::class, 'index'])
                 ->name('admin.permisos.index');
 
             Route::get('usuarios/{id}/permisos',
-                [\App\Http\Controllers\Admin\PermisoController::class, 'permisosUsuario'])
+                [PermisoController::class, 'permisosUsuario'])
                 ->name('admin.usuarios.permisos');
 
             Route::post('usuarios/{id}/permisos',
-                [\App\Http\Controllers\Admin\PermisoController::class, 'sincronizarPermisosUsuario'])
+                [PermisoController::class, 'sincronizarPermisosUsuario'])
                 ->name('admin.usuarios.permisos.sincronizar');
         });
 
     // Módulo 15 — Capacitación
     Route::prefix('capacitacion')
         ->group(function () {
-            Route::apiResource('planes', \App\Http\Controllers\Capacitacion\PlanCapacitacionController::class)
+            Route::apiResource('planes', PlanCapacitacionController::class)
                 ->middleware('role:admin-uath|asistente-uath');
-            Route::apiResource('cursos', \App\Http\Controllers\Capacitacion\CursoController::class)
+            Route::apiResource('cursos', CursoController::class)
                 ->middleware('role:admin-uath|asistente-uath');
             Route::post('cursos/{curso}/inscribir',
-                [\App\Http\Controllers\Capacitacion\CursoController::class, 'inscribir']);
+                [CursoController::class, 'inscribir']);
             Route::post('cursos/{curso}/evaluar',
-                [\App\Http\Controllers\Capacitacion\CursoController::class, 'evaluar'])
+                [CursoController::class, 'evaluar'])
                 ->middleware('role:admin-uath|asistente-uath');
             Route::get('certificados/{servidorId}',
-                [\App\Http\Controllers\Capacitacion\CertificadoCapacitacionController::class, 'show']);
+                [CertificadoCapacitacionController::class, 'show']);
             Route::post('certificados/{inscripcionId}/generar',
-                [\App\Http\Controllers\Capacitacion\CertificadoCapacitacionController::class, 'generar'])
+                [CertificadoCapacitacionController::class, 'generar'])
                 ->middleware('role:admin-uath|asistente-uath');
         });
 
     // Módulo 16 — Actividades Laborales
     Route::prefix('actividades')
         ->group(function () {
-            Route::apiResource('/', \App\Http\Controllers\Actividades\ActividadLaboralController::class)
+            Route::apiResource('/', ActividadLaboralController::class)
                 ->parameters(['' => 'actividad']); // Para que las rutas resource funcionen con /
             Route::get('por-unidad',
-                [\App\Http\Controllers\Actividades\ActividadLaboralController::class, 'porUnidad'])
+                [ActividadLaboralController::class, 'porUnidad'])
                 ->middleware('role:jefe-unidad|director|admin-uath');
             Route::post('exportar-informe',
-                [\App\Http\Controllers\Actividades\ActividadLaboralController::class, 'exportarInforme']);
+                [ActividadLaboralController::class, 'exportarInforme']);
         });
 
     // Módulo 17 — Bienestar y Clima
     Route::prefix('bienestar')
         ->group(function () {
-            Route::apiResource('planes', \App\Http\Controllers\Bienestar\PlanBienestarController::class)
+            Route::apiResource('planes', PlanBienestarController::class)
                 ->middleware('role:admin-uath|asistente-uath');
             Route::get('encuestas',
-                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'index']);
+                [EncuestaClimaController::class, 'index']);
             Route::post('encuestas',
-                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'store'])
+                [EncuestaClimaController::class, 'store'])
                 ->middleware('role:admin-uath');
             Route::post('encuestas/{encuesta}/responder',
-                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'responder']);
+                [EncuestaClimaController::class, 'responder']);
             Route::get('encuestas/{encuesta}/resultados',
-                [\App\Http\Controllers\Bienestar\EncuestaClimaController::class, 'resultados'])
+                [EncuestaClimaController::class, 'resultados'])
                 ->middleware('role:admin-uath|director|maxima-autoridad');
         });
 
@@ -907,28 +1023,27 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('reporteria')
         ->group(function () {
             Route::get('dashboard',
-                [\App\Http\Controllers\Reporteria\DashboardController::class, 'kpis'])
+                [DashboardController::class, 'kpis'])
                 ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
 
             // Reportes Ad Hoc y Configuración
             Route::get('configuraciones',
-                [\App\Http\Controllers\Reporteria\ReporteController::class, 'indexConfiguraciones'])
+                [ReporteController::class, 'indexConfiguraciones'])
                 ->middleware('role:admin-uath|auditor|director');
             Route::post('configuraciones',
-                [\App\Http\Controllers\Reporteria\ReporteController::class, 'storeConfiguracion'])
+                [ReporteController::class, 'storeConfiguracion'])
                 ->middleware('role:admin-uath|auditor|director');
             Route::post('ad-hoc',
-                [\App\Http\Controllers\Reporteria\ReporteController::class, 'generarAdHoc'])
+                [ReporteController::class, 'generarAdHoc'])
                 ->middleware('role:admin-uath|auditor|director');
 
             // Reportes Asíncronos (Background)
             Route::post('background',
-                [\App\Http\Controllers\Reporteria\ReporteController::class, 'solicitarFondo'])
+                [ReporteController::class, 'solicitarFondo'])
                 ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
             Route::get('background/{job_id}',
-                [\App\Http\Controllers\Reporteria\ReporteController::class, 'estadoFondo'])
+                [ReporteController::class, 'estadoFondo'])
                 ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
         });
-
 
 });

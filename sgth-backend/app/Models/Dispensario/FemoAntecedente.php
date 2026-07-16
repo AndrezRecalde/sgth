@@ -2,6 +2,7 @@
 
 namespace App\Models\Dispensario;
 
+use App\Enums\TipoAntecedenteFemo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -16,6 +17,7 @@ class FemoAntecedente extends Model
     protected function casts(): array
     {
         return [
+            'tipo' => TipoAntecedenteFemo::class,
             'fecha_aproximada' => 'integer',
         ];
     }

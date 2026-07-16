@@ -2,41 +2,35 @@
 
 import {
   Stack, Grid, TextInput, Select,
-  Checkbox, Group, Text, NumberInput,
+  Checkbox, Group, Text,
   Button, Card, ActionIcon, Divider,
-  Modal,
+  Textarea,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
 import { useDisclosure } from '@mantine/hooks'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import {
-  fichaBaseSchema, antecedenteSchema,
   type FichaBaseForm, type AntecedenteForm,
+  type AntecedenteReproductivoForm, type ConsumoSustanciaForm,
 } from '../../schemas/femo.schema'
-import { TIPO_FICHA_OPTIONS } from '../../services/femoService'
+import { TIPO_FICHA_OPTIONS, TIPO_ANTECEDENTE_OPTIONS } from '../../services/femoOptions'
+import { FemoAntecedenteModal } from './FemoAntecedenteModal'
+import { FemoAntecedentesReproductivosSection } from './FemoAntecedentesReproductivosSection'
+import { FemoConsumoSustanciasTable } from './FemoConsumoSustanciasTable'
 
 interface Props {
   fichaData:          Partial<FichaBaseForm>
   constantesData:     Record<string, number | null>
   antecedentes:       AntecedenteForm[]
+  antecedenteReproductivo: Partial<AntecedenteReproductivoForm>
+  consumoSustancias:  ConsumoSustanciaForm[]
   onFichaChange:      (data: Partial<FichaBaseForm>) => void
-  onConstantesChange: (data: Record<string, number | null>) => void
   onAntecedentesChange: (data: AntecedenteForm[]) => void
+  onAntecedenteReproductivoChange: (data: Partial<AntecedenteReproductivoForm>) => void
+  onConsumoSustanciasChange: (data: ConsumoSustanciaForm[]) => void
 }
-
-const TIPO_ANTECEDENTE_OPTIONS = [
-  { value: 'clinico',               label: 'Clínico'              },
-  { value: 'quirurgico',            label: 'Quirúrgico'           },
-  { value: 'familiar',              label: 'Familiar'             },
-  { value: 'ginecologico',          label: 'Ginecológico'         },
-  { value: 'reproductivo_masculino',label: 'Reproductivo masc.'   },
-  { value: 'otro',                  label: 'Otro'                 },
-]
 
 function toDate(s: string | null | undefined): Date | null {
   if (!s) return null
@@ -57,34 +51,16 @@ function fromDate(d: Date | string | null): string | null {
 
 export function FemoPaso1({
   fichaData, constantesData, antecedentes,
-  onFichaChange, onConstantesChange, onAntecedentesChange,
+  antecedenteReproductivo, consumoSustancias,
+  onFichaChange, onAntecedentesChange,
+  onAntecedenteReproductivoChange, onConsumoSustanciasChange,
 }: Props) {
   const contained = useContainedInput()
   const [antModalOpened,
     { open: abrirAntModal, close: cerrarAntModal }] = useDisclosure(false)
 
-  const antForm = useForm<AntecedenteForm>({
-    resolver: zodResolver(antecedenteSchema),
-    defaultValues: { tipo: '', descripcion: '', fecha_aproximada: null },
-  })
-
-  const handleAgregarAntecedente = (values: AntecedenteForm) => {
-    onAntecedentesChange([...antecedentes, values])
-    antForm.reset()
-    cerrarAntModal()
-  }
-
   const handleEliminarAntecedente = (idx: number) => {
     onAntecedentesChange(antecedentes.filter((_, i) => i !== idx))
-  }
-
-  const handleConstante = (campo: string, valor: number | null) => {
-    const nuevas = { ...constantesData, [campo]: valor }
-    if (nuevas.peso_kg && nuevas.talla_cm) {
-      const imc = nuevas.peso_kg / Math.pow(nuevas.talla_cm / 100, 2)
-      nuevas.imc = Math.round(imc * 100) / 100
-    }
-    onConstantesChange(nuevas)
   }
 
   return (
@@ -95,14 +71,6 @@ export function FemoPaso1({
           A. Datos generales
         </Text>
         <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <BuscarServidorSelect
-              label="Servidor"
-              required
-              value={fichaData.servidor_id ?? null}
-              onChange={(id) => onFichaChange({ ...fichaData, servidor_id: id ?? undefined })}
-            />
-          </Grid.Col>
           <Grid.Col span={{ base: 12, md: 6 }}>
             <DatePickerInput
               label="Fecha de evaluación"
@@ -128,14 +96,37 @@ export function FemoPaso1({
               })}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
+          <Grid.Col span={{ base: 12, md: 4 }}>
             <TextInput
               label="Puesto de trabajo"
               placeholder="Ej: Técnico de campo"
+              description="Prellenado según convocatoria o expediente — editable"
               {...contained}
               value={fichaData.puesto_trabajo ?? ''}
               onChange={(e) => onFichaChange({
                 ...fichaData, puesto_trabajo: e.currentTarget.value,
+              })}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <TextInput
+              label="Puesto (CIUO)"
+              {...contained}
+              value={fichaData.puesto_trabajo_ciuo ?? ''}
+              onChange={(e) => onFichaChange({
+                ...fichaData, puesto_trabajo_ciuo: e.currentTarget.value,
+              })}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 5 }}>
+            <DatePickerInput
+              label="Fecha de ingreso al trabajo"
+              valueFormat="DD/MM/YYYY"
+              clearable
+              {...contained}
+              value={toDate(fichaData.fecha_ingreso_trabajo)}
+              onChange={(d) => onFichaChange({
+                ...fichaData, fecha_ingreso_trabajo: fromDate(d as Date | null),
               })}
             />
           </Grid.Col>
@@ -157,6 +148,19 @@ export function FemoPaso1({
                   grupo_discapacidad: e.currentTarget.checked,
                 })}
               />
+              {fichaData.grupo_discapacidad && (
+                <TextInput
+                  label="Porcentaje"
+                  placeholder="%"
+                  size="xs"
+                  w={100}
+                  {...contained}
+                  value={fichaData.porcentaje_discapacidad ?? ''}
+                  onChange={(e) => onFichaChange({
+                    ...fichaData, porcentaje_discapacidad: e.currentTarget.value,
+                  })}
+                />
+              )}
             </Group>
           </Grid.Col>
         </Grid>
@@ -169,34 +173,38 @@ export function FemoPaso1({
           style={{ letterSpacing: '0.05em' }}>
           B. Signos vitales y antropometría
         </Text>
-        <Grid>
-          {[
-            { campo: 'peso_kg',              label: 'Peso (kg)',      placeholder: '0.0'  },
-            { campo: 'talla_cm',             label: 'Talla (cm)',     placeholder: '0'    },
-            { campo: 'imc',                  label: 'IMC',            placeholder: 'Auto', readonly: true },
-            { campo: 'temperatura_c',        label: 'Temp. (°C)',     placeholder: '37.0' },
-            { campo: 'presion_sistolica',     label: 'P. Sistólica',   placeholder: '120'  },
-            { campo: 'presion_diastolica',    label: 'P. Diastólica',  placeholder: '80'   },
-            { campo: 'frecuencia_cardiaca',   label: 'F. Cardíaca',    placeholder: 'bpm'  },
-            { campo: 'frecuencia_respiratoria',label: 'F. Respiratoria',placeholder: 'rpm' },
-            { campo: 'saturacion_oxigeno',    label: 'Sat. O2 (%)',    placeholder: '98'   },
-            { campo: 'glucosa',               label: 'Glucosa',        placeholder: 'mg/dL'},
-          ].map(({ campo, label, placeholder, readonly }) => (
-            <Grid.Col key={campo} span={{ base: 6, md: 3 }}>
-              <NumberInput
-                label={label}
-                placeholder={placeholder}
-                size="sm"
-                {...contained}
-                readOnly={readonly}
-                value={constantesData[campo] ?? undefined}
-                onChange={(v) => !readonly && handleConstante(
-                  campo, v !== '' ? Number(v) : null
-                )}
-              />
-            </Grid.Col>
-          ))}
-        </Grid>
+        {Object.values(constantesData).every(v => v === null || v === undefined) ? (
+          <Text size="sm" c="orange">
+            Aún no hay signos vitales registrados por Enfermería para esta solicitud.
+          </Text>
+        ) : (
+          <>
+            <Text size="xs" c="dimmed">
+              Registrados por Enfermería (Atención SSO) — solo lectura.
+            </Text>
+            <Grid>
+              {[
+                { campo: 'peso_kg',               label: 'Peso (kg)' },
+                { campo: 'talla_cm',              label: 'Talla (cm)' },
+                { campo: 'imc',                   label: 'IMC' },
+                { campo: 'temperatura_c',         label: 'Temp. (°C)' },
+                { campo: 'presion_sistolica',      label: 'P. Sistólica' },
+                { campo: 'presion_diastolica',     label: 'P. Diastólica' },
+                { campo: 'frecuencia_cardiaca',    label: 'F. Cardíaca' },
+                { campo: 'frecuencia_respiratoria', label: 'F. Respiratoria' },
+                { campo: 'saturacion_oxigeno',     label: 'Sat. O2 (%)' },
+                { campo: 'glucosa',                label: 'Glucosa' },
+              ].map(({ campo, label }) => (
+                <Grid.Col key={campo} span={{ base: 6, md: 3 }}>
+                  <Text size="xs" c="dimmed">{label}</Text>
+                  <Text size="sm" fw={500}>
+                    {constantesData[campo] ?? '—'}
+                  </Text>
+                </Grid.Col>
+              ))}
+            </Grid>
+          </>
+        )}
       </Stack>
 
       <Divider />
@@ -248,69 +256,77 @@ export function FemoPaso1({
             ))}
           </Stack>
         )}
+
+        <Textarea
+          label="Enfermedad o problema actual"
+          autosize
+          minRows={2}
+          {...contained}
+          value={fichaData.enfermedad_actual ?? ''}
+          onChange={(e) => onFichaChange({
+            ...fichaData, enfermedad_actual: e.currentTarget.value,
+          })}
+        />
+
+        <FemoAntecedentesReproductivosSection
+          data={antecedenteReproductivo}
+          onChange={onAntecedenteReproductivoChange}
+        />
+
+        <FemoConsumoSustanciasTable
+          data={consumoSustancias}
+          onChange={onConsumoSustanciasChange}
+        />
+
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              label="Actividad física (¿cuál?)"
+              {...contained}
+              value={fichaData.actividad_fisica_cual ?? ''}
+              onChange={(e) => onFichaChange({
+                ...fichaData, actividad_fisica_cual: e.currentTarget.value,
+              })}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              label="Tiempo de actividad física"
+              {...contained}
+              value={fichaData.actividad_fisica_tiempo ?? ''}
+              onChange={(e) => onFichaChange({
+                ...fichaData, actividad_fisica_tiempo: e.currentTarget.value,
+              })}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              label="Medicación habitual (¿cuál?)"
+              {...contained}
+              value={fichaData.medicacion_habitual_cual ?? ''}
+              onChange={(e) => onFichaChange({
+                ...fichaData, medicacion_habitual_cual: e.currentTarget.value,
+              })}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              label="Cantidad"
+              {...contained}
+              value={fichaData.medicacion_habitual_cantidad ?? ''}
+              onChange={(e) => onFichaChange({
+                ...fichaData, medicacion_habitual_cantidad: e.currentTarget.value,
+              })}
+            />
+          </Grid.Col>
+        </Grid>
       </Stack>
 
-      <Modal
+      <FemoAntecedenteModal
         opened={antModalOpened}
         onClose={cerrarAntModal}
-        title="Agregar antecedente"
-        size="sm"
-        radius="xl"
-      >
-        <form onSubmit={antForm.handleSubmit(handleAgregarAntecedente)}>
-          <Stack gap="sm">
-            <Controller
-              name="tipo"
-              control={antForm.control}
-              render={({ field }) => (
-                <Select
-                  label="Tipo"
-                  data={TIPO_ANTECEDENTE_OPTIONS}
-                  required
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v ?? '')}
-                  error={antForm.formState.errors.tipo?.message}
-                />
-              )}
-            />
-            <TextInput
-              label="Descripción"
-              required
-              {...contained}
-              {...antForm.register('descripcion')}
-              error={antForm.formState.errors.descripcion?.message}
-            />
-            <Controller
-              name="fecha_aproximada"
-              control={antForm.control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Año aproximado (opcional)"
-                  placeholder="Ej: 2018"
-                  min={1900}
-                  max={new Date().getFullYear()}
-                  {...contained}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
-                />
-              )}
-            />
-            <Group justify="flex-end" mt="sm">
-              <Button variant="default" onClick={cerrarAntModal}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                color="emerald"
-                leftSection={<IconCheck size={14} />}
-              >
-                Agregar
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      </Modal>
+        onAgregar={(values) => onAntecedentesChange([...antecedentes, values])}
+      />
     </Stack>
   )
 }
