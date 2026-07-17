@@ -36,6 +36,7 @@ use App\Http\Controllers\Dispensario\FichaSaludOcupacionalController;
 use App\Http\Controllers\Dispensario\HistoriaClinicaController;
 use App\Http\Controllers\Dispensario\InventarioMedicinasController;
 use App\Http\Controllers\Dispensario\ItemRecetaController;
+use App\Http\Controllers\Dispensario\OdontogramaController;
 use App\Http\Controllers\Dispensario\PacienteController;
 use App\Http\Controllers\Dispensario\PersonalMedicoController;
 use App\Http\Controllers\Dispensario\RecetaController;
@@ -820,6 +821,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 Route::get('{id}', [ConsultaMedicaController::class, 'show']);
                 Route::patch('{id}', [ConsultaMedicaController::class, 'update'])
                     ->middleware('role:medico|odontologo');
+            });
+
+        // Odontograma — mismo acceso que consultas médicas
+        // NOTA: segmentos literales (historia-clinica, procedimientos, piezas)
+        // registrados antes de cualquier wildcard {id}.
+        Route::prefix('odontograma')
+            ->middleware('role:medico|odontologo|admin-dispensario')
+            ->group(function () {
+                Route::get('historia-clinica/{historiaClinicaId}', [OdontogramaController::class, 'show']);
+                Route::post('procedimientos', [OdontogramaController::class, 'registrarProcedimiento']);
+                Route::patch('procedimientos/{id}/anular', [OdontogramaController::class, 'anularProcedimiento']);
+                Route::get('piezas/{piezaId}/historial', [OdontogramaController::class, 'historialPieza']);
             });
 
         Route::get('certificados-medicos',

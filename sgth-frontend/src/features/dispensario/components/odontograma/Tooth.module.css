@@ -1,0 +1,38 @@
+.diente {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.diente:hover {
+  transform: scale(1.15);
+  z-index: 1;
+}
+
+.raiz {
+  fill: var(--mantine-color-gray-3);
+  stroke: var(--mantine-color-gray-5);
+  stroke-width: 1;
+}
+
+.corona {
+  stroke-width: 1.5;
+}
+
+.surco {
+  fill: none;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+.numero {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mantine-color-dimmed);
+  line-height: 1;
+}

@@ -1,0 +1,17 @@
+.fila {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cuadrante {
+  display: flex;
+  gap: 6px;
+}
+
+.separador {
+  width: 1px;
+  align-self: stretch;
+  background: var(--mantine-color-gray-3);
+  margin: 0 10px;
+}
