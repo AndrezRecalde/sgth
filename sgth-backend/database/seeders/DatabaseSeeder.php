@@ -23,7 +23,8 @@ class DatabaseSeeder extends Seeder
             GrupoOcupacionalSeeder::class,
             UnidadAdministrativaSeeder::class,
             PartidaPresupuestariaSeeder::class,
-            
+            ProgramaDrogasActividadesSeeder::class,
+
             // Catálogo CIE-10 (ejecutar manualmente: php artisan db:seed --class=Cie10Seeder)
             // Cie10Seeder::class,
         ]);

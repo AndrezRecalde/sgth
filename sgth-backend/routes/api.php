@@ -92,7 +92,24 @@ use App\Http\Controllers\Seleccion\PostulanteController;
 use App\Http\Controllers\Seleccion\SeleccionController;
 use App\Http\Controllers\Sgd\DocumentoInstitucionalController;
 use App\Http\Controllers\Sso\AccidenteTrabajoController;
+use App\Http\Controllers\Sso\CapacitacionSsoController;
+use App\Http\Controllers\Sso\CumplimientoNormativaController;
+use App\Http\Controllers\Sso\DashboardSsoController;
+use App\Http\Controllers\Sso\EppEntregaController;
 use App\Http\Controllers\Sso\EquipoProteccionController;
+use App\Http\Controllers\Sso\FactorRiesgoCatalogoController;
+use App\Http\Controllers\Sso\DocumentoSsoController;
+use App\Http\Controllers\Sso\EvaluacionAssistController;
+use App\Http\Controllers\Sso\HorasTrabajadasController;
+use App\Http\Controllers\Sso\IndicadoresSsoController;
+use App\Http\Controllers\Sso\InspeccionSsoController;
+use App\Http\Controllers\Sso\EvaluacionPsicosocialController;
+use App\Http\Controllers\Sso\NormativaLegalSsoController;
+use App\Http\Controllers\Sso\ProgramaDrogaActividadController;
+use App\Http\Controllers\Sso\ProgramaDrogaSeguimientoController;
+use App\Http\Controllers\Sso\PuestoEppController;
+use App\Http\Controllers\Sso\RespuestaAssistController;
+use App\Http\Controllers\Sso\RespuestaPsicosocialController;
 use App\Http\Controllers\Sso\RiesgoLaboralController;
 use App\Http\Controllers\Viatico\AutorizacionVueloController;
 use App\Http\Controllers\Viatico\CatalogoViaticoController;
@@ -123,6 +140,23 @@ Route::prefix('v1')->group(function () {
 
     // Dispensario Médico: Búsqueda pública CIE-10 para autocompletado
     Route::get('dispensario/cie10/buscar', [DiagnosticoCie10Controller::class, 'buscar']);
+
+    // SSO: cuestionario de evaluación de riesgo psicosocial — anónimo por diseño (sin
+    // login de servidor), accesible únicamente por código de campaña.
+    Route::get('sso/psicosocial/{codigo}/cuestionario', [RespuestaPsicosocialController::class, 'cuestionario']);
+    Route::post('sso/psicosocial/{codigo}/respuestas', [RespuestaPsicosocialController::class, 'store'])
+        ->middleware('throttle:20,1');
+
+    // SSO: tamizaje ASSIST del programa de prevención de drogas (Fase 4, Instructivo
+    // MDT-MSP-2019-038) — anónimo y confidencial por mandato regulatorio, sin login de servidor.
+    Route::get('sso/assist/{codigo}/cuestionario', [RespuestaAssistController::class, 'cuestionario']);
+    Route::post('sso/assist/{codigo}/respuestas', [RespuestaAssistController::class, 'store'])
+        ->middleware('throttle:20,1');
+
+    // SSO: descarga de documentos adjuntos (Fase 9) protegida por firma temporal de URL,
+    // igual que sgd.documentos.descargar.
+    Route::get('sso/documentos/{documento}/descargar', [DocumentoSsoController::class, 'descargar'])
+        ->name('sso.documentos.descargar');
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
@@ -708,6 +742,67 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
             Route::apiResource('riesgos', RiesgoLaboralController::class);
             Route::apiResource('accidentes', AccidenteTrabajoController::class);
             Route::apiResource('equipos-proteccion', EquipoProteccionController::class);
+            Route::apiResource('inspecciones', InspeccionSsoController::class);
+            Route::apiResource('capacitaciones', CapacitacionSsoController::class);
+
+            Route::middleware('permission:ver-reportes-sso|gestionar-sso')->group(function () {
+                Route::get('dashboard/resumen', [DashboardSsoController::class, 'resumen']);
+                Route::get('factores-riesgo', [FactorRiesgoCatalogoController::class, 'index']);
+                Route::get('puestos/{puestoId}/equipos-proteccion', [PuestoEppController::class, 'index']);
+                Route::get('epp-entregas/reporte', [EppEntregaController::class, 'reporte']);
+                Route::get('epp-entregas', [EppEntregaController::class, 'index']);
+                Route::get('servidores/{servidorId}/kit-epp', [EppEntregaController::class, 'kitParaServidor']);
+                Route::get('horas-trabajadas', [HorasTrabajadasController::class, 'index']);
+                Route::get('indicadores/reactivos', [IndicadoresSsoController::class, 'reactivos']);
+                Route::get('indicadores/proactivos', [IndicadoresSsoController::class, 'proactivos']);
+                Route::get('normativa-legal', [NormativaLegalSsoController::class, 'index']);
+                Route::get('cumplimiento/lista-verificacion', [CumplimientoNormativaController::class, 'listaVerificacion']);
+                Route::get('psicosocial/campanias', [EvaluacionPsicosocialController::class, 'index']);
+                Route::get('psicosocial/campanias/{id}/resultados', [EvaluacionPsicosocialController::class, 'resultados']);
+                Route::get('assist/campanias', [EvaluacionAssistController::class, 'index']);
+                Route::get('assist/campanias/{id}/resultados', [EvaluacionAssistController::class, 'resultados']);
+                Route::get('programa-drogas/actividades', [ProgramaDrogaActividadController::class, 'index']);
+                Route::get('programa-drogas/seguimiento/lista', [ProgramaDrogaSeguimientoController::class, 'listaSeguimiento']);
+                Route::get('documentos', [DocumentoSsoController::class, 'index']);
+                Route::get('documentos/{id}/generar-enlace', [DocumentoSsoController::class, 'generarEnlace']);
+            });
+
+            Route::middleware('permission:gestionar-sso')->group(function () {
+                Route::post('factores-riesgo', [FactorRiesgoCatalogoController::class, 'store']);
+                Route::put('factores-riesgo/{id}', [FactorRiesgoCatalogoController::class, 'update']);
+                Route::delete('factores-riesgo/{id}', [FactorRiesgoCatalogoController::class, 'destroy']);
+
+                Route::post('puestos/{puestoId}/equipos-proteccion', [PuestoEppController::class, 'store']);
+                Route::delete('puestos/{puestoId}/equipos-proteccion/{id}', [PuestoEppController::class, 'destroy']);
+
+                Route::post('epp-entregas/kit', [EppEntregaController::class, 'storeKit']);
+                Route::post('epp-entregas', [EppEntregaController::class, 'store']);
+
+                Route::post('horas-trabajadas', [HorasTrabajadasController::class, 'store']);
+                Route::put('horas-trabajadas/{id}', [HorasTrabajadasController::class, 'update']);
+                Route::delete('horas-trabajadas/{id}', [HorasTrabajadasController::class, 'destroy']);
+
+                Route::post('normativa-legal', [NormativaLegalSsoController::class, 'store']);
+                Route::put('normativa-legal/{id}', [NormativaLegalSsoController::class, 'update']);
+                Route::delete('normativa-legal/{id}', [NormativaLegalSsoController::class, 'destroy']);
+
+                Route::post('cumplimiento', [CumplimientoNormativaController::class, 'store']);
+
+                Route::post('psicosocial/campanias', [EvaluacionPsicosocialController::class, 'store']);
+                Route::patch('psicosocial/campanias/{id}/cerrar', [EvaluacionPsicosocialController::class, 'cerrar']);
+
+                Route::post('assist/campanias', [EvaluacionAssistController::class, 'store']);
+                Route::patch('assist/campanias/{id}/cerrar', [EvaluacionAssistController::class, 'cerrar']);
+
+                Route::post('programa-drogas/actividades', [ProgramaDrogaActividadController::class, 'store']);
+                Route::put('programa-drogas/actividades/{id}', [ProgramaDrogaActividadController::class, 'update']);
+                Route::delete('programa-drogas/actividades/{id}', [ProgramaDrogaActividadController::class, 'destroy']);
+
+                Route::post('programa-drogas/seguimiento', [ProgramaDrogaSeguimientoController::class, 'store']);
+
+                Route::post('documentos', [DocumentoSsoController::class, 'store']);
+                Route::delete('documentos/{id}', [DocumentoSsoController::class, 'destroy']);
+            });
         });
 
     // Módulo 11 — Dispensario Médico

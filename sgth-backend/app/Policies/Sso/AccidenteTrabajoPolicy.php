@@ -33,4 +33,9 @@ final class AccidenteTrabajoPolicy
     {
         return $user->can(Permiso::GESTIONAR_SSO->value);
     }
+
+    public function delete(User $user, AccidenteTrabajo $model): bool
+    {
+        return $user->can(Permiso::GESTIONAR_SSO->value);
+    }
 }

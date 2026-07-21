@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
@@ -222,6 +223,17 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\Expediente\Servidor::observe(
             \App\Observers\ServidorObserver::class
         );
+
+        // Morph map de documentos_sso (Fase 9): guarda un alias corto en 'documentable_type'
+        // en vez del FQCN completo, para no acoplar la BD a la estructura interna de namespaces.
+        // No se usa enforceMorphMap(): Spatie Permission morphea User/Role internamente
+        // (model_has_roles) sin registrar esos modelos, y enforce() los rompería.
+        Relation::morphMap([
+            'cumplimiento_normativa' => \App\Models\Sso\CumplimientoNormativa::class,
+            'inspeccion_sso' => \App\Models\Sso\InspeccionSso::class,
+            'capacitacion_sso' => \App\Models\Sso\CapacitacionSso::class,
+            'programa_drogas_seguimiento' => \App\Models\Sso\ProgramaDrogaSeguimiento::class,
+        ]);
 
         Gate::define('viewPulse', function (?User $user) {
             if (app()->environment('local')) {

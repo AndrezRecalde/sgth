@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\User;
 use App\Observers\Sso\InspeccionSsoObserver;
@@ -40,5 +41,10 @@ class InspeccionSso extends Model
     public function inspector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'inspector_id');
+    }
+
+    public function documentos(): MorphMany
+    {
+        return $this->morphMany(DocumentoSso::class, 'documentable');
     }
 }

@@ -131,6 +131,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::GENERAR_REPORTES,
             Permiso::PUEDE_MARCAR_ONLINE,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
+            Permiso::GESTIONAR_SSO,
+            Permiso::VER_REPORTES_SSO,
+            Permiso::REGISTRAR_ACCIDENTE,
         ]));
 
         // ANALISTA_UATH
@@ -260,6 +263,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_AUDITORIA,
             Permiso::VER_DASHBOARD_EJECUTIVO,
             Permiso::GENERAR_REPORTES,
+            Permiso::VER_REPORTES_SSO,
         ]));
     }
 

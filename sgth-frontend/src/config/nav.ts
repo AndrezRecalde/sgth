@@ -71,6 +71,69 @@ export const NAV_SGTH: NavGroup[] = [
         icon:    'IconStethoscope',
         permiso: 'solicitar-certificacion-medica',
       },
+      {
+        label:    'Riesgos laborales (SSO)',
+        href:     ROUTES.SGTH.RIESGOS_LABORALES,
+        icon:     'IconShieldCheck',
+        permiso:  'gestionar-sso',
+        children: [
+          {
+            label: 'Dashboard',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES,
+            icon:  'IconLayoutDashboard',
+          },
+          {
+            label: 'Factores de riesgo',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_FACTORES,
+            icon:  'IconShieldCheck',
+          },
+          {
+            label: 'Accidentes de trabajo',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_ACCIDENTES,
+            icon:  'IconAlertTriangle',
+          },
+          {
+            label: 'Equipos de protección',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_EPP,
+            icon:  'IconHelmet',
+          },
+          {
+            label: 'Entregas de EPP',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_ENTREGAS_EPP,
+            icon:  'IconTruckDelivery',
+          },
+          {
+            label: 'Indicadores',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_INDICADORES,
+            icon:  'IconChartBar',
+          },
+          {
+            label: 'Cumplimiento',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_CUMPLIMIENTO,
+            icon:  'IconClipboardCheck',
+          },
+          {
+            label: 'Psicosocial',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_PSICOSOCIAL,
+            icon:  'IconMoodSmile',
+          },
+          {
+            label: 'Tamizaje ASSIST',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_ASSIST,
+            icon:  'IconVaccine',
+          },
+          {
+            label: 'Programa de drogas',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_PROGRAMA_DROGAS,
+            icon:  'IconChecklist',
+          },
+          {
+            label: 'Ausentismo',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_AUSENTISMO,
+            icon:  'IconCalendarOff',
+          },
+        ],
+      },
     ],
   },
   {

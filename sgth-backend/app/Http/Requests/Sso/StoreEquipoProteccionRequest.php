@@ -14,7 +14,12 @@ class StoreEquipoProteccionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Reglas validadas
+            'codigo'           => ['required', 'string', 'max:50', 'unique:equipos_proteccion,codigo'],
+            'nombre'           => ['required', 'string', 'max:150'],
+            'tipo'             => ['required', 'string', 'max:100'],
+            'norma_tecnica'    => ['nullable', 'string', 'max:150'],
+            'vida_util_meses'  => ['nullable', 'integer', 'min:1'],
+            'estado'           => ['boolean'],
         ];
     }
 }

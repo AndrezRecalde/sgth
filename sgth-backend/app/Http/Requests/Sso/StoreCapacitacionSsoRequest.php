@@ -14,7 +14,12 @@ class StoreCapacitacionSsoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Reglas validadas
+            'tema'            => ['required', 'string', 'max:200'],
+            'fecha'           => ['required', 'date'],
+            'duracion_horas'  => ['required', 'numeric', 'min:0.5'],
+            'instructor'      => ['required', 'string', 'max:150'],
+            'lugar'           => ['nullable', 'string', 'max:200'],
+            'estado'          => ['boolean'],
         ];
     }
 }

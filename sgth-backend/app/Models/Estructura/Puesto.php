@@ -80,6 +80,11 @@ class Puesto extends Model
             ->orderBy('orden');
     }
 
+    public function equiposProteccionRequeridos(): HasMany
+    {
+        return $this->hasMany(\App\Models\Sso\PuestoEpp::class);
+    }
+
     public function plazasOcupadas(): int
     {
         return $this->contratosVigentes()->count();

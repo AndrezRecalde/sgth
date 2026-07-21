@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Observers\Sso\AccidenteTrabajoObserver;
+use App\Enums\TipoEventoAccidente;
 
 #[ObservedBy(AccidenteTrabajoObserver::class)]
 class AccidenteTrabajo extends Model
@@ -19,7 +20,7 @@ class AccidenteTrabajo extends Model
     protected $table = 'accidentes_trabajo';
 
     protected $fillable = [
-        'servidor_id', 'fecha_accidente', 'hora_accidente', 'lugar_accidente',
+        'servidor_id', 'tipo_evento', 'fecha_accidente', 'hora_accidente', 'lugar_accidente',
         'descripcion_hechos', 'gravedad', 'requirio_atencion_medica',
         'dias_reposo_medico', 'causa_raiz', 'medidas_correctivas',
         'estado', 'investigado_por', 'created_by', 'updated_by'
@@ -28,6 +29,7 @@ class AccidenteTrabajo extends Model
     protected function casts(): array
     {
         return [
+            'tipo_evento' => TipoEventoAccidente::class,
             'fecha_accidente' => 'date',
             'hora_accidente' => 'datetime:H:i',
             'requirio_atencion_medica' => 'boolean',

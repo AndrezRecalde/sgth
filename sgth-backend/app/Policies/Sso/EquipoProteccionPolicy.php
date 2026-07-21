@@ -30,4 +30,9 @@ final class EquipoProteccionPolicy
     {
         return $user->can(Permiso::GESTIONAR_SSO->value);
     }
+
+    public function delete(User $user, EquipoProteccion $model): bool
+    {
+        return $user->can(Permiso::GESTIONAR_SSO->value);
+    }
 }

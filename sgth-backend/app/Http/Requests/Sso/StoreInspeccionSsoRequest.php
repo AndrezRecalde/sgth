@@ -14,7 +14,13 @@ class StoreInspeccionSsoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Reglas validadas
+            'unidad_administrativa_id' => ['required', 'integer', 'exists:unidades_administrativas,id'],
+            'fecha_inspeccion'         => ['required', 'date', 'before_or_equal:today'],
+            'tipo_inspeccion'          => ['required', 'string', 'max:150'],
+            'hallazgos'                => ['nullable', 'string', 'max:3000'],
+            'recomendaciones'          => ['nullable', 'string', 'max:3000'],
+            'estado'                   => ['boolean'],
+            'inspector_id'             => ['required', 'integer', 'exists:users,id'],
         ];
     }
 }
