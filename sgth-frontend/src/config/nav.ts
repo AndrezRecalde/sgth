@@ -54,6 +54,18 @@ export const NAV_SGTH: NavGroup[] = [
         label: 'Expediente',
         href:  ROUTES.SGTH.EXPEDIENTE,
         icon:  'IconFolder',
+        children: [
+          {
+            label: 'Expediente digital',
+            href:  ROUTES.SGTH.EXPEDIENTE,
+            icon:  'IconFolder',
+          },
+          {
+            label: 'Subrogaciones y encargos',
+            href:  ROUTES.SGTH.SUBROGACIONES,
+            icon:  'IconArrowsExchange',
+          },
+        ],
       },
       {
         label: 'Nómina',

@@ -52,6 +52,10 @@ const TIPO_OPTIONS = [
     value: 'servicios_profesionales',
     label: 'Servicios Profesionales',
   },
+  {
+    value: 'eleccion_popular',
+    label: 'Elección Popular',
+  },
 ]
 
 const ESTADO_OPTIONS = [
@@ -103,6 +107,10 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
     control,
     name: "puesto_id",
   });
+  const remuneracionWatch = useWatch({ control, name: "remuneracion" });
+  const rau = typeof remuneracionWatch === "number"
+    ? remuneracionWatch * 12
+    : null;
 
   // Unidades solo nivel 2
   const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 });
@@ -392,6 +400,21 @@ export function ContratoModal({ opened, onClose, servidorId, contrato }: Props) 
                     }
                   />
                 )}
+              />
+            </Grid.Col>
+
+            {/* R.A.U. — calculada, solo lectura */}
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <NumberInput
+                label="R.A.U. (Remuneración Anual Unificada)"
+                placeholder="0.00"
+                decimalScale={2}
+                fixedDecimalScale
+                prefix="$ "
+                disabled
+                {...contained}
+                value={rau ?? ''}
+                description="Calculada automáticamente: R.M.U. × 12"
               />
             </Grid.Col>
 

@@ -92,6 +92,7 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
               '/salud/enfermeria',
               '/sgth/reclutamiento/convocatorias',
               '/sgth/reclutamiento/plantillas',
+              '/sgth/expediente',
             ]
             const isActive = (child as NavItem).children
               ? (child as NavItem).children!.some(

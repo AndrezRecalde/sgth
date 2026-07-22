@@ -55,8 +55,7 @@ class Servidor extends Model
         'tiene_enfermedad_catastrofica',
         // Sección F
         'tipo_nombramiento', 'fecha_ingreso_institucion', 'fecha_ingreso_sector_publico',
-        'fecha_nombramiento', 'fecha_inicio_ultimo_contrato', 'fecha_fin_ultimo_contrato',
-        'puede_marcar'
+        'fecha_nombramiento', 'puede_marcar'
     ];
 
     protected function casts(): array
@@ -74,8 +73,6 @@ class Servidor extends Model
             'fecha_ingreso_institucion'     => 'date',
             'fecha_ingreso_sector_publico'  => 'date',
             'fecha_nombramiento'            => 'date',
-            'fecha_inicio_ultimo_contrato'  => 'date',
-            'fecha_fin_ultimo_contrato'     => 'date',
         ];
     }
 
@@ -176,6 +173,29 @@ class Servidor extends Model
     public function codigoMarcacionVigente(): ?string
     {
         return $this->cedula;
+    }
+
+    /**
+     * Años de servicio calculados desde la fecha de referencia según régimen
+     * (mismo criterio que PeriodoVacacionService::calcularAntiguedad, pero
+     * contado hasta hoy en vez de al cierre de un año fiscal).
+     */
+    protected function aniosServicio(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $esLosep = $this->regimen_laboral?->value === 'losep';
+                $fechaRef = $esLosep && $this->fecha_ingreso_sector_publico
+                    ? $this->fecha_ingreso_sector_publico
+                    : $this->fecha_ingreso_institucion;
+
+                if (!$fechaRef) {
+                    return null;
+                }
+
+                return \Carbon\Carbon::parse($fechaRef)->diffInYears(now());
+            }
+        );
     }
 
     /**

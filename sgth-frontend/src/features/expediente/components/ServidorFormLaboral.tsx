@@ -25,10 +25,17 @@ const fromDate = (d: Date | string | null): string | null => {
   return `${year}-${month}-${day}`
 }
 
-export function ServidorFormLaboral() {
+interface Props {
+  /** Tipo de nombramiento del contrato vigente del servidor, si existe. */
+  tipoNombramiento?: string | null
+}
+
+export function ServidorFormLaboral({ tipoNombramiento }: Props) {
   const contained = useContainedInput()
   const { control, formState: { errors } } =
     useFormContext<ServidorLaboralFormData>()
+
+  const esPermanente = tipoNombramiento === 'nombramiento_permanente'
 
   return (
     <Grid>
@@ -41,9 +48,9 @@ export function ServidorFormLaboral() {
           mb="xs"
         >
           <Text size="xs">
-            Estos datos provienen de la resolución oficial de nombramiento.
-            La fecha de ingreso a la institución es obligatoria para
-            el cálculo de antigüedad y beneficios LOSEP.
+            La fecha de ingreso al GAD se sincroniza automáticamente con la
+            fecha de inicio del contrato vigente. La fecha de nombramiento
+            oficial solo aplica a Nombramiento Permanente.
           </Text>
         </Alert>
       </Grid.Col>
@@ -55,9 +62,10 @@ export function ServidorFormLaboral() {
           render={({ field }) => (
             <DatePickerInput
               label="Fecha de ingreso al GAD"
-              placeholder="Seleccionar fecha"
+              placeholder="Se sincroniza con el contrato vigente"
               valueFormat="YYYY-MM-DD"
               maxDate={new Date()}
+              disabled
               {...contained}
               value={toDate(field.value)}
               onChange={(d) => field.onChange(fromDate(d) ?? '')}
@@ -94,10 +102,15 @@ export function ServidorFormLaboral() {
           render={({ field }) => (
             <DatePickerInput
               label="Fecha de nombramiento oficial"
-              placeholder="Seleccionar fecha (opcional)"
+              placeholder={
+                esPermanente
+                  ? 'Se sincroniza con el contrato vigente'
+                  : 'Solo aplica a Nombramiento Permanente'
+              }
               valueFormat="YYYY-MM-DD"
               clearable
               maxDate={new Date()}
+              disabled={!esPermanente}
               {...contained}
               value={toDate(field.value)}
               onChange={(d) => field.onChange(fromDate(d))}

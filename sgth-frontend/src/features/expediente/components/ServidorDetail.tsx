@@ -11,6 +11,7 @@ import {
   Button,
   ThemeIcon,
   ScrollArea,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconUser,
@@ -23,6 +24,7 @@ import {
   IconHeart,
   IconStethoscope,
   IconEdit,
+  IconHistory,
 } from "@tabler/icons-react";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { DatosPersonalesTab } from "./tabs/DatosPersonalesTab";
@@ -34,6 +36,7 @@ import { DocumentosTab } from "./tabs/DocumentosTab";
 import { DeclaracionesTab } from "./tabs/DeclaracionesTab";
 import { CondicionTab } from "./tabs/CondicionTab";
 import { SaludOcupacionalTab } from "./tabs/SaludOcupacionalTab";
+import { MovimientosTab } from "./tabs/MovimientosTab";
 import type { ServidorConRelaciones } from "@/types/api";
 
 interface Props {
@@ -73,6 +76,9 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
       .filter(Boolean)
       .join("")
       .toUpperCase() || "?";
+
+  const condicionDeshabilitada =
+    !servidor.tiene_discapacidad && !servidor.tiene_enfermedad_catastrofica;
 
   return (
     <Drawer
@@ -122,6 +128,14 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
                   >
                     {REGIMEN_LABELS[servidor.regimen_laboral] ??
                       servidor.regimen_laboral}
+                  </Badge>
+                )}
+                {servidor.anios_servicio != null && (
+                  <Badge color="grape" variant="light" size="xs">
+                    {servidor.anios_servicio}{" "}
+                    {servidor.anios_servicio === 1
+                      ? "año de servicio"
+                      : "años de servicio"}
                   </Badge>
                 )}
                 {servidor.contrato_vigente?.estado && (
@@ -191,14 +205,31 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
               >
                 Declaraciones
               </Tabs.Tab>
-              <Tabs.Tab value="condicion" leftSection={<IconHeart size={13} />}>
-                Condición
-              </Tabs.Tab>
+              <Tooltip
+                label="Active el switch de discapacidad o enfermedad catastrófica en Datos Personales para habilitar esta sección"
+                disabled={!condicionDeshabilitada}
+                multiline
+                w={220}
+              >
+                <Tabs.Tab
+                  value="condicion"
+                  leftSection={<IconHeart size={13} />}
+                  disabled={condicionDeshabilitada}
+                >
+                  Condición
+                </Tabs.Tab>
+              </Tooltip>
               <Tabs.Tab
                 value="salud"
                 leftSection={<IconStethoscope size={13} />}
               >
                 Salud
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="movimientos"
+                leftSection={<IconHistory size={13} />}
+              >
+                Movimientos
               </Tabs.Tab>
             </Tabs.List>
 
@@ -228,6 +259,12 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
             </Tabs.Panel>
             <Tabs.Panel value="salud" pt="md">
               <SaludOcupacionalTab servidorId={servidorId} />
+            </Tabs.Panel>
+            <Tabs.Panel value="movimientos" pt="md">
+              <MovimientosTab
+                servidorId={servidorId}
+                tipoNombramiento={servidor.contrato_vigente?.tipo_nombramiento}
+              />
             </Tabs.Panel>
           </Tabs>
         </Stack>

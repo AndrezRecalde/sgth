@@ -1,6 +1,7 @@
 import { Text, Badge } from '@mantine/core'
 import { IconEye, IconEdit } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
+import { esExterno } from '../utils/nombramiento'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ServidorConRelaciones } from '@/types/api'
 
@@ -76,6 +77,24 @@ export const getServidorColumns = (
           size="sm"
         >
           {REGIMEN_LABELS[regimen_laboral] ?? regimen_laboral}
+        </Badge>
+      )
+    },
+  },
+  {
+    accessor: 'tipo_vinculo',
+    title:    'Vínculo',
+    width:    90,
+    render:   (row) => {
+      const tipo = row.contrato_vigente?.tipo_nombramiento
+      if (!tipo) return <Text size="sm" c="dimmed">-</Text>
+      return (
+        <Badge
+          color={esExterno(tipo) ? 'orange' : 'gray'}
+          variant="light"
+          size="sm"
+        >
+          {esExterno(tipo) ? 'Externo' : 'Interno'}
         </Badge>
       )
     },

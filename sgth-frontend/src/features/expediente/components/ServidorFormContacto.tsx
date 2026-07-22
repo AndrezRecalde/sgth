@@ -1,6 +1,6 @@
 'use client'
 
-import { TextInput, Grid } from '@mantine/core'
+import { TextInput, Grid, Divider } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { UseFormReturn } from 'react-hook-form'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
@@ -15,6 +15,9 @@ export function ServidorFormContacto({ form }: Props) {
 
   return (
     <Grid>
+      <Grid.Col span={12}>
+        <Divider label="Contacto" labelPosition="left" mb="xs" />
+      </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
           label="Teléfono celular"
@@ -51,6 +54,10 @@ export function ServidorFormContacto({ form }: Props) {
           {...register('direccion_domicilio')}
           error={errors.direccion_domicilio?.message}
         />
+      </Grid.Col>
+
+      <Grid.Col span={12}>
+        <Divider label="Documentos adicionales" labelPosition="left" mb="xs" mt="xs" />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput

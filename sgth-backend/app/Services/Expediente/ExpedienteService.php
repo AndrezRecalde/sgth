@@ -124,9 +124,25 @@ class ExpedienteService implements ExpedienteServiceInterface
 
     public function listarServidores(array $filtros): mixed
     {
-        $query = Servidor::query()
-            ->with(['unidadAdministrativa', 'puesto.cargo', 'contratoVigente']);
+        $query = $this->filtrarServidores(
+            Servidor::query()->with(['unidadAdministrativa', 'puesto.cargo', 'contratoVigente']),
+            $filtros
+        );
 
+        $perPage = isset($filtros['per_page'])
+            ? (int) $filtros['per_page'] : 15;
+
+        return $query->orderBy('apellido')->orderBy('nombre')
+                     ->paginate($perPage);
+    }
+
+    /**
+     * Filtros compartidos entre el listado paginado y la exportación de
+     * nómina (Excel/PDF), para que ambos apliquen exactamente las mismas
+     * reglas.
+     */
+    private function filtrarServidores($query, array $filtros)
+    {
         // Búsqueda por nombre o cédula
         if (!empty($filtros['search'])) {
             $search = $filtros['search'];
@@ -144,8 +160,21 @@ class ExpedienteService implements ExpedienteServiceInterface
                 $filtros['unidad_administrativa_id']);
         }
 
-        if (isset($filtros['estado'])) {
-            $query->where('estado', $filtros['estado']);
+        // Estado propio del servidor (activo/inactivo), no confundir con el
+        // estado del contrato (vigente/terminado/cancelado).
+        if (isset($filtros['estado']) && $filtros['estado'] !== '') {
+            $query->where('estado', filter_var($filtros['estado'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if (!empty($filtros['contrato_estado'])) {
+            $query->whereHas('contratos', function ($q) use ($filtros) {
+                $q->where('estado', $filtros['contrato_estado']);
+            });
+        }
+
+        // Servidor "en funciones": activo y con contrato vigente.
+        if (!empty($filtros['en_funciones'])) {
+            $query->where('estado', true)->whereHas('contratoVigente');
         }
 
         if (!empty($filtros['tipo_nombramiento'])) {
@@ -158,10 +187,71 @@ class ExpedienteService implements ExpedienteServiceInterface
             $query->conDiscapacidad();
         }
 
-        $perPage = isset($filtros['per_page'])
-            ? (int) $filtros['per_page'] : 15;
+        // Año de ingreso a la institución.
+        if (!empty($filtros['anio_ingreso'])) {
+            $query->whereYear('fecha_ingreso_institucion', $filtros['anio_ingreso']);
+        }
 
-        return $query->orderBy('apellido')->orderBy('nombre')
-                     ->paginate($perPage);
+        return $query;
+    }
+
+    /**
+     * Exporta el listado completo de servidores (sin paginar) con las
+     * columnas del formato de nómina usado por Talento Humano.
+     */
+    public function exportarServidores(array $filtros): \Illuminate\Support\Collection
+    {
+        $query = $this->filtrarServidores(
+            Servidor::query()->with([
+                'unidadAdministrativa',
+                'puesto.cargo',
+                'puesto.grupoOcupacional',
+                'contratoVigente',
+                'usuario',
+                'discapacidades',
+                'historialAcademico',
+            ]),
+            $filtros
+        );
+
+        return $query->orderBy('apellido')->orderBy('nombre')->get()
+            ->values()
+            ->map(function (Servidor $servidor, int $index) {
+                $puesto = $servidor->contratoVigente?->puesto ?? $servidor->puesto;
+                $discapacidad = $servidor->discapacidades->first();
+                $formacion = $servidor->historialAcademico
+                    ->sortByDesc('fecha_fin')
+                    ->first();
+
+                $enFunciones = $servidor->estado && $servidor->contratoVigente;
+
+                return [
+                    'ITEM'                   => $index + 1,
+                    'CÉDULA'                 => $servidor->cedula,
+                    'NOMBRES Y APELLIDOS'    => trim(collect([
+                        $servidor->apellido, $servidor->segundo_apellido,
+                        $servidor->nombre, $servidor->segundo_nombre,
+                    ])->filter()->join(' ')),
+                    'GENERO'                 => $servidor->genero,
+                    'ESTADO CIVIL'           => $servidor->estado_civil,
+                    'TIPO DE DISCAPACIDAD'   => $discapacidad?->tipo_discapacidad?->etiqueta() ?? 'NO',
+                    'PORCENTAJE'             => $discapacidad?->porcentaje ?? 0,
+                    'CARGO'                  => $puesto?->cargo?->nombre,
+                    'GRUPO OCUPACIONAL'      => $puesto?->grupoOcupacional?->denominacion_generica,
+                    'R.M.U'                  => $servidor->contratoVigente?->remuneracion ?? $puesto?->rmu,
+                    'R.A.U'                  => $servidor->contratoVigente?->rau,
+                    'TIPO DE NOMBRAMIENTO'   => $servidor->tipo_nombramiento?->etiqueta(),
+                    'GESTIÓN'                => $servidor->unidadAdministrativa?->nombre,
+                    'FORMACIÓN'              => $formacion?->titulo_capacitacion,
+                    'FECHA DE INGRESO'       => $servidor->fecha_ingreso_institucion?->format('Y-m-d'),
+                    'FECHA DE SALIDA'        => $enFunciones ? 'EN FUNCIONES' : $servidor->contratoVigente?->fecha_fin?->format('Y-m-d'),
+                    'FECHA DE NACIMIENTO'    => $servidor->fecha_nacimiento?->format('Y-m-d'),
+                    'EDAD'                   => $servidor->fecha_nacimiento?->age,
+                    'DIRECCIÓN'              => $servidor->direccion_domicilio,
+                    'CELULAR'                => $servidor->telefono_celular,
+                    'CORREO PERSONAL'        => $servidor->correo_personal,
+                    'CORREO INSTITUCIONAL'   => $servidor->usuario?->email,
+                ];
+            });
     }
 }

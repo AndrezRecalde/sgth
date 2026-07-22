@@ -55,6 +55,14 @@ export function DatosPersonalesTab({ servidor }: Props) {
       <Campo label="Nombre completo" value={nombreCompleto} />
       <Campo label="Cédula de identidad" value={servidor.cedula} />
       <Campo
+        label="Años de servicio"
+        value={
+          servidor.anios_servicio != null
+            ? `${servidor.anios_servicio} ${servidor.anios_servicio === 1 ? "año" : "años"}`
+            : "—"
+        }
+      />
+      <Campo
         label="Fecha de nacimiento"
         value={
           servidor.fecha_nacimiento

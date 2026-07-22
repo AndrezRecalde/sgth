@@ -7,6 +7,7 @@ use App\Enums\TipoNombramiento;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,8 @@ class ContratoServidor extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'contratos_servidor';
+
+    protected $appends = ['rau'];
 
     protected $fillable = [
         'servidor_id',
@@ -46,6 +49,20 @@ class ContratoServidor extends Model
             'remuneracion'      => 'decimal:2',
             'puede_marcar'      => 'boolean',
         ];
+    }
+
+    /**
+     * R.A.U. — Remuneración Anual Unificada, derivada de la R.M.U. del
+     * contrato. No se persiste: cambia automáticamente si la remuneración
+     * mensual cambia.
+     */
+    protected function rau(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->remuneracion !== null
+                ? round((float) $this->remuneracion * 12, 2)
+                : null,
+        );
     }
 
     public function servidor(): BelongsTo

@@ -52,7 +52,9 @@ use App\Http\Controllers\Estructura\PuestoController;
 use App\Http\Controllers\Estructura\UnidadAdministrativaController;
 use App\Http\Controllers\Evaluacion\EvaluacionController;
 use App\Http\Controllers\Expediente\CargaFamiliarController;
+use App\Http\Controllers\Expediente\AccionPersonalPdfController;
 use App\Http\Controllers\Expediente\CertificadoLaboralController;
+use App\Http\Controllers\Expediente\ExportServidoresController;
 use App\Http\Controllers\Expediente\ContratoServidorController;
 use App\Http\Controllers\Expediente\CuentaBancariaServidorController;
 use App\Http\Controllers\Expediente\DeclaracionJuramentadaController;
@@ -253,6 +255,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     )->name('carga.enfermedades.destroy');
 
     Route::prefix('expediente')->group(function () {
+        Route::get('servidores-export/excel', [ExportServidoresController::class, 'excel']);
+        Route::get('servidores-export/pdf', [ExportServidoresController::class, 'pdf']);
         Route::apiResource('servidores', ServidorController::class);
 
         Route::prefix('servidores/{servidorId}')->group(function () {
@@ -270,6 +274,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 ->name('documentos.descargar');
         });
         Route::get('servidores/{servidor}/movimientos', [MovimientoPersonalController::class, 'index']);
+        Route::post('servidores/{servidorId}/movimientos', [MovimientoPersonalController::class, 'store'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::get('movimientos/{movimientoId}/accion-personal-pdf', [AccionPersonalPdfController::class, 'generar']);
 
         Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar']);
         Route::get('certificado-laboral/descargar/{archivo}', [CertificadoLaboralController::class, 'descargar'])

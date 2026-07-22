@@ -44,6 +44,7 @@ const NOMBRAMIENTO_LABELS: Record<string, string> = {
   libre_nombramiento_remocion: "Libre Nombramiento y Remoción",
   codigo_trabajo: "Código del Trabajo",
   servicios_profesionales: "Servicios Profesionales",
+  eleccion_popular: "Elección Popular",
 };
 
 function formatFecha(fecha?: string | null): string {
@@ -151,11 +152,25 @@ function ContratoDetalle({ contrato }: DetalleProps) {
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
           <Text size="xs" c="dimmed" mb={2}>
-            Remuneración mensual
+            Remuneración mensual (R.M.U.)
           </Text>
           <Text size="sm" fw={600}>
             {contrato.remuneracion
               ? `$ ${Number(contrato.remuneracion).toLocaleString("es-EC", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}`
+              : "—"}
+          </Text>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+          <Text size="xs" c="dimmed" mb={2}>
+            Remuneración anual (R.A.U.)
+          </Text>
+          <Text size="sm" fw={600}>
+            {contrato.rau
+              ? `$ ${Number(contrato.rau).toLocaleString("es-EC", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`

@@ -1,10 +1,10 @@
 'use client'
 
-import { Modal, Tabs, Button, Group } from '@mantine/core'
+import { Modal, Stepper, Button, Group } from '@mantine/core'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconUser, IconPhone, IconBriefcase } from '@tabler/icons-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useServidorMutations } from '../hooks/useServidorMutations'
 import { ServidorFormPersonal } from './ServidorFormPersonal'
@@ -26,103 +26,128 @@ interface Props {
   servidor?: ServidorConRelaciones | null
 }
 
+const BLANK_FORM_VALUES: ServidorBasicoFormData = {
+  nombre:           '',
+  segundo_nombre:   '',
+  apellido:         '',
+  segundo_apellido: '',
+  cedula:           '',
+  fecha_nacimiento: '',
+  genero:           'masculino',
+  estado_civil:     'soltero',
+  tipo_sangre:             null,
+  es_extranjero:           false,
+  provincia_nacimiento_id: null,
+  canton_nacimiento_id:    null,
+  nacionalidad:            '',
+  pais_origen:             '',
+  numero_papeleta_votacion: '',
+  pasaporte_numero:        '',
+  tiene_discapacidad:            false,
+  tiene_enfermedad_catastrofica: false,
+  telefono_celular:      '',
+  telefono_convencional: '',
+  correo_personal:       '',
+  direccion_domicilio:   '',
+}
+
+const BLANK_LABORAL_VALUES: ServidorLaboralFormData = {
+  fecha_ingreso_institucion:    '',
+  fecha_ingreso_sector_publico: null,
+  fecha_nombramiento:           null,
+  numero_contrato:              null,
+}
+
+function mapServidorToFormValues(servidor: ServidorConRelaciones): ServidorBasicoFormData {
+  return {
+    nombre:           servidor.nombre  ?? '',
+    segundo_nombre:   servidor.segundo_nombre  ?? '',
+    apellido:         servidor.apellido ?? '',
+    segundo_apellido: servidor.segundo_apellido ?? '',
+    cedula:           servidor.cedula ?? '',
+    fecha_nacimiento: servidor.fecha_nacimiento
+      ? servidor.fecha_nacimiento.split('T')[0] : '',
+    genero:           (servidor.genero as ServidorBasicoFormData['genero'])
+      ?? 'masculino',
+    estado_civil: (servidor.estado_civil as ServidorBasicoFormData['estado_civil'])
+      ?? 'soltero',
+    tipo_sangre:             (servidor.tipo_sangre as ServidorBasicoFormData['tipo_sangre']) ?? null,
+    es_extranjero:           servidor.es_extranjero ?? false,
+    provincia_nacimiento_id: servidor.provincia_nacimiento_id ?? null,
+    canton_nacimiento_id:    servidor.canton_nacimiento_id ?? null,
+    nacionalidad:            servidor.nacionalidad ?? '',
+    pais_origen:             servidor.pais_origen ?? '',
+    numero_papeleta_votacion: servidor.numero_papeleta_votacion ?? '',
+    pasaporte_numero:        servidor.pasaporte_numero ?? '',
+    tiene_discapacidad:            servidor.tiene_discapacidad ?? false,
+    tiene_enfermedad_catastrofica: servidor.tiene_enfermedad_catastrofica ?? false,
+    telefono_celular:      servidor.telefono_celular ?? '',
+    telefono_convencional: servidor.telefono_convencional ?? '',
+    correo_personal:       servidor.correo_personal ?? '',
+    direccion_domicilio:   servidor.direccion_domicilio ?? '',
+  }
+}
+
+const PERSONAL_FIELDS = [
+  'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido', 'cedula',
+  'fecha_nacimiento', 'genero', 'estado_civil', 'tipo_sangre', 'es_extranjero',
+  'provincia_nacimiento_id', 'canton_nacimiento_id', 'nacionalidad', 'pais_origen',
+  'tiene_discapacidad', 'tiene_enfermedad_catastrofica',
+] as const satisfies readonly (keyof ServidorBasicoFormData)[]
+
+function mapServidorToLaboralValues(servidor: ServidorConRelaciones): ServidorLaboralFormData {
+  return {
+    fecha_ingreso_institucion: servidor.fecha_ingreso_institucion
+      ? servidor.fecha_ingreso_institucion.split('T')[0] : '',
+    fecha_ingreso_sector_publico: servidor.fecha_ingreso_sector_publico
+      ? servidor.fecha_ingreso_sector_publico.split('T')[0] : null,
+    fecha_nombramiento: servidor.fecha_nombramiento
+      ? servidor.fecha_nombramiento.split('T')[0] : null,
+    numero_contrato: servidor.numero_contrato ?? null,
+  }
+}
+
 export function ServidorModal({ opened, onClose, servidor }: Props) {
   const { isMobile }      = useMobileBreakpoint()
   const { crear, editar } = useServidorMutations()
   const isEditing         = !!servidor
+  const totalSteps        = isEditing ? 3 : 2
+
+  const [step, setStep] = useState(0)
 
   const form = useForm<ServidorBasicoFormData>({
     resolver: zodResolver(servidorBasicoSchema),
-    defaultValues: {
-      nombre:           servidor?.nombre  ?? '',
-      segundo_nombre:   servidor?.segundo_nombre  ?? '',
-      apellido:         servidor?.apellido ?? '',
-      segundo_apellido: servidor?.segundo_apellido ?? '',
-      cedula:           servidor?.cedula ?? '',
-      fecha_nacimiento: servidor?.fecha_nacimiento ?? '',
-      genero:           (servidor?.genero as ServidorBasicoFormData['genero'])
-        ?? 'masculino',
-      estado_civil: (servidor?.estado_civil as ServidorBasicoFormData['estado_civil'])
-        ?? 'soltero',
-      tipo_sangre:             null,
-      es_extranjero:           false,
-      provincia_nacimiento_id: servidor?.provincia_nacimiento_id ?? null,
-      canton_nacimiento_id:    servidor?.canton_nacimiento_id ?? null,
-      nacionalidad:            '',
-      pais_origen:             '',
-      numero_papeleta_votacion: '',
-      pasaporte_numero:        '',
-      tiene_discapacidad:            false,
-      tiene_enfermedad_catastrofica: false,
-      telefono_celular:      servidor?.telefono_celular ?? '',
-      telefono_convencional: servidor?.telefono_convencional ?? '',
-      correo_personal:       servidor?.correo_personal ?? '',
-      direccion_domicilio:   servidor?.direccion_domicilio ?? '',
-    },
+    defaultValues: servidor ? mapServidorToFormValues(servidor) : BLANK_FORM_VALUES,
   })
 
   const laboralForm = useForm<ServidorLaboralFormData>({
     resolver: zodResolver(servidorLaboralSchema),
-    defaultValues: {
-      fecha_ingreso_institucion:    servidor?.fecha_ingreso_institucion
-        ? servidor.fecha_ingreso_institucion.split('T')[0] : '',
-      fecha_ingreso_sector_publico: servidor?.fecha_ingreso_sector_publico
-        ? servidor.fecha_ingreso_sector_publico.split('T')[0] : null,
-      fecha_nombramiento: servidor?.fecha_nombramiento
-        ? servidor.fecha_nombramiento.split('T')[0] : null,
-      numero_contrato:    servidor?.numero_contrato ?? null,
-    },
+    defaultValues: servidor ? mapServidorToLaboralValues(servidor) : BLANK_LABORAL_VALUES,
   })
 
   useEffect(() => {
     if (servidor) {
-      form.reset({
-        nombre:           servidor.nombre  ?? '',
-        segundo_nombre:   servidor.segundo_nombre  ?? '',
-        apellido:         servidor.apellido ?? '',
-        segundo_apellido: servidor.segundo_apellido ?? '',
-        cedula:           servidor.cedula ?? '',
-        fecha_nacimiento: servidor.fecha_nacimiento
-          ? servidor.fecha_nacimiento.split('T')[0] : '',
-        genero:           (servidor.genero as ServidorBasicoFormData['genero'])
-          ?? 'masculino',
-        estado_civil: (servidor.estado_civil as ServidorBasicoFormData['estado_civil'])
-          ?? 'soltero',
-        tipo_sangre:             (servidor.tipo_sangre as ServidorBasicoFormData['tipo_sangre']) ?? null,
-        es_extranjero:           servidor.es_extranjero ?? false,
-        provincia_nacimiento_id: servidor.provincia_nacimiento_id ?? null,
-        canton_nacimiento_id:    servidor.canton_nacimiento_id ?? null,
-        nacionalidad:            servidor.nacionalidad ?? '',
-        pais_origen:             servidor.pais_origen ?? '',
-        numero_papeleta_votacion: servidor.numero_papeleta_votacion ?? '',
-        pasaporte_numero:        servidor.pasaporte_numero ?? '',
-        tiene_discapacidad:            servidor.tiene_discapacidad ?? false,
-        tiene_enfermedad_catastrofica: servidor.tiene_enfermedad_catastrofica ?? false,
-        telefono_celular:      servidor.telefono_celular ?? '',
-        telefono_convencional: servidor.telefono_convencional ?? '',
-        correo_personal:       servidor.correo_personal ?? '',
-        direccion_domicilio:   servidor.direccion_domicilio ?? '',
-      })
-      laboralForm.reset({
-        fecha_ingreso_institucion: servidor.fecha_ingreso_institucion
-          ? servidor.fecha_ingreso_institucion.split('T')[0] : '',
-        fecha_ingreso_sector_publico: servidor.fecha_ingreso_sector_publico
-          ? servidor.fecha_ingreso_sector_publico.split('T')[0] : null,
-        fecha_nombramiento: servidor.fecha_nombramiento
-          ? servidor.fecha_nombramiento.split('T')[0] : null,
-        numero_contrato: servidor.numero_contrato ?? null,
-      })
+      form.reset(mapServidorToFormValues(servidor))
+      laboralForm.reset(mapServidorToLaboralValues(servidor))
     } else {
-      form.reset()
-      laboralForm.reset()
+      form.reset(BLANK_FORM_VALUES)
+      laboralForm.reset(BLANK_LABORAL_VALUES)
     }
   }, [servidor, form, laboralForm])
 
   const handleClose = () => {
-    form.reset()
-    laboralForm.reset()
+    form.reset(BLANK_FORM_VALUES)
+    laboralForm.reset(BLANK_LABORAL_VALUES)
+    setStep(0)
     onClose()
   }
+
+  const handleNext = async () => {
+    const valid = await form.trigger(PERSONAL_FIELDS)
+    if (valid) setStep((s) => Math.min(s + 1, totalSteps - 1))
+  }
+
+  const handleBack = () => setStep((s) => Math.max(s - 1, 0))
 
   const onSubmit = async (values: ServidorBasicoFormData) => {
     try {
@@ -159,60 +184,50 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
+      <Stepper active={step} size="sm" color="emerald" mb="lg" allowNextStepsSelect={false}>
+        <Stepper.Step label="Datos personales" icon={<IconUser size={16} />} />
+        <Stepper.Step label="Contacto" icon={<IconPhone size={16} />} />
+        {isEditing && (
+          <Stepper.Step label="Laboral" icon={<IconBriefcase size={16} />} />
+        )}
+      </Stepper>
+
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Tabs defaultValue="personal" color="emerald">
-          <Tabs.List mb="md">
-            <Tabs.Tab
-              value="personal"
-              leftSection={<IconUser size={14} />}
-            >
-              Personal
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="contacto"
-              leftSection={<IconPhone size={14} />}
-            >
-              Contacto
-            </Tabs.Tab>
-            {isEditing && (
-              <Tabs.Tab
-                value="laboral"
-                leftSection={<IconBriefcase size={14} />}
-              >
-                Laboral
-              </Tabs.Tab>
-            )}
-          </Tabs.List>
+        {step === 0 && <ServidorFormPersonal form={form} />}
+        {step === 1 && <ServidorFormContacto form={form} />}
+        {step === 2 && isEditing && (
+          <FormProvider {...laboralForm}>
+            <ServidorFormLaboral
+              tipoNombramiento={servidor?.contrato_vigente?.tipo_nombramiento}
+            />
+          </FormProvider>
+        )}
 
-          <Tabs.Panel value="personal" pt="md">
-            <ServidorFormPersonal form={form} />
-          </Tabs.Panel>
-
-          <Tabs.Panel value="contacto" pt="md">
-            <ServidorFormContacto form={form} />
-          </Tabs.Panel>
-
-          {isEditing && (
-            <Tabs.Panel value="laboral" pt="md">
-              <FormProvider {...laboralForm}>
-                <ServidorFormLaboral />
-              </FormProvider>
-            </Tabs.Panel>
-          )}
-        </Tabs>
-
-        <Group justify="flex-end" mt="xl">
+        <Group justify="space-between" mt="xl">
           <Button variant="default" onClick={handleClose}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            loading={isPending}
-            color="emerald"
-            variant="light"
-          >
-            {isEditing ? 'Actualizar' : 'Registrar servidor'}
-          </Button>
+          <Group>
+            {step > 0 && (
+              <Button variant="default" onClick={handleBack}>
+                Atrás
+              </Button>
+            )}
+            {step < totalSteps - 1 ? (
+              <Button type="button" color="emerald" variant="light" onClick={handleNext}>
+                Siguiente
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                loading={isPending}
+                color="emerald"
+                variant="light"
+              >
+                {isEditing ? 'Actualizar' : 'Registrar servidor'}
+              </Button>
+            )}
+          </Group>
         </Group>
       </form>
     </Modal>

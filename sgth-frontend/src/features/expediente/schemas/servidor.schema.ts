@@ -56,6 +56,7 @@ export const servidorSchema = z.object({
     'libre_nombramiento_remocion',
     'codigo_trabajo',
     'servicios_profesionales',
+    'eleccion_popular',
   ]),
   numero_contrato:              z.string().optional(),
   fecha_ingreso_institucion:    z.string().min(1, 'Requerido'),

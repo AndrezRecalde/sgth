@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  TextInput, Select, Grid, Switch,
+  TextInput, Select, Grid, Switch, Divider,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
@@ -75,6 +75,9 @@ export function ServidorFormPersonal({ form }: Props) {
 
   return (
     <Grid>
+      <Grid.Col span={12}>
+        <Divider label="Identificación" labelPosition="left" mb="xs" />
+      </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
           label="Primer nombre"
@@ -120,6 +123,10 @@ export function ServidorFormPersonal({ form }: Props) {
           {...register('cedula')}
           error={errors.cedula?.message}
         />
+      </Grid.Col>
+
+      <Grid.Col span={12}>
+        <Divider label="Datos demográficos" labelPosition="left" mb="xs" mt="xs" />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 4 }}>
         <Controller
@@ -192,6 +199,9 @@ export function ServidorFormPersonal({ form }: Props) {
         />
       </Grid.Col>
 
+      <Grid.Col span={12}>
+        <Divider label="Origen" labelPosition="left" mb="xs" mt="xs" />
+      </Grid.Col>
       <Grid.Col span={12}>
         <Controller
           name="es_extranjero"
@@ -279,6 +289,9 @@ export function ServidorFormPersonal({ form }: Props) {
         </>
       )}
 
+      <Grid.Col span={12}>
+        <Divider label="Condición de salud" labelPosition="left" mb="xs" mt="xs" />
+      </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <Controller
           name="tiene_discapacidad"

@@ -5068,7 +5068,7 @@ export interface components {
          * TipoNombramiento
          * @enum {string}
          */
-        TipoNombramiento: "nombramiento_permanente" | "nombramiento_provisional" | "servicios_ocasionales" | "libre_nombramiento_remocion" | "codigo_trabajo" | "servicios_profesionales";
+        TipoNombramiento: "nombramiento_permanente" | "nombramiento_provisional" | "servicios_ocasionales" | "libre_nombramiento_remocion" | "codigo_trabajo" | "servicios_profesionales" | "eleccion_popular";
         /**
          * TipoParentesco
          * @enum {string}

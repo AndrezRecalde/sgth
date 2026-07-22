@@ -60,6 +60,11 @@ class Puesto extends Model
         return $this->belongsTo(GrupoOcupacional::class);
     }
 
+    public function partidaPresupuestaria(): BelongsTo
+    {
+        return $this->belongsTo(PartidaPresupuestaria::class);
+    }
+
     public function contratosVigentes(): HasMany
     {
         return $this->hasMany(
@@ -87,7 +92,12 @@ class Puesto extends Model
 
     public function plazasOcupadas(): int
     {
-        return $this->contratosVigentes()->count();
+        // Servicios Profesionales no consume plaza presupuestada: es un
+        // contrato civil, no una relación de dependencia sobre el puesto.
+        return $this->contratosVigentes()
+            ->where('tipo_nombramiento', '!=',
+                \App\Enums\TipoNombramiento::SERVICIOS_PROFESIONALES->value)
+            ->count();
     }
 
     public function plazasDisponibles(): int

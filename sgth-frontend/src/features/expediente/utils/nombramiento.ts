@@ -1,0 +1,59 @@
+/**
+ * Un contrato es "externo" cuando es de Servicios Profesionales (contrato
+ * civil sin relación de dependencia ni marcación). Todo lo demás se
+ * considera personal interno del GAD. No es un campo propio: se deriva del
+ * tipo de nombramiento para evitar un dato redundante que se pueda
+ * desincronizar.
+ */
+export function esExterno(tipoNombramiento?: string | null): boolean {
+  return tipoNombramiento === 'servicios_profesionales'
+}
+
+/**
+ * Régimen LOSEP vs Código de Trabajo — mismo criterio que
+ * TipoNombramiento::esLosep() en el backend: todo lo que no sea Código de
+ * Trabajo ni Servicios Profesionales es LOSEP (incluida Elección Popular).
+ */
+export function esLosep(tipoNombramiento?: string | null): boolean {
+  return tipoNombramiento !== 'codigo_trabajo'
+    && tipoNombramiento !== 'servicios_profesionales'
+}
+
+export type AccionPersonalTipo =
+  | 'cambio_denominacion'
+  | 'prestacion_servicios'
+  | 'cambio_administrativo'
+  | 'comision_sin_remuneracion'
+  | 'licencia_sin_remuneracion'
+
+export const ACCION_PERSONAL_LABELS: Record<AccionPersonalTipo, string> = {
+  cambio_denominacion:       'Cambio de Denominación',
+  prestacion_servicios:      'Prestación de Servicios',
+  cambio_administrativo:     'Cambio Administrativo',
+  comision_sin_remuneracion: 'Comisión de Servicios sin Remuneración',
+  licencia_sin_remuneracion: 'Licencia sin Remuneración',
+}
+
+/**
+ * Refleja TipoMovimientoPersonal::elegiblePara() del backend, para filtrar
+ * las opciones visibles en el formulario. El backend sigue siendo la
+ * autoridad — esto es solo para no ofrecer opciones que de todas formas
+ * serán rechazadas.
+ */
+export function accionesElegibles(
+  tipoNombramiento?: string | null
+): AccionPersonalTipo[] {
+  if (!tipoNombramiento) return []
+
+  const elegible: Record<AccionPersonalTipo, boolean> = {
+    cambio_denominacion:       tipoNombramiento === 'codigo_trabajo',
+    prestacion_servicios:      esLosep(tipoNombramiento) && tipoNombramiento !== 'nombramiento_permanente',
+    cambio_administrativo:     tipoNombramiento === 'nombramiento_permanente',
+    comision_sin_remuneracion: tipoNombramiento === 'nombramiento_permanente',
+    licencia_sin_remuneracion: [
+      'nombramiento_permanente', 'codigo_trabajo', 'eleccion_popular',
+    ].includes(tipoNombramiento),
+  }
+
+  return (Object.keys(elegible) as AccionPersonalTipo[]).filter((k) => elegible[k])
+}

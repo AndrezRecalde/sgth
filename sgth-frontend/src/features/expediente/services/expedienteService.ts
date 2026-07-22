@@ -4,6 +4,7 @@ import type { DeclaracionFormData } from '../schemas/declaracion.schema'
 import type { DiscapacidadFormData } from '../schemas/discapacidad.schema'
 import type { EnfermedadFormData } from '../schemas/enfermedad.schema'
 import type { HistorialAcademicoFormData } from '../schemas/historialAcademico.schema'
+import type { MovimientoFormData } from '../schemas/movimiento.schema'
 import type {
   ApiResponse,
   Servidor,
@@ -17,6 +18,7 @@ import type {
   ServidorConRelaciones,
   DiscapacidadCargaFamiliar,
   EnfermedadCatastroficaCargaFamiliar,
+  MovimientoPersonal,
 } from "@/types/api";
 import type { ServidorFormData } from "../schemas/servidor.schema";
 import type { ServidorBasicoFormData } from "../schemas/servidorBasico.schema";
@@ -63,6 +65,20 @@ export const expedienteService = {
     api
       .put<ApiResponse<Servidor>>(`/expediente/servidores/${id}`, data)
       .then((r) => r.data.datos),
+
+  exportarExcel: (params?: ServidorParams) =>
+    api
+      .get("/expediente/servidores-export/excel", {
+        params, responseType: "blob",
+      })
+      .then((r) => r.data),
+
+  exportarPdf: (params?: ServidorParams) =>
+    api
+      .get("/expediente/servidores-export/pdf", {
+        params, responseType: "blob",
+      })
+      .then((r) => r.data),
 
   // ── Historial académico ─────────────────────────
   listarHistorialAcademico: (servidorId: number) =>
@@ -275,6 +291,28 @@ export const expedienteService = {
         `/expediente/servidores/${servidorId}/documentos/${documentoId}/descargar`,
         { responseType: "blob" },
       )
+      .then((r) => r.data),
+
+  // ── Movimientos de personal / acciones de personal ──
+  listarMovimientos: (servidorId: number) =>
+    api
+      .get<
+        ApiResponse<MovimientoPersonal[]>
+      >(`/expediente/servidores/${servidorId}/movimientos`)
+      .then((r) => r.data.datos ?? []),
+
+  crearMovimiento: (servidorId: number, data: MovimientoFormData) =>
+    api
+      .post<
+        ApiResponse<MovimientoPersonal>
+      >(`/expediente/servidores/${servidorId}/movimientos`, data)
+      .then((r) => r.data.datos),
+
+  descargarAccionPersonalPdf: (movimientoId: number) =>
+    api
+      .get(`/expediente/movimientos/${movimientoId}/accion-personal-pdf`, {
+        responseType: "blob",
+      })
       .then((r) => r.data),
 
   // ── Sub-condiciones de carga familiar ──────────

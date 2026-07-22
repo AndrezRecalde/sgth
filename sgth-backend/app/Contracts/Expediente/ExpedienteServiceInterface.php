@@ -19,4 +19,6 @@ interface ExpedienteServiceInterface
     public function obtenerExpedienteCompleto(int $servidorId): Servidor;
 
     public function listarServidores(array $filtros): mixed;
+
+    public function exportarServidores(array $filtros): \Illuminate\Support\Collection;
 }

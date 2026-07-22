@@ -64,11 +64,13 @@ class SubrogacionController extends Controller
         return ApiResponse::ok($subrogacion, 'Subrogación/Encargo cancelado exitosamente.');
     }
 
-    public function listarActivas(): JsonResponse
+    public function listarActivas(Request $request): JsonResponse
     {
         $this->authorize('verAny', Subrogacion::class);
 
-        $activas = $this->subrogacionService->listarActivas();
+        $activas = $this->subrogacionService->listarActivas(
+            $request->only(['unidad_administrativa_id', 'tipo'])
+        );
 
         return ApiResponse::ok($activas, 'Subrogaciones activas');
     }

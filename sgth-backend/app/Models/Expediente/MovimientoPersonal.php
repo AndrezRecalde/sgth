@@ -2,6 +2,7 @@
 
 namespace App\Models\Expediente;
 
+use App\Enums\TipoMovimientoPersonal;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\User;
@@ -16,8 +17,11 @@ class MovimientoPersonal extends Model
     protected $fillable = [
         'servidor_id',
         'tipo_movimiento',
+        'codigo',
         'descripcion',
         'fecha_efectiva',
+        'fecha_inicio',
+        'fecha_fin',
         'unidad_origen_id',
         'unidad_destino_id',
         'puesto_origen_id',
@@ -26,12 +30,21 @@ class MovimientoPersonal extends Model
         'documento_respaldo',
         'autorizado_por',
         'observacion',
+        'lugar_trabajo',
+        'caucionado',
+        'caucion_numero',
+        'caucion_fecha',
     ];
 
     protected function casts(): array
     {
         return [
-            'fecha_efectiva' => 'date',
+            'tipo_movimiento' => TipoMovimientoPersonal::class,
+            'fecha_efectiva'  => 'date',
+            'fecha_inicio'    => 'date',
+            'fecha_fin'       => 'date',
+            'caucionado'      => 'boolean',
+            'caucion_fecha'   => 'date',
         ];
     }
 

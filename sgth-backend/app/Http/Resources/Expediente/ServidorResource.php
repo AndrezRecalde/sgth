@@ -12,6 +12,8 @@ class ServidorResource extends JsonResource
     {
         $datos = parent::toArray($request);
 
+        $datos['anios_servicio'] = $this->anios_servicio;
+
         // Nunca exponer rutas absolutas físicas directamente por seguridad
         if (!empty($this->carnet_conadis_ruta)) {
             $datos['carnet_conadis_ruta'] = URL::temporarySignedRoute(

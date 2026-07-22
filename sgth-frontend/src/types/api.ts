@@ -277,6 +277,7 @@ export type TipoNombramiento =
   | 'libre_nombramiento_remocion'
   | 'codigo_trabajo'
   | 'servicios_profesionales'
+  | 'eleccion_popular'
 
 export type EstadoContrato =
   | 'vigente'
@@ -298,8 +299,15 @@ export type ServidorParams = {
   page?: number
   per_page?: number
   search?: string
-  unidad_id?: number
-  estado?: EstadoContrato
+  unidad_administrativa_id?: number
+  /** Estado propio del servidor (activo/inactivo). */
+  estado?: boolean
+  /** Estado del contrato (vigente/terminado/cancelado). */
+  contrato_estado?: EstadoContrato
+  /** Atajo: activo y con contrato vigente. */
+  en_funciones?: boolean
+  tipo_nombramiento?: TipoNombramiento
+  anio_ingreso?: number
 }
 
 export type AgendaParams = {
@@ -411,6 +419,7 @@ export type ServidorConRelaciones = Servidor & {
   fecha_ingreso_sector_publico?: string | null
   fecha_nombramiento?:           string | null
   numero_contrato?:              string | null
+  anios_servicio?:               number | null
   puesto?: {
     id:     number
     es_jefe?: boolean
@@ -457,6 +466,90 @@ export type ContratoConRelaciones = ContratoServidor & {
   puede_marcar?: boolean | null
   documento_ruta?: string | null
   remuneracion?: string | number | null
+  /** R.A.U. — Remuneración Anual Unificada (remuneracion * 12, calculada en backend). */
+  rau?: string | number | null
+}
+
+export type TipoMovimientoPersonal =
+  | 'traslado'
+  | 'ascenso'
+  | 'subrogacion'
+  | 'comision_servicios'
+  | 'cambio_regimen'
+  | 'cambio_puesto'
+  | 'ingreso'
+  | 'egreso'
+  | 'novedad_contrato'
+  | 'cambio_denominacion'
+  | 'prestacion_servicios'
+  | 'cambio_administrativo'
+  | 'comision_sin_remuneracion'
+  | 'licencia_sin_remuneracion'
+
+export type MovimientoPersonal = {
+  id: number
+  servidor_id: number
+  tipo_movimiento: TipoMovimientoPersonal
+  codigo?: string | null
+  descripcion: string
+  fecha_efectiva: string
+  fecha_inicio?: string | null
+  fecha_fin?: string | null
+  unidad_origen_id?: number | null
+  unidad_destino_id?: number | null
+  puesto_origen_id?: number | null
+  puesto_destino_id?: number | null
+  resolucion_numero?: string | null
+  documento_respaldo?: string | null
+  autorizado_por?: number | null
+  observacion?: string | null
+  lugar_trabajo?: string | null
+  caucionado?: boolean | null
+  caucion_numero?: string | null
+  caucion_fecha?: string | null
+  created_at?: string
+  unidad_origen?: { id: number; nombre?: string } | null
+  unidad_destino?: { id: number; nombre?: string } | null
+  puesto_origen?: { id: number; cargo?: { nombre?: string } | null } | null
+  puesto_destino?: { id: number; cargo?: { nombre?: string } | null } | null
+  autorizado_por_usuario?: { id: number; nombre_completo?: string } | null
+}
+
+export type TipoSubrogacion = 'subrogacion' | 'encargo'
+export type MotivoSubrogacion =
+  | 'vacaciones'
+  | 'comision_servicios'
+  | 'enfermedad'
+  | 'licencia'
+  | 'encargo_vacante'
+  | 'otro'
+export type EstadoSubrogacion = 'activa' | 'finalizada' | 'cancelada'
+
+export type Subrogacion = {
+  id: number
+  tipo: TipoSubrogacion
+  servidor_subrogante_id: number
+  servidor_subrogado_id?: number | null
+  unidad_administrativa_id: number
+  puesto_subrogado_id: number
+  fecha_inicio: string
+  fecha_fin: string
+  motivo: MotivoSubrogacion
+  resolucion_numero?: string | null
+  documento_respaldo?: string | null
+  estado: EstadoSubrogacion
+  observacion?: string | null
+  registrado_por?: number | null
+  created_at?: string
+  subrogante?: { id: number; nombre?: string; apellido?: string; cedula?: string } | null
+  subrogado?: { id: number; nombre?: string; apellido?: string; cedula?: string } | null
+  unidad_administrativa?: { id: number; nombre?: string } | null
+  puesto_subrogado?: { id: number; cargo?: { nombre?: string } | null } | null
+}
+
+export type SubrogacionParams = {
+  unidad_administrativa_id?: number
+  tipo?: TipoSubrogacion
 }
 
 export type DocumentoServidorConRelaciones = {

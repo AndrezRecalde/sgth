@@ -119,17 +119,30 @@ class SubrogacionService implements SubrogacionServiceInterface
         return $subrogacion;
     }
 
-    public function listarActivas(): Collection
+    public function listarActivas(array $filtros = []): Collection
     {
-        return Subrogacion::where('estado', EstadoSubrogacion::ACTIVA)
+        $query = Subrogacion::with([
+            'subrogante', 'subrogado', 'unidadAdministrativa', 'puestoSubrogado.cargo',
+        ])->where('estado', EstadoSubrogacion::ACTIVA)
             ->where('fecha_inicio', '<=', now())
-            ->where('fecha_fin', '>=', now())
-            ->get();
+            ->where('fecha_fin', '>=', now());
+
+        if (!empty($filtros['unidad_administrativa_id'])) {
+            $query->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']);
+        }
+
+        if (!empty($filtros['tipo'])) {
+            $query->where('tipo', $filtros['tipo']);
+        }
+
+        return $query->orderBy('fecha_inicio', 'desc')->get();
     }
 
     public function listarPorServidor(int $servidorId): Collection
     {
-        return Subrogacion::where('servidor_subrogante_id', $servidorId)
+        return Subrogacion::with([
+            'subrogante', 'subrogado', 'unidadAdministrativa', 'puestoSubrogado.cargo',
+        ])->where('servidor_subrogante_id', $servidorId)
             ->orderBy('fecha_inicio', 'desc')
             ->get();
     }

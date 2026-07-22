@@ -13,7 +13,7 @@ interface SubrogacionServiceInterface
 
     public function cancelar(int $subrogacionId, string $motivo): Subrogacion;
 
-    public function listarActivas(): Collection;
+    public function listarActivas(array $filtros = []): Collection;
 
     public function listarPorServidor(int $servidorId): Collection;
 

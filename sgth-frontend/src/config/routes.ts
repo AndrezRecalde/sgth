@@ -11,6 +11,7 @@ export const ROUTES = {
     USUARIOS:         '/sgth/usuarios',
     ESTRUCTURA:       '/sgth/estructura',
     EXPEDIENTE:       '/sgth/expediente',
+    SUBROGACIONES:    '/sgth/expediente/subrogaciones',
     NOMINA:           '/sgth/nomina',
     ASISTENCIA:       '/sgth/asistencia',
     CERTIFICACIONES_MEDICAS: '/sgth/certificaciones-medicas',
