@@ -35,7 +35,6 @@ beforeEach(function () {
     RecetaMedica::unguard();
 
     $this->medico = User::create([
-        'name' => 'Dr. House',
         'email' => 'house@example.com',
         'usuario_ti' => 'house',
         'password' => bcrypt('123456'),
@@ -43,7 +42,6 @@ beforeEach(function () {
     ]);
 
     $this->pacienteUser = User::create([
-        'name' => 'Juan Perez',
         'email' => 'juan@example.com',
         'usuario_ti' => 'juanp',
         'password' => bcrypt('123456'),

@@ -48,7 +48,6 @@ beforeEach(function () {
 
     // Crear Servidor A
     $this->userA = User::create([
-        'name' => 'Servidor A',
         'email' => 'a@example.com',
         'password' => bcrypt('123456'),
         'primer_login' => false,
@@ -69,7 +68,6 @@ beforeEach(function () {
 
     // Crear Servidor B
     $this->userB = User::create([
-        'name' => 'Servidor B',
         'email' => 'b@example.com',
         'password' => bcrypt('123456'),
         'primer_login' => false,
@@ -126,7 +124,6 @@ test('servidor_no_accede_a_expediente_de_otro', function () {
 
 test('rol_recepcion_solo_puede_confirmar_permisos', function () {
     $userRecepcion = User::create([
-        'name' => 'Recepcion',
         'email' => 'rec@example.com',
         'password' => bcrypt('123456'),
         'primer_login' => false,
@@ -165,7 +162,6 @@ test('rol_trabajo_social_solo_puede_validar_enf_calamidad', function () {
     $this->withExceptionHandling();
 
     $userTS = User::create([
-        'name' => 'Trabajo Social',
         'email' => 'ts@example.com',
         'password' => bcrypt('123456'),
         'primer_login' => false,
@@ -218,7 +214,6 @@ test('rol_trabajo_social_solo_puede_validar_enf_calamidad', function () {
 
 test('usuario_sin_primer_login_bloqueado_en_todos_endpoints', function () {
     $userNuevo = User::create([
-        'name' => 'Nuevo',
         'email' => 'nuevo@example.com',
         'password' => bcrypt('0800000003'),
         'primer_login' => true,

@@ -28,7 +28,6 @@ beforeEach(function () {
     Storage::fake('local'); // Para evitar escritura real de XML
 
     $this->user = User::create([
-        'name' => 'Admin User',
         'email' => 'admin_'.uniqid().'@example.com',
         'usuario_ti' => 'admin_'.uniqid(),
         'password' => bcrypt('123456'),

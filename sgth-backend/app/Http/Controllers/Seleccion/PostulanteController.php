@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Seleccion;
 use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\DocumentoPostulante;
 use App\Models\Seleccion\Postulante;
@@ -39,7 +40,16 @@ final class PostulanteController extends Controller
             );
         }
 
+        $esContenedor = (bool) $convocatoria->es_contenedor_permanente;
+
         $datos = $request->validate([
+            // En un contenedor express el puesto lo trae el aspirante; en un
+            // concurso formal lo fija la convocatoria y enviarlo es un error.
+            'puesto_id' => [
+                $esContenedor ? 'required' : 'prohibited',
+                'nullable', 'integer', 'exists:puestos,id',
+            ],
+            'fecha_inscripcion' => ['nullable', 'date'],
             'cedula' => ['required', 'string', 'max:20'],
             'nombres' => ['required', 'string', 'max:150'],
             'segundo_nombre' => ['nullable', 'string', 'max:150'],
@@ -55,19 +65,38 @@ final class PostulanteController extends Controller
             'canton_nacimiento_id' => ['nullable', 'integer', 'exists:cantones,id'],
         ]);
 
+        $datos['fecha_inscripcion'] = $datos['fecha_inscripcion'] ?? now()->toDateString();
+
+        // En un contenedor permanente la unicidad es por año: la misma persona
+        // puede ser contratada en 2026 y otra vez en 2027 bajo la misma
+        // modalidad. En un concurso formal sigue siendo una sola inscripción.
         $existe = Postulante::where('convocatoria_id', $convocatoriaId)
             ->where('cedula', $datos['cedula'])
+            ->when($esContenedor, fn ($q) => $q->whereYear(
+                'fecha_inscripcion',
+                (int) date('Y', strtotime($datos['fecha_inscripcion']))
+            ))
             ->exists();
 
         if ($existe) {
             throw new ReglaNegocioException(
-                'Ya existe un postulante con esa cédula en esta convocatoria.'
+                $esContenedor
+                    ? 'Ya existe un aspirante con esa cédula en esta modalidad para ese año.'
+                    : 'Ya existe un postulante con esa cédula en esta convocatoria.'
             );
         }
+
+        // Un servidor activo SÍ puede postular a un concurso interno — no se
+        // bloquea la inscripción, solo se marca la referencia para que
+        // confirmarIncorporacion() reutilice la identidad existente en vez
+        // de intentar crear un Servidor duplicado (violaría la unique de
+        // servidores.cedula).
+        $servidorExistente = Servidor::where('cedula', $datos['cedula'])->first();
 
         $postulante = Postulante::create([
             ...$datos,
             'convocatoria_id' => $convocatoriaId,
+            'servidor_id' => $servidorExistente?->id,
             'estado' => 'inscrito',
             'created_by' => $request->user()->id,
         ]);

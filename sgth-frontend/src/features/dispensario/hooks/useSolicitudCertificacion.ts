@@ -127,11 +127,11 @@ export function useConfirmarIncorporacion() {
       solicitudCertificacionService.confirmarIncorporacion(id),
     onSuccess: () => {
       notifications.show({
-        title:   '✅ Servidor incorporado',
-        message: 'El expediente del servidor fue creado correctamente en el sistema.',
-        color:   'emerald',
+        title:   '📝 Identidad creada, ingreso pendiente de aprobación',
+        message: 'Se creó el expediente del servidor. El ingreso quedó registrado en borrador y requiere revisión y aprobación de Talento Humano en Expediente / Movimientos antes de quedar vinculado formalmente.',
+        color:   'blue',
         icon:    React.createElement(IconCheck, { size: 16 }),
-        autoClose: 6000,
+        autoClose: 8000,
       })
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],

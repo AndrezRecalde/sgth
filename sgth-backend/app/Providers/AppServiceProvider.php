@@ -102,6 +102,10 @@ class AppServiceProvider extends ServiceProvider
             ExpedienteService::class
         );
         $this->app->bind(
+            \App\Contracts\Reporte\ReporteSiithSutServiceInterface::class,
+            \App\Services\Reporte\ReporteSiithSutService::class
+        );
+        $this->app->bind(
             SsoServiceInterface::class,
             SsoService::class
         );
@@ -220,9 +224,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \App\Models\Expediente\Servidor::observe(
-            \App\Observers\ServidorObserver::class
-        );
+        // Servidor ya se observa declarativamente vía #[ObservedBy] en el
+        // modelo — este registro duplicaba el observer (cada evento
+        // disparaba ServidorObserver dos veces).
 
         // Morph map de documentos_sso (Fase 9): guarda un alias corto en 'documentable_type'
         // en vez del FQCN completo, para no acoplar la BD a la estructura interna de namespaces.
@@ -249,9 +253,20 @@ class AppServiceProvider extends ServiceProvider
             return $user?->hasRole('admin-ti');
         });
 
-        // Super administradores — acceso sin restricciones
+        // Superusuario técnico — acceso sin restricciones.
+        //
+        // 'admin-uath' salió de aquí (2026-08-04). El atajo anulaba todo
+        // permiso y toda policy para Talento Humano, incluida la restricción
+        // deliberada del seeder: tiene 'ver-historia-clinica-propia' y NO
+        // 'ver-historia-clinica', pero el bypass le devolvía las historias
+        // clínicas ajenas, odontología, despacho de medicamentos y los
+        // tamizajes psicosocial y ASSIST.
+        //
+        // No lo necesitaba: las policies de Expediente comprueban el rol
+        // directamente (ServidorPolicy::verAny y siguientes), así que su
+        // trabajo diario no depende de este atajo.
         Gate::before(function ($user, $ability) {
-            if ($user->hasAnyRole(['admin-ti', 'admin-uath'])) {
+            if ($user->hasRole('admin-ti')) {
                 return true;
             }
         });

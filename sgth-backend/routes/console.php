@@ -21,6 +21,15 @@ Schedule::job(new EnviarAlertaSlaJob)->everyFifteenMinutes();
 // Sprint 12: Generación automática de reportes LOTAIP Art. 7
 Schedule::command('lotaip:generar-reportes')->dailyAt('01:00');
 
+// Plazos del Art. 183 del Código del Trabajo en los trámites de visto bueno
+Schedule::command('sgth:visto-bueno:control-plazos')->weekdays()->dailyAt('07:00');
+
+// Vencimiento de contratos de Servicios Profesionales: genera la cesación en
+// borrador para que Talento Humano la revise. Nada se da de baja sin aprobación.
+Schedule::command('sgth:contratos:detectar-vencidos')
+    ->dailyAt('05:00')
+    ->onOneServer();
+
 // Tarea 8: Backup Automático Diario
 Schedule::command('backup:base-datos')
     ->dailyAt('02:00')

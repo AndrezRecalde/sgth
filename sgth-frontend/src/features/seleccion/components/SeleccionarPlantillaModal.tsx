@@ -25,7 +25,7 @@ export function SeleccionarPlantillaModal({
 }: Props) {
   const [seleccionada, setSeleccionada] = useState<number | null>(null)
   const { data: plantillas = [], isLoading } = usePlantillas()
-  const aplicar = useAplicarPlantilla(convocatoriaId)
+  const aplicar = useAplicarPlantilla()
 
   const getLabelTipo = (tipo: string | null | undefined) =>
     TIPO_CONTRATO_PLANTILLA_OPTIONS.find(
@@ -34,7 +34,7 @@ export function SeleccionarPlantillaModal({
 
   const handleAplicar = () => {
     if (!seleccionada) return
-    aplicar.mutate(seleccionada, {
+    aplicar.mutate({ plantillaId: seleccionada, convocatoriaId }, {
       onSuccess: () => {
         setSeleccionada(null)
         onClose()

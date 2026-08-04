@@ -17,11 +17,15 @@ class PartidaPresupuestaria extends Model
         'descripcion',
         'grupo_gasto',
         'activo',
+        'disponible',
     ];
 
     protected function casts(): array
     {
-        return ['activo' => 'boolean'];
+        return [
+            'activo'     => 'boolean',
+            'disponible' => 'boolean',
+        ];
     }
 
     public function unidades(): BelongsToMany

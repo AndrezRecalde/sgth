@@ -25,7 +25,10 @@ class ServidorPolicy
             return true;
         }
 
-        return $user->id === $servidor->user_id;
+        // servidores.user_id ya no existe (la FK se invirtió en
+        // 2026_05_27_161227_reestructurar_relacion_users_servidores.php):
+        // ahora es users.servidor_id el que apunta al Servidor.
+        return $user->servidor_id === $servidor->id;
     }
 
     /**
@@ -48,7 +51,7 @@ class ServidorPolicy
             return true;
         }
 
-        return $user->id === $servidor->user_id;
+        return $user->servidor_id === $servidor->id;
     }
 
     /**

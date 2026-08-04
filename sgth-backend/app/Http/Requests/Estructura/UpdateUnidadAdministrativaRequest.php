@@ -26,6 +26,11 @@ final class UpdateUnidadAdministrativaRequest extends FormRequest
             'unidad_padre_id' => ['nullable', 'integer', 'exists:unidades_administrativas,id'],
             'nivel'           => ['sometimes', 'integer', 'min:1'],
             'estado'          => ['boolean'],
+            // Anclan de qué unidad sale cada firmante de las Acciones de
+            // Personal. Marcar otra unidad desmarca la anterior — lo hace
+            // UnidadAdministrativaController para no chocar con el índice único.
+            'es_unidad_talento_humano' => ['boolean'],
+            'es_maxima_autoridad'      => ['boolean'],
         ];
     }
 

@@ -1,5 +1,5 @@
 import { Text, Badge } from '@mantine/core'
-import { IconEye, IconEdit } from '@tabler/icons-react'
+import { IconEye, IconEdit, IconHistory } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import { esExterno } from '../utils/nombramiento'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -18,10 +18,11 @@ const REGIMEN_COLORS: Record<string, string> = {
 type Handlers = {
   onView: (servidor: ServidorConRelaciones) => void
   onEdit: (servidor: ServidorConRelaciones) => void
+  onAccionPersonal: (servidor: ServidorConRelaciones) => void
 }
 
 export const getServidorColumns = (
-  { onView, onEdit }: Handlers
+  { onView, onEdit, onAccionPersonal }: Handlers
 ): DataTableColumn<ServidorConRelaciones>[] => [
   {
     accessor: 'cedula',
@@ -124,6 +125,12 @@ export const getServidorColumns = (
           icon:    <IconEye size={14} />,
           color:   'blue',
           onClick: () => onView(servidor),
+        },
+        {
+          label:   'Acción de Personal',
+          icon:    <IconHistory size={14} />,
+          color:   'emerald',
+          onClick: () => onAccionPersonal(servidor),
         },
         {
           label:   'Editar datos',

@@ -21,6 +21,7 @@ use App\Http\Controllers\Catalogo\EntidadFinancieraController;
 use App\Http\Controllers\Catalogo\ProvinciaController;
 use App\Http\Controllers\Catalogo\TipoUnidadController;
 use App\Http\Controllers\Disciplinario\DisciplinarioController;
+use App\Http\Controllers\Disciplinario\VistoBuenoController;
 use App\Http\Controllers\Dispensario\AdquisicionController;
 use App\Http\Controllers\Dispensario\AgendaController;
 use App\Http\Controllers\Dispensario\AlergiaPacienteController;
@@ -47,6 +48,7 @@ use App\Http\Controllers\Estructura\CargoController;
 use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
 use App\Http\Controllers\Estructura\GrupoOcupacionalController;
 use App\Http\Controllers\Estructura\OrganigramaController;
+use App\Http\Controllers\Estructura\PartidaPresupuestariaController;
 use App\Http\Controllers\Estructura\PuestoActividadController;
 use App\Http\Controllers\Estructura\PuestoController;
 use App\Http\Controllers\Estructura\UnidadAdministrativaController;
@@ -54,6 +56,7 @@ use App\Http\Controllers\Evaluacion\EvaluacionController;
 use App\Http\Controllers\Expediente\CargaFamiliarController;
 use App\Http\Controllers\Expediente\AccionPersonalPdfController;
 use App\Http\Controllers\Expediente\CertificadoLaboralController;
+use App\Http\Controllers\Expediente\FirmanteAccionPersonalController;
 use App\Http\Controllers\Expediente\ExportServidoresController;
 use App\Http\Controllers\Expediente\ContratoServidorController;
 use App\Http\Controllers\Expediente\CuentaBancariaServidorController;
@@ -64,7 +67,9 @@ use App\Http\Controllers\Expediente\DocumentoServidorController;
 use App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController;
 use App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController;
 use App\Http\Controllers\Expediente\HistorialAcademicoController;
+use App\Http\Controllers\Expediente\AusenciaTemporalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
+use App\Http\Controllers\Expediente\VinculacionInicialController;
 use App\Http\Controllers\Expediente\ServidorController;
 use App\Http\Controllers\Expediente\SubrogacionController;
 use App\Http\Controllers\Helpdesk\AreaDticController;
@@ -84,9 +89,12 @@ use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
 use App\Http\Controllers\Nomina\HandoffErpController;
 use App\Http\Controllers\Nomina\NominaController;
 use App\Http\Controllers\Nomina\RolPagoController;
+use App\Http\Controllers\Reporte\ConfiguracionReporteMovimientoController;
+use App\Http\Controllers\Reporte\ReporteSiithSutController;
 use App\Http\Controllers\Reporteria\DashboardController;
 use App\Http\Controllers\Reporteria\ReporteController;
 use App\Http\Controllers\Seleccion\CalificacionController;
+use App\Http\Controllers\Seleccion\ContenedorExpressController;
 use App\Http\Controllers\Seleccion\ConvocatoriaController;
 use App\Http\Controllers\Seleccion\CriterioEvaluacionController;
 use App\Http\Controllers\Seleccion\PlantillaEvaluacionController;
@@ -214,6 +222,24 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('grupos-ocupacionales', [GrupoOcupacionalController::class, 'index'])
             ->name('estructura.grupos-ocupacionales');
 
+        // Catálogo de partidas presupuestarias. La lectura queda abierta a
+        // cualquier usuario autenticado porque alimenta los selectores de
+        // Puestos y de las acciones de personal; la gestión del catálogo la
+        // restringe el middleware de rol, igual que las extensiones.
+        Route::get('partidas-presupuestarias', [PartidaPresupuestariaController::class, 'index'])
+            ->name('estructura.partidas-presupuestarias.index');
+        Route::get('partidas-presupuestarias/{partida}', [PartidaPresupuestariaController::class, 'show'])
+            ->name('estructura.partidas-presupuestarias.show');
+
+        Route::middleware('role:admin-uath|admin-ti')->group(function () {
+            Route::post('partidas-presupuestarias', [PartidaPresupuestariaController::class, 'store'])
+                ->name('estructura.partidas-presupuestarias.store');
+            Route::put('partidas-presupuestarias/{partida}', [PartidaPresupuestariaController::class, 'update'])
+                ->name('estructura.partidas-presupuestarias.update');
+            Route::delete('partidas-presupuestarias/{partida}', [PartidaPresupuestariaController::class, 'destroy'])
+                ->name('estructura.partidas-presupuestarias.destroy');
+        });
+
         // Directorio telefónico público para servidores
         Route::get('directorio-telefonico', [ExtensionTelefonicaController::class, 'index']);
 
@@ -257,7 +283,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('expediente')->group(function () {
         Route::get('servidores-export/excel', [ExportServidoresController::class, 'excel']);
         Route::get('servidores-export/pdf', [ExportServidoresController::class, 'pdf']);
-        Route::apiResource('servidores', ServidorController::class);
+        // 'store' retirado: sin consumidor real, y su contrato de datos
+        // (puesto/unidad/tipo_nombramiento requeridos al crear) contradice
+        // la materialización tardía vía creaVinculo(). La creación real
+        // pasa por 'basico' + un MovimientoPersonal de ingreso.
+        Route::apiResource('servidores', ServidorController::class)->except(['store']);
 
         Route::prefix('servidores/{servidorId}')->group(function () {
             Route::get('documentos',
@@ -276,7 +306,39 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get('servidores/{servidor}/movimientos', [MovimientoPersonalController::class, 'index']);
         Route::post('servidores/{servidorId}/movimientos', [MovimientoPersonalController::class, 'store'])
             ->middleware('role:admin-uath|asistente-uath');
+        Route::get('movimientos', [MovimientoPersonalController::class, 'bandeja'])
+            ->middleware('role:admin-uath|asistente-uath');
+
+        // Quién está temporalmente fuera (comisión de servicios, licencia sin
+        // remuneración) y qué hueco falta cubrir con personal de apoyo.
+        Route::get('ausencias-temporales', [AusenciaTemporalController::class, 'index'])
+            ->middleware('role:admin-uath|asistente-uath');
+
+        // Carga inicial: servidores que ya estaban vinculados antes de que el
+        // sistema existiera. Se salta la Acción de Personal a propósito, así
+        // que va detrás de un permiso propio —no de un rol— para poder
+        // revocarlo al terminar la migración sin tocar nada más.
+        Route::prefix('vinculacion-inicial')
+            ->middleware('permission:vincular-servidor-inicial')
+            ->group(function () {
+                Route::post('/', [VinculacionInicialController::class, 'store'])
+                    ->name('vinculacionInicial.store');
+                Route::get('/', [VinculacionInicialController::class, 'index'])
+                    ->name('vinculacionInicial.index');
+            });
+
+        // Quién firma las acciones de personal, derivado del organigrama. Solo
+        // lectura: para cambiar un firmante se cambia el organigrama, no una
+        // designación paralela.
+        Route::get('firmantes-accion-personal/vigentes', [FirmanteAccionPersonalController::class, 'vigentes']);
         Route::get('movimientos/{movimientoId}/accion-personal-pdf', [AccionPersonalPdfController::class, 'generar']);
+        Route::get('movimientos/{movimiento}', [MovimientoPersonalController::class, 'show']);
+        Route::put('movimientos/{movimiento}', [MovimientoPersonalController::class, 'update'])
+            ->middleware('role:admin-uath');
+        Route::put('movimientos/{movimiento}/transicionar', [MovimientoPersonalController::class, 'transicionar'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('movimientos/{movimiento}/corregir', [MovimientoPersonalController::class, 'corregir'])
+            ->middleware('role:admin-uath|asistente-uath');
 
         Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar']);
         Route::get('certificado-laboral/descargar/{archivo}', [CertificadoLaboralController::class, 'descargar'])
@@ -287,7 +349,27 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::prefix('servidores/{servidorId}')
             ->middleware('role:admin-uath|asistente-uath')
             ->group(function () {
-                Route::apiResource('contratos', ContratoServidorController::class)->parameters(['contratos' => 'contrato']);
+                // 'store' queda fuera: un vínculo no se crea suelto, se crea
+                // desde la acción de personal que lo respalda (regla de
+                // Talento Humano). El alta directa sobrevive solo para carga
+                // histórica, detrás de un rol aparte —ver más abajo—, porque
+                // se salta la máquina de estados y no deja acción de personal.
+                Route::get('actividad-laboral', [ContratoServidorController::class, 'actividadLaboral'])
+                    ->name('contratos.actividadLaboral');
+
+                Route::apiResource('contratos', ContratoServidorController::class)
+                    ->parameters(['contratos' => 'contrato'])
+                    ->only(['index', 'show']);
+
+                Route::post('contratos', [ContratoServidorController::class, 'store'])
+                    ->middleware('role:admin-ti')
+                    ->name('contratos.store');
+                Route::put('contratos/{contrato}/cerrar', [ContratoServidorController::class, 'cerrar'])
+                    ->name('contratos.cerrar');
+                // Único campo editable de un vínculo ya creado: el plazo
+                // (prórroga o corrección de digitación), siempre con motivo.
+                Route::put('contratos/{contrato}/plazo', [ContratoServidorController::class, 'reprogramarPlazo'])
+                    ->name('contratos.plazo');
                 Route::apiResource('discapacidades', DiscapacidadServidorController::class);
                 Route::apiResource('enfermedades', EnfermedadCatastroficaServidorController::class);
 
@@ -465,6 +547,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     Route::prefix('seleccion')
         ->middleware('role:admin-uath|analista-uath|admin-ti')
         ->group(function () {
+            // Reclutamiento express: contenedores permanentes por modalidad.
+            // Van antes que 'convocatorias/{id}' para que 'express' no se
+            // interprete como un id.
+            Route::get('express/resumen', [ContenedorExpressController::class, 'resumen']);
+            Route::get('express/anios', [ContenedorExpressController::class, 'aniosDisponibles']);
+            Route::get('express/{convocatoriaId}/aspirantes', [ContenedorExpressController::class, 'aspirantes']);
+
             // Convocatorias
             Route::get('convocatorias', [ConvocatoriaController::class, 'index']);
             Route::post('convocatorias', [ConvocatoriaController::class, 'store']);
@@ -613,6 +702,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::post('evaluaciones/{evaluacionId}/servidor/{servidorId}', [EvaluacionController::class, 'registrarResultado']);
     });
 
+    // Reporte de apoyo a transcripción manual SIITH/SUT (no es integración
+    // con API externa: SIITH/SUT no la tienen, se transcribe a mano en su
+    // portal — este módulo solo estructura los datos para minimizar error
+    // de transcripción).
+    Route::prefix('reportes/siith-sut')
+        ->middleware('role:admin-uath|asistente-uath')
+        ->group(function () {
+            Route::get('movimientos', [ReporteSiithSutController::class, 'movimientos']);
+            Route::get('mensual', [ReporteSiithSutController::class, 'mensual']);
+            Route::get('configuracion', [ConfiguracionReporteMovimientoController::class, 'index']);
+            Route::patch('configuracion/{configuracion}', [ConfiguracionReporteMovimientoController::class, 'update']);
+        });
+
     // Módulo 09: Viáticos
     Route::prefix('viaticos')->group(function () {
         Route::get('/', [ViaticoController::class, 'index']);
@@ -736,11 +838,23 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::delete('{id}/facturas/{factura}', [FacturaViaticoController::class, 'destroy']);
     });
 
-    // Módulo 14: Disciplinario
-    Route::prefix('disciplinario')->group(function () {
-        Route::post('sumarios/{id}/resolver', [DisciplinarioController::class, 'resolver'])
-            ->middleware('role:admin-uath');
-    });
+    // Módulo 14: Disciplinario — sumario administrativo (LOSEP) y visto bueno
+    // (Código del Trabajo). Son procedimientos distintos según el régimen del
+    // servidor, no dos nombres para lo mismo.
+    Route::prefix('disciplinario')
+        ->middleware('role:admin-uath')
+        ->group(function () {
+            Route::get('sumarios', [DisciplinarioController::class, 'index']);
+            Route::post('sumarios', [DisciplinarioController::class, 'store']);
+            Route::get('sumarios/{sumario}', [DisciplinarioController::class, 'show']);
+            Route::put('sumarios/{sumario}/avanzar', [DisciplinarioController::class, 'avanzar']);
+            Route::post('sumarios/{id}/resolver', [DisciplinarioController::class, 'resolver']);
+
+            Route::get('vistos-buenos', [VistoBuenoController::class, 'index']);
+            Route::post('vistos-buenos', [VistoBuenoController::class, 'store']);
+            Route::get('vistos-buenos/{vistoBueno}', [VistoBuenoController::class, 'show']);
+            Route::put('vistos-buenos/{vistoBueno}/transicionar', [VistoBuenoController::class, 'transicionar']);
+        });
 
     // Módulo 10 — SSO
     Route::prefix('sso')

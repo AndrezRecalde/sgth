@@ -3,30 +3,40 @@
 import { useState } from 'react'
 import { Stack, Group, Text, Badge, Button, Skeleton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconHistory, IconFileDownload } from '@tabler/icons-react'
+import { IconPlus, IconHistory, IconFileDownload, IconEye } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useMovimientos } from '../../hooks/useMovimientos'
 import { MovimientoModal } from '../MovimientoModal'
+import { AccionPersonalDetalleDrawer } from '../AccionPersonalDetalleDrawer'
 import { expedienteService } from '../../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
-import { ACCION_PERSONAL_LABELS } from '../../utils/nombramiento'
+import {
+  ESTADO_COLORS, ESTADO_LABELS, puedeDescargarPdf,
+} from '../../utils/estadoAccionPersonal'
+import {
+  SUBTIPO_LABELS, TIPO_LABELS as TIPOS_VIGENTES,
+} from '../../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 
+/**
+ * Tipos históricos genéricos que ya no se ofrecen al registrar, pero siguen
+ * apareciendo en el historial; los vigentes vienen de la taxonomía compartida.
+ */
 const TIPO_LABELS: Record<string, string> = {
   traslado: 'Traslado',
-  ascenso: 'Ascenso',
   subrogacion: 'Subrogación',
   comision_servicios: 'Comisión de Servicios',
   cambio_regimen: 'Cambio de Régimen',
   cambio_puesto: 'Cambio de Puesto',
-  ingreso: 'Ingreso',
   egreso: 'Egreso',
   novedad_contrato: 'Novedad de Contrato',
-  ...ACCION_PERSONAL_LABELS,
+  traspaso: 'Traspaso',
+  destitucion: 'Destitución',
+  ...TIPOS_VIGENTES,
 }
 
 function formatFecha(fecha?: string | null): string {
@@ -43,6 +53,8 @@ interface Props {
 
 export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
+  const [detalleOpened, { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
+  const [detalleId, setDetalleId] = useState<number | null>(null)
   const { data: movimientos = [], isLoading } = useMovimientos(servidorId)
   const [descargandoId, setDescargandoId] = useState<number | null>(null)
 
@@ -73,10 +85,18 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
     {
       accessor: 'tipo_movimiento',
       title: 'Tipo',
-      render: ({ tipo_movimiento }) => (
-        <Text size="sm" fw={500}>
-          {TIPO_LABELS[tipo_movimiento] ?? tipo_movimiento}
-        </Text>
+      render: ({ tipo_movimiento, subtipo_movimiento }) => (
+        <div>
+          <Text size="sm" fw={500}>
+            {TIPO_LABELS[tipo_movimiento] ?? tipo_movimiento}
+          </Text>
+          {subtipo_movimiento && (
+            <Text size="xs" c="dimmed">
+              {SUBTIPO_LABELS[subtipo_movimiento as keyof typeof SUBTIPO_LABELS]
+                ?? subtipo_movimiento}
+            </Text>
+          )}
+        </div>
       ),
     },
     {
@@ -108,17 +128,45 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
       ),
     },
     {
+      accessor: 'estado',
+      title: 'Estado',
+      width: 150,
+      render: ({ estado }) =>
+        estado ? (
+          <Badge color={ESTADO_COLORS[estado]} variant="light" size="sm">
+            {ESTADO_LABELS[estado]}
+          </Badge>
+        ) : (
+          <Text size="sm" c="dimmed">—</Text>
+        ),
+    },
+    {
       accessor: 'acciones',
       title: '',
       width: 50,
+      // El detalle concentra revisar, editar, avanzar y descargar; se deja
+      // aparte solo el atajo de PDF, que es la acción más frecuente sobre
+      // acciones ya registradas.
       render: (m) => (
         <TableActions
           actions={[
             {
-              label: 'Descargar PDF de Acción de Personal',
+              label: 'Ver detalle',
+              icon: <IconEye size={14} />,
+              color: 'blue',
+              onClick: () => {
+                setDetalleId(Number(m.id))
+                abrirDetalle()
+              },
+            },
+            {
+              label: puedeDescargarPdf(m.estado, m.tipo_movimiento)
+                ? 'Descargar PDF de Acción de Personal'
+                : 'Sin documento imprimible',
               icon: <IconFileDownload size={14} />,
               color: 'blue',
-              disabled: descargandoId === Number(m.id),
+              disabled: descargandoId === Number(m.id)
+                || !puedeDescargarPdf(m.estado, m.tipo_movimiento),
               onClick: () => handleDescargarPdf(m),
             },
           ]}
@@ -170,6 +218,12 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
         onClose={close}
         servidorId={servidorId}
         tipoNombramiento={tipoNombramiento}
+      />
+
+      <AccionPersonalDetalleDrawer
+        opened={detalleOpened}
+        onClose={cerrarDetalle}
+        movimientoId={detalleId}
       />
     </Stack>
   )

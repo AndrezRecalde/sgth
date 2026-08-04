@@ -3,6 +3,8 @@
 namespace App\Models\Seleccion;
 
 use App\Enums\EstadoConvocatoria;
+use App\Enums\TipoNombramiento;
+use App\Enums\TipoProcesoConvocatoria;
 use App\Models\Estructura\Puesto;
 use App\Models\User;
 use App\Observers\Seleccion\ConvocatoriaObserver;
@@ -28,6 +30,9 @@ class Convocatoria extends Model
         'fecha_fin',
         'estado',
         'tipo',
+        'tipo_proceso',
+        'tipo_nombramiento_previsto',
+        'es_contenedor_permanente',
         'vacantes',
         'created_by',
         'updated_by',
@@ -36,11 +41,14 @@ class Convocatoria extends Model
     protected function casts(): array
     {
         return [
-            'bases_concurso' => 'array',
-            'fecha_inicio'   => 'date',
-            'fecha_fin'      => 'date',
-            'estado'         => EstadoConvocatoria::class,
-            'vacantes'       => 'integer',
+            'bases_concurso'              => 'array',
+            'fecha_inicio'                => 'date',
+            'fecha_fin'                   => 'date',
+            'estado'                      => EstadoConvocatoria::class,
+            'tipo_proceso'                => TipoProcesoConvocatoria::class,
+            'tipo_nombramiento_previsto'  => TipoNombramiento::class,
+            'vacantes'                    => 'integer',
+            'es_contenedor_permanente'    => 'boolean',
         ];
     }
 

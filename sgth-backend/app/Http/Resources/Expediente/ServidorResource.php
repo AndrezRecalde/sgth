@@ -31,7 +31,14 @@ class ServidorResource extends JsonResource
         $datos['unidad_administrativa'] = $this->whenLoaded('unidadAdministrativa');
         $datos['puesto'] = $this->whenLoaded('puesto');
         $datos['contrato_vigente'] = $this->whenLoaded('contratoVigente');
-        $datos['user'] = $this->whenLoaded('user');
+        // Derivado, no una columna: true si el servidor no tiene ningún
+        // ContratoServidor vigente. No confundir con Servidor.estado (activo/
+        // inactivo) — son conceptos independientes. Cálculo directo (no
+        // whenLoaded con closure) para no depender de su resolución interna.
+        $datos['pendiente_vinculacion'] = $this->resource->relationLoaded('contratoVigente')
+            ? is_null($this->resource->contratoVigente)
+            : null;
+        $datos['user'] = $this->whenLoaded('usuario');
         $datos['documentos'] = DocumentoServidorResource::collection($this->whenLoaded('documentos'));
         $datos['movimientos'] = $this->whenLoaded('movimientos'); // Resource genérico o matriz directa
 

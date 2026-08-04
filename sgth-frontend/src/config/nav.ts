@@ -65,6 +65,11 @@ export const NAV_SGTH: NavGroup[] = [
             href:  ROUTES.SGTH.SUBROGACIONES,
             icon:  'IconArrowsExchange',
           },
+          {
+            label: 'Nueva acción de personal',
+            href:  ROUTES.SGTH.ACCIONES_PERSONAL,
+            icon:  'IconUserPlus',
+          },
         ],
       },
       {
@@ -82,6 +87,11 @@ export const NAV_SGTH: NavGroup[] = [
         href:    ROUTES.SGTH.CERTIFICACIONES_MEDICAS,
         icon:    'IconStethoscope',
         permiso: 'solicitar-certificacion-medica',
+      },
+      {
+        label: 'Régimen disciplinario',
+        href:  ROUTES.SGTH.DISCIPLINARIO,
+        icon:  'IconGavel',
       },
       {
         label:    'Riesgos laborales (SSO)',
@@ -167,6 +177,11 @@ export const NAV_SGTH: NavGroup[] = [
             icon:  'IconPlus',
           },
         ],
+      },
+      {
+        label: 'Reclutamiento Express',
+        href:  ROUTES.SGTH.RECLUTAMIENTO_EXPRESS,
+        icon:  'IconBolt',
       },
       {
         label: 'Plantillas',

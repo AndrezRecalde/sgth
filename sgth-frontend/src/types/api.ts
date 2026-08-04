@@ -359,6 +359,10 @@ export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | '
   puestos_count?: number
   puestos?: PuestoConRelaciones[]
   hijos?: UnidadConRelaciones[]
+  // Anclajes de los firmantes de las Acciones de Personal: el jefe de la
+  // unidad marcada es quien firma. Solo una unidad lleva cada bandera.
+  es_unidad_talento_humano?: boolean
+  es_maxima_autoridad?: boolean
 }
 
 export type ExtensionConRelaciones = {
@@ -414,6 +418,7 @@ export type ServidorConRelaciones = Servidor & {
   tiene_discapacidad?: boolean
   tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones
+  pendiente_vinculacion?: boolean | null
   estado?: boolean
   fecha_ingreso_institucion?:    string | null
   fecha_ingreso_sector_publico?: string | null
@@ -457,8 +462,16 @@ export type ContratoConRelaciones = ContratoServidor & {
       denominacion_generica?: string
       clasificacion_personal?: string
     } | null
+    // La partida cuelga del puesto, no del contrato: al reubicar a alguien
+    // por traslado o traspaso, la partida acompaña al puesto nuevo.
+    partida_presupuestaria?: {
+      id: number
+      codigo?: string | null
+      descripcion?: string | null
+    } | null
   } | null
   estado?:         string
+  motivo_fin?:     string | null
   fecha_inicio?:   string
   fecha_fin?:      string | null
   numero_contrato?: string | null
@@ -485,12 +498,55 @@ export type TipoMovimientoPersonal =
   | 'cambio_administrativo'
   | 'comision_sin_remuneracion'
   | 'licencia_sin_remuneracion'
+  | 'incremento_remuneracion'
+
+export type EstadoAccionPersonal =
+  | 'borrador'
+  | 'suscrita'
+  | 'registrada'
+  | 'notificada'
+  | 'anulada'
+
+export type CategoriaEventoVinculo =
+  | 'accion_de_personal'
+  | 'adenda_contractual'
+  | 'movimiento_codigo_trabajo'
 
 export type MovimientoPersonal = {
   id: number
   servidor_id: number
   tipo_movimiento: TipoMovimientoPersonal
+  subtipo_movimiento?: string | null
+  categoria?: CategoriaEventoVinculo | null
+  estado?: EstadoAccionPersonal
+  // Datos del vínculo que Talento Humano fija mientras está en borrador y que
+  // se materializan en el ContratoServidor al registrar la acción.
+  tipo_nombramiento_propuesto?: string | null
+  remuneracion_propuesta?: string | number | null
+  // Situación actual congelada al crear la acción: no se deriva del puesto de
+  // origen, que puede haber cambiado de escala o de partida desde entonces.
+  remuneracion_origen?: string | number | null
+  partida_origen_id?: number | null
+  /** Ausencia temporal que este ingreso viene a cubrir. Solo en reemplazos. */
+  cubre_movimiento_id?: number | null
+  numero_contrato?: string | null
+  partida_presupuestaria_id?: number | null
+  puede_marcar?: boolean | null
+  requiere_dictamen_medico?: boolean | null
+  movimiento_previo_id?: number | null
+  fecha_fin_propuesta?: string | null
+  // Firmantes sellados al suscribir: se copian dentro de la acción para que
+  // una reimpresión no atribuya la firma a quien ocupe hoy el cargo.
+  fecha_suscripcion?: string | null
+  firmante_autoridad_nombre?: string | null
+  firmante_autoridad_cargo?: string | null
+  firmante_th_nombre?: string | null
+  firmante_th_cargo?: string | null
   codigo?: string | null
+  codigo_registro?: string | null
+  fecha_registro?: string | null
+  dictamen_presupuestario_ref?: string | null
+  corrige_a_id?: number | null
   descripcion: string
   fecha_efectiva: string
   fecha_inicio?: string | null
@@ -502,6 +558,8 @@ export type MovimientoPersonal = {
   resolucion_numero?: string | null
   documento_respaldo?: string | null
   autorizado_por?: number | null
+  notificado_por?: number | null
+  fecha_notificacion?: string | null
   observacion?: string | null
   lugar_trabajo?: string | null
   caucionado?: boolean | null
@@ -776,6 +834,140 @@ export type GrupoOcupacional = {
   nivel_complejidad?: string | null
   rol_puesto?: string | null
   activo?: boolean
+}
+
+// ── Partidas presupuestarias ─────────────────────
+// Catálogo puro: sin monto asignado ni saldo por año fiscal. 'disponible'
+// es el hint de disponibilidad que el área presupuestaria mantiene a mano
+// y del que depende el guard del Art. 105 LOSEP en el backend.
+export type PartidaPresupuestaria = {
+  id: number
+  codigo: string
+  descripcion: string
+  grupo_gasto: string
+  activo: boolean
+  disponible: boolean
+  puestos_count?: number
+}
+
+export type PartidaPresupuestariaFormData = {
+  codigo: string
+  descripcion: string
+  grupo_gasto?: string
+  activo?: boolean
+  disponible?: boolean
+}
+
+export type PartidaPresupuestariaParams = {
+  search?: string
+  grupo_gasto?: string
+  activo?: boolean
+  disponible?: boolean
+  all?: boolean
+}
+
+// ── Firmantes de acciones de personal ────────────
+export type RolFirmaAccionPersonal =
+  | 'autoridad_nominadora'
+  | 'responsable_talento_humano'
+
+/**
+ * Firmante derivado del organigrama: el jefe de la unidad anclada para ese
+ * rol. No existe designación manual — se cambia cambiando el organigrama.
+ */
+export type FirmanteVigente = {
+  rol_firma: RolFirmaAccionPersonal
+  etiqueta: string
+  unidad?: { id: number; nombre: string } | null
+  servidor?: ServidorResumen | null
+  cargo: string
+  /** Firma por subrogación o encargo vigente sobre el puesto. */
+  subrogado: boolean
+  resuelto: boolean
+  motivo_sin_resolver?: string | null
+}
+
+// ── Régimen disciplinario ────────────────────────
+// Dos procedimientos distintos según el régimen del servidor: sumario
+// administrativo (LOSEP) y visto bueno ante el Inspector del Trabajo
+// (obreros bajo Código del Trabajo).
+export type EstadoSumario =
+  | 'abierto' | 'en_instruccion' | 'en_prueba'
+  | 'con_informe' | 'resuelto' | 'apelado' | 'cerrado'
+
+export type TipoSancion =
+  | 'amonestacion_verbal' | 'amonestacion_escrita'
+  | 'multa' | 'suspension' | 'destitucion'
+
+export type EstadoVistoBueno =
+  | 'solicitado' | 'notificado' | 'en_investigacion'
+  | 'concedido' | 'negado' | 'desistido' | 'impugnado'
+
+export type CausalVistoBueno =
+  | 'faltas_puntualidad_asistencia'
+  | 'indisciplina_desobediencia'
+  | 'falta_probidad'
+  | 'injurias_graves'
+  | 'ineptitud_manifiesta'
+  | 'denuncia_injustificada_iess'
+  | 'incumplimiento_seguridad'
+
+export type ServidorResumen = {
+  id: number
+  nombre?: string | null
+  segundo_nombre?: string | null
+  apellido?: string | null
+  segundo_apellido?: string | null
+  cedula?: string | null
+}
+
+export type Sumario = {
+  id: number
+  servidor_id: number
+  servidor?: ServidorResumen | null
+  motivo: string
+  estado: EstadoSumario
+  fecha_apertura?: string | null
+  notificado_sn?: boolean
+  fecha_notificacion?: string | null
+  fecha_termino_prueba?: string | null
+  fecha_informe?: string | null
+  fecha_resolucion?: string | null
+  sancion?: { id: number; tipo_sancion: TipoSancion; tipo_falta?: string | null } | null
+}
+
+export type VistoBueno = {
+  id: number
+  servidor_id: number
+  servidor?: ServidorResumen | null
+  causal: CausalVistoBueno
+  estado: EstadoVistoBueno
+  numero_tramite_mdt?: string | null
+  inspectoria?: string | null
+  inspector_nombre?: string | null
+  fecha_solicitud: string
+  fecha_notificacion?: string | null
+  fecha_resolucion?: string | null
+  hechos: string
+  resolucion_detalle?: string | null
+  movimiento_personal_id?: number | null
+  movimiento_personal?: { id: number; codigo_registro?: string | null; estado?: string | null } | null
+}
+
+export type SumarioFormData = {
+  servidor_id: number
+  motivo: string
+  fecha_apertura?: string | null
+}
+
+export type VistoBuenoFormData = {
+  servidor_id: number
+  causal: CausalVistoBueno
+  hechos: string
+  fecha_solicitud: string
+  numero_tramite_mdt?: string | null
+  inspectoria?: string | null
+  inspector_nombre?: string | null
 }
 
 // ── Permisos ─────────────────────────────────────

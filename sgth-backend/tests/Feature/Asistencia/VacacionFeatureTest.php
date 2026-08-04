@@ -24,7 +24,6 @@ beforeEach(function () {
     }
 
     $this->userJefe = User::create([
-        'name' => 'Jefe Unidad',
         'email' => 'jefe_vac@example.com',
         'usuario_ti' => 'jefe_v',
         'password' => bcrypt('123456'),
@@ -32,7 +31,6 @@ beforeEach(function () {
     ]);
 
     $this->userSubordinado = User::create([
-        'name' => 'Subordinado',
         'email' => 'sub_vac@example.com',
         'usuario_ti' => 'sub_v',
         'password' => bcrypt('123456'),

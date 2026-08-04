@@ -44,9 +44,11 @@ beforeEach(function () {
 
     $this->usuarioNormal = User::factory()->create();
     $this->usuarioNormal->assignRole('servidor');
-    
+
+    // servidores.user_id no existe (la FK se invirtió en
+    // 2026_05_27_161227_reestructurar_relacion_users_servidores.php):
+    // el vínculo se hace desde users.servidor_id.
     $this->servidorTitular = Servidor::create([
-        'user_id' => $this->usuarioNormal->id,
         'cedula'  => '1111111111',
         'nombre'  => 'Titular',
         'apellido'=> 'Test',
@@ -64,17 +66,20 @@ beforeEach(function () {
         'tipo_nombramiento' => 'nombramiento_permanente',
         'fecha_ingreso_institucion' => '2020-01-01',
     ]);
+
+    $this->usuarioNormal->update(['servidor_id' => $this->servidorTitular->id]);
 });
 
 test('campos condicionales de extranjería validan correctamente', function () {
+    // POST /expediente/servidores (StoreServidorRequest) se retiró — sin
+    // consumidor real, contradecía la materialización tardía vía
+    // creaVinculo(). La creación real de servidores pasa por 'basico'
+    // (StoreServidorBasicoRequest), que tiene la misma validación
+    // condicional de extranjería.
     $datos = [
-        'user_id' => User::factory()->create()->id,
         'cedula'  => '1234567890',
         'nombre'  => 'Test',
         'apellido'=> 'Test',
-        'regimen_laboral' => 'losep',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'puesto_id' => $this->puesto->id,
         'fecha_nacimiento' => '1990-01-01',
         'genero' => 'masculino',
         'estado_civil' => 'soltero',
@@ -82,12 +87,10 @@ test('campos condicionales de extranjería validan correctamente', function () {
         // Al ser extranjero faltan 'nacionalidad' y 'pais_origen'
         'tiene_discapacidad' => false,
         'tiene_enfermedad_catastrofica' => false,
-        'tipo_nombramiento' => 'nombramiento_permanente',
-        'fecha_ingreso_institucion' => '2020-01-01',
     ];
 
     $response = $this->actingAs($this->adminUath, 'sanctum')
-                     ->postJson('/api/v1/expediente/servidores', $datos);
+                     ->postJson('/api/v1/expediente/servidores/basico', $datos);
 
     $response->assertStatus(422)
              ->assertJsonStructure(['errores' => ['nacionalidad', 'pais_origen']]);
@@ -97,7 +100,7 @@ test('campos condicionales de extranjería validan correctamente', function () {
     $datos['pais_origen'] = 'Colombia';
 
     $response2 = $this->actingAs($this->adminUath, 'sanctum')
-                     ->postJson('/api/v1/expediente/servidores', $datos);
+                     ->postJson('/api/v1/expediente/servidores/basico', $datos);
 
     // Debe pasar la validación (tal vez falten campos requeridos como direccion etc., así que probamos que el error de extranjería se fue)
     $response2->assertJsonMissing(['errores' => ['nacionalidad']]);
@@ -107,9 +110,7 @@ test('campos condicionales de extranjería validan correctamente', function () {
 
 test('el servidor solo puede ver su propio expediente y UATH puede ver todos', function () {
     // Un servidor intenta ver el expediente de otro
-    $otroUsuario = User::factory()->create();
     $otroServidor = Servidor::create([
-        'user_id' => $otroUsuario->id,
         'cedula'  => '2222222222',
         'nombre'  => 'Otro',
         'apellido'=> 'Servidor',

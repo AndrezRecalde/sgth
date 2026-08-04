@@ -8,8 +8,6 @@ use Illuminate\Http\UploadedFile;
 
 interface ExpedienteServiceInterface
 {
-    public function crearServidor(array $datos): Servidor;
-
     public function crearServidorBasico(array $datos): Servidor;
 
     public function actualizarServidor(int $id, array $datos): Servidor;
@@ -21,4 +19,6 @@ interface ExpedienteServiceInterface
     public function listarServidores(array $filtros): mixed;
 
     public function exportarServidores(array $filtros): \Illuminate\Support\Collection;
+
+    public function lineaDeTiempo(int $servidorId): \Illuminate\Support\Collection;
 }

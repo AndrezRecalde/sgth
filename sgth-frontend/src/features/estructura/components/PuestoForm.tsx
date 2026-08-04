@@ -2,14 +2,16 @@
 
 import {
   Select, Grid, Switch, NumberInput,
-  Box, LoadingOverlay,
+  Box, LoadingOverlay, Alert,
 } from '@mantine/core'
+import { IconInfoCircle } from '@tabler/icons-react'
 import { useForm, Controller, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '../hooks/useUnidades'
 import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
 import { useCargos } from '../hooks/useCargos'
+import { SelectPartidaPresupuestaria } from './SelectPartidaPresupuestaria'
 import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
 import type { UnidadConRelaciones, Cargo, GrupoOcupacional } from '@/types/api'
 
@@ -153,22 +155,51 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
               )}
             />
           </Grid.Col>
+          {/* La escala de grupos ocupacionales es del régimen LOSEP: fija el
+              grado y la RMU del puesto. Bajo Código del Trabajo la
+              remuneración se negocia en cada contrato, así que pedir aquí un
+              grupo ocupacional invita a cargar un dato que no aplica. */}
+          {regimenActual === 'losep' && (
+            <Grid.Col span={12}>
+              <Controller
+                name="grupo_ocupacional_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Grupo ocupacional (LOSEP)"
+                    description="Define el grado y la RMU del puesto."
+                    placeholder="Seleccionar grupo"
+                    data={grupoOptions}
+                    searchable
+                    clearable
+                    {...contained}
+                    value={field.value ? String(field.value) : ''}
+                    onChange={(v) => field.onChange(v ? Number(v) : null)}
+                  />
+                )}
+              />
+            </Grid.Col>
+          )}
+
+          {regimenActual === 'codigo_trabajo' && (
+            <Grid.Col span={12}>
+              <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+                Bajo Código del Trabajo la remuneración se pacta en cada contrato,
+                no se deriva de una escala. Se ingresa al aprobar la acción de
+                personal de ingreso.
+              </Alert>
+            </Grid.Col>
+          )}
           <Grid.Col span={12}>
             <Controller
-              name="grupo_ocupacional_id"
+              name="partida_presupuestaria_id"
               control={control}
               render={({ field }) => (
-                <Select
-                  label={regimenActual === 'losep'
-                    ? 'Grupo ocupacional (LOSEP)'
-                    : 'Grupo ocupacional (CT — referencial)'}
-                  placeholder="Seleccionar grupo"
-                  data={grupoOptions}
-                  searchable
-                  clearable
-                  {...contained}
-                  value={field.value ? String(field.value) : ''}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
+                <SelectPartidaPresupuestaria
+                  value={field.value}
+                  onChange={field.onChange}
+                  description="Partida que respalda la remuneración de este puesto."
+                  error={errors.partida_presupuestaria_id?.message}
                 />
               )}
             />

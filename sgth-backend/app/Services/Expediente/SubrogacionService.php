@@ -3,6 +3,8 @@
 namespace App\Services\Expediente;
 
 use App\Contracts\Expediente\SubrogacionServiceInterface;
+use App\Enums\CategoriaEventoVinculo;
+use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoSubrogacion;
 use App\Enums\TipoSubrogacion;
 use App\Exceptions\ReglaNegocioException;
@@ -61,10 +63,19 @@ class SubrogacionService implements SubrogacionServiceInterface
                 'registrado_por'           => auth()->id(),
             ]);
 
-            // Registrar en historial inmutable
+            // Registrar en historial inmutable. El Art. 21 del Reglamento
+            // LOSEP trata la subrogación/encargo como una acción de
+            // personal formal más (a diferencia de servicios
+            // profesionales): nace en BORRADOR y debe pasar por el mismo
+            // flujo guardado (MovimientoPersonalStateService) — incluido
+            // el bloqueo presupuestario antes de suscribirse — que
+            // cualquier otro tipo con efecto económico. El resto de esta
+            // lógica (elegibilidad, traslape, remuneración) no cambia.
             MovimientoPersonal::create([
                 'servidor_id'       => $subrogacion->servidor_subrogante_id,
                 'tipo_movimiento'   => 'subrogacion',
+                'categoria'         => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
+                'estado'            => EstadoAccionPersonal::BORRADOR,
                 'descripcion'       => "Inicio de {$subrogacion->tipo->etiqueta()} en la unidad seleccionada.",
                 'fecha_efectiva'    => $subrogacion->fecha_inicio,
                 'unidad_destino_id' => $subrogacion->unidad_administrativa_id,

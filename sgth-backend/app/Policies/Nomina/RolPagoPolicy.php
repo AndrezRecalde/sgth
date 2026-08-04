@@ -24,6 +24,9 @@ class RolPagoPolicy
             return true;
         }
 
-        return $rolPago->servidor && $rolPago->servidor->user_id === $user->id;
+        // servidores.user_id ya no existe (la FK se invirtió en
+        // 2026_05_27_161227_reestructurar_relacion_users_servidores.php):
+        // ahora es users.servidor_id el que apunta al Servidor.
+        return $rolPago->servidor && $rolPago->servidor->id === $user->servidor_id;
     }
 }

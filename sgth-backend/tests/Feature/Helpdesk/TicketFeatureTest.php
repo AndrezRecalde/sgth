@@ -33,7 +33,6 @@ beforeEach(function () {
     OrigenBien::unguard();
 
     $this->servidorUser = User::create([
-        'name' => 'Usuario Normal',
         'email' => 'normal@example.com',
         'usuario_ti' => 'normal',
         'password' => bcrypt('123456'),
@@ -41,7 +40,6 @@ beforeEach(function () {
     ]);
 
     $this->tecnicoUser = User::create([
-        'name' => 'Tecnico TI',
         'email' => 'tecnico@example.com',
         'usuario_ti' => 'tecnico',
         'password' => bcrypt('123456'),

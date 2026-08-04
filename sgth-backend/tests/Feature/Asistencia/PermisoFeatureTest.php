@@ -23,7 +23,6 @@ beforeEach(function () {
     PermisoServidor::unguard();
 
     $this->userJefe = User::create([
-        'name' => 'Jefe Unidad',
         'email' => 'jefe@example.com',
         'usuario_ti' => 'jefe_u',
         'password' => bcrypt('123456'),
@@ -31,7 +30,6 @@ beforeEach(function () {
     ]);
 
     $this->userSubordinado = User::create([
-        'name' => 'Subordinado',
         'email' => 'sub@example.com',
         'usuario_ti' => 'sub_u',
         'password' => bcrypt('123456'),
@@ -130,7 +128,6 @@ test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {
     $this->seed(\Database\Seeders\RolPermisoSeeder::class);
 
     $userRecepcion = User::create([
-        'name' => 'Recepción',
         'email' => 'rec@example.com',
         'usuario_ti' => 'rec_u',
         'password' => bcrypt('123456'),

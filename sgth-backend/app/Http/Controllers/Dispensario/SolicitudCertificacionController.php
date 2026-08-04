@@ -4,20 +4,30 @@ namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\EstadoPostulante;
 use App\Enums\Permiso;
+use App\Enums\TipoMovimientoPersonal;
+use App\Enums\TipoNombramiento;
+use App\Enums\TipoProcesoConvocatoria;
+use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreSolicitudCertificacionLoteRequest;
 use App\Http\Requests\Dispensario\StoreSolicitudSignosVitalesRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Dispensario\SolicitudConstantesVitales;
-use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\Onboarding;
+use App\Services\Expediente\MovimientoPersonalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class SolicitudCertificacionController extends Controller
 {
+    public function __construct(
+        private readonly MovimientoPersonalService $movimientoPersonalService,
+    ) {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $query = SolicitudCertificacionMedica::with([
@@ -259,7 +269,8 @@ final class SolicitudCertificacionController extends Controller
         }
 
         $solicitud = SolicitudCertificacionMedica::with([
-            'postulante.convocatoria.puesto',
+            'postulante.convocatoria.puesto.grupoOcupacional',
+            'postulante.puesto',
         ])->findOrFail($id);
 
         if (! $solicitud->postulante || $solicitud->servidor_id) {
@@ -294,41 +305,74 @@ final class SolicitudCertificacionController extends Controller
             );
         }
 
+        // En un contenedor express el puesto lo trae el aspirante; en un
+        // concurso formal lo fija la convocatoria.
+        $puesto = $postulante->puestoEfectivo();
+
+        if (! $puesto) {
+            return ApiResponse::error(
+                'El aspirante no tiene un puesto asignado y la convocatoria tampoco lo define.',
+                null, 422
+            );
+        }
+
         \DB::beginTransaction();
         try {
-            $servidor = Servidor::create([
-                'cedula' => $postulante->cedula,
-                'nombre' => $postulante->nombres,
-                'segundo_nombre' => $postulante->segundo_nombre,
-                'apellido' => $postulante->apellidos,
-                'segundo_apellido' => $postulante->segundo_apellido,
-                'genero' => $postulante->genero,
-                'estado_civil' => $postulante->estado_civil,
-                'fecha_nacimiento' => $postulante->fecha_nacimiento?->toDateString(),
-                'tipo_sangre' => $postulante->tipo_sangre,
-                'correo_personal' => $postulante->correo,
-                'telefono_celular' => $postulante->telefono,
-                'provincia_nacimiento_id' => $postulante->provincia_nacimiento_id,
-                'canton_nacimiento_id' => $postulante->canton_nacimiento_id,
-                'puesto_id' => $convocatoria->puesto_id,
-                'estado' => true,
-            ]);
+            $esCandidatoInterno = $postulante->servidor_id !== null;
 
-            Onboarding::create([
-                'postulante_id' => $postulante->id,
-                'servidor_id' => $servidor->id,
-                'created_by' => $request->user()->id,
-            ]);
+            if ($esCandidatoInterno) {
+                // Candidato interno (la cédula ya coincidía con un Servidor
+                // al inscribirse — ver PostulanteController::store()): la
+                // identidad ya existe, no se crea de nuevo ni se genera
+                // Onboarding (no aplica inducción para alguien que ya
+                // trabaja en la institución).
+                $servidor = Servidor::findOrFail($postulante->servidor_id);
+            } else {
+                $servidor = Servidor::create([
+                    'cedula' => $postulante->cedula,
+                    'nombre' => $postulante->nombres,
+                    'segundo_nombre' => $postulante->segundo_nombre,
+                    'apellido' => $postulante->apellidos,
+                    'segundo_apellido' => $postulante->segundo_apellido,
+                    'genero' => $postulante->genero,
+                    'estado_civil' => $postulante->estado_civil,
+                    'fecha_nacimiento' => $postulante->fecha_nacimiento?->toDateString(),
+                    'tipo_sangre' => $postulante->tipo_sangre,
+                    'correo_personal' => $postulante->correo,
+                    'telefono_celular' => $postulante->telefono,
+                    'provincia_nacimiento_id' => $postulante->provincia_nacimiento_id,
+                    'canton_nacimiento_id' => $postulante->canton_nacimiento_id,
+                    'puesto_id' => $puesto->id,
+                    'estado' => true,
+                ]);
 
-            MovimientoPersonal::create([
-                'servidor_id' => $servidor->id,
-                'tipo_movimiento' => 'ingreso',
+                Onboarding::create([
+                    'postulante_id' => $postulante->id,
+                    'servidor_id' => $servidor->id,
+                    'created_by' => $request->user()->id,
+                ]);
+            }
+
+            $tipoNombramientoPropuesto = $this->resolverTipoNombramientoPropuesto($convocatoria);
+
+            $movimiento = $this->movimientoPersonalService->registrar($servidor->id, [
+                'tipo_movimiento' => TipoMovimientoPersonal::INGRESO->value,
                 'descripcion' => "Incorporación tras proceso de selección {$convocatoria->codigo}. Dictamen médico: {$solicitud->dictamen}.",
                 'fecha_efectiva' => now()->toDateString(),
-                'autorizado_por' => $request->user()->id,
+                'tipo_nombramiento_propuesto' => $tipoNombramientoPropuesto->value,
+                'puesto_destino_id' => $puesto->id,
+                'unidad_destino_id' => $puesto->unidad_administrativa_id,
+                'remuneracion_propuesta' => $puesto->rmu,
             ]);
 
-            $solicitud->update(['servidor_id' => $servidor->id]);
+            // Se enlaza la solicitud al movimiento para que el guard de
+            // dictamen médico de MovimientoPersonalStateService encuentre este
+            // dictamen (ya emitido) en vez de abrir una segunda solicitud al
+            // suscribirse el ingreso.
+            $solicitud->update([
+                'servidor_id'            => $servidor->id,
+                'movimiento_personal_id' => $movimiento->id,
+            ]);
 
             $postulante->update([
                 'estado' => EstadoPostulante::INCORPORADO,
@@ -336,13 +380,50 @@ final class SolicitudCertificacionController extends Controller
 
             \DB::commit();
 
+            $mensajeIdentidad = $esCandidatoInterno
+                ? 'Candidato interno identificado con su expediente existente.'
+                : 'Identidad del servidor creada.';
+
+            // Un candidato interno conserva su vínculo vigente, y el ingreso ya
+            // no lo cierra por su cuenta: Talento Humano debe registrar antes la
+            // Cesación de Funciones del puesto actual (ver
+            // MovimientoPersonalStateService::assertSinVinculoVigente()).
+            $mensajeCesacion = $esCandidatoInterno && $servidor->contratoVigente()->exists()
+                ? ' Como mantiene un vínculo vigente, primero debe registrarse la '
+                    .'Cesación de Funciones de su puesto actual; recién entonces podrá '
+                    .'registrarse este Ingreso y Vinculación.'
+                : '';
+
             return ApiResponse::ok(
-                ['servidor_id' => $servidor->id],
-                'Servidor incorporado correctamente al sistema.'
+                ['servidor_id' => $servidor->id, 'movimiento_id' => $movimiento->id],
+                "{$mensajeIdentidad} El ingreso quedó registrado en borrador (código "
+                    .$movimiento->id.') y requiere revisión y aprobación de Talento Humano en el '
+                    .'módulo de Expediente / Movimientos antes de quedar vinculado formalmente.'
+                    .$mensajeCesacion
             );
         } catch (\Exception $e) {
             \DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Formal: único resultado legal posible es Nombramiento Permanente
+     * (confirmado con Talento Humano — no se infiere nada del Puesto).
+     * Express: el tipo lo declaró Talento Humano al abrir el proceso
+     * (Convocatoria::tipo_nombramiento_previsto), tampoco se deriva del
+     * Puesto. Talento Humano debe revisar este dato propuesto antes de
+     * registrar el movimiento — si no corresponde, puede anular este
+     * borrador y registrar el ingreso manualmente con el tipo correcto.
+     */
+    private function resolverTipoNombramientoPropuesto(Convocatoria $convocatoria): TipoNombramiento
+    {
+        return match ($convocatoria->tipo_proceso) {
+            TipoProcesoConvocatoria::FORMAL => TipoNombramiento::PERMANENTE,
+            TipoProcesoConvocatoria::EXPRESS => $convocatoria->tipo_nombramiento_previsto
+                ?? throw new ReglaNegocioException(
+                    'La convocatoria express no tiene un tipo de nombramiento previsto definido.'
+                ),
+        };
     }
 }

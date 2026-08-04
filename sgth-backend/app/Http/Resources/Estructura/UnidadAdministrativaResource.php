@@ -18,6 +18,9 @@ class UnidadAdministrativaResource extends JsonResource
             'unidad_padre_id' => $this->unidad_padre_id,
             'nivel'           => $this->nivel,
             'estado'          => $this->estado,
+            // Anclajes de los firmantes de las Acciones de Personal.
+            'es_unidad_talento_humano' => (bool) $this->es_unidad_talento_humano,
+            'es_maxima_autoridad'      => (bool) $this->es_maxima_autoridad,
             'tipo_unidad'     => $this->whenLoaded('tipoUnidad', fn() => [
                 'id'          => $this->tipoUnidad->id,
                 'acronimo'    => $this->tipoUnidad->acronimo,

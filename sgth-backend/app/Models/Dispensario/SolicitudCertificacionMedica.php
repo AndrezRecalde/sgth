@@ -2,6 +2,7 @@
 
 namespace App\Models\Dispensario;
 
+use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\Postulante;
@@ -17,6 +18,7 @@ class SolicitudCertificacionMedica extends Model
     protected $fillable = [
         'tipo_evento', 'origen',
         'servidor_id', 'postulante_id', 'convocatoria_id',
+        'movimiento_personal_id',
         'cedula_paciente', 'nombres_paciente',
         'correo_paciente', 'puesto_solicitado',
         'solicitado_por', 'estado',
@@ -45,6 +47,15 @@ class SolicitudCertificacionMedica extends Model
     public function convocatoria(): BelongsTo
     {
         return $this->belongsTo(Convocatoria::class);
+    }
+
+    /**
+     * Acción de personal que exige este dictamen. En reclutamiento se enlaza
+     * al confirmar la incorporación; en el resto de acciones, al suscribirse.
+     */
+    public function movimientoPersonal(): BelongsTo
+    {
+        return $this->belongsTo(MovimientoPersonal::class, 'movimiento_personal_id');
     }
 
     public function solicitadoPor(): BelongsTo

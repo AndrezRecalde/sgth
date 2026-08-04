@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Expediente;
 use App\Contracts\Expediente\ExpedienteServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expediente\StoreServidorBasicoRequest;
-use App\Http\Requests\Expediente\StoreServidorRequest;
 use App\Http\Requests\Expediente\UpdateServidorRequest;
 use App\Http\Resources\Expediente\ServidorResource;
 use App\Http\Responses\ApiResponse;
@@ -53,15 +52,6 @@ class ServidorController extends Controller
                 'ultima_pagina' => $paginador->lastPage(),
             ],
         ]);
-    }
-
-    public function store(StoreServidorRequest $request): JsonResponse
-    {
-        $this->authorize('crear', Servidor::class);
-
-        $servidor = $this->expedienteService->crearServidor($request->validated());
-
-        return ApiResponse::created(new ServidorResource($servidor), 'Expediente del servidor creado con éxito.');
     }
 
     public function show(int $id): JsonResponse

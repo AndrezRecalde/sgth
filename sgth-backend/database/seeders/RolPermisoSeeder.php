@@ -57,6 +57,10 @@ class RolPermisoSeeder extends Seeder
             Permiso::CONFIGURAR_SLA,
             Permiso::VER_TICKETS_TODOS,
             Permiso::GESTIONAR_TICKETS,
+            // Carga inicial de servidores. Se deja en TI y no en UATH porque
+            // es una vía excepcional que se revoca al terminar la migración:
+            // durante ese lapso se le concede también a quien la ejecute.
+            Permiso::VINCULAR_SERVIDOR_INICIAL,
         ]));
 
         // ADMIN_UATH

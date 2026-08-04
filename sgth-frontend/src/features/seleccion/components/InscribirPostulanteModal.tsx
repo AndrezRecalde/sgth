@@ -10,7 +10,9 @@ import '@mantine/dates/styles.css'
 import {
   IconUsers, IconCheck, IconInfoCircle,
 } from '@tabler/icons-react'
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
+import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -20,6 +22,12 @@ interface Props {
   opened:         boolean
   onClose:        () => void
   convocatoriaId: number
+  /**
+   * En los contenedores express el puesto lo trae el aspirante, porque el
+   * contenedor agrupa por modalidad y no por vacante. En un concurso formal
+   * el puesto lo fija la convocatoria y enviarlo es un error de validación.
+   */
+  requierePuesto?: boolean
 }
 
 const GENERO_OPTIONS = [
@@ -73,10 +81,14 @@ function toDate(s: string | null | undefined): Date | null {
 }
 
 export function InscribirPostulanteModal({
-  opened, onClose, convocatoriaId,
+  opened, onClose, convocatoriaId, requierePuesto = false,
 }: Props) {
   const contained = useContainedInput()
   const inscribir = useInscribirPostulante(convocatoriaId)
+
+  const [puestoId, setPuestoId] = useState<number | null>(null)
+  const [fechaInscripcion, setFechaInscripcion] = useState<Date | null>(new Date())
+  const [errorPuesto, setErrorPuesto] = useState<string | null>(null)
 
   const {
     control, register, handleSubmit,
@@ -88,13 +100,30 @@ export function InscribirPostulanteModal({
 
   const handleClose = () => {
     reset()
+    setPuestoId(null)
+    setFechaInscripcion(new Date())
+    setErrorPuesto(null)
     onClose()
   }
 
   const onSubmit = (values: FormData) => {
-    inscribir.mutate(values, {
-      onSuccess: handleClose,
-    })
+    if (requierePuesto && !puestoId) {
+      setErrorPuesto('Seleccione el puesto al que aspira.')
+      return
+    }
+
+    setErrorPuesto(null)
+
+    inscribir.mutate(
+      requierePuesto
+        ? {
+          ...values,
+          puesto_id: puestoId,
+          fecha_inscripcion: fromDate(fechaInscripcion),
+        }
+        : values,
+      { onSuccess: handleClose },
+    )
   }
 
   return (
@@ -119,6 +148,36 @@ export function InscribirPostulanteModal({
               candidato es seleccionado.
             </Text>
           </Alert>
+
+          {requierePuesto && (
+            <Stack gap="xs">
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+                style={{ letterSpacing: '0.05em' }}>
+                Vacante a la que aspira
+              </Text>
+              <Grid>
+                <Grid.Col span={{ base: 12, md: 8 }}>
+                  <BuscarPuestoSelect
+                    label="Puesto"
+                    value={puestoId}
+                    onChange={setPuestoId}
+                    error={errorPuesto ?? undefined}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <DatePickerInput
+                    label="Fecha de inscripción"
+                    description="Define el año en que se contabiliza."
+                    value={fechaInscripcion}
+                    onChange={(v) => setFechaInscripcion(v as Date | null)}
+                    valueFormat="DD/MM/YYYY"
+                    {...contained}
+                  />
+                </Grid.Col>
+              </Grid>
+              <Divider />
+            </Stack>
+          )}
 
           <Stack gap="xs">
             <Text size="xs" fw={600} c="dimmed" tt="uppercase"

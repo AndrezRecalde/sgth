@@ -1,354 +1,238 @@
-"use client";
+'use client'
 
-import { useState } from "react";
 import {
-  Stack,
-  Group,
-  Text,
-  Badge,
-  Button,
-  Skeleton,
-  Grid,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  IconPlus,
-  IconEdit,
-  IconTrash,
-  IconBriefcase,
-} from "@tabler/icons-react";
-import { DataTable } from "mantine-datatable";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { TableActions } from "@/components/ui/TableActions";
-import { useContratos } from "../../hooks/useContratos";
-import { useContratoMutations } from "../../hooks/useContratoMutations";
-import { ContratoModal } from "../ContratoModal";
-import type { ContratoConRelaciones, EstadoContrato } from "@/types/api";
+  Accordion, Alert, Badge, Box, Grid, Group, Paper, Skeleton, Stack, Text,
+} from '@mantine/core'
+import { IconBriefcase, IconInfoCircle } from '@tabler/icons-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { useActividadLaboral } from '../../hooks/useActividadLaboral'
+import type {
+  AccionSobreVinculo, VinculoConActividad,
+} from '../../services/actividadLaboralService'
+import type { EstadoContrato } from '@/types/api'
 
 const ESTADO_COLORS: Record<EstadoContrato, string> = {
-  vigente: "green",
-  terminado: "gray",
-  cancelado: "red",
-};
+  vigente: 'green',
+  terminado: 'gray',
+  cancelado: 'red',
+}
 
 const ESTADO_LABELS: Record<EstadoContrato, string> = {
-  vigente: "Vigente",
-  terminado: "Terminado",
-  cancelado: "Cancelado",
-};
+  vigente: 'Vigente',
+  terminado: 'Terminado',
+  cancelado: 'Cancelado',
+}
 
 const NOMBRAMIENTO_LABELS: Record<string, string> = {
-  nombramiento_permanente: "Nombramiento Permanente",
-  nombramiento_provisional: "Nombramiento Provisional",
-  servicios_ocasionales: "Servicios Ocasionales",
-  libre_nombramiento_remocion: "Libre Nombramiento y Remoción",
-  codigo_trabajo: "Código del Trabajo",
-  servicios_profesionales: "Servicios Profesionales",
-  eleccion_popular: "Elección Popular",
-};
-
-function formatFecha(fecha?: string | null): string {
-  if (!fecha) return "—";
-  return new Date(fecha).toLocaleDateString("es-EC", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  nombramiento_permanente: 'Nombramiento Permanente',
+  nombramiento_provisional: 'Nombramiento Provisional',
+  servicios_ocasionales: 'Servicios Ocasionales',
+  libre_nombramiento_remocion: 'Libre Nombramiento y Remoción',
+  codigo_trabajo: 'Código del Trabajo',
+  servicios_profesionales: 'Servicios Profesionales',
+  eleccion_popular: 'Elección Popular',
 }
 
-interface DetalleProps {
-  contrato: ContratoConRelaciones;
+function fecha(f?: string | null): string {
+  if (!f) return '—'
+  return new Date(f).toLocaleDateString('es-EC', {
+    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
+  })
 }
 
-function ContratoDetalle({ contrato }: DetalleProps) {
-  const cargo = (
-    contrato.puesto as {
-      cargo?: {
-        nombre?: string;
-        denominacion_generica?: string;
-      } | null;
-    }
-  )?.cargo;
+function dinero(v?: string | number | null): string {
+  return v != null ? `$ ${Number(v).toFixed(2)}` : '—'
+}
 
-  const unidad = (
-    contrato.unidad_administrativa as {
-      nombre?: string;
-    }
-  )?.nombre;
+function Dato({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
+  return (
+    <Box>
+      <Text size="xs" fw={600} c="dimmed" tt="uppercase">{etiqueta}</Text>
+      <Text size="sm">{valor?.toString().trim() || '—'}</Text>
+    </Box>
+  )
+}
+
+/** Resumen legible del cambio que produjo una acción. */
+function cambio(a: AccionSobreVinculo): string | null {
+  if (a.unidad_destino && a.unidad_destino !== a.unidad_origen) {
+    return `${a.unidad_origen ?? 'Sin unidad'} → ${a.unidad_destino}`
+  }
+  if (a.fecha_inicio) {
+    return `${fecha(a.fecha_inicio)} – ${a.fecha_fin ? fecha(a.fecha_fin) : 'sin fecha de fin'}`
+  }
+  return null
+}
+
+function FilaAccion({ accion }: { accion: AccionSobreVinculo }) {
+  const detalle = cambio(accion)
 
   return (
-    <Stack
-      gap={0}
-      p="md"
-      style={{
-        background: "var(--mantine-color-default-hover)",
-        borderTop: "1px solid var(--mantine-color-default-border)",
-      }}
-    >
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Cargo
-          </Text>
-          <Text size="sm" fw={500}>
-            {cargo?.nombre ?? "—"}
-          </Text>
-          {cargo?.denominacion_generica && (
-            <Text size="xs" c="dimmed">
-              {cargo.denominacion_generica}
-            </Text>
+    <Paper withBorder p="xs" radius="sm">
+      <Group justify="space-between" wrap="nowrap" align="flex-start">
+        <div style={{ minWidth: 0 }}>
+          <Text size="sm" fw={500}>{accion.etiqueta ?? accion.tipo_movimiento}</Text>
+          {detalle && <Text size="xs" c="dimmed">{detalle}</Text>}
+        </div>
+        <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+          <Text size="xs">{fecha(accion.fecha_efectiva)}</Text>
+          {accion.codigo_registro && (
+            <Text size="xs" c="dimmed" ff="monospace">{accion.codigo_registro}</Text>
           )}
-        </Grid.Col>
+        </div>
+      </Group>
+    </Paper>
+  )
+}
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Unidad administrativa
-          </Text>
-          <Text size="sm" fw={500}>
-            {unidad ?? "—"}
-          </Text>
-        </Grid.Col>
+function Vinculo({ vinculo }: { vinculo: VinculoConActividad }) {
+  const c = vinculo.contrato
+  const estado = (c.estado ?? 'vigente') as EstadoContrato
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Período
-          </Text>
-          <Text size="sm" fw={500}>
-            {formatFecha(contrato.fecha_inicio)}
-            {" → "}
-            {contrato.fecha_fin
-              ? formatFecha(contrato.fecha_fin)
-              : "Indefinido"}
-          </Text>
-        </Grid.Col>
+  return (
+    <Accordion.Item value={String(c.id)}>
+      <Accordion.Control>
+        <Group justify="space-between" wrap="nowrap" pr="sm">
+          <div style={{ minWidth: 0 }}>
+            <Group gap="xs">
+              <Text fw={600} size="sm">
+                {NOMBRAMIENTO_LABELS[c.tipo_nombramiento as string] ?? c.tipo_nombramiento}
+              </Text>
+              {c.numero_contrato && (
+                <Text size="sm" c="dimmed" ff="monospace">{c.numero_contrato}</Text>
+              )}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {c.puesto?.cargo?.nombre ?? 'Sin puesto'} · {c.unidad_administrativa?.nombre ?? 'Sin unidad'}
+            </Text>
+          </div>
+          <Group gap="xs" wrap="nowrap">
+            <Badge color={ESTADO_COLORS[estado]} variant="light" size="sm">
+              {ESTADO_LABELS[estado]}
+            </Badge>
+            {/* Situación derivada de las acciones vigentes hoy, no un estado
+                almacenado: el vínculo sigue vigente aunque la persona esté
+                temporalmente ausente. */}
+            {vinculo.situacion && (
+              <Badge color="violet" variant="light" size="sm">
+                {vinculo.situacion.etiqueta}
+                {vinculo.situacion.hasta ? ` hasta ${fecha(vinculo.situacion.hasta)}` : ''}
+              </Badge>
+            )}
+            {vinculo.reemplaza_a && (
+              <Badge color="grape" variant="light" size="sm">Reemplazo</Badge>
+            )}
+          </Group>
+        </Group>
+      </Accordion.Control>
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Número de contrato
-          </Text>
-          <Text size="sm" fw={500} ff="monospace">
-            {contrato.numero_contrato ?? "—"}
-          </Text>
-        </Grid.Col>
+      <Accordion.Panel>
+        <Stack gap="md">
+          {vinculo.reemplaza_a && (
+            <Alert variant="light" color="grape" icon={<IconInfoCircle size={16} />}>
+              Contrato de reemplazo: cubre la{' '}
+              {vinculo.reemplaza_a.etiqueta?.toLowerCase() ?? 'ausencia'} de{' '}
+              <strong>{vinculo.reemplaza_a.servidor}</strong>
+              {vinculo.reemplaza_a.hasta
+                ? `, hasta el ${fecha(vinculo.reemplaza_a.hasta)}.`
+                : '.'}
+            </Alert>
+          )}
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Número de resolución
-          </Text>
-          <Text size="sm" fw={500} ff="monospace">
-            {contrato.resolucion_numero ?? "—"}
-          </Text>
-        </Grid.Col>
+          <Grid>
+            <Grid.Col span={{ base: 6, sm: 3 }}>
+              <Dato etiqueta="Desde" valor={fecha(c.fecha_inicio)} />
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, sm: 3 }}>
+              <Dato etiqueta="Hasta" valor={c.fecha_fin ? fecha(c.fecha_fin) : 'Sin plazo'} />
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, sm: 3 }}>
+              <Dato etiqueta="Remuneración" valor={dinero(c.remuneracion)} />
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, sm: 3 }}>
+              <Dato etiqueta="Resolución" valor={c.resolucion_numero} />
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, sm: 3 }}>
+              <Dato
+                etiqueta="Partida"
+                valor={c.puesto?.partida_presupuestaria?.codigo}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, sm: 3 }}>
+              <Dato etiqueta="Marca asistencia" valor={c.puede_marcar === false ? 'No' : 'Sí'} />
+            </Grid.Col>
+            {c.motivo_fin && (
+              <Grid.Col span={12}>
+                <Dato etiqueta="Motivo de término" valor={c.motivo_fin} />
+              </Grid.Col>
+            )}
+          </Grid>
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Marcación biométrica
-          </Text>
-          <Text size="sm" fw={500} ff="monospace">
-            {contrato.puede_marcar === false ? "No" : "Sí"}
-          </Text>
-        </Grid.Col>
+          <div>
+            <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">
+              Acciones de personal sobre este vínculo
+            </Text>
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Remuneración mensual (R.M.U.)
-          </Text>
-          <Text size="sm" fw={600}>
-            {contrato.remuneracion
-              ? `$ ${Number(contrato.remuneracion).toLocaleString("es-EC", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              : "—"}
-          </Text>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Text size="xs" c="dimmed" mb={2}>
-            Remuneración anual (R.A.U.)
-          </Text>
-          <Text size="sm" fw={600}>
-            {contrato.rau
-              ? `$ ${Number(contrato.rau).toLocaleString("es-EC", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              : "—"}
-          </Text>
-        </Grid.Col>
-      </Grid>
-    </Stack>
-  );
+            {vinculo.acciones.length === 0 ? (
+              <Text size="sm" c="dimmed">
+                Sin acciones registradas sobre este vínculo.
+              </Text>
+            ) : (
+              <Stack gap="xs">
+                {vinculo.acciones.map((a) => <FilaAccion key={a.id} accion={a} />)}
+              </Stack>
+            )}
+          </div>
+        </Stack>
+      </Accordion.Panel>
+    </Accordion.Item>
+  )
 }
 
 interface Props {
-  servidorId: number;
+  servidorId: number
 }
 
+/**
+ * Actividad laboral: cada vínculo con las acciones ocurridas sobre él.
+ *
+ * No hay botones para crear ni cerrar contratos: un vínculo nace de una acción
+ * de personal de ingreso y muere con una de cesación. Permitirlo aquí sería la
+ * puerta trasera que deja contratos sin acción que los respalde.
+ */
 export function LaboralTab({ servidorId }: Props) {
-  const [modalOpened, { open, close }] = useDisclosure(false);
-  const [editContrato, setEditContrato] =
-    useState<ContratoConRelaciones | null>(null);
-
-  const { data: contratos = [], isLoading } = useContratos(servidorId);
-  const { eliminar } = useContratoMutations(servidorId);
-
-  const handleClose = () => {
-    setEditContrato(null);
-    close();
-  };
-
-  const lista = contratos as ContratoConRelaciones[];
+  const { data: vinculos = [], isLoading } = useActividadLaboral(servidorId)
 
   if (isLoading) {
     return (
       <Stack gap="xs">
-        <Skeleton height={42} radius="md" />
-        <Skeleton height={42} radius="md" />
+        <Skeleton height={64} radius="md" />
+        <Skeleton height={64} radius="md" />
       </Stack>
-    );
+    )
+  }
+
+  if (vinculos.length === 0) {
+    return (
+      <EmptyState
+        icon={IconBriefcase}
+        title="Sin vínculos registrados"
+        description="El vínculo laboral se crea al aprobar una acción de personal de Ingreso y Vinculación."
+      />
+    )
   }
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end">
-        <Button
-          size="xs"
-          color="emerald"
-          variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={() => {
-            setEditContrato(null);
-            open();
-          }}
-        >
-          Nuevo contrato
-        </Button>
-      </Group>
+      <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+        Cada vínculo conserva su número de contrato original. Traspasos,
+        comisiones y sanciones no crean uno nuevo: se registran sobre el mismo,
+        y se ven al desplegarlo.
+      </Alert>
 
-      {lista.length === 0 ? (
-        <EmptyState
-          icon={IconBriefcase}
-          title="Sin contratos registrados"
-          description="Registra el primer contrato o nombramiento del servidor."
-        />
-      ) : (
-        <DataTable
-          records={lista}
-          idAccessor="id"
-          columns={[
-            {
-              accessor: "tipo_nombramiento",
-              title: "Tipo de nombramiento",
-              render: ({ tipo_nombramiento }) => (
-                <Text size="sm" fw={500}>
-                  {NOMBRAMIENTO_LABELS[tipo_nombramiento ?? ""] ??
-                    tipo_nombramiento ??
-                    "—"}
-                </Text>
-              ),
-            },
-            {
-              accessor: "cargo",
-              title: "Cargo",
-              render: (contrato) => {
-                const cargo = (
-                  contrato.puesto as {
-                    cargo?: { nombre?: string } | null;
-                  }
-                )?.cargo;
-                return (
-                  <Text size="sm" c="dimmed">
-                    {cargo?.nombre ?? "—"}
-                  </Text>
-                );
-              },
-            },
-            {
-              accessor: "fecha_inicio",
-              title: "Inicio",
-              width: 110,
-              render: ({ fecha_inicio }) => (
-                <Text size="sm">{formatFecha(fecha_inicio)}</Text>
-              ),
-            },
-            {
-              accessor: "remuneracion",
-              title: "RMU",
-              width: 100,
-              render: ({ remuneracion }) => (
-                <Text size="sm" ff="monospace">
-                  {remuneracion ? `$${Number(remuneracion).toFixed(2)}` : "—"}
-                </Text>
-              ),
-            },
-            {
-              accessor: "estado",
-              title: "Estado",
-              width: 100,
-              render: ({ estado }) => (
-                <Badge
-                  color={ESTADO_COLORS[estado as EstadoContrato] ?? "gray"}
-                  variant="light"
-                  size="sm"
-                >
-                  {ESTADO_LABELS[estado as EstadoContrato] ?? estado ?? "—"}
-                </Badge>
-              ),
-            },
-            {
-              accessor: "acciones",
-              title: "",
-              width: 50,
-              render: (contrato) => (
-                <TableActions
-                  actions={[
-                    {
-                      label: "Editar contrato",
-                      icon: <IconEdit size={14} />,
-                      color: "blue",
-                      onClick: () => {
-                        setEditContrato(contrato);
-                        open();
-                      },
-                    },
-                    {
-                      label: "Eliminar contrato",
-                      icon: <IconTrash size={14} />,
-                      color: "red",
-                      onClick: () => {
-                        if (
-                          confirm(
-                            "¿Eliminar este contrato? Esta acción no se puede deshacer.",
-                          )
-                        )
-                          eliminar.mutate(Number(contrato.id));
-                      },
-                    },
-                  ]}
-                />
-              ),
-            },
-          ]}
-          rowExpansion={{
-            content: ({ record }) => <ContratoDetalle contrato={record} />,
-          }}
-          withTableBorder
-          withColumnBorders={false}
-          borderRadius="md"
-          highlightOnHover
-          verticalSpacing="sm"
-          minHeight={80}
-        />
-      )}
-
-      <ContratoModal
-        opened={modalOpened}
-        onClose={handleClose}
-        servidorId={servidorId}
-        contrato={editContrato}
-      />
+      <Accordion variant="separated" defaultValue={String(vinculos[0]?.contrato.id)}>
+        {vinculos.map((v) => <Vinculo key={v.contrato.id} vinculo={v} />)}
+      </Accordion>
     </Stack>
-  );
+  )
 }

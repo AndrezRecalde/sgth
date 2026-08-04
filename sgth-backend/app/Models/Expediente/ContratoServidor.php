@@ -3,6 +3,7 @@
 namespace App\Models\Expediente;
 
 use App\Enums\EstadoContrato;
+use App\Enums\OrigenVinculo;
 use App\Enums\TipoNombramiento;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -30,11 +31,14 @@ class ContratoServidor extends Model
         'numero_contrato',
         'unidad_administrativa_id',
         'puesto_id',
+        'cubre_movimiento_id',
         'fecha_inicio',
         'fecha_fin',
+        'motivo_fin',
         'resolucion_numero',
         'documento_ruta',
         'estado',
+        'origen',
         'remuneracion',
         'puede_marcar'
     ];
@@ -44,6 +48,7 @@ class ContratoServidor extends Model
         return [
             'tipo_nombramiento' => TipoNombramiento::class,
             'estado'            => EstadoContrato::class,
+            'origen'            => OrigenVinculo::class,
             'fecha_inicio'      => 'date',
             'fecha_fin'         => 'date',
             'remuneracion'      => 'decimal:2',
@@ -78,6 +83,21 @@ class ContratoServidor extends Model
     public function puesto(): BelongsTo
     {
         return $this->belongsTo(Puesto::class);
+    }
+
+    /**
+     * La ausencia temporal que este contrato vino a cubrir. Un contrato con
+     * este campo poblado no consume plaza: la plaza sigue siendo del titular
+     * ausente, que conserva su vínculo vigente.
+     */
+    public function cubreMovimiento(): BelongsTo
+    {
+        return $this->belongsTo(MovimientoPersonal::class, 'cubre_movimiento_id');
+    }
+
+    public function esReemplazo(): bool
+    {
+        return $this->cubre_movimiento_id !== null;
     }
 
     public function scopeVigente(Builder $query): Builder

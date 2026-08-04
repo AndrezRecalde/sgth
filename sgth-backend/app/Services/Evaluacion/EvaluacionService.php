@@ -9,6 +9,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Evaluacion\EvaluacionDesempeno;
 use App\Models\Evaluacion\PlanMejora;
 use App\Models\Evaluacion\ResultadoEvaluacion;
+use App\Models\Expediente\Servidor;
 use Illuminate\Support\Facades\DB;
 
 final class EvaluacionService implements EvaluacionServiceInterface
@@ -19,6 +20,18 @@ final class EvaluacionService implements EvaluacionServiceInterface
 
         if ($evaluacion->estado !== EstadoEvaluacion::EN_EVALUACION) {
             throw new ReglaNegocioException('El período de evaluación no se encuentra activo para registro de calificaciones.');
+        }
+
+        // La evaluación de desempeño (carrera administrativa) no aplica a
+        // servicios profesionales (contrato civil, sin relación de
+        // dependencia) ni a código de trabajo (régimen distinto, con su
+        // propio instrumento) — solo a vínculos LOSEP vigentes.
+        $servidor = Servidor::with('contratoVigente')->findOrFail($servidorId);
+
+        if (!$servidor->contratoVigente?->tipo_nombramiento?->esLosep()) {
+            throw new ReglaNegocioException(
+                'Evaluación de desempeño no aplica a este régimen contractual.'
+            );
         }
 
         $cuantitativa = $datos['calificacion_cuantitativa'];

@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
+import { TIPO_NOMBRAMIENTO_OPTIONS } from '@/features/expediente/utils/tipoNombramientoOptions'
 
 export interface Postulante {
   id:                      number
@@ -52,6 +53,8 @@ export interface Convocatoria {
   fecha_inicio:   string
   fecha_fin:      string
   tipo:           string
+  tipo_proceso:   'formal' | 'express'
+  tipo_nombramiento_previsto?: string | null
   vacantes:       number
   estado:         string
   puesto?: {
@@ -60,6 +63,7 @@ export interface Convocatoria {
     unidad_administrativa?: { nombre: string }
     grupo_ocupacional?:     { nombre?: string; rmu?: number }
     actividades_activas?:   { id: number; descripcion: string; orden: number }[]
+    regimen_laboral?: string
   }
   postulantes?: Postulante[]
 }
@@ -69,9 +73,11 @@ export interface CrearConvocatoriaData {
   titulo:          string
   descripcion:     string
   bases_concurso?: Record<string, unknown> | null
-  fecha_inicio:    string
-  fecha_fin:       string
+  fecha_inicio?:   string
+  fecha_fin?:      string
   tipo:            'interna' | 'externa' | 'mixta'
+  tipo_proceso:    'formal' | 'express'
+  tipo_nombramiento_previsto?: string
   vacantes:        number
 }
 
@@ -100,6 +106,20 @@ export const TIPO_CONVOCATORIA_OPTIONS = [
   { value: 'externa', label: 'Externa' },
   { value: 'mixta',   label: 'Mixta'   },
 ]
+
+// Estos 4 valores deben coincidir EXACTAMENTE con el CHECK constraint de
+// tipo_nombramiento_previsto en la migración de convocatorias del backend
+// (2026_07_24_090000_agregar_tipo_proceso_a_convocatorias.php). No hay
+// sincronización automática entre ambos — si se agrega o quita un tipo
+// válido para procesos express en el backend, este array debe
+// actualizarse a mano.
+const TIPOS_NOMBRAMIENTO_EXPRESS = [
+  'nombramiento_provisional', 'servicios_ocasionales',
+  'servicios_profesionales', 'codigo_trabajo',
+]
+
+export const TIPO_NOMBRAMIENTO_PREVISTO_OPTIONS = TIPO_NOMBRAMIENTO_OPTIONS
+  .filter(o => TIPOS_NOMBRAMIENTO_EXPRESS.includes(o.value))
 
 export const ESTADO_POSTULANTE_OPTIONS = [
   { value: 'inscrito',           label: 'Inscrito'            },
@@ -152,6 +172,13 @@ export const convocatoriaService = {
   inscribirPostulante: (
     convocatoriaId: number,
     data: Pick<Postulante, 'cedula' | 'nombres' | 'apellidos' | 'correo' | 'telefono'>
+      & Partial<Record<
+        'segundo_nombre' | 'segundo_apellido' | 'genero' | 'estado_civil'
+        | 'fecha_nacimiento' | 'tipo_sangre' | 'fecha_inscripcion',
+        string | null
+      >>
+      // Solo en contenedores express: el puesto lo trae el aspirante.
+      & { puesto_id?: number | null }
   ) =>
     api.post<ApiResponse<Postulante>>(
       `/seleccion/convocatorias/${convocatoriaId}/postulantes`, data

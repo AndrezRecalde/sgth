@@ -31,6 +31,26 @@ enum TipoNombramiento: string
     }
 
     /**
+     * Valor sugerido para 'puede_marcar' (marcación biométrica) al crear un
+     * vínculo. Sigue la regla que dio Talento Humano: marcan los nombramientos
+     * permanente, provisional y de servicios ocasionales.
+     *
+     * Es solo el valor por defecto del formulario, nunca una restricción: TH
+     * lo edita caso por caso mientras la acción de personal está en borrador
+     * —entre los obreros, por ejemplo, algunos marcan y otros no—. Servicios
+     * Profesionales es el caso donde el default importa: es un contrato civil
+     * sin relación de dependencia y no debería marcar nunca.
+     */
+    public function puedeMarcarPorDefecto(): bool
+    {
+        return in_array($this, [
+            self::PERMANENTE,
+            self::PROVISIONAL,
+            self::SERVICIOS_OCASIONALES,
+        ], true);
+    }
+
+    /**
      * Régimen LOSEP vs Código de Trabajo, según la clasificación ya usada
      * en ContratoServidorService::sincronizarRegimenServidor(): Código de
      * Trabajo y Servicios Profesionales se liquidan bajo régimen de Código

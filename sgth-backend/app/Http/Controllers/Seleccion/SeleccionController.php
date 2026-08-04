@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Seleccion;
 
 use App\Contracts\Seleccion\SeleccionServiceInterface;
+use App\Enums\EstadoConvocatoria;
+use App\Enums\EstadoPostulante;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Seleccion\CalificarPostulanteRequest;
 use App\Http\Requests\Seleccion\DeclararGanadorRequest;
 use App\Http\Responses\ApiResponse;
+use App\Models\Seleccion\Convocatoria;
+use App\Models\Seleccion\Postulante;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SeleccionController extends Controller
 {
@@ -26,55 +31,59 @@ class SeleccionController extends Controller
 
     public function declararGanador(int $convocatoriaId, DeclararGanadorRequest $request): JsonResponse
     {
-        $ganador = $this->seleccionService->declararGanador(
+        $ganadores = $this->seleccionService->declararGanadores(
             $convocatoriaId,
-            $request->validated('postulante_ganador_id'),
+            $request->ganadores(),
             $request->user()->id
         );
 
-        return ApiResponse::ok($ganador, 'Concurso finalizado. Ganador declarado, onboarding y movimiento de personal (ingreso) generados automáticamente.');
+        $cantidad = $ganadores->count();
+
+        return ApiResponse::ok(
+            $ganadores,
+            "{$cantidad} candidato(s) enviados al dispensario médico. "
+                .'El ingreso de cada uno se genera recién al confirmar su incorporación '
+                .'con dictamen de aptitud.'
+        );
     }
 
     public function confirmarGanador(
         int $convocatoriaId,
         Request $request
     ): JsonResponse {
-        $convocatoria = \App\Models\Seleccion\Convocatoria::findOrFail(
-            $convocatoriaId
-        );
+        $convocatoria = Convocatoria::findOrFail($convocatoriaId);
 
-        if ($convocatoria->estado !== \App\Enums\EstadoConvocatoria::EN_EVALUACION_MEDICA) {
-            return \App\Http\Responses\ApiResponse::error(
+        if ($convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION_MEDICA) {
+            return ApiResponse::error(
                 'La convocatoria debe estar en evaluación médica para confirmar al ganador.',
                 null, 422
             );
         }
 
-        $ganador = \App\Models\Seleccion\Postulante::where(
-            'convocatoria_id', $convocatoriaId
-        )->where(
-            'estado', \App\Enums\EstadoPostulante::GANADOR_POTENCIAL->value
-        )->first();
+        $ganadores = Postulante::where('convocatoria_id', $convocatoriaId)
+            ->where('estado', EstadoPostulante::GANADOR_POTENCIAL->value)
+            ->get();
 
-        if (!$ganador) {
-            return \App\Http\Responses\ApiResponse::error(
-                'No se encontró un ganador potencial para esta convocatoria.',
+        if ($ganadores->isEmpty()) {
+            return ApiResponse::error(
+                'No se encontró ningún ganador potencial para esta convocatoria.',
                 null, 422
             );
         }
 
         $convocatoria->update([
-            'estado'     => \App\Enums\EstadoConvocatoria::FINALIZADA,
+            'estado'     => EstadoConvocatoria::FINALIZADA,
             'updated_by' => $request->user()->id,
         ]);
 
-        $ganador->update([
-            'estado' => \App\Enums\EstadoPostulante::SELECCIONADO,
-        ]);
+        Postulante::whereIn('id', $ganadores->pluck('id'))
+            ->update(['estado' => EstadoPostulante::SELECCIONADO->value]);
 
-        return \App\Http\Responses\ApiResponse::ok(
-            $ganador->fresh(),
-            'Ganador confirmado. La convocatoria ha sido finalizada.'
+        $cantidad = $ganadores->count();
+
+        return ApiResponse::ok(
+            $ganadores->map->fresh(),
+            "{$cantidad} ganador(es) confirmado(s). La convocatoria ha sido finalizada."
         );
     }
 }

@@ -4,14 +4,17 @@ import { useState } from 'react'
 import { Box, Button, Group } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf } from '@tabler/icons-react'
+import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ServidorToolbar } from '@/features/expediente/components/ServidorToolbar'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
 import { ServidorModal } from '@/features/expediente/components/ServidorModal'
 import { ServidorDetail } from '@/features/expediente/components/ServidorDetail'
+import { AccionPersonalDrawer } from '@/features/expediente/components/AccionPersonalDrawer'
 import { SolicitarCertificacionLoteModal } from '@/features/expediente/components/SolicitarCertificacionLoteModal'
+import { VinculacionInicialModal } from '@/features/expediente/components/VinculacionInicialModal'
+import { usePuedeVincularInicial } from '@/features/expediente/hooks/useVinculacionInicial'
 import { useServidores } from '@/features/expediente/hooks/useServidores'
 import { expedienteService } from '@/features/expediente/services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
@@ -20,6 +23,8 @@ import type { ServidorConRelaciones, EstadoContrato, TipoNombramiento } from '@/
 
 export function ExpedienteView() {
   const { hasPermiso } = useAuth()
+  const puedeVincularInicial = usePuedeVincularInicial()
+  const [vinculacionOpened, { open: abrirVinculacion, close: cerrarVinculacion }] = useDisclosure(false)
   const [page, setPage]     = useState(1)
   const [search, setSearch] = useState('')
   const [contratoEstado, setContratoEstado] = useState<string | null>(null)
@@ -31,13 +36,16 @@ export function ExpedienteView() {
   const [selectedRecords, setSelectedRecords] =
     useState<ServidorConRelaciones[]>([])
 
-  const [modalOpened,  { open: openModal,  close: closeModal  }] = useDisclosure(false)
-  const [detailOpened, { open: openDetail, close: closeDetail }] = useDisclosure(false)
-  const [loteOpened,   { open: openLote,   close: closeLote   }] = useDisclosure(false)
+  const [modalOpened,        { open: openModal,        close: closeModal        }] = useDisclosure(false)
+  const [detailOpened,       { open: openDetail,       close: closeDetail       }] = useDisclosure(false)
+  const [accionPersonalOpened, { open: openAccionPersonal, close: closeAccionPersonal }] = useDisclosure(false)
+  const [loteOpened,         { open: openLote,         close: closeLote         }] = useDisclosure(false)
 
   const [editServidor, setEditServidor] =
     useState<ServidorConRelaciones | null>(null)
   const [viewServidor, setViewServidor] =
+    useState<ServidorConRelaciones | null>(null)
+  const [accionPersonalServidor, setAccionPersonalServidor] =
     useState<ServidorConRelaciones | null>(null)
 
   const filtros = {
@@ -90,6 +98,11 @@ export function ExpedienteView() {
     openModal()
   }
 
+  const handleAccionPersonal = (s: ServidorConRelaciones) => {
+    setAccionPersonalServidor(s)
+    openAccionPersonal()
+  }
+
   const handleNuevo = () => {
     setEditServidor(null)
     openModal()
@@ -133,6 +146,18 @@ export function ExpedienteView() {
         >
           Exportar PDF
         </Button>
+        {/* Carga inicial: solo aparece mientras dure la migración, para quien
+            tenga el permiso. Al revocarlo el botón desaparece solo. */}
+        {puedeVincularInicial && (
+          <Button
+            color="grape"
+            variant="light"
+            leftSection={<IconHistoryToggle size={16} />}
+            onClick={abrirVinculacion}
+          >
+            Vinculación inicial
+          </Button>
+        )}
         <Button
           color="emerald"
           variant="light"
@@ -174,6 +199,7 @@ export function ExpedienteView() {
           onPageChange={setPage}
           onView={handleView}
           onEdit={handleEdit}
+          onAccionPersonal={handleAccionPersonal}
           selectedRecords={selectedRecords}
           onSelectedRecordsChange={setSelectedRecords}
         />
@@ -191,10 +217,19 @@ export function ExpedienteView() {
         servidor={viewServidor}
         onEdit={handleEdit}
       />
+      <AccionPersonalDrawer
+        opened={accionPersonalOpened}
+        onClose={() => { setAccionPersonalServidor(null); closeAccionPersonal() }}
+        servidor={accionPersonalServidor}
+      />
       <SolicitarCertificacionLoteModal
         opened={loteOpened}
         onClose={() => { setSelectedRecords([]); closeLote() }}
         servidores={selectedRecords}
+      />
+      <VinculacionInicialModal
+        opened={vinculacionOpened}
+        onClose={cerrarVinculacion}
       />
     </Box>
   )

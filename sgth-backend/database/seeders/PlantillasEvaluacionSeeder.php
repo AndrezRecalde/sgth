@@ -180,26 +180,42 @@ class PlantillasEvaluacionSeeder extends Seeder
             ],
         ];
 
+        // Idempotente: se identifica cada nivel por su clave natural (nombre
+        // de la plantilla, sección+nombre del criterio, etiqueta de la
+        // opción). Con create() a secas, cada corrida duplicaba las tres
+        // plantillas junto con todos sus criterios y opciones, y las
+        // duplicadas aparecían como opciones distintas al aplicar una
+        // plantilla a una convocatoria.
         foreach ($plantillas as $data) {
             $criteriosData = $data['criterios'];
             unset($data['criterios']);
 
-            $plantilla = PlantillaEvaluacion::create($data);
+            $plantilla = PlantillaEvaluacion::updateOrCreate(
+                ['nombre' => $data['nombre']],
+                $data
+            );
 
             foreach ($criteriosData as $criterioData) {
                 $opcionesData = $criterioData['opciones'];
                 unset($criterioData['opciones']);
 
-                $criterio = PlantillaCriterio::create([
-                    ...$criterioData,
-                    'plantilla_id' => $plantilla->id,
-                ]);
+                $criterio = PlantillaCriterio::updateOrCreate(
+                    [
+                        'plantilla_id' => $plantilla->id,
+                        'seccion'      => $criterioData['seccion'],
+                        'nombre'       => $criterioData['nombre'],
+                    ],
+                    $criterioData
+                );
 
                 foreach ($opcionesData as $opcion) {
-                    PlantillaOpcion::create([
-                        ...$opcion,
-                        'plantilla_criterio_id' => $criterio->id,
-                    ]);
+                    PlantillaOpcion::updateOrCreate(
+                        [
+                            'plantilla_criterio_id' => $criterio->id,
+                            'etiqueta'              => $opcion['etiqueta'],
+                        ],
+                        $opcion
+                    );
                 }
             }
         }

@@ -13,6 +13,7 @@ use App\Models\Seleccion\EvaluacionSeleccion;
 use App\Models\Seleccion\Onboarding;
 use App\Models\Seleccion\Postulante;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class SeleccionService implements SeleccionServiceInterface
@@ -46,77 +47,126 @@ final class SeleccionService implements SeleccionServiceInterface
         return $evaluacion;
     }
 
-    public function declararGanador(int $convocatoriaId, int $postulanteGanadorId, int $userId): Postulante
+    public function declararGanadores(int $convocatoriaId, array $postulanteIds, int $userId): Collection
     {
-        $convocatoria = Convocatoria::with('puesto.cargo')
-            ->findOrFail($convocatoriaId);
-        $ganador = Postulante::where('convocatoria_id', $convocatoriaId)
-            ->findOrFail($postulanteGanadorId);
+        $convocatoria = Convocatoria::with('puesto.cargo')->findOrFail($convocatoriaId);
 
+        $ganadores = Postulante::with('puesto.cargo')
+            ->where('convocatoria_id', $convocatoriaId)
+            ->whereIn('id', $postulanteIds)
+            ->get();
+
+        if ($ganadores->count() !== count(array_unique($postulanteIds))) {
+            throw new ReglaNegocioException(
+                'Alguno de los postulantes indicados no pertenece a esta convocatoria.'
+            );
+        }
+
+        $esContenedor = (bool) $convocatoria->es_contenedor_permanente;
+
+        // Primero lo estructural: si el concurso ya cerró, decirlo así. Al
+        // declarar ganadores los demás aprobados pasan a lista de espera, de
+        // modo que un segundo intento fallaría por "no está aprobado" —
+        // consecuencia del cierre, no la causa, y un mensaje que despista.
+        if (!$esContenedor) {
+            $this->assertConcursoAbierto($convocatoria);
+            $this->assertCabenEnLasVacantes($convocatoria, $ganadores->count());
+        }
+
+        $noAprobados = $ganadores->filter(
+            fn (Postulante $p) => $p->estado->value !== EstadoPostulante::APROBADO->value
+        );
+
+        if ($noAprobados->isNotEmpty()) {
+            throw new ReglaNegocioException(
+                'Todos los seleccionados deben estar aprobados (puntaje >= 70) para ser enviados al dispensario. '
+                    .'No cumplen: '.$noAprobados->pluck('cedula')->join(', ').'.'
+            );
+        }
+
+        return DB::transaction(function () use ($convocatoria, $ganadores, $userId, $esContenedor) {
+            // Un contenedor express es permanente y sus aspirantes no compiten
+            // entre sí: despachar a uno no cierra la modalidad ni manda a los
+            // demás a lista de espera.
+            if (!$esContenedor) {
+                $convocatoria->update([
+                    'estado'     => EstadoConvocatoria::EN_EVALUACION_MEDICA,
+                    'updated_by' => $userId,
+                ]);
+
+                Postulante::where('convocatoria_id', $convocatoria->id)
+                    ->whereNotIn('id', $ganadores->pluck('id'))
+                    ->where('estado', EstadoPostulante::APROBADO->value)
+                    ->update(['estado' => EstadoPostulante::LISTA_ESPERA->value]);
+            }
+
+            foreach ($ganadores as $ganador) {
+                // No se crea expediente todavía: primero el dictamen médico.
+                $ganador->update(['estado' => EstadoPostulante::GANADOR_POTENCIAL]);
+
+                $this->solicitarCertificacion($convocatoria, $ganador, $userId);
+            }
+
+            return $ganadores->map->fresh();
+        });
+    }
+
+    private function assertConcursoAbierto(Convocatoria $convocatoria): void
+    {
         if (in_array($convocatoria->estado, [
             EstadoConvocatoria::FINALIZADA,
             EstadoConvocatoria::EN_EVALUACION_MEDICA,
-        ])) {
+        ], true)) {
             throw new ReglaNegocioException(
-                'Esta convocatoria ya tiene un candidato en evaluación médica o fue finalizada.'
+                'Esta convocatoria ya tiene candidatos en evaluación médica o fue finalizada.'
             );
         }
+    }
 
-        if ($ganador->estado->value !== EstadoPostulante::APROBADO->value) {
+    /**
+     * No se puede declarar más ganadores que vacantes convocadas: es el número
+     * que se publicó y el que respalda presupuestariamente los ingresos.
+     */
+    private function assertCabenEnLasVacantes(Convocatoria $convocatoria, int $cantidad): void
+    {
+        $vacantes = (int) ($convocatoria->vacantes ?? 1);
+
+        if ($cantidad > $vacantes) {
             throw new ReglaNegocioException(
-                'El postulante debe estar aprobado (puntaje >= 70) para ser enviado al dispensario.'
+                "La convocatoria tiene {$vacantes} vacante(s) y se intentan declarar {$cantidad} ganador(es)."
             );
         }
+    }
 
-        DB::beginTransaction();
-        try {
-            // 1. Cambiar convocatoria a EN_EVALUACION_MEDICA
-            //    (NO finalizar todavía — esperar dictamen)
-            $convocatoria->estado = EstadoConvocatoria::EN_EVALUACION_MEDICA;
-            $convocatoria->updated_by = $userId;
-            $convocatoria->save();
+    /**
+     * La solicitud lleva los datos del CANDIDATO, no de un servidor: todavía no
+     * existe expediente. El puesto sale del aspirante en los contenedores
+     * express y de la convocatoria en un concurso formal.
+     */
+    private function solicitarCertificacion(
+        Convocatoria $convocatoria,
+        Postulante $ganador,
+        int $userId
+    ): void {
+        $nombreCompleto = trim(implode(' ', array_filter([
+            $ganador->nombres,
+            $ganador->segundo_nombre,
+            $ganador->apellidos,
+            $ganador->segundo_apellido,
+        ])));
 
-            // 2. Marcar ganador como GANADOR_POTENCIAL
-            //    (NO crear expediente todavía —
-            //    esperar confirmación médica)
-            $ganador->update([
-                'estado' => EstadoPostulante::GANADOR_POTENCIAL,
-            ]);
-
-            // 3. Marcar aprobados restantes como lista_espera
-            Postulante::where('convocatoria_id', $convocatoriaId)
-                ->where('id', '!=', $ganador->id)
-                ->where('estado', EstadoPostulante::APROBADO->value)
-                ->update(['estado' => 'lista_espera']);
-
-            // 4. Generar solicitud de certificación médica
-            //    con datos del CANDIDATO (no del servidor)
-            $nombreCompleto = trim(implode(' ', array_filter([
-                $ganador->nombres,
-                $ganador->segundo_nombre,
-                $ganador->apellidos,
-                $ganador->segundo_apellido,
-            ])));
-
-            SolicitudCertificacionMedica::create([
-                'tipo_evento'      => 'ingreso',
-                'origen'           => 'reclutamiento',
-                'postulante_id'    => $ganador->id,
-                'convocatoria_id'  => $convocatoria->id,
-                'cedula_paciente'  => $ganador->cedula,
-                'nombres_paciente' => $nombreCompleto,
-                'correo_paciente'  => $ganador->correo,
-                'puesto_solicitado'=> $convocatoria->puesto?->cargo?->nombre,
-                'solicitado_por'   => $userId,
-                'estado'           => 'pendiente',
-                'fecha_limite'     => now()->addDays(7)->toDateString(),
-            ]);
-
-            DB::commit();
-            return $ganador->fresh();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        SolicitudCertificacionMedica::create([
+            'tipo_evento'       => 'ingreso',
+            'origen'            => 'reclutamiento',
+            'postulante_id'     => $ganador->id,
+            'convocatoria_id'   => $convocatoria->id,
+            'cedula_paciente'   => $ganador->cedula,
+            'nombres_paciente'  => $nombreCompleto,
+            'correo_paciente'   => $ganador->correo,
+            'puesto_solicitado' => $ganador->puestoEfectivo()?->cargo?->nombre,
+            'solicitado_por'    => $userId,
+            'estado'            => 'pendiente',
+            'fecha_limite'      => now()->addDays(7)->toDateString(),
+        ]);
     }
 }

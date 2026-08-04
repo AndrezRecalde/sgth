@@ -43,6 +43,8 @@ export function UnidadModal({ opened, onClose, unidad }: Props) {
             nombre:         (unidad as UnidadConRelaciones).nombre,
             tipo_unidad_id: (unidad as UnidadConRelaciones & { tipo_unidad_id?: number }).tipo_unidad_id ?? 0,
             unidad_padre_id: (unidad as UnidadConRelaciones & { unidad_padre_id?: number }).unidad_padre_id ?? null,
+            es_unidad_talento_humano: (unidad as UnidadConRelaciones).es_unidad_talento_humano ?? false,
+            es_maxima_autoridad: (unidad as UnidadConRelaciones).es_maxima_autoridad ?? false,
           } : undefined}
           onSubmit={handleSubmit}
           isPending={isPending}

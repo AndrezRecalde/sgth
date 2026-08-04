@@ -12,19 +12,20 @@ interface Props {
   onPageChange: (page: number) => void
   onView: (servidor: ServidorConRelaciones) => void
   onEdit: (servidor: ServidorConRelaciones) => void
+  onAccionPersonal: (servidor: ServidorConRelaciones) => void
   selectedRecords?: ServidorConRelaciones[]
   onSelectedRecordsChange?: (records: ServidorConRelaciones[]) => void
 }
 
 export function ServidorTable({
   data, isLoading, total, page,
-  onPageChange, onView, onEdit,
+  onPageChange, onView, onEdit, onAccionPersonal,
   selectedRecords, onSelectedRecordsChange,
 }: Props) {
   return (
     <SgthTable
       records={data}
-      columns={getServidorColumns({ onView, onEdit })}
+      columns={getServidorColumns({ onView, onEdit, onAccionPersonal })}
       fetching={isLoading}
       totalRecords={total || data.length || 0}
       recordsPerPage={15}

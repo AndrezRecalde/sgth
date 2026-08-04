@@ -26,6 +26,11 @@ class UnidadAdministrativa extends Model
         'unidad_padre_id',
         'nivel',
         'estado',
+        // Anclajes de los firmantes de las Acciones de Personal: el jefe de
+        // estas unidades es quien firma. A lo sumo una unidad con cada
+        // bandera (índices únicos parciales).
+        'es_unidad_talento_humano',
+        'es_maxima_autoridad',
     ];
 
     protected function casts(): array
@@ -34,6 +39,8 @@ class UnidadAdministrativa extends Model
             'estado' => 'boolean',
             'nivel'  => 'integer',
             'tipo_unidad_id' => 'string',
+            'es_unidad_talento_humano' => 'boolean',
+            'es_maxima_autoridad'      => 'boolean',
         ];
     }
 

@@ -61,8 +61,29 @@ final class EstructuraService implements EstructuraServiceInterface
             throw new ReglaNegocioException('Una unidad administrativa no puede ser hija de sí misma.');
         }
 
+        $this->liberarAnclajesDeFirma($id, $datos);
+
         $unidad->update($datos);
         return $unidad;
+    }
+
+    /**
+     * Solo puede haber una unidad de Talento Humano y una máxima autoridad
+     * (índices únicos parciales). Al marcar una nueva se desmarca la anterior,
+     * que es lo que espera quien reorganiza el orgánico: mover el anclaje, no
+     * toparse con un error de base de datos.
+     */
+    private function liberarAnclajesDeFirma(int $id, array $datos): void
+    {
+        foreach (['es_unidad_talento_humano', 'es_maxima_autoridad'] as $bandera) {
+            if (empty($datos[$bandera])) {
+                continue;
+            }
+
+            UnidadAdministrativa::where($bandera, true)
+                ->where('id', '!=', $id)
+                ->update([$bandera => false]);
+        }
     }
 
     public function eliminarUnidad(int $id): void

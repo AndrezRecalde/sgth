@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { use } from 'react'
 import {
   Stack, Group, Badge, Text, Button,
@@ -13,7 +13,7 @@ import {
   IconCalendar, IconBriefcase,
   IconCheck, IconPlus,
 } from '@tabler/icons-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -52,7 +52,8 @@ interface Props {
 export default function DetalleConvocatoriaPage({ params }: Props) {
   const { id } = use(params)
   const convocatoriaId = Number(id)
-  const router   = useRouter()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
   const publicar = usePublicarConvocatoria()
   const confirmarGanador = useConfirmarGanador(convocatoriaId)
   const [modalOpened,
@@ -67,6 +68,20 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
     useConvocatoriaDetalle(convocatoriaId)
   const { data: postulantes = [], isLoading: cargandoPostulantes } =
     usePostulantes(convocatoriaId)
+
+  // Reclutamiento Express navega aquí con ?inscribir=1 para abrir el modal
+  // de inscripción automáticamente. La guarda evita que abrirModal() +
+  // router.replace() se disparen más de una vez por carga de página si el
+  // efecto se re-ejecuta antes de que el replace complete.
+  const inscribirYaAbierto = useRef(false)
+  useEffect(() => {
+    if (inscribirYaAbierto.current) return
+    if (searchParams.get('inscribir') === '1') {
+      inscribirYaAbierto.current = true
+      abrirModal()
+      router.replace(`/sgth/reclutamiento/convocatorias/${convocatoriaId}`)
+    }
+  }, [searchParams, convocatoriaId, router, abrirModal])
 
   const getLabelEstado = (v: string) =>
     ESTADO_CONVOCATORIA_OPTIONS.find(o => o.value === v)?.label ?? v
@@ -423,6 +438,7 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
             <TabRanking
               convocatoriaId={convocatoriaId}
               estadoConvocatoria={convocatoria.estado}
+              vacantes={convocatoria.vacantes}
             />
           </Card>
         </Tabs.Panel>

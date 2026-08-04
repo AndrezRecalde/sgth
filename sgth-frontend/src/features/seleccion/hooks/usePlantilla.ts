@@ -116,12 +116,20 @@ export function useEliminarCriterioPlantilla(plantillaId: number) {
   })
 }
 
-export function useAplicarPlantilla(convocatoriaId: number) {
+// convocatoriaId viaja en las variables de mutate(), no como argumento del
+// hook: en el formulario de creación (Reclutamiento Express) el id recién
+// se conoce dentro del onSuccess de crear(), así que un valor fijado al
+// instanciar el hook quedaría en un closure obsoleto. El mismo hook sirve
+// para el flujo formal (SeleccionarPlantillaModal, id ya conocido de
+// antemano) y para el encadenamiento de creación.
+export function useAplicarPlantilla() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (plantillaId: number) =>
-      plantillaService.aplicarAConvocatoria(plantillaId, convocatoriaId),
-    onSuccess: () => {
+    mutationFn: ({ plantillaId, convocatoriaId }: {
+      plantillaId:    number
+      convocatoriaId: number
+    }) => plantillaService.aplicarAConvocatoria(plantillaId, convocatoriaId),
+    onSuccess: (_, { convocatoriaId }) => {
       notifications.show({
         title:   'Plantilla aplicada',
         message: 'Los criterios fueron copiados a la convocatoria.',

@@ -2,7 +2,7 @@
 
 import {
   TextInput, Select, Textarea,
-  NumberInput, Grid,
+  NumberInput, Grid, Switch, Divider, Text,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -41,6 +41,8 @@ export function UnidadForm({ initialValues, onSubmit }: Props) {
       unidad_padre_id:    initialValues?.unidad_padre_id    ?? null,
       mision:             initialValues?.mision             ?? '',
       presupuesto_total:  initialValues?.presupuesto_total  ?? null,
+      es_unidad_talento_humano: initialValues?.es_unidad_talento_humano ?? false,
+      es_maxima_autoridad:      initialValues?.es_maxima_autoridad      ?? false,
     },
   })
 
@@ -139,6 +141,49 @@ export function UnidadForm({ initialValues, onSubmit }: Props) {
                 onChange={(v) =>
                   field.onChange(typeof v === 'number' ? v : null)
                 }
+              />
+            )}
+          />
+        </Grid.Col>
+
+        <Grid.Col span={12}>
+          <Divider
+            my="xs"
+            label="Firmas de Acciones de Personal"
+            labelPosition="left"
+          />
+          <Text size="xs" c="dimmed" mb="xs">
+            El jefe de la unidad marcada es quien firma los documentos. Solo una
+            unidad puede llevar cada marca: al activarla aquí se desactiva en la
+            que la tuviera antes.
+          </Text>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Controller
+            name="es_maxima_autoridad"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Unidad de la máxima autoridad"
+                description="Su jefe firma como Autoridad Nominadora."
+                checked={!!field.value}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
+              />
+            )}
+          />
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Controller
+            name="es_unidad_talento_humano"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Unidad de Talento Humano"
+                description="Su jefe firma como Responsable de Talento Humano."
+                checked={!!field.value}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
               />
             )}
           />

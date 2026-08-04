@@ -37,22 +37,45 @@ class ContratoServidorObserver
     }
 
     /**
-     * Después de crear — sincronizar puede_marcar.
+     * Después de crear — sincronizar puede_marcar y dejar rastro en
+     * activity_log.
      */
     public function created(ContratoServidor $contrato): void
     {
         if ($this->esVigente($contrato)) {
             $this->sincronizarPuedeMarcar($contrato);
         }
+
+        activity()
+            ->performedOn($contrato)
+            ->withProperties([
+                'tipo_nombramiento' => $contrato->tipo_nombramiento?->value,
+                'estado'            => $contrato->estado?->value,
+            ])
+            ->event('created')
+            ->log('Contrato de servidor creado');
     }
 
     /**
-     * Después de actualizar — sincronizar puede_marcar.
+     * Después de actualizar — sincronizar puede_marcar y, si el contrato
+     * quedó cerrado (manual vía cerrar() o automático al activarse uno
+     * nuevo), dejar rastro en activity_log con quién y el motivo.
      */
     public function updated(ContratoServidor $contrato): void
     {
         if ($this->esVigente($contrato)) {
             $this->sincronizarPuedeMarcar($contrato);
+        }
+
+        if ($contrato->wasChanged('estado') && $contrato->estado?->value === 'terminado') {
+            activity()
+                ->performedOn($contrato)
+                ->withProperties([
+                    'motivo_fin' => $contrato->motivo_fin,
+                    'fecha_fin'  => optional($contrato->fecha_fin)->toDateString(),
+                ])
+                ->event('updated')
+                ->log('Contrato cerrado');
         }
     }
 
@@ -78,15 +101,31 @@ class ContratoServidorObserver
             $query->where('id', '!=', $excluirId);
         }
 
-        $count = $query->count();
+        // Update por instancia, no mass-update: un mass-update no dispara
+        // eventos de modelo, y con ellos se perdería tanto sincronizarPuedeMarcar()
+        // como la auditoría en activity_log de cada contrato cerrado
+        // automáticamente. El volumen aquí siempre es 0 o 1 en la práctica
+        // (un solo contrato vigente por servidor).
+        $contratos = $query->get();
 
-        if ($count > 0) {
-            $query->update(['estado' => 'terminado']);
-            Log::info(
-                "Terminados {$count} contratos vigentes " .
-                "del servidor {$servidorId} al activar nuevo contrato."
-            );
+        if ($contratos->isEmpty()) {
+            return;
         }
+
+        foreach ($contratos as $contrato) {
+            // Cierre, no edición libre: siempre queda fecha_fin + motivo_fin,
+            // igual que un cierre manual vía ContratoServidorService::cerrar().
+            $contrato->update([
+                'estado'     => 'terminado',
+                'fecha_fin'  => now()->toDateString(),
+                'motivo_fin' => 'Reemplazado automáticamente por nuevo contrato vigente.',
+            ]);
+        }
+
+        Log::info(
+            "Terminados {$contratos->count()} contratos vigentes " .
+            "del servidor {$servidorId} al activar nuevo contrato."
+        );
     }
 
     private function sincronizarPuedeMarcar(
@@ -94,9 +133,11 @@ class ContratoServidorObserver
     ): void {
         $puedeMarcar = (bool)($contrato->puede_marcar ?? true);
 
-        \App\Models\Expediente\Servidor::where(
-            'id', $contrato->servidor_id
-        )->update(['puede_marcar' => $puedeMarcar]);
+        // Update de instancia, no mass-update: mismo patrón que el resto
+        // de esta fase — para que dispare ServidorObserver (limpieza de
+        // caché incluida).
+        \App\Models\Expediente\Servidor::findOrFail($contrato->servidor_id)
+            ->update(['puede_marcar' => $puedeMarcar]);
 
         Log::info(
             "Servidor {$contrato->servidor_id}: " .

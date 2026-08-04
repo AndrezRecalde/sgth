@@ -34,7 +34,8 @@ import { useExtensionMutations } from "@/features/estructura/hooks/useExtensionM
 import type { UnidadConRelaciones, ExtensionConRelaciones } from "@/types/api";
 import { CargosTab } from "@/features/estructura/components/CargosTab";
 import { GruposOcupacionalesTab } from "@/features/estructura/components/GruposOcupacionalesTab";
-import { IconId, IconScale } from "@tabler/icons-react";
+import { IconId, IconScale, IconReceipt2 } from "@tabler/icons-react";
+import { PartidasPresupuestariasTab } from "@/features/estructura/components/PartidasPresupuestariasTab";
 
 export function EstructuraView() {
   const [search, setSearch] = useState("");
@@ -110,6 +111,9 @@ export function EstructuraView() {
           </Tabs.Tab>
           <Tabs.Tab value="grupos" leftSection={<IconScale size={16} />}>
             Grupos Ocupacionales
+          </Tabs.Tab>
+          <Tabs.Tab value="partidas" leftSection={<IconReceipt2 size={16} />}>
+            Partidas Presupuestarias
           </Tabs.Tab>
         </Tabs.List>
 
@@ -209,6 +213,10 @@ export function EstructuraView() {
 
         <Tabs.Panel value="grupos">
           <GruposOcupacionalesTab />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="partidas">
+          <PartidasPresupuestariasTab />
         </Tabs.Panel>
       </Tabs>
 

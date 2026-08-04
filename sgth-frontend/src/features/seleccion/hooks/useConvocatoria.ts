@@ -190,18 +190,31 @@ export function useCalificarPostulante(convocatoriaId: number) {
   })
 }
 
+/**
+ * Despacha uno o varios candidatos al dispensario. El backend acota la
+ * cantidad a las vacantes de la convocatoria; en los contenedores express no
+ * hay tope porque los aspirantes no compiten entre sí.
+ */
 export function useEnviarAlDispensario(convocatoriaId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (postulanteId: number) =>
+    mutationFn: (postulanteIds: number | number[]) =>
       api.post<ApiResponse<unknown>>(
         `/seleccion/convocatorias/${convocatoriaId}/declarar-ganador`,
-        { postulante_ganador_id: postulanteId }
+        {
+          postulante_ganador_ids: Array.isArray(postulanteIds)
+            ? postulanteIds
+            : [postulanteIds],
+        }
       ).then(r => r.data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      const cantidad = Array.isArray(variables) ? variables.length : 1
+
       notifications.show({
         title:   '📋 Enviado al Dispensario',
-        message: 'El candidato fue enviado al Dispensario Médico para evaluación. El ganador será confirmado tras el dictamen médico.',
+        message: cantidad === 1
+          ? 'El candidato fue enviado al Dispensario Médico para evaluación. El ganador será confirmado tras el dictamen médico.'
+          : `${cantidad} candidatos fueron enviados al Dispensario Médico. Cada uno se confirma tras su propio dictamen.`,
         color:   'blue',
         icon:    React.createElement(IconCheck, { size: 16 }),
         autoClose: 8000,

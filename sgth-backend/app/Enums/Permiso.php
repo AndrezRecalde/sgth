@@ -16,6 +16,12 @@ enum Permiso: string
     case VER_EXPEDIENTE_UNIDAD = 'ver-expediente-unidad';
     case VER_EXPEDIENTE_TODOS = 'ver-expediente-todos';
     case GESTIONAR_EXPEDIENTE = 'gestionar-expediente';
+    /**
+     * Carga inicial de servidores ya vinculados: crea la ficha y el contrato
+     * vigente sin Acción de Personal. Es temporal — se otorga para migrar lo
+     * que Talento Humano lleva en Excel y se revoca al terminar.
+     */
+    case VINCULAR_SERVIDOR_INICIAL = 'vincular-servidor-inicial';
     case CARGAR_DOCUMENTOS = 'cargar-documentos';
     case GESTIONAR_CARGAS_FAMILIARES = 'gestionar-cargas-familiares';
 

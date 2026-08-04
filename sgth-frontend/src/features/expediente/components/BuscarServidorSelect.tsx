@@ -15,18 +15,20 @@ interface Servidor {
   segundo_nombre?: string | null
   segundo_apellido?: string | null
   cedula?:         string
+  pendiente_vinculacion?: boolean | null
 }
 
 interface Props {
   label:     string
   value?:    number | null
   onChange:  (id: number | null) => void
+  onSelect?: (servidor: Servidor) => void
   required?: boolean
   error?:    string
 }
 
 export function BuscarServidorSelect({
-  label, value, onChange, required, error,
+  label, value, onChange, onSelect, required, error,
 }: Props) {
   const contained   = useContainedInput()
   const combobox    = useCombobox()
@@ -62,6 +64,7 @@ export function BuscarServidorSelect({
   const handleSelect = (srv: Servidor) => {
     setSearch(getNombreCompleto(srv))
     onChange(srv.id)
+    onSelect?.(srv)
     combobox.closeDropdown()
   }
 

@@ -7,6 +7,11 @@ export const unidadSchema = z.object({
   unidad_padre_id:    z.number().optional().nullable(),
   mision:             z.string().optional(),
   presupuesto_total:  z.number().optional().nullable(),
+  // Anclajes de los firmantes de las Acciones de Personal: el jefe de estas
+  // unidades es quien firma. Solo una unidad puede llevar cada bandera; el
+  // backend desmarca la anterior al mover el anclaje.
+  es_unidad_talento_humano: z.boolean().optional(),
+  es_maxima_autoridad:      z.boolean().optional(),
 })
 
 export type UnidadFormData = z.infer<typeof unidadSchema>

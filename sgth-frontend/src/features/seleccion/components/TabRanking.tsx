@@ -3,14 +3,14 @@
 import {
   Stack, Text, Group, Badge, Card,
   Button, ThemeIcon, Progress,
-  Alert, Skeleton,
+  Alert, Skeleton, Checkbox,
 } from '@mantine/core'
 import {
   IconTrophy, IconMedal, IconMedal2,
   IconInfoCircle, IconSend,
   IconCircleCheck,
 } from '@tabler/icons-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   usePostulantes,
   useEnviarAlDispensario,
@@ -21,6 +21,8 @@ import type { Postulante } from '../services/convocatoriaService'
 interface Props {
   convocatoriaId:      number
   estadoConvocatoria:  string
+  /** Tope de ganadores declarables. El backend es la autoridad. */
+  vacantes?:           number
 }
 
 function PosicionIcon({ pos }: { pos: number }) {
@@ -70,11 +72,20 @@ const ESTADO_LABELS: Record<string, string> = {
   incorporado:        '✅ Incorporado',
 }
 
-export function TabRanking({ convocatoriaId, estadoConvocatoria }: Props) {
+export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }: Props) {
   const { data: postulantes = [], isLoading } =
     usePostulantes(convocatoriaId)
   const enviar   = useEnviarAlDispensario(convocatoriaId)
   const confirmar = useConfirmarGanador(convocatoriaId)
+
+  const [seleccionados, setSeleccionados] = useState<number[]>([])
+
+  const alternar = (id: number) =>
+    setSeleccionados((previos) =>
+      previos.includes(id)
+        ? previos.filter((x) => x !== id)
+        : [...previos, id],
+    )
 
   const ranking = useMemo(() => {
     return [...postulantes]
@@ -171,6 +182,48 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria }: Props) {
             </Badge>
           </Group>
 
+          {puedeEnviar && seleccionados.length > 0 && (
+            <Card withBorder radius="md" padding="sm" bg="var(--mantine-color-blue-0)">
+              <Group justify="space-between" wrap="nowrap">
+                <div>
+                  <Text size="sm" fw={600}>
+                    {seleccionados.length} de {vacantes} vacante
+                    {vacantes !== 1 ? 's' : ''} seleccionada
+                    {seleccionados.length !== 1 ? 's' : ''}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    Cada candidato recibe su propia solicitud de certificación médica.
+                  </Text>
+                </div>
+                <Button
+                  size="xs"
+                  color="blue"
+                  leftSection={<IconSend size={13} />}
+                  loading={enviar.isPending}
+                  onClick={() => {
+                    const nombres = ranking
+                      .filter((p) => seleccionados.includes(p.id))
+                      .map((p) => `· ${getNombreCompleto(p)}`)
+                      .join('\n')
+
+                    if (confirm(
+                      `¿Enviar al Dispensario Médico a ${seleccionados.length} candidato(s)?\n\n` +
+                      `${nombres}\n\n` +
+                      `La convocatoria queda en espera de los dictámenes médicos. ` +
+                      `Los demás aprobados pasan a lista de espera.`
+                    )) {
+                      enviar.mutate(seleccionados, {
+                        onSuccess: () => setSeleccionados([]),
+                      })
+                    }
+                  }}
+                >
+                  Enviar al Dispensario
+                </Button>
+              </Group>
+            </Card>
+          )}
+
           {ranking.map((p, i) => {
             const total   = p.evaluacion?.puntaje_total ?? 0
             const aprueba = Number(total) >= 70
@@ -241,27 +294,19 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria }: Props) {
                     radius="xl"
                   />
 
-                  {esPrimero && aprueba && puedeEnviar && (
+                  {aprueba && puedeEnviar && (
                     <Group justify="flex-end">
-                      <Button
-                        size="xs"
-                        color="blue"
-                        leftSection={<IconSend size={13} />}
-                        loading={enviar.isPending}
-                        onClick={() => {
-                          if (confirm(
-                            `¿Enviar a ${getNombreCompleto(p)} al Dispensario Médico?\n\n` +
-                            `Esta acción:\n` +
-                            `· Envía solicitud de certificación médica\n` +
-                            `· La convocatoria queda en espera del dictamen médico\n\n` +
-                            `El ganador será confirmado DESPUÉS del dictamen de aptitud.`
-                          )) {
-                            enviar.mutate(p.id)
-                          }
-                        }}
-                      >
-                        Enviar al Dispensario
-                      </Button>
+                      <Checkbox
+                        label="Declarar ganador"
+                        checked={seleccionados.includes(p.id)}
+                        onChange={() => alternar(p.id)}
+                        // Sin cupo restante solo se puede desmarcar.
+                        disabled={
+                          !seleccionados.includes(p.id)
+                          && seleccionados.length >= vacantes
+                        }
+                        size="sm"
+                      />
                     </Group>
                   )}
                 </Stack>

@@ -15,7 +15,6 @@ import {
 } from "@mantine/core";
 import {
   IconUser,
-  IconBriefcase,
   IconSchool,
   IconUsers,
   IconCreditCard,
@@ -24,11 +23,9 @@ import {
   IconHeart,
   IconStethoscope,
   IconEdit,
-  IconHistory,
 } from "@tabler/icons-react";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { DatosPersonalesTab } from "./tabs/DatosPersonalesTab";
-import { LaboralTab } from "./tabs/LaboralTab";
 import { AcademicoTab } from "./tabs/AcademicoTab";
 import { FamiliaTab } from "./tabs/FamiliaTab";
 import { CuentasBancariasTab } from "./tabs/CuentasBancariasTab";
@@ -36,7 +33,6 @@ import { DocumentosTab } from "./tabs/DocumentosTab";
 import { DeclaracionesTab } from "./tabs/DeclaracionesTab";
 import { CondicionTab } from "./tabs/CondicionTab";
 import { SaludOcupacionalTab } from "./tabs/SaludOcupacionalTab";
-import { MovimientosTab } from "./tabs/MovimientosTab";
 import type { ServidorConRelaciones } from "@/types/api";
 
 interface Props {
@@ -90,7 +86,7 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
             <IconUser size={16} />
           </ThemeIcon>
           <Text fw={700} size="md">
-            Expediente Digital
+            Expediente — Datos personales
           </Text>
         </Group>
       }
@@ -173,12 +169,6 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
                 Personal
               </Tabs.Tab>
               <Tabs.Tab
-                value="laboral"
-                leftSection={<IconBriefcase size={13} />}
-              >
-                Laboral
-              </Tabs.Tab>
-              <Tabs.Tab
                 value="academico"
                 leftSection={<IconSchool size={13} />}
               >
@@ -225,19 +215,10 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
               >
                 Salud
               </Tabs.Tab>
-              <Tabs.Tab
-                value="movimientos"
-                leftSection={<IconHistory size={13} />}
-              >
-                Movimientos
-              </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="personal" pt="md">
               <DatosPersonalesTab servidor={servidor} />
-            </Tabs.Panel>
-            <Tabs.Panel value="laboral" pt="md">
-              <LaboralTab servidorId={servidorId} />
             </Tabs.Panel>
             <Tabs.Panel value="academico" pt="md">
               <AcademicoTab servidorId={servidorId} />
@@ -259,12 +240,6 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
             </Tabs.Panel>
             <Tabs.Panel value="salud" pt="md">
               <SaludOcupacionalTab servidorId={servidorId} />
-            </Tabs.Panel>
-            <Tabs.Panel value="movimientos" pt="md">
-              <MovimientosTab
-                servidorId={servidorId}
-                tipoNombramiento={servidor.contrato_vigente?.tipo_nombramiento}
-              />
             </Tabs.Panel>
           </Tabs>
         </Stack>

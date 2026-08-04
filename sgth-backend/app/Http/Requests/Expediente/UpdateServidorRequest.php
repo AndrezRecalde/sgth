@@ -4,7 +4,6 @@ namespace App\Http\Requests\Expediente;
 
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoDiscapacidad;
-use App\Enums\TipoNombramiento;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rule;
@@ -36,9 +35,15 @@ class UpdateServidorRequest extends FormRequest
             
             // Relaciones y datos base
             'regimen_laboral'          => ['sometimes', 'required', new Enum(RegimenLaboral::class)],
-            'unidad_administrativa_id' => 'sometimes|required|exists:unidades_administrativas,id',
-            'puesto_id'                => 'sometimes|required|exists:puestos,id',
-            
+            // puesto_id/unidad_administrativa_id NUNCA se editan aquí: la
+            // única vía es ContratoServidorService::sincronizarPuestoDesdeVinculo(),
+            // derivado siempre del ContratoServidor vigente. Un cambio de
+            // puesto/unidad se hace registrando un MovimientoPersonal
+            // (traslado/ascenso/traspaso/cambio_administrativo), no
+            // editando el Servidor directamente.
+            'unidad_administrativa_id' => ['prohibited'],
+            'puesto_id'                => ['prohibited'],
+
             // Sección A
             'fecha_nacimiento' => 'sometimes|required|date|before:today',
             'genero'           => 'sometimes|required|string|in:masculino,femenino,otro',
@@ -71,7 +76,12 @@ class UpdateServidorRequest extends FormRequest
             'tiene_enfermedad_catastrofica' => 'sometimes|required|boolean',
 
             // Sección F
-            'tipo_nombramiento'            => ['sometimes', 'required', new Enum(TipoNombramiento::class)],
+            // tipo_nombramiento tampoco se edita aquí, mismo razonamiento
+            // que puesto_id/unidad_administrativa_id: un cambio de
+            // modalidad pasa por creaVinculo()/modificaVinculo() al
+            // registrar el MovimientoPersonal correspondiente, nunca por
+            // un update() directo sobre Servidor.
+            'tipo_nombramiento'            => ['prohibited'],
             'numero_contrato'              => 'nullable|string|max:100',
             'fecha_ingreso_institucion'    => 'sometimes|required|date',
             'fecha_ingreso_sector_publico' => 'nullable|date',
@@ -93,7 +103,11 @@ class UpdateServidorRequest extends FormRequest
             'pais_origen.required_if'             => 'El país de origen es obligatorio para servidores extranjeros.',
             
             'cedula.regex'                     => 'La cédula debe contener exactamente 10 dígitos numéricos.',
-            
+
+            'puesto_id.prohibited'                => 'El puesto no se edita aquí: registre un movimiento de traslado, ascenso, traspaso o cambio administrativo.',
+            'unidad_administrativa_id.prohibited'  => 'La unidad administrativa no se edita aquí: registre un movimiento de traslado, ascenso, traspaso o cambio administrativo.',
+            'tipo_nombramiento.prohibited'         => 'El tipo de nombramiento no se edita aquí: registre el movimiento de personal correspondiente (ingreso, traslado, ascenso, traspaso o cambio administrativo).',
+
             'fecha_fin_ultimo_contrato.after'  => 'La fecha de fin del contrato debe ser posterior a la fecha de inicio del mismo.',
         ];
     }

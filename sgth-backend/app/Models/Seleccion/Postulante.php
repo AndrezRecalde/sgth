@@ -3,6 +3,8 @@
 namespace App\Models\Seleccion;
 
 use App\Enums\EstadoPostulante;
+use App\Models\Estructura\Puesto;
+use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Observers\Seleccion\PostulanteObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -21,6 +23,11 @@ class Postulante extends Model
 
     protected $fillable = [
         'convocatoria_id',
+        // En los contenedores express el puesto lo trae el aspirante: el
+        // contenedor agrupa por modalidad, no por vacante.
+        'puesto_id',
+        'fecha_inscripcion',
+        'servidor_id',
         'cedula',
         'nombres',
         'segundo_nombre',
@@ -45,12 +52,36 @@ class Postulante extends Model
         return [
             'estado'              => EstadoPostulante::class,
             'fecha_nacimiento'    => 'date',
+            'fecha_inscripcion'   => 'date',
         ];
+    }
+
+    public function puesto(): BelongsTo
+    {
+        return $this->belongsTo(Puesto::class);
+    }
+
+    /**
+     * Puesto al que aspira: el propio en los contenedores express, el de la
+     * convocatoria en un concurso formal.
+     */
+    public function puestoEfectivo(): ?Puesto
+    {
+        return $this->puesto ?? $this->convocatoria?->puesto;
     }
 
     public function convocatoria(): BelongsTo
     {
         return $this->belongsTo(Convocatoria::class);
+    }
+
+    /**
+     * Poblado en la inscripción (PostulanteController::store()) cuando la
+     * cédula ya coincide con un Servidor existente — candidato interno.
+     */
+    public function servidor(): BelongsTo
+    {
+        return $this->belongsTo(Servidor::class);
     }
 
     public function evaluacion(): HasOne

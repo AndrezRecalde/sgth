@@ -19,6 +19,26 @@ export function esLosep(tipoNombramiento?: string | null): boolean {
     && tipoNombramiento !== 'servicios_profesionales'
 }
 
+/**
+ * ¿La R.M.U. se teclea o se hereda?
+ *
+ * En LOSEP la fija el grupo ocupacional del puesto, así que el campo va en
+ * solo lectura: escribir un monto distinto crearía una diferencia con la
+ * escala vigente que nadie podría justificar después. En Código del Trabajo y
+ * Servicios Profesionales sí se negocia en el contrato, y ahí el campo tiene
+ * que estar abierto.
+ *
+ * Excepción: si el puesto LOSEP no tiene grupo ocupacional asignado no hay
+ * nada que heredar, y bloquear el campo dejaría la acción imposible de
+ * completar. En ese caso se abre y se avisa por qué.
+ */
+export function remuneracionEsHeredada(
+  tipoNombramiento?: string | null,
+  rmuDelPuesto?: number | null,
+): boolean {
+  return esLosep(tipoNombramiento) && rmuDelPuesto != null && rmuDelPuesto > 0
+}
+
 export type AccionPersonalTipo =
   | 'cambio_denominacion'
   | 'prestacion_servicios'

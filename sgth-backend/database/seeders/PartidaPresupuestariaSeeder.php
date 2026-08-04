@@ -32,11 +32,21 @@ class PartidaPresupuestariaSeeder extends Seeder
         ];
 
         foreach ($partidas as $partida) {
-            PartidaPresupuestaria::firstOrCreate(
+            $grupoGasto = $partida['grupo_gasto'] ?? 'Gastos en Personal';
+
+            // Disponibilidad presupuestaria verificada solo para el grupo
+            // de Gastos en Personal (las que respaldan remuneración,
+            // ascensos, subrogaciones): son las que el guard de fase 2
+            // necesita encontrar "disponibles" en un entorno de desarrollo
+            // limpio para que el flujo económico sea probable sin pasos
+            // manuales. Viáticos (grupo 53) queda sin disponibilidad para
+            // seguir probando también la ruta de bloqueo.
+            PartidaPresupuestaria::updateOrCreate(
                 ['codigo' => $partida['codigo']],
                 array_merge($partida, [
-                    'grupo_gasto' => $partida['grupo_gasto'] ?? 'Gastos en Personal',
+                    'grupo_gasto' => $grupoGasto,
                     'activo'      => true,
+                    'disponible'  => $grupoGasto === 'Gastos en Personal',
                 ])
             );
         }

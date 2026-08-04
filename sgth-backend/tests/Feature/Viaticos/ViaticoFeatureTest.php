@@ -28,7 +28,6 @@ beforeEach(function () {
     HandoffErp::unguard();
 
     $this->servidorUser = User::create([
-        'name' => 'Usuario Normal',
         'email' => 'normal@example.com',
         'usuario_ti' => 'normal',
         'password' => bcrypt('123456'),
