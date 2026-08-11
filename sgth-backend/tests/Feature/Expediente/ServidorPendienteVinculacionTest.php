@@ -84,3 +84,55 @@ test('deja de estar pendiente_vinculacion después de que un ingreso llega a reg
     expect($despues->json('datos.pendiente_vinculacion'))->toBeFalse();
     expect($despues->json('datos.contrato_vigente.puesto_id'))->toBe($this->puesto->id);
 });
+
+// ── Filtro del listado ──────────────────────────────────────────
+
+/**
+ * Sin poder listarlos, los servidores a medio registrar quedan olvidados entre
+ * cientos de expedientes: existen en el sistema pero no están contratados, así
+ * que no salen en nómina ni en asistencia y nadie se entera.
+ */
+test('el listado filtra las fichas sin vínculo laboral', function () {
+    $sinVinculo = app(ExpedienteService::class)->crearServidorBasico([
+        'cedula' => '2222222222', 'nombre' => 'Sin', 'apellido' => 'Vinculo',
+        'fecha_nacimiento' => '1990-01-01', 'genero' => 'masculino', 'estado_civil' => 'soltero',
+        'es_extranjero' => false, 'tiene_discapacidad' => false, 'tiene_enfermedad_catastrofica' => false,
+    ]);
+
+    $conVinculo = app(ExpedienteService::class)->crearServidorBasico([
+        'cedula' => '3333333333', 'nombre' => 'Con', 'apellido' => 'Vinculo',
+        'fecha_nacimiento' => '1990-01-01', 'genero' => 'masculino', 'estado_civil' => 'soltero',
+        'es_extranjero' => false, 'tiene_discapacidad' => false, 'tiene_enfermedad_catastrofica' => false,
+    ]);
+
+    \App\Models\Expediente\ContratoServidor::create([
+        'servidor_id'              => $conVinculo->id,
+        'tipo_nombramiento'        => 'nombramiento_permanente',
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id'                => $this->puesto->id,
+        'fecha_inicio'             => '2020-01-01',
+        'estado'                   => 'vigente',
+    ]);
+
+    $pendientes = app(ExpedienteService::class)
+        ->listarServidores(['pendiente_vinculacion' => true]);
+
+    expect($pendientes->pluck('id')->all())->toBe([$sinVinculo->id]);
+
+    // Y el valor contrario devuelve exactamente los que sí lo tienen: 'false'
+    // es un filtro válido, no la ausencia de filtro.
+    $vinculados = app(ExpedienteService::class)
+        ->listarServidores(['pendiente_vinculacion' => false]);
+
+    expect($vinculados->pluck('id')->all())->toBe([$conVinculo->id]);
+});
+
+test('sin el filtro se listan todos', function () {
+    app(ExpedienteService::class)->crearServidorBasico([
+        'cedula' => '4444444444', 'nombre' => 'Uno', 'apellido' => 'Cualquiera',
+        'fecha_nacimiento' => '1990-01-01', 'genero' => 'masculino', 'estado_civil' => 'soltero',
+        'es_extranjero' => false, 'tiene_discapacidad' => false, 'tiene_enfermedad_catastrofica' => false,
+    ]);
+
+    expect(app(ExpedienteService::class)->listarServidores([])->total())->toBe(1);
+});

@@ -19,6 +19,11 @@ const EN_FUNCIONES_OPTIONS = [
   { value: 'no', label: 'Inactivos' },
 ]
 
+const VINCULO_OPTIONS = [
+  { value: 'con', label: 'Con vínculo registrado' },
+  { value: 'sin', label: 'Pendientes de vinculación' },
+]
+
 const TIPO_NOMBRAMIENTO_OPTIONS = [
   { value: 'nombramiento_permanente',      label: 'Nombramiento Permanente' },
   { value: 'nombramiento_provisional',     label: 'Nombramiento Provisional' },
@@ -42,11 +47,16 @@ interface Props {
   onUnidadChange?:        (v: number | null) => void
   onTipoNombramientoChange?: (v: string | null) => void
   onAnioIngresoChange?:   (v: number | null) => void
+  /** Fichas sin vínculo laboral registrado. */
+  onPendienteVinculacionChange?: (v: boolean | null) => void
+  /** Se controla desde fuera para que el contador pueda activar el filtro. */
+  pendienteVinculacion?: boolean | null
 }
 
 export function ServidorToolbar({
   onSearch, onContratoEstadoChange, onEnFuncionesChange,
   onUnidadChange, onTipoNombramientoChange, onAnioIngresoChange,
+  onPendienteVinculacionChange, pendienteVinculacion,
 }: Props) {
   const contained    = useContainedInput()
   const { isMobile } = useMobileBreakpoint()
@@ -81,6 +91,20 @@ export function ServidorToolbar({
           clearable
           {...contained}
           style={{ minWidth: 180 }}
+        />
+      )}
+      {onPendienteVinculacionChange && (
+        <Select
+          label="Vínculo laboral"
+          placeholder="Todos"
+          data={VINCULO_OPTIONS}
+          value={pendienteVinculacion === null || pendienteVinculacion === undefined
+            ? null
+            : (pendienteVinculacion ? 'sin' : 'con')}
+          onChange={(v) => onPendienteVinculacionChange(v === null ? null : v === 'sin')}
+          clearable
+          {...contained}
+          style={{ minWidth: 200 }}
         />
       )}
       <Select

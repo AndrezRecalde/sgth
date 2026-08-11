@@ -24,6 +24,12 @@ interface Props {
   opened:   boolean
   onClose:  () => void
   servidor?: ServidorConRelaciones | null
+  /**
+   * Se dispara con la ficha recién creada. Registrar la ficha es solo la
+   * primera mitad del alta: sin vínculo la persona existe pero no está
+   * contratada, y quien la creó es quien mejor puede continuar en ese momento.
+   */
+  onCreado?: (servidor: ServidorConRelaciones) => void
 }
 
 const BLANK_FORM_VALUES: ServidorBasicoFormData = {
@@ -107,7 +113,7 @@ function mapServidorToLaboralValues(servidor: ServidorConRelaciones): ServidorLa
   }
 }
 
-export function ServidorModal({ opened, onClose, servidor }: Props) {
+export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
   const { isMobile }      = useMobileBreakpoint()
   const { crear, editar } = useServidorMutations()
   const isEditing         = !!servidor
@@ -165,7 +171,12 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
           })
         }
       } else {
-        await crear.mutateAsync(values as never)
+        const creado = await crear.mutateAsync(values as never)
+        handleClose()
+        // El vínculo se registra aparte: se ofrece continuar ahí mismo en vez
+        // de dejar la ficha a medias esperando que alguien la encuentre.
+        if (creado) onCreado?.(creado as unknown as ServidorConRelaciones)
+        return
       }
       handleClose()
     } catch {
@@ -179,7 +190,7 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
     <Modal
       opened={opened}
       onClose={handleClose}
-      title={isEditing ? 'Editar datos del servidor' : 'Registrar servidor'}
+      title={isEditing ? 'Editar datos del servidor' : 'Registrar ficha del servidor'}
       size="xl"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
@@ -224,7 +235,7 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
                 color="emerald"
                 variant="light"
               >
-                {isEditing ? 'Actualizar' : 'Registrar servidor'}
+                {isEditing ? 'Actualizar' : 'Guardar ficha y continuar'}
               </Button>
             )}
           </Group>

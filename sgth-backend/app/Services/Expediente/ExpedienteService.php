@@ -295,6 +295,22 @@ class ExpedienteService implements ExpedienteServiceInterface
             $query->where('estado', true)->whereHas('contratoVigente');
         }
 
+        // Fichas creadas a las que todavía no se les registró el vínculo.
+        // Es un estado legítimo pero transitorio: la persona existe en el
+        // sistema y no está contratada. Sin poder listarlas, quedan olvidadas
+        // a medio registrar entre cientos de expedientes.
+        //
+        // Se comprueba con isset y no con empty: 'false' es un valor válido
+        // —"solo los que sí tienen vínculo"— y empty() lo confundiría con no
+        // haber pedido filtro.
+        if (isset($filtros['pendiente_vinculacion']) && $filtros['pendiente_vinculacion'] !== '') {
+            $sinVinculo = filter_var($filtros['pendiente_vinculacion'], FILTER_VALIDATE_BOOLEAN);
+
+            $sinVinculo
+                ? $query->doesntHave('contratoVigente')
+                : $query->has('contratoVigente');
+        }
+
         if (!empty($filtros['tipo_nombramiento'])) {
             $query->where('tipo_nombramiento',
                 $filtros['tipo_nombramiento']);

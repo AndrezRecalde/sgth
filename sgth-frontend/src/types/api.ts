@@ -306,6 +306,8 @@ export type ServidorParams = {
   contrato_estado?: EstadoContrato
   /** Atajo: activo y con contrato vigente. */
   en_funciones?: boolean
+  /** Fichas creadas a las que aún no se les registró el vínculo laboral. */
+  pendiente_vinculacion?: boolean
   tipo_nombramiento?: TipoNombramiento
   anio_ingreso?: number
 }

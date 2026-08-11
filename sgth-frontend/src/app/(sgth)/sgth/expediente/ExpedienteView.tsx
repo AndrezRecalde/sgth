@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Button, Group } from '@mantine/core'
+import { Alert, Box, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle } from '@tabler/icons-react'
+import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle, IconAlertTriangle } from '@tabler/icons-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ServidorToolbar } from '@/features/expediente/components/ServidorToolbar'
@@ -15,6 +15,8 @@ import { AccionPersonalDrawer } from '@/features/expediente/components/AccionPer
 import { SolicitarCertificacionLoteModal } from '@/features/expediente/components/SolicitarCertificacionLoteModal'
 import { VinculacionInicialModal } from '@/features/expediente/components/VinculacionInicialModal'
 import { usePuedeVincularInicial } from '@/features/expediente/hooks/useVinculacionInicial'
+import { usePendientesVinculacion } from '@/features/expediente/hooks/usePendientesVinculacion'
+import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
 import { useServidores } from '@/features/expediente/hooks/useServidores'
 import { expedienteService } from '@/features/expediente/services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
@@ -32,6 +34,7 @@ export function ExpedienteView() {
   const [unidadId, setUnidadId]             = useState<number | null>(null)
   const [tipoNombramiento, setTipoNombramiento] = useState<string | null>(null)
   const [anioIngreso, setAnioIngreso]       = useState<number | null>(null)
+  const [pendienteVinculacion, setPendienteVinculacion] = useState<boolean | null>(null)
   const [exportando, setExportando]         = useState<'excel' | 'pdf' | null>(null)
   const [selectedRecords, setSelectedRecords] =
     useState<ServidorConRelaciones[]>([])
@@ -48,6 +51,13 @@ export function ExpedienteView() {
   const [accionPersonalServidor, setAccionPersonalServidor] =
     useState<ServidorConRelaciones | null>(null)
 
+  // Ficha recién creada, para encadenar su Ingreso y Vinculación.
+  const [servidorReciente, setServidorReciente] =
+    useState<ServidorConRelaciones | null>(null)
+  const [ingresoOpened, { open: abrirIngreso, close: cerrarIngreso }] = useDisclosure(false)
+
+  const { data: pendientes } = usePendientesVinculacion()
+
   const filtros = {
     search:            search || undefined,
     contrato_estado:   (contratoEstado as EstadoContrato) || undefined,
@@ -55,6 +65,7 @@ export function ExpedienteView() {
     unidad_administrativa_id: unidadId ?? undefined,
     tipo_nombramiento: (tipoNombramiento as TipoNombramiento) || undefined,
     anio_ingreso:      anioIngreso ?? undefined,
+    pendiente_vinculacion: pendienteVinculacion ?? undefined,
   }
 
   const { data, isLoading } = useServidores({
@@ -158,15 +169,43 @@ export function ExpedienteView() {
             Vinculación inicial
           </Button>
         )}
+        {/* "Registrar ficha" y no "Nuevo servidor": esto crea a la persona,
+            no la contrata. El vínculo se registra en el paso siguiente. */}
         <Button
           color="emerald"
           variant="light"
           leftSection={<IconUserPlus size={16} />}
           onClick={handleNuevo}
         >
-          Nuevo servidor
+          Registrar ficha
         </Button>
       </Group>
+
+      {/* Nadie debería quedar a medio registrar sin que se note. */}
+      {(pendientes ?? 0) > 0 && pendienteVinculacion !== true && (
+        <Alert
+          variant="light"
+          color="yellow"
+          icon={<IconAlertTriangle size={16} />}
+          mb="md"
+          title={`${pendientes} ficha(s) sin vínculo laboral registrado`}
+        >
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="sm">
+              Existen en el sistema pero no están contratadas: no aparecen en
+              nómina ni en asistencia hasta que se registre su Ingreso y Vinculación.
+            </Text>
+            <Button
+              size="xs"
+              variant="light"
+              color="yellow"
+              onClick={() => { setPendienteVinculacion(true); setPage(1) }}
+            >
+              Ver quiénes
+            </Button>
+          </Group>
+        </Alert>
+      )}
 
       <ServidorToolbar
         onSearch={setSearch}
@@ -175,18 +214,20 @@ export function ExpedienteView() {
         onUnidadChange={setUnidadId}
         onTipoNombramientoChange={setTipoNombramiento}
         onAnioIngresoChange={setAnioIngreso}
+        onPendienteVinculacionChange={(v) => { setPendienteVinculacion(v); setPage(1) }}
+        pendienteVinculacion={pendienteVinculacion}
       />
 
       {!isLoading && servidores.length === 0 ? (
         <EmptyState
           icon={IconFolder}
           title="No hay servidores registrados"
-          description="Comienza registrando el primer servidor del GAD."
+          description="Comience registrando la ficha del primer servidor. El vínculo laboral se registra después, con su Acción de Personal de Ingreso."
           action={
             <Button color="emerald" variant="light"
               leftSection={<IconUserPlus size={14} />}
               onClick={handleNuevo}>
-              Nuevo servidor
+              Registrar ficha
             </Button>
           }
         />
@@ -210,7 +251,20 @@ export function ExpedienteView() {
         opened={modalOpened}
         onClose={() => { setEditServidor(null); closeModal() }}
         servidor={editServidor}
+        onCreado={(creado) => { setServidorReciente(creado); abrirIngreso() }}
       />
+
+      {/* Segundo paso del alta ordinaria: el vínculo con su Acción de
+          Personal. Se abre encadenado para no dejar la ficha a medias. */}
+      {servidorReciente && (
+        <MovimientoModal
+          opened={ingresoOpened}
+          onClose={() => { setServidorReciente(null); cerrarIngreso() }}
+          servidorId={Number(servidorReciente.id)}
+          tipoFijo="ingreso"
+          titulo={`Ingreso y Vinculación — ${[servidorReciente.apellido, servidorReciente.nombre].filter(Boolean).join(' ')}`}
+        />
+      )}
       <ServidorDetail
         opened={detailOpened}
         onClose={closeDetail}
