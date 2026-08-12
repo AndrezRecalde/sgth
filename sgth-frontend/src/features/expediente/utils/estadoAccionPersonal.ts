@@ -33,9 +33,13 @@ export const TRANSICIONES: Record<EstadoAccionPersonal, EstadoAccionPersonal[]> 
  * Movimientos históricos genéricos: registran un hecho en el expediente pero
  * no son actos administrativos, así que no tienen documento imprimible. El
  * backend los rechaza igual; esto evita ofrecer un botón que va a fallar.
+ *
+ * La subrogación salió de esta lista: sí es un acto formal (Art. 21 del
+ * Reglamento a la LOSEP) y se imprime con el mismo formato de situación actual
+ * y propuesta que las demás. Espeja TipoMovimientoPersonal::tieneDocumentoImprimible().
  */
 const SIN_DOCUMENTO = [
-  'novedad_contrato', 'cambio_puesto', 'egreso', 'subrogacion', 'cambio_regimen',
+  'novedad_contrato', 'cambio_puesto', 'egreso', 'cambio_regimen',
 ]
 
 export function puedeDescargarPdf(

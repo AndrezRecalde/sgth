@@ -13,7 +13,7 @@ import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
 import {
   ESTADO_COLORS, ESTADO_LABELS,
 } from '../utils/estadoAccionPersonal'
-import { SUBTIPO_LABELS, TIPO_LABELS } from '../utils/taxonomiaAccionPersonal'
+import { SUBTIPO_LABELS, etiquetaTipoMovimiento } from '../utils/taxonomiaAccionPersonal'
 import type { EstadoAccionPersonal, MovimientoPersonal } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_LABELS) as EstadoAccionPersonal[])
@@ -70,7 +70,7 @@ export function BandejaAccionesPersonal() {
       render: (m) => (
         <div>
           <Text size="sm">
-            {TIPO_LABELS[m.tipo_movimiento as keyof typeof TIPO_LABELS] ?? m.tipo_movimiento}
+            {etiquetaTipoMovimiento(m.tipo_movimiento)}
           </Text>
           {m.subtipo_movimiento && (
             <Text size="xs" c="dimmed">

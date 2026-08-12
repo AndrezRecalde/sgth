@@ -17,27 +17,10 @@ import {
   ESTADO_COLORS, ESTADO_LABELS, puedeDescargarPdf,
 } from '../../utils/estadoAccionPersonal'
 import {
-  SUBTIPO_LABELS, TIPO_LABELS as TIPOS_VIGENTES,
+  SUBTIPO_LABELS, etiquetaTipoMovimiento,
 } from '../../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
-
-/**
- * Tipos históricos genéricos que ya no se ofrecen al registrar, pero siguen
- * apareciendo en el historial; los vigentes vienen de la taxonomía compartida.
- */
-const TIPO_LABELS: Record<string, string> = {
-  traslado: 'Traslado',
-  subrogacion: 'Subrogación',
-  comision_servicios: 'Comisión de Servicios',
-  cambio_regimen: 'Cambio de Régimen',
-  cambio_puesto: 'Cambio de Puesto',
-  egreso: 'Egreso',
-  novedad_contrato: 'Novedad de Contrato',
-  traspaso: 'Traspaso',
-  destitucion: 'Destitución',
-  ...TIPOS_VIGENTES,
-}
 
 function formatFecha(fecha?: string | null): string {
   if (!fecha) return '—'
@@ -88,7 +71,7 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
       render: ({ tipo_movimiento, subtipo_movimiento }) => (
         <div>
           <Text size="sm" fw={500}>
-            {TIPO_LABELS[tipo_movimiento] ?? tipo_movimiento}
+            {etiquetaTipoMovimiento(tipo_movimiento)}
           </Text>
           {subtipo_movimiento && (
             <Text size="xs" c="dimmed">

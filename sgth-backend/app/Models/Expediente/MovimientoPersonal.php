@@ -292,6 +292,19 @@ class MovimientoPersonal extends Model
     }
 
     /**
+     * La subrogación o encargo que esta acción respalda, si es de ese tipo.
+     *
+     * La clave vive del lado de subrogaciones porque la subrogación existe
+     * primero y la acción se crea para respaldarla. Desde aquí hace falta para
+     * el documento impreso: ambos comparten tipo_movimiento 'subrogacion' y
+     * solo esta fila dice cuál de los dos es.
+     */
+    public function subrogacion(): HasOne
+    {
+        return $this->hasOne(Subrogacion::class, 'movimiento_personal_id');
+    }
+
+    /**
      * Solicitud de ficha de salud ocupacional asociada, cuando la acción
      * requiere dictamen médico. En el flujo de reclutamiento existe desde
      * antes que el movimiento; en el resto se crea al suscribirse.

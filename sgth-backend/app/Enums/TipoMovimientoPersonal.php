@@ -184,6 +184,24 @@ enum TipoMovimientoPersonal: string
     }
 
     /**
+     * Tipos que producen el documento impreso de Acción de Personal.
+     *
+     * Coincide con esAccionDePersonal() salvo por la subrogación, que queda
+     * fuera de aquella lista por un motivo de construcción —se crea con su
+     * propio servicio y no con el genérico, así que no necesita sus reglas de
+     * elegibilidad— y no porque no sea un acto formal. Lo es: el Art. 21 del
+     * Reglamento a la LOSEP la trata como tal, pasa por el flujo guardado,
+     * exige dictamen presupuestario y sella firmantes.
+     *
+     * Los movimientos históricos genéricos —novedad de contrato, cambio de
+     * puesto— siguen sin documento: son bitácora del expediente, no actos.
+     */
+    public function tieneDocumentoImprimible(): bool
+    {
+        return $this->esAccionDePersonal() || $this === self::SUBROGACION;
+    }
+
+    /**
      * Tipos que comprometen presupuesto (Art. 105 LOSEP): la transición a
      * SUSCRITA exige dictamen_presupuestario_ref y disponibilidad
      * verificada en la partida del puesto involucrado.

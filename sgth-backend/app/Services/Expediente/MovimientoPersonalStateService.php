@@ -3,6 +3,7 @@
 namespace App\Services\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\TipoMovimientoPersonal;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Expediente\MovimientoPersonal;
@@ -14,6 +15,7 @@ class MovimientoPersonalStateService
     public function __construct(
         private readonly ContratoServidorService $contratoServidorService,
         private readonly FirmanteAccionPersonalService $firmanteService,
+        private readonly SubrogacionService $subrogacionService,
     ) {
     }
 
@@ -46,6 +48,7 @@ class MovimientoPersonalStateService
                 EstadoAccionPersonal::SUSCRITA   => $this->aplicarSuscrita($movimiento, $datos),
                 EstadoAccionPersonal::REGISTRADA => $this->aplicarRegistro($movimiento, $datos),
                 EstadoAccionPersonal::NOTIFICADA => $this->aplicarNotificacion($movimiento, $datos),
+                EstadoAccionPersonal::ANULADA    => $this->aplicarAnulacion($movimiento, $datos),
                 default                          => $this->aplicarDictamenSiViene($movimiento, $datos),
             };
 
@@ -208,6 +211,29 @@ class MovimientoPersonalStateService
             $this->contratoServidorService->reestructurarDesdeMovimiento($movimiento);
         } elseif ($movimiento->subtipoEfectivo()?->cierraVinculo()) {
             $this->cerrarVinculo($movimiento);
+        }
+
+        // La subrogación no crea vínculo: reemplaza temporalmente al titular
+        // en su puesto. Recién aquí surte efecto, y con ella la facultad de
+        // firmar que FirmanteAccionPersonalService le reconoce al subrogante.
+        if ($tipo === TipoMovimientoPersonal::SUBROGACION) {
+            $this->subrogacionService->activarPorMovimiento($movimiento);
+        }
+    }
+
+    /**
+     * Anular la acción arrastra lo que dependía de ella. Hoy solo la
+     * subrogación: sin acto que la respalde no puede seguir vigente, ni su
+     * subrogante conservar la firma.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function aplicarAnulacion(MovimientoPersonal $movimiento, array $datos): void
+    {
+        $this->aplicarDictamenSiViene($movimiento, $datos);
+
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION) {
+            $this->subrogacionService->cancelarPorMovimiento($movimiento);
         }
     }
 

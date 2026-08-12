@@ -365,6 +365,16 @@ export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | '
   // unidad marcada es quien firma. Solo una unidad lleva cada bandera.
   es_unidad_talento_humano?: boolean
   es_maxima_autoridad?: boolean
+  /** Quién ejerce hoy por subrogación o encargo en esta unidad. El organigrama
+   *  muestra al titular del puesto; esto dice cuándo no es quien despacha. */
+  subrogaciones_vigentes?: {
+    id: number
+    tipo?: TipoSubrogacion | null
+    subrogante?: string | null
+    puesto?: string | null
+    fecha_inicio?: string | null
+    fecha_fin?: string | null
+  }[]
 }
 
 export type ExtensionConRelaciones = {
@@ -583,7 +593,9 @@ export type MotivoSubrogacion =
   | 'licencia'
   | 'encargo_vacante'
   | 'otro'
-export type EstadoSubrogacion = 'activa' | 'finalizada' | 'cancelada'
+/** `pendiente`: registrada, pero su Acción de Personal aún no se registra —
+ *  todavía no surte efecto ni traslada la facultad de firmar. */
+export type EstadoSubrogacion = 'pendiente' | 'activa' | 'finalizada' | 'cancelada'
 
 export type Subrogacion = {
   id: number
@@ -600,11 +612,19 @@ export type Subrogacion = {
   estado: EstadoSubrogacion
   observacion?: string | null
   registrado_por?: number | null
+  movimiento_personal_id?: number | null
   created_at?: string
   subrogante?: { id: number; nombre?: string; apellido?: string; cedula?: string } | null
   subrogado?: { id: number; nombre?: string; apellido?: string; cedula?: string } | null
   unidad_administrativa?: { id: number; nombre?: string } | null
   puesto_subrogado?: { id: number; cargo?: { nombre?: string } | null } | null
+  /** La Acción de Personal que la respalda: mientras no se registre, la
+   *  subrogación queda pendiente. */
+  movimiento_personal?: {
+    id: number
+    estado?: string | null
+    codigo_registro?: string | null
+  } | null
 }
 
 export type SubrogacionParams = {
@@ -793,9 +813,23 @@ export type PuestoConRelaciones = {
     id: number
     grado_codigo?: string
     grupo?: string
+    denominacion_generica?: string | null
     rmu?: number
     regimen?: string
   } | null
+  partida_presupuestaria?: {
+    id: number
+    codigo?: string | null
+    descripcion?: string | null
+    disponible?: boolean
+  } | null
+  /** Quién ocupa el puesto hoy. Lista vacía = vacante, y entonces la figura
+   *  que corresponde es el encargo, no la subrogación. */
+  ocupantes?: {
+    id: number
+    nombre?: string | null
+    cedula?: string | null
+  }[]
 }
 
 // ── Cargos ───────────────────────────────────────

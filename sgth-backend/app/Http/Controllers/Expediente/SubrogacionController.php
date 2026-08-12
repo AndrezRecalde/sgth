@@ -75,6 +75,17 @@ class SubrogacionController extends Controller
         return ApiResponse::ok($activas, 'Subrogaciones activas');
     }
 
+    public function listarVigentes(Request $request): JsonResponse
+    {
+        $this->authorize('verAny', Subrogacion::class);
+
+        $vigentes = $this->subrogacionService->listarVigentes(
+            $request->only(['unidad_administrativa_id', 'tipo'])
+        );
+
+        return ApiResponse::ok($vigentes, 'Subrogaciones pendientes y activas');
+    }
+
     public function listarPorServidor(int $servidorId): JsonResponse
     {
         $this->authorize('verAny', Subrogacion::class);

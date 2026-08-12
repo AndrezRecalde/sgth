@@ -83,6 +83,11 @@ test('puede obtener el organigrama jerárquico completo', function () {
     $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/v1/estructura/organigrama');
 
     // 4. Validar respuestas y anidamientos
+    //
+    // El organigrama devuelve el conteo de puestos, no la lista: es un árbol
+    // que se pinta completo de una sola vez, y arrastrar cada puesto en cada
+    // nivel lo vuelve una respuesta pesada para mostrar un número. Quien
+    // necesita los puestos de una unidad los pide por su propio endpoint.
     $response->assertStatus(200)
         ->assertJsonStructure([
             'exito',
@@ -92,31 +97,22 @@ test('puede obtener el organigrama jerárquico completo', function () {
                     'id',
                     'codigo',
                     'nombre',
+                    'puestos_count',
+                    'subrogaciones_vigentes',
                     'hijos' => [
                         '*' => [
                             'id',
                             'nombre',
+                            'puestos_count',
                             'hijos' => [
                                 '*' => [
                                     'id',
                                     'nombre',
-                                    'puestos' => [
-                                        '*' => [
-                                            'id',
-                                            'denominacion',
-                                            'es_jefe'
-                                        ]
-                                    ]
+                                    'puestos_count',
                                 ]
                             ]
                         ]
                     ],
-                    'puestos' => [
-                        '*' => [
-                            'id',
-                            'denominacion'
-                        ]
-                    ]
                 ]
             ]
         ])
@@ -124,8 +120,8 @@ test('puede obtener el organigrama jerárquico completo', function () {
         ->assertJsonPath('datos.0.codigo', 'GAD-01')
         ->assertJsonPath('datos.0.hijos.0.codigo', 'DIR-01')
         ->assertJsonPath('datos.0.hijos.0.hijos.0.codigo', 'SUB-01')
-        ->assertJsonPath('datos.0.puestos.0.denominacion', 'Prefecto')
-        ->assertJsonPath('datos.0.hijos.0.hijos.0.puestos.0.denominacion', 'Analista');
+        ->assertJsonPath('datos.0.puestos_count', 1)
+        ->assertJsonPath('datos.0.hijos.0.hijos.0.puestos_count', 1);
 });
 
 test('usuario sin permiso de ver estructura recibe 403', function () {

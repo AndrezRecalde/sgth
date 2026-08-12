@@ -407,6 +407,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
         Route::prefix('subrogaciones')->group(function () {
             Route::get('activas', [SubrogacionController::class, 'listarActivas']);
+            Route::get('vigentes', [SubrogacionController::class, 'listarVigentes']);
             Route::get('servidor/{servidorId}', [SubrogacionController::class, 'listarPorServidor']);
             Route::post('/', [SubrogacionController::class, 'registrar']);
             Route::put('{id}/finalizar', [SubrogacionController::class, 'finalizar']);

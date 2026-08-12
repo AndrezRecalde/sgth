@@ -2,6 +2,8 @@
 
 namespace App\Models\Estructura;
 
+use App\Enums\EstadoSubrogacion;
+use App\Models\Expediente\Subrogacion;
 use App\Observers\UnidadAdministrativaObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -90,5 +92,21 @@ class UnidadAdministrativa extends Model
     public function extensionesActivas(): HasMany
     {
         return $this->hasMany(ExtensionTelefonica::class, 'unidad_administrativa_id')->activas();
+    }
+
+    /**
+     * Subrogaciones y encargos que están surtiendo efecto hoy en esta unidad.
+     *
+     * Acotada por fecha además de por estado: es la misma regla con la que se
+     * resuelve quién firma, y las dos deben responder lo mismo — si el
+     * organigrama dijera que alguien subroga y el firmante resolviera al
+     * titular, una de las dos pantallas estaría mintiendo.
+     */
+    public function subrogacionesVigentes(): HasMany
+    {
+        return $this->hasMany(Subrogacion::class, 'unidad_administrativa_id')
+            ->where('estado', EstadoSubrogacion::ACTIVA->value)
+            ->whereDate('fecha_inicio', '<=', now())
+            ->whereDate('fecha_fin', '>=', now());
     }
 }

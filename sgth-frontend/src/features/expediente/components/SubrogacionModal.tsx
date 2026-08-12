@@ -1,6 +1,10 @@
 'use client'
 
-import { Modal, Button, Group, Stack, Select, TextInput, Textarea, SegmentedControl } from '@mantine/core'
+import {
+  Modal, Button, Group, Stack, Select, TextInput, Textarea, SegmentedControl,
+  Grid, Paper, Text, Alert,
+} from '@mantine/core'
+import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
 import { useForm, Controller, useWatch } from 'react-hook-form'
@@ -11,6 +15,8 @@ import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { usePuestos } from '@/features/estructura/hooks/usePuestos'
 import { useServidores } from '../hooks/useServidores'
 import { useSubrogacionMutations } from '../hooks/useSubrogacionMutations'
+import { SituacionActualPanel } from './SituacionActualPanel'
+import { SituacionSubrogadaPanel } from './SituacionSubrogadaPanel'
 import {
   subrogacionSchema, type SubrogacionFormData,
 } from '../schemas/subrogacion.schema'
@@ -63,6 +69,9 @@ export function SubrogacionModal({ opened, onClose }: Props) {
 
   const tipo = useWatch({ control, name: 'tipo' })
   const unidadSelId = useWatch({ control, name: 'unidad_administrativa_id' })
+  const subroganteId = useWatch({ control, name: 'servidor_subrogante_id' })
+  const subrogadoId = useWatch({ control, name: 'servidor_subrogado_id' })
+  const puestoSelId = useWatch({ control, name: 'puesto_subrogado_id' })
 
   const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 })
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
@@ -81,6 +90,46 @@ export function SubrogacionModal({ opened, onClose }: Props) {
     value: String(s.id),
     label: `${[s.apellido, s.nombre].filter(Boolean).join(' ')} — ${s.cedula}`,
   }))
+
+  const unidadSel = unidades.find((u) => u.id === Number(unidadSelId)) ?? null
+  const puestoSel = puestos.find((p) => p.id === Number(puestoSelId)) ?? null
+
+  // La diferencia se calcula contra lo que el subrogante gana hoy, que vive en
+  // su contrato vigente; si no lo tiene, se cae a la R.M.U. de su puesto.
+  const subroganteSel = servidores.find((s) => s.id === Number(subroganteId))
+  const rmuSubroganteRaw = subroganteSel?.contrato_vigente?.remuneracion
+    ?? (subroganteSel as unknown as { puesto?: { rmu?: string | number | null } })?.puesto?.rmu
+  const rmuSubrogante = rmuSubroganteRaw != null ? Number(rmuSubroganteRaw) : null
+
+  /**
+   * El titular no se pide: es quien ocupa el puesto. Pedirlo aparte permitía
+   * nombrar titular a alguien que nunca ocupó ese puesto, y el documento
+   * firmado terminaba afirmando un reemplazo que no ocurrió.
+   */
+  const ocupanteDe = (puestoId?: number | null) =>
+    puestos.find((p) => p.id === Number(puestoId))?.ocupantes?.[0] ?? null
+
+  const ocupante = ocupanteDe(puestoSelId)
+  const puestoVacante = puestoSel != null && ocupante == null
+  const nombrePuesto = puestoSel?.cargo?.nombre ?? 'el puesto'
+
+  /**
+   * Cambiar de figura arrastra al titular: en encargo no hay a quién
+   * reemplazar, y en subrogación el titular vuelve a ser el del puesto.
+   */
+  const elegirTipo = (valor: string) => {
+    setValue('tipo', valor as 'subrogacion' | 'encargo')
+    setValue(
+      'servidor_subrogado_id',
+      valor === 'encargo' ? null : (ocupanteDe(puestoSelId)?.id ?? null),
+    )
+  }
+
+  // La figura la determina el puesto, no quien llena el formulario: un puesto
+  // vacante se encarga y uno con titular se subroga. Se avisa en vez de dejar
+  // que el backend lo rechace al guardar.
+  const figuraEquivocada =
+    puestoSel != null && (tipo === 'subrogacion' ? puestoVacante : !puestoVacante)
 
   const handleClose = () => {
     reset(BLANK_VALUES)
@@ -108,12 +157,18 @@ export function SubrogacionModal({ opened, onClose }: Props) {
       opened={opened}
       onClose={handleClose}
       title="Nueva subrogación / encargo"
-      size="lg"
+      size="xl"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
+          <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+            Queda <strong>pendiente de aprobación</strong>: el servidor asume el
+            puesto —y con él la facultad de firmar— recién cuando su Acción de
+            Personal se registre, con el dictamen presupuestario correspondiente.
+          </Alert>
+
           <Controller
             name="tipo"
             control={control}
@@ -121,10 +176,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
               <SegmentedControl
                 data={TIPO_OPTIONS}
                 value={field.value}
-                onChange={(v) => {
-                  field.onChange(v)
-                  if (v === 'encargo') setValue('servidor_subrogado_id', null)
-                }}
+                onChange={elegirTipo}
                 fullWidth
               />
             )}
@@ -146,26 +198,6 @@ export function SubrogacionModal({ opened, onClose }: Props) {
               />
             )}
           />
-
-          {tipo === 'subrogacion' && (
-            <Controller
-              name="servidor_subrogado_id"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Servidor titular a subrogar"
-                  placeholder="Seleccionar servidor"
-                  data={servidorOptions}
-                  searchable
-                  clearable
-                  {...contained}
-                  value={field.value ? String(field.value) : null}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
-                  error={errors.servidor_subrogado_id?.message}
-                />
-              )}
-            />
-          )}
 
           <Controller
             name="unidad_administrativa_id"
@@ -199,11 +231,98 @@ export function SubrogacionModal({ opened, onClose }: Props) {
                 disabled={!unidadSelId}
                 {...contained}
                 value={field.value ? String(field.value) : null}
-                onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+                onChange={(v) => {
+                  const id = v ? Number(v) : undefined
+                  field.onChange(id)
+                  // De aquí sale el titular, así que no puede quedar el del
+                  // puesto anterior.
+                  setValue(
+                    'servidor_subrogado_id',
+                    tipo === 'encargo' ? null : (ocupanteDe(id)?.id ?? null),
+                  )
+                }}
                 error={errors.puesto_subrogado_id?.message}
               />
             )}
           />
+
+          {figuraEquivocada && (
+            <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />}>
+              {puestoVacante ? (
+                <>
+                  <strong>{nombrePuesto}</strong> está vacante: no hay titular a
+                  quien subrogar. La figura que corresponde es el encargo.
+                </>
+              ) : (
+                <>
+                  <strong>{nombrePuesto}</strong> lo ocupa {ocupante?.nombre}:
+                  la figura que corresponde es la subrogación.
+                </>
+              )}
+              <Button
+                size="xs"
+                variant="light"
+                color="orange"
+                mt="xs"
+                onClick={() => elegirTipo(puestoVacante ? 'encargo' : 'subrogacion')}
+              >
+                Cambiar a {puestoVacante ? 'encargo' : 'subrogación'}
+              </Button>
+            </Alert>
+          )}
+
+          {/* Las tres situaciones del acto: de dónde viene quien subroga, a
+              quién reemplaza y qué puesto asume. Sin esto, Talento Humano
+              autorizaba a ciegas — en particular la diferencia de
+              remuneraciones, que es lo que realmente se paga. */}
+          {(subroganteId || puestoSel) && (
+            <Grid mt="xs">
+              {subroganteId && (
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <SituacionActualPanel
+                    servidorId={Number(subroganteId)}
+                    titulo={tipo === 'encargo' ? 'SITUACIÓN DEL ENCARGADO' : 'SITUACIÓN DEL SUBROGANTE'}
+                    soloVinculo
+                  />
+                </Grid.Col>
+              )}
+
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                {tipo === 'encargo' ? (
+                  <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
+                    <Text size="sm" fw={700} mb="xs">TITULAR</Text>
+                    <Text size="sm" c="dimmed">
+                      Encargo: el puesto no tiene titular que reemplazar.
+                    </Text>
+                  </Paper>
+                ) : subrogadoId ? (
+                  <SituacionActualPanel
+                    servidorId={Number(subrogadoId)}
+                    titulo="TITULAR SUBROGADO"
+                    soloVinculo
+                  />
+                ) : (
+                  <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
+                    <Text size="sm" fw={700} mb="xs">TITULAR SUBROGADO</Text>
+                    <Text size="sm" c="dimmed">
+                      {/* Ya no se elige: sale del puesto. */}
+                      {puestoSel
+                        ? 'El puesto está vacante — no hay titular.'
+                        : 'Seleccione el puesto: el titular es quien lo ocupa.'}
+                    </Text>
+                  </Paper>
+                )}
+              </Grid.Col>
+
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <SituacionSubrogadaPanel
+                  unidad={unidadSel}
+                  puesto={puestoSel}
+                  rmuSubrogante={rmuSubrogante}
+                />
+              </Grid.Col>
+            </Grid>
+          )}
 
           <Group grow>
             <Controller
@@ -272,7 +391,15 @@ export function SubrogacionModal({ opened, onClose }: Props) {
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose}>Cancelar</Button>
-            <Button type="submit" color="emerald" variant="light" loading={registrar.isPending}>
+            <Button
+              type="submit"
+              color="emerald"
+              variant="light"
+              loading={registrar.isPending}
+              // El backend lo rechaza igual; esto evita ofrecer un guardado
+              // que ya se sabe que va a fallar.
+              disabled={figuraEquivocada}
+            >
               Registrar
             </Button>
           </Group>

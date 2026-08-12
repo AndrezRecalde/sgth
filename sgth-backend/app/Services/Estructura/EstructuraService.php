@@ -125,6 +125,11 @@ final class EstructuraService implements EstructuraServiceInterface
                                       ->leftJoin('cargos', 'puestos.cargo_id', '=', 'cargos.id')
                                       ->orderBy('cargos.nombre', 'asc')
                                       ->select('puestos.*'),
+            // Quién está ejerciendo por subrogación o encargo hoy. Es la única
+            // forma de leer el organigrama y saber que el nombre del titular no
+            // es quien realmente despacha en esa unidad.
+            'subrogacionesVigentes.subrogante',
+            'subrogacionesVigentes.puestoSubrogado.cargo',
         ]);
 
         $unidad->hijos->each(
@@ -139,7 +144,12 @@ final class EstructuraService implements EstructuraServiceInterface
     public function listarPuestos(array $filtros): LengthAwarePaginator
     {
         return Puesto::query()
-            ->with(['cargo', 'unidadAdministrativa', 'grupoOcupacional'])
+            ->with([
+                'cargo', 'unidadAdministrativa', 'grupoOcupacional', 'partidaPresupuestaria',
+                // El ocupante vigente: lo necesita el formulario de subrogación
+                // para derivar al titular en vez de pedirlo suelto.
+                'contratosVigentes.servidor:id,cedula,nombre,segundo_nombre,apellido,segundo_apellido',
+            ])
             ->leftJoin('cargos', 'cargos.id', '=', 'puestos.cargo_id')
             ->select('puestos.*')
             ->when(

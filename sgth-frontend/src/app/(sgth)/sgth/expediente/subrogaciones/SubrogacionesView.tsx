@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import { useSubrogacionesActivas } from '@/features/expediente/hooks/useSubrogaciones'
+import { useSubrogacionesVigentes } from '@/features/expediente/hooks/useSubrogaciones'
 import { useSubrogacionMutations } from '@/features/expediente/hooks/useSubrogacionMutations'
 import { SubrogacionModal } from '@/features/expediente/components/SubrogacionModal'
 import { CancelarSubrogacionModal } from '@/features/expediente/components/CancelarSubrogacionModal'
@@ -56,7 +56,7 @@ export function SubrogacionesView() {
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
   const unidadOptions = unidades.map((u) => ({ value: String(u.id), label: u.nombre ?? `Unidad ${u.id}` }))
 
-  const { data: subrogaciones = [], isLoading } = useSubrogacionesActivas({
+  const { data: subrogaciones = [], isLoading } = useSubrogacionesVigentes({
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
     tipo: (tipo as TipoSubrogacion) || undefined,
   })
@@ -68,7 +68,7 @@ export function SubrogacionesView() {
     {
       accessor: 'tipo',
       title: 'Tipo',
-      width: 110,
+      width: 140,
       render: ({ tipo }) => (
         <Badge color={tipo === 'encargo' ? 'blue' : 'grape'} variant="light" size="sm">
           {TIPO_LABELS[tipo]}
@@ -115,13 +115,35 @@ export function SubrogacionesView() {
       ),
     },
     {
+      accessor: 'estado',
+      title: 'Estado',
+      width: 190,
+      render: ({ estado, movimiento_personal }) => (
+        estado === 'pendiente' ? (
+          <div>
+            <Badge color="yellow" variant="light" size="sm">Pendiente</Badge>
+            <Text size="xs" c="dimmed" mt={2}>
+              {movimiento_personal?.codigo_registro
+                ? `Acción ${movimiento_personal.codigo_registro}`
+                : 'Espera su Acción de Personal'}
+            </Text>
+          </div>
+        ) : (
+          <Badge color="emerald" variant="light" size="sm">Activa</Badge>
+        )
+      ),
+    },
+    {
       accessor: 'acciones',
       title: '',
       width: 50,
       render: (s) => (
         <TableActions
           actions={[
-            {
+            // Finalizar solo tiene sentido en las que ya surten efecto: una
+            // pendiente todavía no empezó, y el servicio la rechaza. Ofrecerla
+            // igual era prometer una acción que siempre falla.
+            ...(s.estado === 'activa' ? [{
               label: 'Finalizar',
               icon: <IconPlayerStop size={14} />,
               color: 'emerald',
@@ -130,7 +152,7 @@ export function SubrogacionesView() {
                   finalizar.mutate(Number(s.id))
                 }
               },
-            },
+            }] : []),
             {
               label: 'Cancelar',
               icon: <IconBan size={14} />,
@@ -194,8 +216,8 @@ export function SubrogacionesView() {
       {!isLoading && lista.length === 0 ? (
         <EmptyState
           icon={IconArrowsExchange}
-          title="Sin subrogaciones/encargos activos"
-          description="Los registros activos de subrogación o encargo de puestos aparecerán aquí."
+          title="Sin subrogaciones/encargos vigentes"
+          description="Aquí aparecerán las subrogaciones y encargos pendientes de aprobación y los que ya surten efecto."
           action={
             <Button color="emerald" variant="light" leftSection={<IconPlus size={14} />} onClick={openModal}>
               Nueva subrogación / encargo

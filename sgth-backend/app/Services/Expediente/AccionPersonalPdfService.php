@@ -27,6 +27,10 @@ class AccionPersonalPdfService
             // no la que el puesto tenga hoy.
             'partidaOrigen',
             'autorizadoPor',
+            // Subrogación y encargo comparten tipo_movimiento; solo la fila
+            // enlazada distingue cuál de los dos es, y el documento debe
+            // decirlo por su nombre.
+            'subrogacion.subrogado',
         ])->findOrFail($movimientoId);
 
         // El formato impreso es el de una Acción de Personal. Los movimientos
@@ -34,7 +38,7 @@ class AccionPersonalPdfService
         // bitácora interna: registran un hecho, no son un acto administrativo
         // con firmantes. Imprimirlos produciría un documento de apariencia
         // oficial que nunca existió.
-        if (! $movimiento->tipo_movimiento->esAccionDePersonal()) {
+        if (! $movimiento->tipo_movimiento->tieneDocumentoImprimible()) {
             throw new ReglaNegocioException(
                 "\"{$movimiento->tipo_movimiento->etiqueta()}\" es un registro interno del "
                     .'expediente, no una Acción de Personal: no tiene documento imprimible.'

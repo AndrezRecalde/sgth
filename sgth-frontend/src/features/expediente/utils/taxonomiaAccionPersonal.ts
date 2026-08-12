@@ -39,6 +39,44 @@ export const TIPO_LABELS: Record<AccionTipo, string> = {
   incremento_remuneracion: 'Incremento de Remuneración',
 }
 
+/**
+ * Tipos que aparecen en el historial pero que no se crean desde el formulario
+ * de Acción de Personal: la subrogación nace en su propia pantalla, y el resto
+ * son bitácora interna del expediente o tipos planos heredados. Van aparte de
+ * TIPO_LABELS a propósito — necesitan etiqueta para *mostrarse*, no para
+ * ofrecerse como opción.
+ */
+const TIPO_LABELS_FUERA_DEL_FORMULARIO: Record<string, string> = {
+  subrogacion:        'Subrogación',
+  novedad_contrato:   'Novedad de Contrato',
+  cambio_puesto:      'Cambio de Puesto',
+  cambio_regimen:     'Cambio de Régimen',
+  traslado:           'Traslado',
+  traspaso:           'Traspaso',
+  comision_servicios: 'Comisión de Servicios',
+  egreso:             'Egreso',
+  destitucion:        'Destitución',
+}
+
+/**
+ * Espeja TipoMovimientoPersonal::tieneEfectoEconomico(). Estos comprometen
+ * presupuesto (Art. 105 LOSEP) y el backend rechaza suscribirlos sin la
+ * referencia del dictamen presupuestario, así que hay que pedirla antes de
+ * intentar la transición en vez de dejar que falle.
+ */
+export function tieneEfectoEconomico(tipo?: string | null): boolean {
+  return tipo === 'subrogacion' || tipo === 'incremento_remuneracion'
+}
+
+/** Etiqueta legible de cualquier tipo de movimiento, venga o no del formulario. */
+export function etiquetaTipoMovimiento(tipo?: string | null): string {
+  if (!tipo) return '—'
+
+  return TIPO_LABELS[tipo as AccionTipo]
+    ?? TIPO_LABELS_FUERA_DEL_FORMULARIO[tipo]
+    ?? tipo
+}
+
 export const SUBTIPO_LABELS: Record<AccionSubtipo, string> = {
   traslado_administrativo: 'Traslado Administrativo',
   traspaso: 'Traspaso',
@@ -155,16 +193,19 @@ export function esComision(subtipo?: AccionSubtipo | null): boolean {
 /**
  * ¿Esta acción propone una situación nueva?
  *
- * Solo el ingreso —que crea el vínculo— y las que reubican al servidor. Una
- * cesación termina el vínculo y no propone nada; una comisión, una licencia o
- * una sanción dejan al servidor en su mismo puesto. Mostrarles una columna de
- * "situación propuesta" en blanco hace creer que falta llenar algo.
+ * El ingreso —que crea el vínculo—, las que reubican al servidor, y la
+ * subrogación: aunque el vínculo original se conserva, el servidor pasa a
+ * ocupar otro puesto y a cobrar por él, que es justamente lo que la autoridad
+ * autoriza. Una cesación termina el vínculo y no propone nada; una comisión,
+ * una licencia o una sanción dejan al servidor en su mismo puesto. Mostrarles
+ * una columna de "situación propuesta" en blanco hace creer que falta llenar
+ * algo.
  */
 export function proponeSituacion(
   tipo?: string | null,
   subtipo?: AccionSubtipo | null,
 ): boolean {
-  return tipo === 'ingreso' || reubicaAlServidor(subtipo)
+  return tipo === 'ingreso' || tipo === 'subrogacion' || reubicaAlServidor(subtipo)
 }
 
 /** Acciones que apartan temporalmente al servidor: lo suyo es el período. */

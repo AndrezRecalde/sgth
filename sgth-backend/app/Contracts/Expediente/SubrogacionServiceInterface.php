@@ -15,6 +15,11 @@ interface SubrogacionServiceInterface
 
     public function listarActivas(array $filtros = []): Collection;
 
+    public function listarVigentes(array $filtros = []): Collection;
+
+    /** @return array{caducadas: int, fecha: string} */
+    public function caducarVencidas(?string $hasta = null): array;
+
     public function listarPorServidor(int $servidorId): Collection;
 
     public function verificarSubrogacionActiva(int $servidorId, int $unidadId): ?Subrogacion;

@@ -29,6 +29,22 @@ class UnidadAdministrativaResource extends JsonResource
             'puestos_count'   => $this->whenLoaded('puestos',
                 fn() => $this->puestos->count(), 0
             ),
+            // Quién ejerce hoy por subrogación o encargo. Sin esto el
+            // organigrama muestra al titular de un puesto que otra persona
+            // está despachando, que es justo lo que hay que poder ver.
+            'subrogaciones_vigentes' => $this->whenLoaded('subrogacionesVigentes',
+                fn() => $this->subrogacionesVigentes->map(fn ($s) => [
+                    'id'           => $s->id,
+                    'tipo'         => $s->tipo?->value,
+                    'subrogante'   => trim(implode(' ', array_filter([
+                        $s->subrogante?->apellido, $s->subrogante?->nombre,
+                    ]))) ?: null,
+                    'puesto'       => $s->puestoSubrogado?->cargo?->nombre,
+                    'fecha_inicio' => $s->fecha_inicio?->toDateString(),
+                    'fecha_fin'    => $s->fecha_fin?->toDateString(),
+                ])->values(),
+                []
+            ),
             'hijos'           => UnidadAdministrativaResource::collection(
                 $this->whenLoaded('hijos')
             ),

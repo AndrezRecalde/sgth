@@ -17,13 +17,14 @@ import { getApiErrorMessage } from '@/types/api'
 import { useMovimiento, useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import { MovimientoModal } from './MovimientoModal'
 import { CompletarVinculoModal } from './CompletarVinculoModal'
+import { DictamenPresupuestarioModal } from './DictamenPresupuestarioModal'
 import {
   ESTADO_COLORS, ESTADO_LABELS, TRANSICIONES, puedeDescargarPdf,
   requiereCompletarVinculo,
 } from '../utils/estadoAccionPersonal'
 import {
-  SUBTIPO_LABELS, TIPO_LABELS, esAusenciaTemporal, proponeSituacion,
-  type AccionSubtipo,
+  SUBTIPO_LABELS, esAusenciaTemporal, etiquetaTipoMovimiento, proponeSituacion,
+  tieneEfectoEconomico, type AccionSubtipo,
 } from '../utils/taxonomiaAccionPersonal'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import type { EstadoAccionPersonal } from '@/types/api'
@@ -106,6 +107,9 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
    */
   const [aprobarOpened, { open: abrirAprobar, close: cerrarAprobar }] = useDisclosure(false)
 
+  /** Referencia de la certificación presupuestaria, exigida al suscribir. */
+  const [dictamenOpened, { open: abrirDictamen, close: cerrarDictamen }] = useDisclosure(false)
+
   const descargarPdf = async () => {
     if (!m) return
     setDescargando(true)
@@ -140,14 +144,29 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
     const subtipo = m.subtipo_movimiento as AccionSubtipo | null | undefined
     const propone = proponeSituacion(m.tipo_movimiento, subtipo)
     const ausencia = esAusenciaTemporal(m.tipo_movimiento, subtipo)
+    const esSubrogacion = m.tipo_movimiento === 'subrogacion'
+
+    const diferencia = m.remuneracion_propuesta != null && m.remuneracion_origen != null
+      ? Number(m.remuneracion_propuesta) - Number(m.remuneracion_origen)
+      : null
 
     /**
      * Único punto de edición del drawer. Se ancla al pie de la tarjeta de la
      * derecha; cuando esa tarjeta no existe —cesación, sanción— baja a la
      * única que hay, para que nunca quede una acción en borrador sin forma de
      * corregirla.
+     *
+     * La subrogación se excluye: su acción es el reflejo de una fila en
+     * `subrogaciones`, y este modal solo escribiría el movimiento. Cambiar
+     * aquí el puesto dejaría a los dos registros diciendo cosas distintas —
+     * uno para el documento, otro para quién puede firmar. Se corrige
+     * cancelándola y volviéndola a registrar.
      */
-    const botonEditar = (
+    const botonEditar = esSubrogacion ? (
+      <Text size="xs" c="dimmed" mt="xs">
+        Para corregirla, cancele la subrogación y regístrela de nuevo.
+      </Text>
+    ) : (
       <Button
         size="xs"
         variant="light"
@@ -169,7 +188,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         <Group justify="space-between" align="flex-start">
           <div>
             <Text fw={600}>
-              {TIPO_LABELS[m.tipo_movimiento as keyof typeof TIPO_LABELS] ?? m.tipo_movimiento}
+              {etiquetaTipoMovimiento(m.tipo_movimiento)}
             </Text>
             {m.subtipo_movimiento && (
               <Text size="sm" c="dimmed">
@@ -243,11 +262,15 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           {propone && (
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Paper withBorder p="sm" radius="md" h="100%">
-                <Text size="sm" fw={700} mb="xs">SITUACIÓN PROPUESTA</Text>
+                <Text size="sm" fw={700} mb="xs">
+                  {esSubrogacion ? 'PUESTO SUBROGADO' : 'SITUACIÓN PROPUESTA'}
+                </Text>
                 <Stack gap="xs">
                   <Dato etiqueta="Unidad" valor={mv.unidad_destino?.nombre} />
                   <Dato etiqueta="Puesto" valor={mv.puesto_destino?.cargo?.nombre} />
-                  <Dato etiqueta="Lugar de trabajo" valor={m.lugar_trabajo} />
+                  {!esSubrogacion && (
+                    <Dato etiqueta="Lugar de trabajo" valor={m.lugar_trabajo} />
+                  )}
                   {/* La de la acción manda; si Talento Humano no fijó ninguna,
                       rige la del puesto de destino. */}
                   <Dato
@@ -255,7 +278,21 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                     valor={mv.partida_presupuestaria?.codigo
                       ?? mv.puesto_destino?.partida_presupuestaria?.codigo}
                   />
-                  <Dato etiqueta="R.M.U. propuesta" valor={dinero(m.remuneracion_propuesta)} />
+                  <Dato
+                    etiqueta={esSubrogacion ? 'R.M.U. del puesto' : 'R.M.U. propuesta'}
+                    valor={dinero(m.remuneracion_propuesta)}
+                  />
+                  {/* Lo que realmente se autoriza en una subrogación: no el
+                      sueldo del puesto, sino la diferencia contra lo que el
+                      servidor ya percibe (Art. 21 Reglamento LOSEP). Ambas
+                      cifras quedaron congeladas al crear la acción, así que
+                      esta resta es la que se aprobó, no la de hoy. */}
+                  {esSubrogacion && (
+                    <Dato
+                      etiqueta="Diferencia a pagar"
+                      valor={diferencia != null && diferencia > 0 ? dinero(diferencia) : null}
+                    />
+                  )}
                 </Stack>
 
                 {botonEditar}
@@ -408,6 +445,13 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                     abrirAprobar()
                     return
                   }
+                  // Mismo criterio para el dictamen presupuestario: el backend
+                  // rechaza suscribir sin él, así que se pide antes en vez de
+                  // dejar que la transición falle.
+                  if (destino === 'suscrita' && tieneEfectoEconomico(m.tipo_movimiento)) {
+                    abrirDictamen()
+                    return
+                  }
                   transicionar.mutate({ id: Number(m.id), estado: destino })
                 }}
               >
@@ -432,6 +476,12 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           // Al aprobar la acción cambia de estado, así que el drawer se cierra
           // para no dejar a la vista un detalle que ya quedó obsoleto.
           onSaved={onClose}
+          movimiento={m}
+        />
+
+        <DictamenPresupuestarioModal
+          opened={dictamenOpened}
+          onClose={cerrarDictamen}
           movimiento={m}
         />
       </Stack>

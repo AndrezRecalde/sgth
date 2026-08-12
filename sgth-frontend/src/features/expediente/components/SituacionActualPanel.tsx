@@ -5,6 +5,11 @@ import { useServidor } from '../hooks/useServidor'
 
 interface Props {
   servidorId: number
+  /** Por defecto "SITUACIÓN ACTUAL". En subrogaciones se muestran dos: la del
+   *  subrogante y la del titular, y cada una necesita su rótulo. */
+  titulo?: string
+  /** Oculta identidad y papeleta: útil cuando ya se ve en otra parte. */
+  soloVinculo?: boolean
 }
 
 /**
@@ -47,7 +52,9 @@ function Campo({ etiqueta, valor }: { etiqueta: string; valor?: string | null })
  * documento de Acción de Personal. Se lee del expediente en vez de pedirlo en
  * el formulario — son datos que ya existen y que nadie debería re-teclear.
  */
-export function SituacionActualPanel({ servidorId }: Props) {
+export function SituacionActualPanel({
+  servidorId, titulo = 'SITUACIÓN ACTUAL', soloVinculo = false,
+}: Props) {
   const { data: servidor, isLoading } = useServidor(servidorId)
 
   if (isLoading) return <Skeleton height={190} radius="md" />
@@ -66,14 +73,23 @@ export function SituacionActualPanel({ servidorId }: Props) {
 
   return (
     <Paper withBorder p="sm" radius="md" bg="var(--mantine-color-gray-0)">
-      <Text size="sm" fw={700} mb="xs">SITUACIÓN ACTUAL</Text>
+      <Text size="sm" fw={700} mb="xs">{titulo}</Text>
       <Grid>
-        <Grid.Col span={6}><Campo etiqueta="Apellidos" valor={apellidos} /></Grid.Col>
-        <Grid.Col span={6}><Campo etiqueta="Nombres" valor={nombres} /></Grid.Col>
-        <Grid.Col span={6}><Campo etiqueta="Cédula" valor={s.cedula} /></Grid.Col>
-        <Grid.Col span={6}>
-          <Campo etiqueta="Papeleta de votación" valor={s.numero_papeleta_votacion} />
-        </Grid.Col>
+        {!soloVinculo && (
+          <>
+            <Grid.Col span={6}><Campo etiqueta="Apellidos" valor={apellidos} /></Grid.Col>
+            <Grid.Col span={6}><Campo etiqueta="Nombres" valor={nombres} /></Grid.Col>
+            <Grid.Col span={6}><Campo etiqueta="Cédula" valor={s.cedula} /></Grid.Col>
+            <Grid.Col span={6}>
+              <Campo etiqueta="Papeleta de votación" valor={s.numero_papeleta_votacion} />
+            </Grid.Col>
+          </>
+        )}
+        {soloVinculo && (
+          <Grid.Col span={12}>
+            <Campo etiqueta="Servidor" valor={`${apellidos} ${nombres}`.trim()} />
+          </Grid.Col>
+        )}
         {sinVinculo ? (
           // Un ingreso no tiene situación previa que comparar. Mostrar unidad,
           // puesto y R.M.U. en blanco haría pensar que faltan datos por leer.

@@ -10,8 +10,10 @@ import type { ApiResponse } from '@/types/api'
 export function useSubrogacionMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () =>
+  const invalidar = () => {
     qc.invalidateQueries({ queryKey: ['subrogaciones-activas'] })
+    qc.invalidateQueries({ queryKey: ['subrogaciones-vigentes'] })
+  }
 
   const onError = (error: AxiosError<ApiResponse>) => {
     notifications.show({

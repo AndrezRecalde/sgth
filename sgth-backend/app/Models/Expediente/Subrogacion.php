@@ -25,7 +25,7 @@ class Subrogacion extends Model
         'unidad_administrativa_id', 'puesto_subrogado_id',
         'fecha_inicio', 'fecha_fin', 'motivo',
         'resolucion_numero', 'documento_respaldo',
-        'estado', 'observacion', 'registrado_por',
+        'estado', 'observacion', 'registrado_por', 'movimiento_personal_id',
     ];
 
     protected function casts(): array
@@ -42,6 +42,15 @@ class Subrogacion extends Model
     public function subrogante(): BelongsTo
     {
         return $this->belongsTo(Servidor::class, 'servidor_subrogante_id');
+    }
+
+    /**
+     * La Acción de Personal que respalda esta subrogación. Mientras no esté
+     * registrada, la subrogación permanece pendiente y no surte efecto.
+     */
+    public function movimientoPersonal(): BelongsTo
+    {
+        return $this->belongsTo(MovimientoPersonal::class, 'movimiento_personal_id');
     }
 
     public function subrogado(): BelongsTo

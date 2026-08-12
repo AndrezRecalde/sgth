@@ -241,6 +241,12 @@
 
     $esIngreso = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::INGRESO;
 
+    // Subrogación y encargo comparten tipo_movimiento: el rótulo correcto solo
+    // lo sabe la fila enlazada. Un encargo impreso como "Subrogación" diría que
+    // se reemplazó a un titular que no existe.
+    $rotuloTipo = $movimiento->subrogacion?->tipo?->etiqueta()
+        ?? $movimiento->tipo_movimiento->etiqueta();
+
     // Situación actual: se toman los valores congelados en la acción, no los
     // que el puesto tenga hoy. Un documento reimpreso años después debe seguir
     // mostrando las cifras que tuvo el original.
@@ -292,7 +298,7 @@
 
 <div class="titulo">
     <div class="supra">Acción de Personal</div>
-    <h1>{{ $movimiento->tipo_movimiento->etiqueta() }}</h1>
+    <h1>{{ $rotuloTipo }}</h1>
     @if($movimiento->subtipo_movimiento)
         <div class="subtipo">{{ $movimiento->subtipo_movimiento->etiqueta() }}</div>
     @endif

@@ -346,6 +346,17 @@ test('SubrogacionService::registrar crea el movimiento asociado en borrador, no 
         'regimen_laboral' => 'losep',
     ]);
 
+    // El titular tiene que ocupar de verdad el puesto que se subroga: es lo que
+    // distingue una subrogación de un encargo.
+    ContratoServidor::create([
+        'servidor_id'              => $subrogado->id,
+        'tipo_nombramiento'        => 'nombramiento_permanente',
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id'                => $this->puestoConFondos->id,
+        'fecha_inicio'             => '2020-01-01',
+        'estado'                   => 'vigente',
+    ]);
+
     app(SubrogacionService::class)->registrar([
         'tipo' => 'subrogacion',
         'servidor_subrogante_id' => $this->servidor->id,

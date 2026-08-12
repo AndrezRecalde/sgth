@@ -30,6 +30,13 @@ Schedule::command('sgth:contratos:detectar-vencidos')
     ->dailyAt('05:00')
     ->onOneServer();
 
+// Cierre de subrogaciones y encargos cuyo plazo venció. Aquí no se genera nada
+// para revisar —a diferencia de los contratos vencidos—: la fecha de fin ya
+// venía autorizada en la Acción de Personal.
+Schedule::command('sgth:subrogaciones:caducar')
+    ->dailyAt('05:30')
+    ->onOneServer();
+
 // Tarea 8: Backup Automático Diario
 Schedule::command('backup:base-datos')
     ->dailyAt('02:00')
