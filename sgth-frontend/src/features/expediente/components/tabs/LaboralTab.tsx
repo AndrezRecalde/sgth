@@ -1,15 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import {
-  Accordion, Alert, Badge, Box, Grid, Group, Paper, Skeleton, Stack, Text,
+  Accordion, ActionIcon, Alert, Badge, Box, Grid, Group, Paper, Skeleton,
+  Stack, Text, Tooltip,
 } from '@mantine/core'
-import { IconBriefcase, IconInfoCircle } from '@tabler/icons-react'
+import { IconBriefcase, IconCalendarCog, IconInfoCircle } from '@tabler/icons-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useActividadLaboral } from '../../hooks/useActividadLaboral'
+import { ReprogramarPlazoModal } from '../ReprogramarPlazoModal'
 import type {
   AccionSobreVinculo, VinculoConActividad,
 } from '../../services/actividadLaboralService'
-import type { EstadoContrato } from '@/types/api'
+import type { ContratoConRelaciones, EstadoContrato } from '@/types/api'
 
 const ESTADO_COLORS: Record<EstadoContrato, string> = {
   vigente: 'green',
@@ -85,7 +88,12 @@ function FilaAccion({ accion }: { accion: AccionSobreVinculo }) {
   )
 }
 
-function Vinculo({ vinculo }: { vinculo: VinculoConActividad }) {
+function Vinculo({
+  vinculo, onReprogramar,
+}: {
+  vinculo: VinculoConActividad
+  onReprogramar: (contrato: VinculoConActividad['contrato']) => void
+}) {
   const c = vinculo.contrato
   const estado = (c.estado ?? 'vigente') as EstadoContrato
 
@@ -144,7 +152,25 @@ function Vinculo({ vinculo }: { vinculo: VinculoConActividad }) {
               <Dato etiqueta="Desde" valor={fecha(c.fecha_inicio)} />
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Dato etiqueta="Hasta" valor={c.fecha_fin ? fecha(c.fecha_fin) : 'Sin plazo'} />
+              <Group gap={4} align="flex-start" wrap="nowrap">
+                <Dato etiqueta="Hasta" valor={c.fecha_fin ? fecha(c.fecha_fin) : 'Sin plazo'} />
+                {/* El plazo es lo único editable de un vínculo ya creado, y
+                    solo mientras siga vigente: en uno terminado la fecha de
+                    fin ya es un hecho histórico. */}
+                {estado === 'vigente' && (
+                  <Tooltip label="Prórroga o corrección del vencimiento" withArrow>
+                    <ActionIcon
+                      variant="subtle"
+                      color="emerald"
+                      size="sm"
+                      aria-label="Reprogramar el plazo"
+                      onClick={() => onReprogramar(c)}
+                    >
+                      <IconCalendarCog size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+              </Group>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <Dato etiqueta="Remuneración" valor={dinero(c.remuneracion)} />
@@ -203,6 +229,9 @@ interface Props {
 export function LaboralTab({ servidorId }: Props) {
   const { data: vinculos = [], isLoading } = useActividadLaboral(servidorId)
 
+  /** El contrato abierto para reprogramar; null = modal cerrado. */
+  const [reprogramando, setReprogramando] = useState<ContratoConRelaciones | null>(null)
+
   if (isLoading) {
     return (
       <Stack gap="xs">
@@ -231,8 +260,17 @@ export function LaboralTab({ servidorId }: Props) {
       </Alert>
 
       <Accordion variant="separated" defaultValue={String(vinculos[0]?.contrato.id)}>
-        {vinculos.map((v) => <Vinculo key={v.contrato.id} vinculo={v} />)}
+        {vinculos.map((v) => (
+          <Vinculo key={v.contrato.id} vinculo={v} onReprogramar={setReprogramando} />
+        ))}
       </Accordion>
+
+      <ReprogramarPlazoModal
+        opened={reprogramando !== null}
+        onClose={() => setReprogramando(null)}
+        servidorId={servidorId}
+        contrato={reprogramando}
+      />
     </Stack>
   )
 }

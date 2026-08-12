@@ -43,11 +43,34 @@ export type VinculoConActividad = {
   reemplaza_a: ReemplazoDeVinculo | null
 }
 
+/**
+ * El plazo es lo único editable de un vínculo ya creado. El motivo es
+ * obligatorio porque los dos casos que lo mueven —una prórroga y la corrección
+ * de una fecha mal digitada— se ven idénticos en la base, y solo el motivo los
+ * distingue después.
+ */
+export type ReprogramarPlazoData = {
+  fecha_fin: string | null
+  motivo: string
+}
+
 export const actividadLaboralService = {
   listar: (servidorId: number) =>
     api
       .get<ApiResponse<VinculoConActividad[]>>(
         `/expediente/servidores/${servidorId}/actividad-laboral`,
+      )
+      .then((r) => r.data.datos),
+
+  reprogramarPlazo: (
+    servidorId: number,
+    contratoId: number,
+    data: ReprogramarPlazoData,
+  ) =>
+    api
+      .put<ApiResponse<ContratoConRelaciones>>(
+        `/expediente/servidores/${servidorId}/contratos/${contratoId}/plazo`,
+        data,
       )
       .then((r) => r.data.datos),
 }
