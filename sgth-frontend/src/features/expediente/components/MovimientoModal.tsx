@@ -157,9 +157,16 @@ function FormularioAccion({
   const qc = useQueryClient()
 
   const edicion = !!movimiento
-  // Sin paso de selección: al editar porque cambiar la naturaleza del acto no
-  // es editarlo, y con tipo fijo porque ya venía decidido desde la pantalla.
-  const sinPasoDeTipo = edicion || !!tipoFijo
+  /**
+   * Sin paso de selección: al editar, porque cambiar la naturaleza del acto no
+   * es editarlo; y con tipo fijo, porque ya venía decidido desde la pantalla.
+   *
+   * Salvo que ese tipo exija subtipo —cesación, cambio administrativo, régimen
+   * disciplinario—: ahí el paso sigue haciendo falta, porque es el subtipo el
+   * que determina las reglas y el documento. Saltárselo dejaba un formulario
+   * que el backend rechazaba por un dato que nunca se pidió.
+   */
+  const sinPasoDeTipo = edicion || (!!tipoFijo && !requiereSubtipo(tipoFijo))
 
   const [paso, setPaso] = React.useState(sinPasoDeTipo ? 1 : 0)
 
@@ -350,25 +357,39 @@ function FormularioAccion({
             size="sm"
             color="emerald"
           >
-            <Stepper.Step label="Tipo de acción" description="Qué se va a registrar">
+            {/* Con el tipo ya fijado, lo único que queda por elegir aquí es el
+                subtipo — y el rótulo debe decirlo solo cuando de verdad lo
+                haya. */}
+            <Stepper.Step
+              label={tipoFijo && requiereSubtipo(tipoFijo) ? 'Subtipo' : 'Tipo de acción'}
+              description={
+                tipoFijo && requiereSubtipo(tipoFijo)
+                  ? 'Bajo qué figura'
+                  : 'Qué se va a registrar'
+              }
+            >
               <Stack gap="sm" mt="md">
-                <Controller
-                  name="tipo_movimiento"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Tipo de acción de personal"
-                      data={tipos.map((t) => ({ value: t, label: TIPO_LABELS[t] }))}
-                      value={field.value}
-                      onChange={(v) => {
-                        field.onChange(v as AccionTipo)
-                        elegirSubtipo(null)
-                      }}
-                      error={errors.tipo_movimiento?.message}
-                      {...contained}
-                    />
-                  )}
-                />
+                {/* Con tipo fijo no se vuelve a preguntar: ya se eligió en el
+                    grid, y ofrecerlo otra vez permitiría contradecirlo. */}
+                {!tipoFijo && (
+                  <Controller
+                    name="tipo_movimiento"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        label="Tipo de acción de personal"
+                        data={tipos.map((t) => ({ value: t, label: TIPO_LABELS[t] }))}
+                        value={field.value}
+                        onChange={(v) => {
+                          field.onChange(v as AccionTipo)
+                          elegirSubtipo(null)
+                        }}
+                        error={errors.tipo_movimiento?.message}
+                        {...contained}
+                      />
+                    )}
+                  />
+                )}
 
                 {tipo && requiereSubtipo(tipo) && (
                   <Controller

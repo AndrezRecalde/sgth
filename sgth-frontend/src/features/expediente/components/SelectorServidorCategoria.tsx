@@ -1,17 +1,17 @@
 'use client'
 
 import { Stack, SimpleGrid, UnstyledButton, Text, Tooltip, Box, Badge } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
 import { BuscarServidorSelect } from './BuscarServidorSelect'
 import {
   CATEGORIAS_ACCION_PERSONAL, categoriaHabilitada,
 } from '../utils/categoriasAccionPersonal'
+import type { AccionTipo } from '../utils/taxonomiaAccionPersonal'
 import type { ServidorConRelaciones } from '@/types/api'
 
 interface Props {
   servidor:          ServidorConRelaciones | null
   onServidorChange:  (servidor: ServidorConRelaciones | null) => void
-  onCategoriaSeleccionada: (categoria: string) => void
+  onCategoriaSeleccionada: (categoria: AccionTipo) => void
 }
 
 function tooltipDeshabilitado(categoria: string, pendienteVinculacion: boolean | null | undefined): string {
@@ -27,17 +27,14 @@ function tooltipDeshabilitado(categoria: string, pendienteVinculacion: boolean |
 export function SelectorServidorCategoria({ servidor, onServidorChange, onCategoriaSeleccionada }: Props) {
   const pendienteVinculacion = servidor?.pendiente_vinculacion
 
-  const handleClickCategoria = (categoriaValue: string, habilitada: boolean) => {
+  /**
+   * Todas las categorías abren el mismo formulario con el tipo ya fijado.
+   * Antes solo el ingreso lo hacía y el resto avisaba "formulario en
+   * construcción" — un mensaje que había quedado viejo: esos formularios ya
+   * existían y se llegaba a ellos desde el expediente del servidor.
+   */
+  const handleClickCategoria = (categoriaValue: AccionTipo, habilitada: boolean) => {
     if (!habilitada) return
-
-    if (categoriaValue !== 'ingreso') {
-      notifications.show({
-        title: 'Formulario en construcción',
-        message: 'Este tipo de acción de personal estará disponible próximamente.',
-        color: 'blue',
-      })
-      return
-    }
 
     onCategoriaSeleccionada(categoriaValue)
   }

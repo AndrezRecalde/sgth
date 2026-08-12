@@ -1,26 +1,33 @@
-// Refleja los tipos de TipoMovimientoPersonal (backend) que pasan por la
-// máquina de estados de MovimientoPersonalStateService — es decir,
-// creaVinculo() + modificaVinculo() + esAccionDePersonal(). requiereVinculo
-// distingue el único tipo que crea el primer vínculo ('ingreso') del resto,
-// que necesitan un ContratoServidor vigente ya existente.
+import { TIPO_LABELS, type AccionTipo } from './taxonomiaAccionPersonal'
+
 export interface CategoriaAccionPersonal {
-  value: string
+  value: AccionTipo
   label: string
   requiereVinculo: boolean
 }
 
-export const CATEGORIAS_ACCION_PERSONAL: CategoriaAccionPersonal[] = [
-  { value: 'ingreso', label: 'Ingreso y Vinculación', requiereVinculo: false },
-  { value: 'traslado', label: 'Traslado', requiereVinculo: true },
-  { value: 'ascenso', label: 'Ascenso', requiereVinculo: true },
-  { value: 'traspaso', label: 'Traspaso', requiereVinculo: true },
-  { value: 'cambio_administrativo', label: 'Cambio Administrativo', requiereVinculo: true },
-  { value: 'cambio_denominacion', label: 'Cambio de Denominación', requiereVinculo: true },
-  { value: 'prestacion_servicios', label: 'Prestación de Servicios', requiereVinculo: true },
-  { value: 'comision_sin_remuneracion', label: 'Comisión de Servicios sin Remuneración', requiereVinculo: true },
-  { value: 'licencia_sin_remuneracion', label: 'Licencia sin Remuneración', requiereVinculo: true },
-  { value: 'incremento_remuneracion', label: 'Incremento de Remuneración', requiereVinculo: true },
-]
+/**
+ * El único tipo que no exige un vínculo previo: es el que lo crea.
+ */
+const CREAN_EL_VINCULO: AccionTipo[] = ['ingreso']
+
+/**
+ * Las categorías que ofrece el asistente, derivadas de la misma taxonomía que
+ * usa el formulario.
+ *
+ * Antes era una lista escrita a mano y se había separado en cinco puntos:
+ * ofrecía "Ascenso" —retirado en 2026-07-23 por no existir en la operación
+ * real del GAD—, más "Traslado" y "Traspaso", que dejaron de ser tipos cuando
+ * pasaron a ser subtipos de Cambio Administrativo; y omitía Cesación de
+ * Funciones y Régimen Disciplinario, que sí existen y el formulario maneja.
+ * Derivarla es lo que impide que vuelvan a separarse.
+ */
+export const CATEGORIAS_ACCION_PERSONAL: CategoriaAccionPersonal[] =
+  (Object.keys(TIPO_LABELS) as AccionTipo[]).map((value) => ({
+    value,
+    label: TIPO_LABELS[value],
+    requiereVinculo: !CREAN_EL_VINCULO.includes(value),
+  }))
 
 /**
  * true si la categoría está habilitada dado el estado de vínculo del
