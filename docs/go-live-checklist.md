@@ -31,6 +31,10 @@
 □ scheduler corriendo con restart:unless-stopped
 □ php artisan queue:restart ejecutado tras deploy
 □ Verificar que jobs de nómina procesan correctamente
+□ php artisan schedule:list muestra las 8 tareas registradas
+□ Logs del contenedor scheduler muestran ejecuciones cada minuto
+  (que el contenedor esté "up" no prueba que las tareas corran)
+□ Ver docs/scheduler.md: qué hace cada tarea y qué se rompe si no corre
 
 ## SEGURIDAD
 □ CORS configurado solo para dominio del GAD
@@ -71,4 +75,5 @@
 □ Monitorear Laravel Pulse durante las primeras 48 horas
 □ Verificar que Sentry no reporta errores críticos
 □ Confirmar que backup automático de 02:00 AM ejecutó
+  (es la prueba concluyente de que el scheduler corre)
 □ Verificar que jobs de colas procesan sin errores

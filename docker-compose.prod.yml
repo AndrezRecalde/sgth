@@ -109,7 +109,13 @@ services:
       dockerfile: Dockerfile.prod
     container_name: sgth_scheduler_prod
     restart: unless-stopped
-    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    # schedule:work duerme hasta el siguiente cambio de minuto. El bucle
+    # anterior dormía 60s *después* de ejecutar, así que el ciclo duraba lo que
+    # tardara la tarea más un minuto y se corría: en media hora ya se saltaba
+    # un minuto entero del reloj. Como schedule:run ejecuta lo que vence en el
+    # minuto actual, ese salto podía caer justo en las 05:00 y dejar sin correr
+    # la detección de contratos vencidos, sin rastro de que no corrió.
+    command: php artisan schedule:work --no-interaction
     env_file:
       - ./sgth-backend/.env
     depends_on:
