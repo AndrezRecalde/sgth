@@ -154,15 +154,28 @@ test('handoff_devengado_generado_al_liquidar', function () {
 
     $liquidacion = LiquidacionViatico::create([
         'viatico_id' => $viatico->id,
-        'facturas' => json_encode([
-            ['numero' => '001-001-000000001', 'proveedor' => 'Hotel Manta', 'monto' => 100.00],
-        ]),
         'total_facturas' => 100.00,
-        'monto_justificado' => 100.00,
         'diferencia_devolver' => 12.00, // 160 - (100 justificado + 48 exento)
         'fecha_retorno' => now()->subDays(2),
         'fecha_liquidacion' => now()->toDateString(),
         'created_by' => $this->servidorUser->id,
+    ]);
+
+    // Las facturas viven en su propia tabla desde el refactor: ya no son un
+    // JSON dentro de la liquidación.
+    $categoria = \App\Models\Viatico\CategoriaFactura::firstOrCreate(
+        ['nombre' => 'Hospedaje'],
+        ['grupo' => 'viatico', 'codigo' => 'HOSP', 'activo' => true],
+    );
+
+    \App\Models\Viatico\FacturaViatico::create([
+        'liquidacion_viatico_id' => $liquidacion->id,
+        'categoria_factura_id'   => $categoria->id,
+        'tipo_comprobante'       => 'factura',
+        'numero_factura'         => '001-001-000000001',
+        'ruc_proveedor'          => '1790016919001',
+        'nombre_proveedor'       => 'Hotel Manta',
+        'monto'                  => 100.00,
     ]);
 
     $service = new HandoffErpService();

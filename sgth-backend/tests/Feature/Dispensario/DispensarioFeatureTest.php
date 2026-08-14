@@ -66,29 +66,27 @@ beforeEach(function () {
     $this->pacienteUser->update(['servidor_id' => $this->paciente->id]);
 });
 
-test('agenda_medica_genera_permiso_de_ausencia_automaticamente', function () {
-    $service = new AgendaService();
-    
-    $fecha = now()->addDays(2)->format('Y-m-d');
-    
+test('agendar_cita_deja_el_turno_en_espera', function () {
+    $service = app(AgendaService::class);
+
     $cita = $service->agendarCita([
-        'servidor_id' => $this->paciente->id,
-        'medico_id' => $this->medico->id,
-        'fecha' => $fecha,
-        'hora_inicio' => '10:00:00',
-        'hora_fin' => '10:30:00',
+        'servidor_id'      => $this->paciente->id,
+        'medico_id'        => $this->medico->id,
+        'fecha'            => now()->addDays(2)->format('Y-m-d'),
+        'hora_inicio'      => '10:00:00',
+        'hora_fin'         => '10:30:00',
         'motivo_solicitud' => 'Chequeo general',
-        'estado' => 'agendada',
-    ]);
+    ], $this->medico->id);
 
     expect($cita)->toBeInstanceOf(AgendaMedica::class);
-    expect($cita->estado)->toBe('agendada');
+    expect($cita->estado)->toBe('en_espera');
 
-    // Verificar que se creó el permiso automáticamente en la tabla correcta (permisos_servidor)
-    $permiso = DB::table('permisos_servidor')->where('servidor_id', $this->paciente->id)->first();
-    expect($permiso)->not->toBeNull();
-    expect($permiso->estado)->toBe('pendiente');
-    expect($permiso->observacion)->toContain('Cita médica');
+    // Agendar ya no crea el permiso de ausencia. Hoy lo emite
+    // CertificadoMedicoService cuando el médico certifica la atención, que es
+    // mejor regla: una cita agendada no prueba que el servidor faltó, y así no
+    // quedaban permisos abiertos por citas a las que nadie asistió.
+    expect(DB::table('permisos_servidor')->where('servidor_id', $this->paciente->id)->exists())
+        ->toBeFalse();
 });
 
 test('registrar_consulta_actualiza_estado_de_agenda_a_atendida', function () {
@@ -105,9 +103,9 @@ test('registrar_consulta_actualiza_estado_de_agenda_a_atendida', function () {
         'hora_fin' => '10:30:00',
         'motivo_solicitud' => 'Chequeo',
         'estado' => 'agendada',
-    ]);
+    ], $this->medico->id);
 
-    $service = new HistoriaClinicaService();
+    $service = app(HistoriaClinicaService::class);
     
     $consulta = $service->registrarConsulta([
         'historia_clinica_id' => $historia->id,
@@ -123,25 +121,25 @@ test('registrar_consulta_actualiza_estado_de_agenda_a_atendida', function () {
     expect($consulta)->toBeInstanceOf(ConsultaMedica::class);
 
     $agenda->refresh();
-    expect($agenda->estado)->toBe('atendida');
+    expect($agenda->estado)->toBe('atendido');
 });
 
 test('ingresar_medicina_registra_movimiento_kardex_automatico', function () {
     $this->actingAs($this->medico, 'sanctum');
 
-    $service = new InventarioMedicinasService();
+    $service = app(InventarioMedicinasService::class);
     
     $medicina = $service->ingresarMedicina([
         'codigo' => 'MED-001',
         'nombre' => 'Paracetamol',
         'principio_activo' => 'Paracetamol',
         'concentracion' => '500mg',
-        'presentacion' => 'Tabletas',
+        'presentacion' => 'tableta',
         'lote' => 'L123',
         'fecha_caducidad' => now()->addYear(),
         'stock_minimo' => 10,
         'stock_actual' => 100,
-    ]);
+    ], $this->medico->id);
 
     expect($medicina)->toBeInstanceOf(InventarioMedicina::class);
 
@@ -161,7 +159,7 @@ test('emitir_y_despachar_receta_descuenta_stock_y_registra_kardex', function () 
         'nombre' => 'Ibuprofeno',
         'principio_activo' => 'Ibuprofeno',
         'concentracion' => '400mg',
-        'presentacion' => 'Tabletas',
+        'presentacion' => 'tableta',
         'lote' => 'L124',
         'fecha_caducidad' => now()->addYear(),
         'stock_minimo' => 10,
@@ -226,7 +224,7 @@ test('emitir_receta_con_stock_insuficiente_incluye_alerta', function () {
         'nombre' => 'Amoxicilina',
         'principio_activo' => 'Amoxicilina',
         'concentracion' => '500mg',
-        'presentacion' => 'Capsulas',
+        'presentacion' => 'capsula',
         'lote' => 'L125',
         'fecha_caducidad' => now()->addYear(),
         'stock_minimo' => 10,

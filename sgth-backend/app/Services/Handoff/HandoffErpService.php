@@ -81,28 +81,44 @@ class HandoffErpService implements HandoffErpServiceInterface
     public function generarHandoffCompromisoViatico(int $viaticoId): HandoffErp
     {
         return DB::transaction(function () use ($viaticoId) {
-            $viatico = Viatico::with('servidor')->findOrFail($viaticoId);
+            // El itinerario dejó de ser una lista de destinos sueltos: hoy son
+            // tramos, cada uno con su origen, su destino y su empresa. La
+            // relación `destinos` desapareció con esa refactorización y este
+            // método seguía pidiéndola, así que reventaba con sortBy() sobre
+            // null en cuanto se lo llamaba.
+            $viatico = Viatico::with([
+                'servidor',
+                'tramos.destinoCanton',
+                'tramos.destinoProvincia',
+            ])->findOrFail($viaticoId);
 
             $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><HandoffViatico tipo="compromiso"></HandoffViatico>');
             $xml->addChild('NumeroResolucion', htmlspecialchars($viatico->numero_resolucion ?? ''));
-            
+
             $servidor = $xml->addChild('Servidor');
             $servidor->addChild('Cedula', $viatico->servidor->cedula);
             $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombre_completo));
-            
-            $destinosTexto = $viatico->destinos
-                ->sortBy('orden')
-                ->map(function ($d) {
-                    if ($d->tipo_destino === 'nacional') {
-                        return $d->canton->nombre . ' - ' . $d->provincia->nombre;
+
+            $destinosTexto = $viatico->tramos
+                ->map(function ($tramo) {
+                    if ($tramo->destino_tipo === 'nacional') {
+                        return trim(implode(' - ', array_filter([
+                            $tramo->destinoCanton?->nombre ?? $tramo->destino_ciudad,
+                            $tramo->destinoProvincia?->nombre,
+                        ])));
                     }
-                    return $d->estado_region ? $d->estado_region . ' - ' . $d->pais : $d->pais;
+
+                    return trim(implode(' - ', array_filter([
+                        $tramo->destino_ciudad,
+                        $tramo->destino_pais,
+                    ])));
                 })
+                ->filter()
                 ->join(', ');
 
             $xml->addChild('Destino', htmlspecialchars($destinosTexto));
-            $xml->addChild('FechaInicio', $viatico->fecha_inicio->format('Y-m-d'));
-            $xml->addChild('FechaFin', $viatico->fecha_fin->format('Y-m-d'));
+            $xml->addChild('FechaInicio', $viatico->datetime_salida?->format('Y-m-d') ?? '');
+            $xml->addChild('FechaFin', $viatico->datetime_llegada?->format('Y-m-d') ?? '');
             $xml->addChild('MontoAprobado', $viatico->monto_anticipo);
             $xml->addChild('PartidaPresupuestaria', htmlspecialchars($viatico->partida_presupuestaria ?? ''));
 
@@ -129,7 +145,10 @@ class HandoffErpService implements HandoffErpServiceInterface
     public function generarHandoffDevengadoViatico(int $liquidacionId): HandoffErp
     {
         return DB::transaction(function () use ($liquidacionId) {
-            $liquidacion = LiquidacionViatico::with('viatico.servidor')->findOrFail($liquidacionId);
+            $liquidacion = LiquidacionViatico::with([
+                'viatico.servidor',
+                'detallesFactura',
+            ])->findOrFail($liquidacionId);
             $viatico = $liquidacion->viatico;
 
             $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><HandoffViatico tipo="devengado"></HandoffViatico>');
@@ -139,13 +158,17 @@ class HandoffErpService implements HandoffErpServiceInterface
             $servidor->addChild('Cedula', $viatico->servidor->cedula);
             $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombre_completo));
             
+            // Las facturas salieron de un JSON dentro de la liquidación y
+            // pasaron a su propia tabla, con categoría y tipo de comprobante.
+            // Este método seguía leyendo la columna vieja.
             $facturasXml = $xml->addChild('Facturas');
-            $facturasArr = is_array($liquidacion->facturas) ? $liquidacion->facturas : json_decode($liquidacion->facturas ?? '[]', true);
-            foreach ($facturasArr as $factura) {
+            foreach ($liquidacion->detallesFactura as $factura) {
                 $f = $facturasXml->addChild('Factura');
-                $f->addChild('Numero', htmlspecialchars($factura['numero'] ?? ''));
-                $f->addChild('Proveedor', htmlspecialchars($factura['proveedor'] ?? ''));
-                $f->addChild('Monto', $factura['monto'] ?? '0.00');
+                $f->addChild('Numero', htmlspecialchars(
+                    $factura->numero_factura ?? $factura->numero_ticket ?? ''
+                ));
+                $f->addChild('Proveedor', htmlspecialchars($factura->nombre_proveedor ?? ''));
+                $f->addChild('Monto', number_format((float) $factura->monto, 2, '.', ''));
             }
 
             $xml->addChild('TotalFacturas', $liquidacion->total_facturas);

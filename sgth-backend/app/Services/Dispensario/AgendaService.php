@@ -74,7 +74,10 @@ final class AgendaService implements AgendaServiceInterface
     {
         $agenda = AgendaMedica::findOrFail($id);
 
-        if ($agenda->estado === 'atendida') {
+        // 'atendido', no 'atendida': es el valor que escribe el resto del
+        // módulo. Con la 'a' esta comparación nunca daba verdadera y un turno
+        // ya atendido se podía cancelar igual.
+        if ($agenda->estado === 'atendido') {
             throw new ReglaNegocioException(
                 'No se puede cancelar un turno ya atendido.'
             );

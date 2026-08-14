@@ -51,7 +51,9 @@ final class ViaticoService implements ViaticoServiceInterface
             $montoCalculado = $this->calcularMonto(
                 $servidor,
                 $zona,
-                $totalDias
+                $totalDias,
+                $datetimeSalida,
+                $datetimeLlegada
             );
         }
 
@@ -437,8 +439,12 @@ final class ViaticoService implements ViaticoServiceInterface
         foreach ($viaticosPendientes as $v) {
             if (!$v->datetime_llegada) continue;
 
+            // Cinco, no cuatro: calcularDiasHabiles() cuenta a partir del día
+            // siguiente al retorno, así que pedirle 4 dejaba el plazo en
+            // cuatro días hábiles y bloqueaba al servidor un día antes de lo
+            // que permite la norma — la misma que cita el mensaje de error.
             $fechaLimite = $this->calcularDiasHabiles(
-                Carbon::parse($v->datetime_llegada)->copy(), 4
+                Carbon::parse($v->datetime_llegada)->copy(), 5
             );
 
             if (now()->gt($fechaLimite)) {
@@ -449,10 +455,38 @@ final class ViaticoService implements ViaticoServiceInterface
         return false;
     }
 
+    /**
+     * Un desplazamiento de menos de 10 horas que no obliga a pernoctar paga
+     * subsistencia, no viático: la diferencia es que el viático cubre el
+     * alojamiento y la subsistencia solo la alimentación.
+     *
+     * El catálogo de tarifas ya distinguía las dos —subsistencia está sembrada
+     * a la mitad para cada zona y nivel— pero el cálculo pedía siempre
+     * 'con_pernocte', así que una comisión de ocho horas se pagaba como si el
+     * servidor hubiera dormido fuera.
+     */
+    private function aplicaSubsistencia(
+        ?Carbon $salida,
+        ?Carbon $llegada
+    ): bool {
+        if (!$salida || !$llegada) {
+            return false;
+        }
+
+        // Cruzar la medianoche implica pernoctar, dure lo que dure.
+        if (!$salida->isSameDay($llegada)) {
+            return false;
+        }
+
+        return $salida->diffInHours($llegada) < 10;
+    }
+
     private function calcularMonto(
         Servidor $servidor,
         string $zona,
-        float $totalDias = 1
+        float $totalDias = 1,
+        ?Carbon $datetimeSalida = null,
+        ?Carbon $datetimeLlegada = null
     ): float {
         $denominacion = strtolower(
             $servidor->puesto?->cargo?->nombre ?? ''
@@ -463,18 +497,25 @@ final class ViaticoService implements ViaticoServiceInterface
                     || str_contains($denominacion, 'secretario');
         $nivel = $esAutoridad ? 'autoridad' : 'servidor';
 
+        $subsistencia = $this->aplicaSubsistencia($datetimeSalida, $datetimeLlegada);
+        $tipoTarifa   = $subsistencia ? 'subsistencia' : 'con_pernocte';
+
         $tarifa = TarifaViatico::where('zona', $zona)
             ->where('nivel', $nivel)
-            ->where('tipo_tarifa', 'con_pernocte')
+            ->where('tipo_tarifa', $tipoTarifa)
             ->first();
 
         if (!$tarifa) {
             throw new ReglaNegocioException(
                 "No se encontró tarifa para: zona={$zona}, " .
-                "nivel={$nivel}. Verifique las tarifas."
+                "nivel={$nivel}, tipo={$tipoTarifa}. Verifique las tarifas."
             );
         }
 
-        return round((float) $tarifa->valor_diario * $totalDias, 2);
+        // La subsistencia se paga una sola vez: por definición no hay más de
+        // un día que cubrir.
+        $dias = $subsistencia ? 1 : $totalDias;
+
+        return round((float) $tarifa->valor_diario * $dias, 2);
     }
 }

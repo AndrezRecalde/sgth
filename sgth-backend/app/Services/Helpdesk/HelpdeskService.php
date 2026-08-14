@@ -60,10 +60,17 @@ class HelpdeskService implements HelpdeskServiceInterface
                 'fecha_respuesta' => null
             ]);
             
-            // Enviar correo de cierre
-            \Illuminate\Support\Facades\Mail::to($ticket->solicitante->user->email ?? 'test@example.com')
-                ->queue(new \App\Mail\Helpdesk\TicketCerradoMail($ticket, $encuesta));
-                
+            // La relación se llama `usuario`, no `user`: con el nombre
+            // equivocado devolvía null y el `??` mandaba todos los correos de
+            // cierre a una dirección de prueba. Sin destinatario real no se
+            // encola nada — la encuesta de satisfacción no llegaba a nadie.
+            $correo = $ticket->solicitante?->usuario?->email;
+
+            if ($correo) {
+                \Illuminate\Support\Facades\Mail::to($correo)
+                    ->queue(new \App\Mail\Helpdesk\TicketCerradoMail($ticket, $encuesta));
+            }
+
             return $ticket;
         });
     }
