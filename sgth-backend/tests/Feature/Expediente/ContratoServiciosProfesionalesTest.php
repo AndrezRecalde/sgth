@@ -365,6 +365,48 @@ test('prorrogar saca al contrato de la detección de vencidos', function () {
     expect($this->vencidoService->generarCesacionesPendientes('2026-02-01')['generadas'])->toBeEmpty();
 });
 
+/**
+ * El motivo se exige, se guarda… y hasta ahora nadie podía leerlo: no había
+ * pantalla ni endpoint que expusiera la auditoría. Sin esto, exigirlo era una
+ * formalidad — la trazabilidad existía en la base y no llegaba a nadie.
+ */
+test('la actividad laboral muestra la reprogramación con su motivo y su autor', function () {
+    $contrato = ($this->contratoProfesional)('2026-03-01');
+
+    $this->contratoService->reprogramarPlazo($contrato, [
+        'fecha_fin' => '2027-06-30',
+        'motivo'    => 'Prórroga autorizada mediante memorando DTH-2026-0184.',
+    ]);
+
+    $vinculos = $this->contratoService->actividadLaboral($contrato->servidor_id);
+    $cambios  = collect($vinculos)->firstWhere('contrato.id', $contrato->id)['cambios'];
+
+    $reprogramacion = collect($cambios)
+        ->firstWhere('descripcion', 'Plazo del contrato reprogramado');
+
+    expect($reprogramacion)->not->toBeNull()
+        ->and($reprogramacion['fecha_fin_anterior'])->toBe('2026-12-31')
+        ->and($reprogramacion['fecha_fin_nueva'])->toBe('2027-06-30')
+        ->and($reprogramacion['motivo'])->toContain('DTH-2026-0184')
+        ->and($reprogramacion['por'])->not->toBeNull();
+});
+
+test('los cambios de un contrato no se mezclan con los de otro', function () {
+    $unContrato  = ($this->contratoProfesional)('2026-03-01');
+    $otroServidor = ($this->contratoProfesional)('2026-04-01');
+
+    $this->contratoService->reprogramarPlazo($unContrato, [
+        'fecha_fin' => '2027-06-30',
+        'motivo'    => 'Prórroga del primero.',
+    ]);
+
+    $vinculos = $this->contratoService->actividadLaboral($otroServidor->servidor_id);
+    $cambios  = collect($vinculos)->firstWhere('contrato.id', $otroServidor->id)['cambios'];
+
+    expect(collect($cambios)->pluck('descripcion'))
+        ->not->toContain('Plazo del contrato reprogramado');
+});
+
 test('el endpoint reprograma el plazo y exige motivo', function () {
     $contrato = ($this->contratoProfesional)('2026-03-01');
     $ruta = "/api/v1/expediente/servidores/{$contrato->servidor_id}/contratos/{$contrato->id}/plazo";

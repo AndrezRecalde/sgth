@@ -43,6 +43,15 @@ function fecha(f?: string | null): string {
   })
 }
 
+/** Cuándo se hizo el cambio: aquí sí importa la hora, no solo el día. */
+function fechaHora(f?: string | null): string {
+  if (!f) return '—'
+  return new Date(f).toLocaleString('es-EC', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
 function dinero(v?: string | number | null): string {
   return v != null ? `$ ${Number(v).toFixed(2)}` : '—'
 }
@@ -96,6 +105,11 @@ function Vinculo({
 }) {
   const c = vinculo.contrato
   const estado = (c.estado ?? 'vigente') as EstadoContrato
+
+  // De todo lo auditado sobre el contrato, la reprogramación es la única que
+  // trae una explicación escrita por una persona. El alta y el cierre ya se
+  // leen en el resto de la tarjeta.
+  const reprogramaciones = (vinculo.cambios ?? []).filter((x) => x.motivo)
 
   return (
     <Accordion.Item value={String(c.id)}>
@@ -193,6 +207,33 @@ function Vinculo({
               </Grid.Col>
             )}
           </Grid>
+
+          {/* El plazo es lo único editable de un vínculo, y moverlo cambia
+              cuándo cesa el servidor. Aquí queda dicho quién lo movió y por
+              qué — antes el motivo se exigía, se guardaba y no lo veía nadie. */}
+          {reprogramaciones.length > 0 && (
+            <div>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">
+                Reprogramaciones del plazo
+              </Text>
+              <Stack gap="xs">
+                {reprogramaciones.map((r) => (
+                  <Paper key={r.id} withBorder p="xs" radius="sm">
+                    <Group gap="xs" wrap="nowrap" align="baseline">
+                      <Text size="sm" fw={500}>
+                        {fecha(r.fecha_fin_anterior)} → {fecha(r.fecha_fin_nueva)}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {fechaHora(r.fecha)}
+                        {r.por ? ` · ${r.por}` : ''}
+                      </Text>
+                    </Group>
+                    {r.motivo && <Text size="sm" mt={2}>{r.motivo}</Text>}
+                  </Paper>
+                ))}
+              </Stack>
+            </div>
+          )}
 
           <div>
             <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">

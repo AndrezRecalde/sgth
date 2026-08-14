@@ -36,11 +36,27 @@ export type ReemplazoDeVinculo = {
   hasta: string | null
 }
 
+/**
+ * Lo que le pasó al contrato fuera de las acciones de personal: se creó, se
+ * cerró, se le movió el plazo. Solo la reprogramación trae las tres últimas —
+ * el motivo es obligatorio justamente para que se pueda leer después.
+ */
+export type CambioDeVinculo = {
+  id: number
+  descripcion: string | null
+  fecha: string | null
+  por: string | null
+  fecha_fin_anterior: string | null
+  fecha_fin_nueva: string | null
+  motivo: string | null
+}
+
 export type VinculoConActividad = {
   contrato: ContratoConRelaciones
   acciones: AccionSobreVinculo[]
   situacion: SituacionVinculo | null
   reemplaza_a: ReemplazoDeVinculo | null
+  cambios: CambioDeVinculo[]
 }
 
 /**

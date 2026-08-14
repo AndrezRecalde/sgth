@@ -13,9 +13,11 @@ use App\Models\Estructura\Puesto;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use Spatie\Activitylog\Models\Activity;
 
 class ContratoServidorService
 {
@@ -71,7 +73,9 @@ class ContratoServidorService
             ->orderBy('id')
             ->get();
 
-        return $contratos->map(function (ContratoServidor $contrato) use ($acciones, $fecha) {
+        $cambios = $this->cambiosAuditados($contratos->pluck('id')->all());
+
+        return $contratos->map(function (ContratoServidor $contrato) use ($acciones, $cambios, $fecha) {
             $delContrato = $acciones->filter(
                 fn (MovimientoPersonal $m) => $this->ocurreDurante($m, $contrato)
             )->values();
@@ -117,8 +121,70 @@ class ContratoServidorService
                     'etiqueta'      => $contrato->cubreMovimiento->etiquetaAusencia(),
                     'hasta'         => $contrato->cubreMovimiento->fecha_fin?->toDateString(),
                 ] : null,
+                'cambios' => $cambios->get($contrato->id, collect())->all(),
             ];
         })->all();
+    }
+
+    /**
+     * Lo que le pasó al contrato fuera de las acciones de personal.
+     *
+     * Reprogramar el plazo exige un motivo escrito, se guarda con la fecha
+     * anterior, la nueva y quién lo hizo — y hasta ahora nadie podía leerlo:
+     * no hay pantalla ni endpoint que exponga el registro de auditoría. El
+     * motivo obligatorio era una formalidad que se cobraba y no se usaba.
+     *
+     * Va acotado a ContratoServidor a propósito. Las acciones de personal ya
+     * se ven en su propio drawer, y la sincronización de datos laborales del
+     * servidor es un efecto colateral interno: incluirlos convertiría esto en
+     * ruido que entierra lo único que trae una explicación humana.
+     *
+     * @param  list<int>  $contratoIds
+     * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<int, array>>
+     */
+    private function cambiosAuditados(array $contratoIds): Collection
+    {
+        if ($contratoIds === []) {
+            return collect();
+        }
+
+        return Activity::where('subject_type', ContratoServidor::class)
+            ->whereIn('subject_id', $contratoIds)
+            ->with('causer:id,email,servidor_id', 'causer.servidor:id,nombre,apellido')
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Activity $a) => [
+                'id'          => $a->id,
+                'descripcion' => $a->description,
+                'fecha'       => $a->created_at?->toDateTimeString(),
+                'por'         => $this->nombreDelCausante($a),
+                'contrato_id' => $a->subject_id,
+                // Solo las reprogramaciones traen estos tres; el resto los deja
+                // en null y la UI muestra únicamente la línea de la acción.
+                'fecha_fin_anterior' => $a->properties['fecha_fin_anterior'] ?? null,
+                'fecha_fin_nueva'    => $a->properties['fecha_fin_nueva'] ?? null,
+                'motivo'             => $a->properties['motivo'] ?? null,
+            ])
+            ->groupBy('contrato_id');
+    }
+
+    /** El nombre del servidor detrás del usuario; su correo si no lo tiene. */
+    private function nombreDelCausante(Activity $actividad): ?string
+    {
+        $usuario = $actividad->causer;
+
+        if (! $usuario) {
+            return null;
+        }
+
+        $servidor = $usuario->servidor ?? null;
+
+        if ($servidor) {
+            return trim(($servidor->apellido ?? '').' '.($servidor->nombre ?? '')) ?: $usuario->email;
+        }
+
+        return $usuario->email;
     }
 
     /** Una acción pertenece al contrato cuyo período contiene su fecha efectiva. */
