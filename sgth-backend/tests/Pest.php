@@ -3,6 +3,13 @@
 use Illuminate\Database\Eloquent\Model;
 
 /*
+| Fixtures de estructura organizacional compartidos por los tests. Se cargan
+| desde aquí —y no solo vía composer autoload-dev— para que estén disponibles
+| sin depender de un `composer dump-autoload` tras clonar la rama.
+*/
+require_once __DIR__.'/Support/EstructuraFixtures.php';
+
+/*
 |--------------------------------------------------------------------------
 | Reguard global tras cada test
 |--------------------------------------------------------------------------

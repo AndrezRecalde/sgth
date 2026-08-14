@@ -48,36 +48,22 @@ beforeEach(function () {
         'primer_login' => false,
     ]);
 
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'U01',
-        'nombre' => 'Direccion Test',
-        'estado' => true,
-        'nivel' => 1,
-    ]);
-
-    $this->puesto = Puesto::create([
-        'codigo' => 'P01',
-        'denominacion' => 'Analista Test',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Profesional',
-        'grado_rmu' => 10,
-        'rmu' => 1000.00,
-        'nivel' => 1,
-        'es_jefe' => false,
-        'estado' => true,
-    ]);
+    $this->unidad = unidadDePrueba(['nombre' => 'Direccion Test']);
+    $this->puesto = puestoDePrueba($this->unidad, 'Analista Test');
 
     $this->paciente = Servidor::create([
         'cedula' => '0801234561',
         'nombre' => 'Juan',
         'apellido' => 'Perez',
-        'user_id' => $this->pacienteUser->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
         'fecha_ingreso_institucion' => now()->subYears(3),
         'estado' => true,
     ]);
+
+    // La FK va de users a servidores: servidores.user_id ya no existe.
+    $this->pacienteUser->update(['servidor_id' => $this->paciente->id]);
 });
 
 test('agenda_medica_genera_permiso_de_ausencia_automaticamente', function () {

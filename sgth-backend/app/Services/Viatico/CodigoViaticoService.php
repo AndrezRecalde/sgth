@@ -2,7 +2,6 @@
 
 namespace App\Services\Viatico;
 
-use App\Models\Viatico\Comision;
 use App\Models\Viatico\Viatico;
 use Illuminate\Support\Facades\DB;
 
@@ -33,38 +32,14 @@ class CodigoViaticoService
     }
 
     /**
-     * Genera un código secuencial para la comisión (ej: COM-GTIC-2026-0001)
-     */
-    public function generarCodigoComision(Comision $comision): string
-    {
-        $codigoUnidad = $comision->unidadAdministrativa->codigo ?? 'UNID';
-        $anio = $comision->created_at ? $comision->created_at->format('Y') : date('Y');
-
-        return DB::transaction(function () use ($codigoUnidad, $anio) {
-            $ultimo = Comision::where('codigo_comision', 'like', "COM-{$codigoUnidad}-{$anio}-%")
-                ->orderBy('codigo_comision', 'desc')
-                ->lockForUpdate()
-                ->first();
-
-            $ultimoCodigo = $ultimo ? $ultimo->codigo_comision : null;
-
-            $secuencial = $ultimoCodigo
-                ? (int) substr($ultimoCodigo, strrpos($ultimoCodigo, '-') + 1) + 1
-                : 1;
-
-            return sprintf('COM-%s-%d-%04d', $codigoUnidad, $anio, $secuencial);
-        });
-    }
-
-    /**
-     * Determina la unidad base para el prefijo
+     * Determina la unidad base para el prefijo.
+     *
+     * Antes miraba primero la Comisión que agrupaba al viático. Esa entidad se
+     * disolvió dentro del propio viático el 05/06/2026, así que la unidad sale
+     * de donde siempre debió salir: el puesto del servidor que viaja.
      */
     private function obtenerCodigoUnidad(Viatico $viatico): string
     {
-        if ($viatico->comision_id && $viatico->comision) {
-            return $viatico->comision->unidadAdministrativa->codigo ?? 'UNID';
-        }
-
         if ($viatico->servidor && $viatico->servidor->puesto && $viatico->servidor->puesto->unidadAdministrativa) {
             return $viatico->servidor->puesto->unidadAdministrativa->codigo ?? 'UNID';
         }

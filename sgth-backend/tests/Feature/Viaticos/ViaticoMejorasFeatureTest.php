@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\ConceptoFactura;
 use App\Enums\EstadoViatico;
+use App\Models\Viatico\CategoriaFactura;
 use App\Models\Geografia\Canton;
 use App\Models\Catalogo\EntidadFinanciera;
 use App\Models\Geografia\Provincia;
@@ -10,9 +10,6 @@ use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\CuentaBancariaServidor;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
-use App\Models\Viatico\Comision;
-use App\Models\Viatico\DestinoViatico;
-use App\Models\Viatico\TransporteViatico;
 use App\Models\Viatico\Viatico;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -26,54 +23,34 @@ beforeEach(function () {
     // Crear roles necesarios
     Role::firstOrCreate(['name' => 'maxima-autoridad', 'guard_name' => 'sanctum']);
     
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'GTIC',
-        'nombre' => 'Gerencia',
-        'estado' => true,
-        'nivel' => 1
-    ]);
-
-    $this->puesto = Puesto::create([
-        'unidad_administrativa_id' => $this->unidad->id,
-        'codigo' => 'P-01',
-        'grupo_ocupacional' => 'NJS-1',
-        'grado_rmu' => 1,
-        'rmu' => 1000,
-        'nivel' => 1,
-        'denominacion' => 'Analista',
-        'estado' => true
-    ]);
+    $this->unidad = unidadDePrueba(['codigo' => 'GTIC', 'nombre' => 'Gerencia']);
+    $this->puesto = puestoDePrueba($this->unidad);
 
     $this->servidor = Servidor::create([
-        'user_id' => $this->user->id,
         'puesto_id' => $this->puesto->id,
+        'unidad_administrativa_id' => $this->unidad->id,
         'cedula' => '1234567890',
         'nombre' => 'Juan',
         'apellido' => 'Perez',
-        'correo_institucional' => 'juan@test.com',
         'regimen_laboral' => 'losep',
         'estado' => true
     ]);
 
-    $this->comision = Comision::create([
-        'unidad_administrativa_id' => $this->unidad->id,
-        'motivo' => 'Test de comisión',
-        'fecha_inicio' => now()->toDateString(),
-        'fecha_fin' => now()->addDays(2)->toDateString(),
-        'creado_por' => $this->user->id,
-        'estado' => 'borrador'
-    ]);
+    // La FK va de users a servidores: servidores.user_id ya no existe.
+    $this->user->update(['servidor_id' => $this->servidor->id]);
 
     $this->provincia = Provincia::create(['nombre' => 'Pichincha', 'codigo' => '17']);
     $this->canton = Canton::create(['provincia_id' => $this->provincia->id, 'nombre' => 'Quito', 'codigo' => '1701']);
 
+    // Sin comisión ni `tipo`: el refactor del 05/06/2026 disolvió la Comisión
+    // dentro del propio viático (justificación, fechas de salida y llegada,
+    // número de resolución) y los acompañantes pasaron a ViaticoServidor.
+    // Estos tests nunca dependieron de ella — la creaban por inercia.
     $this->viatico = Viatico::create([
         'servidor_id' => $this->servidor->id,
-        'comision_id' => $this->comision->id,
         'zona' => 'dentro_provincia',
-        'tipo' => 'con_pernocte',
-        'fecha_inicio' => now(),
-        'fecha_fin' => now()->addDays(2),
+        'datetime_salida' => now(),
+        'datetime_llegada' => now()->addDays(2),
         'estado' => EstadoViatico::SOLICITADO,
         'monto_calculado' => 100,
         'monto_anticipo' => 0,
@@ -84,146 +61,104 @@ beforeEach(function () {
     Sanctum::actingAs($this->user);
 });
 
-// GRUPO 1 — Destinos con validación condicional
-it('destino_nacional_requiere_provincia_y_ciudad', function () {
-    $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/destinos", [
-        'tipo_destino' => 'nacional',
-        'fecha_llegada' => now()->toDateString(),
-        'fecha_salida' => now()->addDays(1)->toDateString()
-    ]);
-
-    $response->assertStatus(422);
-    $response->assertJsonStructure(['errores' => ['provincia_id', 'canton_id']]);
-});
-
-it('destino_internacional_requiere_pais', function () {
-    $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/destinos", [
-        'tipo_destino' => 'internacional',
-        'fecha_llegada' => now()->toDateString(),
-        'fecha_salida' => now()->addDays(1)->toDateString()
-    ]);
-
-    $response->assertStatus(422);
-    $response->assertJsonStructure(['errores' => ['pais']]);
-});
-
-it('destino_nacional_se_crea_correctamente', function () {
-    $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/destinos", [
-        'tipo_destino' => 'nacional',
-        'provincia_id' => $this->provincia->id,
-        'canton_id' => $this->canton->id,
-        'fecha_llegada' => now()->toDateString(),
-        'fecha_salida' => now()->addDays(1)->toDateString()
-    ]);
-
-    $response->assertCreated();
-    $this->assertDatabaseHas('destinos_viatico', [
-        'viatico_id' => $this->viatico->id,
-        'tipo_destino' => 'nacional',
-        'provincia_id' => $this->provincia->id,
-        'canton_id' => $this->canton->id
-    ]);
-});
-
-// GRUPO 2 — Transportes
-it('transporte_avion_genera_autorizacion_pendiente', function () {
-    $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/transportes", [
-        'tipo' => 'avion',
-        'empresa_o_aerolinea' => 'LATAM',
-        'numero_ticket_o_billete' => '12345',
-        'fecha_viaje' => now()->toDateString(),
-        'monto' => 150.00
-    ]);
-
-    $response->assertCreated();
-    
-    // Verificar que el Observer generó la autorización
-    $transporte = TransporteViatico::first();
-    $this->assertDatabaseHas('autorizaciones_vuelo', [
-        'transporte_viatico_id' => $transporte->id,
-        'viatico_id' => $this->viatico->id,
-        'estado' => 'pendiente'
-    ]);
-});
-
-it('transporte_vehiculo_propio_requiere_placa', function () {
-    $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/transportes", [
-        'tipo' => 'vehiculo_propio',
-        'fecha_viaje' => now()->toDateString(),
-        'monto' => 50.00
-    ]);
-
-    $response->assertStatus(422);
-    $response->assertJsonStructure(['errores' => ['placa_vehiculo', 'kilometraje', 'valor_kilometro']]);
-});
-
 // GRUPO 3 — Código secuencial
 it('codigo_viatico_se_genera_automaticamente', function () {
     expect($this->viatico->codigo_viatico)->not->toBeNull();
-    expect($this->viatico->codigo_viatico)->toMatch('/^[A-Z]+-\d{4}-\d{4}$/');
+    // CodigoViaticoService lo arma con %05d: GTIC-2026-00001.
+    expect($this->viatico->codigo_viatico)->toMatch('/^[A-Z]+-\d{4}-\d{5}$/');
 });
 
-// GRUPO 4 — Liquidación correcta
-it('liquidacion_calcula_diferencia_correctamente', function () {
-    // Configurar viatico
+/*
+| GRUPO 4 — Liquidación bajo la regla 70/30 del MRL
+|
+| Estos dos tests probaban una fórmula que ya no existe: diferencia =
+| anticipo - gastos, que podía dar negativo. Hoy ViaticoService::liquidar()
+| aplica el 70/30: el anticipo cubre el 70% y se justifica solo con facturas
+| del grupo `viatico` (hospedaje y alimentación); el transporte y los demás
+| gastos suman al total pero no descargan el anticipo. Y la diferencia nunca
+| baja de cero — si el servidor gastó de más, la institución le paga el
+| resto, no le queda debiendo un negativo.
+*/
+
+/** Hospedaje y alimentación descargan el anticipo; el resto, no. */
+function categoriaViatico(string $nombre = 'Hospedaje'): CategoriaFactura
+{
+    return CategoriaFactura::firstOrCreate(
+        ['nombre' => $nombre],
+        ['grupo' => 'viatico', 'codigo' => strtoupper(substr($nombre, 0, 4)), 'activo' => true],
+    );
+}
+
+function categoriaFueraDelViatico(string $nombre = 'Transporte'): CategoriaFactura
+{
+    return CategoriaFactura::firstOrCreate(
+        ['nombre' => $nombre],
+        ['grupo' => 'transporte', 'codigo' => strtoupper(substr($nombre, 0, 4)), 'activo' => true],
+    );
+}
+
+function facturaDe(CategoriaFactura $categoria, float $monto): array
+{
+    return [
+        'categoria_factura_id' => $categoria->id,
+        'nombre_proveedor'     => 'Proveedor Test',
+        // Un comprobante de tipo factura exige RUC y número: el ticket y el
+        // recibo no, y por eso el tipo viaja explícito.
+        'tipo_comprobante'     => 'factura',
+        'numero_factura'       => '001-001-'.str_pad((string) random_int(1, 999999999), 9, '0', STR_PAD_LEFT),
+        'ruc_proveedor'        => '1790016919001',
+        'monto'                => $monto,
+    ];
+}
+
+it('no_hay_que_devolver_cuando_hospedaje_y_alimentacion_cubren_el_anticipo', function () {
     $this->viatico->update([
-        'estado' => EstadoViatico::PENDIENTE_LIQUIDACION,
-        'monto_anticipo' => 200.00
+        'estado'          => EstadoViatico::PENDIENTE_LIQUIDACION,
+        'monto_calculado' => 300.00,
+        'monto_anticipo'  => 210.00, // el 70%
     ]);
 
     $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/liquidar", [
         'fecha_retorno' => now()->toDateString(),
         'facturas' => [
-            [
-                'concepto' => ConceptoFactura::ALIMENTACION->value,
-                'numero_factura' => '001-001-000000001',
-                'ruc_proveedor' => '1790016919001',
-                'nombre_proveedor' => 'Restaurante Test',
-                'monto' => 100.00
-            ],
-            [
-                'concepto' => ConceptoFactura::HOSPEDAJE->value,
-                'numero_factura' => '001-001-000000002',
-                'ruc_proveedor' => '1790016919001',
-                'nombre_proveedor' => 'Hotel Test',
-                'monto' => 75.00
-            ]
-        ]
+            facturaDe(categoriaViatico('Hospedaje'), 150.00),
+            facturaDe(categoriaViatico('Alimentación'), 80.00),
+        ],
     ]);
 
     $response->assertOk();
+
+    // 230 de hospedaje y alimentación superan los 210 anticipados.
     $this->assertDatabaseHas('liquidaciones_viatico', [
-        'viatico_id' => $this->viatico->id,
-        'total_facturas' => 175.00,
-        'diferencia_devolver' => 25.00
+        'viatico_id'          => $this->viatico->id,
+        'total_facturas'      => 230.00,
+        'diferencia_devolver' => 0,
     ]);
 });
 
-it('liquidacion_diferencia_negativa_cuando_gasto_mayor', function () {
-    // Configurar viatico
+it('devuelve_lo_no_justificado_y_el_transporte_no_descarga_el_anticipo', function () {
     $this->viatico->update([
-        'estado' => EstadoViatico::PENDIENTE_LIQUIDACION,
-        'monto_anticipo' => 200.00
+        'estado'          => EstadoViatico::PENDIENTE_LIQUIDACION,
+        'monto_calculado' => 300.00,
+        'monto_anticipo'  => 210.00,
     ]);
 
     $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/liquidar", [
         'fecha_retorno' => now()->toDateString(),
         'facturas' => [
-            [
-                'concepto' => ConceptoFactura::HOSPEDAJE->value,
-                'numero_factura' => '001-001-000000003',
-                'ruc_proveedor' => '1790016919001',
-                'nombre_proveedor' => 'Hotel Test 2',
-                'monto' => 215.00
-            ]
-        ]
+            facturaDe(categoriaViatico('Hospedaje'), 60.00),
+            // El pasaje suma al total pero no justifica el viático: es
+            // justamente lo que distingue al grupo `viatico` del resto.
+            facturaDe(categoriaFueraDelViatico('Transporte'), 120.00),
+        ],
     ]);
 
     $response->assertOk();
+
     $this->assertDatabaseHas('liquidaciones_viatico', [
-        'viatico_id' => $this->viatico->id,
-        'total_facturas' => 215.00,
-        'diferencia_devolver' => -15.00
+        'viatico_id'          => $this->viatico->id,
+        'total_facturas'      => 180.00,
+        'diferencia_devolver' => 150.00, // 210 anticipados − 60 justificados
     ]);
 });
 
@@ -272,34 +207,6 @@ it('solo_una_cuenta_principal_por_proposito', function () {
 // GRUPO 6 — Validar para solicitar
 it('no_puede_solicitar_sin_destinos', function () {
     // El viatico base no tiene destinos
-    $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/solicitar");
-
-    $response->assertStatus(422);
-    $response->assertJson(['exito' => false]);
-});
-
-it('no_puede_solicitar_con_autorizacion_vuelo_pendiente', function () {
-    // 1. Agregar destino válido
-    DestinoViatico::create([
-        'viatico_id' => $this->viatico->id,
-        'tipo_destino' => 'nacional',
-        'provincia_id' => $this->provincia->id,
-        'canton_id' => $this->canton->id,
-        'fecha_llegada' => now(),
-        'fecha_salida' => now()->addDays(1),
-        'orden' => 1
-    ]);
-
-    // 2. Agregar vuelo (genera autorización pendiente)
-    $this->postJson("/api/v1/viaticos/{$this->viatico->id}/transportes", [
-        'tipo' => 'avion',
-        'empresa_o_aerolinea' => 'LATAM',
-        'numero_ticket_o_billete' => '123',
-        'fecha_viaje' => now()->toDateString(),
-        'monto' => 100
-    ])->assertCreated();
-
-    // 3. Intentar solicitar
     $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/solicitar");
 
     $response->assertStatus(422);

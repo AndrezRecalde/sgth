@@ -34,36 +34,22 @@ beforeEach(function () {
         'primer_login' => false,
     ]);
 
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'U01',
-        'nombre' => 'Direccion Test',
-        'estado' => true,
-        'nivel' => 1,
-    ]);
-
-    $this->puesto = Puesto::create([
-        'codigo' => 'P01',
-        'denominacion' => 'Analista',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Profesional',
-        'grado_rmu' => 10,
-        'rmu' => 1000.00,
-        'nivel' => 1,
-        'es_jefe' => false,
-        'estado' => true,
-    ]);
+    $this->unidad = unidadDePrueba(['nombre' => 'Direccion Test']);
+    $this->puesto = puestoDePrueba($this->unidad);
 
     $this->servidor = Servidor::create([
         'cedula' => '0801234562',
         'nombre' => 'Pedro',
         'apellido' => 'Gomez',
-        'user_id' => $this->servidorUser->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => \App\Enums\RegimenLaboral::LOSEP,
         'fecha_ingreso_institucion' => now()->subYears(2),
         'estado' => true,
     ]);
+
+    // La FK va de users a servidores: servidores.user_id ya no existe.
+    $this->servidorUser->update(['servidor_id' => $this->servidor->id]);
 });
 
 test('servidor_con_liquidacion_pendiente_no_puede_solicitar', function () {
@@ -71,9 +57,8 @@ test('servidor_con_liquidacion_pendiente_no_puede_solicitar', function () {
     Viatico::create([
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
-        'tipo' => 'con_pernocte',
-        'fecha_inicio' => now()->subDays(12),
-        'fecha_fin' => now()->subDays(10), // Hace 10 dias calendario (mas de 5 habiles seguros)
+        'datetime_salida' => now()->subDays(12),
+        'datetime_llegada' => now()->subDays(10), // Hace 10 dias calendario (mas de 5 habiles seguros)
         'justificacion' => 'Comisión anterior',
         'estado' => EstadoViatico::PENDIENTE_LIQUIDACION->value,
         'monto_calculado' => 80,
@@ -84,9 +69,8 @@ test('servidor_con_liquidacion_pendiente_no_puede_solicitar', function () {
     expect(function () use ($service) {
         $service->solicitar($this->servidor->id, [
             'zona' => 'dentro_provincia',
-            'tipo' => 'con_pernocte',
-            'fecha_inicio' => now()->addDays(1)->format('Y-m-d H:i:s'),
-            'fecha_fin' => now()->addDays(2)->format('Y-m-d H:i:s'),
+            'datetime_salida' => now()->addDays(1)->format('Y-m-d H:i:s'),
+            'datetime_llegada' => now()->addDays(2)->format('Y-m-d H:i:s'),
             'justificacion' => 'Nueva comision',
         ], $this->servidorUser->id);
     })->toThrow(\App\Exceptions\ReglaNegocioException::class, 'El servidor tiene bloqueada la solicitud de nuevos viáticos');
@@ -114,9 +98,8 @@ test('viatico_menos_10_horas_aplica_subsistencia', function () {
     // Comisión de 8 horas: de 08:00 a 16:00
     $viatico = $service->solicitar($this->servidor->id, [
         'zona' => 'dentro_provincia',
-        'tipo' => 'sin_pernocte',
-        'fecha_inicio' => now()->setTime(8, 0)->format('Y-m-d H:i:s'),
-        'fecha_fin' => now()->setTime(16, 0)->format('Y-m-d H:i:s'),
+        'datetime_salida' => now()->setTime(8, 0)->format('Y-m-d H:i:s'),
+        'datetime_llegada' => now()->setTime(16, 0)->format('Y-m-d H:i:s'),
         'justificacion' => 'Reunión rápida',
     ], $this->servidorUser->id);
 
@@ -130,11 +113,10 @@ test('handoff_compromiso_generado_al_aprobar_financiero', function () {
     $viatico = Viatico::create([
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
-        'tipo' => 'con_pernocte',
-        'fecha_inicio' => now()->addDays(2),
-        'fecha_fin' => now()->addDays(4),
+        'datetime_salida' => now()->addDays(2),
+        'datetime_llegada' => now()->addDays(4),
         'justificacion' => 'Supervisión de obras',
-        'estado' => EstadoViatico::APROBADO_FINANCIERO->value,
+        'estado' => EstadoViatico::APROBADO->value,
         'monto_calculado' => 160.00,
         'monto_anticipo' => 160.00,
         'numero_resolucion' => 'RES-2026-001',
@@ -159,9 +141,8 @@ test('handoff_devengado_generado_al_liquidar', function () {
     $viatico = Viatico::create([
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
-        'tipo' => 'con_pernocte',
-        'fecha_inicio' => now()->subDays(4),
-        'fecha_fin' => now()->subDays(2),
+        'datetime_salida' => now()->subDays(4),
+        'datetime_llegada' => now()->subDays(2),
         'justificacion' => 'Supervisión de obras',
         'estado' => EstadoViatico::LIQUIDADO->value,
         'monto_calculado' => 160.00,
@@ -211,9 +192,8 @@ test('liquidacion_vence_a_los_5_dias_habiles', function () {
     Viatico::create([
         'servidor_id' => $this->servidor->id,
         'zona' => 'dentro_provincia',
-        'tipo' => 'con_pernocte',
-        'fecha_inicio' => $fechaFin->copy()->subDays(2),
-        'fecha_fin' => $fechaFin, // Lunes
+        'datetime_salida' => $fechaFin->copy()->subDays(2),
+        'datetime_llegada' => $fechaFin, // Lunes
         'justificacion' => 'Comisión en Quito',
         'estado' => EstadoViatico::PENDIENTE_LIQUIDACION->value,
         'monto_calculado' => 160.00,

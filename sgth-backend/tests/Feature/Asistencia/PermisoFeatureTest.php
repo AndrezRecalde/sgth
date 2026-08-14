@@ -36,42 +36,15 @@ beforeEach(function () {
         'primer_login' => false,
     ]);
 
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'U01_'.uniqid(),
-        'nombre' => 'Dirección de TI',
-        'estado' => true,
-        'nivel' => 1,
-    ]);
+    $this->unidad = unidadDePrueba(['nombre' => 'Dirección de TI']);
 
-    $this->puestoJefe = Puesto::create([
-        'codigo' => 'P01_'.uniqid(),
-        'denominacion' => 'Director',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Directivo',
-        'grado_rmu' => 15,
-        'rmu' => 2000.00,
-        'nivel' => 1,
-        'es_jefe' => true,
-        'estado' => true,
-    ]);
-
-    $this->puestoSubordinado = Puesto::create([
-        'codigo' => 'P02_'.uniqid(),
-        'denominacion' => 'Analista',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Profesional',
-        'grado_rmu' => 10,
-        'rmu' => 1000.00,
-        'nivel' => 1,
-        'es_jefe' => false,
-        'estado' => true,
-    ]);
+    $this->puestoJefe        = puestoJefeDePrueba($this->unidad);
+    $this->puestoSubordinado = puestoDePrueba($this->unidad);
 
     $this->servidorJefe = Servidor::create([
         'cedula' => '0801234561',
         'nombre' => 'Juan',
         'apellido' => 'Jefe',
-        'user_id' => $this->userJefe->id,
         'puesto_id' => $this->puestoJefe->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -82,12 +55,17 @@ beforeEach(function () {
         'cedula' => '0801234562',
         'nombre' => 'Pedro',
         'apellido' => 'Subordinado',
-        'user_id' => $this->userSubordinado->id,
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
         'estado' => true,
     ]);
+
+    // La FK va de users a servidores, no al revés: servidores.user_id se
+    // eliminó al invertir la relación. Puesto en el Servidor era ignorado en
+    // silencio, así que el usuario y su servidor nunca quedaban enlazados.
+    $this->userJefe->update(['servidor_id' => $this->servidorJefe->id]);
+    $this->userSubordinado->update(['servidor_id' => $this->servidorSubordinado->id]);
 });
 
 test('permiso_personal_no_puede_exceder_4_horas', function () {

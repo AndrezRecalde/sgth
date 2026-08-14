@@ -48,12 +48,12 @@ class Viatico extends Model
     protected function casts(): array
     {
         return [
-            'zona'            => ZonaViatico::class,
-            'estado'          => EstadoViatico::class,
-            'fecha_inicio'    => 'datetime',
-            'fecha_fin'       => 'datetime',
-            'monto_calculado' => 'decimal:2',
-            'monto_anticipo'  => 'decimal:2',
+            'zona'             => ZonaViatico::class,
+            'estado'           => EstadoViatico::class,
+            'datetime_salida'  => 'datetime',
+            'datetime_llegada' => 'datetime',
+            'monto_calculado'  => 'decimal:2',
+            'monto_anticipo'   => 'decimal:2',
         ];
     }
 
@@ -65,11 +65,6 @@ class Viatico extends Model
     public function liquidacion(): HasOne
     {
         return $this->hasOne(LiquidacionViatico::class, 'viatico_id');
-    }
-
-    public function comision(): BelongsTo
-    {
-        return $this->belongsTo(Comision::class);
     }
 
     public function tramos(): HasMany

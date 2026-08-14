@@ -37,36 +37,10 @@ beforeEach(function () {
         'primer_login' => false,
     ]);
 
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'U01_'.uniqid(),
-        'nombre' => 'Dirección de TI',
-        'estado' => true,
-        'nivel' => 1,
-    ]);
+    $this->unidad = unidadDePrueba(['nombre' => 'Dirección de TI']);
 
-    $this->puestoJefe = Puesto::create([
-        'codigo' => 'P01_'.uniqid(),
-        'denominacion' => 'Director',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Directivo',
-        'grado_rmu' => 15,
-        'rmu' => 2000.00,
-        'nivel' => 1,
-        'es_jefe' => true,
-        'estado' => true,
-    ]);
-
-    $this->puestoSubordinado = Puesto::create([
-        'codigo' => 'P02_'.uniqid(),
-        'denominacion' => 'Analista',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Profesional',
-        'grado_rmu' => 10,
-        'rmu' => 1000.00,
-        'nivel' => 1,
-        'es_jefe' => false,
-        'estado' => true,
-    ]);
+    $this->puestoJefe        = puestoJefeDePrueba($this->unidad);
+    $this->puestoSubordinado = puestoDePrueba($this->unidad);
 });
 
 test('calculo_vacaciones_losep_tramo_1_a_5_anios', function () {
@@ -74,7 +48,6 @@ test('calculo_vacaciones_losep_tramo_1_a_5_anios', function () {
         'cedula' => '0801234561',
         'nombre' => 'Juan',
         'apellido' => 'Perez',
-        'user_id' => $this->userSubordinado->id,
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -95,7 +68,6 @@ test('calculo_vacaciones_losep_tramo_6_a_10_anios', function () {
         'cedula' => '0801234562',
         'nombre' => 'Maria',
         'apellido' => 'Gomez',
-        'user_id' => $this->userSubordinado->id, // Use valid user_id
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -116,7 +88,6 @@ test('calculo_saldo_codigo_trabajo_incluye_dias_antiguedad', function () {
         'cedula' => '0801234563',
         'nombre' => 'Carlos',
         'apellido' => 'Mena',
-        'user_id' => $this->userSubordinado->id,
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::CODIGO_TRABAJO,
@@ -153,7 +124,6 @@ test('solicitud_vacacion_descuenta_dias_correctamente', function () {
         'cedula' => '0801234564',
         'nombre' => 'Ana',
         'apellido' => 'Losep',
-        'user_id' => $this->userSubordinado->id,
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -165,7 +135,6 @@ test('solicitud_vacacion_descuenta_dias_correctamente', function () {
         'cedula' => '0801234565',
         'nombre' => 'Luis',
         'apellido' => 'CodigoT',
-        'user_id' => $this->userJefe->id, // just to have another valid user
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::CODIGO_TRABAJO,
@@ -193,7 +162,6 @@ test('validacion_acumulacion_losep_falla_si_supera_60_dias', function () {
         'cedula' => '0801234566',
         'nombre' => 'Rosa',
         'apellido' => 'Limite',
-        'user_id' => $this->userSubordinado->id,
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -225,7 +193,6 @@ test('jefe_puede_aprobar_o_rechazar_vacacion_de_subordinado', function () {
         'cedula' => '0801234567',
         'nombre' => 'Subordinado',
         'apellido' => 'Prueba',
-        'user_id' => $this->userSubordinado->id,
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -237,7 +204,6 @@ test('jefe_puede_aprobar_o_rechazar_vacacion_de_subordinado', function () {
         'cedula' => '0801234568',
         'nombre' => 'Jefe',
         'apellido' => 'Prueba',
-        'user_id' => $this->userJefe->id,
         'puesto_id' => $this->puestoJefe->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,

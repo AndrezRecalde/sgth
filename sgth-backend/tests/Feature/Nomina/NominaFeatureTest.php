@@ -34,23 +34,8 @@ beforeEach(function () {
         'primer_login' => false,
     ]);
 
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'U01_'.uniqid(),
-        'nombre' => 'Dirección de Talento Humano',
-        'estado' => true,
-        'nivel' => 1,
-    ]);
-
-    $this->puesto = Puesto::create([
-        'codigo' => 'P01_'.uniqid(),
-        'denominacion' => 'Analista',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Profesional',
-        'grado_rmu' => 10,
-        'rmu' => 1000.00,
-        'nivel' => 1,
-        'estado' => true,
-    ]);
+    $this->unidad = unidadDePrueba(['nombre' => 'Dirección de Talento Humano']);
+    $this->puesto = puestoDePrueba($this->unidad);
 
     $this->conceptoIess = ConceptoNomina::create([
         'codigo' => 'IESS_PERSONAL',
@@ -94,7 +79,6 @@ test('calculo_iess_correcto_regimen_losep', function () {
         'cedula' => '0801234567',
         'nombre' => 'Juan',
         'apellido' => 'Pérez',
-        'user_id' => $this->user->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -118,7 +102,6 @@ test('calculo_iess_correcto_regimen_codigo_trabajo', function () {
         'cedula' => '0801234568',
         'nombre' => 'María',
         'apellido' => 'Gómez',
-        'user_id' => $this->user->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::CODIGO_TRABAJO,
@@ -142,7 +125,6 @@ test('cierre_nomina_genera_handoff_erp', function () {
         'cedula' => '0801234569',
         'nombre' => 'Luis',
         'apellido' => 'Mena',
-        'user_id' => $this->user->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -172,7 +154,6 @@ test('descuento_recurrente_aplicado_automaticamente', function () {
         'cedula' => '0801234570',
         'nombre' => 'Ana',
         'apellido' => 'Vera',
-        'user_id' => $this->user->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
@@ -211,7 +192,6 @@ test('descuento_recurrente_se_completa_al_pagar_ultima_cuota', function () {
         'cedula' => '0801234571',
         'nombre' => 'Pedro',
         'apellido' => 'Luna',
-        'user_id' => $this->user->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,

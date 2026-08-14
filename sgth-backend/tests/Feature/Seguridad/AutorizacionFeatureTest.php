@@ -27,24 +27,8 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'recepcion', 'guard_name' => 'sanctum']);
     Role::firstOrCreate(['name' => 'trabajo-social', 'guard_name' => 'sanctum']);
 
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'U01',
-        'nombre' => 'Direccion Test',
-        'estado' => true,
-        'nivel' => 1,
-    ]);
-
-    $this->puesto = Puesto::create([
-        'codigo' => 'P01',
-        'denominacion' => 'Analista',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'grupo_ocupacional' => 'Profesional',
-        'grado_rmu' => 10,
-        'rmu' => 1000.00,
-        'nivel' => 1,
-        'es_jefe' => false,
-        'estado' => true,
-    ]);
+    $this->unidad = unidadDePrueba(['nombre' => 'Direccion Test']);
+    $this->puesto = puestoDePrueba($this->unidad);
 
     // Crear Servidor A
     $this->userA = User::create([
@@ -58,7 +42,6 @@ beforeEach(function () {
         'cedula' => '0800000001',
         'nombre' => 'Servidor',
         'apellido' => 'A',
-        'user_id' => $this->userA->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => \App\Enums\RegimenLaboral::LOSEP,
@@ -78,13 +61,18 @@ beforeEach(function () {
         'cedula' => '0800000002',
         'nombre' => 'Servidor',
         'apellido' => 'B',
-        'user_id' => $this->userB->id,
         'puesto_id' => $this->puesto->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => \App\Enums\RegimenLaboral::LOSEP,
         'fecha_ingreso_institucion' => now()->subYears(2),
         'estado' => true,
     ]);
+
+    // La FK va de users a servidores: servidores.user_id ya no existe. Este
+    // enlace es justamente lo que estos tests verifican —que A no vea lo de
+    // B—, así que sin él la prueba no probaba nada.
+    $this->userA->update(['servidor_id' => $this->servidorA->id]);
+    $this->userB->update(['servidor_id' => $this->servidorB->id]);
 });
 
 test('servidor_no_accede_a_nomina_de_otro', function () {
