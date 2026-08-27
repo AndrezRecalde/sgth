@@ -65,8 +65,13 @@ export function SelectPartidaPresupuestaria({
   // Se filtra solo si la modalidad tiene correspondencia y esas partidas están
   // en el catálogo: si no, mostrar una lista vacía sería peor que mostrarlas
   // todas.
+  // Se respeta el orden del mapeo, no el del catálogo: cuando hay dos opciones
+  // la primera es la que Financiera señaló como habitual, y es la que verá
+  // arriba quien elija sin detenerse a comparar.
   const aplicables = codigos.length > 0
-    ? partidas.filter((p) => codigos.includes(p.codigo ?? ''))
+    ? partidas
+      .filter((p) => codigos.includes(p.codigo ?? ''))
+      .sort((a, b) => codigos.indexOf(a.codigo ?? '') - codigos.indexOf(b.codigo ?? ''))
     : []
 
   const listado = aplicables.length > 0 ? aplicables : partidas
@@ -84,14 +89,23 @@ export function SelectPartidaPresupuestaria({
   const unica = aplicables.length === 1 ? aplicables[0] : null
   const unicaId = unica?.id ?? null
 
+  // Al cambiar de modalidad la partida anterior puede dejar de corresponder.
+  // Desaparece del listado pero seguía en el formulario: el campo se veía
+  // lleno y se guardaba una imputación que ya no era la de esa modalidad.
+  const vigente = aplicables.length === 0
+    || value == null
+    || aplicables.some((p) => p.id === value)
+
   useEffect(() => {
     if (unicaId !== null && value !== unicaId) {
       onChange(unicaId)
+    } else if (!vigente) {
+      onChange(null)
     }
     // onChange se omite a propósito: los padres la redefinen en cada render y
     // volvería a disparar el efecto sin que nada haya cambiado.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unicaId, value])
+  }, [unicaId, value, vigente])
 
   const ayuda = description
     ?? (exigeElegirPartida(modalidad)
