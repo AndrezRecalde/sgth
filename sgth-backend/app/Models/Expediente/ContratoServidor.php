@@ -40,6 +40,7 @@ class ContratoServidor extends Model
         'estado',
         'origen',
         'remuneracion',
+        'partida_presupuestaria_id',
         'puede_marcar'
     ];
 
@@ -83,6 +84,19 @@ class ContratoServidor extends Model
     public function puesto(): BelongsTo
     {
         return $this->belongsTo(Puesto::class);
+    }
+
+    /**
+     * La partida que paga este vínculo. Depende de la modalidad —un ocasional
+     * y un permanente en el mismo puesto se imputan a partidas distintas—, por
+     * eso vive aquí y no en el puesto.
+     */
+    public function partidaPresupuestaria(): BelongsTo
+    {
+        return $this->belongsTo(
+            \App\Models\Estructura\PartidaPresupuestaria::class,
+            'partida_presupuestaria_id'
+        );
     }
 
     /**

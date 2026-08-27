@@ -149,9 +149,12 @@ class MovimientoPersonalService
         // en LOSEP el contrato puede llevar un monto ajustado.
         $datos['remuneracion_origen'] ??= $vigente->remuneracion;
 
-        // La partida sí viene del puesto, que es donde vive el respaldo
-        // presupuestario de la plaza ocupada.
-        $datos['partida_origen_id'] ??= $vigente->puesto?->partida_presupuestaria_id;
+        // La partida sale del vínculo, no del puesto: es la que realmente le
+        // está pagando al servidor. Un ocasional y un permanente sobre la misma
+        // plaza se imputan a partidas distintas, así que la del puesto solo
+        // sirve de respaldo para los vínculos anteriores a esa distinción.
+        $datos['partida_origen_id'] ??= $vigente->partida_presupuestaria_id
+            ?? $vigente->puesto?->partida_presupuestaria_id;
     }
 
     /**

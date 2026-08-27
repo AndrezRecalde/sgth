@@ -523,7 +523,10 @@ function FormularioAccion({
                               <SelectPartidaPresupuestaria
                                 value={field.value}
                                 onChange={field.onChange}
-                                description="Se toma del puesto al elegirlo; puede reemplazarla."
+                                // La partida la decide la modalidad, no el
+                                // puesto: un ocasional y un permanente sobre
+                                // la misma plaza se imputan distinto.
+                                modalidad={nombramiento}
                               />
                             )}
                           />

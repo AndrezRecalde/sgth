@@ -243,7 +243,7 @@ function Formulario({
       <SelectPartidaPresupuestaria
         value={partidaId}
         onChange={setPartidaId}
-        description="Partida que respaldará este vínculo."
+        modalidad={nombramiento}
       />
 
       <Switch

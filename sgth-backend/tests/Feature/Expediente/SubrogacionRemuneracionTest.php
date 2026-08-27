@@ -120,7 +120,7 @@ beforeEach(function () {
     };
 });
 
-test('la acción congela ambas remuneraciones y ambas partidas', function () {
+test('la acción congela ambas remuneraciones y la situación de origen', function () {
     $titular    = ($this->servidorCon)($this->puestoJefe);
     $subrogante = ($this->servidorCon)($this->puestoAsistente);
 
@@ -129,9 +129,27 @@ test('la acción congela ambas remuneraciones y ambas partidas', function () {
     expect((float) $movimiento->remuneracion_origen)->toBe(585.00)
         ->and((float) $movimiento->remuneracion_propuesta)->toBe(1412.00)
         ->and($movimiento->partida_origen_id)->toBe($this->partidaOrigen->id)
-        ->and($movimiento->partida_presupuestaria_id)->toBe($this->partidaDestino->id)
         ->and($movimiento->puesto_origen_id)->toBe($this->puestoAsistente->id)
         ->and($movimiento->unidad_origen_id)->toBe($this->unidad->id);
+});
+
+/**
+ * Esta aserción decía antes que la partida propuesta era la del puesto
+ * subrogado. Estaba mal: la subrogación no paga la remuneración de ese puesto
+ * —su titular la sigue cobrando— sino la diferencia, y la Dirección Financiera
+ * confirmó que esa se imputa a la 510512. Cargarla al puesto habría duplicado
+ * el gasto sobre una plaza ya pagada.
+ */
+test('la diferencia se imputa a la partida de subrogaciones, no a la del puesto', function () {
+    $this->seed(\Database\Seeders\PartidaPresupuestariaSeeder::class);
+
+    $titular    = ($this->servidorCon)($this->puestoJefe);
+    $subrogante = ($this->servidorCon)($this->puestoAsistente);
+
+    $movimiento = ($this->registrar)($subrogante, $titular)->movimientoPersonal;
+
+    expect($movimiento->partidaPresupuestaria?->codigo)->toBe('510512')
+        ->and($movimiento->partida_presupuestaria_id)->not->toBe($this->partidaDestino->id);
 });
 
 /**

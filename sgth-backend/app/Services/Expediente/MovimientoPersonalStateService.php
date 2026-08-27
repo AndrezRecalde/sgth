@@ -146,12 +146,29 @@ class MovimientoPersonalStateService
             );
         }
 
+        // Se verifica la partida que se va a usar, en este orden: la que la
+        // acción fijó —que es la que Talento Humano eligió—, luego la del
+        // vínculo vigente, y solo al final la del puesto. Mirar únicamente la
+        // del puesto certificaba una partida distinta de la que paga: un
+        // contrato ocasional sobre un puesto de carrera se imputa a 510510 y no
+        // a la 510105 con la que el orgánico presupuesta la plaza.
         $puesto = $movimiento->puestoDestino ?? $movimiento->puestoOrigen ?? $movimiento->servidor?->puesto;
-        $partida = $puesto?->partidaPresupuestaria;
 
-        if (!$partida || !$partida->disponible) {
+        $partida = $movimiento->partidaPresupuestaria
+            ?? $movimiento->servidor?->contratoVigente?->partidaPresupuestaria
+            ?? $puesto?->partidaPresupuestaria;
+
+        if (!$partida) {
             throw new ReglaNegocioException(
-                'No hay disponibilidad presupuestaria verificada para el puesto de este movimiento.'
+                'Esta acción no tiene partida presupuestaria asignada: '
+                    .'indíquela antes de suscribirla.'
+            );
+        }
+
+        if (!$partida->disponible) {
+            throw new ReglaNegocioException(
+                "La partida {$partida->codigo} no tiene disponibilidad presupuestaria "
+                    .'verificada. Solicítela a la Dirección Financiera antes de suscribir.'
             );
         }
     }
@@ -196,6 +213,11 @@ class MovimientoPersonalStateService
                 // ContratoServidorService.
                 'fecha_fin'                => $movimiento->fecha_fin_propuesta?->toDateString(),
                 'remuneracion'             => $movimiento->remuneracion_propuesta,
+                // La partida viaja de la acción al contrato: es la que Talento
+                // Humano eligió al aprobar, y la que va a pagar este vínculo.
+                // Si la acción no se pronunció, cae a la del puesto.
+                'partida_presupuestaria_id' => $movimiento->partida_presupuestaria_id
+                    ?? $movimiento->puestoDestino?->partida_presupuestaria_id,
                 'resolucion_numero'        => $movimiento->resolucion_numero,
                 // null = la acción no se pronunció: el contrato conserva su
                 // propio default en vez de forzarle un false.

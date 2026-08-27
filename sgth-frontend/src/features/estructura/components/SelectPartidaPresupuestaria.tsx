@@ -1,7 +1,11 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Select } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import {
+  codigosDePartida, exigeElegirPartida,
+} from '@/features/expediente/utils/partidaPorModalidad'
 import { usePartidasPresupuestarias } from '../hooks/usePartidasPresupuestarias'
 
 interface Props {
@@ -20,6 +24,16 @@ interface Props {
    * Puestos se deja en false para no ocultar partidas aún sin verificar.
    */
   soloDisponibles?: boolean
+  /**
+   * Limita el listado a las partidas que pagan esta modalidad de vinculación
+   * y preselecciona la única posible cuando no hay ambigüedad.
+   *
+   * Sin esto, registrar un ingreso obligaba a buscar entre veinte partidas la
+   * que correspondía — y equivocarse no costaba nada. Es una ayuda, no un
+   * candado: si la modalidad no tiene correspondencia definida, se muestra el
+   * catálogo completo.
+   */
+  modalidad?: string | null
 }
 
 /**
@@ -37,6 +51,7 @@ export function SelectPartidaPresupuestaria({
   required,
   disabled,
   soloDisponibles = false,
+  modalidad = null,
 }: Props) {
   const contained = useContainedInput()
 
@@ -45,16 +60,49 @@ export function SelectPartidaPresupuestaria({
     ...(soloDisponibles ? { disponible: true } : {}),
   })
 
-  const options = partidas.map((p) => ({
+  const codigos = codigosDePartida(modalidad)
+
+  // Se filtra solo si la modalidad tiene correspondencia y esas partidas están
+  // en el catálogo: si no, mostrar una lista vacía sería peor que mostrarlas
+  // todas.
+  const aplicables = codigos.length > 0
+    ? partidas.filter((p) => codigos.includes(p.codigo ?? ''))
+    : []
+
+  const listado = aplicables.length > 0 ? aplicables : partidas
+
+  const options = listado.map((p) => ({
     value: String(p.id),
     label: `${p.codigo} — ${p.descripcion}`,
   }))
+
+  // Con una sola partida posible no hay nada que decidir: se deja puesta. El
+  // campo sigue siendo editable por si aparece una excepción.
+  //
+  // Va en un efecto y no en el render porque avisarle al padre mientras se
+  // dibuja es lo que produce el "cannot update a component while rendering".
+  const unica = aplicables.length === 1 ? aplicables[0] : null
+  const unicaId = unica?.id ?? null
+
+  useEffect(() => {
+    if (unicaId !== null && value !== unicaId) {
+      onChange(unicaId)
+    }
+    // onChange se omite a propósito: los padres la redefinen en cada render y
+    // volvería a disparar el efecto sin que nada haya cambiado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unicaId, value])
+
+  const ayuda = description
+    ?? (exigeElegirPartida(modalidad)
+      ? 'Esta modalidad se imputa a gasto corriente o de inversión: elija según el fondo que financia el contrato.'
+      : undefined)
 
   return (
     <Select
       label={label}
       placeholder={isLoading ? 'Cargando partidas...' : placeholder}
-      description={description}
+      description={ayuda}
       data={options}
       value={value ? String(value) : null}
       onChange={(v) => onChange(v ? Number(v) : null)}

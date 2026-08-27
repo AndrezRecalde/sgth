@@ -7,7 +7,9 @@ use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoSubrogacion;
 use App\Enums\TipoSubrogacion;
+use App\Enums\PartidaPorModalidad;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Subrogacion;
@@ -219,11 +221,35 @@ class SubrogacionService implements SubrogacionServiceInterface
             // define R.M.U., y en LOSEP el contrato puede llevar un ajuste. Si
             // el contrato no la trae, el puesto es el único respaldo que hay.
             'remuneracion_origen' => $vigente?->remuneracion ?? $vigente?->puesto?->rmu,
-            'partida_origen_id'   => $vigente?->puesto?->partida_presupuestaria_id,
+            // La del vínculo que el subrogante ya tiene: es la que hoy le paga.
+            'partida_origen_id'   => $vigente?->partida_presupuestaria_id
+                ?? $vigente?->puesto?->partida_presupuestaria_id,
 
             'remuneracion_propuesta'    => $puesto?->rmu,
-            'partida_presupuestaria_id' => $puesto?->partida_presupuestaria_id,
+            // No la del puesto subrogado: la subrogación no paga su
+            // remuneración sino la diferencia, y esa tiene partida propia
+            // —510512 subrogaciones, 510513 encargos— confirmada por la
+            // Dirección Financiera. Imputarla a la del puesto habría cargado
+            // el gasto a una plaza que su titular sigue ocupando.
+            'partida_presupuestaria_id' => $this->partidaDeLaDiferencia($subrogacion),
         ];
+    }
+
+    /**
+     * La partida contra la que se paga la diferencia: 510512 para la
+     * subrogación, 510513 para el encargo. Null si no están registradas — el
+     * guard del Art. 105 lo rechazará al suscribir, que es mejor que imputar
+     * el gasto a una partida equivocada.
+     */
+    private function partidaDeLaDiferencia(Subrogacion $subrogacion): ?int
+    {
+        $codigo = $subrogacion->tipo === TipoSubrogacion::ENCARGO
+            ? PartidaPorModalidad::ENCARGO
+            : PartidaPorModalidad::SUBROGACION;
+
+        return PartidaPresupuestaria::where('codigo', $codigo)
+            ->where('activo', true)
+            ->value('id');
     }
 
     /**
