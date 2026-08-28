@@ -3,6 +3,7 @@
 import { useCallback } from 'react'
 import ReactECharts from 'echarts-for-react'
 import { Skeleton, Text, Paper } from '@mantine/core'
+import { useEChartsColors, type EChartsColors } from '@/hooks/useEChartsColors'
 import type { UnidadConRelaciones } from '@/types/api'
 
 interface Props {
@@ -31,33 +32,66 @@ type EChartsGraphLink = {
   target: string
 }
 
-// Configuración visual por nivel
-const NIVEL_CONFIG = [
-  {
-    // Nivel 0 — GADPE (raíz)
-    bgColor: '#0D1F2D',
-    borderColor: '#10B981',
-    textColor: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    width: 160,
-    height: 52,
-    shadowColor: 'rgba(16,185,129,0.4)',
-    shadowBlur: 12,
-  },
-  {
-    // Nivel 1 — Gestiones principales
-    bgColor: '#059669',
-    borderColor: '#047857',
-    textColor: '#ffffff',
-    fontSize: 11,
-    fontWeight: 'bold',
-    width: 150,
-    height: 48,
-    shadowColor: 'rgba(5,150,105,0.35)',
-    shadowBlur: 8,
-  },
-]
+/**
+ * Colores derivados de los tokens para este organigrama.
+ *
+ * Dos hechos del sistema mandan sobre el diseño:
+ *
+ * - `acento` resuelve a un verde oscuro en los DOS esquemas, así que un
+ *   relleno sólido de acento siempre pide una etiqueta clara encima.
+ * - `acentoTenue` es opaco y se invierte solo (menta pálido en claro, verde
+ *   profundo en oscuro), así que junto a `texto` da contraste alto en ambos.
+ *
+ * De ahí salen los tres pesos que sostienen la jerarquía: relleno sólido para
+ * la raíz, tinte de acento para las gestiones, lienzo hundido detrás.
+ */
+function coloresOrganigrama(c: EChartsColors) {
+  const oscuro = c.esquema === 'dark'
+
+  return {
+    /** Etiqueta sobre el relleno de acento. */
+    sobreAcento: oscuro ? c.texto : c.superficie,
+    /**
+     * Trazo de bordes y conexiones. En oscuro el acento resuelto se apaga
+     * contra el lienzo y las líneas de 1.5px desaparecen; el emerald de la
+     * paleta mantiene el dibujo legible.
+     */
+    trazo: oscuro ? c.serie[0] : c.acento,
+  }
+}
+
+/** Configuración visual por nivel, construida sobre los tokens del tema. */
+function nivelesOrganigrama(c: EChartsColors) {
+  const { sobreAcento, trazo } = coloresOrganigrama(c)
+
+  return [
+    {
+      // Nivel 0 — GADPE (raíz). El peso máximo: relleno de acento sólido.
+      bgColor: c.acento,
+      borderColor: trazo,
+      textColor: sobreAcento,
+      fontSize: 14,
+      fontWeight: 'bold',
+      width: 160,
+      height: 52,
+      shadowColor: trazo,
+      shadowBlur: 12,
+    },
+    {
+      // Nivel 1 — Gestiones principales. Un escalón por debajo: tinte de
+      // acento con borde de acento, y la etiqueta en el color de texto.
+      bgColor: c.acentoTenue,
+      borderColor: trazo,
+      textColor: c.texto,
+      fontSize: 11,
+      fontWeight: 'bold',
+      width: 150,
+      height: 48,
+      shadowColor: c.borde,
+      shadowBlur: 8,
+    },
+  ]
+}
 
 function wrapText(text: string, maxLen = 18): string {
   if (text.length <= maxLen) return text
@@ -82,6 +116,8 @@ export function OrganigramaChart({
   error,
   onNodeClick,
 }: Props) {
+  const c = useEChartsColors()
+
   const handleEvents = useCallback(
     () => ({
       click: (params: { data: EChartsGraphNode }) => {
@@ -113,6 +149,9 @@ export function OrganigramaChart({
     )
   }
 
+  const { sobreAcento, trazo } = coloresOrganigrama(c)
+  const NIVEL_CONFIG = nivelesOrganigrama(c)
+
   // 1. Encontrar el nodo raíz (GADPE)
   const root = unidades[0]
   const nodes: EChartsGraphNode[] = []
@@ -121,7 +160,7 @@ export function OrganigramaChart({
   if (root) {
     const rootConfig = NIVEL_CONFIG[0]
     const rootName = wrapText(root.nombre ?? 'GADPE', 20)
-    
+
     // Nodo Raíz al centro
     nodes.push({
       id: 'root',
@@ -155,7 +194,7 @@ export function OrganigramaChart({
 
     // 2. Agrupar los hijos (Gestiones) por su tipo de unidad
     const hijos = root.hijos ?? []
-    
+
     // Categorías en orden de arriba hacia abajo:
     // 1. GOBERNANTES ('G')
     // 2. HABILITANTES ASESORES ('HA')
@@ -231,15 +270,17 @@ export function OrganigramaChart({
             width: config.width - 24,
           },
           emphasis: {
+            // Al pasar el cursor la gestión "se rellena": sube del tinte al
+            // acento sólido, el mismo peso que la raíz.
             itemStyle: {
-              color: '#047857',
-              borderColor: '#10B981',
+              color: c.acento,
+              borderColor: trazo,
               borderWidth: 2.5,
               shadowBlur: 18,
-              shadowColor: 'rgba(16,185,129,0.5)',
+              shadowColor: trazo,
             },
             label: {
-              color: '#ffffff',
+              color: sobreAcento,
             },
           },
         })
@@ -258,12 +299,12 @@ export function OrganigramaChart({
     tooltip: {
       trigger: 'item',
       triggerOn: 'mousemove',
-      backgroundColor: '#0D1F2D',
-      borderColor: '#10B981',
+      backgroundColor: c.superficie,
+      borderColor: trazo,
       borderWidth: 1,
       padding: [10, 14],
       textStyle: {
-        color: '#ffffff',
+        color: c.texto,
         fontSize: 12,
         fontFamily: "'Inter', sans-serif",
       },
@@ -277,13 +318,13 @@ export function OrganigramaChart({
         const hijosCount = u.hijos?.length ?? 0
         const extra =
           nivel === 1 && hijosCount > 0
-            ? `<br/><span style="color:#10B981">▶ Clic para ver detalles</span>`
+            ? `<br/><span style="color:${trazo}">▶ Clic para ver detalles</span>`
             : ''
         return `
           <div style="font-weight:600;margin-bottom:4px;">
             ${(u.nombre ?? '').replace(/\n/g, ' ')}
           </div>
-          <div style="color:#a3e6cb;font-size:11px;">
+          <div style="color:${c.textoTenue};font-size:11px;">
             ${nivelLabel}
             ${hijosCount > 0 ? ` · ${hijosCount} subunidades` : ''}
           </div>
@@ -300,7 +341,7 @@ export function OrganigramaChart({
         roam: true,
         scaleLimit: { min: 0.4, max: 2 },
         lineStyle: {
-          color: '#059669',
+          color: trazo,
           width: 1.5,
           opacity: 0.6,
           curveness: 0,
@@ -320,26 +361,25 @@ export function OrganigramaChart({
     <Paper
       radius="md"
       withBorder
+      bg="var(--sgth-surface-sunken)"
       style={{
         height: 620,
-        background:
-          'linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #f0fdf4 100%)',
         position: 'relative',
       }}
     >
-      <div
+      <Text
+        size="xs"
+        c="dimmed"
         style={{
           position: 'absolute',
           bottom: 12,
           right: 12,
-          fontSize: 11,
-          color: '#6b7280',
           pointerEvents: 'none',
           zIndex: 10,
         }}
       >
         Scroll para zoom · Arrastra para mover · Clic en gestión para detalles
-      </div>
+      </Text>
       <div style={{ overflowX: 'auto', height: '100%', width: '100%' }}>
         <div style={{ minWidth: 1200, height: '100%' }}>
           <ReactECharts
