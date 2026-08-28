@@ -28,13 +28,23 @@ export function OrganigramaTree({
     })
   }
 
+  // La sangría del esqueleto va como padding del contenedor, no como `ml` en
+  // el Skeleton: el Skeleton mide `width: 100%`, así que un margen lo desplaza
+  // sin encogerlo y se sale del ancho de página. El padding sí reduce el
+  // espacio disponible, y son los mismos 24px por nivel del árbol ya cargado.
   if (isLoading) {
     return (
       <Stack>
         <Skeleton height={60} radius="md" />
-        <Skeleton height={60} radius="md" ml="xl" />
-        <Skeleton height={60} radius="md" ml="xl" />
-        <Skeleton height={60} radius="md" ml={48} />
+        <Box pl={24}>
+          <Skeleton height={60} radius="md" />
+        </Box>
+        <Box pl={24}>
+          <Skeleton height={60} radius="md" />
+        </Box>
+        <Box pl={48}>
+          <Skeleton height={60} radius="md" />
+        </Box>
       </Stack>
     )
   }
