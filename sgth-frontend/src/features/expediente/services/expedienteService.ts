@@ -86,19 +86,19 @@ export const expedienteService = {
         current_page: r.data.meta?.pagina_actual ?? 1,
       })),
 
+  // `ServidorController` responde con `obtenerExpedienteCompleto`:
+  // trae unidad, puesto con cargo y partida, contrato vigente y movimientos.
   obtener: (id: number) =>
     api
-      .get<ApiResponse<Servidor>>(`/expediente/servidores/${id}`)
+      .get<ApiResponse<ServidorConRelaciones>>(`/expediente/servidores/${id}`)
       .then((r) => r.data.datos),
 
-  crearBasico: (data: Partial<ServidorFormData>) =>
-    api
-      .post<ApiResponse<Servidor>>("/expediente/servidores/basico", data)
-      .then((r) => r.data.datos),
-
+  // `storeBasico` responde con un `ServidorResource` recién creado: sin
+  // relaciones cargadas, pero con la ficha completa que el llamador necesita
+  // para encadenar la vinculación.
   crear: (data: ServidorBasicoFormData) =>
     api
-      .post<ApiResponse<Servidor>>("/expediente/servidores/basico", data)
+      .post<ApiResponse<ServidorConRelaciones>>("/expediente/servidores/basico", data)
       .then((r) => r.data.datos),
 
   editar: (

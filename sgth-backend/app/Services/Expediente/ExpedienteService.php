@@ -92,6 +92,10 @@ class ExpedienteService implements ExpedienteServiceInterface
             // bloque sale en blanco aunque el dato exista.
             'puesto.cargo',
             'puesto.partidaPresupuestaria',
+            // El accesor `rmu` del puesto lee su grupo ocupacional: sin
+            // cargarlo aquí, ServidorResource lo resolvería con una consulta
+            // suelta por cada servidor.
+            'puesto.grupoOcupacional',
             'documentos',
             'contratoVigente.puesto.cargo',
             'contratoVigente.puesto.partidaPresupuestaria',
@@ -243,7 +247,7 @@ class ExpedienteService implements ExpedienteServiceInterface
     public function listarServidores(array $filtros): mixed
     {
         $query = $this->filtrarServidores(
-            Servidor::query()->with(['unidadAdministrativa', 'puesto.cargo', 'contratoVigente']),
+            Servidor::query()->with(['unidadAdministrativa', 'puesto.cargo', 'puesto.grupoOcupacional', 'contratoVigente']),
             $filtros
         );
 

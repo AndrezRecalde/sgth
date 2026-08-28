@@ -177,7 +177,7 @@ export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
         handleClose()
         // El vínculo se registra aparte: se ofrece continuar ahí mismo en vez
         // de dejar la ficha a medias esperando que alguien la encuentre.
-        if (creado) onCreado?.(creado as unknown as ServidorConRelaciones)
+        if (creado) onCreado?.(creado)
         return
       }
       handleClose()

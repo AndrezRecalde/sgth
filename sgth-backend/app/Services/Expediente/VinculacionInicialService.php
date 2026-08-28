@@ -80,6 +80,9 @@ class VinculacionInicialService
                 'contratoVigente.unidadAdministrativa',
                 'unidadAdministrativa',
                 'puesto.cargo',
+                // ServidorResource expone el accesor `rmu` del puesto, que
+                // sale de su grupo ocupacional.
+                'puesto.grupoOcupacional',
             ]);
         });
     }

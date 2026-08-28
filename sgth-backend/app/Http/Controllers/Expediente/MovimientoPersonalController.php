@@ -31,7 +31,7 @@ class MovimientoPersonalController extends Controller
 
         $this->authorize('ver', $servidor);
 
-        $movimientos = MovimientoPersonal::with(['unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo', 'puestoDestino.cargo', 'autorizadoPor'])
+        $movimientos = MovimientoPersonal::with(['unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo', 'puestoDestino.cargo', 'puestoDestino.grupoOcupacional:id,rmu', 'autorizadoPor'])
             ->where('servidor_id', $servidorId)
             // El id desempata: varias acciones del mismo día es lo normal
             // (una cesación y el ingreso que la sigue, por ejemplo), y sin
@@ -59,6 +59,7 @@ class MovimientoPersonalController extends Controller
             'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula',
             'unidadDestino:id,nombre',
             'puestoDestino.cargo:id,nombre',
+            'puestoDestino.grupoOcupacional:id,rmu',
             'partidaPresupuestaria:id,codigo,descripcion',
         ])
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
@@ -93,6 +94,7 @@ class MovimientoPersonalController extends Controller
             'puestoOrigen.cargo:id,nombre',
             'puestoDestino.cargo:id,nombre',
             'puestoDestino.partidaPresupuestaria:id,codigo,descripcion',
+            'puestoDestino.grupoOcupacional:id,rmu',
             'partidaPresupuestaria:id,codigo,descripcion',
             'partidaOrigen:id,codigo,descripcion',
             'autorizadoPor',

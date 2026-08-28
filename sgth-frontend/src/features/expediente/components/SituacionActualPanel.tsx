@@ -12,32 +12,6 @@ interface Props {
   soloVinculo?: boolean
 }
 
-/**
- * Forma mínima de la respuesta del expediente que consume este panel. El tipo
- * generado de Servidor no describe las relaciones anidadas que llegan aquí.
- */
-type PuestoSituacion = {
-  cargo?: { nombre?: string | null } | null
-  rmu?: string | number | null
-  partida_presupuestaria?: { codigo?: string | null } | null
-}
-
-type ServidorSituacion = {
-  nombre?: string | null
-  segundo_nombre?: string | null
-  apellido?: string | null
-  segundo_apellido?: string | null
-  cedula?: string | null
-  numero_papeleta_votacion?: string | null
-  puesto?: PuestoSituacion | null
-  unidad_administrativa?: { nombre?: string | null } | null
-  contrato_vigente?: {
-    remuneracion?: string | number | null
-    puesto?: PuestoSituacion | null
-    unidad_administrativa?: { nombre?: string | null } | null
-  } | null
-}
-
 function Campo({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
   return (
     <Box>
@@ -60,7 +34,7 @@ export function SituacionActualPanel({
   if (isLoading) return <Skeleton height={190} radius="md" />
   if (!servidor) return null
 
-  const s = servidor as unknown as ServidorSituacion
+  const s = servidor
   const contrato = s.contrato_vigente ?? null
   const puesto = contrato?.puesto ?? s.puesto ?? null
   const sinVinculo = !contrato
@@ -68,7 +42,11 @@ export function SituacionActualPanel({
   const nombres = [s.nombre, s.segundo_nombre].filter(Boolean).join(' ')
   const apellidos = [s.apellido, s.segundo_apellido].filter(Boolean).join(' ')
 
-  const rmu = contrato?.remuneracion ?? puesto?.rmu
+  // Solo se llega aquí con contrato vigente —sin él se muestra el aviso de
+  // abajo—, así que la R.M.U. es siempre la suya: lo que el servidor cobra
+  // hoy. El `rmu` del puesto es el de la escala del grupo ocupacional, que es
+  // otra cosa y no tiene por qué coincidir.
+  const rmu = contrato?.remuneracion
   const rmuFmt = rmu != null ? `$ ${Number(rmu).toFixed(2)}` : null
 
   return (

@@ -34,7 +34,7 @@ const fromDate = (d: Date | string | null): string | null => {
  */
 export function VinculacionInicialFormVinculo() {
   const contained = useContainedInput()
-  const { control, setValue, formState: { errors } } = useFormContext<VinculacionInicialFormData>()
+  const { control, setValue, resetField, formState: { errors } } = useFormContext<VinculacionInicialFormData>()
 
   const nombramiento = useWatch({ control, name: 'vinculo.tipo_nombramiento' })
   const unidadId     = useWatch({ control, name: 'vinculo.unidad_administrativa_id' })
@@ -98,7 +98,7 @@ export function VinculacionInicialFormVinculo() {
               value={field.value ? String(field.value) : null}
               onChange={(v) => {
                 field.onChange(v ? Number(v) : null)
-                setValue('vinculo.puesto_id', undefined as unknown as number)
+                resetField('vinculo.puesto_id')
               }}
               error={errVinculo?.unidad_administrativa_id?.message}
               {...contained}

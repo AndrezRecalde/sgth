@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Alert, Button, Group, Modal, Stepper } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { FormProvider, useForm, Controller } from 'react-hook-form'
+import { FormProvider, useForm, Controller, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconBriefcase, IconInfoCircle, IconPhone, IconUser } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
@@ -21,7 +21,12 @@ interface Props {
   onClose: () => void
 }
 
-const BLANCO = {
+/**
+ * Unidad, puesto y remuneración arrancan sin valor: el esquema los exige al
+ * enviar, pero los valores iniciales de un formulario son parciales por
+ * definición, de ahí `DefaultValues`.
+ */
+const BLANCO: DefaultValues<VinculacionInicialFormData> = {
   nombre: '', segundo_nombre: '', apellido: '', segundo_apellido: '', cedula: '',
   fecha_nacimiento: '',
   genero: 'masculino',
@@ -40,16 +45,13 @@ const BLANCO = {
   fecha_ingreso_sector_publico: null,
   vinculo: {
     tipo_nombramiento: 'nombramiento_permanente',
-    unidad_administrativa_id: undefined,
-    puesto_id: undefined,
     fecha_inicio: '',
     fecha_fin: null,
-    remuneracion: undefined,
     numero_contrato: '',
     resolucion_numero: '',
     puede_marcar: true,
   },
-} as unknown as VinculacionInicialFormData
+}
 
 /** Campos que deben validarse antes de dejar avanzar de paso. */
 const PASO_PERSONAL = [
@@ -97,7 +99,7 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
 
   const avanzar = async () => {
     if (paso === 0) {
-      const ok = await form.trigger(PASO_PERSONAL as unknown as (keyof VinculacionInicialFormData)[])
+      const ok = await form.trigger(PASO_PERSONAL)
       if (!ok) return
     }
     setPaso((p) => Math.min(p + 1, 2))

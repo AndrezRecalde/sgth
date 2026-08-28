@@ -36,37 +36,6 @@ interface Props {
   movimientoId: number | null
 }
 
-/**
- * Relaciones que trae el endpoint de detalle y que el tipo generado de
- * MovimientoPersonal no describe.
- */
-type RelacionesMovimiento = {
-  servidor?: {
-    nombre?: string | null
-    segundo_nombre?: string | null
-    apellido?: string | null
-    segundo_apellido?: string | null
-    cedula?: string | null
-    numero_papeleta_votacion?: string | null
-  } | null
-  unidad_origen?: { nombre?: string | null } | null
-  puesto_origen?: { cargo?: { nombre?: string | null } | null } | null
-  partida_origen?: { codigo?: string | null } | null
-  unidad_destino?: { nombre?: string | null } | null
-  puesto_destino?: {
-    cargo?: { nombre?: string | null } | null
-    partida_presupuestaria?: { codigo?: string | null } | null
-  } | null
-  partida_presupuestaria?: { codigo?: string | null } | null
-  solicitud_certificacion?: { dictamen?: string | null; estado?: string | null } | null
-  cubre_movimiento?: {
-    id?: number
-    codigo_registro?: string | null
-    fecha_fin?: string | null
-    servidor?: { nombre?: string | null; apellido?: string | null } | null
-  } | null
-}
-
 function fecha(f?: string | null): string {
   if (!f) return '—'
   return new Date(f).toLocaleDateString('es-EC', {
@@ -136,7 +105,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
   const contenido = () => {
     if (isLoading || !m) return <Skeleton height={420} radius="md" />
 
-    const mv = m as unknown as RelacionesMovimiento
+    const mv = m
     const estado = m.estado as EstadoAccionPersonal | undefined
     const posibles = estado ? TRANSICIONES[estado] : []
     const avanzar = posibles.filter((e) => e !== 'anulada')

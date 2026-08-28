@@ -20,7 +20,7 @@ import { z } from "zod/v4";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
-import type { Viatico } from "@/types/api";
+import type { ViaticoConRelaciones } from "@/types/api";
 
 const schema = z.object({
   pais_destino: z.string().min(1, "Requerido"),
@@ -32,7 +32,8 @@ type FormData = z.infer<typeof schema>;
 interface Props {
   opened: boolean;
   onClose: () => void;
-  viatico: Viatico;
+  // Lee `servidor.puesto.rol_puesto` para elegir la tarifa.
+  viatico: ViaticoConRelaciones;
 }
 
 const TARIFA_DIGNATARIO = 220.0;
@@ -44,16 +45,9 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
   const contained = useContainedInput();
   const { aprobar } = useViaticoMutations();
 
-  type ViaticoConServidor = Viatico & {
-    puesto?:    { rol_puesto?: string } | null
-    servidor?:  {
-      puesto?: { rol_puesto?: string } | null
-    } | null
-  }
-  const v = viatico as ViaticoConServidor
+  // El puesto cuelga del servidor: el viático no tiene relación `puesto`.
   const esDignatario =
-    v.puesto?.rol_puesto === 'dignatario' ||
-    v.servidor?.puesto?.rol_puesto === 'dignatario'
+    viatico.servidor?.puesto?.rol_puesto === 'dignatario'
 
   const tarifaBase = esDignatario ? TARIFA_DIGNATARIO : TARIFA_SERVIDOR;
 

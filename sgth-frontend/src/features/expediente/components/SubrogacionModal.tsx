@@ -6,7 +6,7 @@ import {
 } from '@mantine/core'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { DatePickerInput } from '@mantine/dates'
-import { useForm, Controller, useWatch } from 'react-hook-form'
+import { useForm, Controller, useWatch, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -35,12 +35,15 @@ const MOTIVO_OPTIONS = [
   { value: 'otro',                label: 'Otro' },
 ]
 
-const BLANK_VALUES: SubrogacionFormData = {
+/**
+ * Los tres selectores arrancan sin valor. El esquema los exige al enviar,
+ * pero los valores iniciales de un formulario son parciales por definición
+ * —de ahí `DefaultValues`—: darles un número inventado los mostraría como ya
+ * elegidos.
+ */
+const BLANK_VALUES: DefaultValues<SubrogacionFormData> = {
   tipo: 'subrogacion',
-  servidor_subrogante_id: undefined as unknown as number,
   servidor_subrogado_id:  null,
-  unidad_administrativa_id: undefined as unknown as number,
-  puesto_subrogado_id:      undefined as unknown as number,
   fecha_inicio: '',
   fecha_fin:    '',
   motivo: 'vacaciones',
@@ -59,7 +62,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
   const { registrar } = useSubrogacionMutations()
 
   const {
-    control, handleSubmit, reset, register, setValue,
+    control, handleSubmit, reset, register, setValue, resetField,
     formState: { errors },
   } = useForm<SubrogacionFormData>({
     resolver: zodResolver(subrogacionSchema),
@@ -97,7 +100,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
   // su contrato vigente; si no lo tiene, se cae a la R.M.U. de su puesto.
   const subroganteSel = servidores.find((s) => s.id === Number(subroganteId))
   const rmuSubroganteRaw = subroganteSel?.contrato_vigente?.remuneracion
-    ?? (subroganteSel as unknown as { puesto?: { rmu?: string | number | null } })?.puesto?.rmu
+    ?? subroganteSel?.puesto?.rmu
   const rmuSubrogante = rmuSubroganteRaw != null ? Number(rmuSubroganteRaw) : null
 
   /**
@@ -211,7 +214,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
                 value={field.value ? String(field.value) : null}
                 onChange={(v) => {
                   field.onChange(v ? Number(v) : undefined)
-                  setValue('puesto_subrogado_id', undefined as unknown as number)
+                  resetField('puesto_subrogado_id')
                 }}
                 error={errors.unidad_administrativa_id?.message}
               />

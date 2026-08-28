@@ -18,12 +18,13 @@ import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
-import type { Viatico, ViaticoConRelaciones } from "@/types/api";
+import type { ViaticoConRelaciones } from "@/types/api";
 
 interface Props {
   opened: boolean;
   onClose: () => void;
-  viatico: Viatico;
+  // Necesita `todos_servidores`, que sólo viene en la vista de detalle.
+  viatico: ViaticoConRelaciones;
 }
 
 export function ServidoresModal({ opened, onClose, viatico }: Props) {
@@ -31,7 +32,7 @@ export function ServidoresModal({ opened, onClose, viatico }: Props) {
   const contained = useContainedInput();
   const { actualizar } = useViaticoMutations();
 
-  const d = viatico as ViaticoConRelaciones;
+  const d = viatico;
 
   // Servidor titular
   const titular = d.todos_servidores?.find((vs) => vs.es_titular);

@@ -187,6 +187,10 @@ export type ViaticoConRelaciones = Viatico & {
     segundo_apellido?: string | null
     puesto?: {
       id?:   number
+      // El controlador serializa el modelo Puesto completo con
+      // `servidor.puesto.cargo`, y `rol_puesto` decide la tarifa del
+      // exterior (dignatario vs. servidor).
+      rol_puesto?: components['schemas']['RolPuesto'] | null
       cargo?: { nombre?: string } | null
       unidad_administrativa?: { nombre?: string } | null
     } | null
@@ -443,10 +447,20 @@ export type ServidorConRelaciones = Servidor & {
   puesto?: {
     id:     number
     es_jefe?: boolean
+    /** Accesor: la R.M.U. de la escala del grupo ocupacional del puesto.
+     *  `ServidorResource` lo agrega a mano — no es una columna. */
+    rmu?: number | null
     cargo?: {
       id:     number
       nombre?: string
       denominacion_generica?: string
+    } | null
+    // `obtenerExpedienteCompleto` carga `puesto.partidaPresupuestaria` para
+    // el bloque "situación actual" de la Acción de Personal.
+    partida_presupuestaria?: {
+      id: number
+      codigo?: string | null
+      descripcion?: string | null
     } | null
   } | null
   unidad_administrativa?: { id: number; nombre?: string }
@@ -580,10 +594,61 @@ export type MovimientoPersonal = {
   caucion_numero?: string | null
   caucion_fecha?: string | null
   created_at?: string
+  // Relaciones. `MovimientoPersonalResource` las expone en snake_case y cada
+  // endpoint carga las suyas: la bandeja trae servidor, unidad y puesto de
+  // destino; el detalle (`show`) las trae todas.
+  servidor?: {
+    id: number
+    nombre?: string | null
+    segundo_nombre?: string | null
+    apellido?: string | null
+    segundo_apellido?: string | null
+    cedula?: string | null
+    /** Solo en el detalle: la bandeja no la selecciona. */
+    numero_papeleta_votacion?: string | null
+  } | null
   unidad_origen?: { id: number; nombre?: string } | null
   unidad_destino?: { id: number; nombre?: string } | null
   puesto_origen?: { id: number; cargo?: { nombre?: string } | null } | null
-  puesto_destino?: { id: number; cargo?: { nombre?: string } | null } | null
+  puesto_destino?: {
+    id: number
+    /** Accesor: la R.M.U. de la escala del grupo ocupacional del puesto.
+     *  `MovimientoPersonalResource` lo agrega a mano — no es una columna. */
+    rmu?: number | null
+    cargo?: { nombre?: string } | null
+    partida_presupuestaria?: { id: number; codigo?: string | null; descripcion?: string | null } | null
+  } | null
+  partida_origen?: { id: number; codigo?: string | null; descripcion?: string | null } | null
+  partida_presupuestaria?: { id: number; codigo?: string | null; descripcion?: string | null } | null
+  solicitud_certificacion?: {
+    id: number
+    estado?: string | null
+    dictamen?: string | null
+    fecha_limite?: string | null
+  } | null
+  movimiento_previo?: {
+    id: number
+    tipo_movimiento?: TipoMovimientoPersonal
+    subtipo_movimiento?: string | null
+    codigo_registro?: string | null
+    fecha_efectiva?: string | null
+  } | null
+  /** La ausencia que este ingreso cubre, con el titular ausente. */
+  cubre_movimiento?: {
+    id: number
+    servidor_id?: number
+    tipo_movimiento?: TipoMovimientoPersonal
+    subtipo_movimiento?: string | null
+    codigo_registro?: string | null
+    fecha_inicio?: string | null
+    fecha_fin?: string | null
+    servidor?: {
+      id: number
+      nombre?: string | null
+      apellido?: string | null
+      cedula?: string | null
+    } | null
+  } | null
   autorizado_por_usuario?: { id: number; nombre_completo?: string } | null
 }
 

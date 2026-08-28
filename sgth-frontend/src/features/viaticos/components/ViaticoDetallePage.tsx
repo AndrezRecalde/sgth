@@ -36,8 +36,6 @@ import { ServidoresModal } from "./ServidoresModal";
 import { TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
 
-import type { ViaticoConRelaciones, Viatico } from "@/types/api";
-
 interface Props {
   identificador: string | number;
 }
@@ -79,7 +77,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const qc = useQueryClient();
 
   const { data: detalle, isLoading } = useViatico(identificador);
-  const d = detalle as ViaticoConRelaciones | undefined;
+  const d = detalle;
 
   const { data: tramosData = [] } = useTramos(detalle?.id ?? null);
 
@@ -288,7 +286,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
         <ViaticoEditModal
           opened={editModalAbierto}
           onClose={cerrarEdit}
-          viatico={d as unknown as Viatico}
+          viatico={d}
           onSuccess={cerrarEdit}
         />
       )}
@@ -297,7 +295,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
         <ServidoresModal
           opened={servidoresModalAbierto}
           onClose={cerrarServidores}
-          viatico={d as unknown as Viatico}
+          viatico={d}
         />
       )}
 
@@ -305,7 +303,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
         <AprobarExteriorModal
           opened={exteriorModalAbierto}
           onClose={cerrarExterior}
-          viatico={d as unknown as Viatico}
+          viatico={d}
         />
       )}
 
@@ -338,10 +336,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
                 </Text>
                 <TramoForm
                   viaticoId={d.id}
-                  viatico={d as unknown as import('@/types/api').Viatico}
-                  tramosExistentes={
-                    (tramosData as import('@/types/api').TramoViatico[]).length
-                  }
+                  viatico={d}
+                  tramosExistentes={tramosData.length}
                   onSuccess={() => {
                     setMostrarTramoForm(false)
                   }}

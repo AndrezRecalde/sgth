@@ -18,7 +18,7 @@ import type { EstadoAccionPersonal, MovimientoPersonal } from '@/types/api'
 const ESTADO_OPTIONS = (Object.keys(ESTADO_LABELS) as EstadoAccionPersonal[])
   .map((e) => ({ value: e, label: ESTADO_LABELS[e] }))
 
-function nombreServidor(s?: Record<string, unknown> | null): string {
+function nombreServidor(s?: MovimientoPersonal['servidor']): string {
   if (!s) return '—'
 
   return [s.apellido, s.segundo_apellido, s.nombre, s.segundo_nombre]
@@ -54,11 +54,11 @@ export function BandejaAccionesPersonal() {
       accessor: 'servidor',
       title: 'Servidor',
       render: (m) => {
-        const s = (m as unknown as { servidor?: Record<string, unknown> }).servidor
+        const s = m.servidor
         return (
           <div>
             <Text size="sm" fw={500}>{nombreServidor(s)}</Text>
-            <Text size="xs" c="dimmed">{(s?.cedula as string) ?? '—'}</Text>
+            <Text size="xs" c="dimmed">{s?.cedula ?? '—'}</Text>
           </div>
         )
       },

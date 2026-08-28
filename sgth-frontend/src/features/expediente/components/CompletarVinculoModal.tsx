@@ -81,12 +81,7 @@ function Formulario({
   const derivaDelPuesto = esLosep(nombramiento)
   const llevaPlazo = nombramiento ? CON_PLAZO.includes(nombramiento) : false
 
-  const puesto = (movimiento as unknown as {
-    puesto_destino?: {
-      rmu?: string | number | null
-      partida_presupuestaria?: { id: number } | null
-    } | null
-  }).puesto_destino
+  const puesto = movimiento.puesto_destino
 
   // La RMU solo se sugiere en LOSEP, donde sale del grupo ocupacional del
   // puesto. En Código del Trabajo y Servicios Profesionales se negocia en el
