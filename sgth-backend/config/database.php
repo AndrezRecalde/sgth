@@ -109,6 +109,11 @@ return [
             'charset'        => 'utf8',
             'prefix'         => '',
             'prefix_indexes' => true,
+            // El ODBC Driver 18 cifra por defecto y valida el certificado del
+            // servidor; el SQL Server del biométrico no lo tiene, así que se
+            // desactiva el cifrado y se confía en el certificado.
+            'encrypt'                  => env('DB_SQLSRV_ENCRYPT', 'no'),
+            'trust_server_certificate' => env('DB_SQLSRV_TRUST_CERT', 'true'),
         ],
 
     ],
