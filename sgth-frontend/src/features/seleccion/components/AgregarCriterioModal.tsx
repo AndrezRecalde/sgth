@@ -126,8 +126,8 @@ export function AgregarCriterioModal({
               value={seccion}
               onChange={(v) => setSeccion(v as SeccionCriterio)}
               data={[
-                { label: '📋 Méritos (hoja de vida)', value: 'meritos' },
-                { label: '🎯 Oposición (evaluación directa)', value: 'oposicion' },
+                { label: 'Méritos (hoja de vida)', value: 'meritos' },
+                { label: 'Oposición (evaluación directa)', value: 'oposicion' },
               ]}
               fullWidth
             />

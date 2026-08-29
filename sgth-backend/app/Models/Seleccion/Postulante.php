@@ -3,6 +3,7 @@
 namespace App\Models\Seleccion;
 
 use App\Enums\EstadoPostulante;
+use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -92,6 +93,18 @@ class Postulante extends Model
     public function onboarding(): HasOne
     {
         return $this->hasOne(Onboarding::class);
+    }
+
+    /**
+     * Última solicitud de certificación médica del aspirante.
+     *
+     * Reclutamiento la necesita para saber en qué punto va el trámite médico:
+     * el dictamen decide si ya se puede confirmar la incorporación, y ese paso
+     * lo ejecuta Talento Humano, no el dispensario.
+     */
+    public function solicitudCertificacion(): HasOne
+    {
+        return $this->hasOne(SolicitudCertificacionMedica::class)->latestOfMany();
     }
 
     public function documentos(): HasMany

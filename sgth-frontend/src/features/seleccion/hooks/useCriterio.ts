@@ -102,6 +102,10 @@ export function useGuardarCalificaciones(
       qc.invalidateQueries({
         queryKey: ['postulantes', convocatoriaId],
       })
+      // Los mismos postulantes se listan en Reclutamiento Express bajo otra
+      // clave; sin esto la tabla y los conteos del contenedor quedan viejos.
+      qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
+      qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: (error: unknown) =>
       notifications.show({

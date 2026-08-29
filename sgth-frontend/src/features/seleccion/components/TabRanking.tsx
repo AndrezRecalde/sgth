@@ -65,11 +65,11 @@ const ESTADO_LABELS: Record<string, string> = {
   en_evaluacion:      'En evaluación',
   aprobado:           'Aprobado',
   reprobado:          'Reprobado',
-  seleccionado:       '🏆 Ganador',
-  ganador_potencial:  '🏥 En evaluación médica',
+  seleccionado:       'Ganador',
+  ganador_potencial:  'En evaluación médica',
   no_seleccionado:    'No seleccionado',
   lista_espera:       'Lista de espera',
-  incorporado:        '✅ Incorporado',
+  incorporado:        'Incorporado',
 }
 
 export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }: Props) {

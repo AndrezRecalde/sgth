@@ -227,7 +227,7 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
       )}
 
       <SeccionCriterios
-        titulo="📋 Méritos (hoja de vida)"
+        titulo="Méritos (hoja de vida)"
         criterios={meritos}
         color="blue"
         convocatoriaId={convocatoriaId}
@@ -238,7 +238,7 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
       <Divider />
 
       <SeccionCriterios
-        titulo="🎯 Oposición (evaluación directa)"
+        titulo="Oposición (evaluación directa)"
         criterios={oposicion}
         color="orange"
         convocatoriaId={convocatoriaId}

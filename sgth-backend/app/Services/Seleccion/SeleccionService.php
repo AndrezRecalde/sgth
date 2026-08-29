@@ -21,9 +21,26 @@ final class SeleccionService implements SeleccionServiceInterface
     public function calificarPostulante(int $postulanteId, array $datos, int $evaluadorId): EvaluacionSeleccion
     {
         $postulante = Postulante::findOrFail($postulanteId);
-        
-        if ($postulante->convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION) {
+
+        // Un contenedor express es permanente y no atraviesa fases: se queda en
+        // 'publicada' de por vida, y sus aspirantes se evalúan uno por uno según
+        // van llegando. Exigirle 'en_evaluacion' dejaba la calificación
+        // inalcanzable para toda la modalidad express. Es la misma excepción que
+        // ya hace `declararGanadores`.
+        if (!$postulante->convocatoria->es_contenedor_permanente
+            && $postulante->convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION
+        ) {
             throw new ReglaNegocioException('La convocatoria no está en fase de evaluación.');
+        }
+
+        // Misma guarda que en la calificación por criterios: si el aspirante ya
+        // fue despachado al dispensario o incorporado, recalcular el estado lo
+        // devolvería a «aprobado» y borraría en silencio ese avance.
+        if (! $postulante->estado->admiteCalificacion()) {
+            throw new ReglaNegocioException(
+                'El aspirante ya avanzó a '.$postulante->estado->value.
+                ' y su calificación no se puede modificar.'
+            );
         }
 
         $puntajeTotal = $datos['puntaje_meritos'] + $datos['puntaje_oposicion'];

@@ -111,8 +111,8 @@ export function AgregarCriterioPlantillaModal({
               value={seccion}
               onChange={(v) => setSeccion(v as SeccionCriterio)}
               data={[
-                { label: '📋 Méritos', value: 'meritos' },
-                { label: '🎯 Oposición', value: 'oposicion' },
+                { label: 'Méritos', value: 'meritos' },
+                { label: 'Oposición', value: 'oposicion' },
               ]}
               fullWidth
             />

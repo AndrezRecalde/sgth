@@ -58,6 +58,9 @@ class StoreServidorBasicoRequest extends FormRequest
             'telefono_celular'      => 'nullable|string|max:20',
             'telefono_convencional' => 'nullable|string|max:20',
             'correo_personal'       => 'nullable|email|max:150',
+            // Registro profesional ante el ACESS. Solo lo tiene el personal
+            // de salud; aparece en la sección O de la ficha FEMO que firma.
+            'codigo_medico'         => 'nullable|string|max:30',
             'direccion_domicilio'   => 'nullable|string|max:255',
             'provincia_domicilio'   => 'nullable|string|max:100',
             'ciudad_domicilio'      => 'nullable|string|max:100',

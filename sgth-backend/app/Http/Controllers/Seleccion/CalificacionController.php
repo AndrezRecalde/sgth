@@ -43,6 +43,18 @@ final class CalificacionController extends Controller
         $postulante = Postulante::where('convocatoria_id', $convocatoriaId)
             ->findOrFail($postulanteId);
 
+        // El puntaje ya decidió la suerte del aspirante y el trámite avanzó.
+        // Sin esta guarda, recalificar a alguien en evaluación médica lo
+        // devolvía en silencio a «aprobado» y se perdía el despacho al
+        // dispensario, junto con el dictamen que ya tuviera.
+        if (! $postulante->estado->admiteCalificacion()) {
+            return ApiResponse::error(
+                'El aspirante ya avanzó a '.$postulante->estado->value.
+                ' y su calificación no se puede modificar.',
+                null, 422
+            );
+        }
+
         $request->validate([
             'calificaciones'                    => ['required', 'array'],
             'calificaciones.*.criterio_id'      => ['required', 'integer', 'exists:seleccion_criterios,id'],

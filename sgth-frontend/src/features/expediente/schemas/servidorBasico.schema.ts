@@ -39,6 +39,11 @@ export const servidorBasicoSchema = z.object({
   correo_personal:       z.string().email('Email inválido')
     .optional().or(z.literal('')),
   direccion_domicilio:   z.string().optional(),
+  /**
+   * Registro profesional ante el ACESS. Solo lo tiene el personal de salud;
+   * aparece en la sección O de las fichas FEMO que este servidor firme.
+   */
+  codigo_medico:         z.string().max(30, 'Máximo 30 caracteres').optional(),
 }).superRefine((data, ctx) => {
   if (!data.es_extranjero) {
     if (!data.provincia_nacimiento_id) {

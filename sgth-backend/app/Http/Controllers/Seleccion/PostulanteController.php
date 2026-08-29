@@ -57,7 +57,12 @@ final class PostulanteController extends Controller
             'segundo_apellido' => ['nullable', 'string', 'max:150'],
             'correo' => ['required', 'email', 'max:150'],
             'telefono' => ['nullable', 'string', 'max:20'],
-            'genero' => ['nullable', 'string', 'in:masculino,femenino,otro'],
+            // Obligatorio desde el 2026-08-28. Al incorporar al aspirante, este
+            // valor se copia a `servidores`, donde el género SÍ es requerido;
+            // aceptarlo nulo aquí metía por la puerta de atrás un expediente
+            // incompleto. Además la ficha FEMO lo usa para decidir qué bloque
+            // reproductivo del formulario del MSP mostrar.
+            'genero' => ['required', 'string', 'in:masculino,femenino,otro'],
             'estado_civil' => ['nullable', 'string', 'in:soltero,casado,union_libre,divorciado,viudo'],
             'fecha_nacimiento' => ['nullable', 'date'],
             'tipo_sangre' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],

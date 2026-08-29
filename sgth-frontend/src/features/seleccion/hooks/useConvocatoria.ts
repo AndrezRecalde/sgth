@@ -145,6 +145,12 @@ export function useInscribirPostulante(convocatoriaId: number) {
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
+      // El aspirante aparece también en Reclutamiento Express, bajo otras
+      // claves: sin esto los conteos del contenedor y el filtro de años se
+      // quedaban viejos hasta recargar la página.
+      qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
+      qc.invalidateQueries({ queryKey: ['express-resumen'] })
+      qc.invalidateQueries({ queryKey: ['express-anios'] })
     },
     onError: (error: unknown) =>
       notifications.show({
@@ -211,7 +217,7 @@ export function useEnviarAlDispensario(convocatoriaId: number) {
       const cantidad = Array.isArray(variables) ? variables.length : 1
 
       notifications.show({
-        title:   '📋 Enviado al Dispensario',
+        title:   'Enviado al Dispensario',
         message: cantidad === 1
           ? 'El candidato fue enviado al Dispensario Médico para evaluación. El ganador será confirmado tras el dictamen médico.'
           : `${cantidad} candidatos fueron enviados al Dispensario Médico. Cada uno se confirma tras su propio dictamen.`,
@@ -221,6 +227,10 @@ export function useEnviarAlDispensario(convocatoriaId: number) {
       })
       qc.invalidateQueries({ queryKey: ['convocatoria', convocatoriaId] })
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
+      // Los mismos postulantes se listan en Reclutamiento Express bajo otra
+      // clave; sin esto la tabla y los conteos del contenedor quedan viejos.
+      qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
+      qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: (error: unknown) =>
       notifications.show({
@@ -239,7 +249,7 @@ export function useConfirmarGanador(convocatoriaId: number) {
       convocatoriaService.confirmarGanador(convocatoriaId),
     onSuccess: () => {
       notifications.show({
-        title:   '🏆 Ganador confirmado',
+        title:   'Ganador confirmado',
         message: 'El candidato fue declarado ganador oficial. La convocatoria ha sido finalizada.',
         color:   'emerald',
         icon:    React.createElement(IconCheck, { size: 16 }),

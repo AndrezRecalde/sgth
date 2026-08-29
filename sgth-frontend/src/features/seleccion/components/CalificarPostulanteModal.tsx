@@ -22,12 +22,29 @@ import type {
   CriterioEvaluacion,
   CalificacionItem,
 } from '../services/criterioService'
-import type { Postulante } from '../services/convocatoriaService'
+/**
+ * Lo único que el modal necesita saber de la persona: su identidad, para
+ * mostrarla en la cabecera, y su `id`, para guardar la calificación.
+ *
+ * Se tipa así de estrecho a propósito. Antes pedía un `Postulante` completo, y
+ * eso dejaba fuera a los aspirantes de Reclutamiento Express, que llegan por
+ * otro endpoint con una forma distinta aunque sean la misma entidad. Ambos
+ * cumplen esta interfaz sin necesidad de forzar el tipo.
+ */
+export interface PostulanteCalificable {
+  id:                number
+  cedula:            string
+  nombres:           string
+  segundo_nombre?:   string | null
+  apellidos:         string
+  segundo_apellido?: string | null
+  correo:            string
+}
 
 interface Props {
   opened:         boolean
   onClose:        () => void
-  postulante:     Postulante | null
+  postulante:     PostulanteCalificable | null
   convocatoriaId: number
 }
 
@@ -311,8 +328,8 @@ export function CalificarPostulanteModal({
           />
           <Text size="xs" c={aprueba ? 'emerald' : 'red'} mt={4}>
             {aprueba
-              ? '✓ Aprueba (≥ 70 puntos)'
-              : '✗ No aprueba (< 70 puntos)'}
+              ? 'Aprueba (≥ 70 puntos)'
+              : 'No aprueba (< 70 puntos)'}
           </Text>
         </Card>
 
@@ -340,7 +357,7 @@ export function CalificarPostulanteModal({
                 <Stack gap="sm">
                   <Group gap="xs">
                     <Text size="sm" fw={700}>
-                      📋 Méritos
+                      Méritos
                     </Text>
                     <Badge size="sm" variant="light" color="blue">
                       {totalMeritos.toFixed(2)} pts
@@ -396,7 +413,7 @@ export function CalificarPostulanteModal({
                   <Stack gap="sm">
                     <Group gap="xs">
                       <Text size="sm" fw={700}>
-                        🎯 Oposición
+                        Oposición
                       </Text>
                       <Badge size="sm" variant="light" color="orange">
                         {totalOposicion.toFixed(2)} pts

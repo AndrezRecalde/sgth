@@ -19,10 +19,17 @@ final class ConvocatoriaController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        // Los contenedores permanentes de Reclutamiento Express no son
+        // convocatorias que se listen, abran o cierren: son bandejas por
+        // modalidad. Mezclarlos aquí los hacía navegables como si fueran un
+        // concurso, con acciones de concurso que el backend después rechaza.
+        // Se administran en /sgth/reclutamiento/express.
         $query = Convocatoria::with([
             'puesto.cargo',
             'puesto.unidadAdministrativa',
-        ])->orderBy('created_at', 'desc');
+        ])
+            ->where('es_contenedor_permanente', false)
+            ->orderBy('created_at', 'desc');
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));

@@ -37,6 +37,16 @@ export type AspiranteExpress = {
     unidad_administrativa?: { nombre?: string | null } | null
   } | null
   evaluacion?: { puntaje_total?: number | string | null } | null
+  /**
+   * Trámite médico del aspirante. Con dictamen de aptitud, Talento Humano
+   * confirma la incorporación desde Reclutamiento.
+   */
+  solicitud_certificacion?: {
+    id: number
+    estado: string
+    dictamen?: string | null
+    ficha_femo_id?: number | null
+  } | null
 }
 
 export type FiltroAnios = {

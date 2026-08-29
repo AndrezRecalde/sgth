@@ -6,7 +6,6 @@ import {
   Grid, Divider,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import {
   IconUsers, IconCheck, IconInfoCircle,
 } from '@tabler/icons-react'
@@ -56,7 +55,14 @@ const schema = z.object({
   segundo_apellido: z.string().optional().nullable(),
   correo:           z.email('Correo inválido'),
   telefono:         z.string().optional().nullable(),
-  genero:           z.string().optional().nullable(),
+  /**
+   * Obligatorio: al incorporar al aspirante este valor se copia a su
+   * expediente de servidor, donde el género es requerido. Además la ficha
+   * FEMO lo usa para decidir qué bloque reproductivo del MSP mostrar.
+   */
+  genero:           z.enum(['masculino', 'femenino', 'otro'], {
+    message: 'Seleccione el género',
+  }),
   estado_civil:     z.string().optional().nullable(),
   fecha_nacimiento: z.string().optional().nullable(),
   tipo_sangre:      z.string().optional().nullable(),
@@ -96,6 +102,21 @@ export function InscribirPostulanteModal({
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    // Sin `defaultValues` los campos arrancan no controlados y React avisa en
+    // consola la primera vez que se escribe en cada uno. `genero` se deja sin
+    // valor a propósito: es obligatorio y nadie debe elegirlo por el usuario.
+    defaultValues: {
+      cedula: '',
+      nombres: '',
+      segundo_nombre: '',
+      apellidos: '',
+      segundo_apellido: '',
+      correo: '',
+      telefono: '',
+      estado_civil: null,
+      fecha_nacimiento: null,
+      tipo_sangre: null,
+    },
   })
 
   const handleClose = () => {
@@ -280,10 +301,11 @@ export function InscribirPostulanteModal({
                     <Select
                       label="Género"
                       data={GENERO_OPTIONS}
-                      clearable
+                      required
                       {...contained}
                       value={field.value ?? null}
                       onChange={(v) => field.onChange(v)}
+                      error={errors.genero?.message}
                     />
                   )}
                 />

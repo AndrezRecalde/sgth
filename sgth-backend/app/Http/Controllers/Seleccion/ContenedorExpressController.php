@@ -91,6 +91,15 @@ final class ContenedorExpressController extends Controller
             'puesto.unidadAdministrativa:id,nombre',
             'evaluacion',
             'servidor:id,cedula',
+            // El trámite médico decide el siguiente paso del reclutamiento:
+            // con dictamen de aptitud, Talento Humano confirma la
+            // incorporación desde aquí, sin ir al módulo del dispensario.
+            //
+            // Sin lista de columnas a propósito: `latestOfMany()` resuelve la
+            // última solicitud con un join sobre la misma tabla, y restringir
+            // las columnas deja `postulante_id` ambiguo. Es una fila por
+            // aspirante, así que traerla entera no cuesta nada.
+            'solicitudCertificacion',
         ])
             ->where('convocatoria_id', $contenedor->id)
             ->when($desde, fn ($q) => $q->whereYear('fecha_inscripcion', '>=', $desde))
