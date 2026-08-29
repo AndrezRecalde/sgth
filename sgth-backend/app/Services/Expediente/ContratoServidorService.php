@@ -242,6 +242,7 @@ class ContratoServidorService
         }
 
         $data['fecha_fin'] = $this->resolverFechaFin($data);
+        $data['puede_marcar'] = $this->resolverPuedeMarcar($data);
 
         if (isset($data['archivo_contrato'])
             && $data['archivo_contrato'] instanceof UploadedFile) {
@@ -407,6 +408,39 @@ class ContratoServidorService
                     .'Anúlela antes de reprogramar el plazo.'
             );
         }
+    }
+
+    /**
+     * Decide si el contrato habilita la marcación biométrica.
+     *
+     * Esta es la segunda puerta al mismo dato: la acción de personal ya lo
+     * resuelve en `MovimientoPersonalService::resolverPuedeMarcar()`, pero
+     * `POST servidores/{id}/contratos` llega aquí sin pasar por ahí. Como
+     * `contratos_servidor.puede_marcar` tiene `DEFAULT true`, omitir el campo
+     * activaba la marcación de un contrato de servicios profesionales — que no
+     * tiene jornada — y el observer la copiaba al servidor.
+     *
+     * Para las modalidades que no marcan nunca se fuerza a falso aunque el
+     * cliente mande lo contrario: es una restricción, no un valor sugerido.
+     * Los obreros del Código del Trabajo siguen siendo editables, que entre
+     * ellos unos marcan y otros no.
+     */
+    private function resolverPuedeMarcar(array $data): bool
+    {
+        $nombramiento = TipoNombramiento::tryFrom(
+            $this->valorTipoNombramiento($data['tipo_nombramiento'] ?? '')
+        );
+
+        if ($nombramiento !== null && ! $nombramiento->admiteMarcacion()) {
+            return false;
+        }
+
+        if (array_key_exists('puede_marcar', $data) && $data['puede_marcar'] !== null) {
+            return (bool) $data['puede_marcar'];
+        }
+
+        // Sin valor explícito manda la modalidad, no el DEFAULT de la columna.
+        return $nombramiento?->puedeMarcarPorDefecto() ?? true;
     }
 
     private function valorTipoNombramiento(mixed $tipoNombramiento): string
