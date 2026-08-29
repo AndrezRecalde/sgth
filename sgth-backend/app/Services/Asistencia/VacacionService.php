@@ -5,6 +5,7 @@ namespace App\Services\Asistencia;
 use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Enums\RegimenLaboral;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Expediente\Servidor;
@@ -15,19 +16,43 @@ use Illuminate\Support\Facades\DB;
 
 class VacacionService implements VacacionServiceInterface
 {
+    /**
+     * Motor de cálculo según la jurisprudencia aplicable al servidor.
+     *
+     * Se decide con un `match` sobre los tres regímenes y no descartando el
+     * Código del Trabajo: con la forma anterior, el régimen de servicios
+     * profesionales —agregado el 2026-08-29— caía por omisión en el motor
+     * LOSEP y se le calculaban vacaciones que un contrato civil no genera.
+     * Un cuarto régimen tendría que decidir aquí en vez de heredar una rama.
+     */
     public function obtenerMotor(Servidor $servidor): VacacionMotorInterface
     {
-        // Factoría dinámica según la jurisprudencia aplicable al servidor
-        if ($servidor->regimen_laboral === RegimenLaboral::CODIGO_TRABAJO) {
-            return new VacacionCodigoTrabajoService();
-        }
+        $regimen = $servidor->regimen_laboral instanceof RegimenLaboral
+            ? $servidor->regimen_laboral
+            : RegimenLaboral::tryFrom((string) ($servidor->regimen_laboral ?? 'losep'));
 
-        // Por defecto, o si es LOSEP
-        return new VacacionLosepService();
+        return match ($regimen) {
+            RegimenLaboral::CODIGO_TRABAJO => new VacacionCodigoTrabajoService(),
+            RegimenLaboral::LOSEP, null    => new VacacionLosepService(),
+            RegimenLaboral::SERVICIOS_PROFESIONALES => throw new ReglaNegocioException(
+                'Un contrato de servicios profesionales no genera vacaciones: '
+                .'se pacta un entregable, no una jornada.'
+            ),
+        };
     }
 
     public function calcularSaldoActual(int $servidorId): float
     {
+        $servidor = Servidor::findOrFail($servidorId);
+
+        // Sin derecho a vacaciones no hay saldo que calcular. La comprobación
+        // va antes del cálculo legacy de más abajo: ese camino multiplica los
+        // días del motor por la antigüedad, así que a un contrato civil le
+        // habría inventado un saldo positivo.
+        if (! $this->generaVacaciones($servidor)) {
+            return 0.0;
+        }
+
         $periodoService = app(PeriodoVacacionService::class);
 
         // Si no hay períodos generados aún, usar cálculo legacy
@@ -38,8 +63,7 @@ class VacacionService implements VacacionServiceInterface
         }
 
         // Fallback al cálculo anterior
-        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
-        $motor    = $this->obtenerMotor($servidor);
+        $motor = $this->obtenerMotor($servidor);
 
         $fechaIngreso = $servidor->fecha_ingreso_institucion
             ? \Carbon\Carbon::parse($servidor->fecha_ingreso_institucion)
@@ -68,11 +92,35 @@ class VacacionService implements VacacionServiceInterface
         return max(0, $diasAcumulados - $diasVacaciones - $diasPermiso);
     }
 
+    /**
+     * ¿El régimen de este servidor genera vacaciones?
+     *
+     * Se pregunta por la capacidad —`RegimenLaboral::generaVacaciones()`— en
+     * vez de comparar cadenas en cada sitio.
+     */
+    private function generaVacaciones(Servidor $servidor): bool
+    {
+        $regimen = $servidor->regimen_laboral instanceof RegimenLaboral
+            ? $servidor->regimen_laboral
+            : RegimenLaboral::tryFrom((string) ($servidor->regimen_laboral ?? 'losep'));
+
+        return $regimen?->generaVacaciones() ?? true;
+    }
+
     public function solicitar(array $datos, int $servidorId): Vacacion
     {
         return DB::transaction(function () use ($datos, $servidorId) {
             $servidor = Servidor::findOrFail($servidorId);
-            $motor    = $this->obtenerMotor($servidor);
+
+            // Se corta aquí y no en el saldo: el mensaje tiene que explicar el
+            // motivo —el régimen— y no aparecer como «no tiene días».
+            if (! $this->generaVacaciones($servidor)) {
+                throw new ReglaNegocioException(
+                    'El régimen de este servidor no genera vacaciones.'
+                );
+            }
+
+            $motor = $this->obtenerMotor($servidor);
 
             $fechaInicio = Carbon::parse($datos['fecha_inicio']);
             $fechaFin    = Carbon::parse($datos['fecha_fin']);
