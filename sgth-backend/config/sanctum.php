@@ -50,7 +50,10 @@ return [
     |
     */
 
-    'expiration' => null,
+    // 1440 minutos = 24 horas, la misma vida que la cookie `sgth_token` del
+    // frontend. Con `null` el token seguía siendo válido para el API para
+    // siempre: la sesión de un día era solo una convención del navegador.
+    'expiration' => 1440,
 
     /*
     |--------------------------------------------------------------------------
