@@ -59,19 +59,19 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
         $grupoAsistente = DB::table('grupos_ocupacionales')->where('grado_codigo', 'SPA1')->value('id');
         $grupoProfesional = DB::table('grupos_ocupacionales')->where('grado_codigo', 'SPS2')->value('id');
 
-        $puestoObrero = $this->puesto('Trabajador de Mantenimiento', 'obrero', $unidadAdministrativa, [
+        $puestoObrero = $this->puesto('Trabajador de Mantenimiento', $unidadAdministrativa, [
             'plazas' => 5, 'regimen_laboral' => 'codigo_trabajo',
             'grupo_ocupacional_id' => null, 'nivel_complejidad' => 'bajo',
             'rol_puesto' => 'codigo_trabajo', 'partida_presupuestaria_id' => $partida?->id,
         ]);
 
-        $puestoConsultor = $this->puesto('Consultor de Proyectos', 'contratado', $unidadTic, [
+        $puestoConsultor = $this->puesto('Consultor de Proyectos', $unidadTic, [
             'plazas' => 5, 'regimen_laboral' => 'losep',
             'grupo_ocupacional_id' => $grupoProfesional, 'nivel_complejidad' => 'alto',
             'rol_puesto' => 'ejecucion_procesos', 'partida_presupuestaria_id' => $partida?->id,
         ]);
 
-        $puestoAsistente = $this->puesto('Asistente Administrativo', 'empleado', $unidadAdministrativa, [
+        $puestoAsistente = $this->puesto('Asistente Administrativo', $unidadAdministrativa, [
             'plazas' => 5, 'regimen_laboral' => 'losep',
             'grupo_ocupacional_id' => $grupoAsistente, 'nivel_complejidad' => 'medio',
             'rol_puesto' => 'administrativo', 'partida_presupuestaria_id' => $partida?->id,
@@ -81,36 +81,36 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
 
         // El orden importa: los dos primeros ocupan las jefaturas ancladas, así
         // que las acciones siguientes ya sellan sus nombres como firmantes.
-        $this->vincular('1', 'Marcela', 'Quiñónez', TipoNombramiento::ELECCION_POPULAR,
+        $this->vincular('1', 'Marcela', 'Quiñónez', 'femenino', TipoNombramiento::ELECCION_POPULAR,
             $this->puestoDeJefatura('Prefecto/a Provincial'), '2023-05-15', 4200.00);
 
-        $this->vincular('2', 'Rodrigo', 'Valencia', TipoNombramiento::PERMANENTE,
+        $this->vincular('2', 'Rodrigo', 'Valencia', 'masculino', TipoNombramiento::PERMANENTE,
             $this->puestoDeJefatura('Director/a de Talento Humano'), '2019-03-01', 2034.00);
 
         // Obrero: única vía para probar el visto bueno. Su remuneración es la
         // pactada, no la del puesto — el puesto ni siquiera tiene RMU.
-        $this->vincular('3', 'Segundo', 'Caicedo', TipoNombramiento::CODIGO_TRABAJO,
+        $this->vincular('3', 'Segundo', 'Caicedo', 'masculino', TipoNombramiento::CODIGO_TRABAJO,
             $puestoObrero, '2021-06-01', 620.00);
 
         // Servicios Profesionales YA VENCIDO: 'sgth:contratos:detectar-vencidos'
         // debe generarle la cesación por contrato finalizado.
-        $this->vincular('4', 'Lorena', 'Bone', TipoNombramiento::SERVICIOS_PROFESIONALES,
+        $this->vincular('4', 'Lorena', 'Bone', 'femenino', TipoNombramiento::SERVICIOS_PROFESIONALES,
             $puestoConsultor, "{$anioPasado}-03-01", 1800.00, "{$anioPasado}-03-01");
 
         // Servicios Profesionales VIGENTE: control, no debe aparecer.
-        $this->vincular('5', 'Andrés', 'Mina', TipoNombramiento::SERVICIOS_PROFESIONALES,
+        $this->vincular('5', 'Andrés', 'Mina', 'masculino', TipoNombramiento::SERVICIOS_PROFESIONALES,
             $puestoConsultor, now()->startOfYear()->toDateString(), 1750.00,
             now()->startOfYear()->toDateString());
 
         // Permanente con antigüedad: comisión de servicios (exige 2 años o más)
         // y traspasos, sin tocar al usuario real.
-        $this->vincular('6', 'Gabriela', 'Ortiz', TipoNombramiento::PERMANENTE,
+        $this->vincular('6', 'Gabriela', 'Ortiz', 'femenino', TipoNombramiento::PERMANENTE,
             $puestoAsistente, '2018-02-01', 986.00);
 
         // Permanente con antigüedad que además se va de comisión: es la única
         // forma de que la pestaña de Ausencias y Reemplazos tenga algo que
         // mostrar, y de poder ensayar la contratación del suplente.
-        $ausente = $this->vincular('7', 'Nelson', 'Arroyo', TipoNombramiento::PERMANENTE,
+        $ausente = $this->vincular('7', 'Nelson', 'Arroyo', 'masculino', TipoNombramiento::PERMANENTE,
             $puestoAsistente, '2017-09-01', 1010.00);
 
         $this->comisionar($ausente, $puestoAsistente);
@@ -137,6 +137,16 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
         }
 
         DB::table('solicitudes_certificacion_medica')->whereIn('servidor_id', $ids)->delete();
+
+        // Las subrogaciones apuntan al servidor por dos columnas distintas, y
+        // ninguna se borra en cascada. Sin esto la limpieza fallaba con una
+        // violación de clave foránea en cuanto alguien hubiera ensayado una
+        // subrogación con estos datos, y el seeder dejaba de poder ejecutarse.
+        DB::table('subrogaciones')
+            ->whereIn('servidor_subrogante_id', $ids)
+            ->orWhereIn('servidor_subrogado_id', $ids)
+            ->delete();
+
         MovimientoPersonal::whereIn('servidor_id', $ids)->delete();
         ContratoServidor::withTrashed()->whereIn('servidor_id', $ids)->forceDelete();
         Servidor::withTrashed()->whereIn('id', $ids)->forceDelete();
@@ -173,14 +183,10 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
     /** @param  array<string, mixed>  $atributos */
     private function puesto(
         string $nombreCargo,
-        string $clasificacion,
         UnidadAdministrativa $unidad,
         array $atributos
     ): Puesto {
-        $cargo = Cargo::firstOrCreate(
-            ['nombre' => $nombreCargo],
-            ['clasificacion_personal' => $clasificacion]
-        );
+        $cargo = Cargo::firstOrCreate(['nombre' => $nombreCargo]);
 
         // updateOrCreate para que una corrida posterior complete los puestos
         // que hubieran quedado a medias.
@@ -198,6 +204,7 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
         string $sufijo,
         string $nombre,
         string $apellido,
+        string $genero,
         TipoNombramiento $nombramiento,
         Puesto $puesto,
         string $fechaIngreso,
@@ -210,8 +217,19 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
             'cedula' => $cedula,
             'nombre' => $nombre,
             'apellido' => $apellido,
+            // Obligatorio al inscribir por pantalla, y aquí también: la ficha
+            // FEMO habilita los bloques gineco-obstétricos según este dato, así
+            // que un servidor sembrado sin género nace con la ficha incompleta.
+            'genero' => $genero,
             'correo_personal' => strtolower($nombre).'.'.strtolower($apellido).'@prueba.local',
-            'regimen_laboral' => $nombramiento->esLosep() ? 'losep' : 'codigo_trabajo',
+            // `regimen_laboral` NO se escribe aquí. Es un campo derivado del
+            // contrato, y ContratoServidorService::sincronizarRegimenServidor()
+            // lo pone al materializar la acción de ingreso, unas líneas más
+            // abajo. Escribirlo a mano con `esLosep() ? ... : 'codigo_trabajo'`
+            // —como hacía antes— dejaba a los de Servicios Profesionales como
+            // Código del Trabajo: `esLosep()` es binario y no conoce el tercer
+            // régimen, así que un `migrate:fresh --seed` deshacía la migración
+            // que los reclasificó.
             'fecha_ingreso_institucion' => $fechaIngreso,
             'numero_papeleta_votacion' => '00'.$sufijo.'-0001',
             'estado' => true,
