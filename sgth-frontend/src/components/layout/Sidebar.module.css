@@ -1,104 +1,261 @@
+/* Sidebar del shell. Todos los colores salen de tokens semánticos:
+   este archivo NO conoce el subsistema activo, solo `--sgth-accent-*`. */
+
 .sidebar {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: var(--mantine-color-body);
+  background-color: var(--sgth-surface);
+  border-right: 1px solid var(--sgth-border);
 }
 
-.userRow {
+/* ── Marca ─────────────────────────────────────────────── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  height: var(--sgth-header-height);
+  padding-inline: 14px;
+  border-bottom: 1px solid var(--sgth-border);
+  color: inherit;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brandCollapsed {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.brandMark {
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.brandText {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 32px 16px 16px 16px;
-  text-align: center;
+  min-width: 0;
+  line-height: 1.1;
 }
 
-.userRowCollapsed {
-  padding: 16px 8px;
-  align-items: center;
+.brandName {
+  font-family: var(--font-poppins), var(--mantine-font-family);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--sgth-text);
 }
 
-.avatar {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  margin-bottom: 12px;
+.brandSub {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sgth-text-muted);
 }
 
-.avatarCollapsed {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 0;
-}
-
-.title {
-  font-weight: 600;
-  font-size: 16px;
-  color: var(--mantine-color-text);
-  margin-bottom: 4px;
-}
-
-.subtitle {
-  font-size: 13px;
-  color: var(--mantine-color-dimmed);
-}
-
-.navItem {
+/* ── Conmutador de subsistema ──────────────────────────── */
+.switcher {
   display: flex;
   align-items: center;
+  gap: var(--mantine-spacing-sm);
   width: 100%;
-  padding: 8px;
-  margin-bottom: 4px;
-  border-radius: 8px;
-  color: var(--mantine-color-text);
-  background-color: transparent;
-  transition: background-color 150ms ease, color 150ms ease;
-  text-decoration: none;
-  cursor: pointer;
-  border: none;
-  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--sgth-accent-light);
+  transition: border-color var(--sgth-motion-fast) var(--sgth-easing);
 }
 
-.navItem:hover {
-  background-color: var(--mantine-color-default-hover);
+.switcher:hover {
+  border-color: var(--sgth-accent-border);
 }
 
-.navItemActive {
-  background-color: light-dark(#e2e8f0, rgba(255, 255, 255, 0.08));
-  color: light-dark(#0f172a, var(--mantine-color-text));
-  font-weight: 500;
+.switcherCollapsed {
+  justify-content: center;
+  padding: 8px 0;
 }
 
-.navGroup {
-  margin-top: 12px;
-  margin-bottom: 4px;
-  padding: 0 16px;
-  font-size: 13px;
+.switcherLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  color: var(--sgth-accent-text);
+  text-align: left;
+}
+
+/* ── Navegación ────────────────────────────────────────── */
+.nav {
+  flex: 1;
+  min-height: 0;
+  padding-inline: 10px;
+}
+
+.group + .group {
+  margin-top: 14px;
+}
+
+.groupLabel {
+  padding: 0 8px 6px;
+  font-size: 10px;
   font-weight: 700;
-  color: var(--mantine-color-blue-filled);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sgth-text-muted);
 }
 
-.navGroupSubtitle {
-  padding: 0 16px;
-  font-size: 12px;
-  color: var(--mantine-color-dimmed);
-  margin-top: -2px;
-  margin-bottom: 8px;
+/* Plegado: el título del grupo no cabe, pero la separación debe sobrevivir. */
+.groupRule {
+  height: 1px;
+  margin: 14px 12px 10px;
+  background-color: var(--sgth-border);
 }
 
-.navGroupCollapsed {
-  border-top: 1px solid var(--mantine-color-default-border);
-  margin: 16px 16px 8px 16px;
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  padding-inline: 8px;
+  border-radius: var(--mantine-radius-md);
+  color: var(--sgth-text);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color var(--sgth-motion-fast) var(--sgth-easing),
+    color var(--sgth-motion-fast) var(--sgth-easing);
 }
 
+.item + .item,
+.item + .nested,
+.nested + .item {
+  margin-top: 2px;
+}
+
+.item:hover {
+  background-color: var(--sgth-surface-hover);
+}
+
+.itemActive,
+.itemActive:hover {
+  background-color: var(--sgth-accent-light);
+  color: var(--sgth-accent-text);
+  font-weight: 600;
+}
+
+/* La barra del ítem activo se dibuja con ::before y no con `border-left`:
+   un borde real desplazaría el texto 3px al activarse. */
+.itemActive::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background-color: var(--sgth-accent);
+}
+
+.itemCollapsed {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.itemCollapsed.itemActive::before {
+  left: 0;
+}
+
+.itemIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--sgth-text-muted);
+  transition: transform var(--sgth-motion-base) var(--sgth-easing);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+/* ── Subniveles ────────────────────────────────────────── */
+/* Riel vertical: agrupa visualmente los hijos y evita que un submenú largo
+   se lea como una lista plana. */
+.children {
+  position: relative;
+  margin-left: 18px;
+  padding-left: 12px;
+  padding-block: 2px;
+}
+
+.children::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background-color: var(--sgth-border);
+}
+
+.child {
+  height: 32px;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 400;
+}
+
+.child.itemActive::before {
+  left: -12px;
+  height: 16px;
+}
+
+/* ── Pie ───────────────────────────────────────────────── */
 .footer {
-  padding: 16px;
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--sgth-border);
 }
 
-.helpCard {
-  background-color: var(--mantine-color-default);
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: var(--mantine-shadow-xs);
-  border: 1px solid var(--mantine-color-default-border);
+.footerText {
+  font-size: 10px;
+  color: var(--sgth-text-muted);
+}
+
+/* Hueco del conmutador de subsistema, entre la marca y el menú. */
+.switcherSlot {
+  flex-shrink: 0;
+  padding: 10px 14px;
+}
+
+.switcherSlot[data-collapsed] {
+  padding: 10px 8px;
+}
+
+/* Etiqueta de un ítem de menú que debe poder recortarse.
+   Sin `min-width: 0` el contenido largo empuja el ancho del desplegable en vez
+   de truncarse: un flex item no encoge por debajo de su contenido a menos que
+   se le diga explícitamente. */
+.menuItemLabel {
+  min-width: 0;
 }

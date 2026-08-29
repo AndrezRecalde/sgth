@@ -1,59 +1,70 @@
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { UnstyledButton, Group, Text, Tooltip, Box } from "@mantine/core";
-import { getNavIcon } from "@/lib/tablerIcons";
-import classes from "./Sidebar.module.css";
+'use client'
+
+import Link from 'next/link'
+import { Badge, Tooltip, UnstyledButton } from '@mantine/core'
+import { getNavIcon } from '@/lib/tablerIcons'
+import classes from './Sidebar.module.css'
 
 interface Props {
-  label: string;
-  icon: string;
-  href: string;
-  collapsed: boolean;
-  onClick?: () => void;
+  label: string
+  icon: string
+  href: string
+  badge?: string
+  active: boolean
+  collapsed: boolean
+  /** Marca el ítem como hijo de un submenú (altura y peso menores). */
+  nested?: boolean
+  onNavigate?: () => void
 }
 
-export function NavItem({ label, icon, href, collapsed, onClick }: Props) {
-  const pathname = usePathname();
-  // Active state: exact match for root/home pages, prefix match for others
-  const exactPaths = [
-    "/", "#", "/sgth", "/salud", "/portal",
-    "/salud/sso",
-    "/salud/farmacia",
-  ];
-  const isActive = exactPaths.includes(href)
-    ? pathname === href
-    : pathname === href || pathname.startsWith(`${href}/`);
-
-  const content = (
+/** Destino navegable del sidebar. El estado activo lo decide `Sidebar`. */
+export function NavItem({
+  label,
+  icon,
+  href,
+  badge,
+  active,
+  collapsed,
+  nested = false,
+  onNavigate,
+}: Props) {
+  const enlace = (
     <UnstyledButton
       component={Link}
       href={href}
-      onClick={onClick}
-      className={`${classes.navItem} ${isActive ? classes.navItemActive : ""}`}
+      onClick={onNavigate}
+      aria-current={active ? 'page' : undefined}
+      className={[
+        classes.item,
+        nested && classes.child,
+        active && classes.itemActive,
+        collapsed && classes.itemCollapsed,
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
-      <Group
-        wrap="nowrap"
-        justify={collapsed ? "center" : "flex-start"}
-        gap="lg"
-      >
-        <Box style={{ display: "flex", alignItems: "center" }}>
-          {getNavIcon(icon)}
-        </Box>
-        {!collapsed && (
-          <Text size="sm" fw="inherit">
-            {label}
-          </Text>
-        )}
-      </Group>
+      <span className={classes.itemIcon}>{getNavIcon(icon)}</span>
+      {!collapsed && (
+        <>
+          <span className={classes.itemLabel}>{label}</span>
+          {badge && (
+            <Badge size="xs" color="red" circle variant="filled">
+              {badge}
+            </Badge>
+          )}
+        </>
+      )}
     </UnstyledButton>
-  );
+  )
 
+  // Plegado el texto no se ve: el tooltip es la única forma de saber qué es.
   if (collapsed) {
     return (
-      <Tooltip label={label} position="right">
-        {content}
+      <Tooltip label={label} position="right" openDelay={0}>
+        {enlace}
       </Tooltip>
-    );
+    )
   }
-  return content;
+
+  return enlace
 }

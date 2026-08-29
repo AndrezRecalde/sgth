@@ -1,232 +1,104 @@
-"use client";
+'use client'
 
+import { ActionIcon, Burger, Group, Indicator, Kbd, Tooltip, UnstyledButton } from '@mantine/core'
 import {
-  Group,
-  Burger,
-  ActionIcon,
-  useMantineColorScheme,
-  Avatar,
-  Menu,
-  Text,
-  UnstyledButton,
-  Switch,
-  Tooltip,
-  Image,
-  Indicator,
-  Paper,
-  Stack,
-  Button,
-} from "@mantine/core";
-import { IconSun, IconMoon, IconBell, IconLogout } from "@tabler/icons-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
-import { AppGridSelector } from "./AppGridSelector";
+  IconBell, IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand, IconSearch,
+} from '@tabler/icons-react'
+import { AppBreadcrumbs } from './AppBreadcrumbs'
+import { UserMenu } from './UserMenu'
+import { usePaletteStore } from '@/store/ui.palette.store'
+import type { Subsistema } from '@/config/routes'
+import classes from './Topbar.module.css'
 
-interface TopbarProps {
-  mobileOpened: boolean;
-  desktopOpened: boolean;
-  onMobileToggle: () => void;
-  onDesktopToggle: () => void;
+interface Props {
+  subsistema: Subsistema
+  mobileOpened: boolean
+  navbarCollapsed: boolean
+  onMobileToggle: () => void
+  onNavbarToggle: () => void
 }
 
+/**
+ * Barra superior: dónde estoy y a qué llego desde aquí.
+ *
+ * La identidad institucional y la navegación viven en el sidebar; aquí solo
+ * quedan el control del sidebar, las migas de pan y las acciones globales.
+ */
 export function Topbar({
+  subsistema,
   mobileOpened,
-  desktopOpened,
+  navbarCollapsed,
   onMobileToggle,
-  onDesktopToggle,
-}: TopbarProps) {
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const { usuario, clearAuth } = useAuth();
-  const router = useRouter();
-
-  const displayName =
-    usuario?.nombre_completo || usuario?.usuario_ti || "Usuario";
-
-  let initials = "US";
-  if (displayName && displayName !== "Usuario") {
-    const parts = displayName.trim().split(/\s+/);
-    if (parts.length >= 3) {
-      initials = (parts[0][0] + parts[2][0]).toUpperCase();
-    } else if (parts.length >= 2) {
-      initials = (parts[0][0] + parts[1][0]).toUpperCase();
-    } else if (parts.length === 1) {
-      initials = parts[0].slice(0, 2).toUpperCase();
-    }
-  }
-
-  const handleLogout = (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    clearAuth();
-    window.location.href = "/login?logout=true";
-  };
+  onNavbarToggle,
+}: Props) {
+  const abrirPaleta = usePaletteStore((s) => s.open)
 
   return (
-    <Group h="100%" px="md" justify="space-between" align="center">
-      {/* Sección Izquierda: Burger y Logo */}
-      <Group gap="sm">
+    <header className={classes.topbar}>
+      <div className={classes.left}>
         <Burger
           opened={mobileOpened}
           onClick={onMobileToggle}
           hiddenFrom="md"
-          lineSize={1.5}
           size="sm"
+          aria-label="Abrir menú"
         />
-        <Burger
-          opened={desktopOpened}
-          onClick={onDesktopToggle}
-          visibleFrom="md"
-          lineSize={1.5}
-          size="sm"
-        />
-      </Group>
 
-      {/* Centro: Vacío para separar */}
-      <Group style={{ flex: 1 }} />
-
-      {/* Sección Derecha: Notificaciones y Menú de Usuario */}
-      <Group gap="md">
-        <Tooltip label="Notificaciones">
+        <Tooltip label={navbarCollapsed ? 'Expandir menú' : 'Plegar menú'}>
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            onClick={onNavbarToggle}
+            visibleFrom="md"
             size="lg"
-            radius="xl"
-            aria-label="Notificaciones"
+            aria-label={navbarCollapsed ? 'Expandir menú' : 'Plegar menú'}
           >
-            <IconBell size={20} stroke={1.5} />
+            {navbarCollapsed ? (
+              <IconLayoutSidebarLeftExpand size={20} stroke={1.6} />
+            ) : (
+              <IconLayoutSidebarLeftCollapse size={20} stroke={1.6} />
+            )}
           </ActionIcon>
         </Tooltip>
-        <AppGridSelector />
-        <Menu
-          width={340}
-          position="bottom-end"
-          shadow="xl"
-          radius={24}
-          withinPortal
-          transitionProps={{ transition: "pop", duration: 150 }}
+
+        <Group visibleFrom="sm" gap={0} style={{ minWidth: 0 }}>
+          <AppBreadcrumbs subsistema={subsistema} />
+        </Group>
+      </div>
+
+      <div className={classes.right}>
+        <UnstyledButton
+          onClick={abrirPaleta}
+          className={classes.searchTrigger}
+          visibleFrom="lg"
+          aria-label="Buscar pantalla"
         >
-          <Menu.Target>
-            <UnstyledButton
-              style={{ display: "flex", alignItems: "center" }}
-              aria-label="Menú de usuario"
-            >
-              <Avatar
-                color="emerald"
-                size={45}
-                style={{ cursor: "pointer", fontWeight: 800 }}
-              >
-                {initials}
-              </Avatar>
-            </UnstyledButton>
-          </Menu.Target>
+          <IconSearch size={15} />
+          <span className={classes.searchLabel}>Buscar…</span>
+          <Kbd size="xs">Ctrl+K</Kbd>
+        </UnstyledButton>
 
-          <Menu.Dropdown p="md">
-            {/* Cabecera: Email */}
-            <Text size="sm" fw={600} ta="center" mt="xs">
-              {usuario?.email || "correo@ejemplo.com"}
-            </Text>
+        <Tooltip label="Buscar">
+          <ActionIcon
+            onClick={abrirPaleta}
+            hiddenFrom="lg"
+            size="lg"
+            radius="xl"
+            aria-label="Buscar pantalla"
+          >
+            <IconSearch size={19} stroke={1.6} />
+          </ActionIcon>
+        </Tooltip>
 
-            {/* Avatar & Saludo */}
-            <Stack align="center" gap={4} mt="md">
-              <Indicator
-                inline
-                size={26}
-                offset={10}
-                position="bottom-end"
-                color="emerald"
-                withBorder
-                processing
-              >
-                <Avatar
-                  color="emerald"
-                  size={84}
-                  radius="100%"
-                  style={{
-                    border: "2px solid var(--mantine-color-emerald-filled)",
-                    fontWeight: 700,
-                    fontSize: "32px",
-                  }}
-                >
-                  {initials}
-                </Avatar>
-              </Indicator>
-              <Text size="xl" fw={400} mt="sm">
-                ¡Hola, {displayName.split(" ")[0]}!
-              </Text>
-              <Button
-                variant="default"
-                radius="xl"
-                size="sm"
-                mt="xs"
-                fw={600}
-                onClick={() => router.push("/configuracion")}
-              >
-                Gestionar tu cuenta
-              </Button>
-            </Stack>
+        <Tooltip label="Notificaciones">
+          <Indicator color="red" size={7} offset={7} disabled>
+            <ActionIcon size="lg" radius="xl" aria-label="Notificaciones">
+              <IconBell size={19} stroke={1.6} />
+            </ActionIcon>
+          </Indicator>
+        </Tooltip>
 
-            {/* Bloque de Acciones */}
-            <Paper
-              radius="xl"
-              withBorder
-              bg="var(--mantine-color-default-hover)"
-              mt="xl"
-              p={4}
-            >
-              <Menu.Item
-                closeMenuOnClick={false}
-                leftSection={
-                  colorScheme === "dark" ? (
-                    <IconSun size={18} stroke={1.5} />
-                  ) : (
-                    <IconMoon size={18} stroke={1.5} />
-                  )
-                }
-                rightSection={
-                  <Switch
-                    checked={colorScheme === "dark"}
-                    size="sm"
-                    color="emerald"
-                    style={{ pointerEvents: "none" }}
-                  />
-                }
-                onClick={() => toggleColorScheme()}
-                style={{ borderRadius: "var(--mantine-radius-xl)" }}
-                py="sm"
-              >
-                <Text size="sm" fw={600}>
-                  Modo oscuro
-                </Text>
-              </Menu.Item>
-
-              <Menu.Item
-                leftSection={<IconLogout size={18} stroke={1.5} />}
-                color="red"
-                onClick={handleLogout}
-                style={{ borderRadius: "var(--mantine-radius-xl)" }}
-                py="sm"
-              >
-                <Text size="sm" fw={600}>
-                  Cerrar sesión en todas las cuentas
-                </Text>
-              </Menu.Item>
-            </Paper>
-
-            {/* Footer de enlaces */}
-            <Group justify="center" gap="xs" mt="lg" mb="sm">
-              <Text size="xs" c="dimmed" style={{ cursor: "pointer" }}>
-                Política de Privacidad
-              </Text>
-              <Text size="xs" c="dimmed">
-                •
-              </Text>
-              <Text size="xs" c="dimmed" style={{ cursor: "pointer" }}>
-                Términos del Servicio
-              </Text>
-            </Group>
-          </Menu.Dropdown>
-        </Menu>
-      </Group>
-    </Group>
-  );
+        <UserMenu />
+      </div>
+    </header>
+  )
 }

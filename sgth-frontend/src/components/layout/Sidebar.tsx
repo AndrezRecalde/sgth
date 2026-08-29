@@ -1,141 +1,153 @@
-"use client";
+'use client'
 
-import { Box, ScrollArea, Text, Image } from "@mantine/core";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { useStockBajoCount } from "@/features/dispensario/hooks/useInventarioMedicina";
-import { buildNav } from "@/config/nav";
-import { NavGroup } from "./NavGroup";
-import { NavItem } from "./NavItem";
-import { NavItemNested } from "./NavItemNested";
-import classes from "./Sidebar.module.css";
-import type { Subsistema } from "@/config/routes";
+import { useMemo } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { ScrollArea, Text } from '@mantine/core'
+import { usePathname } from 'next/navigation'
+import { NavItem } from './NavItem'
+import { NavItemNested } from './NavItemNested'
+import { SubsistemaSwitcher } from './SubsistemaSwitcher'
+import { useAuth } from '@/hooks/useAuth'
+import { useStockBajoCount } from '@/features/dispensario/hooks/useInventarioMedicina'
+import { buildNav } from '@/config/nav'
+import { SUBSISTEMAS } from '@/config/subsistemas'
+import { ROUTES, type Subsistema } from '@/config/routes'
+import classes from './Sidebar.module.css'
 
 interface Props {
-  collapsed: boolean;
-  onNavClick?: () => void;
+  subsistema: Subsistema
+  collapsed: boolean
+  onNavigate?: () => void
 }
 
-function getSubsistema(pathname: string): Subsistema {
-  if (pathname.startsWith("/salud")) return "salud";
-  if (pathname.startsWith("/portal")) return "portal";
-  return "sgth";
-}
+export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
+  const { usuario } = useAuth()
+  const pathname = usePathname()
+  const permisos = usuario?.permisos ?? []
+  const permisosKey = permisos.join(',')
 
-const SUBSISTEMA_LABELS: Record<Subsistema, string> = {
-  sgth: "Talento Humano",
-  salud: "Dispensario Médico",
-  portal: "Portal Servidor",
-};
+  const { data: stockBajo = 0 } = useStockBajoCount()
 
-const SUBSISTEMA_COLORS: Record<Subsistema, string> = {
-  sgth: "var(--mantine-color-emerald-6)",
-  salud: "var(--mantine-color-blue-6)",
-  portal: "var(--mantine-color-violet-6)",
-};
+  /**
+   * Menú del subsistema: filtrado por permisos y con los badges dinámicos ya
+   * inyectados en la estructura. Hoy el único badge es el conteo de medicinas
+   * bajo mínimo, que cuelga tanto del ítem Farmacia como de su hijo Inventario.
+   */
+  const grupos = useMemo(() => {
+    const badgeDe = (href: string) =>
+      href === ROUTES.SALUD.FARMACIA && stockBajo > 0
+        ? String(stockBajo)
+        : undefined
 
-export function Sidebar({ collapsed, onNavClick }: Props) {
-  const { usuario } = useAuth();
-  const pathname = usePathname();
-  const router = useRouter();
+    return buildNav(subsistema, permisos).map((grupo) => ({
+      ...grupo,
+      items: grupo.items.map((item) => ({
+        ...item,
+        badge: badgeDe(item.href) ?? item.badge,
+        children: item.children?.map((child) => ({
+          ...child,
+          badge: badgeDe(child.href) ?? child.badge,
+        })),
+      })),
+    }))
+    // Se depende del contenido de `permisos`, no de su identidad de array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subsistema, permisosKey, stockBajo])
 
-  const subsistema = getSubsistema(pathname);
-  const permisos = usuario?.permisos ?? [];
+  /**
+   * Un destino está activo si es la coincidencia MÁS LARGA con la ruta actual.
+   *
+   * Sustituye a las listas de rutas "de coincidencia exacta" que antes estaban
+   * escritas a mano dentro de NavItem y NavItemNested: cada pantalla anidada
+   * nueva obligaba a acordarse de registrar su padre en esas listas, y
+   * olvidarlo dejaba dos ítems iluminados a la vez.
+   */
+  const hrefActivo = useMemo(() => {
+    const destinos = grupos.flatMap((g) =>
+      g.items.flatMap((item) =>
+        item.children?.length ? item.children.map((c) => c.href) : [item.href],
+      ),
+    )
 
-  const { data: stockBajoCount = 0 } = useStockBajoCount();
+    return destinos
+      .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+      .reduce<string | null>(
+        (mejor, href) => (!mejor || href.length > mejor.length ? href : mejor),
+        null,
+      )
+  }, [grupos, pathname])
 
-  const groups = buildNav(subsistema, permisos);
-
-  const groupsConBadges = groups.map((group) => ({
-    ...group,
-    items: group.items.map((item) => {
-      if (item.href === "/salud/farmacia" && item.children) {
-        return {
-          ...item,
-          children: item.children.map((child) =>
-            child.href === "/salud/farmacia"
-              ? {
-                  ...child,
-                  badge:
-                    stockBajoCount > 0 ? String(stockBajoCount) : undefined,
-                }
-              : child,
-          ),
-        };
-      }
-      return item;
-    }),
-  }));
+  const isActive = (href: string) => href === hrefActivo
+  const cfg = SUBSISTEMAS[subsistema]
 
   return (
-    <Box className={classes.sidebar}>
-      {/* Top Header - Logo */}
-      {!collapsed && (
-        <Box
-          px="md"
-          py="lg"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-            }}
-            onClick={() => router.push("/bienvenida")}
-          >
-            <Image
-              radius="lg"
-              h={36}
-              w={50}
-              fit="contain"
-              alt="logo"
-              src={
-                "https://prefecturadeesmeraldas.gob.ec/wp-content/uploads/2026/05/LogoCompleto-2.png"
-              }
-              fallbackSrc="https://placehold.co/600x400?text=Placeholder"
-            />
-            <Text
-              fw={600}
-              size="lg"
-              style={{ letterSpacing: "-0.5px" }}
-              color="#0f172a"
-            >
-              GADPE
-            </Text>
-          </Box>
-        </Box>
-      )}
+    <nav className={classes.sidebar} aria-label="Navegación principal">
+      <Link
+        href={cfg.home}
+        className={`${classes.brand} ${collapsed ? classes.brandCollapsed : ''}`}
+      >
+        <Image
+          src="/logo.png"
+          alt="GAD Provincial de Esmeraldas"
+          width={32}
+          height={32}
+          className={classes.brandMark}
+          priority
+        />
+        {!collapsed && (
+          <span className={classes.brandText}>
+            <span className={classes.brandName}>GADPE</span>
+            <span className={classes.brandSub}>Esmeraldas</span>
+          </span>
+        )}
+      </Link>
 
-      <ScrollArea style={{ flex: 1 }} px="xs">
-        {groupsConBadges.map((g, i) => (
-          <Box key={i} pb="sm">
-            <NavGroup label={g.label} collapsed={collapsed} />
-            {g.items.map((item) =>
+      <div className={classes.switcherSlot} data-collapsed={collapsed || undefined}>
+        <SubsistemaSwitcher actual={subsistema} collapsed={collapsed} />
+      </div>
+
+      <ScrollArea className={classes.nav} type="scroll" scrollbarSize={6}>
+        {grupos.map((grupo) => (
+          <div key={grupo.label} className={classes.group}>
+            {collapsed ? (
+              <div className={classes.groupRule} />
+            ) : (
+              <Text component="div" className={classes.groupLabel}>
+                {grupo.label}
+              </Text>
+            )}
+
+            {grupo.items.map((item) =>
               item.children?.length ? (
                 <NavItemNested
                   key={item.href}
                   item={item}
+                  isActive={isActive}
                   collapsed={collapsed}
-                  onClick={onNavClick}
+                  onNavigate={onNavigate}
                 />
               ) : (
                 <NavItem
                   key={item.href}
                   {...item}
+                  active={isActive(item.href)}
                   collapsed={collapsed}
-                  onClick={onNavClick}
+                  onNavigate={onNavigate}
                 />
               ),
             )}
-          </Box>
+          </div>
         ))}
       </ScrollArea>
-    </Box>
-  );
+
+      {!collapsed && (
+        <div className={classes.footer}>
+          <Text component="div" className={classes.footerText}>
+            SGTH · GAD Provincial de Esmeraldas
+          </Text>
+        </div>
+      )}
+    </nav>
+  )
 }

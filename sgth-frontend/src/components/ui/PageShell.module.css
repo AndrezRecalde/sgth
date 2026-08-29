@@ -1,0 +1,16 @@
+/* El padding lo pone `AppShell.Main`; aquí solo el ancho de lectura y el
+   ritmo vertical entre los bloques de la página. */
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+  width: 100%;
+  max-width: var(--sgth-content-max);
+  margin-inline: auto;
+}
+
+/* Variante a sangre: para lienzos que ocupan todo el ancho disponible
+   (organigrama, odontograma, calendarios). */
+.full {
+  max-width: none;
+}

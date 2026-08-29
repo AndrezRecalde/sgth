@@ -1,0 +1,114 @@
+/**
+ * SGTH — Tokens semánticos en CSS
+ * -------------------------------
+ * Capa sobre las variables de Mantine. Los CSS Modules NUNCA referencian un
+ * color de escala directamente (`--mantine-color-slate-2`): usan el token
+ * semántico de aquí. Así el modo oscuro y el acento por subsistema se
+ * resuelven en un solo sitio.
+ *
+ * Se importa una única vez, en `src/app/layout.tsx`.
+ *
+ * OJO con `light-dark()`: la función de postcss-preset-mantine compila a un
+ * selector DESCENDIENTE de `[data-mantine-color-scheme="dark"]`, y el atributo
+ * vive en el propio `<html>`. Dentro de `:root` nunca llegaría a aplicar, así
+ * que aquí los dos esquemas se escriben explícitos. En un CSS Module con
+ * selector de clase, `light-dark()` sí funciona y es preferible.
+ */
+
+:root {
+  /* ── Medidas del shell ─────────────────────────────────── */
+  --sgth-header-height: 56px;
+  --sgth-navbar-width: 264px;
+  --sgth-navbar-width-collapsed: 64px;
+  --sgth-content-max: 1600px;
+
+  /* ── Movimiento ────────────────────────────────────────── */
+  --sgth-motion-fast: 120ms;
+  --sgth-motion-base: 180ms;
+  --sgth-motion-slow: 280ms;
+  --sgth-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Superficies (modo claro) ──────────────────────────── */
+  /* canvas  → fondo de la aplicación, detrás de todo
+     surface → tarjetas, paneles, sidebar
+     raised  → menús, modales, popovers (capas flotantes)
+     sunken  → cabeceras de tabla, zonas inertes
+     hover   → realce de un elemento interactivo en reposo         */
+  --sgth-canvas: var(--mantine-color-slate-0);
+  --sgth-surface: var(--mantine-color-white);
+  --sgth-surface-raised: var(--mantine-color-white);
+  --sgth-surface-sunken: var(--mantine-color-slate-1);
+  --sgth-surface-hover: var(--mantine-color-slate-1);
+
+  --sgth-border: var(--mantine-color-slate-2);
+  --sgth-border-strong: var(--mantine-color-slate-3);
+
+  --sgth-text: var(--mantine-color-slate-9);
+  --sgth-text-muted: var(--mantine-color-slate-5);
+}
+
+/* ── Superficies (modo oscuro) ───────────────────────────── */
+/* La escala `dark` del tema (NIGHT) está calibrada para que estas cuatro
+   superficies se distingan entre sí: canvas 9, surface 7, raised 6, sunken 8. */
+:root[data-mantine-color-scheme='dark'] {
+  --sgth-canvas: var(--mantine-color-dark-9);
+  --sgth-surface: var(--mantine-color-dark-7);
+  --sgth-surface-raised: var(--mantine-color-dark-6);
+  --sgth-surface-sunken: var(--mantine-color-dark-8);
+  --sgth-surface-hover: var(--mantine-color-dark-5);
+
+  --sgth-border: var(--mantine-color-dark-4);
+  --sgth-border-strong: var(--mantine-color-dark-3);
+
+  --sgth-text: var(--mantine-color-dark-0);
+  --sgth-text-muted: var(--mantine-color-dark-2);
+}
+
+/**
+ * ── Acento por subsistema ────────────────────────────────
+ * El AppShell escribe `data-subsistema` en su nodo raíz. Todo lo que sea "el
+ * color de este subsistema" (ítem activo del menú, foco, indicadores) usa
+ * estos tokens y nunca un nombre de color literal. Las variables de Mantine
+ * que se alían aquí (`-filled`, `-light`, `-outline`) ya son sensibles al
+ * esquema de color, así que este bloque no se duplica para modo oscuro.
+ *
+ * Agregar un subsistema = un bloque aquí + una entrada en
+ * `config/subsistemas.ts`.
+ */
+
+/* Fuera del shell (login, páginas públicas) manda el acento institucional. */
+:root {
+  --sgth-accent: var(--mantine-color-emerald-filled);
+  --sgth-accent-hover: var(--mantine-color-emerald-filled-hover);
+  --sgth-accent-light: var(--mantine-color-emerald-light);
+  --sgth-accent-light-hover: var(--mantine-color-emerald-light-hover);
+  --sgth-accent-text: var(--mantine-color-emerald-light-color);
+  --sgth-accent-border: var(--mantine-color-emerald-outline);
+}
+
+[data-subsistema='sgth'] {
+  --sgth-accent: var(--mantine-color-emerald-filled);
+  --sgth-accent-hover: var(--mantine-color-emerald-filled-hover);
+  --sgth-accent-light: var(--mantine-color-emerald-light);
+  --sgth-accent-light-hover: var(--mantine-color-emerald-light-hover);
+  --sgth-accent-text: var(--mantine-color-emerald-light-color);
+  --sgth-accent-border: var(--mantine-color-emerald-outline);
+}
+
+[data-subsistema='salud'] {
+  --sgth-accent: var(--mantine-color-ocean-filled);
+  --sgth-accent-hover: var(--mantine-color-ocean-filled-hover);
+  --sgth-accent-light: var(--mantine-color-ocean-light);
+  --sgth-accent-light-hover: var(--mantine-color-ocean-light-hover);
+  --sgth-accent-text: var(--mantine-color-ocean-light-color);
+  --sgth-accent-border: var(--mantine-color-ocean-outline);
+}
+
+[data-subsistema='portal'] {
+  --sgth-accent: var(--mantine-color-amethyst-filled);
+  --sgth-accent-hover: var(--mantine-color-amethyst-filled-hover);
+  --sgth-accent-light: var(--mantine-color-amethyst-light);
+  --sgth-accent-light-hover: var(--mantine-color-amethyst-light-hover);
+  --sgth-accent-text: var(--mantine-color-amethyst-light-color);
+  --sgth-accent-border: var(--mantine-color-amethyst-outline);
+}

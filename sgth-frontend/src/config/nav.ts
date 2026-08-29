@@ -416,3 +416,72 @@ export function buildNav(
     ),
   })).filter(group => group.items.length > 0)
 }
+
+// ── Navegación derivada ───────────────
+// El menú lateral, las migas de pan y el buscador de comandos leen la MISMA
+// estructura. Agregar una pantalla al nav la hace navegable, buscable y
+// rastreable en las migas sin tocar nada más.
+
+export interface NavLeaf {
+  label:  string
+  href:   string
+  icon:   string
+  /** Grupo del sidebar al que pertenece ('Talento Humano', 'Reclutamiento'…). */
+  grupo:  string
+  /** Ítem padre, si es una pantalla anidada. */
+  padre?: string
+}
+
+/** Aplana el menú de un subsistema a una lista de destinos navegables. */
+export function flattenNav(
+  subsistema: 'sgth' | 'salud' | 'portal',
+  permisos: string[],
+): NavLeaf[] {
+  const leaves: NavLeaf[] = []
+
+  for (const group of buildNav(subsistema, permisos)) {
+    for (const item of group.items) {
+      if (item.children?.length) {
+        for (const child of item.children) {
+          leaves.push({
+            label: child.label,
+            href:  child.href,
+            icon:  child.icon,
+            grupo: group.label,
+            padre: item.label,
+          })
+        }
+      } else {
+        leaves.push({
+          label: item.label,
+          href:  item.href,
+          icon:  item.icon,
+          grupo: group.label,
+        })
+      }
+    }
+  }
+
+  return leaves
+}
+
+/**
+ * Devuelve la ruta jerárquica hasta la pantalla activa, para las migas de pan.
+ * Elige la coincidencia MÁS LARGA: `/sgth/expediente/subrogaciones` gana sobre
+ * `/sgth/expediente`, que también es prefijo válido.
+ */
+export function findNavTrail(
+  subsistema: 'sgth' | 'salud' | 'portal',
+  permisos: string[],
+  pathname: string,
+): NavLeaf | null {
+  const candidatos = flattenNav(subsistema, permisos).filter(
+    (leaf) => pathname === leaf.href || pathname.startsWith(`${leaf.href}/`),
+  )
+
+  if (!candidatos.length) return null
+
+  return candidatos.reduce((mejor, actual) =>
+    actual.href.length > mejor.href.length ? actual : mejor,
+  )
+}

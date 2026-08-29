@@ -1,144 +1,92 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import {
-  UnstyledButton,
-  Group,
-  Text,
-  Tooltip,
-  Box,
-  Collapse,
-  Badge,
-} from "@mantine/core";
-import { IconChevronRight } from "@tabler/icons-react";
-import { usePathname } from "next/navigation";
-import { getNavIcon } from "@/lib/tablerIcons";
-import type { NavItem } from "@/config/nav";
-import classes from "./Sidebar.module.css";
+import { useState } from 'react'
+import { Collapse, Tooltip, UnstyledButton } from '@mantine/core'
+import { IconChevronRight } from '@tabler/icons-react'
+import { NavItem } from './NavItem'
+import { getNavIcon } from '@/lib/tablerIcons'
+import type { NavItem as NavItemConfig } from '@/config/nav'
+import classes from './Sidebar.module.css'
 
 interface Props {
-  item: NavItem;
-  collapsed: boolean;
-  onClick?: () => void;
+  item: NavItemConfig
+  /** Decide si una ruta está activa. Lo inyecta `Sidebar`. */
+  isActive: (href: string) => boolean
+  collapsed: boolean
+  onNavigate?: () => void
 }
 
-export function NavItemNested({ item, collapsed, onClick }: Props) {
-  const pathname = usePathname();
+/**
+ * Ítem del sidebar con submenú desplegable.
+ *
+ * El submenú se abre solo cuando la ruta activa está dentro, y el usuario
+ * puede plegarlo/desplegarlo a mano. No se cierra al navegar entre hermanos.
+ */
+export function NavItemNested({ item, isActive, collapsed, onNavigate }: Props) {
+  const hijoActivo = item.children?.some((c) => isActive(c.href)) ?? false
+  const [abierto, setAbierto] = useState(hijoActivo)
 
-  const isChildActive =
-    item.children?.some(
-      (child) =>
-        pathname === child.href || pathname.startsWith(`${child.href}/`),
-    ) ?? false;
+  // Al navegar hacia dentro de este submenú, se despliega solo. Se ajusta
+  // durante el render y no en un efecto: así el submenú ya aparece abierto en
+  // el primer pintado, sin el parpadeo de abrirse un frame después.
+  const [hijoActivoPrevio, setHijoActivoPrevio] = useState(hijoActivo)
+  if (hijoActivo !== hijoActivoPrevio) {
+    setHijoActivoPrevio(hijoActivo)
+    if (hijoActivo) setAbierto(true)
+  }
 
-  const [opened, setOpened] = useState(isChildActive);
-
-  useEffect(() => {
-    if (isChildActive) setOpened(true);
-  }, [isChildActive]);
-
-  const content = (
+  const disparador = (
     <UnstyledButton
-      onClick={() => setOpened((o) => !o)}
-      className={`${classes.navItem} ${isChildActive ? classes.navItemActive : ""}`}
+      onClick={() => setAbierto((o) => !o)}
+      aria-expanded={abierto}
+      className={[
+        classes.item,
+        // Plegado no hay submenú visible: el padre debe mostrar él mismo que
+        // algo de adentro está activo.
+        hijoActivo && collapsed && classes.itemActive,
+        collapsed && classes.itemCollapsed,
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
-      <Group
-        wrap="nowrap"
-        justify={collapsed ? "center" : "space-between"}
-        gap="lg"
-        w="100%"
-      >
-        <Group wrap="nowrap" gap="lg">
-          <Box style={{ display: "flex", alignItems: "center" }}>
-            {getNavIcon(item.icon)}
-          </Box>
-          {!collapsed && (
-            <Text size="sm" fw="inherit">
-              {item.label}
-            </Text>
-          )}
-        </Group>
-        {!collapsed && (
+      <span className={classes.itemIcon}>{getNavIcon(item.icon)}</span>
+      {!collapsed && (
+        <>
+          <span className={classes.itemLabel}>{item.label}</span>
           <IconChevronRight
             size={14}
-            style={{
-              transform: opened ? "rotate(90deg)" : "rotate(0deg)",
-              transition: "transform 200ms ease",
-            }}
+            className={`${classes.chevron} ${abierto ? classes.chevronOpen : ''}`}
           />
-        )}
-      </Group>
+        </>
+      )}
     </UnstyledButton>
-  );
+  )
 
   if (collapsed) {
     return (
-      <Tooltip label={item.label} position="right">
-        {content}
+      <Tooltip label={item.label} position="right" openDelay={0}>
+        {disparador}
       </Tooltip>
-    );
+    )
   }
 
   return (
-    <>
-      {content}
-      <Collapse expanded={opened}>
-        <Box pl="md" pt={2} pb={2}>
-          {item.children?.map((child) => {
-            const exactChildPaths = [
-              '/salud/farmacia',
-              '/salud/sso',
-              '/salud/enfermeria',
-              '/sgth/reclutamiento/convocatorias',
-              '/sgth/reclutamiento/plantillas',
-              '/sgth/expediente',
-            ]
-            const isActive = (child as NavItem).children
-              ? (child as NavItem).children!.some(
-                  (c) =>
-                    pathname === c.href || pathname.startsWith(`${c.href}/`),
-                )
-              : exactChildPaths.includes(child.href)
-                ? pathname === child.href
-                : pathname === child.href ||
-                  pathname.startsWith(`${child.href}/`);
-
-            return (
-              <UnstyledButton
-                key={child.href}
-                component={Link}
-                href={child.href}
-                onClick={onClick}
-                className={`${classes.navItem} ${isActive ? classes.navItemActive : ""}`}
-                style={{ paddingLeft: "0.75rem" }}
-              >
-                <Group wrap="nowrap" gap="sm" justify="space-between" w="100%">
-                  <Group wrap="nowrap" gap="sm">
-                    <Box
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        opacity: 0.7,
-                      }}
-                    >
-                      {getNavIcon(child.icon)}
-                    </Box>
-                    <Text size="sm" fw="inherit">
-                      {child.label}
-                    </Text>
-                  </Group>
-                  {child.badge && (
-                    <Badge size="xs" color="red" circle>
-                      {child.badge}
-                    </Badge>
-                  )}
-                </Group>
-              </UnstyledButton>
-            );
-          })}
-        </Box>
+    <div className={classes.nested}>
+      {disparador}
+      <Collapse expanded={abierto}>
+        <div className={classes.children}>
+          {item.children?.map((child) => (
+            <NavItem
+              key={child.href}
+              {...child}
+              nested
+              active={isActive(child.href)}
+              collapsed={false}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
       </Collapse>
-    </>
-  );
+    </div>
+  )
 }

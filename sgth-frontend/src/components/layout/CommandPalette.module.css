@@ -1,0 +1,41 @@
+/* La paleta se ancla arriba, no centrada: al escribir la lista crece hacia
+   abajo y el campo de búsqueda no se mueve bajo el cursor. */
+.inner {
+  padding-top: 12vh;
+  align-items: flex-start;
+}
+
+.content {
+  background-color: var(--sgth-surface-raised);
+  border: 1px solid var(--sgth-border);
+  overflow: hidden;
+}
+
+.search {
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--sgth-border);
+}
+
+.result {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--mantine-radius-md);
+  color: var(--sgth-text);
+}
+
+.result[data-selected] {
+  background-color: var(--sgth-accent-light);
+  color: var(--sgth-accent-text);
+}
+
+.resultIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  color: var(--sgth-text-muted);
+}
+
+.result[data-selected] .resultIcon {
+  color: var(--sgth-accent-text);
+}

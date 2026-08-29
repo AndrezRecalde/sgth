@@ -1,3 +1,17 @@
+/**
+ * Patrón "contained": la etiqueta vive DENTRO del control.
+ * Es la firma visual de los formularios del SGTH (509 campos en 136 archivos).
+ *
+ * Se aplica SIEMPRE a través del hook `useContainedInput()`, nunca importando
+ * este módulo directamente:
+ *
+ *   const contained = useContainedInput()
+ *   <TextInput label="Nombres" {...contained} {...register('nombres')} />
+ *
+ * Geometría: 48px de alto (antes 55px). Un formulario como la ficha FEMO tiene
+ * decenas de campos; 7px por campo son varias pantallas de scroll.
+ */
+
 .root {
   position: relative;
 }
@@ -7,49 +21,110 @@
 }
 
 .input {
-  height: 55px;
-  padding-top: 18px;
-  transition: border-color 0.15s ease;
+  height: 48px;
+  padding-top: 20px;
+  padding-bottom: 6px;
+  border-color: var(--sgth-border);
+  background-color: var(--sgth-surface);
+  transition:
+    border-color var(--sgth-motion-fast) var(--sgth-easing),
+    background-color var(--sgth-motion-fast) var(--sgth-easing);
 }
 
+.input:hover:not(:disabled):not([data-error]) {
+  border-color: var(--sgth-border-strong);
+}
+
+.input:focus,
+.input:focus-within {
+  border-color: var(--sgth-accent);
+  /* Segundo borde por sombra en vez de `border-width`: engrosar el borde
+     desplaza el contenido un píxel y el campo "salta" al enfocarse. */
+  box-shadow: 0 0 0 1px var(--sgth-accent);
+}
+
+.input[data-error] {
+  border-color: var(--mantine-color-error);
+}
+
+.input[data-error]:focus,
+.input[data-error]:focus-within {
+  box-shadow: 0 0 0 1px var(--mantine-color-error);
+}
+
+.input:disabled,
+.input[data-disabled] {
+  background-color: var(--sgth-surface-sunken);
+  color: var(--sgth-text-muted);
+}
+
+/**
+ * La etiqueta se posiciona en su POSICIÓN ESTÁTICA: absoluta, pero sin `top`
+ * ni `left`.
+ *
+ * Es lo que hace funcionar todo el patrón. Al salir del flujo, el input sube a
+ * ocupar el hueco que la etiqueta habría tenido, y la etiqueta queda encima de
+ * la franja superior del input. Como el punto de partida es el que le tocaba en
+ * el flujo, un campo con `description` la coloca debajo de esa descripción en
+ * lugar de encima.
+ *
+ * Fijar `top: 0` la clavaría al borde del contenedor y la haría chocar con la
+ * descripción. No añadir `top` aquí.
+ */
 .label {
   position: absolute;
   pointer-events: none;
+  z-index: 1;
+  padding-left: var(--mantine-spacing-sm);
+  padding-top: 6px;
   font-size: var(--mantine-font-size-xs);
   font-weight: 600;
-  /* color: var(--mantine-color-dimmed); */
-  padding-left: var(--mantine-spacing-sm);
-  padding-top: calc(var(--mantine-spacing-sm) / 2);
-  z-index: 1;
-  transition: color 0.15s ease;
-}
-
-.description {
-  font-size: var(--mantine-font-size-xs);
-  color: var(--mantine-color-dimmed);
-  margin-bottom: 4px;
-}
-
-.innerInput {
-  padding-top: 18px;
-  font-size: 14px;
-}
-
-.input:focus {
-  border-color: var(--mantine-color-emerald-6);
-  border-width: 1.5px;
-}
-
-.input[data-variant="filled"] {
-  background-color: var(--mantine-color-default-hover);
-}
-
-.input[data-variant="filled"]:focus {
-  background-color: var(--mantine-color-body);
-  border-color: var(--mantine-color-emerald-6);
-  border-width: 1.5px;
+  line-height: 1.2;
+  color: var(--sgth-text-muted);
+  transition: color var(--sgth-motion-fast) var(--sgth-easing);
 }
 
 .root:focus-within .label {
-  color: var(--mantine-color-emerald-7);
+  color: var(--sgth-accent-text);
+}
+
+/* El asterisco de campo requerido hereda el rojo de error de Mantine. */
+.label[data-required]::after {
+  color: var(--mantine-color-error);
+}
+
+.description {
+  margin-bottom: 4px;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--sgth-text-muted);
+}
+
+.innerInput {
+  height: 48px;
+  padding-top: 20px;
+  padding-bottom: 6px;
+  font-size: var(--mantine-font-size-md);
+}
+
+/* ── Variante compacta ─────────────────────────────────────
+   Para barras de filtros y formularios en línea, donde el campo convive
+   con botones y no necesita el aire del formulario de captura.
+   Se activa con `useContainedInput('sm')`. */
+.inputCompact {
+  height: 40px;
+  padding-top: 17px;
+  padding-bottom: 4px;
+}
+
+.innerInputCompact {
+  height: 40px;
+  padding-top: 17px;
+  padding-bottom: 4px;
+  font-size: var(--mantine-font-size-sm);
+}
+
+/* Mismo criterio que `.label`: se ajusta con padding, nunca con `top`. */
+.labelCompact {
+  padding-top: 4px;
+  font-size: 10px;
 }

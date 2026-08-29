@@ -1,133 +1,50 @@
-.searchContainer {
+.topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex: 1;
-  max-width: 600px;
-  margin: 0 32px;
-}
-
-.searchForm {
-  display: flex;
-  flex: 1;
-  align-items: center;
-}
-
-.searchInputWrapper {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  height: 40px;
-  border: 1px solid
-    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-  border-right: none;
-  border-radius: 40px 0 0 40px;
-  padding: 0 4px 0 16px;
-  background-color: light-dark(
-    var(--mantine-color-white),
-    var(--mantine-color-dark-7)
-  );
-  transition: border-color 150ms ease;
-}
-
-.searchInputWrapper:focus-within {
-  border-color: var(--mantine-color-emerald-5);
-}
-
-.searchInput {
-  border: none;
-  background: transparent;
-  outline: none;
-  width: 100%;
-  font-size: 14px;
-  color: var(--mantine-color-text);
+  gap: var(--mantine-spacing-md);
   height: 100%;
+  padding-inline: var(--mantine-spacing-md);
+  background-color: var(--sgth-surface);
+  border-bottom: 1px solid var(--sgth-border);
 }
 
-.searchInput::placeholder {
-  color: var(--mantine-color-dimmed);
-}
-
-.searchButton {
+.left {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 40px;
-  background-color: light-dark(
-    var(--mantine-color-gray-0),
-    var(--mantine-color-dark-6)
-  );
-  border: 1px solid
-    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-  border-radius: 0 40px 40px 0;
-  cursor: pointer;
-  color: var(--mantine-color-text);
-  transition: background-color 150ms ease;
-}
-
-.searchButton:hover {
-  background-color: light-dark(
-    var(--mantine-color-gray-1),
-    var(--mantine-color-dark-5)
-  );
-}
-
-.micButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: light-dark(
-    var(--mantine-color-gray-0),
-    var(--mantine-color-dark-6)
-  );
-  border: none;
-  cursor: pointer;
-  color: var(--mantine-color-text);
-  transition: background-color 150ms ease;
-}
-
-.micButton:hover {
-  background-color: light-dark(
-    var(--mantine-color-gray-1),
-    var(--mantine-color-dark-5)
-  );
-}
-
-/* User Menu Styles */
-.userMenuHeader {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid
-    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
-  margin-bottom: 4px;
-}
-
-.userMenuInfo {
-  display: flex;
-  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  flex: 1;
   min-width: 0;
 }
 
-.userMenuName {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--mantine-color-text);
-}
-
-.userMenuRole {
-  font-size: 12px;
-  color: var(--mantine-color-dimmed);
-}
-
-.switchRow {
+.right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Disparador del buscador. Es un botón con aspecto de campo: comunica que se
+   escribe ahí, sin ser un input real (el foco lo recibe la paleta al abrirse). */
+.searchTrigger {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  width: 240px;
+  height: 34px;
+  padding-inline: 10px;
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--sgth-surface-sunken);
+  color: var(--sgth-text-muted);
+  font-size: var(--mantine-font-size-sm);
+  transition: border-color var(--sgth-motion-fast) var(--sgth-easing);
+}
+
+.searchTrigger:hover {
+  border-color: var(--sgth-border-strong);
+}
+
+.searchLabel {
+  flex: 1;
+  text-align: left;
 }

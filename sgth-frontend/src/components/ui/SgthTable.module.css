@@ -1,0 +1,19 @@
+.root {
+  /* La tabla nunca desborda la página: el scroll horizontal es suyo. */
+  overflow-x: auto;
+  background-color: var(--sgth-surface);
+}
+
+.header {
+  background-color: var(--sgth-surface-sunken);
+}
+
+/* Cabeceras en versalita pequeña: pesan menos que los datos, que es lo que
+   el usuario viene a leer. */
+.header th {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--sgth-text-muted);
+  text-transform: uppercase;
+}
