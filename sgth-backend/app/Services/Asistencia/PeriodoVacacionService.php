@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\Asistencia;
 
+use App\Enums\RegimenLaboral;
 use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
@@ -15,6 +16,13 @@ class PeriodoVacacionService
         string $regimen,
         int $aniosAntiguedad
     ): float {
+        // Un contrato de servicios profesionales es civil: se pacta un
+        // entregable, no una jornada, así que no genera vacaciones. Sin este
+        // caso caía en la fórmula del Código del Trabajo y le generaba días.
+        if ($regimen === RegimenLaboral::SERVICIOS_PROFESIONALES->value) {
+            return 0.0;
+        }
+
         if ($regimen === 'losep') {
             return match(true) {
                 $aniosAntiguedad >= 16 => 30.0,
@@ -53,27 +61,43 @@ class PeriodoVacacionService
      */
     public function generarPeriodo(
         Servidor $servidor,
-        int $anio
+        int $anio,
+        bool $forzar = false
     ): PeriodoVacacion {
-        $regimen = $servidor->regimen_laboral instanceof \App\Enums\RegimenLaboral
-            ? $servidor->regimen_laboral->value
-            : (string)($servidor->regimen_laboral ?? 'losep');
+        $existente = PeriodoVacacion::where('servidor_id', $servidor->id)
+            ->where('anio', $anio)
+            ->first();
 
-        $antiguedad = $this->calcularAntiguedad($servidor, $regimen, $anio);
-        $diasGen    = $this->calcularDiasGenerados($regimen, $antiguedad);
-
-        // Calcular saldo acumulado de períodos anteriores abiertos
-        $saldoAcumulado = PeriodoVacacion::where('servidor_id', $servidor->id)
-            ->where('anio', '<', $anio)
-            ->where('estado', 'abierto')
-            ->sum('dias_saldo');
-
-        // Aplicar límite de acumulación LOSEP (60 días)
-        if ($regimen === 'losep') {
-            $saldoAcumulado = min($saldoAcumulado, 60.0);
+        /**
+         * Un período cerrado no se recalcula por rutina.
+         *
+         * Su saldo ya se certificó: se comunicó al servidor, se arrastró al año
+         * siguiente y puede haberse liquidado. «Generar todos» es una operación
+         * masiva y periódica, y corregir de paso la antigüedad de alguien le
+         * cambiaría en silencio un saldo que ya constaba como suyo.
+         *
+         * Corregir un año cerrado sigue siendo posible, pero como acto
+         * deliberado sobre ese servidor y ese año: eso es `$forzar`, que además
+         * deja registro en la bitácora (ver `registrarRecalculoForzado`).
+         */
+        if ($existente && $existente->estado !== 'abierto' && ! $forzar) {
+            return $existente;
         }
 
-        return PeriodoVacacion::updateOrCreate(
+        $antes = $existente
+            ? $existente->only(['dias_generados', 'dias_utilizados', 'dias_saldo', 'anios_antiguedad', 'regimen'])
+            : null;
+
+        [
+            'regimen'         => $regimen,
+            'antiguedad'      => $antiguedad,
+            'dias_generados'  => $diasGen,
+            'dias_utilizados' => $diasUtilizados,
+            'dias_saldo'      => $diasSaldo,
+            'saldo_acumulado' => $saldoAcumulado,
+        ] = $this->calcularCifras($servidor, $anio, $existente);
+
+        $periodo = PeriodoVacacion::updateOrCreate(
             [
                 'servidor_id' => $servidor->id,
                 'anio'        => $anio,
@@ -84,12 +108,149 @@ class PeriodoVacacionService
                 'regimen'              => $regimen,
                 'anios_antiguedad'     => $antiguedad,
                 'dias_generados'       => $diasGen,
-                'dias_utilizados'      => 0,
-                'dias_saldo'           => $diasGen,
-                'saldo_acumulado'      => $saldoAcumulado + $diasGen,
-                'estado'               => 'abierto',
+                'dias_utilizados'      => $diasUtilizados,
+                'dias_saldo'           => $diasSaldo,
+                // Arrastre de años anteriores más lo que queda de este, no lo
+                // generado: si no, el acumulado ignoraría lo ya gozado.
+                'saldo_acumulado'      => $saldoAcumulado + $diasSaldo,
+                'estado'               => $existente->estado ?? 'abierto',
             ]
         );
+
+        // Solo el recálculo deliberado sobre un año ya cerrado deja rastro: es
+        // el único que altera un saldo certificado.
+        if ($forzar && $antes !== null && $existente->estado !== 'abierto') {
+            $this->registrarRecalculoForzado($periodo, $antes);
+        }
+
+        return $periodo;
+    }
+
+    /**
+     * Calcula las cifras de un período sin escribir nada.
+     *
+     * Vive aparte de `generarPeriodo()` porque la previsualización del recálculo
+     * forzado necesita exactamente los mismos números que se van a guardar: si se
+     * calcularan en dos sitios, el diálogo podría prometer un saldo y la
+     * operación dejar otro.
+     *
+     * @return array{regimen: string, antiguedad: int, dias_generados: float, dias_utilizados: float, dias_saldo: float, saldo_acumulado: float}
+     */
+    public function calcularCifras(
+        Servidor $servidor,
+        int $anio,
+        ?PeriodoVacacion $existente = null
+    ): array {
+        $regimen = $servidor->regimen_laboral instanceof RegimenLaboral
+            ? $servidor->regimen_laboral->value
+            : (string) ($servidor->regimen_laboral ?? 'losep');
+
+        $antiguedad = $this->calcularAntiguedad($servidor, $regimen, $anio);
+        $diasGen    = $this->calcularDiasGenerados($regimen, $antiguedad);
+
+        // Saldo acumulado de períodos anteriores abiertos.
+        $saldoAcumulado = (float) PeriodoVacacion::where('servidor_id', $servidor->id)
+            ->where('anio', '<', $anio)
+            ->where('estado', 'abierto')
+            ->sum('dias_saldo');
+
+        // Límite de acumulación LOSEP (60 días).
+        if ($regimen === 'losep') {
+            $saldoAcumulado = min($saldoAcumulado, 60.0);
+        }
+
+        /**
+         * Los días ya gozados NO se tocan al regenerar.
+         *
+         * `generarPeriodo()` se llama tanto para crear el período como para
+         * recalcularlo —por ejemplo tras corregir el régimen o la antigüedad de
+         * alguien—, y el botón «Generar todos» lo dispara sobre toda la
+         * plantilla. Poniendo `dias_utilizados` en cero, una regeneración de
+         * rutina habría borrado el consumo de vacaciones de todo el personal y
+         * les habría devuelto el saldo íntegro.
+         *
+         * Regenerar recalcula lo GENERADO —que depende del régimen y la
+         * antigüedad, datos que sí pueden corregirse— y respeta lo CONSUMIDO,
+         * que es un hecho ya ocurrido y solo cambia aprobando o anulando
+         * vacaciones.
+         */
+        $diasUtilizados = (float) ($existente->dias_utilizados ?? 0);
+
+        // Se acota a cero igual que en `descontarDias()`: si alguien gozó más
+        // de lo que su régimen corregido genera, el saldo es cero, no negativo.
+        $diasSaldo = max(0.0, $diasGen - $diasUtilizados);
+
+        return [
+            'regimen'         => $regimen,
+            'antiguedad'      => $antiguedad,
+            'dias_generados'  => $diasGen,
+            'dias_utilizados' => $diasUtilizados,
+            'dias_saldo'      => $diasSaldo,
+            'saldo_acumulado' => $saldoAcumulado,
+        ];
+    }
+
+    /**
+     * Qué pasaría al forzar el recálculo de un período, sin tocar nada.
+     *
+     * Existe para que el diálogo de confirmación pueda decir el número concreto
+     * —«el saldo pasará de 30.00 a 15.00 días»— antes de que alguien acepte.
+     * Una consecuencia que solo se ve después de aceptarla no es una decisión.
+     *
+     * @return array{anio: int, estado: string, actual: array<string, float>, propuesto: array<string, float>}|null
+     *         `null` si el servidor no tiene período de ese año.
+     */
+    public function previsualizarRecalculo(Servidor $servidor, int $anio): ?array
+    {
+        $existente = PeriodoVacacion::where('servidor_id', $servidor->id)
+            ->where('anio', $anio)
+            ->first();
+
+        if (! $existente) {
+            return null;
+        }
+
+        $cifras = $this->calcularCifras($servidor, $anio, $existente);
+
+        return [
+            'anio'   => $anio,
+            'estado' => $existente->estado,
+            'actual' => [
+                'dias_generados'  => (float) $existente->dias_generados,
+                'dias_utilizados' => (float) $existente->dias_utilizados,
+                'dias_saldo'      => (float) $existente->dias_saldo,
+            ],
+            'propuesto' => [
+                'dias_generados'  => $cifras['dias_generados'],
+                'dias_utilizados' => $cifras['dias_utilizados'],
+                'dias_saldo'      => $cifras['dias_saldo'],
+            ],
+        ];
+    }
+
+    /**
+     * Deja en la bitácora el recálculo de un período cerrado.
+     *
+     * Es lo que hace aceptable permitirlo: cambiar un saldo certificado está
+     * bien si queda constancia de quién lo hizo y de qué había antes.
+     *
+     * @param  array<string, mixed>  $antes
+     */
+    private function registrarRecalculoForzado(PeriodoVacacion $periodo, array $antes): void
+    {
+        activity('periodos-vacaciones')
+            ->performedOn($periodo)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'anio' => $periodo->anio,
+                'estado' => $periodo->estado,
+                'antes' => $antes,
+                'despues' => $periodo->only([
+                    'dias_generados', 'dias_utilizados', 'dias_saldo',
+                    'anios_antiguedad', 'regimen',
+                ]),
+            ])
+            ->log('Recálculo forzado de un período cerrado');
     }
 
     /**

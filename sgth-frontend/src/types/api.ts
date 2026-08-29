@@ -1275,6 +1275,27 @@ export type PeriodoVacacion = {
   dias_permisos_personales?:  number | null
 }
 
+/**
+ * Lo que cambiaría al forzar el recálculo de un período cerrado.
+ *
+ * Se pide antes de abrir la confirmación para poder nombrar el saldo concreto
+ * de antes y de después, en vez de avisar de un cambio en abstracto.
+ */
+export type PrevisualizacionRecalculo = {
+  anio:   number
+  estado: string
+  actual: {
+    dias_generados:  number
+    dias_utilizados: number
+    dias_saldo:      number
+  }
+  propuesto: {
+    dias_generados:  number
+    dias_utilizados: number
+    dias_saldo:      number
+  }
+}
+
 export type ResumenPeriodos = {
   periodos:      PeriodoVacacion[]
   saldo_total:   number

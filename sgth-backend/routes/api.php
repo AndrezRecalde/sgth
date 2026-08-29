@@ -489,6 +489,23 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                     'generar']
             )->name('periodos.generar');
 
+            // Qué cambiaría al forzar el recálculo. Solo lee: alimenta el
+            // diálogo de confirmación con el saldo de antes y el de después.
+            Route::get(
+                'servidores/{servidorId}/recalcular-cerrado/previsualizacion',
+                [PeriodoVacacionController::class,
+                    'previsualizarRecalculo']
+            )->name('periodos.recalcular-cerrado.previsualizacion');
+
+            // Recálculo deliberado de un año ya cerrado. Ruta propia y no una
+            // bandera de 'generar': alterar un saldo certificado no puede ser
+            // el efecto colateral de una operación de rutina.
+            Route::post(
+                'servidores/{servidorId}/recalcular-cerrado',
+                [PeriodoVacacionController::class,
+                    'recalcularCerrado']
+            )->name('periodos.recalcular-cerrado');
+
             Route::post(
                 'generar-todos',
                 [PeriodoVacacionController::class,

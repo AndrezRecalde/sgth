@@ -2,7 +2,7 @@ import api from '@/lib/axios'
 import type {
   ApiResponse, MarcacionBiometrica,
   PermisoServidor, Vacacion,
-  PeriodoVacacion, ResumenPeriodos, ConsolidadoPermisoResponse,
+  PeriodoVacacion, ResumenPeriodos, PrevisualizacionRecalculo, ConsolidadoPermisoResponse,
   PaginatedResponse
 } from '@/types/api'
 
@@ -92,6 +92,31 @@ export const asistenciaService = {
         `/asistencia/periodos-vacaciones/servidores/${servidorId}/generar`,
         { anio: anio ?? new Date().getFullYear() }
       ).then(r => r.data.datos),
+
+    /**
+     * Qué cambiaría al forzar el recálculo. Solo lee.
+     */
+    previsualizarRecalculo: (servidorId: number, anio: number) =>
+      api.get<ApiResponse<PrevisualizacionRecalculo>>(
+        `/asistencia/periodos-vacaciones/servidores/${servidorId}/recalcular-cerrado/previsualizacion`,
+        { params: { anio } },
+      ).then(r => r.data.datos),
+
+    /**
+     * Recalcula un período YA CERRADO, a sabiendas.
+     *
+     * Ruta propia y no una bandera de `generar`: alterar un saldo certificado
+     * es una decisión sobre un servidor y un año concretos, y queda registrada
+     * en la bitácora del sistema.
+     *
+     * Devuelve la respuesta completa porque el mensaje del backend trae el
+     * saldo antes y después, y eso es lo que hay que mostrarle a quien lo pidió.
+     */
+    recalcularCerrado: (servidorId: number, anio: number) =>
+      api.post<ApiResponse<PeriodoVacacion>>(
+        `/asistencia/periodos-vacaciones/servidores/${servidorId}/recalcular-cerrado`,
+        { anio },
+      ).then(r => r.data),
 
     generarTodos: (anio?: number) =>
       api.post<ApiResponse<{ generados: number }>>(

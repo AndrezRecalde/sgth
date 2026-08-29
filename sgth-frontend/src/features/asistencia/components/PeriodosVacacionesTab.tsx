@@ -21,23 +21,21 @@ import {
   IconAlertTriangle,
   IconUsers,
   IconInfoCircle,
+  IconRefreshAlert,
 } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
-import { SgthTable } from "@/components/ui/SgthTable";
-import type { ServidorConRelaciones, PeriodoVacacion } from "@/types/api";
+import { SgthTable, StatusBadge, TableActions, confirmar } from "@/components/ui";
+import type {
+  ServidorConRelaciones,
+  PeriodoVacacion,
+  PrevisualizacionRecalculo,
+} from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
+import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
 
-const REGIMEN_COLORS = {
-  losep: "blue",
-  codigo_trabajo: "orange",
-};
-const REGIMEN_LABELS = {
-  losep: "LOSEP",
-  codigo_trabajo: "Código del Trabajo",
-};
 const ESTADO_COLORS = {
   abierto: "emerald",
   cerrado: "gray",
@@ -64,7 +62,63 @@ export function PeriodosVacacionesTab() {
 
   const { data: resumen, isLoading } = usePeriodosVacaciones(servidorSelId);
 
-  const { generar, generarTodos } = usePeriodosMutations();
+  const { generar, generarTodos, previsualizarRecalculo, recalcularCerrado } =
+    usePeriodosMutations();
+
+  /**
+   * Pide primero qué cambiaría y solo entonces pregunta.
+   *
+   * Un período cerrado tiene un saldo ya certificado —comunicado al servidor y
+   * arrastrado al año siguiente—, así que la confirmación nombra los días
+   * concretos de antes y de después. Advertir de «un cambio» sin decir cuál
+   * obliga a aceptar para averiguarlo.
+   */
+  const abrirRecalculo = async (periodo: PeriodoVacacion) => {
+    if (!servidorSelId) return;
+
+    let previa: PrevisualizacionRecalculo;
+    try {
+      previa = await previsualizarRecalculo.mutateAsync({
+        servidorId: servidorSelId,
+        anio: periodo.anio,
+      });
+    } catch {
+      return; // La mutación ya avisó del error.
+    }
+
+    const saldoAntes = previa.actual.dias_saldo;
+    const saldoDespues = previa.propuesto.dias_saldo;
+    // Medio centésimo: es la precisión con la que se muestran los días.
+    const sinCambios = Math.abs(saldoAntes - saldoDespues) < 0.005;
+
+    confirmar({
+      title: `Recalcular el período ${previa.anio}`,
+      message: sinCambios ? (
+        <>
+          El período <b>{previa.anio}</b> está cerrado y recalcularlo lo dejaría
+          igual: <b>{saldoAntes.toFixed(2)} días</b> de saldo. Puedes ejecutarlo,
+          pero no cambiará nada.
+        </>
+      ) : (
+        <>
+          El período <b>{previa.anio}</b> está cerrado y su saldo ya se
+          certificó. Al recalcularlo pasará de <b>{saldoAntes.toFixed(2)}</b> a{" "}
+          <b>{saldoDespues.toFixed(2)} días</b>, porque los generados cambian de{" "}
+          {previa.actual.dias_generados.toFixed(2)} a{" "}
+          {previa.propuesto.dias_generados.toFixed(2)}. Los{" "}
+          {previa.propuesto.dias_utilizados.toFixed(2)} días ya gozados no se
+          tocan. Queda registrado en la bitácora.
+        </>
+      ),
+      confirmLabel: "Recalcular",
+      destructiva: true,
+      onConfirm: () =>
+        recalcularCerrado.mutate({
+          servidorId: servidorSelId,
+          anio: periodo.anio,
+        }),
+    });
+  };
 
   const periodos = (resumen?.periodos ?? []) as PeriodoVacacion[];
   const saldoTotal = resumen?.saldo_total ?? 0;
@@ -86,15 +140,9 @@ export function PeriodosVacacionesTab() {
       title: "Régimen",
       width: 130,
       render: ({ regimen }) => (
-        <Badge
-          color={
-            REGIMEN_COLORS[regimen as keyof typeof REGIMEN_COLORS] ?? "gray"
-          }
-          variant="light"
-          size="sm"
-        >
-          {REGIMEN_LABELS[regimen as keyof typeof REGIMEN_LABELS] ?? regimen}
-        </Badge>
+        <StatusBadge tone={REGIMEN_TONOS[regimen] ?? "neutral"}>
+          {REGIMEN_LABELS[regimen] ?? regimen}
+        </StatusBadge>
       ),
     },
     {
@@ -251,6 +299,26 @@ export function PeriodosVacacionesTab() {
         </Badge>
       ),
     },
+    {
+      accessor: "acciones",
+      title: "",
+      width: 50,
+      render: (periodo) => (
+        <TableActions
+          actions={[
+            {
+              label: "Recalcular este período",
+              icon: <IconRefreshAlert size={14} />,
+              color: "orange",
+              // Solo en los cerrados: un período abierto se recalcula con la
+              // generación normal, que no necesita advertencia ni bitácora.
+              hidden: periodo.estado === "abierto",
+              onClick: () => void abrirRecalculo(periodo),
+            },
+          ]}
+        />
+      ),
+    },
   ];
 
   return (
@@ -354,7 +422,7 @@ export function PeriodosVacacionesTab() {
             </Badge>
             {alertaLimite && (
               <Text size="xs" c="orange" fw={500}>
-                ⚠️ Servidor acumula más de 45 días — debe gozar vacaciones
+                Servidor acumula más de 45 días — debe gozar vacaciones
                 pronto (límite LOSEP: 60 días)
               </Text>
             )}
