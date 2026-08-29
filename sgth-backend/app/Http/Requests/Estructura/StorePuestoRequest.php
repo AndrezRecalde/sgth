@@ -5,6 +5,7 @@ namespace App\Http\Requests\Estructura;
 use App\Enums\NivelComplejidadPuesto;
 use App\Enums\RolPuesto;
 use App\Models\Estructura\Puesto;
+use App\Rules\GrupoOcupacionalDelRegimen;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -20,7 +21,10 @@ final class StorePuestoRequest extends FormRequest
         return [
             'cargo_id'                  => ['required', 'integer', 'exists:cargos,id'],
             'unidad_administrativa_id'  => ['required', 'integer', 'exists:unidades_administrativas,id'],
-            'grupo_ocupacional_id'      => ['nullable', 'integer', 'exists:grupos_ocupacionales,id'],
+            'grupo_ocupacional_id'      => [
+                'nullable', 'integer', 'exists:grupos_ocupacionales,id',
+                new GrupoOcupacionalDelRegimen($this->input('regimen_laboral')),
+            ],
             'partida_presupuestaria_id' => ['nullable', 'integer', 'exists:partidas_presupuestarias,id'],
             'plazas'                    => ['required', 'integer', 'min:1'],
             'rol_puesto'                => ['nullable', new Enum(RolPuesto::class)],
