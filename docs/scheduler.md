@@ -1,6 +1,6 @@
 # SGTH — Tareas programadas (scheduler)
 
-Ocho tareas corren solas. Ninguna avisa cuando **no** corre: si el scheduler
+Nueve tareas corren solas. Ninguna avisa cuando **no** corre: si el scheduler
 está caído, nada falla — las cosas simplemente no ocurren, y eso se descubre
 semanas después. Por eso este documento existe.
 
@@ -12,6 +12,7 @@ Todas se declaran en [`sgth-backend/routes/console.php`](../sgth-backend/routes/
 |---|---|---|---|
 | 01:00 | `lotaip:generar-reportes` | Reportes de transparencia Art. 7 LOTAIP | Incumplimiento de publicación |
 | 02:00 | `backup:base-datos` | Respaldo de PostgreSQL | **No hay respaldos.** Un respaldo que nadie ejecuta no es un respaldo |
+| 03:30 | `sanctum:prune-expired --hours=24` | Borra los tokens del API caducados hace más de un día | La tabla `personal_access_tokens` crece sin fin. No rompe nada: Sanctum ya los rechaza |
 | 05:00 | `sgth:contratos:detectar-vencidos` | Genera en borrador la Cesación de Funciones de los contratos de Servicios Profesionales vencidos | Los contratos vencen y nadie se entera; el servidor sigue figurando como vigente |
 | 05:30 | `sgth:subrogaciones:caducar` | Cierra las subrogaciones y encargos cuyo plazo ya venció | El estado guardado miente. La pantalla queda bien igual —filtra por fecha—, pero cualquier reporte que consulte el estado se equivoca |
 | 06:00 | `VerificarAlertasInventarioJob` | Alertas de stock del dispensario | Se agota medicación sin aviso |
