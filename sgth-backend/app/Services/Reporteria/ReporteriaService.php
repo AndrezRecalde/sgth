@@ -3,6 +3,7 @@
 namespace App\Services\Reporteria;
 
 use App\Contracts\Reporteria\ReporteriaServiceInterface;
+use App\Enums\RegimenLaboral;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -28,10 +29,20 @@ class ReporteriaService implements ReporteriaServiceInterface
         // Aquí irían las consultas Eloquent como: Servidor::where('estado', true)->count()
         return [
             'total_servidores_activos' => DB::table('servidores')->whereNull('deleted_at')->count(),
-            'servidores_por_regimen' => [
-                'losep' => DB::table('servidores')->where('regimen_laboral', 'LOSEP')->count(),
-                'codigo_trabajo' => DB::table('servidores')->where('regimen_laboral', 'CODIGO_TRABAJO')->count()
-            ],
+            // Se arma desde el enum en vez de enumerar dos claves a mano.
+            // Estaban escritas en MAYÚSCULAS contra una columna que guarda
+            // minúsculas, así que ambos contadores devolvían cero desde
+            // siempre; y al agregarse el tercer régimen en 2026 nadie se
+            // acordó de este archivo. Recorriendo los casos, un régimen nuevo
+            // aparece solo.
+            'servidores_por_regimen' => collect(RegimenLaboral::cases())
+                ->mapWithKeys(fn (RegimenLaboral $regimen) => [
+                    $regimen->value => DB::table('servidores')
+                        ->whereNull('deleted_at')
+                        ->where('regimen_laboral', $regimen->value)
+                        ->count(),
+                ])
+                ->all(),
             'servidores_por_unidad' => DB::table('servidores')
                 ->join('unidades_administrativas', 'servidores.unidad_administrativa_id', '=', 'unidades_administrativas.id')
                 ->select('unidades_administrativas.nombre', DB::raw('count(*) as total'))
