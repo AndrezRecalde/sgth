@@ -11,7 +11,16 @@ export const servidorSchema = z.object({
     .regex(/^\d+$/, 'Solo dígitos'),
 
   // Régimen y cargo
-  regimen_laboral:          z.enum(['losep', 'codigo_trabajo']),
+  /**
+   * Espeja `RegimenServidor` de @/lib/regimen. Se quedó en dos valores cuando
+   * se agregó `servicios_profesionales` el 2026-08-29.
+   *
+   * Este esquema hoy solo se usa como tipo en las firmas del servicio —ningún
+   * formulario valida con él, y la pantalla de servidor no envía el régimen,
+   * que lo escribe el contrato—, pero un tipo que miente engaña a quien arme
+   * una petición leyéndolo.
+   */
+  regimen_laboral:          z.enum(['losep', 'codigo_trabajo', 'servicios_profesionales']),
   unidad_administrativa_id: z.number({ error: 'Seleccione unidad' }),
   puesto_id:                z.number({ error: 'Seleccione puesto' }),
 
