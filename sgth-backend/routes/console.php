@@ -42,6 +42,14 @@ Schedule::command('backup:base-datos')
     ->dailyAt('02:00')
     ->onOneServer();
 
+// Los tokens del API caducan a las 24 horas (config/sanctum.php), pero Sanctum
+// solo los rechaza: siguen en `personal_access_tokens` hasta que alguien los
+// borre. `--hours=24` deja un día de margen desde que caducaron, así que se van
+// los emitidos hace más de dos días.
+Schedule::command('sanctum:prune-expired --hours=24')
+    ->dailyAt('03:30')
+    ->onOneServer();
+
 use App\Jobs\GenerarPeriodosAnualesJob;
 
 Schedule::call(function () {
