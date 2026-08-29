@@ -216,3 +216,37 @@ test('previsualizar no escribe nada', function () {
 test('previsualizar un año sin período devuelve null', function () {
     expect($this->servicio->previsualizarRecalculo($this->servidor, 2019))->toBeNull();
 });
+
+// ── A quien no genera vacaciones no se le abre período ───────────
+
+test('no se abre un período para un contrato de servicios profesionales', function () {
+    $this->servidor->update(['regimen_laboral' => 'servicios_profesionales']);
+
+    expect(fn () => $this->servicio->generarPeriodo($this->servidor->fresh(), 2026))
+        ->toThrow(\App\Exceptions\ReglaNegocioException::class, 'no genera vacaciones');
+
+    expect(PeriodoVacacion::where('servidor_id', $this->servidor->id)->count())->toBe(0);
+});
+
+test('«generar todos» salta a los regímenes sin vacaciones', function () {
+    $this->servidor->update(['regimen_laboral' => 'servicios_profesionales']);
+
+    // No lanza: la generación masiva es de rutina y los filtra en la consulta.
+    $resultados = $this->servicio->generarPeriodosAnuales(2026);
+
+    expect($resultados)->toHaveCount(0)
+        ->and(PeriodoVacacion::where('servidor_id', $this->servidor->id)->count())->toBe(0);
+});
+
+test('el período que ya existía sí se recalcula al cambiar de régimen', function () {
+    // El corte es solo para períodos NUEVOS. Quien estuvo bajo otro régimen y
+    // gozó días conserva su período: eso ocurrió y no se borra.
+    $this->servicio->generarPeriodo($this->servidor, 2026);
+    $this->servicio->descontarDias($this->servidor->id, 3, 2026);
+
+    $this->servidor->update(['regimen_laboral' => 'servicios_profesionales']);
+    $periodo = $this->servicio->generarPeriodo($this->servidor->fresh(), 2026);
+
+    expect((float) $periodo->dias_generados)->toBe(0.0)
+        ->and((float) $periodo->dias_utilizados)->toBe(3.0);
+});

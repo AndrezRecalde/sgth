@@ -20,6 +20,7 @@ import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useServidores } from '@/features/expediente/hooks/useServidores'
+import { generaVacaciones } from '@/lib/regimen'
 import { usePeriodosVacaciones } from '../hooks/usePeriodosVacaciones'
 import { useVacacionMutations } from '../hooks/useVacacionMutations'
 import { asistenciaService } from '../services/asistenciaService'
@@ -128,10 +129,15 @@ export function VacacionModal({ opened, onClose }: Props) {
     label: u.nombre ?? `Unidad ${u.id}`,
   }))
 
-  const servidorOptions = servidoresUnidad.map(s => ({
-    value: String(s.id),
-    label: `${[s.apellido, s.nombre].filter(Boolean).join(' ')} — ${s.cedula}`,
-  }))
+  // Quien no genera vacaciones no aparece en el selector. El backend lo
+  // rechaza igual, pero ofrecerlo aquí sería abrir una puerta para cerrarla en
+  // la cara: la persona elige, llena las fechas y recién al enviar se entera.
+  const servidorOptions = servidoresUnidad
+    .filter(s => generaVacaciones(s.regimen_laboral))
+    .map(s => ({
+      value: String(s.id),
+      label: `${[s.apellido, s.nombre].filter(Boolean).join(' ')} — ${s.cedula}`,
+    }))
 
   const jefeOptions = servidoresUnidad
     .filter(s => (s.puesto as { es_jefe?: boolean } | null)?.es_jefe)

@@ -2,6 +2,7 @@
 namespace App\Services\Asistencia;
 
 use App\Enums\RegimenLaboral;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
@@ -69,6 +70,29 @@ class PeriodoVacacionService
             ->first();
 
         /**
+         * A quien no genera vacaciones no se le abre un período.
+         *
+         * Antes se le creaba uno con cero días. Parecía inofensivo, pero deja a
+         * un contratado civil dentro de la pantalla de vacaciones, contándose
+         * entre los períodos de la plantilla y con un saldo que discutir. No
+         * tiene jornada ni relación de dependencia: no es que le toquen cero
+         * días, es que no le corresponde el período.
+         *
+         * Se lanza en vez de devolver algo vacío para que el endpoint conteste
+         * el motivo. La generación masiva no llega aquí: filtra antes.
+         *
+         * Si el período YA existe se sigue de largo: es alguien que estuvo bajo
+         * otro régimen y cuyo período hay que recalcular a cero conservando lo
+         * que gozó. Eso ocurrió y no se borra.
+         */
+        if (! $existente && ! $this->generaVacaciones($servidor)) {
+            throw new ReglaNegocioException(
+                'El régimen de este servidor no genera vacaciones, '
+                .'así que no le corresponde un período.'
+            );
+        }
+
+        /**
          * Un período cerrado no se recalcula por rutina.
          *
          * Su saldo ya se certificó: se comunicó al servidor, se arrastró al año
@@ -124,6 +148,21 @@ class PeriodoVacacionService
         }
 
         return $periodo;
+    }
+
+    /**
+     * ¿El régimen de este servidor genera vacaciones?
+     *
+     * Se pregunta por la capacidad —`RegimenLaboral::generaVacaciones()`— en
+     * vez de comparar cadenas, para que un régimen nuevo tenga que declararlo.
+     */
+    private function generaVacaciones(Servidor $servidor): bool
+    {
+        $regimen = $servidor->regimen_laboral instanceof RegimenLaboral
+            ? $servidor->regimen_laboral
+            : RegimenLaboral::tryFrom((string) ($servidor->regimen_laboral ?? 'losep'));
+
+        return $regimen?->generaVacaciones() ?? true;
     }
 
     /**
@@ -259,7 +298,12 @@ class PeriodoVacacionService
      */
     public function generarPeriodosAnuales(int $anio): Collection
     {
-        $servidores = Servidor::where('estado', true)->get();
+        // Se excluyen en la consulta los regímenes que no generan vacaciones:
+        // la generación masiva es de rutina y no puede ir lanzando excepciones
+        // por cada contrato civil de la plantilla.
+        $servidores = Servidor::where('estado', true)
+            ->whereNotIn('regimen_laboral', RegimenLaboral::valoresSinVacaciones())
+            ->get();
         $resultados = collect();
 
         foreach ($servidores as $servidor) {

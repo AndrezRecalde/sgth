@@ -46,3 +46,17 @@ export function esRelacionLaboral(regimen?: string | null): boolean {
 export function accedeAPermisos(regimen?: string | null): boolean {
   return regimen === 'losep'
 }
+
+/**
+ * ¿Genera vacaciones?
+ *
+ * Espeja `RegimenLaboral::generaVacaciones()`. Un contrato civil no tiene
+ * jornada ni relación de dependencia: no es que le toquen cero días, es que no
+ * le corresponde el período.
+ *
+ * El backend lo rechaza igual; esto evita ofrecer en un selector a alguien a
+ * quien después se le va a negar la solicitud.
+ */
+export function generaVacaciones(regimen?: string | null): boolean {
+  return esRelacionLaboral(regimen)
+}

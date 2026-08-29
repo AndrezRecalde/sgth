@@ -34,7 +34,7 @@ import type {
   PrevisualizacionRecalculo,
 } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
-import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
+import { REGIMEN_LABELS, REGIMEN_TONOS, generaVacaciones } from '@/lib/regimen'
 
 const ESTADO_COLORS = {
   abierto: "emerald",
@@ -55,10 +55,14 @@ export function PeriodosVacacionesTab() {
   const { data: servidoresData } = useServidores({ per_page: 200 });
   const servidores = (servidoresData?.data ?? []) as ServidorConRelaciones[];
 
-  const servidorOptions = servidores.map((s) => ({
-    value: String(s.id),
-    label: `${[s.apellido, s.nombre].filter(Boolean).join(" ")} — ${s.cedula}`,
-  }));
+  // Los regímenes sin vacaciones no se ofrecen: no es que su período salga en
+  // cero, es que no les corresponde uno. El backend rechaza la generación.
+  const servidorOptions = servidores
+    .filter((s) => generaVacaciones(s.regimen_laboral))
+    .map((s) => ({
+      value: String(s.id),
+      label: `${[s.apellido, s.nombre].filter(Boolean).join(" ")} — ${s.cedula}`,
+    }));
 
   const { data: resumen, isLoading } = usePeriodosVacaciones(servidorSelId);
 

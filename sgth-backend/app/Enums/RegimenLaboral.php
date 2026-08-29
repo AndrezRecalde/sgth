@@ -53,6 +53,20 @@ enum RegimenLaboral: string
     }
 
     /**
+     * Los regímenes que NO generan vacaciones, para las consultas que necesitan
+     * excluirlos en SQL.
+     *
+     * @return list<string>
+     */
+    public static function valoresSinVacaciones(): array
+    {
+        return array_values(array_map(
+            fn (self $caso) => $caso->value,
+            array_filter(self::cases(), fn (self $caso) => ! $caso->generaVacaciones())
+        ));
+    }
+
+    /**
      * ¿Accede al módulo de permisos?
      *
      * Solo LOSEP. Los obreros del Código del Trabajo se rigen por su propio
