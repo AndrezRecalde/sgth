@@ -15,6 +15,7 @@
 export type { components, paths, operations } from './api.generated'
 
 import type { components } from './api.generated'
+import type { RegimenServidor } from '@/lib/regimen'
 
 // ── Respuesta estándar del API ───────────────
 export type ApiResponse<T = unknown> = {
@@ -1260,7 +1261,8 @@ export type PeriodoVacacion = {
   anio:                 number
   fecha_inicio_periodo: string
   fecha_fin_periodo:    string
-  regimen:              'losep' | 'codigo_trabajo'
+  // El régimen de la PERSONA, que desde 2026-08-29 admite un tercer valor.
+  regimen:              RegimenServidor
   anios_antiguedad:     number
   dias_generados:       number | string
   dias_utilizados:      number | string

@@ -6,7 +6,6 @@ import {
   Switch, Divider, Stepper, Grid, NumberInput, Paper, Text,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck, IconX, IconInfoCircle } from '@tabler/icons-react'
@@ -21,7 +20,7 @@ import { expedienteService } from '../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
 import { movimientoSchema, type MovimientoFormData } from '../schemas/movimiento.schema'
 import { SituacionActualPanel } from './SituacionActualPanel'
-import { esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
+import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
 import { useAusenciasTemporales } from '../hooks/useAusenciasTemporales'
 import { FirmantesPanel } from './FirmantesPanel'
@@ -625,14 +624,25 @@ function FormularioAccion({
                               <Controller
                                 name="puede_marcar"
                                 control={control}
-                                render={({ field }) => (
-                                  <Switch
-                                    label="Marcación biométrica"
-                                    description="Sugerida según el nombramiento; ajústela si este caso es distinto."
-                                    checked={!!field.value}
-                                    onChange={(e) => field.onChange(e.currentTarget.checked)}
-                                  />
-                                )}
+                                render={({ field }) => {
+                                  // Servicios profesionales, libre nombramiento
+                                  // y elección popular no marcan nunca: el
+                                  // interruptor se apaga y se bloquea, y el
+                                  // backend fuerza el valor igualmente.
+                                  const admite = admiteMarcacion(nombramiento)
+
+                                  return (
+                                    <Switch
+                                      label="Marcación biométrica"
+                                      description={admite
+                                        ? 'Sugerida según el nombramiento; ajústela si este caso es distinto.'
+                                        : 'Esta modalidad no marca biométrico.'}
+                                      checked={admite && !!field.value}
+                                      disabled={!admite}
+                                      onChange={(e) => field.onChange(e.currentTarget.checked)}
+                                    />
+                                  )
+                                }}
                               />
                             </>
                           )}

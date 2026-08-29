@@ -496,20 +496,27 @@ class MovimientoPersonalService
      */
     private function resolverPuedeMarcar(array $datos): ?bool
     {
+        $propuesto = $datos['tipo_nombramiento_propuesto'] ?? null;
+
+        $nombramiento = $propuesto instanceof TipoNombramiento
+            ? $propuesto
+            : ($propuesto !== null ? TipoNombramiento::tryFrom((string) $propuesto) : null);
+
+        // Hay modalidades que no marcan nunca —servicios profesionales, libre
+        // nombramiento y elección popular—. Se fuerza a falso aunque el cliente
+        // mande lo contrario: es una restricción, no un valor sugerido, y no
+        // puede depender de que el formulario se comporte bien.
+        if ($nombramiento !== null && ! $nombramiento->admiteMarcacion()) {
+            return false;
+        }
+
         if (array_key_exists('puede_marcar', $datos) && $datos['puede_marcar'] !== null) {
             return (bool) $datos['puede_marcar'];
         }
 
-        $propuesto = $datos['tipo_nombramiento_propuesto'] ?? null;
-
-        if ($propuesto === null) {
-            return null;
-        }
-
-        $nombramiento = $propuesto instanceof TipoNombramiento
-            ? $propuesto
-            : TipoNombramiento::tryFrom((string) $propuesto);
-
+        // Sin nombramiento propuesto (acciones que no crean vínculo) se deja
+        // null: esta acción no opina sobre la marcación y el contrato conserva
+        // la suya.
         return $nombramiento?->puedeMarcarPorDefecto();
     }
 

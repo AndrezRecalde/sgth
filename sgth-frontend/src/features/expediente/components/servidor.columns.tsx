@@ -4,16 +4,7 @@ import { TableActions } from '@/components/ui/TableActions'
 import { esExterno } from '../utils/nombramiento'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ServidorConRelaciones } from '@/types/api'
-
-const REGIMEN_LABELS: Record<string, string> = {
-  losep:          'LOSEP',
-  codigo_trabajo: 'Cód. Trabajo',
-}
-
-const REGIMEN_COLORS: Record<string, string> = {
-  losep:          'emerald',
-  codigo_trabajo: 'blue',
-}
+import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
 
 type Handlers = {
   onView: (servidor: ServidorConRelaciones) => void
@@ -73,7 +64,7 @@ export const getServidorColumns = (
       if (!regimen_laboral) return <Text size="sm" c="dimmed">-</Text>
       return (
         <Badge
-          color={REGIMEN_COLORS[regimen_laboral] ?? 'gray'}
+          color={REGIMEN_TONOS[regimen_laboral] ?? 'gray'}
           variant="light"
           size="sm"
         >

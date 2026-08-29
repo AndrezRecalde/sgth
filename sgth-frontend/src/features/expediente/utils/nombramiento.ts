@@ -20,6 +20,30 @@ export function esLosep(tipoNombramiento?: string | null): boolean {
 }
 
 /**
+ * ¿Esta modalidad puede marcar biométrico, aunque sea de forma excepcional?
+ *
+ * Espeja `TipoNombramiento::admiteMarcacion()` del backend. Tres no marcan
+ * nunca, por motivos distintos:
+ *
+ *  - Servicios Profesionales: contrato civil sin relación de dependencia.
+ *  - Libre Nombramiento y Remoción, y Elección Popular: autoridades y personal
+ *    de confianza, sin horario sujeto a control biométrico.
+ *
+ * Los obreros del Código del Trabajo sí quedan editables: entre ellos unos
+ * marcan y otros no.
+ *
+ * El backend fuerza el valor a falso igual, así que esto solo evita ofrecer un
+ * interruptor que no haría nada.
+ */
+export function admiteMarcacion(tipoNombramiento?: string | null): boolean {
+  return ![
+    'servicios_profesionales',
+    'libre_nombramiento_remocion',
+    'eleccion_popular',
+  ].includes(tipoNombramiento ?? '')
+}
+
+/**
  * ¿La R.M.U. se teclea o se hereda?
  *
  * En LOSEP la fija el grupo ocupacional del puesto, así que el campo va en

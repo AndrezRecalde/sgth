@@ -483,8 +483,11 @@ class ContratoServidorService
             : TipoNombramiento::from((string) $tipoNombramiento);
 
         $regimen = match ($tipoNombramientoEnum) {
-            TipoNombramiento::CODIGO_TRABAJO,
-            TipoNombramiento::SERVICIOS_PROFESIONALES => 'codigo_trabajo',
+            // Hasta el 2026-08-29 los servicios profesionales caían aquí, en el
+            // cajón de «lo que no es LOSEP». Ahora tienen su propio régimen:
+            // es un contrato civil, no una relación laboral.
+            TipoNombramiento::SERVICIOS_PROFESIONALES => 'servicios_profesionales',
+            TipoNombramiento::CODIGO_TRABAJO => 'codigo_trabajo',
             default => 'losep',
         };
 

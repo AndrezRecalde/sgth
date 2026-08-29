@@ -91,15 +91,21 @@ class PermisoServidorController extends Controller
             );
         }
 
-        // Verificar que el servidor no sea CT
+        // Solo LOSEP accede al módulo de permisos. Se comprueba en positivo y
+        // no descartando el Código del Trabajo: con esa forma, el régimen de
+        // servicios profesionales —agregado el 2026-08-29— habría entrado por
+        // omisión, y un contrato civil no tiene jornada que permisar.
         $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
         $regimen = $servidor->regimen_laboral instanceof \App\Enums\RegimenLaboral
-            ? $servidor->regimen_laboral->value
-            : (string)($servidor->regimen_laboral ?? 'losep');
+            ? $servidor->regimen_laboral
+            : \App\Enums\RegimenLaboral::tryFrom(
+                (string) ($servidor->regimen_laboral ?? 'losep')
+            );
 
-        if ($regimen === 'codigo_trabajo') {
+        if (! $regimen?->accedeAPermisos()) {
             return ApiResponse::error(
-                'Los servidores con Código del Trabajo no tienen acceso al módulo de permisos.',
+                'El régimen '.($regimen?->etiqueta() ?? 'del servidor').
+                ' no tiene acceso al módulo de permisos.',
                 422
             );
         }

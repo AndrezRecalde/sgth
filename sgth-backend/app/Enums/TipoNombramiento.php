@@ -43,10 +43,37 @@ enum TipoNombramiento: string
      */
     public function puedeMarcarPorDefecto(): bool
     {
-        return in_array($this, [
+        return $this->admiteMarcacion() && in_array($this, [
             self::PERMANENTE,
             self::PROVISIONAL,
             self::SERVICIOS_OCASIONALES,
+        ], true);
+    }
+
+    /**
+     * ¿Esta modalidad puede marcar biométrico, aunque sea de forma excepcional?
+     *
+     * Tres no admiten marcación en ningún caso, y por motivos distintos:
+     *
+     *  - **Servicios Profesionales**: contrato civil sin relación de
+     *    dependencia. No hay jornada que controlar.
+     *  - **Libre Nombramiento y Remoción** y **Elección Popular**: autoridades
+     *    y personal de confianza, sin horario sujeto a control biométrico.
+     *
+     * Es distinto de `puedeMarcarPorDefecto()`, que solo sugiere un valor
+     * inicial editable. Esto es una restricción: el formulario deshabilita la
+     * casilla y el backend la fuerza a falso, así que no depende de que la
+     * pantalla se comporte bien.
+     *
+     * Los obreros del Código del Trabajo SÍ quedan editables: entre ellos unos
+     * marcan y otros no, según indicó Talento Humano.
+     */
+    public function admiteMarcacion(): bool
+    {
+        return ! in_array($this, [
+            self::SERVICIOS_PROFESIONALES,
+            self::LIBRE_NOMBRAMIENTO,
+            self::ELECCION_POPULAR,
         ], true);
     }
 
