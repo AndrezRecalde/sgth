@@ -3,21 +3,15 @@
 import { useEffect } from 'react'
 import {
   Modal, Button, Group, Stack,
-  TextInput, Select, Textarea, Anchor,
+  TextInput, Textarea, Anchor,
 } from '@mantine/core'
-import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCargoMutations } from '../hooks/useCargoMutations'
 import { cargoSchema, type CargoFormData } from '../schemas/cargo.schema'
 import type { Cargo } from '@/types/api'
-
-const CLASIFICACION_OPTIONS = [
-  { value: 'empleado',   label: 'Empleado (LOSEP)' },
-  { value: 'contratado', label: 'Contratado (Servicios Ocasionales/Profesionales)' },
-  { value: 'obrero',     label: 'Obrero (Código del Trabajo)' },
-]
 
 interface Props {
   opened:  boolean
@@ -33,7 +27,6 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
 
   const {
     register,
-    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -44,7 +37,6 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
       denominacion_generica:  cargo?.denominacion_generica ?? '',
       codigo_ciuo:            cargo?.codigo_ciuo            ?? '',
       mision:                 cargo?.mision                ?? '',
-      clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal']) ?? 'empleado',
     },
   })
 
@@ -54,7 +46,6 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
       denominacion_generica: cargo?.denominacion_generica ?? '',
       codigo_ciuo:           cargo?.codigo_ciuo            ?? '',
       mision:                cargo?.mision                ?? '',
-      clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal']) ?? 'empleado',
     })
   }, [cargo, reset])
 
@@ -117,22 +108,6 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
             {...contained}
             {...register('codigo_ciuo')}
             error={errors.codigo_ciuo?.message}
-          />
-          <Controller
-            name="clasificacion_personal"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Clasificación de personal"
-                data={CLASIFICACION_OPTIONS}
-                {...contained}
-                value={field.value}
-                onChange={(v) =>
-                  field.onChange((v ?? 'empleado') as CargoFormData['clasificacion_personal'])
-                }
-                error={errors.clasificacion_personal?.message}
-              />
-            )}
           />
           <Textarea
             label="Misión del cargo"

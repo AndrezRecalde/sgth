@@ -14,9 +14,6 @@ export const cargoSchema = z.object({
     .max(10, 'Máximo 10 dígitos')
     .optional(),
   mision: z.string().optional(),
-  clasificacion_personal: z.enum([
-    'empleado', 'contratado', 'obrero',
-  ]),
 })
 
 export type CargoFormData = z.infer<typeof cargoSchema>

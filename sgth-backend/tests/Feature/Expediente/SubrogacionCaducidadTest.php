@@ -41,7 +41,7 @@ beforeEach(function () {
         'codigo' => 'P-PREF', 'unidad_administrativa_id' => $this->unidad->id,
         'plazas' => 1, 'es_jefe' => true, 'activo' => true,
         'cargo_id' => Cargo::firstOrCreate(
-            ['nombre' => 'Prefecto/a Provincial'], ['clasificacion_personal' => 'empleado']
+            ['nombre' => 'Prefecto/a Provincial']
         )->id,
         'partida_presupuestaria_id' => $this->partida->id,
     ]);

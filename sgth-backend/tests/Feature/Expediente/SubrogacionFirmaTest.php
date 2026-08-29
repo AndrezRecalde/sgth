@@ -34,10 +34,7 @@ beforeEach(function () {
         'es_maxima_autoridad' => true,
     ]);
 
-    $cargo = Cargo::firstOrCreate(
-        ['nombre' => 'Prefecto/a Provincial'],
-        ['clasificacion_personal' => 'empleado']
-    );
+    $cargo = Cargo::firstOrCreate(['nombre' => 'Prefecto/a Provincial']);
 
     // La subrogación compromete presupuesto (Art. 105 LOSEP): sin partida
     // disponible su acción no puede suscribirse, que es justo lo que este

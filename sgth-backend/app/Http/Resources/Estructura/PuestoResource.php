@@ -26,7 +26,6 @@ class PuestoResource extends JsonResource
                 'id'                     => $this->cargo->id,
                 'nombre'                 => $this->cargo->nombre,
                 'denominacion_generica'  => $this->cargo->denominacion_generica,
-                'clasificacion_personal' => $this->cargo->clasificacion_personal,
             ]),
 
             'unidad_administrativa' => new UnidadAdministrativaResource(

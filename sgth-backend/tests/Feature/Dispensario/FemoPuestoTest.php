@@ -25,7 +25,6 @@ beforeEach(function () {
 
     $this->cargo = Cargo::create([
         'nombre' => 'Analista de Seguridad Informática',
-        'clasificacion_personal' => 'empleado',
         'codigo_ciuo' => '2529',
     ]);
 

@@ -31,7 +31,7 @@ beforeEach(function () {
         'codigo' => 'UATH-01', 'nombre' => 'Unidad de Talento Humano', 'nivel' => 1,
     ]);
 
-    $cargo = Cargo::create(['nombre' => 'Analista', 'clasificacion_personal' => 'empleado']);
+    $cargo = Cargo::create(['nombre' => 'Analista']);
 
     $this->puesto = Puesto::create([
         'unidad_administrativa_id' => $this->unidad->id,

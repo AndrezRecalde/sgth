@@ -72,10 +72,7 @@ function puestoDePrueba(
 
     return Puesto::create(array_merge([
         'unidad_administrativa_id' => $unidad->id,
-        'cargo_id'                 => Cargo::firstOrCreate(
-            ['nombre' => $cargo],
-            ['clasificacion_personal' => 'empleado'],
-        )->id,
+        'cargo_id'                 => Cargo::firstOrCreate(['nombre' => $cargo])->id,
         'grupo_ocupacional_id'     => $grupo->id,
         'plazas'                   => 1,
         'es_jefe'                  => $esJefe,

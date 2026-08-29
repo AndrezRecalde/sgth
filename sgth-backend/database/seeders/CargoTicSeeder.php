@@ -16,7 +16,6 @@ class CargoTicSeeder extends Seeder
                 'mision' => 'Administrar, dar soporte y garantizar la disponibilidad de la '
                     . 'infraestructura tecnológica, sistemas de información y comunicaciones '
                     . 'del GADPE.',
-                'clasificacion_personal' => 'empleado',
                 'activo' => true,
             ]
         );

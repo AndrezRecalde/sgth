@@ -475,7 +475,6 @@ export type ContratoConRelaciones = ContratoServidor & {
       id:                    number
       nombre?:               string
       denominacion_generica?: string
-      clasificacion_personal?: string
     } | null
     // La partida cuelga del puesto, no del contrato: al reubicar a alguien
     // por traslado o traspaso, la partida acompaña al puesto nuevo.
@@ -809,7 +808,6 @@ export type PuestoConRelaciones = {
     id: number
     nombre?: string
     denominacion_generica?: string | null
-    clasificacion_personal?: ClasificacionPersonal
   } | null
   unidad_administrativa?: { id: number; nombre?: string }
   grupo_ocupacional?: {
@@ -836,11 +834,6 @@ export type PuestoConRelaciones = {
 }
 
 // ── Cargos ───────────────────────────────────────
-export type ClasificacionPersonal =
-  | 'empleado'
-  | 'contratado'
-  | 'obrero'
-
 export type Cargo = {
   id: number
   nombre: string
@@ -848,7 +841,6 @@ export type Cargo = {
   /** Código CIUO-08. Lo heredan las fichas médicas ocupacionales del puesto. */
   codigo_ciuo?: string | null
   mision?: string | null
-  clasificacion_personal: ClasificacionPersonal
   activo: boolean
 }
 
@@ -857,12 +849,10 @@ export type CargoFormData = {
   denominacion_generica?: string
   codigo_ciuo?: string
   mision?: string
-  clasificacion_personal: ClasificacionPersonal
 }
 
 export type CargoParams = {
   search?: string
-  clasificacion?: ClasificacionPersonal
 }
 
 export type GrupoOcupacional = {

@@ -14,12 +14,6 @@ const REGIMEN_COLORS: Record<string, string> = {
   codigo_trabajo: 'blue',
 }
 
-const CLASIFICACION_COLORS: Record<string, string> = {
-  empleado:   'gray',
-  contratado: 'orange',
-  obrero:     'violet',
-}
-
 type Handlers = {
   onEdit:        (puesto: PuestoConRelaciones) => void
   onDelete:      (puesto: PuestoConRelaciones) => void
@@ -36,15 +30,6 @@ export const getPuestoColumns = (
       <div>
         <Text size="sm" fw={500}>{cargo?.nombre ?? '-'}</Text>
         <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
-          {cargo?.clasificacion_personal && (
-            <Badge
-              size="xs"
-              variant="dot"
-              color={CLASIFICACION_COLORS[cargo.clasificacion_personal] ?? 'gray'}
-            >
-              {cargo.clasificacion_personal}
-            </Badge>
-          )}
           {es_jefe && (
             <Badge size="xs" variant="dot" color="emerald">
               Jefe

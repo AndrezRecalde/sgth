@@ -25,7 +25,7 @@ beforeEach(function () {
         'codigo' => 'U1', 'nombre' => 'Unidad', 'nivel' => 1,
     ]);
     $cargo = Cargo::create([
-        'nombre' => 'Analista', 'clasificacion_personal' => 'empleado',
+        'nombre' => 'Analista',
     ]);
     $puesto = Puesto::create([
         'unidad_administrativa_id' => $unidad->id, 'cargo_id' => $cargo->id, 'plazas' => 1,

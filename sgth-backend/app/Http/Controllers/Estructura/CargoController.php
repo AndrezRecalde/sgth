@@ -16,13 +16,6 @@ class CargoController extends Controller
                 $request->filled('search'),
                 fn($q) => $q->where('nombre', 'ilike', "%{$request->search}%")
             )
-            ->when(
-                $request->filled('clasificacion'),
-                fn($q) => $q->where(
-                    'clasificacion_personal',
-                    $request->clasificacion
-                )
-            )
             ->where('activo', true)
             ->orderBy('nombre')
             ->get();
@@ -39,10 +32,6 @@ class CargoController extends Controller
             // heredan las fichas médicas ocupacionales de todos sus puestos.
             'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
             'mision'                 => ['nullable', 'string'],
-            'clasificacion_personal' => [
-                'required', 'string',
-                'in:empleado,contratado,obrero',
-            ],
         ]);
 
         $cargo = Cargo::create($validated);
@@ -59,10 +48,6 @@ class CargoController extends Controller
             // heredan las fichas médicas ocupacionales de todos sus puestos.
             'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
             'mision'                 => ['nullable', 'string'],
-            'clasificacion_personal' => [
-                'sometimes', 'string',
-                'in:empleado,contratado,obrero',
-            ],
             'activo' => ['boolean'],
         ]);
 

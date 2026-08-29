@@ -11,21 +11,9 @@ import { useCargos } from "../hooks/useCargos";
 import { useCargoMutations } from "../hooks/useCargoMutations";
 import { CargoModal } from "./CargoModal";
 import { useContainedInput } from "@/hooks/useContainedInput";
-import type { Cargo, ClasificacionPersonal } from "@/types/api";
+import type { Cargo } from "@/types/api";
 import { Badge, Text } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
-
-const CLASIFICACION_LABELS: Record<ClasificacionPersonal, string> = {
-  empleado: "Empleado",
-  contratado: "Contratado",
-  obrero: "Obrero",
-};
-
-const CLASIFICACION_COLORS: Record<ClasificacionPersonal, string> = {
-  empleado: "blue",
-  contratado: "orange",
-  obrero: "violet",
-};
 
 export function CargosTab() {
   const [search, setSearch] = useState("");
@@ -63,21 +51,6 @@ export function CargosTab() {
             </Text>
           )}
         </div>
-      ),
-    },
-    {
-      accessor: "clasificacion_personal",
-      title: "Clasificación",
-      width: 130,
-      render: ({ clasificacion_personal }) => (
-        <Badge
-          color={CLASIFICACION_COLORS[clasificacion_personal] ?? "gray"}
-          variant="light"
-          size="sm"
-        >
-          {CLASIFICACION_LABELS[clasificacion_personal] ??
-            clasificacion_personal}
-        </Badge>
       ),
     },
     {

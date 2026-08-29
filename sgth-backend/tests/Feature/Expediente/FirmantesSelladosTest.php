@@ -51,7 +51,7 @@ beforeEach(function () {
         ]);
 
         $cargo = Cargo::create([
-            'nombre' => $nombreCargo, 'clasificacion_personal' => 'empleado',
+            'nombre' => $nombreCargo,
         ]);
 
         $puesto = Puesto::create([

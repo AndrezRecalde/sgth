@@ -28,7 +28,7 @@ beforeEach(function () {
         'codigo' => 'UATH-01', 'nombre' => 'Talento Humano', 'nivel' => 1,
     ]);
     $cargo = Cargo::create([
-        'nombre' => 'Chofer', 'clasificacion_personal' => 'obrero', 'codigo_ciuo' => '8322',
+        'nombre' => 'Chofer', 'codigo_ciuo' => '8322',
     ]);
     $this->puesto = Puesto::create([
         'unidad_administrativa_id' => $unidad->id, 'cargo_id' => $cargo->id, 'plazas' => 3,

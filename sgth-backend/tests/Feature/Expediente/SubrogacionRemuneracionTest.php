@@ -58,7 +58,7 @@ beforeEach(function () {
         'unidad_administrativa_id' => $this->unidad->id,
         'plazas' => 1, 'es_jefe' => true,
         'cargo_id' => Cargo::firstOrCreate(
-            ['nombre' => 'Jefe de Tecnologías'], ['clasificacion_personal' => 'empleado']
+            ['nombre' => 'Jefe de Tecnologías']
         )->id,
         'grupo_ocupacional_id' => $this->grupoJefe->id,
         'partida_presupuestaria_id' => $this->partidaDestino->id,
@@ -69,7 +69,7 @@ beforeEach(function () {
         'unidad_administrativa_id' => $this->unidad->id,
         'plazas' => 1,
         'cargo_id' => Cargo::firstOrCreate(
-            ['nombre' => 'Asistente Administrativo'], ['clasificacion_personal' => 'empleado']
+            ['nombre' => 'Asistente Administrativo']
         )->id,
         'grupo_ocupacional_id' => $this->grupoAsistente->id,
         'partida_presupuestaria_id' => $this->partidaOrigen->id,
