@@ -67,11 +67,10 @@ export function ViaticoView() {
   });
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Viáticos"
-        subtitle="Gestión de comisiones de servicio y viáticos"
-        icon={<IconPlane size={24} />}
+        description="Gestión de comisiones de servicio y viáticos"
       />
 
       <Tabs defaultValue="viaticos">
@@ -134,6 +133,8 @@ export function ViaticoView() {
         onClose={close}
         onCreated={handleCreado}
       />
-    </Stack>
+    </PageShell>
   );
 }
+
+import { PageShell } from '@/components/ui'

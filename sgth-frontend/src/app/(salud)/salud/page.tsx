@@ -1,11 +1,9 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconHeartbeat } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { DisponibilidadToggle } from
   '@/features/dispensario/components/DisponibilidadToggle'
 import { useAuth } from '@/hooks/useAuth'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export default function SaludHomePage() {
   const { usuario } = useAuth()
@@ -15,13 +13,12 @@ export default function SaludHomePage() {
   )
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Dispensario Médico"
-        subtitle="Sistema de Salud Ambulatoria — GADPE"
-        icon={<IconHeartbeat size={24} />}
+        description="Sistema de Salud Ambulatoria — GADPE"
       />
       {esPersonalClinico && <DisponibilidadToggle />}
-    </Stack>
+    </PageShell>
   )
 }

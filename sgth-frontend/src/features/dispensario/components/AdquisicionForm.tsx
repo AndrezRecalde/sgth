@@ -5,7 +5,6 @@ import {
   Textarea, Button, Table, Text, Alert,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useDisclosure } from '@mantine/hooks'

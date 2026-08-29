@@ -28,13 +28,14 @@ export const TIPO_RESULTADO_OPTIONS = [
   { value: 'otro',              label: 'Otro'                },
 ]
 
+/** Icono por tipo de resultado. Nombre de @tabler/icons-react, como en el menú. */
 export const TIPO_RESULTADO_ICONS: Record<string, string> = {
-  laboratorio:        '🧪',
-  imagen:             '🖼️',
-  ecografia:          '📡',
-  rayos_x:           '☢️',
-  electrocardiograma: '💓',
-  otro:               '📄',
+  laboratorio:        'IconFlask',
+  imagen:             'IconPhoto',
+  ecografia:          'IconWaveSine',
+  rayos_x:            'IconRadioactive',
+  electrocardiograma: 'IconHeartRateMonitor',
+  otro:               'IconFileText',
 }
 
 export const resultadoMedicoService = {

@@ -54,6 +54,7 @@ const BLANK_FORM_VALUES: ServidorBasicoFormData = {
   telefono_celular:      '',
   telefono_convencional: '',
   correo_personal:       '',
+  codigo_medico:         '',
   direccion_domicilio:   '',
 }
 
@@ -90,6 +91,7 @@ function mapServidorToFormValues(servidor: ServidorConRelaciones): ServidorBasic
     telefono_celular:      servidor.telefono_celular ?? '',
     telefono_convencional: servidor.telefono_convencional ?? '',
     correo_personal:       servidor.correo_personal ?? '',
+    codigo_medico:         servidor.codigo_medico ?? '',
     direccion_domicilio:   servidor.direccion_domicilio ?? '',
   }
 }

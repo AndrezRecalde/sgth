@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Tabs } from '@mantine/core'
+import { Tabs } from '@mantine/core'
 import { IconInbox, IconSignature, IconUserOff, IconUserPlus } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { SelectorServidorCategoria } from '@/features/expediente/components/SelectorServidorCategoria'
 import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
 import { BandejaAccionesPersonal } from '@/features/expediente/components/BandejaAccionesPersonal'
@@ -13,6 +12,7 @@ import {
   TIPO_LABELS, type AccionTipo,
 } from '@/features/expediente/utils/taxonomiaAccionPersonal'
 import type { ServidorConRelaciones } from '@/types/api'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export function AccionesPersonalView() {
   const [servidor, setServidor] = useState<ServidorConRelaciones | null>(null)
@@ -32,11 +32,10 @@ export function AccionesPersonalView() {
   const handleCerrar = () => setCategoria(null)
 
   return (
-    <Box>
+    <PageShell>
       <PageHeader
         title="Acciones de Personal"
-        subtitle="Registre nuevas acciones y revise las que esperan aprobación de Talento Humano"
-        icon={<IconUserPlus size={28} />}
+        description="Registre nuevas acciones y revise las que esperan aprobación de Talento Humano"
       />
 
       <Tabs defaultValue="bandeja" color="emerald">
@@ -89,6 +88,6 @@ export function AccionesPersonalView() {
           <FirmantesPanel />
         </Tabs.Panel>
       </Tabs>
-    </Box>
+    </PageShell>
   )
 }

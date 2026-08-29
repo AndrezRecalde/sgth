@@ -5,8 +5,6 @@ import { Stack, Tabs, Card, Alert, Text } from '@mantine/core'
 import {
   IconShoppingCart, IconList, IconCheck,
 } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { AdquisicionForm } from
   '@/features/dispensario/components/AdquisicionForm'
 import { SubirDocumentoModal } from
@@ -116,11 +114,10 @@ function HistorialAdquisiciones() {
 
 export default function AdquisicionesPage() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Adquisiciones de Medicamentos"
-        subtitle="Registro de compras y donaciones con respaldo documental"
-        icon={<IconShoppingCart size={24} />}
+        description="Registro de compras y donaciones con respaldo documental"
       />
 
       <Tabs defaultValue="nueva">
@@ -147,6 +144,8 @@ export default function AdquisicionesPage() {
           <HistorialAdquisiciones />
         </Tabs.Panel>
       </Tabs>
-    </Stack>
+    </PageShell>
   )
 }
+
+import { PageHeader, PageShell, SgthTable } from '@/components/ui'

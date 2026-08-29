@@ -1,13 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Button, Group, Text, Badge, Select } from '@mantine/core'
+import { Button, Group, Text, Badge, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconArrowsExchange, IconPlus, IconPlayerStop, IconBan } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useSubrogacionesVigentes } from '@/features/expediente/hooks/useSubrogaciones'
 import { useSubrogacionMutations } from '@/features/expediente/hooks/useSubrogacionMutations'
@@ -16,6 +12,7 @@ import { CancelarSubrogacionModal } from '@/features/expediente/components/Cance
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { Subrogacion, TipoSubrogacion, UnidadConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
 
 const TIPO_LABELS: Record<TipoSubrogacion, string> = {
   subrogacion: 'Subrogación',
@@ -169,11 +166,10 @@ export function SubrogacionesView() {
   ]
 
   return (
-    <Box>
+    <PageShell>
       <PageHeader
         title="Subrogaciones y Encargos"
-        subtitle="Administración de subrogaciones y encargos de puestos vacantes del GAD Provincial de Esmeraldas"
-        icon={<IconArrowsExchange size={28} />}
+        description="Administración de subrogaciones y encargos de puestos vacantes del GAD Provincial de Esmeraldas"
       />
 
       <Group justify="flex-end" mb="md">
@@ -239,6 +235,6 @@ export function SubrogacionesView() {
         onClose={() => { setCancelarId(null); closeCancelar() }}
         subrogacionId={cancelarId}
       />
-    </Box>
+    </PageShell>
   )
 }

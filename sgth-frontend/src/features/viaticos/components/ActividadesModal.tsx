@@ -5,7 +5,6 @@ import {
   Modal, Stack, Button, Group,
   Alert, Text, ThemeIcon, Divider,
 } from '@mantine/core'
-import '@mantine/dates/styles.css'
 import {
   IconPlus, IconClipboardList,
   IconAlertCircle, IconCheck,

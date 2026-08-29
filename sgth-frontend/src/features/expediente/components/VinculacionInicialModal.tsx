@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Alert, Button, Group, Modal, Stepper } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { FormProvider, useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconBriefcase, IconInfoCircle, IconPhone, IconUser } from '@tabler/icons-react'

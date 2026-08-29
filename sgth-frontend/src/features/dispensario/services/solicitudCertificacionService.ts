@@ -30,6 +30,31 @@ export interface CrearSolicitudSignosVitalesData {
   observaciones_enfermera?: string | null
 }
 
+
+/** Puesto tal como lo expone el detalle de la solicitud. */
+export interface PuestoDeSolicitud {
+  id: number
+  cargo?: {
+    id?: number
+    nombre: string
+    /** Código CIUO-08 del cargo. La ficha FEMO lo hereda, no lo pide. */
+    codigo_ciuo?: string | null
+  } | null
+  unidad_administrativa?: {
+    id: number
+    nombre: string
+  } | null
+}
+
+
+/**
+ * Sexo del paciente, para decidir qué bloque reproductivo mostrar.
+ *
+ * Puede faltar: la columna `genero` no está poblada para toda la plantilla,
+ * así que el formulario tiene que comportarse bien cuando llega vacía.
+ */
+export type SexoPaciente = 'masculino' | 'femenino' | 'otro' | null
+
 export interface SolicitudCertificacion {
   id:                number
   tipo_evento:       string
@@ -50,6 +75,9 @@ export interface SolicitudCertificacion {
     nombre:  string
     apellido: string
     cedula:  string
+    genero?: SexoPaciente
+    tipo_sangre?: string | null
+    puesto?: PuestoDeSolicitud | null
     unidad_administrativa?: {
       id:     number
       nombre: string
@@ -61,21 +89,16 @@ export interface SolicitudCertificacion {
     apellidos: string
     cedula:   string
     correo:   string
+    genero?: SexoPaciente
+    tipo_sangre?: string | null
+    /** En reclutamiento express el puesto lo trae el aspirante, no la convocatoria. */
+    puesto?: PuestoDeSolicitud | null
   } | null
   convocatoria?: {
     id:     number
     codigo: string
     titulo: string
-    puesto?: {
-      id:      number
-      cargo?: {
-        nombre: string
-      } | null
-      unidad_administrativa?: {
-        id:     number
-        nombre: string
-      } | null
-    } | null
+    puesto?: PuestoDeSolicitud | null
   } | null
   solicitado_por?: {
     servidor?: {

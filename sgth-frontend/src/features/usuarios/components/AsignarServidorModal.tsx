@@ -116,7 +116,6 @@ export function AsignarServidorModal({ opened, onClose, usuario }: Props) {
           <TextInput
             label="Cédula o nombre del servidor"
             placeholder="Ej: 0800123456 o Juan Pérez"
-            leftSection={<IconSearch size={14} />}
             {...contained}
             value={busqueda}
             onChange={(e) => setBusqueda(e.currentTarget.value)}

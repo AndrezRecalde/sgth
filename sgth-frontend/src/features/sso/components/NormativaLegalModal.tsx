@@ -5,7 +5,6 @@ import {
   ActionIcon, Badge,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
@@ -16,7 +15,7 @@ import { useNormativas, useNormativaMutations } from '../hooks/useNormativaLegal
 import {
   normativaLegalSchema, type NormativaLegalFormData, TIPO_NORMATIVA_OPTIONS,
 } from '../schemas/normativaLegal.schema'
-import { toDateValue, fromDateValue } from '../utils/fecha'
+import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { NormativaLegalSso } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
 

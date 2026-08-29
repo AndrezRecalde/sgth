@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Center, Loader, Container, Grid } from "@mantine/core";
+import { Center, Loader, Grid } from "@mantine/core";
 import api from "@/lib/axios";
 import { useAuth } from "@/hooks/useAuth";
 import type { UsuarioAuth } from "@/store/auth.store";
 import { PerfilServidorCard } from "@/features/portal/components/PerfilServidorCard";
 import { NoticiasCard } from "@/features/portal/components/NoticiasCard";
+import { PageShell } from "@/components/ui";
 
 export default function PortalHomePage() {
   const { usuario, token, setAuth } = useAuth();
@@ -38,7 +39,7 @@ export default function PortalHomePage() {
   }
 
   return (
-    <Container size="xl">
+    <PageShell>
       <Grid>
         <Grid.Col span={{ base: 12, md: 6, lg: 6 }}>
           <PerfilServidorCard usuario={usuarioActual} />
@@ -47,6 +48,6 @@ export default function PortalHomePage() {
           <NoticiasCard />
         </Grid.Col>
       </Grid>
-    </Container>
+    </PageShell>
   );
 }

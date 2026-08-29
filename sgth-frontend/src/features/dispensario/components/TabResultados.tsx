@@ -10,6 +10,7 @@ import {
   IconExternalLink,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
+import { getIcon } from '@/lib/tablerIcons'
 import { SubirResultadoModal } from './SubirResultadoModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import {
@@ -98,9 +99,7 @@ export function TabResultados({
                   <ThemeIcon
                     size="md" variant="light" color="blue" radius="xl"
                   >
-                    <Text size="sm">
-                      {TIPO_RESULTADO_ICONS[r.tipo] ?? '📄'}
-                    </Text>
+                    {getIcon(TIPO_RESULTADO_ICONS[r.tipo] ?? 'IconFileText', 16)}
                   </ThemeIcon>
                   <Stack gap={0}>
                     <Group gap="xs">

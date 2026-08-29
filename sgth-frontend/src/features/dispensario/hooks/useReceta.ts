@@ -16,7 +16,7 @@ export function useEmitirReceta(consultaId?: number) {
       if (result?.alertas_alergias?.length) {
         result.alertas_alergias.forEach(alerta =>
           notifications.show({
-            title:   '⚠ Alerta de alergia',
+            title:   'Alerta de alergia',
             message: alerta,
             color:   'orange',
             icon:    React.createElement(

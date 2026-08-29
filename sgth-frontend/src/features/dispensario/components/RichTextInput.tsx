@@ -4,7 +4,6 @@ import { RichTextEditor, Link } from '@mantine/tiptap'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
-import '@mantine/tiptap/styles.css'
 import { Text, Stack } from '@mantine/core'
 import { useEffect } from 'react'
 

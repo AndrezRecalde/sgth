@@ -1,21 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { Stack, Group, Badge, Text, Card, Select, ThemeIcon, Skeleton } from '@mantine/core'
 import {
-  Stack, Group, Badge, Text, Card,
-  Select, ThemeIcon, Skeleton,
-} from '@mantine/core'
-import {
-  IconShieldCheck, IconClipboardHeart,
+  IconClipboardHeart,
   IconPlayerPlay,
-  IconFileText, IconUserCheck,
+  IconFileText,
+  IconUserCheck,
   IconDownload,
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -32,6 +26,7 @@ import {
 import type { SolicitudCertificacion } from
   '@/features/dispensario/services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
 
 const DICTAMEN_COLORS: Record<string, string> = {
   apto:                   'emerald',
@@ -140,7 +135,6 @@ export default function SsoPage() {
             {fecha.toLocaleDateString('es-EC', {
               day: '2-digit', month: 'short', year: 'numeric',
             })}
-            {urgente && ' ⚠️'}
           </Text>
         )
       },
@@ -248,11 +242,10 @@ export default function SsoPage() {
   ]
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Salud Ocupacional"
-        subtitle="Solicitudes de certificación médica de Talento Humano"
-        icon={<IconShieldCheck size={24} />}
+        description="Solicitudes de certificación médica de Talento Humano"
       />
 
       <Card withBorder radius="lg" p="lg">
@@ -323,6 +316,6 @@ export default function SsoPage() {
           )}
         </Stack>
       </Card>
-    </Stack>
+    </PageShell>
   )
 }

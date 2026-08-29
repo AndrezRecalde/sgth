@@ -19,9 +19,9 @@ interface Props {
 }
 
 const DICTAMEN_OPTIONS = [
-  { value: 'apto',                    label: '✅ Apto — Sin restricciones'   },
-  { value: 'apto_con_restricciones',  label: '⚠️ Apto con restricciones'     },
-  { value: 'no_apto',                 label: '❌ No apto'                     },
+  { value: 'apto',                    label: 'Apto — Sin restricciones'   },
+  { value: 'apto_con_restricciones',  label: 'Apto con restricciones'     },
+  { value: 'no_apto',                 label: 'No apto'                     },
 ]
 
 const DICTAMEN_COLORS: Record<string, string> = {

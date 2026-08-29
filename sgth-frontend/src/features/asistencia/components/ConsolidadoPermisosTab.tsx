@@ -15,7 +15,6 @@ import {
   Table,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 import {
   IconSearch,
   IconFileDownload,

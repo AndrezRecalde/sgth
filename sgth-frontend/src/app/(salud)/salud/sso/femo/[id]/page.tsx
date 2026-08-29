@@ -2,16 +2,12 @@
 
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Stack, Skeleton, Alert, Text, Button, Group,
-  Card, Badge, SimpleGrid, Stepper,
-} from '@mantine/core'
+import { Stack, Skeleton, Alert, Text, Button, Group, Card, Badge, SimpleGrid, Stepper } from '@mantine/core'
 import {
   IconAlertCircle, IconStethoscope, IconDownload,
   IconEdit, IconUser, IconStretching, IconBriefcase,
   IconArrowLeft, IconArrowRight, IconCheck, IconX,
 } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { useFemoDetalle, useActualizarFemo } from
   '@/features/dispensario/hooks/useFemo'
 import { useFemoWizardState } from
@@ -29,6 +25,7 @@ import { FemoPaso3 } from
 import {
   TIPO_FICHA_OPTIONS, APTITUD_OPTIONS, APTITUD_COLORS,
 } from '@/features/dispensario/services/femoOptions'
+import { PageHeader, PageShell } from '@/components/ui'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -93,11 +90,10 @@ export default function FemoDetallePage({ params }: Props) {
     ]
 
     return (
-      <Stack gap="md">
+      <PageShell>
         <PageHeader
           title={`Editar ficha FEMO #${femoId}`}
-          subtitle="Ficha de evaluación médica ocupacional"
-          icon={<IconStethoscope size={24} />}
+          description="Ficha de evaluación médica ocupacional"
           actions={
             <Button variant="default" leftSection={<IconX size={14} />} onClick={() => setModo('lectura')}>
               Cancelar edición
@@ -184,22 +180,21 @@ export default function FemoDetallePage({ params }: Props) {
             </Button>
           )}
         </Group>
-      </Stack>
+      </PageShell>
     )
   }
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title={`Ficha FEMO #${femoId}`}
-        subtitle={
+        description={
           ficha.servidor
             ? `${ficha.servidor.nombre} ${ficha.servidor.apellido}`
             : ficha.postulante
               ? `${ficha.postulante.nombres} ${ficha.postulante.apellidos}`
               : undefined
         }
-        icon={<IconStethoscope size={24} />}
         actions={
           <Group>
             <Button
@@ -329,6 +324,6 @@ export default function FemoDetallePage({ params }: Props) {
       <Button variant="subtle" onClick={() => router.push('/salud/sso/femo')}>
         Volver al listado
       </Button>
-    </Stack>
+    </PageShell>
   )
 }

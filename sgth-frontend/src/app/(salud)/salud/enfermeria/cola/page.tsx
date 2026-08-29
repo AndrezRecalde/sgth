@@ -1,19 +1,16 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconNurse } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { EnfermeriaColaMonitoreoView } from '@/features/dispensario/components/EnfermeriaColaMonitoreoView'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export default function EnfermeriaColaPage() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Enfermería"
-        subtitle="Cola y monitoreo de turnos"
-        icon={<IconNurse size={24} />}
+        description="Cola y monitoreo de turnos"
       />
       <EnfermeriaColaMonitoreoView />
-    </Stack>
+    </PageShell>
   )
 }

@@ -19,7 +19,6 @@ import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useDocumentoMutations } from "../hooks/useDocumentoMutations";
 import { DatePickerInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 
 const TIPO_OPTIONS = [
   {

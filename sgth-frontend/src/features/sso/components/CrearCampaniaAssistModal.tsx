@@ -2,7 +2,6 @@
 
 import { Modal, Stack, TextInput, Select, Button, Group } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
@@ -12,7 +11,7 @@ import { useAssistMutations } from '../hooks/useAssist'
 import {
   crearCampaniaAssistSchema, type CrearCampaniaAssistFormData,
 } from '../schemas/assist.schema'
-import { toDateValue, fromDateValue } from '../utils/fecha'
+import { toDateValue, fromDateValue } from '@/lib/fecha'
 
 interface Props {
   opened: boolean

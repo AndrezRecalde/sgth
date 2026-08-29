@@ -1,9 +1,6 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconDental } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { TurnosDelDiaTable } from
   '@/features/dispensario/components/TurnosDelDiaTable'
 import type { AgendaMedica } from
@@ -21,16 +18,17 @@ export default function OdontologiaPage() {
   }
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Odontología"
-        subtitle="Mis pacientes del día"
-        icon={<IconDental size={24} />}
+        description="Mis pacientes del día"
       />
       <TurnosDelDiaTable
         onAtender={handleAtender}
         onVerConsulta={handleVerConsulta}
       />
-    </Stack>
+    </PageShell>
   )
 }
+
+import { PageHeader, PageShell } from '@/components/ui'

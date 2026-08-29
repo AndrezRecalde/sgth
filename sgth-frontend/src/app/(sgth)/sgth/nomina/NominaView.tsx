@@ -1,11 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack } from '@mantine/core'
+
 import { useDisclosure } from '@mantine/hooks'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { NominaToolbar } from '@/features/nomina/components/NominaToolbar'
 import { getNominaColumns } from '@/features/nomina/components/nomina.columns'
 import { NominaDetalleModal } from '@/features/nomina/components/NominaDetalleModal'
@@ -13,6 +10,7 @@ import { useNominas } from '@/features/nomina/hooks/useNominas'
 import { useNominaMutations } from '@/features/nomina/hooks/useNominaMutations'
 import { IconReportMoney } from '@tabler/icons-react'
 import type { Nomina } from '@/types/api'
+import { EmptyState, PageHeader, PageShell, SgthTable } from '@/components/ui'
 
 export function NominaView() {
   const [filtroEstado, setFiltroEstado] =
@@ -50,11 +48,10 @@ export function NominaView() {
   })
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Nómina"
-        subtitle="Gestión de roles de pago y períodos de nómina"
-        icon={<IconReportMoney size={24} />}
+        description="Gestión de roles de pago y períodos de nómina"
       />
       <NominaToolbar onEstadoChange={setFiltroEstado} />
       {lista.length === 0 && !isLoading ? (
@@ -77,6 +74,6 @@ export function NominaView() {
         onClose={cerrarModal}
         nomina={nominaSel}
       />
-    </Stack>
+    </PageShell>
   )
 }

@@ -2,17 +2,13 @@
 
 import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Stepper, Button, Group, Stack,
-  Card, Text, Alert, Badge, Skeleton,
-} from '@mantine/core'
+import { Stepper, Button, Group, Card, Text, Alert, Badge, Skeleton } from '@mantine/core'
 import {
   IconUser, IconBriefcase, IconStethoscope,
   IconArrowLeft, IconArrowRight, IconCheck,
   IconInfoCircle, IconStretching,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { FemoPaso1 } from
   '@/features/dispensario/components/femo/FemoPaso1'
 import { FemoPasoExamenFisico } from
@@ -31,6 +27,8 @@ import { DictamenMedicoModal } from
   '@/features/dispensario/components/DictamenMedicoModal'
 import type { FichaBaseForm } from '@/features/dispensario/schemas/femo.schema'
 import api from '@/lib/axios'
+import { fromDateValue } from '@/lib/fecha'
+import { PageHeader, PageShell } from '@/components/ui'
 
 interface Props {
   params: Promise<{ solicitudId: string }>
@@ -52,14 +50,6 @@ const TIPO_EVENTO_LABELS: Record<string, string> = {
   especial:  'Especial',
 }
 
-function fromDate(d: Date): string {
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
 export default function NuevaFemoPage({ params }: Props) {
   const { solicitudId } = use(params)
   const router          = useRouter()
@@ -79,7 +69,7 @@ export default function NuevaFemoPage({ params }: Props) {
     aptitud:            'apto',
     grupo_embarazada:   false,
     grupo_discapacidad: false,
-    fecha_evaluacion:   fromDate(new Date()),
+    fecha_evaluacion:   fromDateValue(new Date()),
   })
   const { active, setActive, fichaData, setFichaData } = wizard
 
@@ -130,56 +120,72 @@ export default function NuevaFemoPage({ params }: Props) {
       })
     }
 
-    const puestoConvocatoria = solicitudDetalle.convocatoria?.puesto
-    if (puestoConvocatoria?.cargo?.nombre) {
-      setFichaData(prev => ({ ...prev, puesto_trabajo: puestoConvocatoria.cargo!.nombre }))
-    }
-    if (puestoConvocatoria?.id) {
+    /**
+     * El puesto que se evalúa, de lo más específico a lo más general.
+     *
+     * El del aspirante va primero por reclutamiento express: ahí el contenedor
+     * es permanente y no tiene puesto, cada aspirante trae el suyo. Leer solo
+     * el de la convocatoria dejaba a todos los aspirantes express sin puesto y
+     * obligaba al médico a teclearlo.
+     */
+    const puesto =
+      solicitudDetalle.postulante?.puesto ??
+      solicitudDetalle.servidor?.puesto ??
+      solicitudDetalle.convocatoria?.puesto ??
+      null
+
+    if (puesto) {
+      setFichaData(prev => ({
+        ...prev,
+        puesto_id:           puesto.id,
+        // Copia para mostrar mientras se llena. Al guardar, el backend vuelve a
+        // sellar el nombre y el CIUO desde `puesto_id`, que es la fuente.
+        puesto_trabajo:      puesto.cargo?.nombre ?? prev.puesto_trabajo,
+        puesto_trabajo_ciuo: puesto.cargo?.codigo_ciuo ?? prev.puesto_trabajo_ciuo,
+      }))
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPuestoId(puestoConvocatoria.id)
+      setPuestoId(puesto.id)
+    }
+
+    if (solicitudDetalle.postulante?.id) {
+      setFichaData(prev => ({
+        ...prev,
+        postulante_id: solicitudDetalle.postulante!.id,
+      }))
+    }
+
+    if (solicitudDetalle.servidor?.id) {
+      setFichaData(prev => ({
+        ...prev,
+        servidor_id: solicitudDetalle.servidor!.id,
+      }))
     }
 
     if (esIngreso) {
-      // Para candidatos de ingreso: crear HCE por cédula y precargar
-      // el postulante (el candidato no tiene expediente de servidor todavía)
+      // El candidato de ingreso todavía no tiene expediente, así que se le abre
+      // historia clínica por cédula.
       api.post('/dispensario/historias-clinicas/crear-por-cedula', {
         cedula_paciente: cedula,
         tipo_paciente:   'candidato',
       }).catch(() => {})
-
-      if (solicitudDetalle.postulante?.id) {
-        setFichaData(prev => ({
-          ...prev,
-          postulante_id: solicitudDetalle.postulante!.id,
-        }))
-      }
-      return
     }
-
-    // Para periódica/reintegro/retiro: buscar en expediente
-    api.get('/expediente/servidores', {
-      params: { search: cedula, per_page: 1 },
-    }).then(res => {
-      const datos = res.data?.datos
-      const items = Array.isArray(datos)
-        ? datos
-        : Array.isArray(datos?.data)
-          ? datos.data
-          : []
-      const srv = items[0]
-      if (srv) {
-        setFichaData(prev => ({
-          ...prev,
-          servidor_id: srv.id,
-          puesto_trabajo: srv.puesto?.cargo?.nombre ?? prev.puesto_trabajo,
-        }))
-        if (srv.puesto?.id) {
-          setPuestoId(srv.puesto.id)
-        }
-      }
-    }).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [solicitudDetalle])
+
+  /**
+   * Sexo del paciente. Decide qué bloque reproductivo del MSP se muestra.
+   * Puede venir vacío: la columna no está poblada para toda la plantilla.
+   */
+  const sexoPaciente =
+    solicitudDetalle?.postulante?.genero ??
+    solicitudDetalle?.servidor?.genero ??
+    null
+
+  /** Grupo sanguíneo del expediente. La sección A lo muestra, no lo pide. */
+  const tipoSangrePaciente =
+    solicitudDetalle?.postulante?.tipo_sangre ??
+    solicitudDetalle?.servidor?.tipo_sangre ??
+    null
 
   const pasos = [
     {
@@ -204,16 +210,26 @@ export default function NuevaFemoPage({ params }: Props) {
     },
   ]
 
-  const puedeAvanzar = () => {
-    if (active === 0) {
-      return !!(
-        (fichaData.servidor_id || fichaData.postulante_id) &&
-        fichaData.fecha_evaluacion &&
-        fichaData.tipo_ficha
-      )
+  /**
+   * Qué falta para poder avanzar del paso actual.
+   *
+   * Devuelve la lista, no un booleano: antes el botón «Siguiente» simplemente
+   * aparecía apagado y el médico tenía que adivinar cuál de los campos de la
+   * sección A lo estaba bloqueando.
+   */
+  const faltantes = (): string[] => {
+    if (active !== 0) return []
+
+    const falta: string[] = []
+    if (!fichaData.servidor_id && !fichaData.postulante_id) {
+      falta.push('identificar al paciente')
     }
-    return true
+    if (!fichaData.fecha_evaluacion) falta.push('la fecha de evaluación')
+    if (!fichaData.tipo_ficha) falta.push('el tipo de evaluación')
+    return falta
   }
+
+  const pendientes = faltantes()
 
   const handleGuardar = () => {
     const payload = wizard.construirPayload()
@@ -229,19 +245,18 @@ export default function NuevaFemoPage({ params }: Props) {
 
   if (!solicitudDetalle) {
     return (
-      <Stack gap="md">
+      <PageShell>
         <Skeleton height={60} radius="lg" />
         <Skeleton height={400} radius="lg" />
-      </Stack>
+      </PageShell>
     )
   }
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Nueva ficha FEMO"
-        subtitle="Ficha de evaluación médica ocupacional"
-        icon={<IconStethoscope size={24} />}
+        description="Ficha de evaluación médica ocupacional"
       />
 
       <Alert
@@ -286,6 +301,9 @@ export default function NuevaFemoPage({ params }: Props) {
             onAntecedentesChange={wizard.setAntecedentes}
             onAntecedenteReproductivoChange={wizard.setAntecedenteReproductivo}
             onConsumoSustanciasChange={wizard.setConsumoSustancias}
+            sexo={sexoPaciente}
+            tipoSangre={tipoSangrePaciente}
+            cedula={solicitudDetalle.cedula_paciente}
           />
         )}
         {active === 1 && (
@@ -335,17 +353,24 @@ export default function NuevaFemoPage({ params }: Props) {
         </Button>
 
         {active < 3 ? (
-          <Button
-            color="blue"
-            rightSection={<IconArrowRight size={14} />}
-            disabled={!puedeAvanzar()}
-            onClick={() => setActive(a => a + 1)}
-          >
-            Siguiente
-          </Button>
+          <Group gap="sm" wrap="nowrap">
+            {pendientes.length > 0 && (
+              <Text size="xs" c="dimmed" ta="right" maw={320}>
+                Para continuar falta {pendientes.join(', ')}.
+              </Text>
+            )}
+            <Button
+              variant="light"
+              rightSection={<IconArrowRight size={14} />}
+              disabled={pendientes.length > 0}
+              onClick={() => setActive(a => a + 1)}
+            >
+              Siguiente
+            </Button>
+          </Group>
         ) : (
           <Button
-            color="emerald"
+            variant="light"
             leftSection={<IconCheck size={14} />}
             loading={crear.isPending}
             onClick={handleGuardar}
@@ -364,6 +389,6 @@ export default function NuevaFemoPage({ params }: Props) {
         solicitud={solicitudDetalle}
         fichaFemoId={fichaGuardadaId}
       />
-    </Stack>
+    </PageShell>
   )
 }

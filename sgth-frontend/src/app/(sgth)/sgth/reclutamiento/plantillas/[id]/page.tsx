@@ -1,23 +1,21 @@
 'use client'
 
 import { use } from 'react'
+import { Stack, Group, Text, Button, Card, Badge, ActionIcon, ThemeIcon, Divider, Skeleton, Alert } from '@mantine/core'
 import {
-  Stack, Group, Text, Button, Card,
-  Badge, ActionIcon, ThemeIcon,
-  Divider, Skeleton, Alert,
-} from '@mantine/core'
-import {
-  IconTemplate, IconArrowLeft,
-  IconPlus, IconTrash, IconList,
-  IconHash, IconCheckbox, IconInfoCircle,
+  IconArrowLeft,
+  IconPlus,
+  IconTrash,
+  IconList,
+  IconHash,
+  IconCheckbox,
+  IconInfoCircle,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
 import {
   usePlantillaDetalle,
   useEliminarCriterioPlantilla,
-  useAgregarCriterioPlantilla,
 } from '@/features/seleccion/hooks/usePlantilla'
 import { AgregarCriterioPlantillaModal } from
   '@/features/seleccion/components/AgregarCriterioPlantillaModal'
@@ -26,6 +24,7 @@ import { TIPO_CONTRATO_PLANTILLA_OPTIONS } from
 import type { SeccionCriterio } from
   '@/features/seleccion/services/criterioService'
 import { useState } from 'react'
+import { PageHeader, PageShell } from '@/components/ui'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -152,11 +151,10 @@ export default function DetallePlantillaPage({ params }: Props) {
   )
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title={plantilla.nombre}
-        subtitle={getLabelTipo(plantilla.tipo_contrato)}
-        icon={<IconTemplate size={24} />}
+        description={getLabelTipo(plantilla.tipo_contrato)}
         actions={
           <Button
             variant="default"
@@ -197,7 +195,7 @@ export default function DetallePlantillaPage({ params }: Props) {
         <Stack gap="sm">
           <Group justify="space-between">
             <Group gap="xs">
-              <Text size="sm" fw={700}>📋 Méritos</Text>
+              <Text size="sm" fw={700}>Méritos</Text>
               <Badge size="sm" variant="light" color="blue">
                 {meritos.reduce(
                   (a, c) => a + Number(c.puntaje_maximo), 0
@@ -222,7 +220,7 @@ export default function DetallePlantillaPage({ params }: Props) {
         <Stack gap="sm">
           <Group justify="space-between">
             <Group gap="xs">
-              <Text size="sm" fw={700}>🎯 Oposición</Text>
+              <Text size="sm" fw={700}>Oposición</Text>
               <Badge size="sm" variant="light" color="orange">
                 {oposicion.reduce(
                   (a, c) => a + Number(c.puntaje_maximo), 0
@@ -249,6 +247,6 @@ export default function DetallePlantillaPage({ params }: Props) {
         plantillaId={plantillaId}
         seccionInicial={seccionModal}
       />
-    </Stack>
+    </PageShell>
   )
 }

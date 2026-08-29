@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Alert, Button, Group, Modal, Stack, Text, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'

@@ -5,7 +5,6 @@ import {
   Modal, Button, Group, Stack, Select, Textarea, Text, Divider,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
@@ -15,7 +14,7 @@ import { DocumentosSsoPanel } from './DocumentosSsoPanel'
 import {
   seguimientoProgramaSchema, type SeguimientoProgramaFormData, ESTADO_ACTIVIDAD_PROGRAMA_OPTIONS,
 } from '../schemas/programaDrogas.schema'
-import { toDateValue, fromDateValue } from '../utils/fecha'
+import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
 
 interface Props {

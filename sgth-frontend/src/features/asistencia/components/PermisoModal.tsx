@@ -15,7 +15,6 @@ import {
   Divider,
 } from "@mantine/core";
 import { DatePickerInput, TimeInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";

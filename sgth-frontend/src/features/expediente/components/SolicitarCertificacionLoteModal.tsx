@@ -5,7 +5,6 @@ import {
   Button, Group, Text, List, ScrollArea,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useState } from 'react'
 import { IconSend } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'

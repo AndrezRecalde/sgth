@@ -6,7 +6,6 @@ import {
   TextInput, Select, Textarea, Switch, NumberInput,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
@@ -17,7 +16,7 @@ import {
   accidenteTrabajoSchema, type AccidenteTrabajoFormData, GRAVEDAD_OPTIONS,
   TIPO_EVENTO_ACCIDENTE_OPTIONS,
 } from '../schemas/accidenteTrabajo.schema'
-import { toDateValue, fromDateValue } from '../utils/fecha'
+import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { AccidenteTrabajo } from '../services/ssoService'
 
 interface Props {

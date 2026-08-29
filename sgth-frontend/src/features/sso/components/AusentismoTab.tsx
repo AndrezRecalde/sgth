@@ -5,7 +5,6 @@ import {
   Stack, Group, Button, Text, Badge, Grid, Card, Skeleton, Alert, Table,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import {
   IconSearch, IconFileDownload, IconFileTypeCsv, IconClipboardList, IconInfoCircle, IconCheck,
 } from '@tabler/icons-react'
@@ -13,7 +12,7 @@ import { notifications } from '@mantine/notifications'
 import { useQuery } from '@tanstack/react-query'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { asistenciaService } from '@/features/asistencia/services/asistenciaService'
-import { fromDateValue } from '../utils/fecha'
+import { fromDateValue } from '@/lib/fecha'
 import type { ConsolidadoPermiso } from '@/types/api'
 
 const TIPO_ENFERMEDAD = 'enfermedad'

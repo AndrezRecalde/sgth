@@ -5,7 +5,6 @@ import {
   Text,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { IconTrash } from '@tabler/icons-react'
 import { Controller, type Control } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'

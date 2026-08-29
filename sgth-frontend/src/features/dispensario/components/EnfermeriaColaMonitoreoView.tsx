@@ -6,7 +6,6 @@ import {
   Group, ActionIcon,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { IconVaccine } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { TriajeForm } from '@/features/dispensario/components/TriajeForm'

@@ -22,7 +22,6 @@ import {
 } from "../schemas/cargaFamiliar.schema";
 import type { CargaFamiliar } from "@/types/api";
 import { DatePickerInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 
 const PARENTESCO_OPTIONS = [
   { value: "conyugue", label: "Cónyuge / Conviviente" },

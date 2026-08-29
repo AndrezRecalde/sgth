@@ -7,7 +7,6 @@ import {
   Checkbox, Text, Divider, Alert,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react'
@@ -19,7 +18,7 @@ import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
 import {
   eppEntregaSchema, type EppEntregaFormData, MOTIVO_ENTREGA_OPTIONS,
 } from '../schemas/eppEntrega.schema'
-import { toDateValue, fromDateValue } from '../utils/fecha'
+import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { PuestoEpp } from '../services/ssoService'
 
 const KIT_EPP_VACIO: PuestoEpp[] = []

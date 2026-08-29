@@ -2,24 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { use } from 'react'
+import { Stack, Group, Badge, Text, Button, Card, Grid, Tabs, Divider, ThemeIcon, Skeleton } from '@mantine/core'
 import {
-  Stack, Group, Badge, Text, Button,
-  Card, Grid, Tabs, Divider,
-  ThemeIcon, Skeleton,
-} from '@mantine/core'
-import {
-  IconSpeakerphone, IconArrowLeft,
-  IconUsers, IconWorldUpload,
-  IconCalendar, IconBriefcase,
-  IconCheck, IconPlus,
+  IconArrowLeft,
+  IconUsers,
+  IconWorldUpload,
+  IconCalendar,
+  IconPlus,
 } from '@tabler/icons-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { TabRanking } from '@/features/seleccion/components/TabRanking'
 import { IconChartBar } from '@tabler/icons-react'
-import { TableActions } from '@/components/ui/TableActions'
 import {
   useConvocatoriaDetalle,
   usePostulantes,
@@ -191,11 +184,10 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
   if (!convocatoria) return null
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title={convocatoria.titulo}
-        subtitle={convocatoria.codigo}
-        icon={<IconSpeakerphone size={24} />}
+        description={convocatoria.codigo}
         actions={
           <Group gap="xs">
             <Button
@@ -459,6 +451,8 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
         postulante={postulanteSel}
         convocatoriaId={convocatoriaId}
       />
-    </Stack>
+    </PageShell>
   )
 }
+
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'

@@ -19,7 +19,6 @@ import {
   type DeclaracionFormData,
 } from "../schemas/declaracion.schema";
 import { DatePickerInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 import { useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";

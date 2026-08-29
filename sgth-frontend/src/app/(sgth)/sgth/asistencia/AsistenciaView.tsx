@@ -1,6 +1,6 @@
 "use client";
 
-import { Stack, Tabs } from "@mantine/core";
+import { Tabs } from "@mantine/core";
 import { PageHeader } from "@/components/ui/PageHeader";
 import {
   IconClock,
@@ -10,7 +10,7 @@ import {
   IconCalendarStats,
   IconReportAnalytics,
 } from "@tabler/icons-react";
-import { IconCalendarTime } from "@tabler/icons-react";
+;
 import { PermisosTab } from "@/features/asistencia/components/PermisosTab";
 import { VacacionesTab } from "@/features/asistencia/components/VacacionesTab";
 import { MarcacionesTab } from "@/features/asistencia/components/MarcacionesTab";
@@ -20,11 +20,10 @@ import { ConsolidadoPermisosTab } from "@/features/asistencia/components/Consoli
 
 export function AsistenciaView() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Asistencia"
-        subtitle="Marcaciones, permisos y vacaciones del personal"
-        icon={<IconCalendarTime size={24} />}
+        description="Marcaciones, permisos y vacaciones del personal"
       />
       <Tabs defaultValue="marcaciones" keepMounted={false}>
         <Tabs.List mb="md">
@@ -76,6 +75,8 @@ export function AsistenciaView() {
           <MarcacionOnlineTab />
         </Tabs.Panel>
       </Tabs>
-    </Stack>
+    </PageShell>
   );
 }
+
+import { PageShell } from '@/components/ui'

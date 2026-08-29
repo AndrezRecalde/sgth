@@ -1,19 +1,16 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconChecklist } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { ProgramaDrogasTab } from '@/features/sso/components/ProgramaDrogasTab'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export default function ProgramaDrogasPage() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Programa de Prevención de Drogas"
-        subtitle="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-        icon={<IconChecklist size={24} />}
+        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
       />
       <ProgramaDrogasTab />
-    </Stack>
+    </PageShell>
   )
 }

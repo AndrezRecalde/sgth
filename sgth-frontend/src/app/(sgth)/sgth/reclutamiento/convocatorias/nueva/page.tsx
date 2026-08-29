@@ -1,14 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Stack, Grid, TextInput, Select,
-  Textarea, NumberInput, Button,
-  Group, Card, Text, Divider,
-  Alert, SegmentedControl,
-} from '@mantine/core'
+import { Stack, Grid, TextInput, Select, Textarea, NumberInput, Button, Group, Card, Text, Divider, Alert, SegmentedControl } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
@@ -17,7 +11,6 @@ import {
   IconInfoCircle, IconBolt,
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useCrearConvocatoria, usePublicarConvocatoria,
@@ -166,11 +159,10 @@ export default function NuevaConvocatoriaPage() {
   }
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Nueva convocatoria"
-        subtitle="Crear proceso de selección de personal"
-        icon={<IconSpeakerphone size={24} />}
+        description="Crear proceso de selección de personal"
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -194,7 +186,7 @@ export default function NuevaConvocatoriaPage() {
                     }}
                     data={[
                       { label: 'Concurso formal', value: 'formal' },
-                      { label: '⚡ Reclutamiento Express', value: 'express' },
+                      { label: 'Reclutamiento Express', value: 'express' },
                     ]}
                   />
                 )}
@@ -271,10 +263,10 @@ export default function NuevaConvocatoriaPage() {
                         data={TIPO_CONVOCATORIA_OPTIONS.map(o => ({
                           ...o,
                           label: o.value === 'interna'
-                            ? '🏛️ Interna — Solo servidores del GADPE'
+                            ? 'Interna — Solo servidores del GADPE'
                             : o.value === 'externa'
-                              ? '🌐 Externa — Público en general'
-                              : '🔀 Mixta — Interna y externa',
+                              ? 'Externa — Público en general'
+                              : 'Mixta — Interna y externa',
                         }))}
                         required
                         {...contained}
@@ -455,6 +447,8 @@ export default function NuevaConvocatoriaPage() {
           </Group>
         </Stack>
       </form>
-    </Stack>
+    </PageShell>
   )
 }
+
+import { PageHeader, PageShell } from '@/components/ui'

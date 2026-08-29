@@ -1,10 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { Stack } from '@mantine/core'
-import { IconStethoscope } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { TurnosDelDiaTable } from
   '@/features/dispensario/components/TurnosDelDiaTable'
 import { useTurnosDelDia } from
@@ -25,16 +21,17 @@ export default function ConsultasPage() {
   }
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Consultas"
-        subtitle="Mis pacientes del día"
-        icon={<IconStethoscope size={24} />}
+        description="Mis pacientes del día"
       />
       <TurnosDelDiaTable
         onAtender={handleAtender}
         onVerConsulta={handleVerConsulta}
       />
-    </Stack>
+    </PageShell>
   )
 }
+
+import { PageHeader, PageShell } from '@/components/ui'

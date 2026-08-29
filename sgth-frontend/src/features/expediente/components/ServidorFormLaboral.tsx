@@ -2,7 +2,6 @@
 
 import { Grid, Text, Alert } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { Controller, useFormContext } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'

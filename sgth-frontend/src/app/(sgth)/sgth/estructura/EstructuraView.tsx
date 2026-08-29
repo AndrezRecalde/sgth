@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Tabs,
-  Box,
-  Button,
-  Group,
-  SegmentedControl,
-  Center,
-} from "@mantine/core";
+import { Tabs, Button, Group, SegmentedControl, Center } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconSitemap,
@@ -88,11 +81,10 @@ export function EstructuraView() {
   };
 
   return (
-    <Box>
+    <PageShell>
       <PageHeader
         title="Estructura Organizacional"
-        subtitle="GAD Provincial de Esmeraldas"
-        icon={<IconSitemap size={28} />}
+        description="GAD Provincial de Esmeraldas"
       />
 
       <Tabs defaultValue="organigrama" color="emerald">
@@ -242,6 +234,8 @@ export function EstructuraView() {
         unidad={(unidadDetalle as UnidadConRelaciones) ?? null}
         isLoading={isLoadingDrawer}
       />
-    </Box>
+    </PageShell>
   );
 }
+
+import { PageShell } from '@/components/ui'

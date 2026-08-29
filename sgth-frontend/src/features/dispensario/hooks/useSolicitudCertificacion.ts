@@ -46,6 +46,10 @@ export function useIniciarProceso() {
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
+      // La incorporación se dispara también desde Reclutamiento Express, y
+      // allí el aspirante pasa a «Incorporado».
+      qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
+      qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: (error: unknown) =>
       notifications.show({
@@ -127,7 +131,7 @@ export function useConfirmarIncorporacion() {
       solicitudCertificacionService.confirmarIncorporacion(id),
     onSuccess: () => {
       notifications.show({
-        title:   '📝 Identidad creada, ingreso pendiente de aprobación',
+        title:   'Identidad creada, ingreso pendiente de aprobación',
         message: 'Se creó el expediente del servidor. El ingreso quedó registrado en borrador y requiere revisión y aprobación de Talento Humano en Expediente / Movimientos antes de quedar vinculado formalmente.',
         color:   'blue',
         icon:    React.createElement(IconCheck, { size: 16 }),

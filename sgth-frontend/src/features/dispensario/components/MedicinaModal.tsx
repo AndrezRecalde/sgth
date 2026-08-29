@@ -11,7 +11,6 @@ import {
   Select,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";

@@ -12,7 +12,6 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconPencil } from "@tabler/icons-react";

@@ -1,21 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { Stack, Group, Badge, Text, Button, Card, ActionIcon, Modal, TextInput, Textarea, Select } from '@mantine/core'
 import {
-  Stack, Group, Badge, Text, Button,
-  Card, ActionIcon, Divider, Modal,
-  TextInput, Textarea, Select,
-} from '@mantine/core'
-import {
-  IconTemplate, IconPlus,
-  IconEdit, IconTrash, IconEye,
+  IconTemplate,
+  IconPlus,
+  IconEdit,
+  IconTrash,
   IconCheck,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   usePlantillas,
@@ -25,6 +20,7 @@ import {
 import {
   TIPO_CONTRATO_PLANTILLA_OPTIONS,
 } from '@/features/seleccion/services/plantillaService'
+import { EmptyState, PageHeader, PageShell } from '@/components/ui'
 
 export default function PlantillasPage() {
   const router   = useRouter()
@@ -74,11 +70,10 @@ export default function PlantillasPage() {
     )?.label ?? 'General'
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Plantillas de evaluación"
-        subtitle="Configuración de criterios reutilizables para convocatorias"
-        icon={<IconTemplate size={24} />}
+        description="Configuración de criterios reutilizables para convocatorias"
         actions={
           <Button
             color="emerald"
@@ -210,6 +205,6 @@ export default function PlantillasPage() {
           </Stack>
         </form>
       </Modal>
-    </Stack>
+    </PageShell>
   )
 }

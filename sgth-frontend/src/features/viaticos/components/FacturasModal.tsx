@@ -10,7 +10,6 @@ import {
   Alert,
   ThemeIcon,
 } from "@mantine/core";
-import "@mantine/dates/styles.css";
 import {
   IconPlus,
   IconFileInvoice,

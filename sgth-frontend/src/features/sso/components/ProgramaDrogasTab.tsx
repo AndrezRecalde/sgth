@@ -10,7 +10,7 @@ import { useListaSeguimientoPrograma } from '../hooks/useProgramaDrogas'
 import { CatalogoActividadesProgramaModal } from './CatalogoActividadesProgramaModal'
 import { RegistrarSeguimientoProgramaModal } from './RegistrarSeguimientoProgramaModal'
 import { ESTADO_ACTIVIDAD_PROGRAMA_COLORS, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '../schemas/programaDrogas.schema'
-import { formatFecha } from '../utils/fecha'
+import { formatFecha } from '@/lib/fecha'
 import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
 import type { DataTableColumn } from 'mantine-datatable'
 

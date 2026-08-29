@@ -13,7 +13,6 @@ import { IconCheck, IconX } from '@tabler/icons-react'
 import { enfermedadSchema, type EnfermedadFormData }
   from '../schemas/enfermedad.schema'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 
 interface Props {
   opened:     boolean

@@ -6,7 +6,7 @@ import { Dropzone } from '@mantine/dropzone'
 import { IconUpload, IconX, IconFile, IconDownload, IconTrash, IconAlertCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDocumentosSso, useDocumentoSsoMutations } from '../hooks/useDocumentosSso'
-import { formatFecha } from '../utils/fecha'
+import { formatFecha } from '@/lib/fecha'
 import type { TipoDocumentableSso, DocumentoSso } from '../services/documentoSsoService'
 
 const MIMES_ACEPTADOS = [

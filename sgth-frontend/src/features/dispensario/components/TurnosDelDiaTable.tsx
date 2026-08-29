@@ -5,7 +5,6 @@ import {
   ActionIcon, Tooltip,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import {
   IconStethoscope, IconUserOff,
   IconRefresh, IconEye, IconX,
@@ -143,7 +142,7 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
           size="xs"
           c={t.triaje ? 'emerald' : t.requiere_triaje ? 'orange' : 'dimmed'}
         >
-          {t.triaje ? '✓ Listo' : t.requiere_triaje ? '⏳ Pendiente' : '—'}
+          {t.triaje ? 'Listo' : t.requiere_triaje ? 'Pendiente' : '—'}
         </Text>
       ),
     },

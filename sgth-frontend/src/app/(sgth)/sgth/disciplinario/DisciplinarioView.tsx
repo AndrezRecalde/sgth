@@ -1,18 +1,17 @@
 'use client'
 
-import { Alert, Box, Tabs } from '@mantine/core'
-import { IconGavel, IconInfoCircle, IconScale, IconTool } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
+import { Alert, Tabs } from '@mantine/core'
+import { IconInfoCircle, IconScale, IconTool } from '@tabler/icons-react'
 import { SumariosTab } from '@/features/disciplinario/components/SumariosTab'
 import { VistosBuenosTab } from '@/features/disciplinario/components/VistosBuenosTab'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export function DisciplinarioView() {
   return (
-    <Box>
+    <PageShell>
       <PageHeader
         title="Régimen Disciplinario"
-        subtitle="GAD Provincial de Esmeraldas"
-        icon={<IconGavel size={28} />}
+        description="GAD Provincial de Esmeraldas"
       />
 
       <Alert
@@ -46,6 +45,6 @@ export function DisciplinarioView() {
           <VistosBuenosTab />
         </Tabs.Panel>
       </Tabs>
-    </Box>
+    </PageShell>
   )
 }

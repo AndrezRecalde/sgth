@@ -1,16 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Stack, Group, Badge, Text, Card,
-  Select, ThemeIcon, Skeleton,
-} from '@mantine/core'
-import {
-  IconStethoscope, IconClipboardHeart,
-} from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { Stack, Group, Badge, Text, Card, Select, ThemeIcon, Skeleton } from '@mantine/core'
+import { IconClipboardHeart } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
@@ -23,6 +15,7 @@ import type { SolicitudCertificacion } from
   '@/features/dispensario/services/solicitudCertificacionService'
 import type { UnidadConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
+import { EmptyState, PageHeader, PageShell, SgthTable } from '@/components/ui'
 
 const ANIO_ACTUAL = new Date().getFullYear()
 
@@ -152,7 +145,6 @@ export default function CertificacionesMedicasPage() {
             {fecha.toLocaleDateString('es-EC', {
               day: '2-digit', month: 'short', year: 'numeric',
             })}
-            {urgente && ' ⚠️'}
           </Text>
         )
       },
@@ -185,11 +177,10 @@ export default function CertificacionesMedicasPage() {
   ]
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Certificaciones médicas"
-        subtitle="Seguimiento de solicitudes enviadas al dispensario médico"
-        icon={<IconStethoscope size={24} />}
+        description="Seguimiento de solicitudes enviadas al dispensario médico"
       />
 
       <Card withBorder radius="lg" p="lg">
@@ -271,6 +262,6 @@ export default function CertificacionesMedicasPage() {
           )}
         </Stack>
       </Card>
-    </Stack>
+    </PageShell>
   )
 }

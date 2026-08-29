@@ -1,19 +1,16 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconChartBar } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { IndicadoresSsoTab } from '@/features/sso/components/IndicadoresSsoTab'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export default function IndicadoresSsoPage() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Indicadores SSO"
-        subtitle="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-        icon={<IconChartBar size={24} />}
+        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
       />
       <IndicadoresSsoTab />
-    </Stack>
+    </PageShell>
   )
 }

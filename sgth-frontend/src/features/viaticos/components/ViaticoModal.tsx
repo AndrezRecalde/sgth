@@ -16,7 +16,6 @@ import {
   MultiSelect,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {

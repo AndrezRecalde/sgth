@@ -6,7 +6,6 @@ import {
   Badge, NumberInput,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useState } from 'react'
 import { IconCheck, IconAlertCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'

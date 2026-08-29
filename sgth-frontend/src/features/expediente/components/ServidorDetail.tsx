@@ -34,6 +34,7 @@ import { DeclaracionesTab } from "./tabs/DeclaracionesTab";
 import { CondicionTab } from "./tabs/CondicionTab";
 import { SaludOcupacionalTab } from "./tabs/SaludOcupacionalTab";
 import type { ServidorConRelaciones } from "@/types/api";
+import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
 
 interface Props {
   opened: boolean;
@@ -41,16 +42,6 @@ interface Props {
   servidor: ServidorConRelaciones | null;
   onEdit?: (s: ServidorConRelaciones) => void;
 }
-
-const REGIMEN_COLORS: Record<string, string> = {
-  losep: "emerald",
-  codigo_trabajo: "blue",
-};
-
-const REGIMEN_LABELS: Record<string, string> = {
-  losep: "LOSEP",
-  codigo_trabajo: "Cód. Trabajo",
-};
 
 export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
   const { isMobile } = useMobileBreakpoint();
@@ -118,7 +109,7 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
               <Group gap="xs">
                 {servidor.regimen_laboral && (
                   <Badge
-                    color={REGIMEN_COLORS[servidor.regimen_laboral] ?? "gray"}
+                    color={REGIMEN_TONOS[servidor.regimen_laboral] ?? "gray"}
                     variant="light"
                     size="xs"
                   >

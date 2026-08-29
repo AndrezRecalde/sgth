@@ -5,13 +5,12 @@ import {
   Alert, Button, Grid, Group, Modal, NumberInput, Stack, Switch, Text, TextInput,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
-import { esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
+import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { MovimientoPersonal } from '@/types/api'
 
 /** Nombramientos cuyo vínculo lleva plazo pactado. */
@@ -246,10 +245,15 @@ function Formulario({
         modalidad={nombramiento}
       />
 
+      {/* Servicios profesionales, libre nombramiento y elección popular no
+          marcan nunca; el backend fuerza el valor igualmente. */}
       <Switch
         label="Marcación biométrica"
-        description="Sugerida según el nombramiento; ajústela si este caso es distinto."
-        checked={puedeMarcar}
+        description={admiteMarcacion(nombramiento)
+          ? 'Sugerida según el nombramiento; ajústela si este caso es distinto.'
+          : 'Esta modalidad no marca biométrico.'}
+        checked={admiteMarcacion(nombramiento) && puedeMarcar}
+        disabled={!admiteMarcacion(nombramiento)}
         onChange={(e) => setPuedeMarcar(e.currentTarget.checked)}
       />
 

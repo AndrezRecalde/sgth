@@ -4,7 +4,6 @@ import {
   TextInput, Select, Grid, Switch, Divider,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useProvincias } from '../hooks/useProvincias'

@@ -2,14 +2,13 @@
 
 import { Alert, Grid, NumberInput, Select, Switch, TextInput } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { Controller, useFormContext, useWatch } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { usePuestos } from '@/features/estructura/hooks/usePuestos'
 import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
-import { esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
+import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { VinculacionInicialFormData } from '../schemas/vinculacionInicial.schema'
 import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
 
@@ -244,14 +243,23 @@ export function VinculacionInicialFormVinculo() {
         <Controller
           name="vinculo.puede_marcar"
           control={control}
-          render={({ field }) => (
-            <Switch
-              label="Marcación biométrica"
-              description="Define si la persona entra al control de asistencia."
-              checked={!!field.value}
-              onChange={(e) => field.onChange(e.currentTarget.checked)}
-            />
-          )}
+          render={({ field }) => {
+            // Servicios profesionales, libre nombramiento y elección popular no
+            // marcan nunca; el backend lo fuerza igual.
+            const admite = admiteMarcacion(nombramiento)
+
+            return (
+              <Switch
+                label="Marcación biométrica"
+                description={admite
+                  ? 'Define si la persona entra al control de asistencia.'
+                  : 'Esta modalidad no marca biométrico.'}
+                checked={admite && !!field.value}
+                disabled={!admite}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
+              />
+            )
+          }}
         />
       </Grid.Col>
     </Grid>

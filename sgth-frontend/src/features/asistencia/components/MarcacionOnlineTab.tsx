@@ -89,7 +89,7 @@ export function MarcacionOnlineTab() {
       children: (
         <Text size="sm">
           Has bloqueado el acceso a la ubicación. Para permitirlo, haz clic en
-          el ícono del candado (🔒) o información (ℹ️) en la barra de
+          el icono de candado o de información que aparece en la barra de
           direcciones de tu navegador, busca Ubicación y cámbialo a Permitir.
           Luego recarga la página.
         </Text>

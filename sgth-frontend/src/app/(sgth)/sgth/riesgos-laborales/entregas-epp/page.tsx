@@ -1,19 +1,16 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconTruckDelivery } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { EntregasEppTab } from '@/features/sso/components/EntregasEppTab'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export default function EntregasEppPage() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Entregas de EPP"
-        subtitle="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-        icon={<IconTruckDelivery size={24} />}
+        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
       />
       <EntregasEppTab />
-    </Stack>
+    </PageShell>
   )
 }

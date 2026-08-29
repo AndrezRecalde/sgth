@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Stack,
   Group,
   Button,
   TextInput,
@@ -13,7 +12,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconPill,
   IconSearch,
   IconX,
   IconShoppingCart,
@@ -105,11 +103,10 @@ export default function FarmaciaPage() {
   });
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Farmacia"
-        subtitle="Gestión del inventario de medicinas"
-        icon={<IconPill size={24} />}
+        description="Gestión del inventario de medicinas"
         actions={
           <Button
             component={Link}
@@ -264,6 +261,8 @@ export default function FarmaciaPage() {
         }}
         medicina={medicinaSel}
       />
-    </Stack>
+    </PageShell>
   );
 }
+
+import { PageShell } from '@/components/ui'

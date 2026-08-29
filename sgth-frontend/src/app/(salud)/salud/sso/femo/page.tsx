@@ -1,18 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  Stack, Group, Badge, Text,
-} from '@mantine/core'
+import { Stack, Badge, Text } from '@mantine/core'
 import {
   IconClipboardHeart, IconEye,
 } from '@tabler/icons-react'
-import { useDisclosure } from '@mantine/hooks'
+
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { useFemos } from
   '@/features/dispensario/hooks/useFemo'
 import {
@@ -23,6 +16,7 @@ import {
 import type { FichaSaludOcupacional } from
   '@/features/dispensario/services/femoService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
 
 export default function FemoPage() {
   const router = useRouter()
@@ -130,11 +124,10 @@ export default function FemoPage() {
   ]
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Fichas de Salud Ocupacional"
-        subtitle="FEMO — Evaluaciones médicas ocupacionales"
-        icon={<IconClipboardHeart size={24} />}
+        description="FEMO — Evaluaciones médicas ocupacionales"
       />
 
       {fichas.length === 0 && !isLoading ? (
@@ -151,6 +144,6 @@ export default function FemoPage() {
           minHeight={200}
         />
       )}
-    </Stack>
+    </PageShell>
   )
 }

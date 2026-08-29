@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Box, Button, Group, Text } from '@mantine/core'
+import { Alert, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle, IconAlertTriangle } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { ServidorToolbar } from '@/features/expediente/components/ServidorToolbar'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
 import { ServidorModal } from '@/features/expediente/components/ServidorModal'
@@ -22,6 +20,7 @@ import { expedienteService } from '@/features/expediente/services/expedienteServ
 import { getApiErrorMessage } from '@/types/api'
 import { useAuth } from '@/hooks/useAuth'
 import type { ServidorConRelaciones, EstadoContrato, TipoNombramiento } from '@/types/api'
+import { EmptyState, PageHeader, PageShell } from '@/components/ui'
 
 export function ExpedienteView() {
   const { hasPermiso } = useAuth()
@@ -120,11 +119,10 @@ export function ExpedienteView() {
   }
 
   return (
-    <Box>
+    <PageShell>
       <PageHeader
         title="Expediente Digital"
-        subtitle="Gestión de servidores públicos del GAD Provincial de Esmeraldas"
-        icon={<IconFolder size={28} />}
+        description="Gestión de servidores públicos del GAD Provincial de Esmeraldas"
       />
 
       <Group justify="flex-end" mb="md">
@@ -285,6 +283,6 @@ export function ExpedienteView() {
         opened={vinculacionOpened}
         onClose={cerrarVinculacion}
       />
-    </Box>
+    </PageShell>
   )
 }

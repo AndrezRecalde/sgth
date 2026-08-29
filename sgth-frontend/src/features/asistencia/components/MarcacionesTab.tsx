@@ -11,7 +11,6 @@ import {
   Skeleton,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useQuery } from "@tanstack/react-query";
 import { SgthTable } from "@/components/ui/SgthTable";

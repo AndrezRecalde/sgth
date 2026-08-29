@@ -1,20 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Stack, Group, Badge, Text, Button,
-} from '@mantine/core'
+import { Stack, Badge, Text, Button } from '@mantine/core'
 import {
   IconSpeakerphone, IconPlus,
   IconEye, IconEdit, IconTrash,
   IconWorldUpload,
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
-import { useDisclosure } from '@mantine/hooks'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
-import { EmptyState } from '@/components/ui/EmptyState'
+
 import {
   useConvocatorias,
   useEliminarConvocatoria,
@@ -28,6 +22,7 @@ import {
 import type { Convocatoria } from
   '@/features/seleccion/services/convocatoriaService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
 
 export default function ConvocatoriasPage() {
   const router   = useRouter()
@@ -166,11 +161,10 @@ export default function ConvocatoriasPage() {
   ]
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Convocatorias"
-        subtitle="Gestión de procesos de selección e incorporación"
-        icon={<IconSpeakerphone size={24} />}
+        description="Gestión de procesos de selección e incorporación"
         actions={
           <Button
             color="emerald"
@@ -202,6 +196,6 @@ export default function ConvocatoriasPage() {
           minHeight={200}
         />
       )}
-    </Stack>
+    </PageShell>
   )
 }

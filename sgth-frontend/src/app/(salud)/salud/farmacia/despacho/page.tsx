@@ -1,17 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Stack, Group, Badge, Text, Button,
-} from '@mantine/core'
+import { Stack, Group, Badge, Text } from '@mantine/core'
 import {
   IconPill, IconCheck, IconEye,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { DespacharRecetaModal } from
   '@/features/dispensario/components/DespacharRecetaModal'
 import { FiltroDespachoBar } from
@@ -23,6 +17,7 @@ import { useRecetasFarmacia } from
 import type { RecetaMedica } from
   '@/features/dispensario/services/recetaService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
 
 function getNombrePaciente(r: RecetaMedica): string {
   const historia = r.consulta_medica?.historia_clinica
@@ -164,11 +159,10 @@ export default function DespachoPage() {
   ]
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Despacho de recetas"
-        subtitle="Gestión de recetas médicas"
-        icon={<IconPill size={24} />}
+        description="Gestión de recetas médicas"
       />
 
       <FiltroDespachoBar
@@ -216,6 +210,6 @@ export default function DespachoPage() {
         onClose={() => { cerrarModal(); setRecetaSel(null) }}
         receta={recetaSel}
       />
-    </Stack>
+    </PageShell>
   )
 }

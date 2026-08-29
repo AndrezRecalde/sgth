@@ -135,7 +135,7 @@ export function PanelContextoPaciente({
                 color="var(--mantine-color-red-6)"
               />
               <Text size="xs" fw={600} c="red">
-                ⚠ Alergia grave detectada
+                Alergia grave detectada
               </Text>
             </Group>
             {alergias.filter(a => a.severidad === 'grave').map(a => (

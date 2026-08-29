@@ -7,7 +7,6 @@ import {
   Stepper, Alert, Badge, Divider,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
@@ -451,7 +450,7 @@ export function VacacionModal({ opened, onClose }: Props) {
                   </Badge>
                   {alertaLimite && (
                     <Text size="xs" c="orange">
-                      ⚠️ Se acerca al límite máximo de acumulación
+                      Se acerca al límite máximo de acumulación
                     </Text>
                   )}
                 </Group>

@@ -1,19 +1,16 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconCalendarOff } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { AusentismoTab } from '@/features/sso/components/AusentismoTab'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export default function AusentismoPage() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Ausentismo por Enfermedad"
-        subtitle="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-        icon={<IconCalendarOff size={24} />}
+        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
       />
       <AusentismoTab />
-    </Stack>
+    </PageShell>
   )
 }

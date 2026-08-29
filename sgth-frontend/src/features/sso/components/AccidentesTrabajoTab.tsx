@@ -9,7 +9,7 @@ import { TableActions } from '@/components/ui/TableActions'
 import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '../hooks/useAccidentesTrabajo'
 import { AccidenteTrabajoModal } from './AccidenteTrabajoModal'
 import { GRAVEDAD_COLORS, TIPO_EVENTO_ACCIDENTE_COLORS, TIPO_EVENTO_ACCIDENTE_OPTIONS } from '../schemas/accidenteTrabajo.schema'
-import { formatFecha } from '../utils/fecha'
+import { formatFecha } from '@/lib/fecha'
 import type { AccidenteTrabajo } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
 

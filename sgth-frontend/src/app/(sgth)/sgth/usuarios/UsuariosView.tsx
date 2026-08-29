@@ -1,7 +1,7 @@
 'use client'
 
 import { useState }           from 'react'
-import { Stack, Button, Group } from '@mantine/core'
+import { Button, Group } from '@mantine/core'
 import { useDisclosure }      from '@mantine/hooks'
 import { IconUsers, IconUserPlus } from '@tabler/icons-react'
 import { PageHeader }         from '@/components/ui/PageHeader'
@@ -14,6 +14,7 @@ import { AsignarServidorModal } from '@/features/usuarios/components/AsignarServ
 import { useUsuarios }        from '@/features/usuarios/hooks/useUsuarios'
 import { useUsuarioMutations } from '@/features/usuarios/hooks/useUsuarioMutations'
 import type { Usuario }       from '@/types/api'
+import { PageShell } from '@/components/ui'
 
 export function UsuariosView() {
   const [page,   setPage]   = useState(1)
@@ -99,11 +100,10 @@ export function UsuariosView() {
   }
 
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Gestión de Usuarios"
-        subtitle="Administración de accesos al sistema SGTH"
-        icon={<IconUsers size={28} />}
+        description="Administración de accesos al sistema SGTH"
       />
 
       <Group justify="flex-end">
@@ -174,6 +174,6 @@ export function UsuariosView() {
         }}
         usuario={asignarUsr}
       />
-    </Stack>
+    </PageShell>
   )
 }

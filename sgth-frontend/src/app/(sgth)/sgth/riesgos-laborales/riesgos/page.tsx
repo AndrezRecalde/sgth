@@ -1,19 +1,16 @@
 'use client'
 
-import { Stack } from '@mantine/core'
-import { IconShieldCheck } from '@tabler/icons-react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { RiesgosLaboralesTab } from '@/features/sso/components/RiesgosLaboralesTab'
+import { PageHeader, PageShell } from '@/components/ui'
 
 export default function FactoresRiesgoPage() {
   return (
-    <Stack gap="md">
+    <PageShell>
       <PageHeader
         title="Factores de Riesgo Laboral"
-        subtitle="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-        icon={<IconShieldCheck size={24} />}
+        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
       />
       <RiesgosLaboralesTab />
-    </Stack>
+    </PageShell>
   )
 }
