@@ -198,10 +198,20 @@ test('sin el enlace de reemplazo el mismo ingreso choca contra la plaza ocupada'
 
     $suplente = ($this->servidor)();
 
-    expect(fn () => $this->service->registrar(
-        $suplente->id,
-        [...($this->datosReemplazo)($comision), 'cubre_movimiento_id' => null]
-    ))->not->toThrow(ReglaNegocioException::class);
+    // Nombramiento permanente y no el de servicios ocasionales que usa
+    // `datosReemplazo`: lo que se prueba aquí es la exención del enlace de
+    // reemplazo, y para que quitarlo tenga consecuencia el ingreso tiene que
+    // ser de una modalidad que sí ocupe plaza. Los ocasionales no la ocupan
+    // —igual que los servicios profesionales—, así que sin este cambio el
+    // ingreso pasaría por el motivo equivocado y el test no probaría nada.
+    $sinEnlace = [
+        ...($this->datosReemplazo)($comision),
+        'cubre_movimiento_id'         => null,
+        'tipo_nombramiento_propuesto' => TipoNombramiento::PERMANENTE->value,
+    ];
+
+    expect(fn () => $this->service->registrar($suplente->id, $sinEnlace))
+        ->not->toThrow(ReglaNegocioException::class);
 
     $ingreso = MovimientoPersonal::where('servidor_id', $suplente->id)->firstOrFail();
     $ingreso = $this->stateService->transicionar($ingreso, EstadoAccionPersonal::SUSCRITA);

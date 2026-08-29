@@ -92,11 +92,9 @@ class Puesto extends Model
 
     public function plazasOcupadas(): int
     {
-        // Servicios Profesionales no consume plaza presupuestada: es un
-        // contrato civil, no una relación de dependencia sobre el puesto.
+        // Quién ocupa plaza y quién no lo decide TipoNombramiento::ocupaPlaza().
         return $this->contratosVigentes()
-            ->where('tipo_nombramiento', '!=',
-                \App\Enums\TipoNombramiento::SERVICIOS_PROFESIONALES->value)
+            ->whereNotIn('tipo_nombramiento', \App\Enums\TipoNombramiento::valoresSinPlaza())
             ->count();
     }
 

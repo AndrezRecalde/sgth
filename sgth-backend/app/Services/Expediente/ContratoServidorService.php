@@ -418,8 +418,11 @@ class ContratoServidorService
 
     /**
      * Impide asignar un servidor a un puesto sin plazas disponibles.
-     * Servicios Profesionales no consume plaza (contrato civil), por lo que
-     * queda excluido tanto de esta validación como del conteo de ocupadas.
+     *
+     * Qué modalidades consumen plaza lo decide `TipoNombramiento::ocupaPlaza()`:
+     * servicios profesionales y ocasionales quedan fuera tanto de esta
+     * validación como del conteo de ocupadas. Se asignan al puesto igual —para
+     * funciones, EPP y ficha médica—, pero el puesto sigue vacante.
      *
      * Los reemplazos tampoco consumen plaza, en ninguno de los dos sentidos:
      * ni el que se está creando ($cubreMovimientoId) ni los ya existentes,
@@ -434,7 +437,7 @@ class ContratoServidorService
         ?int $exceptoContratoId = null,
         ?int $cubreMovimientoId = null
     ): void {
-        if ($tipoNombramiento === TipoNombramiento::SERVICIOS_PROFESIONALES->value) {
+        if (! TipoNombramiento::from($tipoNombramiento)->ocupaPlaza()) {
             return;
         }
 
@@ -445,7 +448,7 @@ class ContratoServidorService
         $puesto = Puesto::findOrFail($puestoId);
 
         $ocupadas = $puesto->contratosVigentes()
-            ->where('tipo_nombramiento', '!=', TipoNombramiento::SERVICIOS_PROFESIONALES->value)
+            ->whereNotIn('tipo_nombramiento', TipoNombramiento::valoresSinPlaza())
             ->whereNull('cubre_movimiento_id')
             ->when($exceptoContratoId, fn ($q) => $q->where('id', '!=', $exceptoContratoId))
             ->count();

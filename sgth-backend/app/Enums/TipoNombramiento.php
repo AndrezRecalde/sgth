@@ -78,6 +78,51 @@ enum TipoNombramiento: string
     }
 
     /**
+     * ¿Este vínculo ocupa una de las plazas del puesto?
+     *
+     * La plaza es una partida del distributivo. La ocupan los nombramientos
+     * —permanente, provisional, libre nombramiento, elección popular— y los
+     * obreros del Código del Trabajo, que tienen sus propios puestos.
+     *
+     * No la ocupan dos modalidades, por motivos distintos:
+     *
+     *  - **Servicios Profesionales**: contrato civil, sin relación de
+     *    dependencia. No hay plaza que ocupar.
+     *  - **Servicios Ocasionales**: se financian con gasto corriente y no toman
+     *    una plaza del distributivo permanente, así que el puesto sigue vacante
+     *    para concurso mientras dure el contrato.
+     *
+     * Ambas SÍ se asignan a un puesto —de ahí salen las funciones, el EPP y el
+     * puesto de la ficha médica ocupacional—, pero no descuentan de `plazas`.
+     *
+     * Existe como predicado y no como una lista de exclusiones repetida en cada
+     * sitio: antes el «no consume plaza» estaba escrito dos veces, en
+     * `Puesto::plazasOcupadas()` y en `ContratoServidorService::validarVacante()`,
+     * y olvidar uno de los dos no falla ruidosamente — solo cuenta mal.
+     */
+    public function ocupaPlaza(): bool
+    {
+        return ! in_array($this, [
+            self::SERVICIOS_PROFESIONALES,
+            self::SERVICIOS_OCASIONALES,
+        ], true);
+    }
+
+    /**
+     * Los valores de los nombramientos que NO ocupan plaza, para las consultas
+     * que necesitan excluirlos en SQL.
+     *
+     * @return list<string>
+     */
+    public static function valoresSinPlaza(): array
+    {
+        return array_values(array_map(
+            fn (self $caso) => $caso->value,
+            array_filter(self::cases(), fn (self $caso) => ! $caso->ocupaPlaza())
+        ));
+    }
+
+    /**
      * Régimen LOSEP vs Código de Trabajo, según la clasificación ya usada
      * en ContratoServidorService::sincronizarRegimenServidor(): Código de
      * Trabajo y Servicios Profesionales se liquidan bajo régimen de Código
