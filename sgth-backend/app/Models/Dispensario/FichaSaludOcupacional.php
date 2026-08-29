@@ -4,6 +4,7 @@ namespace App\Models\Dispensario;
 
 use App\Enums\AptitudMedica;
 use App\Enums\TipoFichaFemo;
+use App\Models\Estructura\Puesto;
 use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Postulante;
 use App\Models\Sso\AccidenteTrabajo;
@@ -22,12 +23,16 @@ class FichaSaludOcupacional extends Model
     protected $table = 'fichas_salud_ocupacional';
 
     protected $fillable = [
-        'servidor_id', 'postulante_id', 'evaluador_id', 'accidente_trabajo_id',
+        'servidor_id', 'postulante_id', 'puesto_id', 'evaluador_id', 'accidente_trabajo_id',
         'numero_archivo', 'fecha_evaluacion',
         'tipo_ficha', 'puesto_trabajo', 'puesto_trabajo_ciuo',
         'fecha_ingreso_trabajo',
         'grupo_embarazada', 'grupo_discapacidad',
-        'porcentaje_discapacidad',
+        'grupo_enfermedad_catastrofica', 'grupo_adulto_mayor',
+        'porcentaje_discapacidad', 'lateralidad',
+        'fecha_reintegro', 'fecha_ultimo_dia_laboral',
+        'autoriza_transfusion', 'tratamiento_hormonal',
+        'tratamiento_hormonal_cual',
         'aptitud', 'restricciones', 'observaciones',
         'enfermedad_actual', 'recomendaciones', 'tratamiento',
         'condicion_relacionada_trabajo', 'observacion_retiro',
@@ -43,8 +48,16 @@ class FichaSaludOcupacional extends Model
         return [
             'fecha_evaluacion' => 'date',
             'fecha_ingreso_trabajo' => 'date',
+            'fecha_reintegro' => 'date',
+            'fecha_ultimo_dia_laboral' => 'date',
             'grupo_embarazada' => 'boolean',
             'grupo_discapacidad' => 'boolean',
+            'grupo_enfermedad_catastrofica' => 'boolean',
+            'grupo_adulto_mayor' => 'boolean',
+            // Aceptan nulo a propósito: en una historia clínica «no respondió»
+            // no es lo mismo que «respondió que no».
+            'autoriza_transfusion' => 'boolean',
+            'tratamiento_hormonal' => 'boolean',
             'aptitud' => AptitudMedica::class,
             'tipo_ficha' => TipoFichaFemo::class,
             'condicion_relacionada_trabajo' => 'boolean',
@@ -62,6 +75,16 @@ class FichaSaludOcupacional extends Model
     public function postulante(): BelongsTo
     {
         return $this->belongsTo(Postulante::class);
+    }
+
+    /**
+     * Puesto evaluado. Las columnas `puesto_trabajo` y `puesto_trabajo_ciuo`
+     * guardan cómo se llamaba al momento de la evaluación; esta relación sirve
+     * para cruzar la ficha con la estructura vigente.
+     */
+    public function puesto(): BelongsTo
+    {
+        return $this->belongsTo(Puesto::class);
     }
 
     public function evaluador(): BelongsTo

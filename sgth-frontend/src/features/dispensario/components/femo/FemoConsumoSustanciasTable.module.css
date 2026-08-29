@@ -1,0 +1,50 @@
+/* Fila de sustancia. Antes era una única rejilla horizontal donde el nombre,
+   los dos números y las dos casillas competían por doce columnas: a los campos
+   les tocaban dos cada uno, la etiqueta «Tiempo consumo (meses)» no cabía y se
+   montaba sobre las flechas del control numérico.
+
+   Ahora la fila tiene dos alturas: arriba la sustancia y el interruptor
+   maestro, abajo los campos con ancho suficiente. */
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  flex-wrap: wrap;
+}
+
+.nombre {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  color: var(--sgth-text);
+  min-width: 74px;
+}
+
+.detalleOtra {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+/* «No consume» manda sobre el resto de la fila, así que va arriba junto al
+   nombre y no perdido al final como una casilla más. */
+.maestro {
+  margin-left: auto;
+}
+
+.campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  align-items: center;
+}
+
+/* Alinea la casilla con el centro del campo contiguo, sin márgenes mágicos. */
+.casilla {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.filaInactiva {
+  opacity: 0.55;
+}

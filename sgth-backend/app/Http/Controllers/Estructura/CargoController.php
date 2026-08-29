@@ -35,6 +35,9 @@ class CargoController extends Controller
         $validated = $request->validate([
             'nombre'                 => ['required', 'string', 'max:200'],
             'denominacion_generica'  => ['nullable', 'string', 'max:100'],
+            // Código CIUO-08 (adaptación INEC). Se define aquí, en el cargo, y lo
+            // heredan las fichas médicas ocupacionales de todos sus puestos.
+            'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
             'mision'                 => ['nullable', 'string'],
             'clasificacion_personal' => [
                 'required', 'string',
@@ -52,6 +55,9 @@ class CargoController extends Controller
         $validated = $request->validate([
             'nombre'                 => ['sometimes', 'string', 'max:200'],
             'denominacion_generica'  => ['nullable', 'string', 'max:100'],
+            // Código CIUO-08 (adaptación INEC). Se define aquí, en el cargo, y lo
+            // heredan las fichas médicas ocupacionales de todos sus puestos.
+            'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
             'mision'                 => ['nullable', 'string'],
             'clasificacion_personal' => [
                 'sometimes', 'string',

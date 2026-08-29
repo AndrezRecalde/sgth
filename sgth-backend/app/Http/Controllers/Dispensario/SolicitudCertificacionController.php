@@ -144,10 +144,21 @@ final class SolicitudCertificacionController extends Controller
 
     public function show(int $id): JsonResponse
     {
+        // El puesto que se evalúa puede venir de tres sitios, y el más
+        // específico manda: el propio aspirante (reclutamiento express, donde
+        // el contenedor no tiene puesto y cada aspirante trae el suyo), el
+        // expediente del servidor (periódicas, reintegros y retiros), o la
+        // convocatoria formal. Se cargan los tres para que el formulario no
+        // tenga que salir a buscarlos con peticiones adicionales.
         $solicitud = SolicitudCertificacionMedica::with([
             'servidor',
+            'servidor.puesto.cargo:id,nombre,codigo_ciuo',
+            'servidor.puesto.unidadAdministrativa:id,nombre',
             'postulante',
-            'convocatoria.puesto.cargo',
+            'postulante.puesto.cargo:id,nombre,codigo_ciuo',
+            'postulante.puesto.unidadAdministrativa:id,nombre',
+            'convocatoria.puesto.cargo:id,nombre,codigo_ciuo',
+            'convocatoria.puesto.unidadAdministrativa:id,nombre',
             'solicitadoPor.servidor:id,nombre,apellido',
             'constantesVitales',
         ])->findOrFail($id);

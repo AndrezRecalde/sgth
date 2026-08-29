@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Catalogos\FactoresRiesgoMsp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreFichaSaludOcupacionalRequest;
 use App\Http\Requests\Dispensario\UpdateFichaSaludOcupacionalRequest;
@@ -36,6 +37,18 @@ final class FichaSaludOcupacionalController extends Controller
         );
 
         return ApiResponse::created($ficha, 'Ficha FEMO registrada correctamente.');
+    }
+
+    /**
+     * Catálogo oficial de factores de riesgo del formulario 028.
+     *
+     * Lo sirve el backend y no lo lleva el frontend escrito a mano: es el mismo
+     * que valida al guardar y el que usará el PDF, así que las tres cosas no
+     * pueden discrepar.
+     */
+    public function catalogoRiesgos(): JsonResponse
+    {
+        return ApiResponse::ok(FactoresRiesgoMsp::catalogo());
     }
 
     public function show(int $id): JsonResponse

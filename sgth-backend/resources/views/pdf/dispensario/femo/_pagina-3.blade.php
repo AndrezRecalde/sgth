@@ -82,8 +82,11 @@
     <div class="msp-section-title">O. DATOS DEL PROFESIONAL</div>
     <table class="msp-table">
         <tr>
-            <td style="width:60%"><span class="msp-label">Nombres y Apellidos del Profesional</span><br><span class="msp-value">{{ $evaluadorNombre }}</span></td>
-            <td style="width:40%"><span class="msp-label">Cédula</span><br><span class="msp-value">{{ $evaluadorServidor->cedula ?? '-' }}</span></td>
+            <td style="width:45%"><span class="msp-label">Nombres y Apellidos del Profesional</span><br><span class="msp-value">{{ $evaluadorNombre }}</span></td>
+            <td style="width:25%"><span class="msp-label">Cédula</span><br><span class="msp-value">{{ $evaluadorServidor->cedula ?? '-' }}</span></td>
+            {{-- Registro profesional ante el ACESS. El impreso lo pide junto al
+                 nombre y es lo que da validez a la firma. --}}
+            <td style="width:30%"><span class="msp-label">Código Médico</span><br><span class="msp-value">{{ $evaluadorServidor->codigo_medico ?? '-' }}</span></td>
         </tr>
     </table>
 

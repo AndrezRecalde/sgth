@@ -425,6 +425,8 @@ export type ServidorConRelaciones = Servidor & {
   telefono_institucional?: string
 
   correo_personal?: string
+  /** Registro profesional ante el ACESS. Solo el personal de salud lo tiene. */
+  codigo_medico?: string | null
   direccion?: string
   direccion_domicilio?: string
   tiene_discapacidad?: boolean
@@ -842,6 +844,8 @@ export type Cargo = {
   id: number
   nombre: string
   denominacion_generica?: string | null
+  /** Código CIUO-08. Lo heredan las fichas médicas ocupacionales del puesto. */
+  codigo_ciuo?: string | null
   mision?: string | null
   clasificacion_personal: ClasificacionPersonal
   activo: boolean
@@ -850,6 +854,7 @@ export type Cargo = {
 export type CargoFormData = {
   nombre: string
   denominacion_generica?: string
+  codigo_ciuo?: string
   mision?: string
   clasificacion_personal: ClasificacionPersonal
 }

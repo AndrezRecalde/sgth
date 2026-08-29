@@ -1,0 +1,19 @@
+/* Dato traído del sistema, no campo que se llena: se hunde respecto al
+   formulario, igual que el panel de signos vitales. */
+.panel {
+  background-color: var(--sgth-surface-sunken);
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-md);
+}
+
+.icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--sgth-accent-light);
+  color: var(--sgth-accent-text);
+}

@@ -1,0 +1,19 @@
+/* Subcategoría de «De seguridad»: locativos, mecánicos, eléctricos, otros.
+   Pesa menos que el nombre de la categoría para que la jerarquía del
+   formulario impreso se lea de un vistazo. */
+.subcategoria {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sgth-text-muted);
+}
+
+/* Rejilla y no una fila que se envuelve: con 12 factores mecánicos de largos
+   dispares, las casillas quedaban escalonadas y costaba recorrerlas. */
+.factores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px 16px;
+}

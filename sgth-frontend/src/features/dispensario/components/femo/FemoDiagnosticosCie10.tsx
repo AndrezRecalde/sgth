@@ -7,6 +7,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarCie10Input } from '../BuscarCie10Input'
 import type { DiagnosticoFemoForm } from '../../schemas/femo.schema'
 import type { DiagnosticoCie10 } from '../../services/cie10Service'
+import { FemoSeccion } from './FemoSeccion'
 
 interface Props {
   diagnosticos:     DiagnosticoFemoForm[]
@@ -36,10 +37,7 @@ export function FemoDiagnosticosCie10({ diagnosticos, onChange }: Props) {
   }
 
   return (
-    <Stack gap="xs">
-      <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
-        K. Diagnósticos CIE-10 (máx. 6)
-      </Text>
+    <FemoSeccion letra="K" titulo="Diagnósticos CIE-10 (máx. 6)">
 
       {diagnosticos.length < 6 && (
         <Grid align="flex-end">
@@ -94,6 +92,6 @@ export function FemoDiagnosticosCie10({ diagnosticos, onChange }: Props) {
           ))}
         </Stack>
       )}
-    </Stack>
+    </FemoSeccion>
   )
 }

@@ -44,12 +44,18 @@
         </tr>
         <tr>
             <td><span class="msp-label">Grupo Sanguíneo</span><br><span class="msp-value">{{ $persona->tipo_sangre ?? '-' }}</span></td>
-            <td colspan="3">
+            <td><span class="msp-label">Lateralidad</span><br><span class="msp-value">{{ $ficha->lateralidad ? ucfirst($ficha->lateralidad) : '-' }}</span></td>
+            <td colspan="2">
+                {{-- Los CUATRO grupos del impreso. Todos se leen de la ficha:
+                     la enfermedad catastrófica salía del expediente del
+                     servidor, así que lo que marcaba el médico aquí y lo que
+                     se imprimía podían contradecirse. --}}
                 <span class="msp-label">Atención Prioritaria</span><br>
                 <span class="msp-value small">
                     Embarazada: {{ $ficha->grupo_embarazada ? 'SI' : 'NO' }} |
                     Discapacidad: {{ $ficha->grupo_discapacidad ? 'SI' . ($ficha->porcentaje_discapacidad ? " ({$ficha->porcentaje_discapacidad}%)" : '') : 'NO' }} |
-                    E. Catastrófica: {{ $persona->tiene_enfermedad_catastrofica ? 'SI' : 'NO' }}
+                    E. Catastrófica: {{ $ficha->grupo_enfermedad_catastrofica ? 'SI' : 'NO' }} |
+                    Adulto Mayor: {{ $ficha->grupo_adulto_mayor ? 'SI' : 'NO' }}
                 </span>
             </td>
         </tr>
@@ -59,8 +65,13 @@
     <table class="msp-table">
         <tr>
             <td style="width:50%"><span class="msp-label">Puesto de Trabajo (CIUO)</span><br><span class="msp-value">{{ $ficha->puesto_trabajo ?? '-' }} @if($ficha->puesto_trabajo_ciuo)({{ $ficha->puesto_trabajo_ciuo }})@endif</span></td>
-            <td style="width:25%"><span class="msp-label">Fecha de Ingreso al Trabajo</span><br><span class="msp-value">{{ optional($ficha->fecha_ingreso_trabajo)->format('d/m/Y') ?? '-' }}</span></td>
+            <td style="width:25%"><span class="msp-label">Fecha de Atención</span><br><span class="msp-value">{{ optional($ficha->fecha_evaluacion)->format('d/m/Y') ?? '-' }}</span></td>
             <td style="width:25%"><span class="msp-label">Tipo de Evaluación</span><br><span class="msp-value">{{ $ficha->tipo_ficha->etiqueta() }}</span></td>
+        </tr>
+        <tr>
+            <td><span class="msp-label">Fecha de Ingreso al Trabajo</span><br><span class="msp-value">{{ optional($ficha->fecha_ingreso_trabajo)->format('d/m/Y') ?? '-' }}</span></td>
+            <td><span class="msp-label">Fecha de Reintegro</span><br><span class="msp-value">{{ optional($ficha->fecha_reintegro)->format('d/m/Y') ?? '-' }}</span></td>
+            <td><span class="msp-label">Último Día Laboral / Salida</span><br><span class="msp-value">{{ optional($ficha->fecha_ultimo_dia_laboral)->format('d/m/Y') ?? '-' }}</span></td>
         </tr>
         <tr>
             <td colspan="3"><span class="msp-label">Observación</span><br><span class="msp-value">{{ $ficha->observaciones ?? '-' }}</span></td>
@@ -69,7 +80,7 @@
 
     <div class="msp-section-title">C. ANTECEDENTES PERSONALES</div>
     <table class="msp-table">
-        @foreach(['clinico' => 'Antecedentes Clínicos y Quirúrgicos', 'familiar' => 'Antecedentes Familiares', 'transfusion' => 'Autoriza Transfusión', 'tratamiento_hormonal' => 'Tratamiento Hormonal'] as $tipoKey => $tipoLabel)
+        @foreach(['clinico' => 'Antecedentes Clínicos y Quirúrgicos', 'familiar' => 'Antecedentes Familiares'] as $tipoKey => $tipoLabel)
             @if(($antecedentesPorTipo[$tipoKey] ?? collect())->isNotEmpty())
                 <tr>
                     <td style="width:20%" class="msp-label">{{ $tipoLabel }}</td>
@@ -81,6 +92,25 @@
                 </tr>
             @endif
         @endforeach
+
+        {{-- Condición especial para urgencias. Se imprime SIEMPRE, incluso
+             sin responder: en el impreso son casillas fijas, y un «NO
+             RESPONDE» en blanco es información. Antes se buscaban como tipos
+             de antecedente, así que las columnas dedicadas de la ficha nunca
+             llegaban al papel. --}}
+        <tr>
+            <td style="width:20%" class="msp-label">Autoriza Transfusión</td>
+            <td>{{ $ficha->autoriza_transfusion === null ? 'NO RESPONDE' : ($ficha->autoriza_transfusion ? 'SI' : 'NO') }}</td>
+        </tr>
+        <tr>
+            <td class="msp-label">Tratamiento Hormonal</td>
+            <td>
+                {{ $ficha->tratamiento_hormonal === null ? 'NO RESPONDE' : ($ficha->tratamiento_hormonal ? 'SI' : 'NO') }}
+                @if($ficha->tratamiento_hormonal && $ficha->tratamiento_hormonal_cual)
+                    — {{ $ficha->tratamiento_hormonal_cual }}
+                @endif
+            </td>
+        </tr>
         @if($esFemenino && $antReprod)
             <tr>
                 <td class="msp-label">Antecedentes Gineco Obstétricos</td>
@@ -136,7 +166,8 @@
     <table class="msp-table">
         <tr>
             <th>Temp (°C)</th><th>P.A. (mmHg)</th><th>F.C. (lat/min)</th><th>F.R. (fr/min)</th>
-            <th>Sat. O2 (%)</th><th>Peso (Kg)</th><th>Talla (m)</th><th>IMC</th>
+            <th>Sat. O2 (%)</th><th>Peso (Kg)</th><th>Talla (cm)</th><th>IMC</th>
+            <th>Perím. Abd. (cm)</th>
         </tr>
         <tr class="center">
             <td>{{ $ficha->constantesVitales->temperatura_c ?? '-' }}</td>
@@ -147,6 +178,7 @@
             <td>{{ $ficha->constantesVitales->peso_kg ?? '-' }}</td>
             <td>{{ $ficha->constantesVitales->talla_cm ?? '-' }}</td>
             <td>{{ $ficha->constantesVitales->imc ?? '-' }}</td>
+            <td>{{ $ficha->constantesVitales->perimetro_abdominal_cm ?? '-' }}</td>
         </tr>
     </table>
 

@@ -12,7 +12,7 @@ class FemoEmpleoAnterior extends Model
 
     protected $fillable = [
         'ficha_id', 'centro_trabajo',
-        'actividades_desempenadas',
+        'actividades_desempenadas', 'es_trabajo_actual',
         'fecha_inicio', 'fecha_fin', 'observaciones',
         'tipo_evento_laboral', 'calificado_iess',
         'fecha_evento', 'especificar',
@@ -25,6 +25,7 @@ class FemoEmpleoAnterior extends Model
             'fecha_fin' => 'date',
             'tipo_evento_laboral' => TipoEventoLaboral::class,
             'calificado_iess' => 'boolean',
+            'es_trabajo_actual' => 'boolean',
             'fecha_evento' => 'date',
         ];
     }

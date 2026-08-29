@@ -1,12 +1,17 @@
 'use client'
 
 import {
-  Stack, Grid, TextInput,
-  Group, Text, Button, Card,
-  ActionIcon, Divider, Badge,
+  Stack,
+  Grid,
+  TextInput,
+  Group,
+  Text,
+  Button,
+  Card,
+  ActionIcon,
+  Badge,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -17,6 +22,8 @@ import {
 import { FemoEmpleoAnteriorModal } from './FemoEmpleoAnteriorModal'
 import { FemoMatrizRiesgos } from './FemoMatrizRiesgos'
 import { TIPO_EVENTO_LABORAL_OPTIONS } from '../../services/femoOptions'
+import { FemoSeccion } from './FemoSeccion'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 interface Props {
   fichaData:            Partial<FichaBaseForm>
@@ -28,23 +35,6 @@ interface Props {
   onActividadesChange:  (data: ActividadRiesgoForm[]) => void
   onFactoresChange:     (data: FactorRiesgoForm[]) => void
   onEmpleosChange:      (data: EmpleoAnteriorForm[]) => void
-}
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  if (typeof d === 'string') return d.slice(0, 10)
-  if (!(d instanceof Date) || isNaN(d.getTime())) return null
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
-function toDate(s: string | null | undefined): Date | null {
-  if (!s) return null
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
 }
 
 export function FemoPaso2({
@@ -60,7 +50,7 @@ export function FemoPaso2({
   }
 
   return (
-    <Stack gap="md">
+    <Stack gap="xl">
       <FemoMatrizRiesgos
         puestoId={puestoId}
         actividadesRiesgo={actividadesRiesgo}
@@ -69,23 +59,20 @@ export function FemoPaso2({
         onFactoresChange={onFactoresChange}
       />
 
-      <Divider />
-
-      <Stack gap="xs">
-        <Group justify="space-between">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-            style={{ letterSpacing: '0.05em' }}>
-            E. Empleos anteriores / historial laboral
-          </Text>
+      <FemoSeccion
+        letra="H"
+        titulo="Actividad laboral, incidentes y accidentes"
+        accion={
           <Button
-            size="compact-xs"
-            variant="subtle"
-            leftSection={<IconPlus size={12} />}
+            size="xs"
+            variant="light"
+            leftSection={<IconPlus size={14} />}
             onClick={abrirEmpleo}
           >
-            Agregar
+            Agregar empleo
           </Button>
-        </Group>
+        }
+      >
 
         {empleosAnteriores.length === 0 ? (
           <Text size="sm" c="dimmed">
@@ -133,15 +120,9 @@ export function FemoPaso2({
             ))}
           </Stack>
         )}
-      </Stack>
+      </FemoSeccion>
 
-      <Divider />
-
-      <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-          style={{ letterSpacing: '0.05em' }}>
-          I. Actividades extra laborales
-        </Text>
+      <FemoSeccion letra="I" titulo="Actividades extra laborales">
         <Grid>
           <Grid.Col span={{ base: 12, md: 8 }}>
             <TextInput
@@ -159,14 +140,14 @@ export function FemoPaso2({
               valueFormat="DD/MM/YYYY"
               clearable
               {...contained}
-              value={toDate(fichaData.actividad_extralaboral_fecha)}
+              value={toDateValue(fichaData.actividad_extralaboral_fecha)}
               onChange={(d) => onFichaChange({
-                ...fichaData, actividad_extralaboral_fecha: fromDate(d as Date | null),
+                ...fichaData, actividad_extralaboral_fecha: fromDateValueOrNull(d as Date | null),
               })}
             />
           </Grid.Col>
         </Grid>
-      </Stack>
+      </FemoSeccion>
 
       <FemoEmpleoAnteriorModal
         opened={empleoModalOpened}

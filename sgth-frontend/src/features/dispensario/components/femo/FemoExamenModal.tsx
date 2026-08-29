@@ -2,12 +2,12 @@
 
 import { Stack, TextInput, Select, Textarea, Group, Button, Modal } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { examenSchema, type ExamenForm } from '../../schemas/femo.schema'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 interface Props {
   opened:  boolean
@@ -20,23 +20,6 @@ const TIPO_EXAMEN_OPTIONS = [
   { value: 'imagen',      label: 'Imagen'      },
   { value: 'otro',        label: 'Otro'        },
 ]
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  if (typeof d === 'string') return d.slice(0, 10)
-  if (!(d instanceof Date) || isNaN(d.getTime())) return null
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
-function toDate(s: string | null | undefined): Date | null {
-  if (!s) return null
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 
 export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
   const contained = useContainedInput()
@@ -95,9 +78,9 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
             valueFormat="DD/MM/YYYY"
             clearable
             {...contained}
-            value={toDate(examenForm.watch('fecha_examen'))}
+            value={toDateValue(examenForm.watch('fecha_examen'))}
             onChange={(d) =>
-              examenForm.setValue('fecha_examen', fromDate(d as Date | null))
+              examenForm.setValue('fecha_examen', fromDateValueOrNull(d as Date | null))
             }
           />
           <Group justify="flex-end" mt="sm">

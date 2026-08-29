@@ -11,7 +11,7 @@ class FemoFactorRiesgo extends Model
     protected $table = 'femo_factores_riesgo';
 
     protected $fillable = [
-        'ficha_id', 'ficha_actividad_id', 'categoria', 'factor',
+        'ficha_id', 'ficha_actividad_id', 'categoria', 'subcategoria', 'factor',
         'presente', 'medida_preventiva',
     ];
 

@@ -46,6 +46,17 @@ export function ServidorFormContacto({ form }: Props) {
         />
       </Grid.Col>
 
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <TextInput
+          label="Código médico"
+          placeholder="Registro ACESS — solo personal de salud"
+          description="Se imprime en la sección O de las fichas FEMO que firme"
+          {...contained}
+          {...register('codigo_medico')}
+          error={errors.codigo_medico?.message}
+        />
+      </Grid.Col>
+
       <Grid.Col span={12}>
         <TextInput
           label="Dirección domiciliaria"

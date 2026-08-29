@@ -43,6 +43,11 @@ export const servidorSchema = z.object({
   correo_personal:        z.string().email('Email inválido')
     .optional().or(z.literal('')),
   direccion_domicilio:    z.string().optional(),
+  /**
+   * Registro profesional ante el ACESS. Solo lo tiene el personal de salud;
+   * aparece en la sección O de la ficha FEMO que este servidor firme.
+   */
+  codigo_medico:          z.string().max(30, 'Máximo 30 caracteres').optional(),
 
   // Condiciones
   tiene_discapacidad:           z.boolean().default(false),

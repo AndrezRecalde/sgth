@@ -4,6 +4,7 @@ import { Stack, Grid, Card, Radio, Text, Textarea } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { FichaBaseForm } from '../../schemas/femo.schema'
 import { APTITUD_OPTIONS, APTITUD_COLORS } from '../../services/femoOptions'
+import { FemoSeccion } from './FemoSeccion'
 
 interface Props {
   fichaData:     Partial<FichaBaseForm>
@@ -14,10 +15,7 @@ export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
   const contained = useContainedInput()
 
   return (
-    <Stack gap="xs">
-      <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
-        L. Aptitud médica para el trabajo
-      </Text>
+    <FemoSeccion letra="L" titulo="Aptitud médica para el trabajo">
       <Grid>
         {APTITUD_OPTIONS.map((opt) => {
           const isSelected = fichaData.aptitud === opt.value
@@ -74,6 +72,6 @@ export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
           })}
         />
       )}
-    </Stack>
+    </FemoSeccion>
   )
 }

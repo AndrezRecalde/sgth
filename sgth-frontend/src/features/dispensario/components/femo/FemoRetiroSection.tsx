@@ -1,8 +1,9 @@
 'use client'
 
-import { Stack, Text, Group, Checkbox, Textarea } from '@mantine/core'
+import { Group, Checkbox, Textarea } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { FichaBaseForm } from '../../schemas/femo.schema'
+import { FemoSeccion } from './FemoSeccion'
 
 interface Props {
   fichaData:     Partial<FichaBaseForm>
@@ -13,10 +14,7 @@ export function FemoRetiroSection({ fichaData, onFichaChange }: Props) {
   const contained = useContainedInput()
 
   return (
-    <Stack gap="xs">
-      <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
-        N. Retiro (evaluación)
-      </Text>
+    <FemoSeccion letra="N" titulo="Retiro (evaluación)">
       <Group gap="md">
         <Checkbox
           label="Se realiza la evaluación"
@@ -43,6 +41,6 @@ export function FemoRetiroSection({ fichaData, onFichaChange }: Props) {
           ...fichaData, observacion_retiro: e.currentTarget.value,
         })}
       />
-    </Stack>
+    </FemoSeccion>
   )
 }

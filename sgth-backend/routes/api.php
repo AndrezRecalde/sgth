@@ -1139,6 +1139,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::prefix('fichas-sso')
             ->middleware('role:medico|admin-dispensario')
             ->group(function () {
+                // Catálogo oficial de factores de riesgo del MSP (sección G).
+                // Va antes de '{id}' para que 'catalogo-riesgos' no se lea como id.
+                Route::get('catalogo-riesgos', [FichaSaludOcupacionalController::class, 'catalogoRiesgos']);
                 Route::get('/', [FichaSaludOcupacionalController::class, 'index']);
                 Route::post('/', [FichaSaludOcupacionalController::class, 'store']);
                 Route::get('{id}', [FichaSaludOcupacionalController::class, 'show']);

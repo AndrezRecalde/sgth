@@ -29,14 +29,21 @@
             </tr>
             @foreach($categoriasRiesgo as $categoria)
                 @php $factoresCategoria = $filasRiesgoPorCategoria[$categoria->value] ?? collect(); @endphp
-                @forelse($factoresCategoria as $factor => $actividadIds)
+                @forelse($factoresCategoria as $factor => $fila)
                     <tr>
                         @if($loop->first)
                             <td rowspan="{{ $factoresCategoria->count() }}" class="msp-label">{{ $categoria->etiqueta() }}</td>
                         @endif
-                        <td class="small">{{ $factor }}</td>
+                        {{-- La subcategoría solo la usa «De seguridad»; en el
+                             resto viaja nula y el factor va solo. --}}
+                        <td class="small">
+                            @if($fila['subcategoria'])
+                                <strong>{{ $etiquetasSubcategoria[$fila['subcategoria']] ?? $fila['subcategoria'] }}</strong> —
+                            @endif
+                            {{ $factor }}
+                        </td>
                         @foreach($actividadesRiesgo as $actividad)
-                            <td class="msp-check">{{ $actividadIds->contains($actividad->id) ? 'X' : '' }}</td>
+                            <td class="msp-check">{{ $fila['actividades']->contains($actividad->id) ? 'X' : '' }}</td>
                         @endforeach
                     </tr>
                 @empty
@@ -58,7 +65,8 @@
     <div class="msp-section-title">H. ACTIVIDAD LABORAL / INCIDENTES / ACCIDENTES / ENFERMEDADES OCUPACIONALES</div>
     <table class="msp-table">
         <tr>
-            <th>Centro de Trabajo</th><th>Actividades</th><th>Período</th>
+            {{-- «Trabajo» es la columna ANTERIOR / ACTUAL del impreso. --}}
+            <th>Centro de Trabajo</th><th>Actividades</th><th>Trabajo</th><th>Período</th>
             <th>Tipo de Evento</th><th>Calif. IESS</th><th>Fecha</th><th>Especificar</th>
         </tr>
         @forelse($ficha->empleosAnteriores as $empleo)
@@ -69,6 +77,7 @@
             <tr>
                 <td>{{ $empleo->centro_trabajo }}</td>
                 <td class="small">{{ $empleo->actividades_desempenadas ?? '-' }}</td>
+                <td class="center small">{{ $empleo->es_trabajo_actual ? 'ACTUAL' : 'ANTERIOR' }}</td>
                 <td class="small">{{ $inicioEmpleo ? "{$inicioEmpleo} - {$finEmpleo}" : '-' }}</td>
                 <td class="center">{{ $empleo->tipo_evento_laboral->etiqueta() }}</td>
                 <td class="msp-check">{{ $empleo->calificado_iess === null ? '-' : ($empleo->calificado_iess ? 'SI' : 'NO') }}</td>
@@ -76,7 +85,7 @@
                 <td class="small">{{ $empleo->especificar ?? '-' }}</td>
             </tr>
         @empty
-            <tr><td colspan="7" class="small center">Sin registros</td></tr>
+            <tr><td colspan="8" class="small center">Sin registros</td></tr>
         @endforelse
     </table>
 

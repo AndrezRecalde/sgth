@@ -1,0 +1,47 @@
+/* Panel de solo lectura. Se hunde respecto a la superficie del formulario
+   para que se lea como dato traído, no como campo que se puede llenar. */
+.panel {
+  background-color: var(--sgth-surface-sunken);
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-md);
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--mantine-spacing-md);
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.etiqueta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--sgth-text-muted);
+}
+
+.valor {
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--sgth-text);
+}
+
+.sinDato {
+  color: var(--sgth-text-muted);
+  font-weight: 400;
+}
+
+.unidad {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  color: var(--sgth-text-muted);
+}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Dispensario;
 
+use App\Catalogos\FactoresRiesgoMsp;
 use App\Enums\AptitudMedica;
 use App\Enums\CategoriaRiesgoLaboral;
 use App\Enums\RegionExamenFisico;
@@ -25,6 +26,7 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'ficha' => ['required', 'array'],
             'ficha.servidor_id' => ['nullable', 'required_without:ficha.postulante_id', 'integer', 'exists:servidores,id'],
             'ficha.postulante_id' => ['nullable', 'required_without:ficha.servidor_id', 'integer', 'exists:postulantes,id'],
+            'ficha.puesto_id' => ['nullable', 'integer', 'exists:puestos,id'],
             'ficha.accidente_trabajo_id' => ['nullable', 'integer', 'exists:accidentes_trabajo,id'],
             'ficha.numero_archivo' => ['nullable', 'string', 'max:50'],
             'ficha.fecha_evaluacion' => ['required', 'date'],
@@ -32,13 +34,21 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'ficha.puesto_trabajo' => ['nullable', 'string', 'max:200'],
             'ficha.puesto_trabajo_ciuo' => ['nullable', 'string', 'max:20'],
             'ficha.fecha_ingreso_trabajo' => ['nullable', 'date'],
+            'ficha.fecha_reintegro' => ['nullable', 'date'],
+            'ficha.fecha_ultimo_dia_laboral' => ['nullable', 'date'],
             'ficha.grupo_embarazada' => ['nullable', 'boolean'],
             'ficha.grupo_discapacidad' => ['nullable', 'boolean'],
+            'ficha.grupo_enfermedad_catastrofica' => ['nullable', 'boolean'],
+            'ficha.grupo_adulto_mayor' => ['nullable', 'boolean'],
             'ficha.porcentaje_discapacidad' => ['nullable', 'string', 'max:10'],
+            'ficha.lateralidad' => ['nullable', Rule::in(['derecha', 'izquierda'])],
             'ficha.aptitud' => ['required', Rule::enum(AptitudMedica::class)],
             'ficha.restricciones' => ['nullable', 'string'],
             'ficha.observaciones' => ['nullable', 'string'],
             'ficha.enfermedad_actual' => ['nullable', 'string'],
+            'ficha.autoriza_transfusion' => ['nullable', 'boolean'],
+            'ficha.tratamiento_hormonal' => ['nullable', 'boolean'],
+            'ficha.tratamiento_hormonal_cual' => ['nullable', 'string', 'max:200'],
             'ficha.recomendaciones' => ['nullable', 'string'],
             'ficha.tratamiento' => ['nullable', 'string'],
             'ficha.condicion_relacionada_trabajo' => ['nullable', 'boolean'],
@@ -60,6 +70,7 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'constantes_vitales.saturacion_oxigeno' => ['nullable', 'numeric'],
             'constantes_vitales.peso_kg' => ['nullable', 'numeric'],
             'constantes_vitales.talla_cm' => ['nullable', 'numeric'],
+            'constantes_vitales.perimetro_abdominal_cm' => ['nullable', 'numeric'],
             'constantes_vitales.imc' => ['nullable', 'numeric'],
             'constantes_vitales.glucosa' => ['nullable', 'numeric'],
 
@@ -76,7 +87,9 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
 
             'factores_riesgo' => ['nullable', 'array'],
             'factores_riesgo.*.categoria' => ['required', Rule::enum(CategoriaRiesgoLaboral::class)],
-            'factores_riesgo.*.factor' => ['required', 'string', 'max:200'],
+            // El factor debe existir en el catálogo del MSP. Un nombre libre
+            // rompe la fidelidad del PDF y descuadra los indicadores de SSO.
+            'factores_riesgo.*.factor' => ['required', 'string', Rule::in(FactoresRiesgoMsp::todosLosFactores())],
             'factores_riesgo.*.presente' => ['nullable', 'boolean'],
             'factores_riesgo.*.medida_preventiva' => ['nullable', 'string', 'max:500'],
             'factores_riesgo.*.actividad_index' => ['nullable', 'integer', 'min:0'],
@@ -95,6 +108,7 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'empleos_anteriores' => ['nullable', 'array'],
             'empleos_anteriores.*.centro_trabajo' => ['required', 'string', 'max:200'],
             'empleos_anteriores.*.actividades_desempenadas' => ['nullable', 'string'],
+            'empleos_anteriores.*.es_trabajo_actual' => ['nullable', 'boolean'],
             'empleos_anteriores.*.fecha_inicio' => ['nullable', 'date'],
             'empleos_anteriores.*.fecha_fin' => ['nullable', 'date'],
             'empleos_anteriores.*.observaciones' => ['nullable', 'string'],
@@ -136,6 +150,8 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'required' => 'El campo :attribute es obligatorio.',
             'exists' => 'El valor seleccionado para :attribute no es válido.',
             'diagnosticos.max' => 'Máximo 6 diagnósticos.',
+            // Sin esto el médico vería literalmente «validation.in».
+            'factores_riesgo.*.factor.in' => 'Ese factor de riesgo no existe en el formulario del MSP.',
         ];
     }
 }

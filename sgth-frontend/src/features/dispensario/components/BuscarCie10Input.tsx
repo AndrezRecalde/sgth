@@ -5,7 +5,7 @@ import {
   TextInput, Badge, Stack, Combobox,
   useCombobox, Text, Group, ActionIcon,
 } from '@mantine/core'
-import { IconSearch, IconX } from '@tabler/icons-react'
+import { IconX } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useBuscarCie10 } from '../hooks/useCie10'
 import type { DiagnosticoCie10 } from '../services/cie10Service'
@@ -70,7 +70,6 @@ export function BuscarCie10Input({ value, onChange }: Props) {
         <TextInput
           label="Diagnóstico (CIE-10)"
           placeholder="Buscar código o descripción del diagnóstico"
-          leftSection={<IconSearch size={14} />}
           {...contained}
           value={termino}
           onChange={(e) => {

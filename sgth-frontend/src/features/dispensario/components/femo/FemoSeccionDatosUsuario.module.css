@@ -1,0 +1,34 @@
+/* Identidad traída del expediente: se coteja, no se edita. Mismo tratamiento
+   hundido que los signos vitales y el puesto. */
+.identidad {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--mantine-spacing-md);
+  margin: 0;
+  padding: var(--mantine-spacing-md);
+  background-color: var(--sgth-surface-sunken);
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-lg);
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dato dt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--sgth-text-muted);
+}
+
+.dato dd {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  color: var(--sgth-text);
+}

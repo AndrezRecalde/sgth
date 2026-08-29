@@ -14,6 +14,7 @@ class FemoConstantesVitales extends Model
         'presion_sistolica', 'presion_diastolica',
         'frecuencia_cardiaca', 'frecuencia_respiratoria',
         'saturacion_oxigeno', 'peso_kg', 'talla_cm',
+        'perimetro_abdominal_cm',
         'imc', 'glucosa',
     ];
 

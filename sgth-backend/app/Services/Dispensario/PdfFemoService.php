@@ -2,6 +2,7 @@
 
 namespace App\Services\Dispensario;
 
+use App\Catalogos\FactoresRiesgoMsp;
 use App\Enums\CategoriaRiesgoLaboral;
 use App\Enums\RegionExamenFisico;
 use App\Models\Dispensario\FichaSaludOcupacional;
@@ -25,16 +26,23 @@ final class PdfFemoService
         // Matriz actividad x riesgo de la sección G: para cada categoría/factor
         // marcado en la ficha (en cualquiera de sus actividades), el conjunto
         // de ids de `femo_ficha_actividades` donde aparece marcado presente.
+        //
+        // Se arrastra también la subcategoría, porque «De seguridad» se
+        // subdivide en el impreso —locativos, mecánicos, eléctricos, otros— y
+        // sin ella el PDF aplanaba quince factores en una sola lista.
         $filasRiesgoPorCategoria = $ficha->factoresRiesgo
             ->groupBy(fn ($f) => $f->categoria->value)
             ->map(fn ($factoresCategoria) => $factoresCategoria
                 ->groupBy('factor')
-                ->map(fn ($factoresFactor) => $factoresFactor
-                    ->filter(fn ($f) => $f->presente)
-                    ->pluck('ficha_actividad_id')
-                    ->filter()
-                    ->unique()
-                    ->values()));
+                ->map(fn ($factoresFactor) => [
+                    'subcategoria' => $factoresFactor->first()->subcategoria,
+                    'actividades' => $factoresFactor
+                        ->filter(fn ($f) => $f->presente)
+                        ->pluck('ficha_actividad_id')
+                        ->filter()
+                        ->unique()
+                        ->values(),
+                ]));
 
         $antecedentesPorTipo = $ficha->antecedentes->groupBy(
             fn ($antecedente) => $antecedente->tipo->value
@@ -49,6 +57,9 @@ final class PdfFemoService
             'antecedentesPorTipo' => $antecedentesPorTipo,
             'regiones' => RegionExamenFisico::cases(),
             'categoriasRiesgo' => CategoriaRiesgoLaboral::cases(),
+            // Etiquetas legibles de las subcategorías de «De seguridad»,
+            // tomadas del mismo catálogo que valida la ficha.
+            'etiquetasSubcategoria' => $this->etiquetasSubcategoria(),
             'logo' => public_path('images/logo-gadpe.png'),
         ])->setPaper('a4', 'portrait');
 
@@ -56,6 +67,29 @@ final class PdfFemoService
             'content' => $pdf->output(),
             'filename' => 'femo_'.($ficha->numero_archivo ?: $ficha->id).'.pdf',
         ];
+    }
+
+    /**
+     * Clave de subcategoría → etiqueta del impreso.
+     *
+     * Sale del catálogo oficial en vez de escribirse aquí, para que el PDF no
+     * pueda desalinearse de lo que la ficha guarda y valida.
+     *
+     * @return array<string, string>
+     */
+    private function etiquetasSubcategoria(): array
+    {
+        $etiquetas = [];
+
+        foreach (FactoresRiesgoMsp::catalogo() as $categoria) {
+            foreach ($categoria['grupos'] as $grupo) {
+                if ($grupo['subcategoria'] !== null) {
+                    $etiquetas[$grupo['subcategoria']] = $grupo['etiqueta'];
+                }
+            }
+        }
+
+        return $etiquetas;
     }
 
     /**

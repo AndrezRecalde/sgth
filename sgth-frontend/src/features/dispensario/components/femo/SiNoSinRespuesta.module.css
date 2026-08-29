@@ -1,0 +1,79 @@
+/* Pregunta clínica de respuesta obligada.
+   Antes era un control segmentado dentro de una etiqueta corriente y se perdía
+   entre los campos de texto: se leía como un filtro más, no como algo que hay
+   que contestar. Ahora es una tarjeta con borde propio y con estado a la vista. */
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  padding: var(--mantine-spacing-md);
+  background-color: var(--sgth-surface);
+  border: 1px solid var(--sgth-border);
+  border-left: 3px solid var(--sgth-border-strong);
+  border-radius: var(--mantine-radius-lg);
+  transition:
+    border-color var(--sgth-motion-fast) var(--sgth-easing),
+    background-color var(--sgth-motion-fast) var(--sgth-easing);
+}
+
+/* Sin responder: el borde izquierdo llama la atención en ámbar, que es el
+   color de «falta algo» en todo el sistema. */
+.tarjeta[data-estado='pendiente'] {
+  border-left-color: var(--mantine-color-amber-6);
+  background-color: color-mix(
+    in oklab,
+    var(--mantine-color-amber-6) 5%,
+    var(--sgth-surface)
+  );
+}
+
+.tarjeta[data-estado='si'] {
+  border-left-color: var(--mantine-color-emerald-6);
+}
+
+.tarjeta[data-estado='no'] {
+  border-left-color: var(--sgth-text-muted);
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-sm);
+}
+
+.icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--sgth-surface-sunken);
+  color: var(--sgth-text-muted);
+}
+
+.tarjeta[data-estado='pendiente'] .icono {
+  background-color: var(--mantine-color-amber-light);
+  color: var(--mantine-color-amber-light-color);
+}
+
+.tarjeta[data-estado='si'] .icono {
+  background-color: var(--mantine-color-emerald-light);
+  color: var(--mantine-color-emerald-light-color);
+}
+
+.pregunta {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--sgth-text);
+}
+
+.aviso {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-amber-light-color);
+}

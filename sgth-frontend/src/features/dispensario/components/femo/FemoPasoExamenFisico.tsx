@@ -1,9 +1,10 @@
 'use client'
 
-import { Stack, Text, Accordion, Badge, Group } from '@mantine/core'
+import { Text, Accordion, Badge, Group } from '@mantine/core'
 import type { ExamenFisicoItemForm } from '../../schemas/femo.schema'
 import { REGIONES_EXAMEN_FISICO } from '../../services/femoOptions'
 import { ExamenFisicoRegionTable } from './ExamenFisicoRegionTable'
+import { FemoSeccion } from './FemoSeccion'
 
 interface Props {
   examenFisico: ExamenFisicoItemForm[]
@@ -15,10 +16,7 @@ export function FemoPasoExamenFisico({ examenFisico, onChange }: Props) {
     examenFisico.filter(v => v.region === region && !v.normal).length
 
   return (
-    <Stack gap="md">
-      <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
-        F. Examen físico regional
-      </Text>
+    <FemoSeccion letra="F" titulo="Examen físico regional">
       <Accordion multiple variant="separated" radius="md">
         {REGIONES_EXAMEN_FISICO.map((region) => {
           const anormales = contarAnormales(region.value)
@@ -46,6 +44,6 @@ export function FemoPasoExamenFisico({ examenFisico, onChange }: Props) {
           )
         })}
       </Accordion>
-    </Stack>
+    </FemoSeccion>
   )
 }

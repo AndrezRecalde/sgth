@@ -16,6 +16,7 @@ class Cargo extends Model
     protected $fillable = [
         'nombre',
         'denominacion_generica',
+        'codigo_ciuo',
         'mision',
         'clasificacion_personal',
         'activo',

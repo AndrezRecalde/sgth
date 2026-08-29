@@ -50,73 +50,9 @@ export const SUSTANCIA_OPTIONS = [
   { value: 'otra',    label: 'Otra'    },
 ]
 
-export interface CategoriaRiesgo {
-  key:      string
-  label:    string
-  color:    string
-  factores: string[]
-}
-
-// Catálogo de categorías/factores de riesgo laboral (sección G del FEMO).
-export const CATEGORIAS_RIESGO: CategoriaRiesgo[] = [
-  {
-    key:   'fisico',
-    label: 'Físico',
-    color: 'blue',
-    factores: [
-      'Ruido', 'Vibración', 'Iluminación deficiente',
-      'Temperatura extrema', 'Radiación ionizante',
-      'Radiación no ionizante', 'Presión anormal',
-    ],
-  },
-  {
-    key:   'seguridad',
-    label: 'Seguridad',
-    color: 'orange',
-    factores: [
-      'Locativos', 'Mecánicos', 'Eléctricos',
-      'Trabajo en alturas', 'Espacios confinados',
-    ],
-  },
-  {
-    key:   'quimico',
-    label: 'Químico',
-    color: 'grape',
-    factores: [
-      'Polvos', 'Humos', 'Gases y vapores',
-      'Líquidos', 'Aerosoles',
-    ],
-  },
-  {
-    key:   'biologico',
-    label: 'Biológico',
-    color: 'teal',
-    factores: [
-      'Virus', 'Bacterias', 'Hongos',
-      'Parásitos', 'Fluidos corporales',
-    ],
-  },
-  {
-    key:   'ergonomico',
-    label: 'Ergonómico',
-    color: 'yellow',
-    factores: [
-      'Posturas forzadas', 'Carga física',
-      'Movimientos repetitivos', 'PVD',
-      'Trabajo de pie prolongado',
-    ],
-  },
-  {
-    key:   'psicosocial',
-    label: 'Psicosocial',
-    color: 'red',
-    factores: [
-      'Monotonía', 'Sobrecarga laboral',
-      'Relaciones interpersonales', 'Trabajo nocturno',
-      'Alta responsabilidad',
-    ],
-  },
-]
+// El catálogo de factores de riesgo (sección G) ya no vive aquí: lo sirve el
+// backend en /dispensario/fichas-sso/catalogo-riesgos, que es el mismo que
+// valida al guardar y alimenta el PDF. Ver useCatalogoRiesgos().
 
 export interface RegionExamenFisico {
   value: string

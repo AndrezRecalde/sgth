@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import {
   Modal, Button, Group, Stack,
-  TextInput, Select, Textarea,
+  TextInput, Select, Textarea, Anchor,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -42,6 +42,7 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
     defaultValues: {
       nombre:                 cargo?.nombre                ?? '',
       denominacion_generica:  cargo?.denominacion_generica ?? '',
+      codigo_ciuo:            cargo?.codigo_ciuo            ?? '',
       mision:                 cargo?.mision                ?? '',
       clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal']) ?? 'empleado',
     },
@@ -51,6 +52,7 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
     reset({
       nombre:                cargo?.nombre                ?? '',
       denominacion_generica: cargo?.denominacion_generica ?? '',
+      codigo_ciuo:           cargo?.codigo_ciuo            ?? '',
       mision:                cargo?.mision                ?? '',
       clasificacion_personal: (cargo?.clasificacion_personal as CargoFormData['clasificacion_personal']) ?? 'empleado',
     })
@@ -94,6 +96,27 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
             {...contained}
             {...register('denominacion_generica')}
             error={errors.denominacion_generica?.message}
+          />
+          <TextInput
+            label="Código CIUO"
+            placeholder="Ej: 2519"
+            description={
+              <>
+                Clasificación Internacional Uniforme de Ocupaciones. Lo heredan
+                las fichas médicas ocupacionales de este cargo.{' '}
+                <Anchor
+                  href="https://aplicaciones2.ecuadorencifras.gob.ec/SIN/ciuo08.php"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="xs"
+                >
+                  Buscar en el INEC
+                </Anchor>
+              </>
+            }
+            {...contained}
+            {...register('codigo_ciuo')}
+            error={errors.codigo_ciuo?.message}
           />
           <Controller
             name="clasificacion_personal"

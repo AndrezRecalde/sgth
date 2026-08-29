@@ -1,8 +1,14 @@
 'use client'
 
 import {
-  Stack, Textarea, Group, Text, Button,
-  Card, ActionIcon, Divider, Badge,
+  Stack,
+  Textarea,
+  Group,
+  Text,
+  Button,
+  Card,
+  ActionIcon,
+  Badge,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
@@ -15,6 +21,7 @@ import { FemoExamenModal } from './FemoExamenModal'
 import { FemoDiagnosticosCie10 } from './FemoDiagnosticosCie10'
 import { FemoAptitudSelector } from './FemoAptitudSelector'
 import { FemoRetiroSection } from './FemoRetiroSection'
+import { FemoSeccion } from './FemoSeccion'
 
 interface Props {
   fichaData:        Partial<FichaBaseForm>
@@ -44,22 +51,21 @@ export function FemoPaso3({
   }
 
   return (
-    <Stack gap="md">
-      <Stack gap="xs">
-        <Group justify="space-between">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-            style={{ letterSpacing: '0.05em' }}>
-            J. Exámenes complementarios
-          </Text>
+    <Stack gap="xl">
+      <FemoSeccion
+        letra="J"
+        titulo="Exámenes complementarios"
+        accion={
           <Button
-            size="compact-xs"
-            variant="subtle"
-            leftSection={<IconPlus size={12} />}
+            size="xs"
+            variant="light"
+            leftSection={<IconPlus size={14} />}
             onClick={abrirExamen}
           >
-            Agregar
+            Agregar examen
           </Button>
-        </Group>
+        }
+      >
 
         {examenes.length === 0 ? (
           <Text size="sm" c="dimmed">
@@ -101,26 +107,16 @@ export function FemoPaso3({
             ))}
           </Stack>
         )}
-      </Stack>
-
-      <Divider />
+      </FemoSeccion>
 
       <FemoDiagnosticosCie10
         diagnosticos={diagnosticos}
         onChange={onDiagnosticosChange}
       />
 
-      <Divider />
-
       <FemoAptitudSelector fichaData={fichaData} onFichaChange={onFichaChange} />
 
-      <Divider />
-
-      <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-          style={{ letterSpacing: '0.05em' }}>
-          M. Recomendaciones y tratamiento
-        </Text>
+      <FemoSeccion letra="M" titulo="Recomendaciones y tratamiento">
         <Textarea
           label="Recomendaciones"
           placeholder="Indicaciones médicas para el servidor"
@@ -153,11 +149,10 @@ export function FemoPaso3({
             ...fichaData, observaciones: e.currentTarget.value,
           })}
         />
-      </Stack>
+      </FemoSeccion>
 
       {fichaData.tipo_ficha === 'retiro' && (
         <>
-          <Divider />
           <FemoRetiroSection fichaData={fichaData} onFichaChange={onFichaChange} />
         </>
       )}

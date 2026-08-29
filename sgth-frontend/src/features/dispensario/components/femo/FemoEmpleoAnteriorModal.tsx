@@ -5,35 +5,18 @@ import {
   Checkbox, Group, Button, Modal,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import '@mantine/dates/styles.css'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { empleoAnteriorSchema, type EmpleoAnteriorForm } from '../../schemas/femo.schema'
 import { TIPO_EVENTO_LABORAL_OPTIONS } from '../../services/femoOptions'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 interface Props {
   opened:  boolean
   onClose: () => void
   onAgregar: (values: EmpleoAnteriorForm) => void
-}
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  if (typeof d === 'string') return d.slice(0, 10)
-  if (!(d instanceof Date) || isNaN(d.getTime())) return null
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
-function toDate(s: string | null | undefined): Date | null {
-  if (!s) return null
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
 }
 
 export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
@@ -44,6 +27,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
     defaultValues: {
       centro_trabajo: '',
       actividades_desempenadas: '',
+      es_trabajo_actual: false,
       fecha_inicio: null,
       fecha_fin:    null,
       observaciones: null,
@@ -80,6 +64,21 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
             {...contained}
             {...empleoForm.register('actividades_desempenadas')}
           />
+          {/* Columna «TRABAJO: ANTERIOR / ACTUAL» del formulario 028. La
+              sección registra el historial laboral e incluye el empleo vigente,
+              así que hay que poder distinguirlo. */}
+          <Controller
+            name="es_trabajo_actual"
+            control={empleoForm.control}
+            render={({ field }) => (
+              <Checkbox
+                label="Es el trabajo actual"
+                description="Déjalo sin marcar si es un empleo anterior"
+                checked={field.value ?? false}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
+              />
+            )}
+          />
           <Grid>
             <Grid.Col span={6}>
               <DatePickerInput
@@ -87,9 +86,9 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                 valueFormat="DD/MM/YYYY"
                 clearable
                 {...contained}
-                value={toDate(empleoForm.watch('fecha_inicio'))}
+                value={toDateValue(empleoForm.watch('fecha_inicio'))}
                 onChange={(d) =>
-                  empleoForm.setValue('fecha_inicio', fromDate(d as Date | null))
+                  empleoForm.setValue('fecha_inicio', fromDateValueOrNull(d as Date | null))
                 }
               />
             </Grid.Col>
@@ -99,9 +98,9 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                 valueFormat="DD/MM/YYYY"
                 clearable
                 {...contained}
-                value={toDate(empleoForm.watch('fecha_fin'))}
+                value={toDateValue(empleoForm.watch('fecha_fin'))}
                 onChange={(d) =>
-                  empleoForm.setValue('fecha_fin', fromDate(d as Date | null))
+                  empleoForm.setValue('fecha_fin', fromDateValueOrNull(d as Date | null))
                 }
               />
             </Grid.Col>
@@ -142,9 +141,9 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                   valueFormat="DD/MM/YYYY"
                   clearable
                   {...contained}
-                  value={toDate(empleoForm.watch('fecha_evento'))}
+                  value={toDateValue(empleoForm.watch('fecha_evento'))}
                   onChange={(d) =>
-                    empleoForm.setValue('fecha_evento', fromDate(d as Date | null))
+                    empleoForm.setValue('fecha_evento', fromDateValueOrNull(d as Date | null))
                   }
                 />
               </Group>

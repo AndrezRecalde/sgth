@@ -1,14 +1,16 @@
 'use client'
 
 import {
-  Stack, Text, Group, Checkbox, TextInput,
-  Card, Badge, Accordion, Textarea, ActionIcon,
+  Accordion, ActionIcon, Alert, Badge, Card, Checkbox, Group,
+  Skeleton, Stack, Text, Textarea, TextInput,
 } from '@mantine/core'
-import { IconTrash } from '@tabler/icons-react'
+import { IconAlertTriangle, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { usePuestoActividades } from '@/features/estructura/hooks/usePuestoActividad'
-import { CATEGORIAS_RIESGO } from '../../services/femoOptions'
+import { useCatalogoRiesgos } from '../../hooks/useCatalogoRiesgos'
 import type { ActividadRiesgoForm, FactorRiesgoForm } from '../../schemas/femo.schema'
+import { FemoSeccion } from './FemoSeccion'
+import classes from './FemoMatrizRiesgos.module.css'
 
 interface Props {
   puestoId:            number | null
@@ -22,8 +24,9 @@ export function FemoMatrizRiesgos({
   puestoId, actividadesRiesgo, factoresRiesgo,
   onActividadesChange, onFactoresChange,
 }: Props) {
-  const contained = useContainedInput()
+  const contained = useContainedInput('sm')
   const { data: puestoActividades = [] } = usePuestoActividades(puestoId)
+  const { data: catalogo, isLoading: cargandoCatalogo } = useCatalogoRiesgos()
 
   const removerActividad = (index: number) => {
     onActividadesChange(actividadesRiesgo.filter((_, i) => i !== index))
@@ -43,7 +46,12 @@ export function FemoMatrizRiesgos({
     } else {
       onActividadesChange([
         ...actividadesRiesgo,
-        { puesto_actividad_id: pa.id, actividad: pa.descripcion, medida_preventiva: null, orden: actividadesRiesgo.length + 1 },
+        {
+          puesto_actividad_id: pa.id,
+          actividad: pa.descripcion,
+          medida_preventiva: null,
+          orden: actividadesRiesgo.length + 1,
+        },
       ])
     }
   }
@@ -55,7 +63,9 @@ export function FemoMatrizRiesgos({
   }
 
   const getFactor = (index: number, categoria: string, factor: string) =>
-    factoresRiesgo.find(f => f.actividad_index === index && f.categoria === categoria && f.factor === factor)
+    factoresRiesgo.find(
+      f => f.actividad_index === index && f.categoria === categoria && f.factor === factor
+    )
 
   const toggleFactor = (index: number, categoria: string, factor: string) => {
     const existe = getFactor(index, categoria, factor)
@@ -69,7 +79,9 @@ export function FemoMatrizRiesgos({
     }
   }
 
-  const setFactorMedida = (index: number, categoria: string, factor: string, medida: string) => {
+  const setFactorMedida = (
+    index: number, categoria: string, factor: string, medida: string,
+  ) => {
     onFactoresChange(
       factoresRiesgo.map(f =>
         f.actividad_index === index && f.categoria === categoria && f.factor === factor
@@ -80,11 +92,11 @@ export function FemoMatrizRiesgos({
   }
 
   return (
-    <Stack gap="xs">
-      <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
-        D. Factores de riesgo laboral (por actividad del puesto)
-      </Text>
-
+    <FemoSeccion
+      letra="G"
+      titulo="Factores de riesgo del trabajo actual"
+      descripcion="Se marcan por cada actividad importante de la jornada laboral"
+    >
       {puestoActividades.length > 0 ? (
         <Group gap="sm" wrap="wrap">
           {puestoActividades.map((pa) => (
@@ -98,20 +110,34 @@ export function FemoMatrizRiesgos({
           ))}
         </Group>
       ) : (
-        <Text size="sm" c="orange">
-          Este puesto no tiene actividades configuradas. Solicite a Talento Humano
-          que las registre en el módulo de Estructura antes de continuar.
-        </Text>
+        <Alert
+          color="amber"
+          variant="light"
+          radius="lg"
+          icon={<IconAlertTriangle size={18} />}
+          title="El puesto no tiene actividades configuradas"
+        >
+          Los riesgos se evalúan por actividad, así que primero hay que
+          registrarlas. Solicite a Talento Humano que las cargue en
+          Estructura › Puestos.
+        </Alert>
       )}
 
       {actividadesRiesgo.length === 0 ? (
         <Text size="sm" c="dimmed">
           Ninguna actividad seleccionada para evaluar riesgos.
         </Text>
+      ) : cargandoCatalogo || !catalogo ? (
+        <Stack gap="xs">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} height={52} radius="md" />
+          ))}
+        </Stack>
       ) : (
         <Accordion multiple variant="separated" radius="md">
           {actividadesRiesgo.map((act, index) => {
             const factoresActividad = factoresRiesgo.filter(f => f.actividad_index === index)
+
             return (
               <Accordion.Item key={index} value={String(index)}>
                 <Group wrap="nowrap" gap={0}>
@@ -119,65 +145,84 @@ export function FemoMatrizRiesgos({
                     <Group justify="space-between" pr="sm">
                       <Text size="sm" fw={500}>{act.actividad}</Text>
                       {factoresActividad.length > 0 && (
-                        <Badge size="xs" color="orange" variant="light">
-                          {factoresActividad.length} riesgo{factoresActividad.length !== 1 ? 's' : ''}
+                        <Badge size="sm" variant="light" radius="sm">
+                          {factoresActividad.length} riesgo
+                          {factoresActividad.length !== 1 ? 's' : ''}
                         </Badge>
                       )}
                     </Group>
                   </Accordion.Control>
                   <ActionIcon
-                    size="sm" color="red" variant="subtle" mr="sm"
+                    color="red"
+                    mr="sm"
                     onClick={() => removerActividad(index)}
+                    aria-label={`Quitar la actividad ${act.actividad}`}
                   >
-                    <IconTrash size={13} />
+                    <IconTrash size={15} />
                   </ActionIcon>
                 </Group>
+
                 <Accordion.Panel>
-                  <Stack gap="sm">
+                  <Stack gap="md">
                     <Textarea
-                      label="Medida preventiva para esta actividad"
+                      label="Medidas preventivas para esta actividad"
                       autosize
                       minRows={2}
                       {...contained}
                       value={act.medida_preventiva ?? ''}
                       onChange={(e) => setMedidaActividad(index, e.currentTarget.value)}
                     />
-                    {CATEGORIAS_RIESGO.map((cat) => {
-                      const seleccionados = factoresActividad.filter(f => f.categoria === cat.key)
+
+                    {Object.entries(catalogo).map(([clave, cat]) => {
+                      const seleccionados = factoresActividad.filter(f => f.categoria === clave)
+
                       return (
-                        <Card key={cat.key} withBorder radius="md" p="sm">
-                          <Group gap="xs" mb="xs">
-                            <Badge size="sm" variant="light" color={cat.color}>
-                              {cat.label}
-                            </Badge>
+                        <Card key={clave} withBorder radius="md" padding="sm">
+                          <Group gap="xs" mb="sm">
+                            <Text size="sm" fw={600}>{cat.etiqueta}</Text>
                             {seleccionados.length > 0 && (
-                              <Text size="xs" c="dimmed">
-                                {seleccionados.length} seleccionado{seleccionados.length !== 1 ? 's' : ''}
-                              </Text>
+                              <Badge size="xs" variant="light" radius="sm">
+                                {seleccionados.length}
+                              </Badge>
                             )}
                           </Group>
-                          <Group gap="sm" wrap="wrap">
-                            {cat.factores.map((factor) => (
-                              <Checkbox
-                                key={factor}
-                                label={factor}
-                                size="sm"
-                                checked={!!getFactor(index, cat.key, factor)}
-                                onChange={() => toggleFactor(index, cat.key, factor)}
-                              />
+
+                          <Stack gap="sm">
+                            {cat.grupos.map((grupo, g) => (
+                              <div key={grupo.subcategoria ?? g}>
+                                {/* Solo «De seguridad» se subdivide; en el resto
+                                    los factores cuelgan directo de la categoría. */}
+                                {grupo.etiqueta && (
+                                  <Text component="div" className={classes.subcategoria}>
+                                    {grupo.etiqueta}
+                                  </Text>
+                                )}
+                                <div className={classes.factores}>
+                                  {grupo.factores.map((factor) => (
+                                    <Checkbox
+                                      key={factor}
+                                      label={factor}
+                                      size="sm"
+                                      checked={!!getFactor(index, clave, factor)}
+                                      onChange={() => toggleFactor(index, clave, factor)}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
                             ))}
-                          </Group>
+                          </Stack>
+
                           {seleccionados.length > 0 && (
-                            <Stack gap="xs" mt="sm">
+                            <Stack gap="xs" mt="md">
                               {seleccionados.map((f) => (
                                 <TextInput
                                   key={f.factor}
-                                  size="xs"
-                                  label={`Detalle — ${f.factor} (opcional)`}
+                                  label={`Detalle — ${f.factor}`}
+                                  placeholder="Opcional. Obligatorio si marcó «Otros»."
                                   {...contained}
                                   value={f.medida_preventiva ?? ''}
                                   onChange={(e) =>
-                                    setFactorMedida(index, cat.key, f.factor, e.currentTarget.value)
+                                    setFactorMedida(index, clave, f.factor, e.currentTarget.value)
                                   }
                                 />
                               ))}
@@ -193,6 +238,6 @@ export function FemoMatrizRiesgos({
           })}
         </Accordion>
       )}
-    </Stack>
+    </FemoSeccion>
   )
 }
