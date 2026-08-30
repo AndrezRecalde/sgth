@@ -10,6 +10,10 @@ interface OrganigramaTreeProps {
   nivel?: number
   isLoading?: boolean
   error?: Error | null
+  /** Acciones de Talento Humano; sin permiso no se pasan y no se dibujan. */
+  onEditar?: (unidad: UnidadConRelaciones) => void
+  onAgregarHija?: (unidad: UnidadConRelaciones) => void
+  onEliminar?: (unidad: UnidadConRelaciones) => void
 }
 
 export function OrganigramaTree({
@@ -17,13 +21,17 @@ export function OrganigramaTree({
   nivel = 0,
   isLoading,
   error,
+  onEditar,
+  onAgregarHija,
+  onEliminar,
 }: OrganigramaTreeProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
 
   const handleToggle = (id: number) => {
     setExpandedIds(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -79,12 +87,18 @@ export function OrganigramaTree({
               nivel={nivel}
               expanded={isExpanded}
               onToggle={handleToggle}
+              onEditar={onEditar}
+              onAgregarHija={onAgregarHija}
+              onEliminar={onEliminar}
             />
             {isExpanded && hijos.length > 0 && (
               <Box mt="xs">
                 <OrganigramaTree
                   unidades={hijos}
                   nivel={nivel + 1}
+                  onEditar={onEditar}
+                  onAgregarHija={onAgregarHija}
+                  onEliminar={onEliminar}
                 />
               </Box>
             )}

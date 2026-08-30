@@ -23,8 +23,10 @@ final class UpdateUnidadAdministrativaRequest extends FormRequest
             'acronimo'        => ['nullable', 'string', 'max:50'],
             'tipo_unidad_id'  => ['nullable', 'uuid', 'exists:tipos_unidad,id'],
             'descripcion'     => ['nullable', 'string'],
+            // El nivel se deriva del padre y se recalcula en la rama entera al
+            // moverla, así que no se recibe: enviarlo permitiría dejar el
+            // número diciendo una cosa y el árbol otra.
             'unidad_padre_id' => ['nullable', 'integer', 'exists:unidades_administrativas,id'],
-            'nivel'           => ['sometimes', 'integer', 'min:1'],
             'estado'          => ['boolean'],
             // Anclan de qué unidad sale cada firmante de las Acciones de
             // Personal. Marcar otra unidad desmarca la anterior — lo hace
@@ -42,7 +44,6 @@ final class UpdateUnidadAdministrativaRequest extends FormRequest
             'tipo_unidad_id.exists'  => 'El tipo de unidad seleccionado no es válido.',
             'tipo_unidad_id.uuid'    => 'El tipo de unidad debe ser un UUID válido.',
             'unidad_padre_id.exists' => 'La unidad padre seleccionada no es válida.',
-            'nivel.min'              => 'El nivel mínimo debe ser 1.',
         ];
     }
 }

@@ -22,8 +22,14 @@ interface EstructuraServiceInterface
 
     public function eliminarUnidad(int $id): void;
 
+    /** Siguiente código libre bajo un padre, derivado de su jerarquía. */
+    public function sugerirCodigo(?int $unidadPadreId): string;
+
     // Organigrama
     public function obtenerOrganigrama(): Collection;
+
+    /** El árbol sin datos de personas, para la consulta abierta y su PDF. */
+    public function obtenerOrganigramaPublico(): Collection;
 
     // Puestos
     public function listarPuestos(array $filtros): LengthAwarePaginator;

@@ -4,6 +4,13 @@ export const ROUTES = {
     CAMBIAR_PASSWORD: '/cambiar-password',
   },
 
+  // ── Abiertas a la ciudadanía ──────────
+  // Se ven sin sesión. El organigrama es información pública: cualquiera,
+  // dentro o fuera de la institución, puede consultar su estructura.
+  PUBLICO: {
+    ORGANIGRAMA: '/organigrama',
+  },
+
   // ── SGTH (Talento Humano) ─────────────
   SGTH: {
     HOME:             '/sgth',

@@ -36,6 +36,29 @@ class UnidadAdministrativaController extends Controller
         return ApiResponse::ok($unidades, 'Unidades listadas.');
     }
 
+    /**
+     * Código sugerido para una unidad nueva bajo el padre indicado.
+     *
+     * Es una sugerencia, no una asignación: el formulario lo rellena y quien
+     * registra puede cambiarlo, porque el código a veces tiene que coincidir
+     * con el orgánico funcional aprobado o con la codificación presupuestaria.
+     */
+    public function sugerirCodigo(Request $request): JsonResponse
+    {
+        $this->authorize('create', UnidadAdministrativa::class);
+
+        $validado = $request->validate([
+            'unidad_padre_id' => ['nullable', 'integer', 'exists:unidades_administrativas,id'],
+        ]);
+
+        return ApiResponse::ok(
+            ['codigo' => $this->estructuraService->sugerirCodigo(
+                $validado['unidad_padre_id'] ?? null
+            )],
+            'Código sugerido.'
+        );
+    }
+
     public function store(StoreUnidadAdministrativaRequest $request): JsonResponse
     {
         // La autorización ya está delegada al FormRequest

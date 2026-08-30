@@ -4,11 +4,14 @@ import type { NextRequest } from 'next/server'
 /**
  * Rutas abiertas a cualquiera, con sesión o sin ella.
  *
- * Son los enlaces que se envían por correo a los servidores para responder una
+ * Los enlaces que se envían por correo a los servidores para responder una
  * campaña: quien los abre no tiene por qué tener usuario del sistema, y quien
  * sí lo tiene tampoco debe ser desviado al panel al hacer clic en ellos.
+ *
+ * Y el organigrama, que es información pública de la institución: se consulta
+ * desde fuera, sin cuenta de por medio.
  */
-const RUTAS_ABIERTAS = ['/assist', '/psicosocial']
+const RUTAS_ABIERTAS = ['/assist', '/psicosocial', '/organigrama']
 
 /**
  * Rutas de autenticación: se ven sin sesión, y CON sesión sobran.

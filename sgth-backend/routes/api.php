@@ -48,6 +48,7 @@ use App\Http\Controllers\Estructura\CargoController;
 use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
 use App\Http\Controllers\Estructura\GrupoOcupacionalController;
 use App\Http\Controllers\Estructura\OrganigramaController;
+use App\Http\Controllers\Estructura\OrganigramaPdfController;
 use App\Http\Controllers\Estructura\PartidaPresupuestariaController;
 use App\Http\Controllers\Estructura\PuestoActividadController;
 use App\Http\Controllers\Estructura\PlantillaController;
@@ -145,6 +146,14 @@ Route::prefix('v1')->group(function () {
     Route::get('sgd/documentos/{documento}/descargar', [DocumentoInstitucionalController::class, 'descargar'])
         ->name('sgd.documentos.descargar');
 
+    // El organigrama es información pública: se consulta sin sesión desde la
+    // página abierta a la ciudadanía. Con un token de alguien que puede ver
+    // estructura, el mismo endpoint amplía el detalle (puestos, subrogaciones);
+    // sin él devuelve solo el árbol de unidades y subprocesos.
+    Route::get('estructura/organigrama', OrganigramaController::class);
+    Route::get('estructura/organigrama/pdf', OrganigramaPdfController::class)
+        ->name('estructura.organigrama.pdf');
+
     // Catálogos geográficos públicos
     Route::get('catalogos/provincias', [ProvinciaController::class, 'index']);
     Route::get('catalogos/provincias/{id}/cantones', [CantonController::class, 'porProvincia']);
@@ -195,7 +204,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
 
     // Módulo 01: Estructura Organizacional
     Route::prefix('estructura')->group(function () {
-        Route::get('organigrama', OrganigramaController::class);
+        // `organigrama` y `organigrama/pdf` viven en el grupo público de más
+        // arriba: leer la estructura de la institución no exige sesión.
 
         // Estado de la plantilla: plazas, ocupación y personal por modalidad.
         Route::get('plantilla', [PlantillaController::class, 'resumen'])
@@ -203,6 +213,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
         Route::get(
             'unidades-administrativas/todas',
             [UnidadAdministrativaController::class, 'todas']
+        );
+        // Antes del apiResource: si no, `{unidades_administrativa}` se come la
+        // ruta y Laravel busca una unidad con id «sugerir-codigo».
+        Route::get(
+            'unidades-administrativas/sugerir-codigo',
+            [UnidadAdministrativaController::class, 'sugerirCodigo']
         );
         Route::apiResource('unidades-administrativas', UnidadAdministrativaController::class);
         Route::apiResource('puestos', PuestoController::class);
