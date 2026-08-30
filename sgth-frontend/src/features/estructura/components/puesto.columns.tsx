@@ -1,18 +1,9 @@
-import { Text, Badge } from '@mantine/core'
+import { Group, Text } from '@mantine/core'
 import { IconEdit, IconTrash, IconList } from '@tabler/icons-react'
-import { TableActions } from '@/components/ui/TableActions'
+import { StatusBadge, TableActions } from '@/components/ui'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PuestoConRelaciones } from '@/types/api'
-
-const REGIMEN_LABELS: Record<string, string> = {
-  losep:          'LOSEP',
-  codigo_trabajo: 'Cód. Trabajo',
-}
-
-const REGIMEN_COLORS: Record<string, string> = {
-  losep:          'emerald',
-  codigo_trabajo: 'blue',
-}
+import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
 
 type Handlers = {
   onEdit:        (puesto: PuestoConRelaciones) => void
@@ -29,13 +20,11 @@ export const getPuestoColumns = (
     render: ({ cargo, es_jefe }) => (
       <div>
         <Text size="sm" fw={500}>{cargo?.nombre ?? '-'}</Text>
-        <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
-          {es_jefe && (
-            <Badge size="xs" variant="dot" color="emerald">
-              Jefe
-            </Badge>
-          )}
-        </div>
+        {es_jefe && (
+          <Group gap={4} mt={2}>
+            <StatusBadge tone="success" size="xs">Jefe</StatusBadge>
+          </Group>
+        )}
       </div>
     ),
   },
@@ -49,21 +38,17 @@ export const getPuestoColumns = (
   {
     accessor: 'regimen_laboral',
     title: 'Régimen',
-    width: 110,
+    width: 170,
     render: ({ regimen_laboral }) => regimen_laboral ? (
-      <Badge
-        color={REGIMEN_COLORS[regimen_laboral] ?? 'gray'}
-        variant="light"
-        size="sm"
-      >
+      <StatusBadge tone={REGIMEN_TONOS[regimen_laboral] ?? 'neutral'}>
         {REGIMEN_LABELS[regimen_laboral] ?? regimen_laboral}
-      </Badge>
+      </StatusBadge>
     ) : <Text size="sm" c="dimmed">-</Text>,
   },
   {
     accessor: 'plazas',
     title: 'Plazas',
-    width: 70,
+    width: 90,
     render: ({ plazas }) => (
       <Text size="sm" ta="center">{plazas ?? 1}</Text>
     ),

@@ -1,6 +1,6 @@
-import { Text, Badge } from '@mantine/core'
+import { Text } from '@mantine/core'
 import { IconEye, IconEdit, IconHistory } from '@tabler/icons-react'
-import { TableActions } from '@/components/ui/TableActions'
+import { StatusBadge, TableActions } from '@/components/ui'
 import { esExterno } from '../utils/nombramiento'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ServidorConRelaciones } from '@/types/api'
@@ -59,17 +59,15 @@ export const getServidorColumns = (
   {
     accessor: 'regimen_laboral',
     title:    'Régimen',
-    width:    110,
+    // 190: 'Servicios Profesionales' es la etiqueta más larga de las tres y
+    // con 110 se leía «SERVICIOS PROFESIO…».
+    width:    190,
     render:   ({ regimen_laboral }) => {
       if (!regimen_laboral) return <Text size="sm" c="dimmed">-</Text>
       return (
-        <Badge
-          color={REGIMEN_TONOS[regimen_laboral] ?? 'gray'}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge tone={REGIMEN_TONOS[regimen_laboral] ?? 'neutral'}>
           {REGIMEN_LABELS[regimen_laboral] ?? regimen_laboral}
-        </Badge>
+        </StatusBadge>
       )
     },
   },
@@ -81,13 +79,9 @@ export const getServidorColumns = (
       const tipo = row.contrato_vigente?.tipo_nombramiento
       if (!tipo) return <Text size="sm" c="dimmed">-</Text>
       return (
-        <Badge
-          color={esExterno(tipo) ? 'orange' : 'gray'}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge tone={esExterno(tipo) ? 'warning' : 'neutral'}>
           {esExterno(tipo) ? 'Externo' : 'Interno'}
-        </Badge>
+        </StatusBadge>
       )
     },
   },
@@ -96,13 +90,9 @@ export const getServidorColumns = (
     title:    'Estado',
     width:    90,
     render:   ({ estado }) => (
-      <Badge
-        color={estado ? 'emerald' : 'gray'}
-        variant="light"
-        size="sm"
-      >
+      <StatusBadge tone={estado ? 'success' : 'neutral'}>
         {estado ? 'Activo' : 'Inactivo'}
-      </Badge>
+      </StatusBadge>
     ),
   },
   {

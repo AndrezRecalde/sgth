@@ -62,7 +62,7 @@ export function PartidasPresupuestariasTab() {
     {
       accessor: "disponible",
       title: "Disponibilidad",
-      width: 130,
+      width: 150,
       render: ({ disponible }) => (
         <Badge
           color={disponible ? "emerald" : "orange"}

@@ -17,3 +17,21 @@
   color: var(--sgth-text-muted);
   text-transform: uppercase;
 }
+
+/* mantine-datatable recorta el título de cada columna con puntos suspensivos
+   —`nowrap` + `text-overflow: ellipsis`—, así que en cuanto la columna es más
+   estrecha que su encabezado se leía «PLA…» en lugar de «PLAZAS». Un
+   encabezado de dos líneas se lee; uno cortado a la mitad, no. */
+.header th :global(.mantine-datatable-header-cell-sortable-text) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Lo mismo para las etiquetas de estado: Mantine recorta el texto del Badge, y
+   una etiqueta que dice «Cód. Tr…» no comunica el régimen. Prefiero que la
+   columna se ensanche a que el dato mienta. */
+.root :global(.mantine-Badge-label) {
+  overflow: visible;
+  text-overflow: clip;
+}
