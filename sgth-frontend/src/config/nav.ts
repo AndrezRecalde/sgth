@@ -24,11 +24,6 @@ export const NAV_SGTH: NavGroup[] = [
         href:  ROUTES.SGTH.HOME,
         icon:  'IconHome',
       },
-      {
-        label: 'Servidores',
-        href:  ROUTES.SGTH.SERVIDORES,
-        icon:  'IconUsers',
-      },
     ],
   },
   {

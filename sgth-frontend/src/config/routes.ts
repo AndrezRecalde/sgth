@@ -7,7 +7,6 @@ export const ROUTES = {
   // ── SGTH (Talento Humano) ─────────────
   SGTH: {
     HOME:             '/sgth',
-    SERVIDORES:       '/sgth/servidores',
     USUARIOS:         '/sgth/usuarios',
     ESTRUCTURA:       '/sgth/estructura',
     ESTRUCTURA_DIRECTORIO: '/sgth/estructura/directorio',
