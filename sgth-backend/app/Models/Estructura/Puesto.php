@@ -65,6 +65,11 @@ class Puesto extends Model
         return $this->belongsTo(PartidaPresupuestaria::class);
     }
 
+    public function contratos(): HasMany
+    {
+        return $this->hasMany(\App\Models\Expediente\ContratoServidor::class);
+    }
+
     public function contratosVigentes(): HasMany
     {
         return $this->hasMany(
@@ -92,10 +97,9 @@ class Puesto extends Model
 
     public function plazasOcupadas(): int
     {
-        // Quién ocupa plaza y quién no lo decide TipoNombramiento::ocupaPlaza().
-        return $this->contratosVigentes()
-            ->whereNotIn('tipo_nombramiento', \App\Enums\TipoNombramiento::valoresSinPlaza())
-            ->count();
+        // Quién ocupa plaza lo define `ContratoServidor::scopeQueOcupanPlaza()`,
+        // el mismo criterio que usa la validación de vacante al contratar.
+        return $this->contratos()->queOcupanPlaza()->count();
     }
 
     public function plazasDisponibles(): int

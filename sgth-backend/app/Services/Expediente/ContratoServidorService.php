@@ -481,9 +481,8 @@ class ContratoServidorService
 
         $puesto = Puesto::findOrFail($puestoId);
 
-        $ocupadas = $puesto->contratosVigentes()
-            ->whereNotIn('tipo_nombramiento', TipoNombramiento::valoresSinPlaza())
-            ->whereNull('cubre_movimiento_id')
+        $ocupadas = $puesto->contratos()
+            ->queOcupanPlaza()
             ->when($exceptoContratoId, fn ($q) => $q->where('id', '!=', $exceptoContratoId))
             ->count();
 

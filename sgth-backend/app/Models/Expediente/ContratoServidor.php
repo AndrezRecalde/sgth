@@ -122,4 +122,29 @@ class ContratoServidor extends Model
                            ->orWhere('fecha_fin', '>=', now()->toDateString());
                      });
     }
+
+    /**
+     * Los contratos que consumen una plaza del distributivo.
+     *
+     * Dos exclusiones, y las dos importan:
+     *
+     *  - Las modalidades que no ocupan plaza (`TipoNombramiento::ocupaPlaza()`):
+     *    servicios profesionales y ocasionales se asignan al puesto pero no
+     *    descuentan de `plazas`.
+     *  - Los reemplazos (`cubre_movimiento_id`): la plaza sigue siendo del
+     *    titular en comisión o licencia, cuyo contrato continúa vigente y es el
+     *    que la ocupa. Contarlas dos veces bloquearía el puesto justo cuando
+     *    Talento Humano necesita cubrir el hueco.
+     *
+     * Vive aquí y no repetido en cada consulta porque antes lo estaba:
+     * `Puesto::plazasOcupadas()` no excluía los reemplazos y
+     * `ContratoServidorService::validarVacante()` sí, así que un puesto podía
+     * mostrarse sin vacantes y aceptar un contrato nuevo a la vez.
+     */
+    public function scopeQueOcupanPlaza(Builder $query): Builder
+    {
+        return $query->where('estado', 'vigente')
+                     ->whereNotIn('tipo_nombramiento', TipoNombramiento::valoresSinPlaza())
+                     ->whereNull('cubre_movimiento_id');
+    }
 }
