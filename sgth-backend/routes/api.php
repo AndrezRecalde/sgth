@@ -50,6 +50,7 @@ use App\Http\Controllers\Estructura\GrupoOcupacionalController;
 use App\Http\Controllers\Estructura\OrganigramaController;
 use App\Http\Controllers\Estructura\PartidaPresupuestariaController;
 use App\Http\Controllers\Estructura\PuestoActividadController;
+use App\Http\Controllers\Estructura\PlantillaController;
 use App\Http\Controllers\Estructura\PuestoController;
 use App\Http\Controllers\Estructura\UnidadAdministrativaController;
 use App\Http\Controllers\Evaluacion\EvaluacionController;
@@ -195,6 +196,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     // Módulo 01: Estructura Organizacional
     Route::prefix('estructura')->group(function () {
         Route::get('organigrama', OrganigramaController::class);
+
+        // Estado de la plantilla: plazas, ocupación y personal por modalidad.
+        Route::get('plantilla', [PlantillaController::class, 'resumen'])
+            ->name('estructura.plantilla');
         Route::get(
             'unidades-administrativas/todas',
             [UnidadAdministrativaController::class, 'todas']

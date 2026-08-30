@@ -6,9 +6,15 @@ import type {
   ApiResponse,
   UnidadAdministrativaParams,
   UnidadConRelaciones,
+  ResumenPlantilla,
 } from '@/types/api'
 
 export const estructuraService = {
+  /** Plazas, ocupación y personal por modalidad. */
+  plantilla: () =>
+    api.get<ApiResponse<ResumenPlantilla>>('/estructura/plantilla')
+      .then(r => r.data.datos),
+
   // Unidades administrativas
   listarUnidades: (params?: UnidadAdministrativaParams) =>
     api.get<ApiResponse<UnidadAdministrativa[]>>(

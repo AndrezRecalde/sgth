@@ -61,6 +61,11 @@ export const NAV_SGTH: NavGroup[] = [
             icon:  'IconBriefcase',
           },
           {
+            label: 'Plantilla',
+            href:  ROUTES.SGTH.ESTRUCTURA_PLANTILLA,
+            icon:  'IconChartBar',
+          },
+          {
             label: 'Partidas presupuestarias',
             href:  ROUTES.SGTH.ESTRUCTURA_PARTIDAS,
             icon:  'IconReceipt2',

@@ -12,6 +12,7 @@ export const ROUTES = {
     ESTRUCTURA_DIRECTORIO: '/sgth/estructura/directorio',
     ESTRUCTURA_PUESTOS:    '/sgth/estructura/puestos',
     ESTRUCTURA_PARTIDAS:   '/sgth/estructura/partidas',
+    ESTRUCTURA_PLANTILLA:  '/sgth/estructura/plantilla',
     EXPEDIENTE:       '/sgth/expediente',
     SUBROGACIONES:    '/sgth/expediente/subrogaciones',
     ACCIONES_PERSONAL: '/sgth/expediente/acciones-personal',

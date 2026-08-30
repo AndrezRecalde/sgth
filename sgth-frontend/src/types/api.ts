@@ -833,6 +833,48 @@ export type PuestoConRelaciones = {
   }[]
 }
 
+// ── Plantilla ────────────────────────────────────
+/**
+ * Estado de la plantilla: plazas del distributivo y personal por modalidad.
+ *
+ * La ocupación sale de los contratos vigentes que consumen plaza — ni los
+ * servicios profesionales u ocasionales, ni los reemplazos de una ausencia,
+ * que la plaza la sigue teniendo el titular.
+ */
+export type ResumenPlantilla = {
+  plazas: {
+    total:     number
+    ocupadas:  number
+    vacantes:  number
+    /** Porcentaje de plazas ocupadas, ya redondeado por el backend. */
+    ocupacion: number
+  }
+  por_regimen: {
+    regimen:  string
+    plazas:   number
+    ocupadas: number
+    vacantes: number
+  }[]
+  por_modalidad: {
+    tipo_nombramiento: string
+    etiqueta:          string
+    total:             number
+    ocupa_plaza:       boolean
+  }[]
+  por_unidad: {
+    unidad:   string
+    plazas:   number
+    ocupadas: number
+    vacantes: number
+  }[]
+  sin_plaza: {
+    servicios_ocasionales:   number
+    servicios_profesionales: number
+    total_vigentes:          number
+    porcentaje_ocasionales:  number
+  }
+}
+
 // ── Cargos ───────────────────────────────────────
 export type Cargo = {
   id: number
