@@ -49,6 +49,28 @@ export const NAV_SGTH: NavGroup[] = [
         label: 'Estructura',
         href:  ROUTES.SGTH.ESTRUCTURA,
         icon:  'IconSitemap',
+        children: [
+          {
+            label: 'Organigrama',
+            href:  ROUTES.SGTH.ESTRUCTURA,
+            icon:  'IconSitemap',
+          },
+          {
+            label: 'Directorio telefónico',
+            href:  ROUTES.SGTH.ESTRUCTURA_DIRECTORIO,
+            icon:  'IconPhone',
+          },
+          {
+            label: 'Puestos y cargos',
+            href:  ROUTES.SGTH.ESTRUCTURA_PUESTOS,
+            icon:  'IconBriefcase',
+          },
+          {
+            label: 'Partidas presupuestarias',
+            href:  ROUTES.SGTH.ESTRUCTURA_PARTIDAS,
+            icon:  'IconReceipt2',
+          },
+        ],
       },
       {
         label: 'Expediente',

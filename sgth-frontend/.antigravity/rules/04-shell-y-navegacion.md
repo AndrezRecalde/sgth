@@ -19,9 +19,9 @@ AppShell.tsx           orquesta; publica data-subsistema
 
 Solo tres, y ninguna más:
 
-1. **Guardar la ruta.** Sin sesión rehidratada, a la pantalla de acceso. Hoy
-   esta es la protección efectiva del área autenticada, porque el `matcher`
-   del middleware quedó desactualizado (ver [02](02-arquitectura.md)).
+1. **Guardar la ruta.** Sin sesión rehidratada, a la pantalla de acceso. Es la
+   segunda capa: el `matcher` del middleware ya cubre todo el área autenticada
+   (ver [02](02-arquitectura.md)).
 2. **Publicar el subsistema activo** como `data-subsistema`, de donde cuelga
    todo el acento visual.
 3. **Coordinar el estado del sidebar** entre la barra superior y el menú.

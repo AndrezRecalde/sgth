@@ -44,11 +44,10 @@ del código. Al reescribirlo se verificó regla por regla contra el repositorio.
 
 - Las rutas protegidas no viven en `src/app/(dashboard)/`, sino en cuatro
   route groups por subsistema: `(sgth)`, `(salud)`, `(portal)` y `(publico)`.
-- El middleware `src/proxy.ts` sí existe y está activo, pero su lista de rutas
-  quedó desactualizada y hoy cubre casi nada: quien protege el área
-  autenticada es `SGTHAppShell`. Queda documentado en
-  [02](02-arquitectura.md) junto con lo que hay que resolver antes de
-  arreglarlo.
+- El middleware `src/proxy.ts` sí existe y está activo. Su lista de rutas
+  había quedado desactualizada —cubría casi nada— y se corrigió el 2026-08-29:
+  ahora el `matcher` excluye lo estático en vez de enumerar módulos. Ver
+  [02](02-arquitectura.md).
 - El template de metadata es `GADPE — %s`, así que cada página exporta solo el
   nombre de su módulo, no el título completo.
 - La escala tipográfica y el espaciado estaban documentados pero no vivían en

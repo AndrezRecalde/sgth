@@ -24,19 +24,25 @@ decía que las rutas protegidas vivían ahí; nunca fue cierto.
 ## Protección de rutas — dos capas
 
 1. **`src/proxy.ts`** (middleware de Next). Lee la cookie `sgth_token` y
-   redirige antes de servir la página. Su `matcher` es una lista explícita de
-   rutas, y **hoy esa lista está desactualizada**: nombra `/estructura`,
-   `/expediente` y `/usuarios`, que ya no existen como rutas de primer nivel
-   —ahora son `/sgth/estructura` y compañía—. En la práctica solo cubre `/`,
-   `/login` y `/cambiar-password`.
+   redirige antes de servir la página. Su `matcher` **excluye en vez de
+   enumerar**: cubre todo salvo `_next`, las rutas de API y los archivos
+   estáticos. Antes era una lista de rutas de primer nivel que dejó de existir
+   al mover las pantallas bajo `/sgth`, `/salud` y `/portal`, y con ella el
+   sistema entero quedaba fuera. Una lista blanca hay que acordarse de
+   ampliarla cada vez que nace un módulo; la exclusión se mantiene sola.
 
-2. **`SGTHAppShell`** en el cliente. Es la que efectivamente protege el resto
-   del área autenticada (ver [04](04-shell-y-navegacion.md)).
+   `RUTAS_ABIERTAS` (`/assist`, `/psicosocial`) se salta toda comprobación:
+   son los enlaces de campaña que se envían por correo y los abre gente sin
+   usuario del sistema. Van aparte de `RUTAS_AUTENTICACION` (`/login`) porque
+   a quien ya tiene sesión no hay que desviarlo al panel al abrir su propia
+   encuesta.
 
-Antes de ampliar el `matcher` hay que resolver que la cookie `sgth_token` vive
-un día mientras que el store persistido no caduca: con la lista corregida, un
-usuario con sesión válida en `localStorage` y cookie vencida acabaría en la
-pantalla de acceso. Es una decisión pendiente, no un descuido.
+2. **`SGTHAppShell`** en el cliente. Segunda capa, no la única: redirige
+   cuando el store no tiene sesión (ver [04](04-shell-y-navegacion.md)).
+
+Las tres caducidades están alineadas en 24 horas: la cookie `sgth_token`, la
+sesión persistida —que al rehidratar se limpia sola si la cookie ya no está— y
+el token de Sanctum (`config/sanctum.php`).
 
 ## Estructura de `src`
 

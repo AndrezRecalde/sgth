@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { EstructuraView } from './EstructuraView'
+import { OrganigramaView } from './OrganigramaView'
 
 export const metadata: Metadata = {
-  title: 'Estructura Organizacional',
-  description: 'Gestión del organigrama institucional y puestos del GAD Provincial de Esmeraldas',
+  title: 'Organigrama',
+  description: 'Estructura orgánica del GAD Provincial de Esmeraldas',
 }
 
-export default function EstructuraPage() {
-  return <EstructuraView />
+export default function OrganigramaPage() {
+  return <OrganigramaView />
 }
