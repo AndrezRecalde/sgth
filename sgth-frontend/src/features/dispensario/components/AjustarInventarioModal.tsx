@@ -85,11 +85,15 @@ export function AjustarInventarioModal({
           <Controller
             name="nuevo_stock"
             control={control}
-            rules={{ required: true, min: 0 }}
+            rules={{
+              required: 'Indique el stock contado',
+              min: { value: 0, message: 'No puede ser negativo' },
+            }}
             render={({ field }) => (
               <NumberInput
                 label="Stock real (conteo físico)"
                 min={0}
+                required
                 {...contained}
                 value={field.value}
                 onChange={(v) => field.onChange(Number(v) || 0)}
@@ -116,7 +120,10 @@ export function AjustarInventarioModal({
             autosize
             minRows={2}
             {...contained}
-            {...register('motivo', { required: true })}
+            required
+            {...register('motivo', {
+              required: 'Indique el motivo del ajuste',
+            })}
             error={errors.motivo?.message}
           />
 

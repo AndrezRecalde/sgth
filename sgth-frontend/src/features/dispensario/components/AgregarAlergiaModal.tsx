@@ -77,10 +77,11 @@ export function AgregarAlergiaModal({
           <Controller
             name="tipo"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: 'Seleccione el tipo de alergia' }}
             render={({ field }) => (
               <Select
                 label="Tipo de alergia"
+                required
                 data={TIPO_OPTIONS}
                 placeholder="Seleccione"
                 {...contained}
@@ -94,16 +95,20 @@ export function AgregarAlergiaModal({
             label="Descripción"
             placeholder="Ej: Penicilina, Mariscos, Polen..."
             {...contained}
-            {...register('descripcion', { required: true })}
+            required
+            {...register('descripcion', {
+              required: 'Describa la alergia',
+            })}
             error={errors.descripcion?.message}
           />
           <Controller
             name="severidad"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: 'Seleccione la severidad' }}
             render={({ field }) => (
               <Select
                 label="Severidad"
+                required
                 data={SEVERIDAD_OPTIONS}
                 placeholder="Seleccione"
                 {...contained}

@@ -80,10 +80,11 @@ export function AgregarAntecedenteModal({
             <Controller
               name="tipo"
               control={control}
-              rules={{ required: true }}
+              rules={{ required: 'Seleccione el tipo de antecedente' }}
               render={({ field }) => (
                 <Select
                   label="Tipo de antecedente"
+                  required
                   data={TIPO_PERSONAL_OPTIONS}
                   placeholder="Seleccione"
                   {...contained}
@@ -103,7 +104,14 @@ export function AgregarAntecedenteModal({
             autosize
             minRows={3}
             {...contained}
-            {...register('descripcion', { required: true, minLength: 5 })}
+            required
+            {...register('descripcion', {
+              required: 'Describa el antecedente',
+              minLength: {
+                value: 5,
+                message: 'Mínimo 5 caracteres',
+              },
+            })}
             error={errors.descripcion?.message}
           />
 

@@ -32,7 +32,8 @@ export default function PlantillasPage() {
   const crear    = useCrearPlantilla()
   const eliminar = useEliminarPlantilla()
 
-  const { register, handleSubmit, reset, setValue, watch } =
+  const { register, handleSubmit, reset, setValue, watch,
+    formState: { errors } } =
     useForm<{
       nombre:        string
       descripcion:   string
@@ -164,7 +165,10 @@ export default function PlantillasPage() {
               placeholder="Ej: Concurso LOSEP estándar"
               required
               {...contained}
-              {...register('nombre')}
+              {...register('nombre', {
+                required: 'El nombre de la plantilla es obligatorio',
+              })}
+              error={errors.nombre?.message}
             />
             <Textarea
               label="Descripción"

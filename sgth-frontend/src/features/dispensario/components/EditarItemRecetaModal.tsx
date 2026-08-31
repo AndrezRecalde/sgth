@@ -97,34 +97,45 @@ export function EditarItemRecetaModal({
           <Controller
             name="cantidad_prescrita"
             control={control}
-            rules={{ required: true, min: 1 }}
+            rules={{
+              required: 'Indique la cantidad',
+              min: { value: 1, message: 'Debe ser al menos 1' },
+            }}
             render={({ field }) => (
               <NumberInput
                 label="Cantidad"
                 min={1}
+                required
                 {...contained}
                 value={field.value}
                 onChange={(v) => field.onChange(Number(v) || 1)}
+                error={errors.cantidad_prescrita?.message}
               />
             )}
           />
           <TextInput
             label="Dosis"
             placeholder="Ej: 1 tableta"
+            required
             {...contained}
-            {...register('dosis', { required: true })}
+            {...register('dosis', { required: 'Indique la dosis' })}
+            error={errors.dosis?.message}
           />
           <TextInput
             label="Frecuencia"
             placeholder="Ej: Cada 8 horas"
+            required
             {...contained}
-            {...register('frecuencia', { required: true })}
+            {...register('frecuencia', { required: 'Indique la frecuencia' })}
+            error={errors.frecuencia?.message}
           />
           <TextInput
             label="Duración"
             placeholder="Ej: 5 días"
+            required
             {...contained}
-            {...register('duracion', { required: true })}
+            {...register('duracion', { required: 'Indique la duración' })}
+            error={errors.duracion?.message}
           />
           <Textarea
             label="Observaciones (opcional)"

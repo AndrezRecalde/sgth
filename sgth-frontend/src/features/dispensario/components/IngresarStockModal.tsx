@@ -68,11 +68,15 @@ export function IngresarStockModal({
           <Controller
             name="cantidad"
             control={control}
-            rules={{ required: true, min: 1 }}
+            rules={{
+              required: 'Indique la cantidad a ingresar',
+              min: { value: 1, message: 'Debe ser al menos 1' },
+            }}
             render={({ field }) => (
               <NumberInput
                 label="Cantidad a ingresar"
                 min={1}
+                required
                 {...contained}
                 value={field.value}
                 onChange={(v) => field.onChange(Number(v) || 0)}
@@ -87,7 +91,10 @@ export function IngresarStockModal({
             autosize
             minRows={2}
             {...contained}
-            {...register('motivo', { required: true })}
+            required
+            {...register('motivo', {
+              required: 'Indique el motivo del ingreso',
+            })}
             error={errors.motivo?.message}
           />
 
