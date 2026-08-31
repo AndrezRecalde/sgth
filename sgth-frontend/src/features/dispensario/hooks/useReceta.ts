@@ -111,6 +111,8 @@ export function useAccionesItem(consultaId: number) {
 export function useRecetasFarmacia(params?: {
   fecha_desde?: string
   fecha_hasta?: string
+  medico_id?:   number
+  estado?:      string
 }) {
   return useQuery({
     queryKey: ['recetas', 'farmacia', params],
