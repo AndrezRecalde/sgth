@@ -123,7 +123,7 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
       </Stepper>
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(enviar)}>
+        <form onSubmit={form.handleSubmit(enviar)} noValidate>
           {paso === 0 && <ServidorFormPersonal form={form as never} />}
 
           {paso === 1 && (

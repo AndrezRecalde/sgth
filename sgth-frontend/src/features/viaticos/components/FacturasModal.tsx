@@ -202,7 +202,7 @@ export function FacturasModal({
       fullScreen={isMobile}
       closeOnClickOutside={false}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="md">
           <FacturasResumen viatico={viatico} totalFacturas={totalFacturas} />
 

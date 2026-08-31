@@ -73,7 +73,7 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           {fila && (
             <Text size="sm" c="dimmed">

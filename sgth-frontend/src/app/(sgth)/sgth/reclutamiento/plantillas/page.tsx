@@ -157,7 +157,7 @@ export default function PlantillasPage() {
         size="md"
         radius="xl"
       >
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="sm">
             <TextInput
               label="Nombre de la plantilla"

@@ -349,7 +349,7 @@ function FormularioAccion({
           personal formal, o no tiene contrato vigente registrado.
         </Alert>
       ) : (
-        <form onSubmit={handleSubmit((v) => guardar.mutate(v))}>
+        <form onSubmit={handleSubmit((v) => guardar.mutate(v))} noValidate>
           <Stepper
             active={paso}
             onStepClick={sinPasoDeTipo ? undefined : setPaso}

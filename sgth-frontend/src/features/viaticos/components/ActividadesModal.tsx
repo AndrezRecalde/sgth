@@ -137,7 +137,7 @@ export function ActividadesModal({
       fullScreen={isMobile}
       closeOnClickOutside={false}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="md">
           <Alert
             icon={<IconAlertCircle size={14} />}

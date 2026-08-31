@@ -39,7 +39,7 @@ export function ExtensionForm({ initialValues, onSubmit }: Props) {
   }))
 
   return (
-    <form id="extension-form" onSubmit={handleSubmit(onSubmit)}>
+    <form id="extension-form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Grid>
         <Grid.Col span={12}>
           <Controller

@@ -114,7 +114,7 @@ export default function NuevaConvocatoriaPage() {
         description="Concurso de méritos y oposición para un puesto del organigrama"
       />
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="md">
           <Alert
             color="grape"

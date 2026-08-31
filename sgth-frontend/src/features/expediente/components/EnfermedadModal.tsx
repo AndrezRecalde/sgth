@@ -121,7 +121,7 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
       title={initialValues ? 'Editar enfermedad catastrófica' : 'Registrar enfermedad catastrófica'}
       size="sm" fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <TextInput label="Nombre/Tipo de la enfermedad"
             placeholder="Diagnóstico médico"

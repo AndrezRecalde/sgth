@@ -115,7 +115,7 @@ export function AgregarCriterioModal({
       size="lg"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="md">
           <Stack gap="xs">
             <Text size="xs" fw={600} c="dimmed" tt="uppercase"

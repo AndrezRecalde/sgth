@@ -152,7 +152,7 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
         />
 
         {modo === 'individual' && (
-          <form onSubmit={handleSubmit(onSubmitIndividual)}>
+          <form onSubmit={handleSubmit(onSubmitIndividual)} noValidate>
             <Stack gap="sm">
               <Controller
                 name="servidor_id"

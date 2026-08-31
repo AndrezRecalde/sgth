@@ -140,7 +140,7 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
       fullScreen={isMobile}
       radius={isMobile ? 0 : "xl"}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <Controller
             name="tipo_declaracion"

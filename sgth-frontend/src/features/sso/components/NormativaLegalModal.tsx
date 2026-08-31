@@ -85,7 +85,7 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
       radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="sm">
             <Group align="flex-end" wrap="nowrap">
               <TextInput

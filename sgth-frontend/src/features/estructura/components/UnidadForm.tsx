@@ -181,7 +181,7 @@ export function UnidadForm({ initialValues, onSubmit, unidadId }: Props) {
   }
 
   return (
-    <form id="unidad-form" onSubmit={handleSubmit(onSubmit)}>
+    <form id="unidad-form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Grid>
         <Grid.Col span={{ base: 12, sm: 8 }}>
           <TextInput

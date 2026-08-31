@@ -149,7 +149,7 @@ export function MedicinaModal({
       radius={isMobile ? 0 : "xl"}
       closeOnClickOutside={false}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           {isEditing && initialValues && (
             <TextInput

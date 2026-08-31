@@ -74,7 +74,7 @@ export function AgregarAntecedenteModal({
       size="sm"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           {!esFamiliar && (
             <Controller

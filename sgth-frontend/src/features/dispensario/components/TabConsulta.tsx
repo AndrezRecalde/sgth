@@ -312,7 +312,7 @@ export function TabConsulta({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack gap="sm" p="md">
         {consultaPrevia && (
           <Group justify="flex-end">

@@ -110,7 +110,7 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
       title={initialValues ? 'Editar discapacidad' : 'Registrar discapacidad'}
       size="sm" fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <Controller name="tipo_discapacidad" control={control}
             render={({ field }) => (

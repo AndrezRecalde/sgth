@@ -107,7 +107,7 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
       fullScreen={isMobile}
       closeOnClickOutside={false}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <Card withBorder radius="md" p="sm" bg="blue.0">
             <Text size="xs" c="dimmed">

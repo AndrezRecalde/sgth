@@ -96,7 +96,7 @@ export function AdquisicionForm({ onCreada }: Props) {
   return (
     <>
       <Card withBorder radius="lg" p="xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="md">
             <Group grow>
               <Controller

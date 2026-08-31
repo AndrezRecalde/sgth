@@ -92,7 +92,7 @@ export function EditarItemRecetaModal({
       size="sm"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <Controller
             name="cantidad_prescrita"

@@ -72,7 +72,7 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <TextInput
             label="Nombre del cargo"

@@ -293,7 +293,7 @@ export function VacacionModal({ opened, onClose }: Props) {
 
       {/* ── PASO 0: Formulario ── */}
       {paso === 0 && (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="sm">
 
             {/* Unidad */}

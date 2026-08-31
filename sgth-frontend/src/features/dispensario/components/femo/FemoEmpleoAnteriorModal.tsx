@@ -48,7 +48,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
 
   return (
     <Modal opened={opened} onClose={onClose} title="Agregar empleo anterior" size="md" radius="xl">
-      <form onSubmit={empleoForm.handleSubmit(handleSubmit)}>
+      <form onSubmit={empleoForm.handleSubmit(handleSubmit)} noValidate>
         <Stack gap="sm">
           <TextInput
             label="Centro de trabajo"

@@ -88,7 +88,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
 
   return (
     <Card withBorder radius="lg" p="xl">
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="lg">
 
           <Group justify="space-between" wrap="nowrap">

@@ -216,7 +216,7 @@ export function UsuarioDrawer({ opened, onClose, usuario }: Props) {
       padding="lg"
     >
       <ScrollArea h="calc(100vh - 80px)">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="md">
             {/* MODO EDITAR — directo a configurar */}
             {modoEditar && usuario && (

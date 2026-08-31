@@ -72,7 +72,7 @@ export function AgregarAlergiaModal({
       size="sm"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <Controller
             name="tipo"

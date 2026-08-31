@@ -29,7 +29,7 @@ export function LoginForm() {
   });
 
   return (
-    <form onSubmit={handleSubmit((v) => mutate(v))}>
+    <form onSubmit={handleSubmit((v) => mutate(v))} noValidate>
       <Stack gap="md">
         <TextInput
           label="Usuario"

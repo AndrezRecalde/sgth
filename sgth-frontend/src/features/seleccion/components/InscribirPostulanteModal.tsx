@@ -155,7 +155,7 @@ export function InscribirPostulanteModal({
       size="xl"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="md">
           <Alert
             color="blue"

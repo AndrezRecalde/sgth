@@ -60,7 +60,7 @@ export function AjustarInventarioModal({
       size="sm"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
           <Group justify="space-between">
             <Text size="sm" fw={600}>{medicina.nombre}</Text>

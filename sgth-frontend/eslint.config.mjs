@@ -13,6 +13,25 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["**/*.tsx"],
+    rules: {
+      // La validación de formularios la hace Zod vía zodResolver. El prop
+      // `required` de Mantine llega al DOM como atributo `required` real, y
+      // sin `noValidate` el navegador cancela el evento `submit` antes de que
+      // React Hook Form llegue a ejecutarse: no se dispara la petición y no se
+      // renderiza ningún mensaje de error.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            'JSXOpeningElement[name.name="form"]:not(:has(JSXAttribute[name.name="noValidate"], JSXSpreadAttribute))',
+          message:
+            "Todo <form> debe llevar noValidate: la validación la hace Zod (zodResolver), no el navegador. Sin él, el `required` de Mantine bloquea el submit y los mensajes de error nunca se pintan.",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -42,7 +42,7 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
 
   return (
     <Modal opened={opened} onClose={onClose} title="Agregar examen complementario" size="md" radius="xl">
-      <form onSubmit={examenForm.handleSubmit(handleSubmit)}>
+      <form onSubmit={examenForm.handleSubmit(handleSubmit)} noValidate>
         <Stack gap="sm">
           <Controller
             name="tipo"
