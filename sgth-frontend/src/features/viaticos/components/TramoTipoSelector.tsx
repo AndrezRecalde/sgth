@@ -17,7 +17,6 @@ interface Props {
   control: Control<TramoFormData>;
   errors: FieldErrors<TramoFormData>;
   esPrimerTramo: boolean;
-  tipoTramo: string | null | undefined;
 }
 
 const OPCIONES = [
@@ -45,7 +44,6 @@ export function TramoTipoSelector({
   control,
   errors,
   esPrimerTramo,
-  tipoTramo,
 }: Props) {
   if (esPrimerTramo) {
     return (

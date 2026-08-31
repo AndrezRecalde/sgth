@@ -218,7 +218,7 @@ export function PermisoModal({ opened, onClose }: Props) {
 
       {/* ── PASO 0: Formulario ── */}
       {paso === 0 && (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="sm">
             {/* Unidad administrativa */}
             <Controller

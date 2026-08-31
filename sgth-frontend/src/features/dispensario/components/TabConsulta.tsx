@@ -9,7 +9,7 @@ import {
   Text,
   Badge,
   Card,
-  Divider,
+
   Tooltip,
 } from "@mantine/core";
 import { useForm, Controller } from "react-hook-form";
@@ -99,7 +99,11 @@ export function TabConsulta({
   const contained = useContainedInput();
   const registrar = useRegistrarConsulta();
   const actualizar = useActualizarConsulta();
-  const [modoEdicion, setModoEdicion] = useState(!consultaPrevia);
+  // Se edita cuando el médico lo pide explícitamente o cuando todavía no hay
+  // consulta previa. Derivarlo evita el efecto que antes lo apagaba al llegar
+  // la consulta del servidor.
+  const [editando, setEditando] = useState(false);
+  const modoEdicion = editando || !consultaPrevia;
   const [cie10Principal, setCie10Principal] = useState<DiagnosticoCie10 | null>(
     null,
   );
@@ -129,7 +133,6 @@ export function TabConsulta({
 
   useEffect(() => {
     if (consultaPrevia) {
-      setModoEdicion(false);
       reset({
         tipo_atencion:
           (consultaPrevia.tipo_atencion as ConsultaMedicaFormData["tipo_atencion"]) ??
@@ -165,7 +168,7 @@ export function TabConsulta({
             notas_medico: values.notas_medico || null,
           },
         },
-        { onSuccess: () => setModoEdicion(false) },
+        { onSuccess: () => setEditando(false) },
       );
     } else {
       const ahora = new Date();
@@ -226,7 +229,7 @@ export function TabConsulta({
               variant="subtle"
               color="blue"
               leftSection={<IconEdit size={13} />}
-              onClick={() => setModoEdicion(true)}
+              onClick={() => setEditando(true)}
             >
               Editar
             </Button>
@@ -312,7 +315,7 @@ export function TabConsulta({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form noValidate onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="sm" p="md">
         {consultaPrevia && (
           <Group justify="flex-end">
@@ -321,7 +324,7 @@ export function TabConsulta({
               variant="subtle"
               color="gray"
               leftSection={<IconX size={13} />}
-              onClick={() => setModoEdicion(false)}
+              onClick={() => setEditando(false)}
             >
               Cancelar edición
             </Button>

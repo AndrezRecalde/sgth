@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, Group, Text, Divider, Alert } from "@mantine/core";
-import type { Viatico, CategoriaFactura } from "@/types/api";
-import { useCategoriasFactura } from "../hooks/useViaticos";
+import type { Viatico } from "@/types/api";
 
 interface Props {
   viatico: Viatico;
@@ -10,16 +9,11 @@ interface Props {
 }
 
 export function FacturasResumen({ viatico, totalFacturas }: Props) {
-  const { data: categoriasData = [] } = useCategoriasFactura();
 
   const montoAsignado = Number(viatico.monto_calculado ?? 0);
   const anticipo = Number(viatico.monto_anticipo ?? 0);
   const monto70 = Math.round(montoAsignado * 0.7 * 100) / 100;
   const modalidad = (viatico.modalidad_anticipo as string) ?? "sin_anticipo";
-
-  const idsViatico = (categoriasData as CategoriaFactura[])
-    .filter((c) => c.grupo === "viatico")
-    .map((c) => Number(c.id));
 
   const diferencia = modalidad === "sin_anticipo" ? 0 : monto70 - totalFacturas;
 

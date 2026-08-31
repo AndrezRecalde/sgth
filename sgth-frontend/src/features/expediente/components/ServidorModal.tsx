@@ -192,7 +192,7 @@ export function ServidorModal({ opened, onClose, servidor }: Props) {
         )}
       </Stepper>
 
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
         {step === 0 && <ServidorFormPersonal form={form} />}
         {step === 1 && <ServidorFormContacto form={form} />}
         {step === 2 && isEditing && (

@@ -67,7 +67,7 @@ export default function NuevaConvocatoriaPage() {
   const [tipoSel, setTipoSel] = useState('externa')
 
   const {
-    control, register, handleSubmit, setValue,
+    control, register, handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -94,7 +94,7 @@ export default function NuevaConvocatoriaPage() {
         icon={<IconSpeakerphone size={24} />}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <Card withBorder radius="lg" p="lg">
             <Stack gap="md">

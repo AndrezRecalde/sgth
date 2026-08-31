@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionIcon, Menu } from "@mantine/core";
-import { IconDots, IconDotsVertical } from "@tabler/icons-react";
+import { IconDots } from "@tabler/icons-react";
 
 export type TableAction = {
   label: string;

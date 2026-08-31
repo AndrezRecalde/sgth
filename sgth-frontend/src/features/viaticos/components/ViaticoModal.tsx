@@ -174,7 +174,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
       radius={isMobile ? 0 : "xl"}
       closeOnClickOutside={false}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           {servidor && (
             <ViaticoServidorCard

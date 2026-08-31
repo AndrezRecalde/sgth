@@ -1,7 +1,5 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
-import type { InventarioMedicina } from './inventarioMedicinaService'
-
 export interface ItemReceta {
   id?:                     number
   inventario_medicina_id:  number

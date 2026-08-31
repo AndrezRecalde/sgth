@@ -26,7 +26,11 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { registrar } = useCumplimientoMutations()
-  const [cumplimientoId, setCumplimientoId] = useState<number | null>(fila?.cumplimiento?.id ?? null)
+  // Id del cumplimiento recién registrado en esta sesión del modal; mientras
+  // sea null vale el que ya trae la fila. Derivarlo evita reasignarlo desde un
+  // efecto cada vez que cambia `fila`.
+  const [registradoId, setRegistradoId] = useState<number | null>(null)
+  const cumplimientoId = registradoId ?? fila?.cumplimiento?.id ?? null
 
   const {
     register, control, handleSubmit, reset,
@@ -40,7 +44,6 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
   })
 
   useEffect(() => {
-    setCumplimientoId(fila?.cumplimiento?.id ?? null)
     reset({
       estado: (fila?.cumplimiento?.estado as CumplimientoFormData['estado']) ?? 'en_proceso',
       observaciones: fila?.cumplimiento?.observaciones ?? '',
@@ -49,7 +52,7 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
 
   const handleClose = () => {
     reset()
-    setCumplimientoId(null)
+    setRegistradoId(null)
     onClose()
   }
 
@@ -60,7 +63,7 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
       periodo,
       ...values,
     }).then((resultado) => {
-      setCumplimientoId(resultado?.id ?? null)
+      setRegistradoId(resultado?.id ?? null)
     }).catch(() => {})
   }
 
@@ -73,7 +76,7 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           {fila && (
             <Text size="sm" c="dimmed">

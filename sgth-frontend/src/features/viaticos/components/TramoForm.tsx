@@ -234,7 +234,7 @@ export function TramoForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form noValidate onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="sm">
         {/* Origen */}
         <Divider label="Origen" labelPosition="left" />
@@ -413,7 +413,6 @@ export function TramoForm({
           control={control}
           errors={errors}
           esPrimerTramo={esPrimerTramo}
-          tipoTramo={tipoTramo}
         />
 
         {/* Botones */}

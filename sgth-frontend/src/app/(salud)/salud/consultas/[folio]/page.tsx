@@ -62,6 +62,9 @@ export default function ConsultaDetallePage({ params }: Props) {
 
   return (
     <AtencionMedicaPanel
+      // Cada turno arranca con su propio estado (pestaña activa, consulta en
+      // curso); antes se reiniciaba con un efecto dentro del panel.
+      key={turno.id}
       turno={turno}
       historiaClinicaId={turno.historia_clinica_id ?? 0}
       totalEnEspera={totalEnEspera}

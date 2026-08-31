@@ -22,18 +22,6 @@ function getSubsistema(pathname: string): Subsistema {
   return "sgth";
 }
 
-const SUBSISTEMA_LABELS: Record<Subsistema, string> = {
-  sgth: "Talento Humano",
-  salud: "Dispensario Médico",
-  portal: "Portal Servidor",
-};
-
-const SUBSISTEMA_COLORS: Record<Subsistema, string> = {
-  sgth: "var(--mantine-color-emerald-6)",
-  salud: "var(--mantine-color-blue-6)",
-  portal: "var(--mantine-color-violet-6)",
-};
-
 export function Sidebar({ collapsed, onNavClick }: Props) {
   const { usuario } = useAuth();
   const pathname = usePathname();

@@ -17,7 +17,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import {
   usePlantillaDetalle,
   useEliminarCriterioPlantilla,
-  useAgregarCriterioPlantilla,
+
 } from '@/features/seleccion/hooks/usePlantilla'
 import { AgregarCriterioPlantillaModal } from
   '@/features/seleccion/components/AgregarCriterioPlantillaModal'

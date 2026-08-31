@@ -11,7 +11,7 @@ import {
   UnstyledButton,
   Switch,
   Tooltip,
-  Image,
+
   Indicator,
   Paper,
   Stack,

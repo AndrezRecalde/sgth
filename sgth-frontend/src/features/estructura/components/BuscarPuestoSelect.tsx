@@ -26,7 +26,7 @@ interface Props {
 }
 
 export function BuscarPuestoSelect({
-  label, value, onChange, required, error, description,
+  label, onChange, required, error, description,
 }: Props) {
   const contained  = useContainedInput()
   const combobox   = useCombobox()

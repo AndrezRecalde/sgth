@@ -84,7 +84,7 @@ export function UsuarioForm({ initialValues, onSubmit, isEditing }: Props) {
   }, [emailVal, rolesVal, servidorIdVal, cedulaVal, reset, initialValues?.roles])
 
   return (
-    <form id="usuario-form" onSubmit={handleSubmit(onSubmit)}>
+    <form noValidate id="usuario-form" onSubmit={handleSubmit(onSubmit)}>
       <Grid>
         {!isEditing && (
           <Grid.Col span={12}>

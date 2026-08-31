@@ -8,13 +8,13 @@ import {
 import {
   IconTrophy, IconMedal, IconMedal2,
   IconInfoCircle, IconSend,
-  IconCircleCheck,
+
 } from '@tabler/icons-react'
 import { useMemo } from 'react'
 import {
   usePostulantes,
   useEnviarAlDispensario,
-  useConfirmarGanador,
+
 } from '../hooks/useConvocatoria'
 import type { Postulante } from '../services/convocatoriaService'
 
@@ -74,7 +74,6 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria }: Props) {
   const { data: postulantes = [], isLoading } =
     usePostulantes(convocatoriaId)
   const enviar   = useEnviarAlDispensario(convocatoriaId)
-  const confirmar = useConfirmarGanador(convocatoriaId)
 
   const ranking = useMemo(() => {
     return [...postulantes]

@@ -1,7 +1,7 @@
 import api from '@/lib/axios'
 import type {
   ApiResponse,
-  PaginatedResponse,
+
   Usuario,
   UsuarioParams,
   UsuarioFormData,

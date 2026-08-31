@@ -97,7 +97,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
   return (
     <Box style={{ position: 'relative' }}>
       <LoadingOverlay visible={!isReady} zIndex={10} />
-      <form id="puesto-form" onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate id="puesto-form" onSubmit={handleSubmit(onSubmit)}>
         <Grid>
           <Grid.Col span={{ base: 12, sm: 8 }}>
             <Controller

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Drawer, Stack, Text, Badge, Group,
   Accordion, Checkbox, ScrollArea,
@@ -9,9 +9,8 @@ import {
 } from '@mantine/core'
 import { IconShieldCheck } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import { usePermisos }         from '../hooks/usePermisos'
+import { usePermisos, usePermisosUsuario } from '../hooks/usePermisos'
 import { useUsuarioMutations } from '../hooks/useUsuarioMutations'
-import { usuarioService }      from '../services/usuarioService'
 import type { Usuario, PermisoGrupo, PermisoItem } from '@/types/api'
 
 interface Props {
@@ -25,24 +24,25 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
   const { data: grupos = [] }   = usePermisos()
   const { sincronizarPermisos } = useUsuarioMutations()
 
-  const [permisosActivos, setPermisosActivos] = useState<string[]>([])
-  const [cargando,        setCargando]        = useState(false)
-  const [guardando,       setGuardando]       = useState(false)
+  // Permisos actuales del usuario, servidos por React Query. Antes se
+  // buscaban con un useEffect + setState propio, que duplicaba este hook.
+  const { data: permisosGuardados, isLoading: cargando } = usePermisosUsuario(
+    opened && usuario?.id ? Number(usuario.id) : null
+  )
 
-  // Cargar permisos actuales del usuario
-  useEffect(() => {
-    if (opened && usuario?.id) {
-      setCargando(true)
-      usuarioService.permisosUsuario(Number(usuario.id))
-        .then(permisos => {
-          setPermisosActivos(
-            (permisos ?? []).map((p: PermisoItem) => p.nombre)
-          )
-        })
-        .catch(() => setPermisosActivos([]))
-        .finally(() => setCargando(false))
-    }
-  }, [opened, usuario?.id])
+  // `edicion` es null mientras el usuario no toque nada: en ese caso se
+  // muestra lo que hay en el servidor. Al primer cambio pasa a contener la
+  // selección local, que es la que se envía al guardar.
+  const [edicion,   setEdicion]   = useState<string[] | null>(null)
+  const [guardando, setGuardando] = useState(false)
+
+  const permisosActivos = edicion
+    ?? (permisosGuardados ?? []).map((p: PermisoItem) => p.nombre)
+
+  const handleClose = () => {
+    setEdicion(null)
+    onClose()
+  }
 
   // Permisos cubiertos por roles del usuario
   const roles = (usuario?.roles as string[]) ?? []
@@ -58,11 +58,12 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
 
   const togglePermiso = (nombre: string) => {
     if (permisosCubiertos.has(nombre)) return
-    setPermisosActivos(prev =>
-      prev.includes(nombre)
-        ? prev.filter(p => p !== nombre)
-        : [...prev, nombre]
-    )
+    setEdicion(prev => {
+      const base = prev ?? permisosActivos
+      return base.includes(nombre)
+        ? base.filter(p => p !== nombre)
+        : [...base, nombre]
+    })
   }
 
   const handleGuardar = async () => {
@@ -75,7 +76,7 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
           p => !permisosCubiertos.has(p)
         ),
       })
-      onClose()
+      handleClose()
     } catch {}
     finally { setGuardando(false) }
   }
@@ -88,7 +89,7 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
   return (
     <Drawer
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title={
         <Group gap="xs">
           <ThemeIcon color="violet" variant="light" size="md" radius="md">
@@ -218,7 +219,7 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
 
       <Group justify="flex-end" pt="md"
         style={{ borderTop: '1px solid var(--mantine-color-gray-2)' }}>
-        <Button variant="default" onClick={onClose}>
+        <Button variant="default" onClick={handleClose}>
           Cancelar
         </Button>
         <Button

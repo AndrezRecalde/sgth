@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Card, Group, Text, Stack, Badge,
+  Card, Group, Text, Stack,
   ThemeIcon, SimpleGrid, Skeleton,
 } from '@mantine/core'
 import { IconHistory, IconInfoCircle } from '@tabler/icons-react'

@@ -92,12 +92,12 @@ export function EditarItemRecetaModal({
       size="sm"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <Controller
             name="cantidad_prescrita"
             control={control}
-            rules={{ required: true, min: 1 }}
+            rules={{ required: 'Requerido', min: { value: 1, message: 'Mínimo 1' } }}
             render={({ field }) => (
               <NumberInput
                 label="Cantidad"
@@ -105,6 +105,7 @@ export function EditarItemRecetaModal({
                 {...contained}
                 value={field.value}
                 onChange={(v) => field.onChange(Number(v) || 1)}
+                error={errors.cantidad_prescrita?.message}
               />
             )}
           />
@@ -112,19 +113,22 @@ export function EditarItemRecetaModal({
             label="Dosis"
             placeholder="Ej: 1 tableta"
             {...contained}
-            {...register('dosis', { required: true })}
+            {...register('dosis', { required: 'Requerido' })}
+            error={errors.dosis?.message}
           />
           <TextInput
             label="Frecuencia"
             placeholder="Ej: Cada 8 horas"
             {...contained}
-            {...register('frecuencia', { required: true })}
+            {...register('frecuencia', { required: 'Requerido' })}
+            error={errors.frecuencia?.message}
           />
           <TextInput
             label="Duración"
             placeholder="Ej: 5 días"
             {...contained}
-            {...register('duracion', { required: true })}
+            {...register('duracion', { required: 'Requerido' })}
+            error={errors.duracion?.message}
           />
           <Textarea
             label="Observaciones (opcional)"

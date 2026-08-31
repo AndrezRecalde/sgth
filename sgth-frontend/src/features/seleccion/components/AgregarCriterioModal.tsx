@@ -1,14 +1,14 @@
 'use client'
 
 import {
-  Modal, Stack, TextInput, Select,
+  Modal, Stack, TextInput,
   NumberInput, Textarea, Button,
   Group, Text, ActionIcon, Card,
   SegmentedControl, Divider,
 } from '@mantine/core'
 import { IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -60,7 +60,7 @@ export function AgregarCriterioModal({
   ])
 
   const {
-    control, register, handleSubmit, watch, reset,
+    control, register, handleSubmit, reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -70,7 +70,7 @@ export function AgregarCriterioModal({
     },
   })
 
-  const tipoInput = watch('tipo_input') as TipoInput
+  const tipoInput = useWatch({ control, name: 'tipo_input' }) as TipoInput
 
   const handleClose = () => {
     reset()
@@ -115,7 +115,7 @@ export function AgregarCriterioModal({
       size="lg"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <Stack gap="xs">
             <Text size="xs" fw={600} c="dimmed" tt="uppercase"

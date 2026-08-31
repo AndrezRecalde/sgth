@@ -8,7 +8,7 @@ import {
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
 import {
-  IconUsers, IconCheck, IconInfoCircle,
+  IconCheck, IconInfoCircle,
 } from '@tabler/icons-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -105,7 +105,7 @@ export function InscribirPostulanteModal({
       size="xl"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <Alert
             color="blue"

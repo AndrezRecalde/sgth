@@ -3,7 +3,7 @@
 import { Stack, TextInput, Select, Textarea, Group, Button, Modal } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -51,6 +51,8 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
     },
   })
 
+  const fechaExamen = useWatch({ control: examenForm.control, name: 'fecha_examen' })
+
   const handleSubmit = (values: ExamenForm) => {
     onAgregar(values)
     examenForm.reset()
@@ -59,7 +61,7 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
 
   return (
     <Modal opened={opened} onClose={onClose} title="Agregar examen complementario" size="md" radius="xl">
-      <form onSubmit={examenForm.handleSubmit(handleSubmit)}>
+      <form noValidate onSubmit={examenForm.handleSubmit(handleSubmit)}>
         <Stack gap="sm">
           <Controller
             name="tipo"
@@ -95,7 +97,7 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
             valueFormat="DD/MM/YYYY"
             clearable
             {...contained}
-            value={toDate(examenForm.watch('fecha_examen'))}
+            value={toDate(fechaExamen)}
             onChange={(d) =>
               examenForm.setValue('fecha_examen', fromDate(d as Date | null))
             }

@@ -55,7 +55,7 @@ interface SortableItemProps {
 }
 
 function SortableItem({
-  actividad, index, puestoId, onEliminar, onToggle,
+  actividad, index, onEliminar, onToggle,
 }: SortableItemProps) {
   const {
     attributes, listeners, setNodeRef,

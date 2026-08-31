@@ -29,7 +29,11 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { registrarSeguimiento } = useProgramaDrogasMutations()
-  const [seguimientoId, setSeguimientoId] = useState<number | null>(fila?.seguimiento?.id ?? null)
+  // Id del seguimiento recién registrado en esta sesión del modal; mientras
+  // sea null vale el que ya trae la fila. Derivarlo evita reasignarlo desde un
+  // efecto cada vez que cambia `fila`.
+  const [registradoId, setRegistradoId] = useState<number | null>(null)
+  const seguimientoId = registradoId ?? fila?.seguimiento?.id ?? null
 
   const {
     register, control, handleSubmit, reset,
@@ -44,7 +48,6 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
   })
 
   useEffect(() => {
-    setSeguimientoId(fila?.seguimiento?.id ?? null)
     reset({
       estado: (fila?.seguimiento?.estado as SeguimientoProgramaFormData['estado']) ?? 'en_proceso',
       fecha_ejecucion: fila?.seguimiento?.fecha_ejecucion ?? null,
@@ -54,7 +57,7 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
 
   const handleClose = () => {
     reset()
-    setSeguimientoId(null)
+    setRegistradoId(null)
     onClose()
   }
 
@@ -65,7 +68,7 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
       periodo,
       ...values,
     }).then((resultado) => {
-      setSeguimientoId(resultado?.id ?? null)
+      setRegistradoId(resultado?.id ?? null)
     }).catch(() => {})
   }
 
@@ -78,7 +81,7 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           {fila && (
             <Text size="sm" c="dimmed">

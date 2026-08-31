@@ -146,7 +146,7 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
       fullScreen={isMobile}
       radius={isMobile ? 0 : "xl"}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <Controller
             name="tipo_documento"

@@ -46,7 +46,7 @@ function formatFecha(fecha: string): string {
 }
 
 export function TabResultados({
-  turno, consulta, historiaClinicaId,
+  consulta, historiaClinicaId,
 }: Props) {
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)

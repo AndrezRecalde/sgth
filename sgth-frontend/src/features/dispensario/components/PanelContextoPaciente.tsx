@@ -2,8 +2,8 @@
 
 import {
   Card, Stack, Group, Text, Avatar,
-  Badge, Divider, Skeleton, ThemeIcon,
-  ActionIcon, Textarea, Button,
+  Badge, Divider, Skeleton,
+  ActionIcon, Textarea,
   Collapse,
 } from '@mantine/core'
 import {

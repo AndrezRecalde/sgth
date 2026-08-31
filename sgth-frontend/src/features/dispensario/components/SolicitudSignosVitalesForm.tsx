@@ -6,7 +6,7 @@ import {
   Textarea, Text, Card, Avatar, Badge,
   Divider, Alert,
 } from '@mantine/core'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   IconCheck, IconUser, IconScale, IconHeartbeat,
@@ -52,7 +52,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
   )?.label ?? solicitud.tipo_evento
 
   const {
-    control, handleSubmit, watch,
+    control, handleSubmit,
     formState: { errors },
   } = useForm<SolicitudSignosVitalesFormData>({
     resolver: zodResolver(solicitudSignosVitalesSchema),
@@ -70,8 +70,8 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
     } as never,
   })
 
-  const peso  = watch('peso_kg')
-  const talla = watch('talla_cm')
+  const peso  = useWatch({ control, name: 'peso_kg' })
+  const talla = useWatch({ control, name: 'talla_cm' })
 
   const imc = useMemo(
     () => calcularImc(peso, talla),
@@ -88,7 +88,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
 
   return (
     <Card withBorder radius="lg" p="xl">
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="lg">
 
           <Group justify="space-between" wrap="nowrap">

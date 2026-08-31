@@ -2,7 +2,7 @@
 
 import { Text, Badge, Group } from '@mantine/core'
 import {
-  IconFileText, IconUpload, IconEye,
+  IconFileText, IconEye,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'

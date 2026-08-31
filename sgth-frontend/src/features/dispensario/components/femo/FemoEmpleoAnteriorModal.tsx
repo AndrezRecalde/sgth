@@ -6,7 +6,7 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -54,7 +54,11 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
     },
   })
 
-  const tipoEvento = empleoForm.watch('tipo_evento_laboral')
+  const tipoEvento      = useWatch({ control: empleoForm.control, name: 'tipo_evento_laboral' })
+  const fechaInicio     = useWatch({ control: empleoForm.control, name: 'fecha_inicio' })
+  const fechaFin        = useWatch({ control: empleoForm.control, name: 'fecha_fin' })
+  const calificadoIess  = useWatch({ control: empleoForm.control, name: 'calificado_iess' })
+  const fechaEvento     = useWatch({ control: empleoForm.control, name: 'fecha_evento' })
 
   const handleSubmit = (values: EmpleoAnteriorForm) => {
     onAgregar(values)
@@ -64,7 +68,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
 
   return (
     <Modal opened={opened} onClose={onClose} title="Agregar empleo anterior" size="md" radius="xl">
-      <form onSubmit={empleoForm.handleSubmit(handleSubmit)}>
+      <form noValidate onSubmit={empleoForm.handleSubmit(handleSubmit)}>
         <Stack gap="sm">
           <TextInput
             label="Centro de trabajo"
@@ -87,7 +91,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                 valueFormat="DD/MM/YYYY"
                 clearable
                 {...contained}
-                value={toDate(empleoForm.watch('fecha_inicio'))}
+                value={toDate(fechaInicio)}
                 onChange={(d) =>
                   empleoForm.setValue('fecha_inicio', fromDate(d as Date | null))
                 }
@@ -99,7 +103,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                 valueFormat="DD/MM/YYYY"
                 clearable
                 {...contained}
-                value={toDate(empleoForm.watch('fecha_fin'))}
+                value={toDate(fechaFin)}
                 onChange={(d) =>
                   empleoForm.setValue('fecha_fin', fromDate(d as Date | null))
                 }
@@ -132,7 +136,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
               <Group grow>
                 <Checkbox
                   label="Calificado por IESS"
-                  checked={empleoForm.watch('calificado_iess') ?? false}
+                  checked={calificadoIess ?? false}
                   onChange={(e) =>
                     empleoForm.setValue('calificado_iess', e.currentTarget.checked)
                   }
@@ -142,7 +146,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                   valueFormat="DD/MM/YYYY"
                   clearable
                   {...contained}
-                  value={toDate(empleoForm.watch('fecha_evento'))}
+                  value={toDate(fechaEvento)}
                   onChange={(d) =>
                     empleoForm.setValue('fecha_evento', fromDate(d as Date | null))
                   }

@@ -13,7 +13,7 @@ import {
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
 import { useState } from "react";
-import { IconUpload, IconCheck } from "@tabler/icons-react";
+import { IconCheck } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useSubirResultado } from "../hooks/useResultadoMedico";
 import { TIPO_RESULTADO_OPTIONS } from "../services/resultadoMedicoService";

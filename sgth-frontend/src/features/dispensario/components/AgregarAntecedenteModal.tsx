@@ -25,10 +25,6 @@ const TIPO_PERSONAL_OPTIONS = [
   { value: 'otro',        label: 'Otro'         },
 ]
 
-const TIPO_FAMILIAR_OPTIONS = [
-  { value: 'familiar', label: 'Familiar' },
-]
-
 type FormData = {
   tipo:              string
   descripcion:       string
@@ -74,7 +70,7 @@ export function AgregarAntecedenteModal({
       size="sm"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           {!esFamiliar && (
             <Controller

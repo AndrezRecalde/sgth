@@ -10,7 +10,7 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  IconCheck, IconPlus, IconInfoCircle,
+  IconCheck, IconInfoCircle,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarAdquisicion } from '../hooks/useAdquisicion'
@@ -97,7 +97,7 @@ export function AdquisicionForm({ onCreada }: Props) {
   return (
     <>
       <Card withBorder radius="lg" p="xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="md">
             <Group grow>
               <Controller

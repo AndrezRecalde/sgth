@@ -3,9 +3,10 @@
 import {
   Modal, Stack, Textarea,
   Button, Group, Text, Alert,
-  Badge, NumberInput,
+  Badge,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
+import type { DatesRangeValue } from '@mantine/dates'
 import '@mantine/dates/styles.css'
 import { useState } from 'react'
 import { IconCheck, IconAlertCircle } from '@tabler/icons-react'
@@ -68,7 +69,7 @@ export function EmitirCertificadoModal({
   }
 
   const handleRangoChange = (
-    value: any
+    value: DatesRangeValue
   ) => {
     const inicio = toDateObj(value[0])
     const fin    = toDateObj(value[1])

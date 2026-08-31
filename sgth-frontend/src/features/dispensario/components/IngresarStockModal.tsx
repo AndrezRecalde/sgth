@@ -56,7 +56,7 @@ export function IngresarStockModal({
       size="sm"
       radius="xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <Group justify="space-between">
             <Text size="sm" fw={600}>{medicina.nombre}</Text>

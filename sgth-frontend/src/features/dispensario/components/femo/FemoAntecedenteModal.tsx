@@ -30,7 +30,7 @@ export function FemoAntecedenteModal({ opened, onClose, onAgregar }: Props) {
 
   return (
     <Modal opened={opened} onClose={onClose} title="Agregar antecedente" size="sm" radius="xl">
-      <form onSubmit={antForm.handleSubmit(handleSubmit)}>
+      <form noValidate onSubmit={antForm.handleSubmit(handleSubmit)}>
         <Stack gap="sm">
           <Controller
             name="tipo"

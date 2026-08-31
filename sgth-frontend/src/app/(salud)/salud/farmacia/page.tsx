@@ -21,7 +21,6 @@ import {
 } from "@tabler/icons-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SgthTable } from "@/components/ui/SgthTable";
-import { useContainedInput } from "@/hooks/useContainedInput";
 import {
   useInventarioMedicinas,
   useInventarioMutations,
@@ -35,7 +34,6 @@ import { getMedicinasColumns } from "@/features/dispensario/components/medicinas
 import type { InventarioMedicina } from "@/features/dispensario/services/inventarioMedicinaService";
 
 export default function FarmaciaPage() {
-  const contained = useContainedInput();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");

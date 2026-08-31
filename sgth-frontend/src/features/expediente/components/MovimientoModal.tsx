@@ -135,7 +135,7 @@ export function MovimientoModal({ opened, onClose, servidorId, tipoNombramiento 
           personal formal, o no tiene contrato vigente registrado.
         </Alert>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="sm">
             <Controller
               name="tipo_movimiento"

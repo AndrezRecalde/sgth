@@ -86,7 +86,7 @@ export function ServidoresModal({ opened, onClose, viatico }: Props) {
       radius="xl"
       fullScreen={isMobile}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           {/* Titular — no editable */}
           <Card withBorder radius="md" p="xs" bg="blue.0">

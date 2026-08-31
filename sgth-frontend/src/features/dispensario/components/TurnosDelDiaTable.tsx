@@ -2,7 +2,7 @@
 
 import {
   Stack, Group, Text, Badge, Button,
-  ActionIcon, Tooltip,
+  ActionIcon,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css'
@@ -11,7 +11,6 @@ import {
   IconRefresh, IconEye, IconX,
 } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useTurnosDelDia, useAccionesTurno } from '../hooks/useAgenda'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
@@ -57,7 +56,6 @@ function fromDate(d: Date | string | null): string | undefined {
 }
 
 export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
-  const router = useRouter()
   const [rango, setRango] = useState<[Date | null, Date | null]>([null, null])
   const [filtroActivo, setFiltroActivo] =
     useState<{ fecha_desde?: string; fecha_hasta?: string } | undefined>(undefined)

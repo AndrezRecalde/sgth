@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Group, Stack, Text, Popover,
+  Group, Stack, Popover,
   TextInput, Button, UnstyledButton,
   Divider,
 } from '@mantine/core'

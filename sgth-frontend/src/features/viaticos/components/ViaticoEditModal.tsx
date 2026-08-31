@@ -119,7 +119,7 @@ export function ViaticoEditModal({
       fullScreen={isMobile}
       closeOnClickOutside={false}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <Grid>
             <Grid.Col span={{ base: 12, sm: 6 }}>

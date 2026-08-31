@@ -7,7 +7,7 @@ import {
 import { IconPill, IconPlus } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { recetaService } from '../services/recetaService'
 import { RecetaModal } from './RecetaModal'
 import { EditarItemRecetaModal } from './EditarItemRecetaModal'
@@ -151,7 +151,6 @@ function ItemsRecetaTable({
 }
 
 export function TabReceta({ turno, consulta }: Props) {
-  const qc = useQueryClient()
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const emitir = useEmitirReceta(consulta.id)

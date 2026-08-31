@@ -27,7 +27,7 @@ export function CambiarPasswordForm() {
   })
 
   return (
-    <form onSubmit={handleSubmit((v) => mutate(v))}>
+    <form noValidate onSubmit={handleSubmit((v) => mutate(v))}>
       <Stack gap="md">
         <PasswordInput
           label="Nueva contraseña"

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Stack, Group, Badge, Text, Button,
+  Stack, Group, Badge, Text,
 } from '@mantine/core'
 import {
   IconPill, IconCheck, IconEye,

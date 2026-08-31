@@ -108,7 +108,7 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
       title={isEditing ? "Editar título o capacitación" : "Registrar título o capacitación"}
       size="md" fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="sm">
           <Controller name="tipo_estudio" control={control}
             render={({ field }) => (

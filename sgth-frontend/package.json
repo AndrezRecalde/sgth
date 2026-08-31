@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings=0",
     "types:generate": "openapi-typescript openapi.yaml -o src/types/api.generated.ts",
     "types:sync": "cd ../sgth-backend && php artisan scramble:export --path=storage/app/openapi.yaml && copy storage\\app\\openapi.yaml ..\\sgth-frontend\\openapi.yaml && cd ..\\sgth-frontend && npm run types:generate"
   },

@@ -10,8 +10,8 @@ import {
 import {
   IconSpeakerphone, IconArrowLeft,
   IconUsers, IconWorldUpload,
-  IconCalendar, IconBriefcase,
-  IconCheck, IconPlus,
+  IconCalendar,
+  IconPlus,
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'

@@ -22,7 +22,6 @@ import {
   IconUsers,
   IconInfoCircle,
 } from "@tabler/icons-react";
-import { useContainedInput } from "@/hooks/useContainedInput";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
@@ -50,7 +49,6 @@ function formatDias(v: number | string | null | undefined): string {
 }
 
 export function PeriodosVacacionesTab() {
-  const contained = useContainedInput();
   const [servidorSelId, setServidorSelId] = useState<number | null>(null);
   const [anio, setAnio] = useState<number>(new Date().getFullYear());
 

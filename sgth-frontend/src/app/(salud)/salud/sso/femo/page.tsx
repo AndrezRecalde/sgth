@@ -1,13 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import {
-  Stack, Group, Badge, Text,
+  Stack, Badge, Text,
 } from '@mantine/core'
 import {
   IconClipboardHeart, IconEye,
 } from '@tabler/icons-react'
-import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SgthTable } from '@/components/ui/SgthTable'

@@ -3,10 +3,10 @@ import type { PuestoFormData } from '../schemas/puesto.schema'
 import type { ExtensionFormData } from '../schemas/extension.schema'
 import type {
   Puesto,
-  ExtensionTelefonica,
+
   ExtensionConRelaciones,
   ApiResponse,
-  PaginatedResponse,
+
   PuestoParams,
   ExtensionTelefonicaParams,
   PuestoConRelaciones,

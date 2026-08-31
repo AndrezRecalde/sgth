@@ -86,7 +86,7 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
       radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <Group align="flex-end" wrap="nowrap">
             <TextInput
               label="Nombre del factor"

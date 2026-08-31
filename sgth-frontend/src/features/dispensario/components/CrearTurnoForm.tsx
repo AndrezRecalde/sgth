@@ -81,7 +81,7 @@ export function CrearTurnoForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form noValidate onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="md">
         <Card
           withBorder radius="md" p="sm"

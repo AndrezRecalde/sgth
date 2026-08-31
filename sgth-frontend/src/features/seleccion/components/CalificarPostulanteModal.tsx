@@ -2,16 +2,16 @@
 
 import {
   Modal, Stack, Text, NumberInput,
-  Textarea, Button, Group, Card,
+  Button, Group, Card,
   Badge, Progress, Divider, Alert,
   Radio, Checkbox, ScrollArea,
   Skeleton, ThemeIcon,
 } from '@mantine/core'
 import {
-  IconCheck, IconTrophy, IconInfoCircle,
+  IconCheck, IconInfoCircle,
   IconList, IconHash, IconCheckbox,
 } from '@tabler/icons-react'
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useCriterios,
@@ -162,7 +162,9 @@ function calcularPuntajeCriterio(
 export function CalificarPostulanteModal({
   opened, onClose, postulante, convocatoriaId,
 }: Props) {
-  const [estados, setEstados] = useState<EstadoCal>({})
+  // `edicion` es null mientras el evaluador no toque nada: hasta entonces se
+  // muestran las calificaciones que vienen del servidor (`estadosIniciales`).
+  const [edicion, setEdicion] = useState<EstadoCal | null>(null)
 
   const { data: criterios = [], isLoading: cargandoCriterios } =
     useCriterios(opened ? convocatoriaId : null)
@@ -177,12 +179,12 @@ export function CalificarPostulanteModal({
     convocatoriaId, postulante?.id ?? 0
   )
 
-  useEffect(() => {
-    if (!opened) return
-    if (cargandoCriterios || cargandoCal) return
-    if (criterios.length === 0) return
-
+  const estadosIniciales = useMemo<EstadoCal>(() => {
     const init: EstadoCal = {}
+    if (!opened) return init
+    if (cargandoCriterios || cargandoCal) return init
+    if (criterios.length === 0) return init
+
     criterios.forEach(c => {
       const prev = calPrevias?.calificaciones?.[c.id]
       if (prev) {
@@ -217,14 +219,31 @@ export function CalificarPostulanteModal({
         init[c.id] = {}
       }
     })
-    setEstados(init)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return init
   }, [
     opened,
     cargandoCriterios,
     cargandoCal,
-    postulante?.id,
+    criterios,
+    calPrevias,
   ])
+
+  const estados = edicion ?? estadosIniciales
+
+  const actualizarEstado = (
+    criterioId: number,
+    val: Partial<EstadoCal[number]>,
+  ) => {
+    setEdicion(prev => {
+      const base = prev ?? estadosIniciales
+      return { ...base, [criterioId]: { ...base[criterioId], ...val } }
+    })
+  }
+
+  const handleClose = () => {
+    setEdicion(null)
+    onClose()
+  }
 
   if (!postulante) return null
 
@@ -272,7 +291,7 @@ export function CalificarPostulanteModal({
       }
     }).flat()
 
-    guardar.mutate(items, { onSuccess: onClose })
+    guardar.mutate(items, { onSuccess: handleClose })
   }
 
   const isLoading = cargandoCriterios || cargandoCal
@@ -280,7 +299,7 @@ export function CalificarPostulanteModal({
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title="Calificar candidato"
       size="xl"
       radius="xl"
@@ -322,7 +341,7 @@ export function CalificarPostulanteModal({
             <Text size="xs">
               Esta convocatoria no tiene criterios de evaluación
               configurados. Configure los criterios primero en
-              el tab "Criterios".
+              el tab &quot;Criterios&quot;.
             </Text>
           </Alert>
         )}
@@ -372,12 +391,7 @@ export function CalificarPostulanteModal({
                         <CriterioInput
                           criterio={c}
                           estado={estados[c.id] ?? {}}
-                          onChange={(val) =>
-                            setEstados(prev => ({
-                              ...prev,
-                              [c.id]: { ...prev[c.id], ...val },
-                            }))
-                          }
+                          onChange={(val) => actualizarEstado(c.id, val)}
                         />
                         <Text size="xs" c="blue" ta="right">
                           Puntaje: {calcularPuntajeCriterio(
@@ -428,12 +442,7 @@ export function CalificarPostulanteModal({
                           <CriterioInput
                             criterio={c}
                             estado={estados[c.id] ?? {}}
-                            onChange={(val) =>
-                              setEstados(prev => ({
-                                ...prev,
-                                [c.id]: { ...prev[c.id], ...val },
-                              }))
-                            }
+                            onChange={(val) => actualizarEstado(c.id, val)}
                           />
                           <Text size="xs" c="orange" ta="right">
                             Puntaje: {calcularPuntajeCriterio(
@@ -459,7 +468,7 @@ export function CalificarPostulanteModal({
             </Text>
           </Text>
           <Group gap="xs">
-            <Button variant="default" onClick={onClose}>
+            <Button variant="default" onClick={handleClose}>
               Cancelar
             </Button>
             <Button

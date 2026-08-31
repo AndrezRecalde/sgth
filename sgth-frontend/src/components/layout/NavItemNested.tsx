@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   UnstyledButton,
   Group,
@@ -34,9 +34,14 @@ export function NavItemNested({ item, collapsed, onClick }: Props) {
 
   const [opened, setOpened] = useState(isChildActive);
 
-  useEffect(() => {
+  // Abrir el submenú cuando la navegación activa a un hijo. Se ajusta durante
+  // el render comparando con el valor anterior, en lugar de en un efecto: así
+  // no se dispara un render en cascada por cada cambio de ruta.
+  const [prevChildActive, setPrevChildActive] = useState(isChildActive);
+  if (isChildActive !== prevChildActive) {
+    setPrevChildActive(isChildActive);
     if (isChildActive) setOpened(true);
-  }, [isChildActive]);
+  }
 
   const content = (
     <UnstyledButton

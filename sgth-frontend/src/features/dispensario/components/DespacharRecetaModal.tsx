@@ -3,15 +3,15 @@
 import {
   Modal, Stack, Text, Group, Badge,
   NumberInput, Button, Alert, Card,
-  ThemeIcon, Divider,
+  ThemeIcon,
 } from '@mantine/core'
 import {
-  IconPill, IconAlertTriangle, IconCheck,
+  IconPill, IconCheck,
 } from '@tabler/icons-react'
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDespacharReceta } from '../hooks/useReceta'
-import type { RecetaMedica, ItemReceta } from '../services/recetaService'
+import type { RecetaMedica } from '../services/recetaService'
 
 interface Props {
   opened:  boolean
@@ -42,19 +42,22 @@ export function DespacharRecetaModal({
   const contained  = useContainedInput()
   const despachar  = useDespacharReceta()
 
-  const [cantidades, setCantidades] = useState<Record<number, number>>({})
+  // Por defecto se propone despachar todo lo que falta de cada ítem. Se
+  // calcula a partir de la receta en lugar de sembrarlo con un efecto.
+  const cantidadesIniciales = useMemo(() => {
+    const init: Record<number, number> = {}
+    receta?.items.forEach(item => {
+      const faltante = item.cantidad_prescrita -
+        (item.cantidad_despachada ?? 0)
+      init[item.id!] = faltante > 0 ? faltante : 0
+    })
+    return init
+  }, [receta])
 
-  useEffect(() => {
-    if (receta && opened) {
-      const init: Record<number, number> = {}
-      receta.items.forEach(item => {
-        const faltante = item.cantidad_prescrita -
-          (item.cantidad_despachada ?? 0)
-        init[item.id!] = faltante > 0 ? faltante : 0
-      })
-      setCantidades(init)
-    }
-  }, [receta, opened])
+  // `edicion` es null mientras el farmacéutico no cambie ninguna cantidad.
+  const [edicion, setEdicion] =
+    useState<Record<number, number> | null>(null)
+  const cantidades = edicion ?? cantidadesIniciales
 
   if (!receta) return null
 
@@ -76,14 +79,14 @@ export function DespacharRecetaModal({
     despachar.mutate(
       { id: receta.id, data: { items } },
       { onSuccess: () => {
-        setCantidades({})
+        setEdicion(null)
         onClose()
       }}
     )
   }
 
   const handleClose = () => {
-    setCantidades({})
+    setEdicion(null)
     onClose()
   }
 
@@ -138,8 +141,6 @@ export function DespacharRecetaModal({
                 (item.cantidad_despachada ?? 0)
               const estadoItem = ESTADO_ITEM[item.estado ?? 'pendiente']
                 ?? { label: item.estado, color: 'gray' }
-              const stockActual = item.inventario?.nombre
-                ? null : null
 
               return (
                 <Card key={item.id} withBorder radius="md" p="sm">
@@ -197,8 +198,8 @@ export function DespacharRecetaModal({
                         max={faltante}
                         {...contained}
                         value={cantidades[item.id!] ?? 0}
-                        onChange={(v) => setCantidades(prev => ({
-                          ...prev,
+                        onChange={(v) => setEdicion(prev => ({
+                          ...(prev ?? cantidadesIniciales),
                           [item.id!]: Math.min(Number(v) || 0, faltante),
                         }))}
                       />

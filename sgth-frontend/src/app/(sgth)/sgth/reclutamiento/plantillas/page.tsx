@@ -1,19 +1,18 @@
 'use client'
 
-import { useState } from 'react'
 import {
   Stack, Group, Badge, Text, Button,
-  Card, ActionIcon, Divider, Modal,
+  Card, ActionIcon, Modal,
   TextInput, Textarea, Select,
 } from '@mantine/core'
 import {
   IconTemplate, IconPlus,
-  IconEdit, IconTrash, IconEye,
+  IconEdit, IconTrash,
   IconCheck,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -36,14 +35,14 @@ export default function PlantillasPage() {
   const crear    = useCrearPlantilla()
   const eliminar = useEliminarPlantilla()
 
-  const { register, handleSubmit, reset, setValue, watch } =
+  const { register, handleSubmit, reset, setValue, control } =
     useForm<{
       nombre:        string
       descripcion:   string
       tipo_contrato: string
     }>()
 
-  const tipoContrato = watch('tipo_contrato')
+  const tipoContrato = useWatch({ control, name: 'tipo_contrato' })
 
   const onSubmit = (values: {
     nombre: string
@@ -163,7 +162,7 @@ export default function PlantillasPage() {
         size="md"
         radius="xl"
       >
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="sm">
             <TextInput
               label="Nombre de la plantilla"

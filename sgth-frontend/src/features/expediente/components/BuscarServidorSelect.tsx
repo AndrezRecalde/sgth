@@ -26,7 +26,7 @@ interface Props {
 }
 
 export function BuscarServidorSelect({
-  label, value, onChange, required, error,
+  label, onChange, required, error,
 }: Props) {
   const contained   = useContainedInput()
   const combobox    = useCombobox()
