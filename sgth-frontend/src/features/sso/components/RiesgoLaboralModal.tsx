@@ -5,7 +5,7 @@ import {
   Modal, Button, Group, Stack,
   Select, Textarea, Switch, Alert, Text,
 } from '@mantine/core'
-import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { useForm, useWatch, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconGauge } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
@@ -38,7 +38,6 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
     control,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<RiesgoLaboralFormData>({
     resolver: zodResolver(riesgoLaboralSchema) as Resolver<RiesgoLaboralFormData>,
@@ -81,9 +80,9 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
 
   const isPending = crear.isPending || editar.isPending
 
-  const nivelDeficiencia = watch('nivel_deficiencia')
-  const nivelExposicion = watch('nivel_exposicion')
-  const nivelConsecuencias = watch('nivel_consecuencias')
+  const nivelDeficiencia = useWatch({ control, name: 'nivel_deficiencia' })
+  const nivelExposicion = useWatch({ control, name: 'nivel_exposicion' })
+  const nivelConsecuencias = useWatch({ control, name: 'nivel_consecuencias' })
 
   const resultado = useMemo(
     () => calcularNtp330(nivelDeficiencia, nivelExposicion, nivelConsecuencias),

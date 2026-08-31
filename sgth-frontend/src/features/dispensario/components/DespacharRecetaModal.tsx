@@ -8,7 +8,7 @@ import {
 import {
   IconPill, IconCheck,
 } from '@tabler/icons-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDespacharReceta } from '../hooks/useReceta'
 import type { RecetaMedica } from '../services/recetaService'
@@ -44,17 +44,22 @@ export function DespacharRecetaModal({
 
   const [cantidades, setCantidades] = useState<Record<number, number>>({})
 
-  useEffect(() => {
-    if (receta && opened) {
-      const init: Record<number, number> = {}
-      receta.items.forEach(item => {
-        const faltante = item.cantidad_prescrita -
-          (item.cantidad_despachada ?? 0)
-        init[item.id!] = faltante > 0 ? faltante : 0
-      })
-      setCantidades(init)
-    }
-  }, [receta, opened])
+  // Las cantidades arrancan en lo que falta por despachar y a partir de ahí
+  // las edita quien despacha. Se resiembran al abrir el modal sobre otra
+  // receta, ajustando el estado durante el render en vez de en un efecto.
+  const semilla = receta && opened ? String(receta.id) : null
+  const [semillaAplicada, setSemillaAplicada] = useState<string | null>(null)
+
+  if (semilla !== semillaAplicada) {
+    setSemillaAplicada(semilla)
+    const init: Record<number, number> = {}
+    receta?.items.forEach(item => {
+      const faltante = item.cantidad_prescrita -
+        (item.cantidad_despachada ?? 0)
+      init[item.id!] = faltante > 0 ? faltante : 0
+    })
+    setCantidades(init)
+  }
 
   if (!receta) return null
 
@@ -138,9 +143,6 @@ export function DespacharRecetaModal({
                 (item.cantidad_despachada ?? 0)
               const estadoItem = ESTADO_ITEM[item.estado ?? 'pendiente']
                 ?? { label: item.estado, color: 'gray' }
-              const stockActual = item.inventario?.nombre
-                ? null : null
-
               return (
                 <Card key={item.id} withBorder radius="md" p="sm">
                   <Stack gap="xs">

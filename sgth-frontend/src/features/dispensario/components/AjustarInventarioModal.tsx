@@ -77,7 +77,7 @@ export function AjustarInventarioModal({
             <Text size="xs">
               Use esta opción solo para corregir el inventario
               tras un conteo físico. Para nuevas compras o
-              donaciones, use "Ingresar stock" o el módulo
+              donaciones, use &laquo;Ingresar stock&raquo; o el módulo
               de Adquisiciones.
             </Text>
           </Alert>

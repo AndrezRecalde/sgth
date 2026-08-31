@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Drawer, Stack, Text, Badge, Group,
   Accordion, Checkbox, ScrollArea,
@@ -9,9 +9,8 @@ import {
 } from '@mantine/core'
 import { IconShieldCheck } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import { usePermisos }         from '../hooks/usePermisos'
+import { usePermisos, usePermisosUsuario } from '../hooks/usePermisos'
 import { useUsuarioMutations } from '../hooks/useUsuarioMutations'
-import { usuarioService }      from '../services/usuarioService'
 import type { Usuario, PermisoGrupo, PermisoItem } from '@/types/api'
 
 interface Props {
@@ -25,24 +24,32 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
   const { data: grupos = [] }   = usePermisos()
   const { sincronizarPermisos } = useUsuarioMutations()
 
+  const usuarioId = usuario?.id ? Number(usuario.id) : null
+
+  // Los permisos del usuario ya tenían su hook de React Query; antes se
+  // pedían a mano desde un efecto que además llamaba a setState en su cuerpo.
+  const { data: permisosUsuario, isLoading: cargando } =
+    usePermisosUsuario(opened ? usuarioId : null)
+
   const [permisosActivos, setPermisosActivos] = useState<string[]>([])
-  const [cargando,        setCargando]        = useState(false)
   const [guardando,       setGuardando]       = useState(false)
 
-  // Cargar permisos actuales del usuario
-  useEffect(() => {
-    if (opened && usuario?.id) {
-      setCargando(true)
-      usuarioService.permisosUsuario(Number(usuario.id))
-        .then(permisos => {
-          setPermisosActivos(
-            (permisos ?? []).map((p: PermisoItem) => p.nombre)
-          )
-        })
-        .catch(() => setPermisosActivos([]))
-        .finally(() => setCargando(false))
-    }
-  }, [opened, usuario?.id])
+  // Los permisos cargados solo siembran la selección: a partir de ahí el
+  // usuario marca y desmarca. Se resiembra al abrir el panel sobre otro
+  // servidor, ajustando el estado durante el render en vez de en un efecto.
+  const semilla = opened && usuarioId !== null && permisosUsuario
+    ? String(usuarioId)
+    : null
+  const [semillaAplicada, setSemillaAplicada] = useState<string | null>(null)
+
+  if (semilla !== semillaAplicada) {
+    setSemillaAplicada(semilla)
+    setPermisosActivos(
+      semilla === null
+        ? []
+        : (permisosUsuario ?? []).map((p: PermisoItem) => p.nombre)
+    )
+  }
 
   // Permisos cubiertos por roles del usuario
   const roles = (usuario?.roles as string[]) ?? []

@@ -25,10 +25,6 @@ const TIPO_PERSONAL_OPTIONS = [
   { value: 'otro',        label: 'Otro'         },
 ]
 
-const TIPO_FAMILIAR_OPTIONS = [
-  { value: 'familiar', label: 'Familiar' },
-]
-
 type FormData = {
   tipo:              string
   descripcion:       string

@@ -2,7 +2,7 @@
 
 import { Stack, TextInput, Select, Textarea, Group, Button, Modal } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -32,6 +32,11 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
       fecha_examen:  null,
       tipo:          'laboratorio',
     },
+  })
+
+  const fechaExamen = useWatch({
+    control: examenForm.control,
+    name: 'fecha_examen',
   })
 
   const handleSubmit = (values: ExamenForm) => {
@@ -78,7 +83,7 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
             valueFormat="DD/MM/YYYY"
             clearable
             {...contained}
-            value={toDateValue(examenForm.watch('fecha_examen'))}
+            value={toDateValue(fechaExamen)}
             onChange={(d) =>
               examenForm.setValue('fecha_examen', fromDateValueOrNull(d as Date | null))
             }

@@ -66,8 +66,10 @@ export function EmitirCertificadoModal({
     return new Date(y, m - 1, d)
   }
 
+  // Mantine entrega el rango como [inicio, fin]; cada extremo puede ser un
+  // Date, la cadena ISO del DatePickerInput, o null si aún no se ha elegido.
   const handleRangoChange = (
-    value: any
+    value: [Date | string | null, Date | string | null]
   ) => {
     const inicio = toDateObj(value[0])
     const fin    = toDateObj(value[1])

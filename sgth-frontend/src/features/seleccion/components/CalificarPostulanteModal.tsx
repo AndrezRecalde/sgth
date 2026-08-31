@@ -11,7 +11,7 @@ import {
   IconCheck, IconInfoCircle,
   IconList, IconHash, IconCheckbox,
 } from '@tabler/icons-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useCriterios,
@@ -194,10 +194,24 @@ export function CalificarPostulanteModal({
     convocatoriaId, postulante?.id ?? 0
   )
 
-  useEffect(() => {
-    if (!opened) return
-    if (cargandoCriterios || cargandoCal) return
-    if (criterios.length === 0) return
+  // Las calificaciones previas solo siembran el formulario; a partir de ahí
+  // las edita el evaluador. Se resiembran al abrir el modal sobre otro
+  // postulante, ajustando el estado durante el render en vez de en un efecto:
+  // hacerlo en un efecto reescribía lo ya tecleado en cada refresco de la
+  // consulta.
+  const semilla = opened && !cargandoCriterios && !cargandoCal
+    && criterios.length > 0
+    ? String(postulante?.id ?? '')
+    : null
+  const [semillaAplicada, setSemillaAplicada] = useState<string | null>(null)
+
+  if (semilla !== semillaAplicada) {
+    setSemillaAplicada(semilla)
+    sembrarEstados()
+  }
+
+  function sembrarEstados() {
+    if (semilla === null) { setEstados({}); return }
 
     const init: EstadoCal = {}
     criterios.forEach(c => {
@@ -235,13 +249,7 @@ export function CalificarPostulanteModal({
       }
     })
     setEstados(init)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    opened,
-    cargandoCriterios,
-    cargandoCal,
-    postulante?.id,
-  ])
+  }
 
   if (!postulante) return null
 
@@ -339,7 +347,7 @@ export function CalificarPostulanteModal({
             <Text size="xs">
               Esta convocatoria no tiene criterios de evaluación
               configurados. Configure los criterios primero en
-              el tab "Criterios".
+              el tab &laquo;Criterios&raquo;.
             </Text>
           </Alert>
         )}

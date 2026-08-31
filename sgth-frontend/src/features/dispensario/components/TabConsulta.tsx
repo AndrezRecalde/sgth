@@ -99,6 +99,19 @@ export function TabConsulta({
   const registrar = useRegistrarConsulta();
   const actualizar = useActualizarConsulta();
   const [modoEdicion, setModoEdicion] = useState(!consultaPrevia);
+
+  // Al cargarse una consulta previa —o al cambiar de consulta— el formulario
+  // vuelve al modo lectura. Se ajusta durante el render, no en un efecto:
+  // hacerlo en el efecto sacaba del modo edición en cada refresco de la
+  // consulta, perdiendo lo que el médico estuviera escribiendo.
+  const semillaConsulta = consultaPrevia?.id ?? null;
+  const [semillaAplicada, setSemillaAplicada] =
+    useState<number | null>(semillaConsulta);
+
+  if (semillaConsulta !== semillaAplicada) {
+    setSemillaAplicada(semillaConsulta);
+    setModoEdicion(!semillaConsulta);
+  }
   const [cie10Principal, setCie10Principal] = useState<DiagnosticoCie10 | null>(
     null,
   );
@@ -128,7 +141,6 @@ export function TabConsulta({
 
   useEffect(() => {
     if (consultaPrevia) {
-      setModoEdicion(false);
       reset({
         tipo_atencion:
           (consultaPrevia.tipo_atencion as ConsultaMedicaFormData["tipo_atencion"]) ??

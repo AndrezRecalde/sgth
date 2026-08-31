@@ -22,7 +22,6 @@ import {
   TIPO_RESULTADO_OPTIONS,
   TIPO_RESULTADO_ICONS,
 } from '../services/resultadoMedicoService'
-import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 
 interface Props {

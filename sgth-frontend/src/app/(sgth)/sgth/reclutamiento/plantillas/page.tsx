@@ -10,7 +10,7 @@ import {
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   usePlantillas,
@@ -32,7 +32,7 @@ export default function PlantillasPage() {
   const crear    = useCrearPlantilla()
   const eliminar = useEliminarPlantilla()
 
-  const { register, handleSubmit, reset, setValue, watch,
+  const { register, handleSubmit, reset, setValue, control,
     formState: { errors } } =
     useForm<{
       nombre:        string
@@ -40,7 +40,7 @@ export default function PlantillasPage() {
       tipo_contrato: string
     }>()
 
-  const tipoContrato = watch('tipo_contrato')
+  const tipoContrato = useWatch({ control, name: 'tipo_contrato' })
 
   const onSubmit = (values: {
     nombre: string

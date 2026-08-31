@@ -26,7 +26,20 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { registrar } = useCumplimientoMutations()
-  const [cumplimientoId, setCumplimientoId] = useState<number | null>(fila?.cumplimiento?.id ?? null)
+  const [cumplimientoId, setCumplimientoId] =
+    useState<number | null>(fila?.cumplimiento?.id ?? null)
+
+  // El id se siembra desde la fila y lo actualiza el guardado, así que es
+  // estado y no derivado. La resiembra se hace durante el render, no en un
+  // efecto: el panel de documentos apuntaba a la fila anterior mientras el
+  // efecto no se hubiera ejecutado.
+  const claveFila = fila?.normativa.id ?? null
+  const [claveAplicada, setClaveAplicada] = useState<number | null>(claveFila)
+
+  if (claveFila !== claveAplicada) {
+    setClaveAplicada(claveFila)
+    setCumplimientoId(fila?.cumplimiento?.id ?? null)
+  }
 
   const {
     register, control, handleSubmit, reset,
@@ -40,7 +53,6 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
   })
 
   useEffect(() => {
-    setCumplimientoId(fila?.cumplimiento?.id ?? null)
     reset({
       estado: (fila?.cumplimiento?.estado as CumplimientoFormData['estado']) ?? 'en_proceso',
       observaciones: fila?.cumplimiento?.observaciones ?? '',
@@ -49,7 +61,6 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
 
   const handleClose = () => {
     reset()
-    setCumplimientoId(null)
     onClose()
   }
 

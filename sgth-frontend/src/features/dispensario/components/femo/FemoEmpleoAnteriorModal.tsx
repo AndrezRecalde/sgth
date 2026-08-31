@@ -5,7 +5,7 @@ import {
   Checkbox, Group, Button, Modal,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -38,7 +38,12 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
     },
   })
 
-  const tipoEvento = empleoForm.watch('tipo_evento_laboral')
+  const control = empleoForm.control
+  const tipoEvento     = useWatch({ control, name: 'tipo_evento_laboral' })
+  const fechaInicio    = useWatch({ control, name: 'fecha_inicio' })
+  const fechaFin       = useWatch({ control, name: 'fecha_fin' })
+  const calificadoIess = useWatch({ control, name: 'calificado_iess' })
+  const fechaEvento    = useWatch({ control, name: 'fecha_evento' })
 
   const handleSubmit = (values: EmpleoAnteriorForm) => {
     onAgregar(values)
@@ -86,7 +91,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                 valueFormat="DD/MM/YYYY"
                 clearable
                 {...contained}
-                value={toDateValue(empleoForm.watch('fecha_inicio'))}
+                value={toDateValue(fechaInicio)}
                 onChange={(d) =>
                   empleoForm.setValue('fecha_inicio', fromDateValueOrNull(d as Date | null))
                 }
@@ -98,7 +103,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                 valueFormat="DD/MM/YYYY"
                 clearable
                 {...contained}
-                value={toDateValue(empleoForm.watch('fecha_fin'))}
+                value={toDateValue(fechaFin)}
                 onChange={(d) =>
                   empleoForm.setValue('fecha_fin', fromDateValueOrNull(d as Date | null))
                 }
@@ -131,7 +136,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
               <Group grow>
                 <Checkbox
                   label="Calificado por IESS"
-                  checked={empleoForm.watch('calificado_iess') ?? false}
+                  checked={calificadoIess ?? false}
                   onChange={(e) =>
                     empleoForm.setValue('calificado_iess', e.currentTarget.checked)
                   }
@@ -141,7 +146,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                   valueFormat="DD/MM/YYYY"
                   clearable
                   {...contained}
-                  value={toDateValue(empleoForm.watch('fecha_evento'))}
+                  value={toDateValue(fechaEvento)}
                   onChange={(d) =>
                     empleoForm.setValue('fecha_evento', fromDateValueOrNull(d as Date | null))
                   }

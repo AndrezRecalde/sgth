@@ -28,7 +28,20 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
   const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { registrarSeguimiento } = useProgramaDrogasMutations()
-  const [seguimientoId, setSeguimientoId] = useState<number | null>(fila?.seguimiento?.id ?? null)
+  const [seguimientoId, setSeguimientoId] =
+    useState<number | null>(fila?.seguimiento?.id ?? null)
+
+  // El id se siembra desde la fila y lo actualiza el guardado, así que es
+  // estado y no derivado. La resiembra se hace durante el render, no en un
+  // efecto: el panel de documentos apuntaba a la fila anterior mientras el
+  // efecto no se hubiera ejecutado.
+  const claveFila = fila?.actividad.id ?? null
+  const [claveAplicada, setClaveAplicada] = useState<number | null>(claveFila)
+
+  if (claveFila !== claveAplicada) {
+    setClaveAplicada(claveFila)
+    setSeguimientoId(fila?.seguimiento?.id ?? null)
+  }
 
   const {
     register, control, handleSubmit, reset,
@@ -43,7 +56,6 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
   })
 
   useEffect(() => {
-    setSeguimientoId(fila?.seguimiento?.id ?? null)
     reset({
       estado: (fila?.seguimiento?.estado as SeguimientoProgramaFormData['estado']) ?? 'en_proceso',
       fecha_ejecucion: fila?.seguimiento?.fecha_ejecucion ?? null,
@@ -53,7 +65,6 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
 
   const handleClose = () => {
     reset()
-    setSeguimientoId(null)
     onClose()
   }
 

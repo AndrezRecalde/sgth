@@ -38,7 +38,7 @@ export function usePdfViatico() {
     identificador: string | number
   ) => {
     setLoadingSolicitud(true)
-    const notifId = notifications.show({
+    notifications.show({
       id:       'pdf-solicitud',
       loading:  true,
       title:    'Generando solicitud PDF',

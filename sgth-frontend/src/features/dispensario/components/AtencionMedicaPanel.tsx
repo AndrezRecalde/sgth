@@ -9,7 +9,7 @@ import {
   IconCertificate, IconHistory,
   IconUser, IconUsers, IconArrowRight,
 } from '@tabler/icons-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAccionesTurno } from '../hooks/useAgenda'
 import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
@@ -53,11 +53,11 @@ export function AtencionMedicaPanel({
 
   const consultaActiva = consultaGuardada ?? consultaCargada ?? null
 
-  useEffect(() => {
-    if (consultaCargada && !consultaGuardada) {
-      setActiveTab('consulta')
-    }
-  }, [consultaCargada, consultaGuardada])
+  // Antes había aquí un efecto que devolvía la pestaña a «Consulta» cuando
+  // llegaba `consultaCargada`. Como es el resultado de React Query, cada
+  // refresco traía una referencia nueva y el efecto se repetía: el médico que
+  // estuviera en «Receta» o «Resultados» era devuelto a «Consulta» sin tocar
+  // nada. La pestaña ya arranca en 'consulta' por el useState de arriba.
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
