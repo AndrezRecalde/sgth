@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -236,18 +237,27 @@ export function ViaticoDetallePage({ identificador }: Props) {
             marcarPendienteLiquidacion.mutate(d.id)
           }
           onContabilizar={() => contabilizar.mutate(d.id)}
-          onDevolverCorreccion={() => {
-            if (confirm('¿Devolver esta liquidación para correcciones?'))
-              devolverCorreccion.mutate(d.id)
-          }}
-          onCancelar={() => {
-            if (confirm('Cancelar esta solicitud?'))
-              cancelar.mutate(d.id)
-          }}
-          onRechazar={() => {
-            if (confirm('Rechazar este viático?'))
-              rechazar.mutate(d.id)
-          }}
+          onDevolverCorreccion={() => confirmar({
+            title:   'Devolver para correcciones',
+            message: 'La liquidación volverá al servidor para que la corrija.',
+            confirmLabel: 'Devolver',
+            onConfirm: () => devolverCorreccion.mutate(d.id),
+          })}
+          onCancelar={() => confirmar({
+            title:   'Cancelar solicitud',
+            message: 'Se cancelará esta solicitud de viático. No se puede deshacer.',
+            destructiva: true,
+            confirmLabel: 'Cancelar solicitud',
+            cancelLabel:  'Volver',
+            onConfirm: () => cancelar.mutate(d.id),
+          })}
+          onRechazar={() => confirmar({
+            title:   'Rechazar viático',
+            message: 'Se rechazará este viático y el servidor será notificado.',
+            destructiva: true,
+            confirmLabel: 'Rechazar',
+            onConfirm: () => rechazar.mutate(d.id),
+          })}
           onSolicitud={() =>
             descargarSolicitud(d.codigo_viatico ?? d.id)
           }

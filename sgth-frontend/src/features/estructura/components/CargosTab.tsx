@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import { Box, Button, Group, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -80,11 +81,18 @@ export function CargosTab() {
               label: "Eliminar cargo",
               icon: <IconTrash size={14} />,
               color: "red",
-              onClick: () => {
-                if (confirm(`¿Eliminar el cargo "${cargo.nombre}"?`)) {
-                  eliminar.mutate(cargo.id);
-                }
-              },
+              onClick: () =>
+                confirmar({
+                  title: "Eliminar cargo",
+                  message: (
+                    <>
+                      Se eliminará el cargo <b>{cargo.nombre}</b>. No se puede
+                      deshacer.
+                    </>
+                  ),
+                  destructiva: true,
+                  onConfirm: () => eliminar.mutate(cargo.id),
+                }),
             },
           ]}
         />

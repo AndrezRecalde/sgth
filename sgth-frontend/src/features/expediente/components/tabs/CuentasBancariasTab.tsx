@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Stack, Text, Badge, Group, Button,
          ActionIcon, Tooltip, Skeleton, Menu } from '@mantine/core'
@@ -147,10 +148,12 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                     variant="subtle"
                     color="red"
                     size="sm"
-                    onClick={() => {
-                      if (confirm('¿Eliminar esta cuenta bancaria?'))
-                        eliminar.mutate(Number(c.id))
-                    }}
+                    onClick={() => confirmar({
+                      title:   'Eliminar cuenta bancaria',
+                      message: 'Se eliminará esta cuenta bancaria del expediente. No se puede deshacer.',
+                      destructiva: true,
+                      onConfirm: () => eliminar.mutate(Number(c.id)),
+                    })}
                   >
                     <IconTrash size={14} />
                   </ActionIcon>

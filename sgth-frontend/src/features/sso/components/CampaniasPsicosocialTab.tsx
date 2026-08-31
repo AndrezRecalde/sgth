@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Box, Group, Button, Badge, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -90,11 +91,18 @@ export function CampaniasPsicosocialTab() {
               icon: <IconLock size={14} />,
               color: 'red',
               hidden: !campania.activa,
-              onClick: () => {
-                if (confirm(`¿Cerrar la campaña del período ${campania.periodo}? Ya no se podrán registrar más respuestas.`)) {
-                  cerrarCampania.mutate(campania.id)
-                }
-              },
+              onClick: () => confirmar({
+                title:   'Cerrar campaña',
+                message: (
+                  <>
+                    Se cerrará la campaña del período <b>{campania.periodo}</b>.
+                    Ya no se podrán registrar más respuestas.
+                  </>
+                ),
+                destructiva: true,
+                confirmLabel: 'Cerrar campaña',
+                onConfirm: () => cerrarCampania.mutate(campania.id),
+              }),
             },
           ]}
         />

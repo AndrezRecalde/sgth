@@ -132,10 +132,7 @@ export const getNominaColumns = (
           label:   'Cerrar nómina',
           icon:    <IconLock size={14} />,
           color:   'orange',
-          onClick: () => {
-            if (confirm(`¿Cerrar la nómina ${nomina.periodo}? Esta acción no se puede deshacer.`))
-              onCerrar(nomina)
-          },
+          onClick: () => onCerrar(nomina),
           hidden: nomina.estado !== 'borrador' && nomina.estado !== 'en_proceso',
         },
       ]} />

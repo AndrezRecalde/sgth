@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack,
@@ -146,10 +147,14 @@ export function CondicionTab({ servidorId }: Props) {
               label: "Eliminar",
               icon: <IconTrash size={14} />,
               color: "red",
-              onClick: () => {
-                if (confirm("¿Eliminar este registro de discapacidad?"))
-                  delDisc.mutate(Number(item.id));
-              },
+              onClick: () =>
+                confirmar({
+                  title: "Eliminar discapacidad",
+                  message:
+                    "Se eliminará este registro de discapacidad. No se puede deshacer.",
+                  destructiva: true,
+                  onConfirm: () => delDisc.mutate(Number(item.id)),
+                }),
             },
           ]}
         />
@@ -214,12 +219,14 @@ export function CondicionTab({ servidorId }: Props) {
               label: "Eliminar",
               icon: <IconTrash size={14} />,
               color: "red",
-              onClick: () => {
-                if (
-                  confirm("¿Eliminar este registro de enfermedad catastrófica?")
-                )
-                  delEnf.mutate(Number(item.id));
-              },
+              onClick: () =>
+                confirmar({
+                  title: "Eliminar enfermedad catastrófica",
+                  message:
+                    "Se eliminará este registro de enfermedad catastrófica. No se puede deshacer.",
+                  destructiva: true,
+                  onConfirm: () => delEnf.mutate(Number(item.id)),
+                }),
             },
           ]}
         />

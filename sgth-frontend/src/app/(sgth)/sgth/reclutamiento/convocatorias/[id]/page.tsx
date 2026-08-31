@@ -189,11 +189,12 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
                 color="blue"
                 leftSection={<IconWorldUpload size={14} />}
                 loading={publicar.isPending}
-                onClick={() => {
-                  if (confirm('¿Publicar esta convocatoria?')) {
-                    publicar.mutate(convocatoriaId)
-                  }
-                }}
+                onClick={() => confirmar({
+                  title:   'Publicar convocatoria',
+                  message: 'La convocatoria quedará visible para los postulantes.',
+                  confirmLabel: 'Publicar',
+                  onConfirm: () => publicar.mutate(convocatoriaId),
+                })}
               >
                 Publicar convocatoria
               </Button>
@@ -203,14 +204,12 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
                 color="emerald"
                 leftSection={<IconCircleCheck size={14} />}
                 loading={confirmarGanador.isPending}
-                onClick={() => {
-                  if (confirm(
-                    '¿Declarar ganador oficial al candidato aprobado por el Dispensario?\n\n' +
-                    'Esta acción finaliza la convocatoria definitivamente.'
-                  )) {
-                    confirmarGanador.mutate()
-                  }
-                }}
+                onClick={() => confirmar({
+                  title:   'Declarar ganador oficial',
+                  message: 'Se declarará ganador al candidato aprobado por el Dispensario. La convocatoria queda finalizada definitivamente.',
+                  confirmLabel: 'Declarar ganador',
+                  onConfirm: () => confirmarGanador.mutate(),
+                })}
               >
                 Declarar ganador oficial
               </Button>
@@ -440,4 +439,4 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
   )
 }
 
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'

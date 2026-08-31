@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Box, Button, Group, Badge, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -89,11 +90,12 @@ export function RiesgosLaboralesTab() {
               label: 'Eliminar riesgo',
               icon: <IconTrash size={14} />,
               color: 'red',
-              onClick: () => {
-                if (confirm('¿Eliminar este riesgo laboral?')) {
-                  eliminar.mutate(riesgo.id)
-                }
-              },
+              onClick: () => confirmar({
+                title:   'Eliminar riesgo laboral',
+                message: 'Se eliminará este riesgo laboral y su valoración. No se puede deshacer.',
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(riesgo.id),
+              }),
             },
           ]}
         />

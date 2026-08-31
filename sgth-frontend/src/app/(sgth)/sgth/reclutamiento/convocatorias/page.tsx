@@ -22,7 +22,7 @@ import {
 import type { Convocatoria } from
   '@/features/seleccion/services/convocatoriaService'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'
 
 export default function ConvocatoriasPage() {
   const router   = useRouter()
@@ -131,11 +131,17 @@ export default function ConvocatoriasPage() {
             label:   'Publicar',
             icon:    <IconWorldUpload size={14} />,
             color:   'emerald',
-            onClick: () => {
-              if (confirm('¿Publicar esta convocatoria?')) {
-                publicar.mutate(c.id)
-              }
-            },
+            onClick: () => confirmar({
+              title:   'Publicar convocatoria',
+              message: (
+                <>
+                  Se publicará <b>{c.titulo}</b> y quedará visible para los
+                  postulantes.
+                </>
+              ),
+              confirmLabel: 'Publicar',
+              onConfirm: () => publicar.mutate(c.id),
+            }),
           }] : []),
           {
             label:   'Editar',
@@ -149,11 +155,12 @@ export default function ConvocatoriasPage() {
             label:   'Eliminar',
             icon:    <IconTrash size={14} />,
             color:   'red',
-            onClick: () => {
-              if (confirm(`¿Eliminar "${c.titulo}"?`)) {
-                eliminar.mutate(c.id)
-              }
-            },
+            onClick: () => confirmar({
+              title:   'Eliminar convocatoria',
+              message: <>Se eliminará <b>{c.titulo}</b>. No se puede deshacer.</>,
+              destructiva: true,
+              onConfirm: () => eliminar.mutate(c.id),
+            }),
           }] : []),
         ]} />
       ),

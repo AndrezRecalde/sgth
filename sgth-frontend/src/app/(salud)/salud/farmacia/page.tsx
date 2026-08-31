@@ -94,12 +94,24 @@ export default function FarmaciaPage() {
       setMedicinaSel(m);
       abrirKardex();
     },
-    onToggleEstado: (m) => {
-      const accion = m.estado ? "dar de baja" : "reactivar";
-      if (confirm(`¿Deseas ${accion} esta medicina?`)) {
-        toggleEstado.mutate(m.id);
-      }
-    },
+    onToggleEstado: (m) =>
+      confirmar({
+        title: m.estado ? "Dar de baja medicina" : "Reactivar medicina",
+        message: m.estado ? (
+          <>
+            Se dará de baja <b>{m.nombre}</b>. Dejará de aparecer en
+            despachos y recetas.
+          </>
+        ) : (
+          <>
+            Se reactivará <b>{m.nombre}</b>. Volverá a estar
+            disponible para despacho.
+          </>
+        ),
+        destructiva: m.estado,
+        confirmLabel: m.estado ? "Dar de baja" : "Reactivar",
+        onConfirm: () => toggleEstado.mutate(m.id),
+      }),
   });
 
   return (
@@ -265,4 +277,4 @@ export default function FarmaciaPage() {
   );
 }
 
-import { PageShell } from '@/components/ui'
+import { PageShell , confirmar } from '@/components/ui'

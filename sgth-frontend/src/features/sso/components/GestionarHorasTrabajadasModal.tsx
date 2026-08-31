@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Modal, Stack, Group, TextInput, NumberInput, Button,
@@ -72,11 +73,12 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
         <ActionIcon
           color="red"
           variant="subtle"
-          onClick={() => {
-            if (confirm('¿Eliminar este registro de horas trabajadas?')) {
-              eliminar.mutate(r.id)
-            }
-          }}
+          onClick={() => confirmar({
+            title:   'Eliminar registro de horas',
+            message: 'Se eliminará este registro de horas trabajadas. No se puede deshacer.',
+            destructiva: true,
+            onConfirm: () => eliminar.mutate(r.id),
+          })}
         >
           <IconTrash size={16} />
         </ActionIcon>

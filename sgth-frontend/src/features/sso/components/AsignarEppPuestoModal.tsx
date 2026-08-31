@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Modal, Stack, Group, Select, NumberInput, Button,
@@ -77,11 +78,12 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
         <ActionIcon
           color="red"
           variant="subtle"
-          onClick={() => {
-            if (confirm('¿Eliminar esta asignación?')) {
-              eliminar.mutate(a.id)
-            }
-          }}
+          onClick={() => confirmar({
+            title:   'Eliminar asignación',
+            message: 'Se eliminará esta asignación de equipo al puesto. No se puede deshacer.',
+            destructiva: true,
+            onConfirm: () => eliminar.mutate(a.id),
+          })}
         >
           <IconTrash size={16} />
         </ActionIcon>

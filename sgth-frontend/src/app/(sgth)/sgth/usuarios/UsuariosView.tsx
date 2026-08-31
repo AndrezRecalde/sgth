@@ -14,7 +14,7 @@ import { AsignarServidorModal } from '@/features/usuarios/components/AsignarServ
 import { useUsuarios }        from '@/features/usuarios/hooks/useUsuarios'
 import { useUsuarioMutations } from '@/features/usuarios/hooks/useUsuarioMutations'
 import type { Usuario }       from '@/types/api'
-import { PageShell } from '@/components/ui'
+import { PageShell , confirmar } from '@/components/ui'
 
 export function UsuariosView() {
   const [page,   setPage]   = useState(1)
@@ -68,31 +68,37 @@ export function UsuariosView() {
     closePermisos()
   }
 
-  const handleRestablecerPassword = (u: Usuario) => {
-    const nombre = u.nombre_completo
+  const nombreDe = (u: Usuario) =>
+    u.nombre_completo
       || u.servidor?.nombre
       || u.email
       || '(Sin nombre)'
-    if (confirm(
-      `¿Restablecer la contraseña de ${nombre}?\n` +
-      `Se establecerá la cédula del servidor como nueva contraseña.`
-    )) {
-      restablecerContrasena.mutate(Number(u.id))
-    }
-  }
 
-  const handleDesvincular = (u: Usuario) => {
-    const nombre = u.nombre_completo
-      || u.servidor?.nombre
-      || u.email
-      || '(Sin nombre)'
-    if (confirm(
-      `¿Desvincular el servidor de ${nombre}?\n` +
-      `El usuario conservará su acceso al sistema.`
-    )) {
-      desvincularServidor.mutate(Number(u.id))
-    }
-  }
+  const handleRestablecerPassword = (u: Usuario) => confirmar({
+    title:   'Restablecer contraseña',
+    message: (
+      <>
+        Se restablecerá la contraseña de <b>{nombreDe(u)}</b>. Quedará como
+        contraseña la cédula del servidor.
+      </>
+    ),
+    destructiva: true,
+    confirmLabel: 'Restablecer',
+    onConfirm: () => restablecerContrasena.mutate(Number(u.id)),
+  })
+
+  const handleDesvincular = (u: Usuario) => confirmar({
+    title:   'Desvincular servidor',
+    message: (
+      <>
+        Se desvinculará el servidor de <b>{nombreDe(u)}</b>. El usuario
+        conservará su acceso al sistema.
+      </>
+    ),
+    destructiva: true,
+    confirmLabel: 'Desvincular',
+    onConfirm: () => desvincularServidor.mutate(Number(u.id)),
+  })
 
   const handleAsignarServidor = (u: Usuario) => {
     setAsignarUsr(u)

@@ -10,7 +10,7 @@ import { useNominas } from '@/features/nomina/hooks/useNominas'
 import { useNominaMutations } from '@/features/nomina/hooks/useNominaMutations'
 import { IconReportMoney } from '@tabler/icons-react'
 import type { Nomina } from '@/types/api'
-import { EmptyState, PageHeader, PageShell, SgthTable } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, SgthTable , confirmar } from '@/components/ui'
 
 export function NominaView() {
   const [filtroEstado, setFiltroEstado] =
@@ -33,14 +33,18 @@ export function NominaView() {
     abrirModal()
   }
 
-  const handleCerrar = (n: Nomina) => {
-    if (confirm(
-      `¿Cerrar la nómina ${n.periodo}? ` +
-      `Esta acción no se puede deshacer.`
-    )) {
-      cerrar.mutate(n.id)
-    }
-  }
+  const handleCerrar = (n: Nomina) => confirmar({
+    title:   'Cerrar nómina',
+    message: (
+      <>
+        Se cerrará la nómina del período <b>{n.periodo}</b>. No se puede
+        deshacer.
+      </>
+    ),
+    destructiva: true,
+    confirmLabel: 'Cerrar nómina',
+    onConfirm: () => cerrar.mutate(n.id),
+  })
 
   const columns = getNominaColumns({
     onVer:    handleVer,

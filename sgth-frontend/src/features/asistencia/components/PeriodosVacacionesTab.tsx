@@ -353,15 +353,19 @@ export function PeriodosVacacionesTab() {
               variant="light"
               leftSection={<IconUsers size={16} />}
               loading={generarTodos.isPending}
-              onClick={() => {
-                if (
-                  confirm(
-                    `¿Generar períodos ${anio} para todos los servidores activos?`,
-                  )
-                ) {
-                  generarTodos.mutate(anio);
-                }
-              }}
+              onClick={() =>
+                confirmar({
+                  title: "Generar períodos de vacaciones",
+                  message: (
+                    <>
+                      Se generará el período <b>{anio}</b> para todos los
+                      servidores activos.
+                    </>
+                  ),
+                  confirmLabel: "Generar",
+                  onConfirm: () => generarTodos.mutate(anio),
+                })
+              }
             >
               Generar para todos
             </Button>
@@ -388,14 +392,22 @@ export function PeriodosVacacionesTab() {
           disabled={!servidorSelId}
           loading={generar.isPending}
           onClick={() => {
-            if (servidorSelId) {
-              if (confirm(`¿Generar período ${anio} para este servidor?`)) {
+            if (!servidorSelId) return;
+            confirmar({
+              title: "Generar período de vacaciones",
+              message: (
+                <>
+                  Se generará el período <b>{anio}</b> para el servidor
+                  seleccionado.
+                </>
+              ),
+              confirmLabel: "Generar",
+              onConfirm: () =>
                 generar.mutate({
                   servidorId: servidorSelId,
                   anio,
-                });
-              }
-            }
+                }),
+            });
           }}
         >
           Generar período {anio}

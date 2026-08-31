@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import { Stack, Group, Text, Badge, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -108,10 +109,14 @@ export function DeclaracionesTab({ servidorId }: Props) {
               label: "Eliminar",
               icon: <IconTrash size={14} />,
               color: "red",
-              onClick: () => {
-                if (confirm("¿Eliminar esta declaración?"))
-                  eliminar.mutate(Number(item.id));
-              },
+              onClick: () =>
+                confirmar({
+                  title: "Eliminar declaración",
+                  message:
+                    "Se eliminará esta declaración patrimonial del expediente. No se puede deshacer.",
+                  destructiva: true,
+                  onConfirm: () => eliminar.mutate(Number(item.id)),
+                }),
             },
           ]}
         />

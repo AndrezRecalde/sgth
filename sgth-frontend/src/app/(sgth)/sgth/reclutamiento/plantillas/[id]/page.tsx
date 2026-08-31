@@ -24,7 +24,7 @@ import { TIPO_CONTRATO_PLANTILLA_OPTIONS } from
 import type { SeccionCriterio } from
   '@/features/seleccion/services/criterioService'
 import { useState } from 'react'
-import { PageHeader, PageShell } from '@/components/ui'
+import { PageHeader, PageShell , confirmar } from '@/components/ui'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -132,13 +132,12 @@ export default function DetallePlantillaPage({ params }: Props) {
                   size="sm"
                   color="red"
                   variant="subtle"
-                  onClick={() => {
-                    if (confirm(
-                      `¿Eliminar el criterio "${c.nombre}"?`
-                    )) {
-                      eliminarCriterio.mutate(c.id)
-                    }
-                  }}
+                  onClick={() => confirmar({
+                    title:   'Eliminar criterio',
+                    message: <>Se eliminará el criterio <b>{c.nombre}</b>. No se puede deshacer.</>,
+                    destructiva: true,
+                    onConfirm: () => eliminarCriterio.mutate(c.id),
+                  })}
                 >
                   <IconTrash size={13} />
                 </ActionIcon>

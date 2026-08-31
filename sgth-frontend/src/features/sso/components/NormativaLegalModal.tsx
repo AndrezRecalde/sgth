@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import {
   Modal, Stack, Group, TextInput, Select, Textarea, Button,
   ActionIcon, Badge,
@@ -61,11 +62,12 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
         <ActionIcon
           color="red"
           variant="subtle"
-          onClick={() => {
-            if (confirm(`¿Eliminar la normativa "${n.nombre}"?`)) {
-              eliminar.mutate(n.id)
-            }
-          }}
+          onClick={() => confirmar({
+            title:   'Eliminar normativa',
+            message: <>Se eliminará la normativa <b>{n.nombre}</b>. No se puede deshacer.</>,
+            destructiva: true,
+            onConfirm: () => eliminar.mutate(n.id),
+          })}
         >
           <IconTrash size={16} />
         </ActionIcon>

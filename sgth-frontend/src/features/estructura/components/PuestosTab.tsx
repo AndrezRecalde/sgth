@@ -1,4 +1,5 @@
 "use client";
+import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import { Box, Button, Group, Select } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -47,11 +48,18 @@ export function PuestosTab() {
     open();
   };
 
-  const handleDelete = (puesto: PuestoConRelaciones) => {
-    if (confirm(`¿Eliminar el puesto "${puesto.cargo?.nombre ?? "-"}"?`)) {
-      eliminar.mutate(Number(puesto.id));
-    }
-  };
+  const handleDelete = (puesto: PuestoConRelaciones) =>
+    confirmar({
+      title: "Eliminar puesto",
+      message: (
+        <>
+          Se eliminará el puesto <b>{puesto.cargo?.nombre ?? "—"}</b>. No se
+          puede deshacer.
+        </>
+      ),
+      destructiva: true,
+      onConfirm: () => eliminar.mutate(Number(puesto.id)),
+    });
 
   const handleActividades = (puesto: PuestoConRelaciones) => {
     setActividadesPuesto(puesto);

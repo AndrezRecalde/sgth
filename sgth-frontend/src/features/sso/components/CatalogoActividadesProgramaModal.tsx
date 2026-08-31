@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import {
   Modal, Stack, Group, TextInput, Select, Textarea, Button,
   ActionIcon, Badge,
@@ -59,11 +60,12 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
         <ActionIcon
           color="red"
           variant="subtle"
-          onClick={() => {
-            if (confirm(`¿Eliminar la actividad "${a.nombre}"?`)) {
-              eliminarActividad.mutate(a.id)
-            }
-          }}
+          onClick={() => confirmar({
+            title:   'Eliminar actividad',
+            message: <>Se eliminará la actividad <b>{a.nombre}</b>. No se puede deshacer.</>,
+            destructiva: true,
+            onConfirm: () => eliminarActividad.mutate(a.id),
+          })}
         >
           <IconTrash size={16} />
         </ActionIcon>

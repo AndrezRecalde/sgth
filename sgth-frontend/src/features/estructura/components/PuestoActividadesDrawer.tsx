@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import {
   Drawer, Stack, Text, Group, Badge,
   TextInput, ActionIcon, Card,
@@ -119,11 +120,12 @@ function SortableItem({
               size="sm"
               color="red"
               variant="subtle"
-              onClick={() => {
-                if (confirm('¿Eliminar esta actividad?')) {
-                  onEliminar(actividad.id)
-                }
-              }}
+              onClick={() => confirmar({
+                title:   'Eliminar actividad',
+                message: <>Se eliminará la actividad <b>{actividad.descripcion}</b> del puesto. No se puede deshacer.</>,
+                destructiva: true,
+                onConfirm: () => onEliminar(actividad.id),
+              })}
             >
               <IconTrash size={13} />
             </ActionIcon>

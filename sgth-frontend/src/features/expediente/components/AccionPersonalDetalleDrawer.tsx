@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Alert, Badge, Box, Button, Divider, Drawer, Grid, Group, Paper,
@@ -422,11 +423,14 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                 variant="subtle"
                 color="red"
                 leftSection={<IconBan size={14} />}
-                onClick={() => {
-                  if (confirm('¿Anular esta acción de personal? No podrá reactivarse.')) {
-                    transicionar.mutate({ id: Number(m.id), estado: 'anulada' }, { onSuccess: onClose })
-                  }
-                }}
+                onClick={() => confirmar({
+                  title:   'Anular acción de personal',
+                  message: 'Se anulará esta acción de personal y no podrá reactivarse.',
+                  destructiva: true,
+                  confirmLabel: 'Anular',
+                  onConfirm: () =>
+                    transicionar.mutate({ id: Number(m.id), estado: 'anulada' }, { onSuccess: onClose }),
+                })}
               >
                 Anular
               </Button>

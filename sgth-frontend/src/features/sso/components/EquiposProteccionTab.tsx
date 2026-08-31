@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Box, Button, Group, Badge, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -76,11 +77,12 @@ export function EquiposProteccionTab() {
               label: 'Eliminar equipo',
               icon: <IconTrash size={14} />,
               color: 'red',
-              onClick: () => {
-                if (confirm(`¿Eliminar el equipo "${equipo.nombre}"?`)) {
-                  eliminar.mutate(equipo.id)
-                }
-              },
+              onClick: () => confirmar({
+                title:   'Eliminar equipo',
+                message: <>Se eliminará el equipo <b>{equipo.nombre}</b>. No se puede deshacer.</>,
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(equipo.id),
+              }),
             },
           ]}
         />

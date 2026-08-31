@@ -20,7 +20,7 @@ import {
 import {
   TIPO_CONTRATO_PLANTILLA_OPTIONS,
 } from '@/features/seleccion/services/plantillaService'
-import { EmptyState, PageHeader, PageShell } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell , confirmar } from '@/components/ui'
 
 export default function PlantillasPage() {
   const router   = useRouter()
@@ -134,13 +134,12 @@ export default function PlantillasPage() {
                   <ActionIcon
                     variant="light"
                     color="red"
-                    onClick={() => {
-                      if (confirm(
-                        `¿Eliminar la plantilla "${p.nombre}"?`
-                      )) {
-                        eliminar.mutate(p.id)
-                      }
-                    }}
+                    onClick={() => confirmar({
+                      title:   'Eliminar plantilla',
+                      message: <>Se eliminará la plantilla <b>{p.nombre}</b>. No se puede deshacer.</>,
+                      destructiva: true,
+                      onConfirm: () => eliminar.mutate(p.id),
+                    })}
                   >
                     <IconTrash size={16} />
                   </ActionIcon>

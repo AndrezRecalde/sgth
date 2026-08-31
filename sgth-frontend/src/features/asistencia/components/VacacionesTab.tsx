@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import React from "react";
 import { useState } from "react";
 import {
@@ -249,13 +250,19 @@ export function VacacionesTab() {
               label: "Rechazar",
               icon: <IconX size={14} />,
               color: "red",
-              onClick: () => {
-                if (confirm("¿Rechazar esta solicitud?"))
-                  actualizar.mutate({
-                    id: v.id,
-                    data: { estado: "rechazada" },
-                  });
-              },
+              onClick: () =>
+                confirmar({
+                  title: "Rechazar solicitud",
+                  message:
+                    "Se rechazará esta solicitud de vacaciones y el servidor será notificado.",
+                  destructiva: true,
+                  confirmLabel: "Rechazar",
+                  onConfirm: () =>
+                    actualizar.mutate({
+                      id: v.id,
+                      data: { estado: "rechazada" },
+                    }),
+                }),
               hidden: v.estado !== "pendiente",
             },
           ]}

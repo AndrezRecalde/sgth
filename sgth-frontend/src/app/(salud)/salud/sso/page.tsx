@@ -26,7 +26,7 @@ import {
 import type { SolicitudCertificacion } from
   '@/features/dispensario/services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'
 
 const DICTAMEN_COLORS: Record<string, string> = {
   apto:                   'emerald',
@@ -53,7 +53,7 @@ export default function SsoPage() {
   })
   const solicitudes = data?.data ?? []
   const iniciar     = useIniciarProceso()
-  const confirmar   = useConfirmarIncorporacion()
+  const incorporar  = useConfirmarIncorporacion()
   const { descargarFemo, loading: descargando } = usePdfFemo()
   const puedeConfirmarIncorporacion = hasPermiso('gestionar-onboarding')
 
@@ -226,15 +226,17 @@ export default function SsoPage() {
             label:   'Confirmar incorporación',
             icon:    <IconUserCheck size={14} />,
             color:   'emerald',
-            onClick: () => {
-              if (confirm(
-                `¿Confirmar la incorporación de ${s.nombres_paciente}?\n\n` +
-                `El sistema creará su expediente como servidor del GADPE.\n` +
-                `Esta acción no se puede deshacer.`
-              )) {
-                confirmar.mutate(s.id)
-              }
-            },
+            onClick: () => confirmar({
+              title:   'Confirmar incorporación',
+              message: (
+                <>
+                  Se creará el expediente de <b>{s.nombres_paciente}</b> como
+                  servidor del GADPE. No se puede deshacer.
+                </>
+              ),
+              confirmLabel: 'Confirmar incorporación',
+              onConfirm: () => incorporar.mutate(s.id),
+            }),
           }] : []),
         ]} />
       ),

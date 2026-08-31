@@ -12,7 +12,7 @@ import { CancelarSubrogacionModal } from '@/features/expediente/components/Cance
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { Subrogacion, TipoSubrogacion, UnidadConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'
 
 const TIPO_LABELS: Record<TipoSubrogacion, string> = {
   subrogacion: 'Subrogación',
@@ -144,11 +144,12 @@ export function SubrogacionesView() {
               label: 'Finalizar',
               icon: <IconPlayerStop size={14} />,
               color: 'emerald',
-              onClick: () => {
-                if (confirm('¿Finalizar esta subrogación/encargo?')) {
-                  finalizar.mutate(Number(s.id))
-                }
-              },
+              onClick: () => confirmar({
+                title:   'Finalizar subrogación',
+                message: 'Se dará por terminada esta subrogación o encargo con fecha de hoy.',
+                confirmLabel: 'Finalizar',
+                onConfirm: () => finalizar.mutate(Number(s.id)),
+              }),
             }] : []),
             {
               label: 'Cancelar',

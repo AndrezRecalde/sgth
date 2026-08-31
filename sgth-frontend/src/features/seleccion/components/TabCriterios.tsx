@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Text, Group, Badge, Button,
@@ -127,11 +128,12 @@ function SeccionCriterios({
                       size="sm"
                       color="red"
                       variant="subtle"
-                      onClick={() => {
-                        if (confirm(`¿Eliminar "${c.nombre}"?`)) {
-                          eliminar.mutate(c.id)
-                        }
-                      }}
+                      onClick={() => confirmar({
+                        title:   'Eliminar criterio',
+                        message: <>Se eliminará el criterio <b>{c.nombre}</b>. No se puede deshacer.</>,
+                        destructiva: true,
+                        onConfirm: () => eliminar.mutate(c.id),
+                      })}
                     >
                       <IconTrash size={13} />
                     </ActionIcon>

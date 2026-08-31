@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -70,7 +71,11 @@ export function PermisosTab() {
   const { data, isLoading } = usePermisos(filtros);
   const lista = (data?.data ?? []) as PermisoServidor[];
 
-  const { confirmar, anular, validarTs } = usePermisoMutations();
+  const {
+    confirmar: confirmarPermiso,
+    anular,
+    validarTs,
+  } = usePermisoMutations();
   const [exportandoId, setExportandoId] = useState<number | null>(null);
 
   const handleExportar = async (id: number) => {
@@ -238,7 +243,7 @@ export function PermisosTab() {
               label: "Confirmar recepción",
               icon: <IconCheck size={14} />,
               color: "blue",
-              onClick: () => p.folio && confirmar.mutate(p.folio),
+              onClick: () => p.folio && confirmarPermiso.mutate(p.folio),
               hidden: (p.estado as string) !== "pendiente",
             },
             {
@@ -254,9 +259,15 @@ export function PermisosTab() {
               label: "Anular",
               icon: <IconX size={14} />,
               color: "red",
-              onClick: () => {
-                if (confirm("¿Anular este permiso?")) anular.mutate(p.id);
-              },
+              onClick: () =>
+                confirmar({
+                  title: "Anular permiso",
+                  message:
+                    "Se anulará este permiso y dejará de contar para el servidor.",
+                  destructiva: true,
+                  confirmLabel: "Anular",
+                  onConfirm: () => anular.mutate(p.id),
+                }),
               hidden: (p.estado as string) !== "pendiente",
             },
           ]}

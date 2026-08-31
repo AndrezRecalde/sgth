@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import {
   Stack,
   Text,
@@ -188,11 +189,15 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                         color="red"
                         variant="subtle"
                         loading={eliminar.isPending}
-                        onClick={() => {
-                          if (confirm("¿Eliminar este tramo?")) {
-                            eliminar.mutate(t.id);
-                          }
-                        }}
+                        onClick={() =>
+                          confirmar({
+                            title: "Eliminar tramo",
+                            message:
+                              "Se eliminará este tramo del itinerario. No se puede deshacer.",
+                            destructiva: true,
+                            onConfirm: () => eliminar.mutate(t.id),
+                          })
+                        }
                       >
                         <IconTrash size={12} />
                       </ActionIcon>

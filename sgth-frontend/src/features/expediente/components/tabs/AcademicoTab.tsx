@@ -1,3 +1,4 @@
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Stack, Group, Text, Badge, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -97,10 +98,12 @@ export function AcademicoTab({ servidorId }: Props) {
             label: 'Eliminar',
             icon: <IconTrash size={14} />,
             color: 'red',
-            onClick: () => {
-              if (confirm('¿Eliminar este registro académico?'))
-                eliminar.mutate(Number(item.id))
-            },
+            onClick: () => confirmar({
+              title:   'Eliminar registro académico',
+              message: 'Se eliminará este registro académico del expediente. No se puede deshacer.',
+              destructiva: true,
+              onConfirm: () => eliminar.mutate(Number(item.id)),
+            }),
           },
         ]} />
       ),

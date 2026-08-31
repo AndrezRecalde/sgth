@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Box, Stack, Group, Text, TextInput, Button, ActionIcon, Alert, Loader } from '@mantine/core'
 import { Dropzone } from '@mantine/dropzone'
@@ -93,11 +94,12 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
             <ActionIcon
               variant="subtle"
               color="red"
-              onClick={() => {
-                if (confirm(`¿Eliminar el documento "${doc.nombre}"?`)) {
-                  eliminar.mutate(doc.id)
-                }
-              }}
+              onClick={() => confirmar({
+                title:   'Eliminar documento',
+                message: <>Se eliminará el documento <b>{doc.nombre}</b>. No se puede deshacer.</>,
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(doc.id),
+              })}
               aria-label="Eliminar"
             >
               <IconTrash size={16} />

@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import {
   Stack, Text, Button, Group, Badge,
   Card, ThemeIcon, Skeleton, Anchor,
@@ -145,11 +146,12 @@ export function TabResultados({
                       size="sm"
                       variant="light"
                       color="red"
-                      onClick={() => {
-                        if (confirm('¿Eliminar este resultado?')) {
-                          eliminar.mutate(r.id)
-                        }
-                      }}
+                      onClick={() => confirmar({
+                        title:   'Eliminar resultado',
+                        message: 'Se eliminará este resultado de laboratorio. No se puede deshacer.',
+                        destructiva: true,
+                        onConfirm: () => eliminar.mutate(r.id),
+                      })}
                     >
                       <IconTrash size={13} />
                     </ActionIcon>

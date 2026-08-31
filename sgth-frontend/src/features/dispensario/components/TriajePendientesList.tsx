@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useTriajesPendientes } from '../hooks/useTriaje'
 import { useCancelarTurno } from '../hooks/useAgenda'
@@ -19,11 +20,14 @@ export function TriajePendientesList({ onSeleccionar }: Props) {
       records={turnos}
       columns={getTurnosColumns({
         onTomarTriaje: onSeleccionar,
-        onCancelar: (id) => {
-          if (confirm('¿Cancelar este turno?')) {
-            cancelar.mutate(id)
-          }
-        },
+        onCancelar: (id) => confirmar({
+          title:   'Cancelar turno',
+          message: 'Se cancelará este turno y el paciente saldrá de la cola.',
+          destructiva: true,
+          confirmLabel: 'Cancelar turno',
+          cancelLabel:  'Volver',
+          onConfirm: () => cancelar.mutate(id),
+        }),
       })}
       fetching={isLoading}
       minHeight={200}

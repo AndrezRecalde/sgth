@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Modal, Stack, Group, TextInput, Select, Button,
@@ -63,12 +64,15 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
           color="red"
           variant="subtle"
           loading={eliminar.isPending && confirmarId === f.id}
-          onClick={() => {
-            if (confirm(`¿Eliminar el factor "${f.nombre}"?`)) {
+          onClick={() => confirmar({
+            title:   'Eliminar factor de riesgo',
+            message: <>Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.</>,
+            destructiva: true,
+            onConfirm: () => {
               setConfirmarId(f.id)
               eliminar.mutate(f.id)
-            }
-          }}
+            },
+          })}
         >
           <IconTrash size={16} />
         </ActionIcon>

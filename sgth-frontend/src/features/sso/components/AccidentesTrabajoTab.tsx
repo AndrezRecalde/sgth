@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Box, Button, Group, Badge, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -96,11 +97,12 @@ export function AccidentesTrabajoTab() {
               label: 'Eliminar accidente',
               icon: <IconTrash size={14} />,
               color: 'red',
-              onClick: () => {
-                if (confirm('¿Eliminar este registro de accidente de trabajo?')) {
-                  eliminar.mutate(accidente.id)
-                }
-              },
+              onClick: () => confirmar({
+                title:   'Eliminar accidente de trabajo',
+                message: 'Se eliminará este registro de accidente de trabajo. No se puede deshacer.',
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(accidente.id),
+              }),
             },
           ]}
         />

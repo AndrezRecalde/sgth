@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import { Badge, Box, Button, Group, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -100,15 +101,21 @@ export function PartidasPresupuestariasTab() {
               label: "Eliminar partida",
               icon: <IconTrash size={14} />,
               color: "red",
-              onClick: () => {
-                if (
-                  confirm(
-                    `¿Eliminar la partida "${partida.codigo} — ${partida.descripcion}"?`,
-                  )
-                ) {
-                  eliminar.mutate(partida.id);
-                }
-              },
+              onClick: () =>
+                confirmar({
+                  title: "Eliminar partida presupuestaria",
+                  message: (
+                    <>
+                      Se eliminará la partida{" "}
+                      <b>
+                        {partida.codigo} — {partida.descripcion}
+                      </b>
+                      . No se puede deshacer.
+                    </>
+                  ),
+                  destructiva: true,
+                  onConfirm: () => eliminar.mutate(partida.id),
+                }),
             },
           ]}
         />

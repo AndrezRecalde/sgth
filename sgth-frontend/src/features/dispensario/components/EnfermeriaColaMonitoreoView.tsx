@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Container, Chip,
@@ -112,11 +113,14 @@ export function EnfermeriaColaMonitoreoView() {
         <ColaTurnosTable
           turnos={turnos}
           isLoading={isLoading}
-          onCancelar={(id) => {
-            if (confirm('¿Cancelar este turno?')) {
-              cancelar.mutate(id)
-            }
-          }}
+          onCancelar={(id) => confirmar({
+            title:   'Cancelar turno',
+            message: 'Se cancelará este turno y el paciente saldrá de la cola.',
+            destructiva: true,
+            confirmLabel: 'Cancelar turno',
+            cancelLabel:  'Volver',
+            onConfirm: () => cancelar.mutate(id),
+          })}
           onTomarTriaje={(turno) => setTurnoTriaje(turno)}
         />
       )}

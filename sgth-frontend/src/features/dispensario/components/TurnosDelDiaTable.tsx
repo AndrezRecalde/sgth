@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import {
   Stack, Group, Text, Badge, Button,
   ActionIcon, Tooltip,
@@ -191,21 +192,23 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
               label:   'No se presentó',
               icon:    <IconUserOff size={14} />,
               color:   'orange',
-              onClick: () => {
-                if (confirm('¿Marcar como no presentado?')) {
-                  noPresentado.mutate(t.id)
-                }
-              },
+              onClick: () => confirmar({
+                title:   'Marcar como no presentado',
+                message: 'El turno quedará marcado como no presentado. Podrás reactivarlo después.',
+                confirmLabel: 'Marcar',
+                onConfirm: () => noPresentado.mutate(t.id),
+              }),
             }] : []),
             ...(esNoPresentado ? [{
               label:   'Reactivar turno',
               icon:    <IconRefresh size={14} />,
               color:   'blue',
-              onClick: () => {
-                if (confirm('¿Reactivar este turno?')) {
-                  reactivar.mutate(t.id)
-                }
-              },
+              onClick: () => confirmar({
+                title:   'Reactivar turno',
+                message: 'El turno volverá a la cola de atención del día.',
+                confirmLabel: 'Reactivar',
+                onConfirm: () => reactivar.mutate(t.id),
+              }),
             }] : []),
           ]} />
         )

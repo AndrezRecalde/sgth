@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import { Stack, Group, Text, Badge, Button,
          ActionIcon, Tooltip, Divider } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -147,10 +148,12 @@ export function DocumentosTab({ servidorId }: Props) {
                   </Tooltip>
                   <Tooltip label="Eliminar" withArrow>
                     <ActionIcon variant="subtle" color="red"
-                      onClick={() => {
-                        if (confirm('¿Eliminar este documento?'))
-                          eliminar.mutate(doc.id)
-                      }}>
+                      onClick={() => confirmar({
+                        title:   'Eliminar documento',
+                        message: <>Se eliminará el documento <b>{doc.nombre_archivo}</b>. No se puede deshacer.</>,
+                        destructiva: true,
+                        onConfirm: () => eliminar.mutate(doc.id),
+                      })}>
                       <IconTrash size={14} />
                     </ActionIcon>
                   </Tooltip>

@@ -1,9 +1,10 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import {
   Stack, Text, Group, Badge, Card,
   Button, ThemeIcon, Progress,
-  Alert, Skeleton, Checkbox,
+  Alert, Skeleton, Checkbox, Box,
 } from '@mantine/core'
 import {
   IconTrophy, IconMedal, IconMedal2,
@@ -14,7 +15,6 @@ import { useMemo, useState } from 'react'
 import {
   usePostulantes,
   useEnviarAlDispensario,
-  useConfirmarGanador,
 } from '../hooks/useConvocatoria'
 import type { Postulante } from '../services/convocatoriaService'
 
@@ -76,7 +76,6 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
   const { data: postulantes = [], isLoading } =
     usePostulantes(convocatoriaId)
   const enviar   = useEnviarAlDispensario(convocatoriaId)
-  const confirmar = useConfirmarGanador(convocatoriaId)
 
   const [seleccionados, setSeleccionados] = useState<number[]>([])
 
@@ -201,21 +200,29 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
                   leftSection={<IconSend size={13} />}
                   loading={enviar.isPending}
                   onClick={() => {
-                    const nombres = ranking
+                    const elegidos = ranking
                       .filter((p) => seleccionados.includes(p.id))
-                      .map((p) => `· ${getNombreCompleto(p)}`)
-                      .join('\n')
 
-                    if (confirm(
-                      `¿Enviar al Dispensario Médico a ${seleccionados.length} candidato(s)?\n\n` +
-                      `${nombres}\n\n` +
-                      `La convocatoria queda en espera de los dictámenes médicos. ` +
-                      `Los demás aprobados pasan a lista de espera.`
-                    )) {
-                      enviar.mutate(seleccionados, {
+                    confirmar({
+                      title:   'Enviar al Dispensario Médico',
+                      message: (
+                        <>
+                          Se enviará al Dispensario Médico a{' '}
+                          <b>{elegidos.length} candidato(s)</b>:
+                          <Box component="ul" my="xs" pl="md">
+                            {elegidos.map((p) => (
+                              <li key={p.id}>{getNombreCompleto(p)}</li>
+                            ))}
+                          </Box>
+                          La convocatoria queda en espera de los dictámenes
+                          médicos. Los demás aprobados pasan a lista de espera.
+                        </>
+                      ),
+                      confirmLabel: 'Enviar',
+                      onConfirm: () => enviar.mutate(seleccionados, {
                         onSuccess: () => setSeleccionados([]),
-                      })
-                    }
+                      }),
+                    })
                   }}
                 >
                   Enviar al Dispensario

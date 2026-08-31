@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -85,47 +86,62 @@ function CargaRow({
   const enfermedades = (carga.enfermedades_catastroficas ??
     []) as EnfermedadCatastroficaCargaFamiliar[];
 
-  const handleDeleteDisc = async (id: number) => {
-    if (!confirm("¿Eliminar esta discapacidad?")) return;
-    try {
-      await expedienteService.eliminarDiscapacidadCarga(Number(carga.id), id);
-      notifications.show({
-        title: "Eliminado",
-        color: "emerald",
-        message: "Discapacidad eliminada.",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
-      qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
-    } catch {
-      notifications.show({
-        title: "Error",
-        color: "red",
-        message: "No se pudo eliminar.",
-        icon: React.createElement(IconX, { size: 16 }),
-      });
-    }
-  };
+  const handleDeleteDisc = (id: number) =>
+    confirmar({
+      title: "Eliminar discapacidad",
+      message:
+        "Se eliminará esta discapacidad de la carga familiar. No se puede deshacer.",
+      destructiva: true,
+      onConfirm: async () => {
+        try {
+          await expedienteService.eliminarDiscapacidadCarga(
+            Number(carga.id),
+            id,
+          );
+          notifications.show({
+            title: "Eliminado",
+            color: "emerald",
+            message: "Discapacidad eliminada.",
+            icon: React.createElement(IconCheck, { size: 16 }),
+          });
+          qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
+        } catch {
+          notifications.show({
+            title: "Error",
+            color: "red",
+            message: "No se pudo eliminar.",
+            icon: React.createElement(IconX, { size: 16 }),
+          });
+        }
+      },
+    });
 
-  const handleDeleteEnf = async (id: number) => {
-    if (!confirm("¿Eliminar esta enfermedad?")) return;
-    try {
-      await expedienteService.eliminarEnfermedadCarga(Number(carga.id), id);
-      notifications.show({
-        title: "Eliminado",
-        color: "emerald",
-        message: "Enfermedad eliminada.",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
-      qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
-    } catch {
-      notifications.show({
-        title: "Error",
-        color: "red",
-        message: "No se pudo eliminar.",
-        icon: React.createElement(IconX, { size: 16 }),
-      });
-    }
-  };
+  const handleDeleteEnf = (id: number) =>
+    confirmar({
+      title: "Eliminar enfermedad",
+      message:
+        "Se eliminará esta enfermedad de la carga familiar. No se puede deshacer.",
+      destructiva: true,
+      onConfirm: async () => {
+        try {
+          await expedienteService.eliminarEnfermedadCarga(Number(carga.id), id);
+          notifications.show({
+            title: "Eliminado",
+            color: "emerald",
+            message: "Enfermedad eliminada.",
+            icon: React.createElement(IconCheck, { size: 16 }),
+          });
+          qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
+        } catch {
+          notifications.show({
+            title: "Error",
+            color: "red",
+            message: "No se pudo eliminar.",
+            icon: React.createElement(IconX, { size: 16 }),
+          });
+        }
+      },
+    });
 
   const hasCondiciones =
     carga.persona_con_discapacidad || carga.posee_enfermedad_catastrofica;
@@ -394,9 +410,14 @@ export function FamiliaTab({ servidorId }: Props) {
     close();
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("¿Eliminar esta carga familiar?")) eliminar.mutate(id);
-  };
+  const handleDelete = (id: number) =>
+    confirmar({
+      title: "Eliminar carga familiar",
+      message:
+        "Se eliminará esta carga familiar del expediente. No se puede deshacer.",
+      destructiva: true,
+      onConfirm: () => eliminar.mutate(id),
+    });
 
   return (
     <Stack gap="md">

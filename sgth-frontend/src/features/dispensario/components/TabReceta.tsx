@@ -1,5 +1,6 @@
 'use client'
 
+import { confirmar } from '@/components/ui'
 import {
   Stack, Text, Button, Group, Badge,
   Card, ThemeIcon,
@@ -118,14 +119,16 @@ function ItemsRecetaTable({
             label:   'Quitar',
             icon:    <IconTrash size={14} />,
             color:   'red',
-            onClick: () => {
-              if (confirm('¿Quitar este medicamento de la receta?')) {
-                quitarItem.mutate({
-                  recetaId: receta.id,
-                  itemId:   item.id!,
-                })
-              }
-            },
+            onClick: () => confirmar({
+              title:   'Quitar medicamento',
+              message: 'Se quitará este medicamento de la receta.',
+              destructiva: true,
+              confirmLabel: 'Quitar',
+              onConfirm: () => quitarItem.mutate({
+                recetaId: receta.id,
+                itemId:   item.id!,
+              }),
+            }),
           },
         ]} />
       ),
