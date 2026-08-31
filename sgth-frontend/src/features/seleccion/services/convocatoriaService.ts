@@ -1,6 +1,5 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
-import { TIPO_NOMBRAMIENTO_OPTIONS } from '@/features/expediente/utils/tipoNombramientoOptions'
 
 export interface Postulante {
   id:                      number
@@ -106,20 +105,6 @@ export const TIPO_CONVOCATORIA_OPTIONS = [
   { value: 'externa', label: 'Externa' },
   { value: 'mixta',   label: 'Mixta'   },
 ]
-
-// Estos 4 valores deben coincidir EXACTAMENTE con el CHECK constraint de
-// tipo_nombramiento_previsto en la migración de convocatorias del backend
-// (2026_07_24_090000_agregar_tipo_proceso_a_convocatorias.php). No hay
-// sincronización automática entre ambos — si se agrega o quita un tipo
-// válido para procesos express en el backend, este array debe
-// actualizarse a mano.
-const TIPOS_NOMBRAMIENTO_EXPRESS = [
-  'nombramiento_provisional', 'servicios_ocasionales',
-  'servicios_profesionales', 'codigo_trabajo',
-]
-
-export const TIPO_NOMBRAMIENTO_PREVISTO_OPTIONS = TIPO_NOMBRAMIENTO_OPTIONS
-  .filter(o => TIPOS_NOMBRAMIENTO_EXPRESS.includes(o.value))
 
 export const ESTADO_POSTULANTE_OPTIONS = [
   { value: 'inscrito',           label: 'Inscrito'            },

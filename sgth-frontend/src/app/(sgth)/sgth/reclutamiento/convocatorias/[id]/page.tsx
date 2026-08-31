@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { use } from 'react'
 import { Stack, Group, Badge, Text, Button, Card, Grid, Tabs, Divider, ThemeIcon, Skeleton } from '@mantine/core'
 import {
@@ -10,7 +10,7 @@ import {
   IconCalendar,
   IconPlus,
 } from '@tabler/icons-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { TabRanking } from '@/features/seleccion/components/TabRanking'
 import { IconChartBar } from '@tabler/icons-react'
 import {
@@ -46,7 +46,6 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
   const { id } = use(params)
   const convocatoriaId = Number(id)
   const router       = useRouter()
-  const searchParams = useSearchParams()
   const publicar = usePublicarConvocatoria()
   const confirmarGanador = useConfirmarGanador(convocatoriaId)
   const [modalOpened,
@@ -61,20 +60,6 @@ export default function DetalleConvocatoriaPage({ params }: Props) {
     useConvocatoriaDetalle(convocatoriaId)
   const { data: postulantes = [], isLoading: cargandoPostulantes } =
     usePostulantes(convocatoriaId)
-
-  // Reclutamiento Express navega aquí con ?inscribir=1 para abrir el modal
-  // de inscripción automáticamente. La guarda evita que abrirModal() +
-  // router.replace() se disparen más de una vez por carga de página si el
-  // efecto se re-ejecuta antes de que el replace complete.
-  const inscribirYaAbierto = useRef(false)
-  useEffect(() => {
-    if (inscribirYaAbierto.current) return
-    if (searchParams.get('inscribir') === '1') {
-      inscribirYaAbierto.current = true
-      abrirModal()
-      router.replace(`/sgth/reclutamiento/convocatorias/${convocatoriaId}`)
-    }
-  }, [searchParams, convocatoriaId, router, abrirModal])
 
   const getLabelEstado = (v: string) =>
     ESTADO_CONVOCATORIA_OPTIONS.find(o => o.value === v)?.label ?? v
