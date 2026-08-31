@@ -4,7 +4,7 @@ import { IconCheck, IconX } from '@tabler/icons-react'
 import React from 'react'
 import type { AxiosError } from 'axios'
 import { expedienteService } from '../services/expedienteService'
-import type { ServidorFormData } from '../schemas/servidor.schema'
+import type {} from '../schemas/servidor.schema'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { ApiResponse } from '@/types/api'
 

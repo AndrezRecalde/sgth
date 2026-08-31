@@ -50,13 +50,12 @@ interface Props {
 interface SortableItemProps {
   actividad:   PuestoActividad
   index:       number
-  puestoId:    number
   onEliminar:  (id: number) => void
   onToggle:    (id: number, activo: boolean) => void
 }
 
 function SortableItem({
-  actividad, index, puestoId, onEliminar, onToggle,
+  actividad, index, onEliminar, onToggle,
 }: SortableItemProps) {
   const {
     attributes, listeners, setNodeRef,
@@ -320,7 +319,6 @@ export function PuestoActividadesDrawer({
                       key={act.id}
                       actividad={act}
                       index={i}
-                      puestoId={puestoId ?? 0}
                       onEliminar={(id) => eliminar.mutate(id)}
                       onToggle={(id, activo) =>
                         actualizar.mutate({ id, data: { activo } })

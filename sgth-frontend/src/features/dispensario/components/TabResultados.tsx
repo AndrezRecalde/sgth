@@ -26,7 +26,6 @@ import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 
 interface Props {
-  turno:             AgendaMedica
   consulta:          ConsultaMedica
   historiaClinicaId: number
 }
@@ -48,7 +47,7 @@ function formatFecha(fecha: string): string {
 }
 
 export function TabResultados({
-  turno, consulta, historiaClinicaId,
+  consulta, historiaClinicaId,
 }: Props) {
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)

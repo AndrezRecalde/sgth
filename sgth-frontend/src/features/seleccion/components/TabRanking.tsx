@@ -9,7 +9,6 @@ import {
 import {
   IconTrophy, IconMedal, IconMedal2,
   IconInfoCircle, IconSend,
-  IconCircleCheck,
 } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import {

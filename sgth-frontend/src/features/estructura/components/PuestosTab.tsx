@@ -8,7 +8,6 @@ import { SgthTable } from "@/components/ui/SgthTable";
 import { usePuestos } from "../hooks/usePuestos";
 import { usePuestoMutations } from "../hooks/usePuestoMutations";
 import {
-  useUnidades,
   useTodasUnidades,
 } from '../hooks/useUnidades'
 import { getPuestoColumns } from "./puesto.columns";

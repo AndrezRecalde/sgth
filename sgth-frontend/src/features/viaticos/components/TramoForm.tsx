@@ -412,7 +412,6 @@ export function TramoForm({
           control={control}
           errors={errors}
           esPrimerTramo={esPrimerTramo}
-          tipoTramo={tipoTramo}
         />
 
         {/* Botones */}

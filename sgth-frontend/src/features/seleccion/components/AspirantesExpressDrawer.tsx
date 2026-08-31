@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Alert, Badge, Button, Drawer, Group, Select, Stack, Text,
+  Alert, Button, Drawer, Group, Select, Stack, Text,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {

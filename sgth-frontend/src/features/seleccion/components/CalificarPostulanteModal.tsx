@@ -2,13 +2,13 @@
 
 import {
   Modal, Stack, Text, NumberInput,
-  Textarea, Button, Group, Card,
+  Button, Group, Card,
   Badge, Progress, Divider, Alert,
   Radio, Checkbox, ScrollArea,
   Skeleton, ThemeIcon,
 } from '@mantine/core'
 import {
-  IconCheck, IconTrophy, IconInfoCircle,
+  IconCheck, IconInfoCircle,
   IconList, IconHash, IconCheckbox,
 } from '@tabler/icons-react'
 import { useState, useEffect } from 'react'

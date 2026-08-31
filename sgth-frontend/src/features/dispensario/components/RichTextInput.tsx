@@ -9,7 +9,6 @@ import { useEffect } from 'react'
 
 interface Props {
   label:        string
-  placeholder?: string
   value:        string
   onChange:     (value: string) => void
   required?:    boolean
@@ -20,7 +19,7 @@ interface Props {
 }
 
 export function RichTextInput({
-  label, placeholder, value, onChange,
+  label, value, onChange,
   required, error, description,
   minHeight = 120,
   maxHeight = 400,

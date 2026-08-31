@@ -10,7 +10,7 @@ import {
   Text,
   Alert,
 } from "@mantine/core";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconCheck, IconInfoCircle } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";

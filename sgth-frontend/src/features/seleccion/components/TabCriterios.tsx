@@ -8,7 +8,7 @@ import {
   Skeleton, Alert,
 } from '@mantine/core'
 import {
-  IconPlus, IconTrash, IconToggleLeft,
+  IconPlus, IconTrash, 
   IconList, IconHash, IconCheckbox,
   IconInfoCircle,
 } from '@tabler/icons-react'

@@ -14,6 +14,22 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    rules: {
+      // Un identificador que empieza por `_` declara que no se usa a
+      // propósito: parámetros que hay que mantener por la firma, elementos
+      // descartados al desestructurar, errores capturados que no se inspeccionan.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.tsx"],
     rules: {
       // La validación de formularios la hace Zod vía zodResolver. El prop

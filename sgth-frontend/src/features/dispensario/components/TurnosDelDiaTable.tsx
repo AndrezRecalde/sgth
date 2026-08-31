@@ -3,7 +3,7 @@
 import { confirmar } from '@/components/ui'
 import {
   Stack, Group, Text, Badge, Button,
-  ActionIcon, Tooltip,
+  ActionIcon, 
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {

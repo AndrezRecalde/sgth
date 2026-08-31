@@ -235,7 +235,6 @@ export function AtencionMedicaPanel({
                 <Tabs.Panel value="resultados">
                   {consultaActiva ? (
                     <TabResultados
-                      turno={turno}
                       consulta={consultaActiva}
                       historiaClinicaId={historiaClinicaId}
                     />

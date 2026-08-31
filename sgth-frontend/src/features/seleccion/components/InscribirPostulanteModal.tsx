@@ -7,7 +7,7 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
-  IconUsers, IconCheck, IconInfoCircle,
+  IconCheck, IconInfoCircle,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'

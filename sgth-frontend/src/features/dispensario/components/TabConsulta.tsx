@@ -9,7 +9,6 @@ import {
   Text,
   Badge,
   Card,
-  Divider,
   Tooltip,
 } from "@mantine/core";
 import { useForm, Controller } from "react-hook-form";

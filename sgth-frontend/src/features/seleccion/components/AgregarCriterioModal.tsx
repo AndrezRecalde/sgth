@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Modal, Stack, TextInput, Select,
+  Modal, Stack, TextInput, 
   NumberInput, Textarea, Button,
   Group, Text, ActionIcon, Card,
   SegmentedControl, Divider,

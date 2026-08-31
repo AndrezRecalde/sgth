@@ -3,15 +3,15 @@
 import {
   Modal, Stack, Text, Group, Badge,
   NumberInput, Button, Alert, Card,
-  ThemeIcon, Divider,
+  ThemeIcon, 
 } from '@mantine/core'
 import {
-  IconPill, IconAlertTriangle, IconCheck,
+  IconPill, IconCheck,
 } from '@tabler/icons-react'
 import { useState, useEffect } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDespacharReceta } from '../hooks/useReceta'
-import type { RecetaMedica, ItemReceta } from '../services/recetaService'
+import type { RecetaMedica } from '../services/recetaService'
 
 interface Props {
   opened:  boolean
