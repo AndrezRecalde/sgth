@@ -10,7 +10,6 @@ import {
   IconUser, IconUsers, IconArrowRight,
 } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useAccionesTurno } from '../hooks/useAgenda'
 import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
@@ -49,7 +48,6 @@ export function AtencionMedicaPanel({
   const [consultaGuardada, setConsultaGuardada] =
     useState<ConsultaMedica | null>(null)
   const [activeTab, setActiveTab] = useState<string>('consulta')
-  const { enConsulta } = useAccionesTurno()
 
   const consultaActiva = consultaGuardada ?? consultaCargada ?? null
 
@@ -69,12 +67,6 @@ export function AtencionMedicaPanel({
   const handleGuardada = (consulta: ConsultaMedica) => {
     setConsultaGuardada(consulta)
     setActiveTab('receta')
-  }
-
-  const handleIniciarConsulta = () => {
-    if (turno.estado === 'en_espera' || turno.estado === 'en_sala') {
-      enConsulta.mutate(turno.id)
-    }
   }
 
   return (
