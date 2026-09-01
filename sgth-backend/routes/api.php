@@ -180,7 +180,7 @@ Route::prefix('v1')->group(function () {
 });
 
 // ── Rutas autenticadas ─────────────────────────────────────────────
-Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login'])->group(function () {
 
     // Auth
     Route::prefix('auth')->group(function () {
@@ -1199,17 +1199,24 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
     });
 
     // Admin TI
+    //
+    // El grupo estaba cerrado con 'role:admin-ti|admin-uath'. Esa lista de
+    // roles no coincidía con los permisos que exige la policy: admin-uath
+    // entraba al grupo pero no tiene 'gestionar-usuarios', así que recibía 403
+    // en el listado y, a la vez, alcanzaba los endpoints que entonces no
+    // comprobaban nada —podía auto-otorgarse cualquier permiso del sistema.
+    //
+    // Ahora cada acción se autoriza por su permiso concreto en UsuarioPolicy,
+    // que es la única lista que hay que mantener.
     Route::prefix('admin')
-        ->middleware('role:admin-ti|admin-uath')
         ->group(function () {
+            // Antes que apiResource: si no, 'usuarios/{usuario}' se traga la
+            // ruta literal.
             Route::get('usuarios/sugerir-usuario-ti',
                 [UsuarioController::class, 'sugerirUsuarioTi'])
                 ->name('usuarios.sugerirUsuarioTi');
 
-            Route::get('usuarios/sin-servidor',
-                [UsuarioController::class, 'sinServidor'])
-                ->name('usuarios.sinServidor');
-            Route::post('usuarios/{usuario}/toggle-activo',
+            Route::post('usuarios/{id}/toggle-activo',
                 [UsuarioController::class, 'toggleActivo'])
                 ->name('usuarios.toggleActivo');
 
@@ -1225,9 +1232,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'primer-login'])->group(functio
                 [UsuarioController::class, 'roles'])
                 ->name('usuarios.roles');
             Route::apiResource('usuarios', UsuarioController::class);
-            Route::post('usuarios/{usuario}/restablecer-contrasena',
+            Route::post('usuarios/{id}/restablecer-contrasena',
                 [UsuarioController::class, 'restablecerContrasena']
-            );
+            )->name('usuarios.restablecerContrasena');
 
             Route::get('permisos',
                 [PermisoController::class, 'index'])

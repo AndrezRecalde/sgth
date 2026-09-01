@@ -1122,6 +1122,12 @@ export type PermisoGrupo = {
   permisos: PermisoItem[]
 }
 
+/** Rol del sistema tal como lo expone /admin/usuarios-roles. */
+export type RolOpcion = {
+  valor:    string
+  etiqueta: string
+}
+
 export type UsuarioCreateData = {
   email:       string
   usuario_ti:  string

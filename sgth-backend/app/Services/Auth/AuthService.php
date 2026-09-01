@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Contracts\Auth\AuthServiceInterface;
+use App\Exceptions\CuentaDesactivadaException;
 use App\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,13 @@ final class AuthService implements AuthServiceInterface
 
         if (!$user || !Hash::check($contrasena, $user->password)) {
             throw new AuthenticationException('Las credenciales proporcionadas son incorrectas.');
+        }
+
+        // La comprobación va después de validar la contraseña a propósito: así
+        // el mensaje de cuenta desactivada solo lo ve quien ya demostró ser el
+        // dueño de la cuenta, y no sirve para descubrir qué usuarios existen.
+        if (!$user->activo) {
+            throw new CuentaDesactivadaException();
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

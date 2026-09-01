@@ -21,9 +21,10 @@ final class UpdateUsuarioRequest extends FormRequest
         $usuario = $this->route('usuario');
         $usuarioId = is_object($usuario) ? $usuario->id : $usuario;
 
+        // 'nombre' y 'apellido' se validaban aquí hasta que la migración de
+        // 2026-05-27 movió esos datos a la ficha de servidor y eliminó las
+        // columnas de users. El servicio nunca los usó.
         return [
-            'nombre'     => ['sometimes', 'string', 'max:100'],
-            'apellido'   => ['sometimes', 'string', 'max:100'],
             'email'      => ['sometimes', 'email', 'unique:users,email,' . $usuarioId],
             'usuario_ti' => [
                 'sometimes',

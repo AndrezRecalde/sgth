@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'primer-login' => \App\Http\Middleware\PrimerLoginMiddleware::class,
+            'usuario-activo' => \App\Http\Middleware\UsuarioActivoMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -68,6 +69,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (\App\Exceptions\ReglaNegocioException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
+        });
+
+        $exceptions->render(function (\App\Exceptions\CuentaDesactivadaException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
         });
 
         // Red de seguridad para violaciones de restricción única no

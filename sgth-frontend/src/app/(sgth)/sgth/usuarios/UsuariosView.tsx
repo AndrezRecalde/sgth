@@ -1,20 +1,20 @@
 'use client'
 
-import { useState }           from 'react'
+import { useState } from 'react'
 import { Button, Group } from '@mantine/core'
 import { useDebouncedValue, useDisclosure } from '@mantine/hooks'
-import { IconUsers, IconUserPlus } from '@tabler/icons-react'
-import { PageHeader }         from '@/components/ui/PageHeader'
-import { EmptyState }         from '@/components/ui/EmptyState'
-import { UsuarioToolbar }     from '@/features/usuarios/components/UsuarioToolbar'
-import { UsuarioTable }       from '@/features/usuarios/components/UsuarioTable'
-import { UsuarioDrawer }      from '@/features/usuarios/components/UsuarioDrawer'
-import { PermisosDrawer }     from '@/features/usuarios/components/PermisosDrawer'
+import { IconUsers, IconUserPlus, IconSearchOff } from '@tabler/icons-react'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { UsuarioToolbar } from '@/features/usuarios/components/UsuarioToolbar'
+import { UsuarioTable } from '@/features/usuarios/components/UsuarioTable'
+import { UsuarioDrawer } from '@/features/usuarios/components/UsuarioDrawer'
+import { PermisosDrawer } from '@/features/usuarios/components/PermisosDrawer'
 import { AsignarServidorModal } from '@/features/usuarios/components/AsignarServidorModal'
-import { useUsuarios }        from '@/features/usuarios/hooks/useUsuarios'
+import { useUsuarios } from '@/features/usuarios/hooks/useUsuarios'
 import { useUsuarioMutations } from '@/features/usuarios/hooks/useUsuarioMutations'
-import type { Usuario }       from '@/types/api'
-import { PageShell , confirmar } from '@/components/ui'
+import type { Usuario } from '@/types/api'
+import { PageShell, confirmar } from '@/components/ui'
 
 // El texto escrito entraba directo en la clave de consulta, así que cada tecla
 // pedía un listado paginado entero y solo importaba el último.
@@ -24,6 +24,7 @@ export function UsuariosView() {
   const [page,   setPage]   = useState(1)
   const [search, setSearch] = useState('')
   const [rol,    setRol]    = useState<string | null>(null)
+  const [estado, setEstado] = useState<string | null>(null)
 
   const [usuarioSel,  setUsuarioSel]  = useState<Usuario | null>(null)
   const [permisosUsr, setPermisosUsr] = useState<Usuario | null>(null)
@@ -51,16 +52,28 @@ export function UsuariosView() {
     setPage(1)
   }
 
+  const filtrarPorEstado = (v: string | null) => {
+    setEstado(v)
+    setPage(1)
+  }
+
   const { data, isLoading } = useUsuarios({
     page,
     per_page: 15,
     search:   searchConRetardo || undefined,
     rol:      rol              || undefined,
+    activo:   estado === null ? undefined : estado === 'true',
   })
 
-  const { toggleActivo, restablecerContrasena, desvincularServidor } = useUsuarioMutations()
+  const { toggleActivo, restablecerContrasena, desvincularServidor } =
+    useUsuarioMutations()
 
   const usuarios = (data?.data ?? []) as Usuario[]
+
+  // Se mira el término ya retardado, que es el que se consultó: con el texto en
+  // crudo el mensaje cambiaría antes de que llegue el resultado.
+  const hayFiltros =
+    searchConRetardo !== '' || rol !== null || estado !== null
 
   const handleNuevo = () => {
     setUsuarioSel(null)
@@ -88,17 +101,15 @@ export function UsuariosView() {
   }
 
   const nombreDe = (u: Usuario) =>
-    u.nombre_completo
-      || u.servidor?.nombre
-      || u.email
-      || '(Sin nombre)'
+    u.nombre_completo || u.servidor?.nombre || u.email || '(Sin nombre)'
 
   const handleRestablecerPassword = (u: Usuario) => confirmar({
     title:   'Restablecer contraseña',
     message: (
       <>
-        Se restablecerá la contraseña de <b>{nombreDe(u)}</b>. Quedará como
-        contraseña la cédula del servidor.
+        La contraseña de <b>{nombreDe(u)}</b> volverá a ser su cédula
+        ({u.servidor?.cedula ?? '—'}) y se cerrarán todas sus sesiones
+        abiertas. Deberá cambiarla al volver a entrar.
       </>
     ),
     destructiva: true,
@@ -110,8 +121,9 @@ export function UsuariosView() {
     title:   'Desvincular servidor',
     message: (
       <>
-        Se desvinculará el servidor de <b>{nombreDe(u)}</b>. El usuario
-        conservará su acceso al sistema.
+        Se desvinculará la ficha de <b>{nombreDe(u)}</b>. El usuario quedará
+        <b> inactivo</b> y perderá el acceso hasta que se le asigne otro
+        servidor.
       </>
     ),
     destructiva: true,
@@ -122,6 +134,12 @@ export function UsuariosView() {
   const handleAsignarServidor = (u: Usuario) => {
     setAsignarUsr(u)
     openAsignar()
+  }
+
+  const limpiarFiltros = () => {
+    setRol(null)
+    setEstado(null)
+    setPage(1)
   }
 
   return (
@@ -145,24 +163,38 @@ export function UsuariosView() {
       <UsuarioToolbar
         onSearch={buscar}
         onRolChange={filtrarPorRol}
+        onEstadoChange={filtrarPorEstado}
       />
 
       {!isLoading && usuarios.length === 0 ? (
-        <EmptyState
-          icon={IconUsers}
-          title="No hay usuarios registrados"
-          description="Comienza creando el primer usuario del sistema."
-          action={
-            <Button
-              color="emerald"
-              variant="light"
-              leftSection={<IconUserPlus size={14} />}
-              onClick={handleNuevo}
-            >
-              Nuevo usuario
-            </Button>
-          }
-        />
+        hayFiltros ? (
+          <EmptyState
+            icon={IconSearchOff}
+            title="Ningún usuario coincide con la búsqueda"
+            description="Prueba con otros términos o quita los filtros aplicados."
+            action={
+              <Button variant="default" onClick={limpiarFiltros}>
+                Limpiar filtros
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={IconUsers}
+            title="No hay usuarios registrados"
+            description="Comienza creando el primer usuario del sistema."
+            action={
+              <Button
+                color="emerald"
+                variant="light"
+                leftSection={<IconUserPlus size={14} />}
+                onClick={handleNuevo}
+              >
+                Nuevo usuario
+              </Button>
+            }
+          />
+        )
       ) : (
         <UsuarioTable
           data={usuarios}

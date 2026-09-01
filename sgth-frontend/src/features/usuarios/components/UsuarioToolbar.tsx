@@ -1,42 +1,81 @@
 'use client'
 
-import { TextInput, Select, Group, Stack } from '@mantine/core'
+import { useState } from 'react'
+import { TextInput, Select, Group, Stack, ActionIcon } from '@mantine/core'
+import { IconSearch, IconX } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useRoles } from '../hooks/useRoles'
 
 interface Props {
-  onSearch:    (v: string) => void
-  onRolChange: (v: string | null) => void
+  /** El retardo lo aplica la vista; aquí se propaga cada pulsación. */
+  onSearch:       (v: string) => void
+  onRolChange:    (v: string | null) => void
+  onEstadoChange: (v: string | null) => void
 }
 
-export function UsuarioToolbar({ onSearch, onRolChange }: Props) {
+const ESTADOS = [
+  { value: 'true',  label: 'Activos' },
+  { value: 'false', label: 'Inactivos' },
+]
+
+export function UsuarioToolbar({ onSearch, onRolChange, onEstadoChange }: Props) {
   const contained    = useContainedInput()
   const { isMobile } = useMobileBreakpoint()
   const { data: roles = [] } = useRoles()
 
-  const rolOptions = (roles as string[]).map(r => ({
-    value: r,
-    label: r.replace(/-/g, ' ')
-             .replace(/\b\w/g, c => c.toUpperCase()),
-  }))
+  // Estado local solo para poder ofrecer el botón de limpiar.
+  const [texto, setTexto] = useState('')
+
+  const escribir = (v: string) => {
+    setTexto(v)
+    onSearch(v)
+  }
+
+  const rolOptions = roles.map(r => ({ value: r.valor, label: r.etiqueta }))
 
   const fields = (
     <>
       <TextInput
-        placeholder="Buscar por nombre, email o usuario"
-        onChange={(e) => onSearch(e.currentTarget.value)}
+        label="Buscar usuario"
+        placeholder="Nombre, cédula, correo o usuario"
+        value={texto}
+        onChange={(e) => escribir(e.currentTarget.value)}
+        leftSection={<IconSearch size={14} />}
+        rightSection={
+          texto ? (
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="gray"
+              aria-label="Limpiar búsqueda"
+              onClick={() => escribir('')}
+            >
+              <IconX size={12} />
+            </ActionIcon>
+          ) : null
+        }
         {...contained}
         style={{ flex: 1 }}
       />
       <Select
-        placeholder="Filtrar por rol"
+        label="Rol"
+        placeholder="Todos"
         data={rolOptions}
         onChange={onRolChange}
         clearable
         searchable
         {...contained}
         style={{ minWidth: 200 }}
+      />
+      <Select
+        label="Estado"
+        placeholder="Todos"
+        data={ESTADOS}
+        onChange={onEstadoChange}
+        clearable
+        {...contained}
+        style={{ minWidth: 140 }}
       />
     </>
   )
