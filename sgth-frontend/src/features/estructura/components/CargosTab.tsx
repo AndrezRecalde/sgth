@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Stack, TextInput } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconBriefcase, IconPlus } from "@tabler/icons-react";
 import {
   DataState,
@@ -21,6 +21,10 @@ import type { Cargo } from "@/types/api";
 import { Text } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
 
+// El texto escrito entraba directo en la clave de consulta, así que cada tecla
+// pedía la lista de cargos entera y solo importaba la última.
+const RETARDO_BUSQUEDA_MS = 300;
+
 export function CargosTab() {
   const [search, setSearch] = useState("");
   const [editCargo, setEditCargo] = useState<Cargo | null>(null);
@@ -28,8 +32,9 @@ export function CargosTab() {
 
   const contained = useContainedInput();
   const { eliminar } = useCargoMutations();
+  const [searchConRetardo] = useDebouncedValue(search, RETARDO_BUSQUEDA_MS);
   const { data: cargos = [], isLoading, error } = useCargos(
-    search ? { search } : undefined,
+    searchConRetardo ? { search: searchConRetardo } : undefined,
   );
 
   const handleEdit = (cargo: Cargo) => {

@@ -2,7 +2,7 @@
 
 import { useState }           from 'react'
 import { Button, Group } from '@mantine/core'
-import { useDisclosure }      from '@mantine/hooks'
+import { useDebouncedValue, useDisclosure } from '@mantine/hooks'
 import { IconUsers, IconUserPlus } from '@tabler/icons-react'
 import { PageHeader }         from '@/components/ui/PageHeader'
 import { EmptyState }         from '@/components/ui/EmptyState'
@@ -15,6 +15,10 @@ import { useUsuarios }        from '@/features/usuarios/hooks/useUsuarios'
 import { useUsuarioMutations } from '@/features/usuarios/hooks/useUsuarioMutations'
 import type { Usuario }       from '@/types/api'
 import { PageShell , confirmar } from '@/components/ui'
+
+// El texto escrito entraba directo en la clave de consulta, así que cada tecla
+// pedía un listado paginado entero y solo importaba el último.
+const RETARDO_BUSQUEDA_MS = 300
 
 export function UsuariosView() {
   const [page,   setPage]   = useState(1)
@@ -32,11 +36,26 @@ export function UsuariosView() {
   const [asignarOpened,
     { open: openAsignar, close: closeAsignar }]   = useDisclosure(false)
 
+  const [searchConRetardo] = useDebouncedValue(search, RETARDO_BUSQUEDA_MS)
+
+  // Cambiar un filtro sin volver a la primera página consultaba esa misma
+  // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
+  // salía en blanco aunque hubiera coincidencias.
+  const buscar = (v: string) => {
+    setSearch(v)
+    setPage(1)
+  }
+
+  const filtrarPorRol = (v: string | null) => {
+    setRol(v)
+    setPage(1)
+  }
+
   const { data, isLoading } = useUsuarios({
     page,
     per_page: 15,
-    search:   search || undefined,
-    rol:      rol    || undefined,
+    search:   searchConRetardo || undefined,
+    rol:      rol              || undefined,
   })
 
   const { toggleActivo, restablecerContrasena, desvincularServidor } = useUsuarioMutations()
@@ -124,8 +143,8 @@ export function UsuariosView() {
       </Group>
 
       <UsuarioToolbar
-        onSearch={setSearch}
-        onRolChange={setRol}
+        onSearch={buscar}
+        onRolChange={filtrarPorRol}
       />
 
       {!isLoading && usuarios.length === 0 ? (

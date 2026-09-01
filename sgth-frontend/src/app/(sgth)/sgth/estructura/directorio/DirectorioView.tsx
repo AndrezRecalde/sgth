@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { useDebouncedValue, useDisclosure } from '@mantine/hooks'
 import { IconCubePlus } from '@tabler/icons-react'
 import { PageHeader, PageShell, confirmar } from '@/components/ui'
 import { DirectorioTable } from '@/features/estructura/components/DirectorioTable'
@@ -11,6 +11,10 @@ import { ExtensionModal } from '@/features/estructura/components/ExtensionModal'
 import { useDirectorio } from '@/features/estructura/hooks/useDirectorio'
 import { useExtensionMutations } from '@/features/estructura/hooks/useExtensionMutations'
 import type { ExtensionConRelaciones } from '@/types/api'
+
+// El texto escrito entraba directo en la clave de consulta, así que cada tecla
+// pedía el directorio entero y solo importaba la última.
+const RETARDO_BUSQUEDA_MS = 300
 
 export function DirectorioView() {
   const [search, setSearch] = useState('')
@@ -21,8 +25,10 @@ export function DirectorioView() {
 
   const { eliminar } = useExtensionMutations()
 
+  const [searchConRetardo] = useDebouncedValue(search, RETARDO_BUSQUEDA_MS)
+
   const { data: directorio = [], isLoading } = useDirectorio({
-    search: search || undefined,
+    search: searchConRetardo || undefined,
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
   })
 

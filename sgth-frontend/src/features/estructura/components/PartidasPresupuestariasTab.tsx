@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Stack, Text, TextInput } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconReceipt, IconTrash } from "@tabler/icons-react";
 import type { DataTableColumn } from "mantine-datatable";
 import {
@@ -19,6 +19,10 @@ import { usePartidaPresupuestariaMutations } from "../hooks/usePartidaPresupuest
 import { PartidaPresupuestariaModal } from "./PartidaPresupuestariaModal";
 import type { PartidaPresupuestaria } from "@/types/api";
 
+// El texto escrito entraba directo en la clave de consulta, así que cada tecla
+// pedía la lista de partidas entera y solo importaba la última.
+const RETARDO_BUSQUEDA_MS = 300;
+
 export function PartidasPresupuestariasTab() {
   const [search, setSearch] = useState("");
   const [editPartida, setEditPartida] = useState<PartidaPresupuestaria | null>(
@@ -28,8 +32,9 @@ export function PartidasPresupuestariasTab() {
 
   const contained = useContainedInput();
   const { eliminar } = usePartidaPresupuestariaMutations();
+  const [searchConRetardo] = useDebouncedValue(search, RETARDO_BUSQUEDA_MS);
   const { data: partidas = [], isLoading, error } = usePartidasPresupuestarias(
-    search ? { search } : undefined,
+    searchConRetardo ? { search: searchConRetardo } : undefined,
   );
 
   const handleEdit = (partida: PartidaPresupuestaria) => {
