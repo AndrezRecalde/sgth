@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Combobox, InputBase, useCombobox,
   Text, Stack, Loader, Badge, Group,
@@ -30,7 +31,10 @@ export function BuscarPuestoSelect({
 }: Props) {
   const contained  = useContainedInput()
   const combobox   = useCombobox()
-  const [search, setSearch]     = useState('')
+  const queryClient = useQueryClient()
+  // `null` significa que el usuario no ha escrito nada: entonces el campo
+  // muestra el puesto seleccionado. Una cadena vacía sí es escritura suya.
+  const [search, setSearch]     = useState<string | null>(null)
   const [puestos, setPuestos]   = useState<Puesto[]>([])
   const [loading, setLoading]   = useState(false)
 
@@ -41,6 +45,23 @@ export function BuscarPuestoSelect({
         ? `— ${p.unidad_administrativa.nombre}`
         : null,
     ].filter(Boolean).join(' ')
+
+  // El texto visible solo se rellenaba al elegir en la lista, así que un
+  // formulario que llegaba con puesto ya asignado —editar un registro— pintaba
+  // el campo vacío y parecía que no había ninguno. Se resuelve el id contra la
+  // API para poder mostrarlo.
+  const { data: puestoSel } = useQuery({
+    queryKey: ['estructura', 'puesto', value],
+    queryFn: async () => {
+      const res = await api.get(`/estructura/puestos/${value}`)
+      return res.data?.datos as Puesto
+    },
+    enabled: !!value,
+    staleTime: Infinity,
+  })
+
+  const escrito = search ?? ''
+  const textoInput = search ?? (puestoSel ? getNombrePuesto(puestoSel) : '')
 
   const buscar = async (q: string) => {
     if (q.length < 2) { setPuestos([]); return }
@@ -64,7 +85,10 @@ export function BuscarPuestoSelect({
   }
 
   const handleSelect = (p: Puesto) => {
-    setSearch(getNombrePuesto(p))
+    // Sembrar la caché con el puesto recién elegido evita que el campo
+    // parpadee vacío mientras la consulta por id va y vuelve.
+    queryClient.setQueryData(['estructura', 'puesto', p.id], p)
+    setSearch(null)
     onChange(p.id, p)
     combobox.closeDropdown()
   }
@@ -88,7 +112,7 @@ export function BuscarPuestoSelect({
             ? <Loader size="xs" />
             : <Combobox.Chevron />}
           {...contained}
-          value={search}
+          value={textoInput}
           onChange={(e) => {
             const v = e.currentTarget.value
             setSearch(v)
@@ -98,7 +122,7 @@ export function BuscarPuestoSelect({
           }}
           onFocus={() => {
             combobox.openDropdown()
-            if (search.length >= 2) buscar(search)
+            if (escrito.length >= 2) buscar(escrito)
           }}
           onBlur={() =>
             setTimeout(() => combobox.closeDropdown(), 200)
@@ -112,7 +136,7 @@ export function BuscarPuestoSelect({
             <Combobox.Empty>Buscando...</Combobox.Empty>
           ) : puestos.length === 0 ? (
             <Combobox.Empty>
-              {search.length < 2
+              {escrito.length < 2
                 ? 'Escriba al menos 2 caracteres'
                 : 'Sin resultados'}
             </Combobox.Empty>

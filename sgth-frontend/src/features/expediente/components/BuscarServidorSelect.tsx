@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Combobox, InputBase, useCombobox,
   Text, Stack, Loader,
@@ -32,13 +33,33 @@ export function BuscarServidorSelect({
 }: Props) {
   const contained   = useContainedInput()
   const combobox    = useCombobox()
-  const [search, setSearch]       = useState('')
+  const queryClient = useQueryClient()
+  // `null` significa que el usuario no ha escrito nada: entonces el campo
+  // muestra el servidor seleccionado. Una cadena vacía sí es escritura suya.
+  const [search, setSearch]       = useState<string | null>(null)
   const [servidores, setServidores] = useState<Servidor[]>([])
   const [loading, setLoading]     = useState(false)
 
   const getNombreCompleto = (s: Servidor) =>
     [s.nombre, s.segundo_nombre, s.apellido, s.segundo_apellido]
       .filter(Boolean).join(' ')
+
+  // El texto visible solo se rellenaba al elegir en la lista, así que un
+  // formulario que llegaba con servidor ya asignado —editar un registro—
+  // pintaba el campo vacío y parecía que no había ninguno. Se resuelve el id
+  // contra la API para poder mostrarlo.
+  const { data: servidorSel } = useQuery({
+    queryKey: ['expediente', 'servidor', value],
+    queryFn: async () => {
+      const res = await api.get(`/expediente/servidores/${value}`)
+      return res.data?.datos as Servidor
+    },
+    enabled: !!value,
+    staleTime: Infinity,
+  })
+
+  const escrito = search ?? ''
+  const textoInput = search ?? (servidorSel ? getNombreCompleto(servidorSel) : '')
 
   const buscar = async (q: string) => {
     if (q.length < 2) { setServidores([]); return }
@@ -62,7 +83,10 @@ export function BuscarServidorSelect({
   }
 
   const handleSelect = (srv: Servidor) => {
-    setSearch(getNombreCompleto(srv))
+    // Sembrar la caché con el servidor recién elegido evita que el campo
+    // parpadee vacío mientras la consulta por id va y vuelve.
+    queryClient.setQueryData(['expediente', 'servidor', srv.id], srv)
+    setSearch(null)
     onChange(srv.id)
     onSelect?.(srv)
     combobox.closeDropdown()
@@ -84,7 +108,7 @@ export function BuscarServidorSelect({
           placeholder="Buscar por nombre o cédula..."
           rightSection={loading ? <Loader size="xs" /> : <Combobox.Chevron />}
           {...contained}
-          value={search}
+          value={textoInput}
           onChange={(e) => {
             const v = e.currentTarget.value
             setSearch(v)
@@ -94,7 +118,7 @@ export function BuscarServidorSelect({
           }}
           onFocus={() => {
             combobox.openDropdown()
-            if (search.length >= 2) buscar(search)
+            if (escrito.length >= 2) buscar(escrito)
           }}
           onBlur={() =>
             setTimeout(() => combobox.closeDropdown(), 200)
@@ -108,7 +132,7 @@ export function BuscarServidorSelect({
             <Combobox.Empty>Buscando...</Combobox.Empty>
           ) : servidores.length === 0 ? (
             <Combobox.Empty>
-              {search.length < 2
+              {escrito.length < 2
                 ? 'Escriba al menos 2 caracteres'
                 : 'Sin resultados'}
             </Combobox.Empty>
