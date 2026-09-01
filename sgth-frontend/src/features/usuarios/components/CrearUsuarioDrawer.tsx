@@ -61,17 +61,22 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
     if (opened) reset(VALORES_VACIOS)
   }, [opened, reset])
 
-  const handleClose = () => {
-    setPaso('buscar')
-    setServidorSel(null)
-    onClose()
-  }
-
-  const volverABuscar = () => {
+  /**
+   * El reinicio del asistente NO va aquí.
+   *
+   * Reiniciarlo junto con el cierre repintaba el paso 1 mientras el panel
+   * todavía se estaba deslizando fuera: quien cerraba desde «Configurar
+   * acceso» veía el formulario convertirse en el buscador durante la salida.
+   * Se hace en onExitTransitionEnd, cuando el panel ya no se ve.
+   */
+  const reiniciarAsistente = () => {
     setPaso('buscar')
     setServidorSel(null)
     reset(VALORES_VACIOS)
   }
+
+  /** «Cambiar» en el paso 2: aquí sí se reinicia en el acto, es lo que se pide. */
+  const volverABuscar = reiniciarAsistente
 
   const handleSeleccionar = async (s: ServidorItem) => {
     setServidorSel(s)
@@ -98,7 +103,7 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
         roles: values.roles,
         servidor_id: values.servidor_id,
       })
-      handleClose()
+      onClose()
     } catch {
       // El hook de mutación ya notifica el error.
     }
@@ -107,7 +112,8 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
   return (
     <Drawer
       opened={opened}
-      onClose={handleClose}
+      onClose={onClose}
+      onExitTransitionEnd={reiniciarAsistente}
       title={
         <Group gap="xs">
           <ThemeIcon color="emerald" variant="light" size="md" radius="md">
@@ -181,7 +187,7 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
                 />
 
                 <Group justify="flex-end" mt="md">
-                  <Button variant="default" onClick={handleClose}>
+                  <Button variant="default" onClick={onClose}>
                     Cancelar
                   </Button>
                   <Button
