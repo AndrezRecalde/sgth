@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Box, Button, Group, Select, Text, Tooltip } from '@mantine/core'
+import { Badge, Button, Select, Stack, Text, Tooltip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPencil, IconPlus } from '@tabler/icons-react'
+import { IconFileCheck, IconPencil, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { DataState, SgthTable, TableActions, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useVistosBuenos } from '../hooks/useDisciplinario'
 import { VistoBuenoModal } from './VistoBuenoModal'
@@ -32,7 +31,7 @@ export function VistosBuenosTab() {
   const [crearOpened, { open: openCrear, close: closeCrear }] = useDisclosure(false)
   const [editarOpened, { open: openEditar, close: closeEditar }] = useDisclosure(false)
 
-  const { data, isLoading } = useVistosBuenos(
+  const { data, isLoading, error } = useVistosBuenos(
     estado ? { estado: estado as EstadoVistoBueno } : undefined,
   )
   const tramites = data?.data ?? []
@@ -122,10 +121,21 @@ export function VistosBuenosTab() {
   ]
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md">
+    <Stack gap="md">
+      <Toolbar
+        actions={
+          <Button
+            leftSection={<IconPlus size={16} />}
+            color="emerald"
+            variant="light"
+            onClick={openCrear}
+          >
+            Solicitar visto bueno
+          </Button>
+        }
+      >
         <Select
-          label="Filtrar por estado"
+          label="Estado"
           placeholder="Todos"
           data={ESTADO_OPTIONS}
           value={estado}
@@ -134,22 +144,26 @@ export function VistosBuenosTab() {
           {...contained}
           style={{ minWidth: 240 }}
         />
-        <Button
-          leftSection={<IconPlus size={16} />}
-          color="emerald"
-          variant="light"
-          onClick={openCrear}
-        >
-          Solicitar visto bueno
-        </Button>
-      </Group>
+      </Toolbar>
 
-      <SgthTable
-        records={tramites}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!tramites.length}
+        emptyProps={{
+          icon: IconFileCheck,
+          title: 'Sin trámites de visto bueno',
+          description: estado
+            ? 'Ningún trámite se encuentra en ese estado.'
+            : 'No hay trámites de visto bueno registrados.',
+        }}
+      >
+        <SgthTable
+          records={tramites}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
 
       <VistoBuenoModal opened={crearOpened} onClose={closeCrear} />
       <TransicionarVistoBuenoModal
@@ -157,6 +171,6 @@ export function VistosBuenosTab() {
         onClose={closeEditar}
         tramite={seleccionado}
       />
-    </Box>
+    </Stack>
   )
 }

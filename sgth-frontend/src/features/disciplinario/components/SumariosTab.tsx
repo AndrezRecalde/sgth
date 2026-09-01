@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Box, Button, Group, Select, Text } from '@mantine/core'
+import { Badge, Button, Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconArrowRight, IconPlus } from '@tabler/icons-react'
+import { IconArrowRight, IconGavel, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { DataState, SgthTable, TableActions, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSumarios } from '../hooks/useDisciplinario'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
@@ -29,7 +28,7 @@ export function SumariosTab() {
   const [estado, setEstado] = useState<string | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
 
-  const { data, isLoading } = useSumarios(
+  const { data, isLoading, error } = useSumarios(
     estado ? { estado: estado as EstadoSumario } : undefined,
   )
   const sumarios = data?.data ?? []
@@ -115,10 +114,21 @@ export function SumariosTab() {
   ]
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md">
+    <Stack gap="md">
+      <Toolbar
+        actions={
+          <Button
+            leftSection={<IconPlus size={16} />}
+            color="emerald"
+            variant="light"
+            onClick={open}
+          >
+            Abrir sumario
+          </Button>
+        }
+      >
         <Select
-          label="Filtrar por estado"
+          label="Estado"
           placeholder="Todos"
           data={ESTADO_OPTIONS}
           value={estado}
@@ -127,24 +137,28 @@ export function SumariosTab() {
           {...contained}
           style={{ minWidth: 240 }}
         />
-        <Button
-          leftSection={<IconPlus size={16} />}
-          color="emerald"
-          variant="light"
-          onClick={open}
-        >
-          Abrir sumario
-        </Button>
-      </Group>
+      </Toolbar>
 
-      <SgthTable
-        records={sumarios}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!sumarios.length}
+        emptyProps={{
+          icon: IconGavel,
+          title: 'Sin sumarios administrativos',
+          description: estado
+            ? 'Ningún sumario se encuentra en ese estado.'
+            : 'No hay sumarios administrativos abiertos.',
+        }}
+      >
+        <SgthTable
+          records={sumarios}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
 
       <SumarioModal opened={modalOpened} onClose={close} />
-    </Box>
+    </Stack>
   )
 }

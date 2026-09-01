@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Box, Group, Select, Text } from '@mantine/core'
+import { Badge, Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconEye } from '@tabler/icons-react'
+import { IconEye, IconFileDescription } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { DataState, SgthTable, TableActions, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useBandejaMovimientos } from '../hooks/useMovimientoMutations'
 import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
@@ -45,7 +44,7 @@ export function BandejaAccionesPersonal() {
   const [seleccionadoId, setSeleccionadoId] = useState<number | null>(null)
   const [detalleOpened, { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
 
-  const { data, isLoading } = useBandejaMovimientos(
+  const { data, isLoading, error } = useBandejaMovimientos(
     estado ? { estado } : undefined,
   )
   const acciones = data?.data ?? []
@@ -132,10 +131,16 @@ export function BandejaAccionesPersonal() {
   ]
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md">
+    <Stack gap="md">
+      <Toolbar
+        actions={
+          <Text size="sm" c="dimmed">
+            {acciones.length} acción(es) en la vista
+          </Text>
+        }
+      >
         <Select
-          label="Filtrar por estado"
+          label="Estado"
           placeholder="Todos"
           data={ESTADO_OPTIONS}
           value={estado}
@@ -144,23 +149,32 @@ export function BandejaAccionesPersonal() {
           {...contained}
           style={{ minWidth: 260 }}
         />
-        <Text size="sm" c="dimmed">
-          {acciones.length} acción(es) en la vista
-        </Text>
-      </Group>
+      </Toolbar>
 
-      <SgthTable
-        records={acciones}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!acciones.length}
+        emptyProps={{
+          icon: IconFileDescription,
+          title: 'Sin acciones de personal',
+          description: estado
+            ? 'Ninguna acción se encuentra en ese estado.'
+            : 'No hay acciones de personal registradas.',
+        }}
+      >
+        <SgthTable
+          records={acciones}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
 
       <AccionPersonalDetalleDrawer
         opened={detalleOpened}
         onClose={cerrarDetalle}
         movimientoId={seleccionadoId}
       />
-    </Box>
+    </Stack>
   )
 }
