@@ -4,13 +4,30 @@
 
 ```bash
 npx tsc --noEmit
-npx eslint src --ext .ts,.tsx
+npx eslint src
 ```
 
-Cero errores de tipos. Cero errores de ESLint **nuevos**: al 27 de agosto de
-2026 el repositorio arrastra 12 errores previos (`set-state-in-effect`,
-`no-unescaped-entities`, un `no-explicit-any`) y 79 avisos de variables sin
-usar. No agregues ninguno; si tocas un archivo que tiene uno, arréglalo.
+`--ext` se cayó del comando: con la configuración plana de ESLint 9 no hace
+nada —las extensiones salen de `eslint.config.mjs`— y dejarlo escrito sugería
+que filtraba algo. `npm run lint` corre exactamente `eslint src`.
+
+Cero errores de tipos y **cero errores de ESLint**: al 1 de septiembre de 2026
+`eslint src` sale limpio sobre todo el proyecto. Ya no hay que descontar nada.
+
+Queda **un único aviso**, documentado a propósito: `handleIniciarConsulta` sin
+usar en `features/dispensario/components/AtencionMedicaPanel.tsx`, a la espera
+de una decisión de producto. Por eso `npm run lint` —que ahora sí ejecuta un
+linter, `eslint src`— no lleva `--max-warnings=0`: sería hacer fallar el script
+por algo que no se resuelve programando.
+
+Un error hoy es tuyo. Si aparece un aviso nuevo, arréglalo antes de cerrar.
+
+Hasta el 27 de agosto de 2026 esta línea base decía 12 errores previos
+(`set-state-in-effect`, `no-unescaped-entities`, un `no-explicit-any`) y 79
+avisos de variables sin usar. Se saldó entre el rescate de tipos que eliminó
+los 17 `as unknown as` y la corrección del script de lint, pero el texto se
+quedó sin actualizar: quien lo leyera después seguía descontando errores que ya
+no existían.
 
 ## Estructura
 
