@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { TextInput, Select, Group, Stack, ActionIcon } from '@mantine/core'
 import { IconSearch, IconX } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -8,6 +7,15 @@ import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useRoles } from '../hooks/useRoles'
 
 interface Props {
+  /**
+   * Los tres controles son controlados por la vista. Con `Select` sin `value`,
+   * «Limpiar filtros» vaciaba el estado y traía la lista completa, pero el
+   * desplegable seguía mostrando el filtro anterior: la pantalla decía
+   * «Inactivos» mientras listaba a todos.
+   */
+  search: string
+  rol:    string | null
+  estado: string | null
   /** El retardo lo aplica la vista; aquí se propaga cada pulsación. */
   onSearch:       (v: string) => void
   onRolChange:    (v: string | null) => void
@@ -19,18 +27,17 @@ const ESTADOS = [
   { value: 'false', label: 'Inactivos' },
 ]
 
-export function UsuarioToolbar({ onSearch, onRolChange, onEstadoChange }: Props) {
+export function UsuarioToolbar({
+  search,
+  rol,
+  estado,
+  onSearch,
+  onRolChange,
+  onEstadoChange,
+}: Props) {
   const contained    = useContainedInput()
   const { isMobile } = useMobileBreakpoint()
   const { data: roles = [] } = useRoles()
-
-  // Estado local solo para poder ofrecer el botón de limpiar.
-  const [texto, setTexto] = useState('')
-
-  const escribir = (v: string) => {
-    setTexto(v)
-    onSearch(v)
-  }
 
   const rolOptions = roles.map(r => ({ value: r.valor, label: r.etiqueta }))
 
@@ -39,17 +46,17 @@ export function UsuarioToolbar({ onSearch, onRolChange, onEstadoChange }: Props)
       <TextInput
         label="Buscar usuario"
         placeholder="Nombre, cédula, correo o usuario"
-        value={texto}
-        onChange={(e) => escribir(e.currentTarget.value)}
+        value={search}
+        onChange={(e) => onSearch(e.currentTarget.value)}
         leftSection={<IconSearch size={14} />}
         rightSection={
-          texto ? (
+          search ? (
             <ActionIcon
               size="sm"
               variant="subtle"
               color="gray"
               aria-label="Limpiar búsqueda"
-              onClick={() => escribir('')}
+              onClick={() => onSearch('')}
             >
               <IconX size={12} />
             </ActionIcon>
@@ -62,6 +69,7 @@ export function UsuarioToolbar({ onSearch, onRolChange, onEstadoChange }: Props)
         label="Rol"
         placeholder="Todos"
         data={rolOptions}
+        value={rol}
         onChange={onRolChange}
         clearable
         searchable
@@ -72,6 +80,7 @@ export function UsuarioToolbar({ onSearch, onRolChange, onEstadoChange }: Props)
         label="Estado"
         placeholder="Todos"
         data={ESTADOS}
+        value={estado}
         onChange={onEstadoChange}
         clearable
         {...contained}
