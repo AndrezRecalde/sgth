@@ -2,10 +2,16 @@
 
 import { useState } from "react";
 import { Combobox, TextInput, useCombobox, Text, Group } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { IconCubePlus } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useQuery } from "@tanstack/react-query";
 import { inventarioMedicinaService } from "../services/inventarioMedicinaService";
+
+// El término escrito entraba directo en la clave de consulta, así que cada
+// tecla a partir de la segunda pedía una lista de medicinas y solo importaba
+// la última.
+const RETARDO_BUSQUEDA_MS = 300;
 
 interface Props {
   onSeleccionar: (id: number, nombre: string) => void;
@@ -19,12 +25,23 @@ export function BuscarMedicinaSelect({ onSeleccionar, onCrearNueva }: Props) {
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
-  const { data: resultados = [] } = useQuery({
-    queryKey: ["medicinas-buscar", termino],
-    queryFn: () => inventarioMedicinaService.buscar(termino),
-    enabled: termino.length >= 2,
+  const [terminoConRetardo] = useDebouncedValue(termino, RETARDO_BUSQUEDA_MS);
+  // Bajar de dos caracteres corta la búsqueda al instante: el retardo aplaza
+  // las peticiones, no el vaciado de la lista.
+  const consulta = termino.length < 2 ? "" : terminoConRetardo;
+
+  const { data: resultados = [], isFetching } = useQuery({
+    queryKey: ["medicinas-buscar", consulta],
+    queryFn: () => inventarioMedicinaService.buscar(consulta),
+    enabled: consulta.length >= 2,
     staleTime: 1000 * 30,
   });
+
+  // El desplegable decía «Sin resultados» mientras la petición iba en vuelo, y
+  // ahora también durante el retardo. Con esto dice «Buscando...» en los dos
+  // tramos, en vez de afirmar que no hay nada a media palabra.
+  const buscando =
+    isFetching || (termino.length >= 2 && consulta !== termino);
 
   return (
     <Combobox
@@ -63,6 +80,8 @@ export function BuscarMedicinaSelect({ onSeleccionar, onCrearNueva }: Props) {
         <Combobox.Options mah={220} style={{ overflowY: "auto" }}>
           {termino.length < 2 ? (
             <Combobox.Empty>Escribe al menos 2 caracteres</Combobox.Empty>
+          ) : buscando ? (
+            <Combobox.Empty>Buscando...</Combobox.Empty>
           ) : resultados.length === 0 ? (
             <Combobox.Empty>Sin resultados</Combobox.Empty>
           ) : (
