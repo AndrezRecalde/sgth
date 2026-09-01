@@ -1,6 +1,5 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
 import React from "react";
 import { useState } from "react";
 import {
@@ -8,7 +7,6 @@ import {
   Group,
   Button,
   Text,
-  Badge,
   TextInput,
   Chip,
   ActionIcon,
@@ -23,9 +21,16 @@ import {
   IconCubePlus,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { SgthTable } from "@/components/ui/SgthTable";
-import { TableActions } from "@/components/ui/TableActions";
-import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  DataState,
+  SgthTable,
+  StatusBadge,
+  TableActions,
+  Toolbar,
+  confirmar,
+} from "@/components/ui";
+import { SEMANTIC_COLOR, type SemanticTone } from "@/config/design.tokens";
+import { useContainedInput } from "@/hooks/useContainedInput";
 import { VacacionModal } from "./VacacionModal";
 import { useVacaciones } from "../hooks/useVacaciones";
 import { useVacacionMutations } from "../hooks/useVacacionMutations";
@@ -33,11 +38,11 @@ import { asistenciaService } from "../services/asistenciaService";
 import type { Vacacion, EstadoVacacion, MotivoVacacion } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
 
-const ESTADO_COLORS: Record<EstadoVacacion, string> = {
-  pendiente: "orange",
-  aprobada: "emerald",
-  rechazada: "red",
-  gozada: "gray",
+const TONO_ESTADO: Record<EstadoVacacion, SemanticTone> = {
+  pendiente: "warning",
+  aprobada: "success",
+  rechazada: "danger",
+  gozada: "neutral",
 };
 const ESTADO_LABELS: Record<EstadoVacacion, string> = {
   pendiente: "Pendiente",
@@ -61,6 +66,7 @@ const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
 
 export function VacacionesTab() {
   const [opened, { open, close }] = useDisclosure(false);
+  const contained = useContainedInput("sm");
 
   // ── Filtros ──────────────────────────────────────
   const [filtroEstado, setFiltroEstado] = useState<string>("pendiente");
@@ -73,7 +79,7 @@ export function VacacionesTab() {
     per_page: 50,
   };
 
-  const { data, isLoading } = useVacaciones(filtros);
+  const { data, isLoading, error } = useVacaciones(filtros);
   const lista = (
     Array.isArray(data)
       ? data
@@ -212,13 +218,9 @@ export function VacacionesTab() {
       title: "Estado",
       width: 110,
       render: ({ estado }) => (
-        <Badge
-          color={ESTADO_COLORS[estado] ?? "gray"}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge tone={TONO_ESTADO[estado] ?? "neutral"}>
           {ESTADO_LABELS[estado] ?? estado}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -273,94 +275,94 @@ export function VacacionesTab() {
 
   return (
     <Stack gap="md">
-      {/* ── Búsqueda y Filtros ── */}
-      <Group justify="space-between" align="flex-start">
-        <Group>
-          <TextInput
-            placeholder="Ej: VAC-2026-00001"
-            value={busquedaFolio}
-            onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") setFolioQuery(busquedaFolio);
-            }}
-            style={{ width: 350 }}
-            rightSection={
-              busquedaFolio && (
-                <ActionIcon
-                  size="sm"
-                  color="gray"
-                  variant="subtle"
-                  onClick={() => {
-                    setBusquedaFolio("");
-                    setFolioQuery("");
-                  }}
-                >
-                  <IconX size={12} />
-                </ActionIcon>
-              )
-            }
-          />
-          <Button
-            color="emerald"
-            variant="light"
-            leftSection={<IconSearch size={14} />}
-            onClick={() => setFolioQuery(busquedaFolio)}
-          >
-            Buscar
-          </Button>
-        </Group>
-
-        <Stack gap="sm" align="flex-end">
-          {/* ── Chips de estado ── */}
-          <Group gap="xs">
-            {[
-              { value: "todos", label: "Todos", color: "gray" },
-              { value: "pendiente", label: "Pendiente", color: "orange" },
-              { value: "aprobada", label: "Aprobada", color: "emerald" },
-              { value: "rechazada", label: "Rechazada", color: "red" },
-              { value: "gozada", label: "Gozada", color: "gray" },
-            ].map((op) => (
-              <Chip
-                key={op.value}
-                color={op.color}
-                checked={filtroEstado === op.value}
-                onChange={() => setFiltroEstado(op.value)}
+      <Toolbar
+        actions={
+          <>
+            <Button
+              variant="light"
+              leftSection={<IconSearch size={14} />}
+              onClick={() => setFolioQuery(busquedaFolio)}
+            >
+              Buscar
+            </Button>
+            <Button
+              color="emerald"
+              variant="light"
+              leftSection={<IconCubePlus size={16} />}
+              onClick={open}
+            >
+              Nueva solicitud
+            </Button>
+          </>
+        }
+      >
+        <TextInput
+          label="Folio"
+          placeholder="Ej: VAC-2026-00001"
+          {...contained}
+          value={busquedaFolio}
+          onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") setFolioQuery(busquedaFolio);
+          }}
+          style={{ minWidth: 280 }}
+          rightSection={
+            busquedaFolio && (
+              <ActionIcon
+                size="sm"
+                color="gray"
+                variant="subtle"
+                onClick={() => {
+                  setBusquedaFolio("");
+                  setFolioQuery("");
+                }}
               >
-                {op.label}
-              </Chip>
-            ))}
-          </Group>
-
-          {/* ── Botón nueva solicitud ── */}
-          <Button
-            color="emerald"
-            variant="light"
-            leftSection={<IconCubePlus size={20} />}
-            onClick={open}
-          >
-            Nueva solicitud
-          </Button>
-        </Stack>
-      </Group>
-
-      {lista.length === 0 && !isLoading ? (
-        <EmptyState
-          icon={IconBeach}
-          title="Sin solicitudes de vacaciones"
-          description={
-            folioQuery
-              ? `No se encontraron solicitudes con folio "${folioQuery}"`
-              : "No hay solicitudes en este estado."
+                <IconX size={12} />
+              </ActionIcon>
+            )
           }
         />
-      ) : (
+        <Group gap="xs">
+          {[
+            { value: "todos", label: "Todos" },
+            { value: "pendiente", label: "Pendiente" },
+            { value: "aprobada", label: "Aprobada" },
+            { value: "rechazada", label: "Rechazada" },
+            { value: "gozada", label: "Gozada" },
+          ].map((op) => (
+            <Chip
+              key={op.value}
+              // Mismo tono semántico que la etiqueta de estado de la fila.
+              color={SEMANTIC_COLOR[
+                TONO_ESTADO[op.value as EstadoVacacion] ?? "neutral"
+              ]}
+              checked={filtroEstado === op.value}
+              onChange={() => setFiltroEstado(op.value)}
+            >
+              {op.label}
+            </Chip>
+          ))}
+        </Group>
+      </Toolbar>
+
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!lista.length}
+        emptyProps={{
+          icon: IconBeach,
+          title: "Sin solicitudes de vacaciones",
+          description: folioQuery
+            ? `No se encontraron solicitudes con folio «${folioQuery}»`
+            : "No hay solicitudes en este estado.",
+        }}
+      >
         <SgthTable
           records={lista}
           columns={columns}
-          fetching={isLoading}
           minHeight={200}
         />
-      )}
+      </DataState>
 
       <VacacionModal opened={opened} onClose={close} />
     </Stack>

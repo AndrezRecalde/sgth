@@ -1,6 +1,5 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -24,9 +23,16 @@ import {
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import React from "react";
-import { SgthTable } from "@/components/ui/SgthTable";
-import { TableActions } from "@/components/ui/TableActions";
-import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  DataState,
+  SgthTable,
+  StatusBadge,
+  TableActions,
+  Toolbar,
+  confirmar,
+} from "@/components/ui";
+import { SEMANTIC_COLOR, type SemanticTone } from "@/config/design.tokens";
+import { useContainedInput } from "@/hooks/useContainedInput";
 import { PermisoModal } from "./PermisoModal";
 import { usePermisos } from "../hooks/usePermisos";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
@@ -34,11 +40,11 @@ import { asistenciaService } from "../services/asistenciaService";
 import type { PermisoServidor } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
 
-const ESTADO_COLORS: Record<string, string> = {
-  pendiente: "orange",
-  activo: "blue",
-  validado_trabajo_social: "emerald",
-  anulado: "red",
+const TONO_ESTADO: Record<string, SemanticTone> = {
+  pendiente: "warning",
+  activo: "info",
+  validado_trabajo_social: "success",
+  anulado: "danger",
 };
 const ESTADO_LABELS: Record<string, string> = {
   pendiente: "Pendiente",
@@ -55,6 +61,7 @@ const TIPO_LABELS: Record<string, string> = {
 
 export function PermisosTab() {
   const [opened, { open, close }] = useDisclosure(false);
+  const contained = useContainedInput("sm");
 
   // ── Filtros ──────────────────────────────────────
   const [filtroEstado, setFiltroEstado] = useState<string>("pendiente");
@@ -68,7 +75,7 @@ export function PermisosTab() {
     per_page: 50,
   };
 
-  const { data, isLoading } = usePermisos(filtros);
+  const { data, isLoading, error } = usePermisos(filtros);
   const lista = (data?.data ?? []) as PermisoServidor[];
 
   const {
@@ -216,13 +223,9 @@ export function PermisosTab() {
       title: "Estado",
       width: 120,
       render: ({ estado }) => (
-        <Badge
-          color={ESTADO_COLORS[estado as string] ?? "gray"}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge tone={TONO_ESTADO[estado as string] ?? "neutral"}>
           {ESTADO_LABELS[estado as string] ?? estado}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -278,96 +281,93 @@ export function PermisosTab() {
 
   return (
     <Stack gap="md">
-      {/* ── Búsqueda por folio ── */}
-      <Group justify="space-between" align="flex-start">
-        <Group>
-          <TextInput
-            placeholder="Ej: PER-2026-00001"
-            value={busquedaFolio}
-            onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") setFolioQuery(busquedaFolio);
-            }}
-            style={{ width: 350 }}
-            rightSection={
-              busquedaFolio && (
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => {
-                    setBusquedaFolio("");
-                    setFolioQuery("");
-                  }}
-                >
-                  <IconX size={12} />
-                </ActionIcon>
-              )
-            }
-          />
-          <Button
-            color="emerald"
-            variant="light"
-            leftSection={<IconSearch size={14} />}
-            onClick={() => setFolioQuery(busquedaFolio)}
-          >
-            Buscar
-          </Button>
-        </Group>
-        <Stack gap="sm" align="flex-end">
-          {/* ── Chips de estado ── */}
-          <Group gap="xs">
-            {[
-              { value: "todos", label: "Todos", color: "gray" },
-              { value: "pendiente", label: "Pendiente", color: "orange" },
-              { value: "activo", label: "Activo", color: "blue" },
-              {
-                value: "validado_trabajo_social",
-                label: "Validado TS",
-                color: "emerald",
-              },
-              { value: "anulado", label: "Anulado", color: "red" },
-            ].map((op) => (
-              <Chip
-                key={op.value}
-                color={op.color}
-                checked={filtroEstado === op.value}
-                onChange={() => setFiltroEstado(op.value)}
+      <Toolbar
+        actions={
+          <>
+            <Button
+              variant="light"
+              leftSection={<IconSearch size={14} />}
+              onClick={() => setFolioQuery(busquedaFolio)}
+            >
+              Buscar
+            </Button>
+            <Button
+              color="emerald"
+              variant="light"
+              leftSection={<IconCubePlus size={16} />}
+              onClick={open}
+            >
+              Nuevo permiso
+            </Button>
+          </>
+        }
+      >
+        <TextInput
+          label="Folio"
+          placeholder="Ej: PER-2026-00001"
+          {...contained}
+          value={busquedaFolio}
+          onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") setFolioQuery(busquedaFolio);
+          }}
+          style={{ minWidth: 280 }}
+          rightSection={
+            busquedaFolio && (
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={() => {
+                  setBusquedaFolio("");
+                  setFolioQuery("");
+                }}
               >
-                {op.label}
-              </Chip>
-            ))}
-          </Group>
-          {/* ── Botón nuevo permiso ── */}
-          <Button
-            color="emerald"
-            variant="light"
-            leftSection={<IconCubePlus size={20} />}
-            onClick={open}
-          >
-            Nuevo permiso
-          </Button>
-        </Stack>
-      </Group>
-
-      {lista.length === 0 && !isLoading ? (
-        <EmptyState
-          icon={IconClipboardList}
-          title="Sin permisos registrados"
-          description={
-            folioQuery
-              ? `No se encontraron permisos con folio "${folioQuery}"`
-              : "No hay permisos en este estado."
+                <IconX size={12} />
+              </ActionIcon>
+            )
           }
         />
-      ) : (
+        <Group gap="xs">
+          {[
+            { value: "todos", label: "Todos" },
+            { value: "pendiente", label: "Pendiente" },
+            { value: "activo", label: "Activo" },
+            { value: "validado_trabajo_social", label: "Validado TS" },
+            { value: "anulado", label: "Anulado" },
+          ].map((op) => (
+            <Chip
+              key={op.value}
+              // El chip toma el color del mismo tono semántico que la
+              // etiqueta de estado, para que filtro y resultado coincidan.
+              color={SEMANTIC_COLOR[TONO_ESTADO[op.value] ?? "neutral"]}
+              checked={filtroEstado === op.value}
+              onChange={() => setFiltroEstado(op.value)}
+            >
+              {op.label}
+            </Chip>
+          ))}
+        </Group>
+      </Toolbar>
+
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!lista.length}
+        emptyProps={{
+          icon: IconClipboardList,
+          title: "Sin permisos registrados",
+          description: folioQuery
+            ? `No se encontraron permisos con folio «${folioQuery}»`
+            : "No hay permisos en este estado.",
+        }}
+      >
         <SgthTable
           records={lista}
           columns={columns}
-          fetching={isLoading}
           minHeight={200}
         />
-      )}
+      </DataState>
 
       <PermisoModal opened={opened} onClose={close} />
     </Stack>

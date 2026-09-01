@@ -27,7 +27,14 @@ import { useContainedInput } from "@/hooks/useContainedInput";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
-import { SgthTable, StatusBadge, TableActions, confirmar } from "@/components/ui";
+import {
+  SgthTable,
+  StatusBadge,
+  TableActions,
+  Toolbar,
+  confirmar,
+} from "@/components/ui";
+import { type SemanticTone } from "@/config/design.tokens";
 import type {
   ServidorConRelaciones,
   PeriodoVacacion,
@@ -36,10 +43,10 @@ import type {
 import type { DataTableColumn } from "mantine-datatable";
 import { REGIMEN_LABELS, REGIMEN_TONOS, generaVacaciones } from '@/lib/regimen'
 
-const ESTADO_COLORS = {
-  abierto: "emerald",
-  cerrado: "gray",
-  vencido: "red",
+const TONO_ESTADO: Record<string, SemanticTone> = {
+  abierto: "success",
+  cerrado: "neutral",
+  vencido: "danger",
 };
 
 function formatDias(v: number | string | null | undefined): string {
@@ -48,7 +55,7 @@ function formatDias(v: number | string | null | undefined): string {
 }
 
 export function PeriodosVacacionesTab() {
-  const contained = useContainedInput();
+  const contained = useContainedInput("sm");
   const [servidorSelId, setServidorSelId] = useState<number | null>(null);
   const [anio, setAnio] = useState<number>(new Date().getFullYear());
 
@@ -294,13 +301,9 @@ export function PeriodosVacacionesTab() {
       title: "Estado",
       width: 90,
       render: ({ estado }) => (
-        <Badge
-          color={ESTADO_COLORS[estado as keyof typeof ESTADO_COLORS] ?? "gray"}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge tone={TONO_ESTADO[estado as string] ?? "neutral"}>
           {estado}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -376,16 +379,8 @@ export function PeriodosVacacionesTab() {
       <Divider label="Consulta por servidor" labelPosition="left" />
 
       {/* ── PANEL INFERIOR: Consulta individual ── */}
-      <Group justify="flex-start">
-        <Select
-          clearable
-          searchable
-          placeholder="Buscar servidor"
-          data={servidorOptions}
-          value={servidorSelId ? String(servidorSelId) : null}
-          onChange={(v) => setServidorSelId(v ? Number(v) : null)}
-          style={{ width: 450 }}
-        />
+      <Toolbar
+        actions={
         <Button
           variant="light"
           leftSection={<IconRefresh size={16} />}
@@ -412,7 +407,20 @@ export function PeriodosVacacionesTab() {
         >
           Generar período {anio}
         </Button>
-      </Group>
+        }
+      >
+        <Select
+          label="Servidor"
+          clearable
+          searchable
+          placeholder="Buscar servidor"
+          data={servidorOptions}
+          {...contained}
+          value={servidorSelId ? String(servidorSelId) : null}
+          onChange={(v) => setServidorSelId(v ? Number(v) : null)}
+          style={{ minWidth: 420 }}
+        />
+      </Toolbar>
 
       {/* ── RESUMEN SALDO ── */}
       {servidorSelId && !isLoading && resumen && (
