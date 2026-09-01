@@ -36,6 +36,8 @@ export function useUsuarioMutations() {
         icon: React.createElement(IconCheck, { size: 16 }),
       })
       invalidar()
+      // Ese servidor ya no está disponible para vincular a otro usuario.
+      qc.invalidateQueries({ queryKey: ['servidores-sin-usuario'] })
     },
     onError,
   })
@@ -116,10 +118,12 @@ export function useUsuarioMutations() {
     onSuccess: () => {
       notifications.show({
         title: 'Contraseña restablecida',
-        message: 'La contraseña fue restablecida a la cédula del servidor.',
+        message: 'La contraseña volvió a ser la cédula del servidor y sus sesiones se cerraron.',
         color: 'emerald',
         icon: React.createElement(IconCheck, { size: 16 }),
       })
+      // primer_login vuelve a true y la tabla lo muestra.
+      invalidar()
     },
     onError,
   })
@@ -132,7 +136,7 @@ export function useUsuarioMutations() {
       id:       number
       permisos: string[]
     }) => usuarioService.sincronizarPermisos(id, permisos),
-    onSuccess: () => {
+    onSuccess: (_data, { id }) => {
       notifications.show({
         title:   'Permisos actualizados',
         message: 'Los permisos fueron sincronizados correctamente.',
@@ -140,6 +144,9 @@ export function useUsuarioMutations() {
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       invalidar()
+      // Sin esto el drawer volvía a abrirse con los permisos previos: la query
+      // tiene staleTime de 5 min y solo se invalidaba la lista de usuarios.
+      qc.invalidateQueries({ queryKey: ['permisos-usuario', id] })
     },
     onError,
   })
@@ -150,11 +157,27 @@ export function useUsuarioMutations() {
     onSuccess: () => {
       notifications.show({
         title:   'Servidor desvinculado',
-        message: 'El servidor fue desvinculado del usuario.',
+        message: 'El usuario quedó inactivo y sin expediente asociado.',
         color:   'orange',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       invalidar()
+    },
+    onError,
+  })
+
+  const asignarServidor = useMutation({
+    mutationFn: ({ id, servidorId }: { id: number; servidorId: number }) =>
+      usuarioService.asignarServidor(id, servidorId),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Servidor asignado',
+        message: 'La ficha fue vinculada y el usuario quedó activo.',
+        color:   'emerald',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+      qc.invalidateQueries({ queryKey: ['servidores-sin-usuario'] })
     },
     onError,
   })
@@ -166,5 +189,6 @@ export function useUsuarioMutations() {
     restablecerContrasena,
     sincronizarPermisos,
     desvincularServidor,
+    asignarServidor,
   }
 }

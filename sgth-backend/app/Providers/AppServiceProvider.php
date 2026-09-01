@@ -271,6 +271,12 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
+        // El autodescubrimiento busca App\Policies\UserPolicy, así que sin este
+        // registro la policy del módulo de usuarios nunca se ejecutaba: todo
+        // authorize() sobre User caía en "sin policy" y solo pasaba admin-ti
+        // por el Gate::before de arriba.
+        Gate::policy(User::class, \App\Policies\Admin\UsuarioPolicy::class);
+
         Scramble::configure()
             ->withDocumentTransformers(function (OpenApi $openApi) {
                 $openApi->secure(

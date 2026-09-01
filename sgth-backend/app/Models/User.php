@@ -22,6 +22,17 @@ class User extends Authenticatable
 
     protected $guard_name = 'sanctum';
 
+    /**
+     * Espejo de los DEFAULT de la tabla. Sin esto, un User recién creado tiene
+     * activo === null en memoria hasta que se recarga —Eloquent no relee los
+     * defaults del motor—, y cualquier comprobación de `activo` sobre esa
+     * instancia lo trata como desactivado.
+     */
+    protected $attributes = [
+        'activo'       => true,
+        'primer_login' => true,
+    ];
+
     protected function casts(): array
     {
         return [

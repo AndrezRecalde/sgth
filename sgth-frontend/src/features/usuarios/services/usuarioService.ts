@@ -7,6 +7,7 @@ import type {
   UsuarioUpdateData,
   PermisoGrupo,
   PermisoItem,
+  RolOpcion,
 } from '@/types/api'
 
 export const usuarioService = {
@@ -72,19 +73,15 @@ export const usuarioService = {
       { params: search ? { search } : undefined }
     ).then(r => r.data.datos),
 
-  sinServidor: (): Promise<Usuario[]> =>
-    api.get<ApiResponse<Usuario[]>>(
-      '/admin/usuarios/sin-servidor'
-    ).then(r => r.data.datos),
-
-  roles: (): Promise<string[]> =>
-    api.get<ApiResponse<string[]>>(
+  roles: (): Promise<RolOpcion[]> =>
+    api.get<ApiResponse<RolOpcion[]>>(
       '/admin/usuarios-roles'
     ).then(r => r.data.datos),
 
   sugerirUsuarioTi: (servidorId: number): Promise<{ usuario_ti_sugerido: string }> =>
-    api.post<ApiResponse<{ usuario_ti_sugerido: string }>>(
-      '/usuarios/sugerir-usuario-ti', { servidor_id: servidorId }
+    api.get<ApiResponse<{ usuario_ti_sugerido: string }>>(
+      '/admin/usuarios/sugerir-usuario-ti',
+      { params: { servidor_id: servidorId } }
     ).then(r => r.data.datos),
 
   listarPermisos: (): Promise<PermisoGrupo[]> =>

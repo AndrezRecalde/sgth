@@ -1,44 +1,11 @@
 import { Text, Badge, Switch, Tooltip, Group, Stack } from '@mantine/core'
-import { IconEdit, IconKey, IconShieldCheck, IconUserOff, IconUserCheck } from '@tabler/icons-react'
+import {
+  IconEdit, IconKey, IconShieldCheck, IconUserOff, IconUserCheck,
+} from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Usuario } from '@/types/api'
-
-const ROL_COLORS: Record<string, string> = {
-  'admin-ti':          'red',
-  'admin-uath':        'violet',
-  'asistente-uath':    'grape',
-  'maxima-autoridad':  'dark',
-  'director':          'blue',
-  'jefe-unidad':       'cyan',
-  'servidor':          'teal',
-  'recepcion':         'orange',
-  'trabajo-social':    'pink',
-  'medico':            'green',
-  'odontologo':        'lime',
-  'enfermera':         'yellow',
-  'admin-dispensario': 'indigo',
-  'tecnico-dtic':      'gray',
-  'auditor':           'brown',
-}
-
-const ROL_LABELS: Record<string, string> = {
-  'admin-ti':          'Admin TI',
-  'admin-uath':        'Admin UATH',
-  'asistente-uath':    'Asistente UATH',
-  'maxima-autoridad':  'Máxima Autoridad',
-  'director':          'Director',
-  'jefe-unidad':       'Jefe de Unidad',
-  'servidor':          'Servidor',
-  'recepcion':         'Recepción',
-  'trabajo-social':    'Trabajo Social',
-  'medico':            'Médico',
-  'odontologo':        'Odontólogo',
-  'enfermera':         'Enfermera',
-  'admin-dispensario': 'Admin Dispensario',
-  'tecnico-dtic':      'Técnico DTIC',
-  'auditor':           'Auditor',
-}
+import { colorRol, etiquetaRol } from '../constants/roles'
 
 type Handlers = {
   onEdit:                (u: Usuario) => void
@@ -84,9 +51,21 @@ export const getUsuarioColumns = ({
   {
     accessor: 'usuario_ti',
     title:    'Usuario TI',
-    render: ({ usuario_ti, email }) => (
-      <Stack gap={0}>
-        <Text size="sm" ff="monospace">{usuario_ti ?? '—'}</Text>
+    render: ({ usuario_ti, email, primer_login }) => (
+      <Stack gap={2}>
+        <Group gap={6} wrap="nowrap">
+          <Text size="sm" ff="monospace">{usuario_ti ?? '—'}</Text>
+          {primer_login && (
+            <Tooltip
+              label="Aún no ha cambiado la contraseña inicial (su cédula)"
+              withArrow
+            >
+              <Badge size="xs" color="orange" variant="light">
+                clave inicial
+              </Badge>
+            </Tooltip>
+          )}
+        </Group>
         <Text size="xs" c="dimmed">{email}</Text>
       </Stack>
     ),
@@ -96,14 +75,9 @@ export const getUsuarioColumns = ({
     title:    'Rol(es)',
     render: ({ roles }) => (
       <Group gap={4} wrap="wrap">
-        {(Array.isArray(roles) ? roles : []).map(r => (
-          <Badge
-            key={r}
-            size="xs"
-            variant="light"
-            color={ROL_COLORS[r] ?? 'gray'}
-          >
-            {ROL_LABELS[r] ?? r}
+        {(roles ?? []).map(r => (
+          <Badge key={r} size="xs" variant="light" color={colorRol(r)}>
+            {etiquetaRol(r)}
           </Badge>
         ))}
       </Group>
@@ -112,30 +86,29 @@ export const getUsuarioColumns = ({
   {
     accessor: 'activo',
     title:    'Estado',
-    width:    80,
+    width:    90,
     render: (usuario) => {
       const sinServidor = !usuario.servidor_id
       return (
         <Tooltip
           label={
             sinServidor
-              ? 'Sin servidor vinculado'
-              : usuario.activo ? 'Desactivar' : 'Activar'
+              ? 'Vincule un servidor para poder activarlo'
+              : usuario.activo ? 'Desactivar acceso' : 'Activar acceso'
           }
           withArrow
         >
-          <Switch
-            checked={
-              String(usuario.activo) === '1' ||
-              String(usuario.activo) === 'true'
-            }
-            onChange={() =>
-              !sinServidor && onToggleActivo(usuario)
-            }
-            disabled={sinServidor}
-            color="emerald"
-            size="sm"
-          />
+          {/* Tooltip necesita un elemento que acepte ref incluso deshabilitado. */}
+          <div style={{ display: 'inline-flex' }}>
+            <Switch
+              checked={!!usuario.activo}
+              onChange={() => onToggleActivo(usuario)}
+              disabled={sinServidor}
+              color="emerald"
+              size="sm"
+              aria-label={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
+            />
+          </div>
         </Tooltip>
       )
     },
@@ -163,6 +136,9 @@ export const getUsuarioColumns = ({
           icon:    <IconKey size={14} />,
           color:   'orange',
           onClick: () => onRestablecerPassword(usuario),
+          // El backend la restablece a la cédula del servidor: sin ficha
+          // vinculada no hay a qué restablecerla.
+          hidden:  !usuario.servidor_id,
         },
         {
           label:   'Asignar servidor',

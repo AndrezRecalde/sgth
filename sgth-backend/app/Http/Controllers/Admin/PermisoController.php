@@ -2,21 +2,32 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Contracts\Admin\UsuarioServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class PermisoController extends Controller
 {
+    use AuthorizesRequests;
+
+    public function __construct(
+        private readonly UsuarioServiceInterface $usuarioService,
+    ) {
+    }
+
     /**
      * Retorna todos los permisos del sistema agrupados
      * por módulo, con sus roles asociados.
      */
     public function index(): JsonResponse
     {
+        $this->authorize('viewAny', User::class);
+
         $permisos = Permission::with('roles')
             ->orderBy('name')
             ->get()
@@ -42,7 +53,8 @@ class PermisoController extends Controller
      */
     public function permisosUsuario(int $id): JsonResponse
     {
-        $user = \App\Models\User::findOrFail($id);
+        $user = $this->usuarioService->obtener($id);
+        $this->authorize('gestionarPermisos', $user);
 
         $directos = $user->getDirectPermissions()
             ->map(fn($p) => [
@@ -61,13 +73,19 @@ class PermisoController extends Controller
         Request $request,
         int $id
     ): JsonResponse {
-        $request->validate([
+        $user = $this->usuarioService->obtener($id);
+        $this->authorize('gestionarPermisos', $user);
+
+        $datos = $request->validate([
             'permisos'   => ['array'],
             'permisos.*' => ['string', 'exists:permissions,name'],
         ]);
 
-        $user = \App\Models\User::findOrFail($id);
-        $user->syncPermissions($request->permisos ?? []);
+        $this->usuarioService->sincronizarPermisos(
+            $id,
+            $datos['permisos'] ?? [],
+            $request->user(),
+        );
 
         return ApiResponse::ok(null, 'Permisos directos actualizados.');
     }
@@ -75,6 +93,14 @@ class PermisoController extends Controller
     private function detectarModulo(string $permiso): string
     {
         return match(true) {
+            // Las tres excepciones van primero porque las ramas genéricas de
+            // abajo las capturaban por subcadena: 'rol' se comía
+            // 'ver-rol-pago-propio', 'contrasena' se comía 'cambiar-contrasena'
+            // y 'bien' se comía 'gestionar-bienestar'.
+            str_contains($permiso, 'rol-pago')          => 'Nómina',
+            $permiso === 'cambiar-contrasena'           => 'Autoservicio',
+            str_contains($permiso, 'bienestar')         => 'Actividades y Bienestar',
+
             str_contains($permiso, 'usuario') ||
             str_contains($permiso, 'rol') ||
             str_contains($permiso, 'contrasena') ||
@@ -103,8 +129,7 @@ class PermisoController extends Controller
 
             str_contains($permiso, 'asistencia') ||
             str_contains($permiso, 'permiso') ||
-            str_contains($permiso, 'vacacion') ||
-            str_contains($permiso, 'contrasena')
+            str_contains($permiso, 'vacacion')
                 => 'Asistencia',
 
             str_contains($permiso, 'viatico') ||
