@@ -9,25 +9,25 @@ npx eslint src
 
 `--ext` se cayó del comando: con la configuración plana de ESLint 9 no hace
 nada —las extensiones salen de `eslint.config.mjs`— y dejarlo escrito sugería
-que filtraba algo. `npm run lint` corre exactamente `eslint src`.
+que filtraba algo. `npm run lint` corre lo mismo más `--max-warnings=0`, que es
+lo que conviene en CI; a mano da igual, porque el umbral se ve en la salida.
 
-Cero errores de tipos y **cero errores de ESLint**: al 1 de septiembre de 2026
-`eslint src` sale limpio sobre todo el proyecto. Ya no hay que descontar nada.
+Cero errores de tipos y **el linter en cero**: al 1 de septiembre de 2026
+`eslint src` no reporta ni un error ni un aviso sobre todo el proyecto. No hay
+línea base que descontar — **cualquier cosa que salga es tuya**.
 
-Queda **un único aviso**, documentado a propósito: `handleIniciarConsulta` sin
-usar en `features/dispensario/components/AtencionMedicaPanel.tsx`, a la espera
-de una decisión de producto. Por eso `npm run lint` —que ahora sí ejecuta un
-linter, `eslint src`— no lleva `--max-warnings=0`: sería hacer fallar el script
-por algo que no se resuelve programando.
-
-Un error hoy es tuyo. Si aparece un aviso nuevo, arréglalo antes de cerrar.
+Por eso `npm run lint` corre `eslint src --max-warnings=0`: el script falla con
+un solo aviso, que es lo que mantiene el cero. Si añades una regla nueva que
+destape avisos preexistentes, arréglalos en el mismo cambio o la regla no entra.
 
 Hasta el 27 de agosto de 2026 esta línea base decía 12 errores previos
 (`set-state-in-effect`, `no-unescaped-entities`, un `no-explicit-any`) y 79
-avisos de variables sin usar. Se saldó entre el rescate de tipos que eliminó
-los 17 `as unknown as` y la corrección del script de lint, pero el texto se
-quedó sin actualizar: quien lo leyera después seguía descontando errores que ya
-no existían.
+avisos de variables sin usar, y pedía descontarlos. Con «cero errores
+**nuevos**» por norma, quien encontrara un error real podía darlo por
+preexistente y cerrarlo sin arreglar. La deuda se saldó entre el rescate de
+tipos que eliminó los 17 `as unknown as` y la corrección del script, pero el
+texto se quedó atrás varias semanas. De ahí que ahora el umbral lo imponga el
+script y no la buena memoria de quien lee.
 
 ## Estructura
 
