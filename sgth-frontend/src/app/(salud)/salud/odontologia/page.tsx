@@ -1,34 +1,20 @@
-'use client'
+import type { Metadata } from 'next'
+import { OdontologiaTurnosView } from '@/features/dispensario/components/OdontologiaTurnosView'
+import { PageHeader, PageShell } from '@/components/ui'
 
-import { useRouter } from 'next/navigation'
-import { TurnosDelDiaTable } from
-  '@/features/dispensario/components/TurnosDelDiaTable'
-import type { AgendaMedica } from
-  '@/features/dispensario/services/agendaService'
+export const metadata: Metadata = {
+  title: 'Odontología',
+  description: 'Mis pacientes del día',
+}
 
 export default function OdontologiaPage() {
-  const router = useRouter()
-
-  const handleAtender = (turno: AgendaMedica) => {
-    router.push(`/salud/odontologia/${turno.folio}`)
-  }
-
-  const handleVerConsulta = (turno: AgendaMedica) => {
-    router.push(`/salud/odontologia/${turno.folio}`)
-  }
-
   return (
     <PageShell>
       <PageHeader
         title="Odontología"
         description="Mis pacientes del día"
       />
-      <TurnosDelDiaTable
-        onAtender={handleAtender}
-        onVerConsulta={handleVerConsulta}
-      />
+      <OdontologiaTurnosView />
     </PageShell>
   )
 }
-
-import { PageHeader, PageShell } from '@/components/ui'

@@ -1,24 +1,20 @@
-'use client'
-
-import { DisponibilidadToggle } from
-  '@/features/dispensario/components/DisponibilidadToggle'
-import { useAuth } from '@/hooks/useAuth'
+import type { Metadata } from 'next'
+import { DisponibilidadToggle } from '@/features/dispensario/components/DisponibilidadToggle'
 import { PageHeader, PageShell } from '@/components/ui'
 
-export default function SaludHomePage() {
-  const { usuario } = useAuth()
-  const roles = (usuario?.roles as string[]) ?? []
-  const esPersonalClinico = roles.some(r =>
-    ['medico', 'odontologo'].includes(r)
-  )
+export const metadata: Metadata = {
+  title: 'Dispensario Médico',
+  description: 'Sistema de Salud Ambulatoria — GADPE',
+}
 
+export default function SaludHomePage() {
   return (
     <PageShell>
       <PageHeader
         title="Dispensario Médico"
         description="Sistema de Salud Ambulatoria — GADPE"
       />
-      {esPersonalClinico && <DisponibilidadToggle />}
+      <DisponibilidadToggle />
     </PageShell>
   )
 }

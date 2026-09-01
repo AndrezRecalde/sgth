@@ -1,34 +1,20 @@
-'use client'
-
-import { useState } from 'react'
-import { Container } from '@mantine/core'
-
-import { SolicitudesPendientesTriajeList } from '@/features/dispensario/components/SolicitudesPendientesTriajeList'
-import { SolicitudSignosVitalesForm } from '@/features/dispensario/components/SolicitudSignosVitalesForm'
-import type { SolicitudCertificacion } from '@/features/dispensario/services/solicitudCertificacionService'
+import type { Metadata } from 'next'
+import { EnfermeriaSsoTriajeView } from '@/features/dispensario/components/EnfermeriaSsoTriajeView'
 import { PageHeader, PageShell } from '@/components/ui'
 
-export default function EnfermeriaSsoPage() {
-  const [solicitudSel, setSolicitudSel] = useState<SolicitudCertificacion | null>(null)
+export const metadata: Metadata = {
+  title: 'Enfermería SSO',
+  description: 'Atención SSO — signos vitales previos al FEMO',
+}
 
+export default function EnfermeriaSsoPage() {
   return (
     <PageShell>
       <PageHeader
         title="Enfermería"
         description="Atención SSO — signos vitales previos al FEMO"
       />
-
-      {solicitudSel ? (
-        <Container size="sm" px={0}>
-          <SolicitudSignosVitalesForm
-            solicitud={solicitudSel}
-            onCreado={() => setSolicitudSel(null)}
-            onCancelar={() => setSolicitudSel(null)}
-          />
-        </Container>
-      ) : (
-        <SolicitudesPendientesTriajeList onSeleccionar={setSolicitudSel} />
-      )}
+      <EnfermeriaSsoTriajeView />
     </PageShell>
   )
 }

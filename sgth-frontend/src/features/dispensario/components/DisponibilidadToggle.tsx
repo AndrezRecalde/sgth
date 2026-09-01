@@ -5,10 +5,22 @@ import {
   useMiDisponibilidad,
   useAlternarDisponibilidad,
 } from '../hooks/useDisponibilidad'
+import { useAuth } from '@/hooks/useAuth'
+
+const ROLES_CLINICOS = ['medico', 'odontologo']
 
 export function DisponibilidadToggle() {
+  const { usuario } = useAuth()
   const { data, isLoading } = useMiDisponibilidad()
   const alternar = useAlternarDisponibilidad()
+
+  // Marcarse disponible solo tiene sentido para quien atiende pacientes; al
+  // resto del personal no se le muestra nada. La comprobación vivía en la
+  // página, que por lo demás no necesitaba ser de cliente.
+  const roles = (usuario?.roles as string[]) ?? []
+  if (!roles.some(r => ROLES_CLINICOS.includes(r))) {
+    return null
+  }
 
   if (isLoading) {
     return <Skeleton height={32} width={220} radius="xl" />
