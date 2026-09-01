@@ -6,8 +6,14 @@ import {
   Combobox, InputBase, useCombobox,
   Text, Stack, Loader, Badge, Group,
 } from '@mantine/core'
+import { useDebouncedValue } from '@mantine/hooks'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
+
+// Cada tecla pedía una lista: escribir «Analista» disparaba siete peticiones y
+// solo importaba la última. Contra el servidor de desarrollo, que atiende de
+// una en una, se encolan y el desplegable se queda en «Buscando...» segundos.
+const RETARDO_BUSQUEDA_MS = 300
 
 interface Puesto {
   id:    number
@@ -35,8 +41,6 @@ export function BuscarPuestoSelect({
   // `null` significa que el usuario no ha escrito nada: entonces el campo
   // muestra el puesto seleccionado. Una cadena vacía sí es escritura suya.
   const [search, setSearch]     = useState<string | null>(null)
-  const [puestos, setPuestos]   = useState<Puesto[]>([])
-  const [loading, setLoading]   = useState(false)
 
   const getNombrePuesto = (p: Puesto) =>
     [
@@ -63,12 +67,16 @@ export function BuscarPuestoSelect({
   const escrito = search ?? ''
   const textoInput = search ?? (puestoSel ? getNombrePuesto(puestoSel) : '')
 
-  const buscar = async (q: string) => {
-    if (q.length < 2) { setPuestos([]); return }
-    setLoading(true)
-    try {
+  const [escritoConRetardo] = useDebouncedValue(escrito, RETARDO_BUSQUEDA_MS)
+  // Bajar de dos caracteres corta la búsqueda al instante: el retardo aplaza
+  // las peticiones, no el vaciado de la lista.
+  const termino = escrito.length < 2 ? '' : escritoConRetardo
+
+  const { data: puestos = [], isFetching } = useQuery({
+    queryKey: ['estructura', 'puestos', 'buscar', termino],
+    queryFn: async () => {
       const res = await api.get('/estructura/puestos', {
-        params: { search: q, per_page: 10, all: false },
+        params: { search: termino, per_page: 10, all: false },
       })
       const datos = res.data?.datos
       const items: Puesto[] = Array.isArray(datos)
@@ -76,13 +84,15 @@ export function BuscarPuestoSelect({
         : Array.isArray(datos?.data)
           ? datos.data
           : []
-      setPuestos(items)
-    } catch {
-      setPuestos([])
-    } finally {
-      setLoading(false)
-    }
-  }
+      return items
+    },
+    enabled: termino.length >= 2,
+  })
+
+  // Mientras corre el retardo todavía no hay petición, pero lo que se ve es la
+  // lista del término anterior: sin esto el desplegable diría «Sin resultados»
+  // en mitad de una palabra.
+  const buscando = isFetching || (escrito.length >= 2 && termino !== escrito)
 
   const handleSelect = (p: Puesto) => {
     // Sembrar la caché con el puesto recién elegido evita que el campo
@@ -108,7 +118,7 @@ export function BuscarPuestoSelect({
           error={error}
           description={description}
           placeholder="Buscar puesto por nombre del cargo..."
-          rightSection={loading
+          rightSection={buscando
             ? <Loader size="xs" />
             : <Combobox.Chevron />}
           {...contained}
@@ -116,14 +126,10 @@ export function BuscarPuestoSelect({
           onChange={(e) => {
             const v = e.currentTarget.value
             setSearch(v)
-            buscar(v)
             combobox.openDropdown()
             if (!v) onChange(null)
           }}
-          onFocus={() => {
-            combobox.openDropdown()
-            if (escrito.length >= 2) buscar(escrito)
-          }}
+          onFocus={() => combobox.openDropdown()}
           onBlur={() =>
             setTimeout(() => combobox.closeDropdown(), 200)
           }
@@ -132,7 +138,7 @@ export function BuscarPuestoSelect({
 
       <Combobox.Dropdown>
         <Combobox.Options>
-          {loading ? (
+          {buscando ? (
             <Combobox.Empty>Buscando...</Combobox.Empty>
           ) : puestos.length === 0 ? (
             <Combobox.Empty>

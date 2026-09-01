@@ -6,8 +6,14 @@ import {
   Combobox, InputBase, useCombobox,
   Text, Stack, Loader,
 } from '@mantine/core'
+import { useDebouncedValue } from '@mantine/hooks'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
+
+// Cada tecla pedía una lista: escribir un apellido disparaba una petición por
+// letra y solo importaba la última. Contra el servidor de desarrollo, que
+// atiende de una en una, se encolan y el desplegable se queda en «Buscando...».
+const RETARDO_BUSQUEDA_MS = 300
 
 interface Servidor {
   id:              number
@@ -37,8 +43,6 @@ export function BuscarServidorSelect({
   // `null` significa que el usuario no ha escrito nada: entonces el campo
   // muestra el servidor seleccionado. Una cadena vacía sí es escritura suya.
   const [search, setSearch]       = useState<string | null>(null)
-  const [servidores, setServidores] = useState<Servidor[]>([])
-  const [loading, setLoading]     = useState(false)
 
   const getNombreCompleto = (s: Servidor) =>
     [s.nombre, s.segundo_nombre, s.apellido, s.segundo_apellido]
@@ -61,12 +65,16 @@ export function BuscarServidorSelect({
   const escrito = search ?? ''
   const textoInput = search ?? (servidorSel ? getNombreCompleto(servidorSel) : '')
 
-  const buscar = async (q: string) => {
-    if (q.length < 2) { setServidores([]); return }
-    setLoading(true)
-    try {
+  const [escritoConRetardo] = useDebouncedValue(escrito, RETARDO_BUSQUEDA_MS)
+  // Bajar de dos caracteres corta la búsqueda al instante: el retardo aplaza
+  // las peticiones, no el vaciado de la lista.
+  const termino = escrito.length < 2 ? '' : escritoConRetardo
+
+  const { data: servidores = [], isFetching } = useQuery({
+    queryKey: ['expediente', 'servidores', 'buscar', termino],
+    queryFn: async () => {
       const res = await api.get('/expediente/servidores', {
-        params: { search: q, per_page: 10 },
+        params: { search: termino, per_page: 10 },
       })
       const datos = res.data?.datos
       const items: Servidor[] = Array.isArray(datos)
@@ -74,13 +82,15 @@ export function BuscarServidorSelect({
         : Array.isArray(datos?.data)
           ? datos.data
           : []
-      setServidores(items)
-    } catch {
-      setServidores([])
-    } finally {
-      setLoading(false)
-    }
-  }
+      return items
+    },
+    enabled: termino.length >= 2,
+  })
+
+  // Mientras corre el retardo todavía no hay petición, pero lo que se ve es la
+  // lista del término anterior: sin esto el desplegable diría «Sin resultados»
+  // en mitad de una palabra.
+  const buscando = isFetching || (escrito.length >= 2 && termino !== escrito)
 
   const handleSelect = (srv: Servidor) => {
     // Sembrar la caché con el servidor recién elegido evita que el campo
@@ -106,20 +116,16 @@ export function BuscarServidorSelect({
           required={required}
           error={error}
           placeholder="Buscar por nombre o cédula..."
-          rightSection={loading ? <Loader size="xs" /> : <Combobox.Chevron />}
+          rightSection={buscando ? <Loader size="xs" /> : <Combobox.Chevron />}
           {...contained}
           value={textoInput}
           onChange={(e) => {
             const v = e.currentTarget.value
             setSearch(v)
-            buscar(v)
             combobox.openDropdown()
             if (!v) onChange(null)
           }}
-          onFocus={() => {
-            combobox.openDropdown()
-            if (escrito.length >= 2) buscar(escrito)
-          }}
+          onFocus={() => combobox.openDropdown()}
           onBlur={() =>
             setTimeout(() => combobox.closeDropdown(), 200)
           }
@@ -128,7 +134,7 @@ export function BuscarServidorSelect({
 
       <Combobox.Dropdown>
         <Combobox.Options>
-          {loading ? (
+          {buscando ? (
             <Combobox.Empty>Buscando...</Combobox.Empty>
           ) : servidores.length === 0 ? (
             <Combobox.Empty>
