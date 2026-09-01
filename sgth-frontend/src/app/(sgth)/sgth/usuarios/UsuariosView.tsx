@@ -137,6 +137,7 @@ export function UsuariosView() {
   }
 
   const limpiarFiltros = () => {
+    setSearch('')
     setRol(null)
     setEstado(null)
     setPage(1)
@@ -161,6 +162,9 @@ export function UsuariosView() {
       </Group>
 
       <UsuarioToolbar
+        search={search}
+        rol={rol}
+        estado={estado}
         onSearch={buscar}
         onRolChange={filtrarPorRol}
         onEstadoChange={filtrarPorEstado}
