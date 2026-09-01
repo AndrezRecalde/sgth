@@ -103,6 +103,38 @@ export const NAV_SGTH: NavGroup[] = [
         label: 'Asistencia',
         href:  ROUTES.SGTH.ASISTENCIA,
         icon:  'IconClock',
+        children: [
+          {
+            label: 'Marcaciones',
+            href:  ROUTES.SGTH.ASISTENCIA,
+            icon:  'IconClock',
+          },
+          {
+            label: 'Permisos',
+            href:  ROUTES.SGTH.ASISTENCIA_PERMISOS,
+            icon:  'IconClipboardList',
+          },
+          {
+            label: 'Vacaciones',
+            href:  ROUTES.SGTH.ASISTENCIA_VACACIONES,
+            icon:  'IconBeach',
+          },
+          {
+            label: 'Períodos de vacaciones',
+            href:  ROUTES.SGTH.ASISTENCIA_PERIODOS,
+            icon:  'IconCalendarStats',
+          },
+          {
+            label: 'Consolidado de permisos',
+            href:  ROUTES.SGTH.ASISTENCIA_CONSOLIDADO,
+            icon:  'IconReportAnalytics',
+          },
+          {
+            label: 'Marcación online',
+            href:  ROUTES.SGTH.ASISTENCIA_MARCACION_ONLINE,
+            icon:  'IconFingerprint',
+          },
+        ],
       },
       {
         label:   'Certificaciones médicas',
