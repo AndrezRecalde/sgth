@@ -1,0 +1,15 @@
+/* El bloque de filtros crece para ocupar el ancho libre, pero lo que de verdad
+   importa es su base de 20rem: es la que obliga a la barra a partirse en dos
+   filas cuando los filtros y las acciones ya no caben juntos.
+
+   Antes la base era 0 (`flex: 1`). En un teléfono eso no provocaba el salto de
+   línea: el bloque se encogía hasta 68px con las acciones al lado, y sus
+   campos —que no bajan de su ancho mínimo— se desbordaban por debajo, pintando
+   los chips de filtro justo detrás de los botones.
+
+   `min-width: 0` se queda por el motivo contrario: sin él, un Select con una
+   opción larga estira la fila entera y saca la barra del contenedor. */
+.filtros {
+  flex: 1 1 20rem;
+  min-width: 0;
+}

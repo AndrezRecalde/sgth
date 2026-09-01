@@ -418,7 +418,10 @@ export function PeriodosVacacionesTab() {
           {...contained}
           value={servidorSelId ? String(servidorSelId) : null}
           onChange={(v) => setServidorSelId(v ? Number(v) : null)}
-          style={{ minWidth: 420 }}
+          // Ancho para que quepa "APELLIDO NOMBRE — cédula" sin cortar, pero
+          // como techo y no como piso: un mínimo de 420 no cabe en la barra de
+          // un teléfono y se desbordaba fuera de la tarjeta.
+          style={{ width: 420, maxWidth: "100%" }}
         />
       </Toolbar>
 

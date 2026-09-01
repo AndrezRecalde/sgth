@@ -1,4 +1,5 @@
 import { Group, Paper } from '@mantine/core'
+import classes from './Toolbar.module.css'
 
 interface Props {
   /** Filtros y búsqueda. Se estiran para ocupar el ancho disponible. */
@@ -17,16 +18,20 @@ interface Props {
  * Los campos que van dentro usan la variante compacta del patrón contained
  * (`useContainedInput('sm')`), para que convivan a la misma altura con los
  * botones sin el aire de un formulario de captura.
+ *
+ * Cuando los filtros y las acciones no caben en una fila —un teléfono, o una
+ * barra con muchos filtros— las acciones bajan a la suya. El reparto vive en
+ * `Toolbar.module.css`.
  */
 export function Toolbar({ children, actions }: Props) {
   return (
     <Paper withBorder radius="lg" p="sm">
       <Group gap="sm" align="flex-end" wrap="wrap">
-        <Group gap="sm" align="flex-end" wrap="wrap" style={{ flex: 1, minWidth: 0 }}>
+        <Group gap="sm" align="flex-end" wrap="wrap" className={classes.filtros}>
           {children}
         </Group>
         {actions && (
-          <Group gap="sm" wrap="nowrap">
+          <Group gap="sm" wrap="wrap">
             {actions}
           </Group>
         )}
