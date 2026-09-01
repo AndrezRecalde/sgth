@@ -2,11 +2,10 @@
 
 import { confirmar } from '@/components/ui'
 import { useState } from 'react'
-import { Box, Button, Group, Badge, Text } from '@mantine/core'
+import { Button, Group, Badge, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconEdit, IconTrash, IconList } from '@tabler/icons-react'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { IconPlus, IconEdit, IconTrash, IconList, IconAlertTriangle } from '@tabler/icons-react'
+import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useRiesgosLaborales, useRiesgoLaboralMutations } from '../hooks/useRiesgosLaborales'
 import { RiesgoLaboralModal } from './RiesgoLaboralModal'
 import { FactoresRiesgoModal } from './FactoresRiesgoModal'
@@ -21,7 +20,7 @@ export function RiesgosLaboralesTab() {
   const [factoresOpened, { open: openFactores, close: closeFactores }] = useDisclosure(false)
 
   const { eliminar } = useRiesgoLaboralMutations()
-  const { data, isLoading } = useRiesgosLaborales({ page })
+  const { data, isLoading, error } = useRiesgosLaborales({ page })
   const records = data?.data ?? []
 
   const handleEdit = (riesgo: RiesgoLaboral) => {
@@ -68,9 +67,9 @@ export function RiesgosLaboralesTab() {
       title: 'Estado',
       width: 90,
       render: (r) => (
-        <Badge color={r.estado ? 'emerald' : 'gray'} variant="light" size="sm">
+        <StatusBadge tone={r.estado ? 'success' : 'neutral'}>
           {r.estado ? 'Activo' : 'Inactivo'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -104,7 +103,7 @@ export function RiesgosLaboralesTab() {
   ]
 
   return (
-    <Box>
+    <Stack gap="md">
       <Group justify="flex-end" mb="md">
         <Button
           leftSection={<IconList size={16} />}
@@ -122,16 +121,26 @@ export function RiesgosLaboralesTab() {
           Nuevo riesgo
         </Button>
       </Group>
-      <SgthTable
-        records={records}
-        columns={columns}
-        fetching={isLoading}
-        totalRecords={data?.total ?? 0}
-        recordsPerPage={15}
-        page={page}
-        onPageChange={setPage}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!records.length}
+        emptyProps={{
+          icon: IconAlertTriangle,
+          title: 'Sin riesgos laborales',
+          description: 'Aún no se han identificado riesgos en los puestos.',
+        }}
+      >
+        <SgthTable
+          records={records}
+          columns={columns}
+          totalRecords={data?.total ?? 0}
+          recordsPerPage={15}
+          page={page}
+          onPageChange={setPage}
+          minHeight={200}
+        />
+      </DataState>
       <RiesgoLaboralModal
         opened={modalOpened}
         onClose={handleClose}
@@ -141,6 +150,6 @@ export function RiesgosLaboralesTab() {
         opened={factoresOpened}
         onClose={closeFactores}
       />
-    </Box>
+    </Stack>
   )
 }

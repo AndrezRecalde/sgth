@@ -2,11 +2,10 @@
 
 import { confirmar } from '@/components/ui'
 import { useState } from 'react'
-import { Box, Button, Group, Badge, Text } from '@mantine/core'
+import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconEdit, IconTrash, IconClipboardList } from '@tabler/icons-react'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { IconPlus, IconEdit, IconTrash, IconClipboardList, IconShieldCheck } from '@tabler/icons-react'
+import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useEquiposProteccion, useEquipoProteccionMutations } from '../hooks/useEquiposProteccion'
 import { EquipoProteccionModal } from './EquipoProteccionModal'
 import { AsignarEppPuestoModal } from './AsignarEppPuestoModal'
@@ -21,7 +20,7 @@ export function EquiposProteccionTab() {
   const [asignarOpened, { open: openAsignar, close: closeAsignar }] = useDisclosure(false)
 
   const { eliminar } = useEquipoProteccionMutations()
-  const { data, isLoading } = useEquiposProteccion({ page })
+  const { data, isLoading, error } = useEquiposProteccion({ page })
   const records = data?.data ?? []
 
   const getTipoLabel = (tipo: string) =>
@@ -55,9 +54,9 @@ export function EquiposProteccionTab() {
       title: 'Estado',
       width: 90,
       render: (e) => (
-        <Badge color={e.estado ? 'emerald' : 'gray'} variant="light" size="sm">
+        <StatusBadge tone={e.estado ? 'success' : 'neutral'}>
           {e.estado ? 'Activo' : 'Inactivo'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -91,7 +90,7 @@ export function EquiposProteccionTab() {
   ]
 
   return (
-    <Box>
+    <Stack gap="md">
       <Group justify="flex-end" mb="md">
         <Button
           leftSection={<IconClipboardList size={16} />}
@@ -109,16 +108,26 @@ export function EquiposProteccionTab() {
           Nuevo equipo
         </Button>
       </Group>
-      <SgthTable
-        records={records}
-        columns={columns}
-        fetching={isLoading}
-        totalRecords={data?.total ?? 0}
-        recordsPerPage={15}
-        page={page}
-        onPageChange={setPage}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!records.length}
+        emptyProps={{
+          icon: IconShieldCheck,
+          title: 'Sin equipos de protección',
+          description: 'Aún no hay equipos registrados en el catálogo.',
+        }}
+      >
+        <SgthTable
+          records={records}
+          columns={columns}
+          totalRecords={data?.total ?? 0}
+          recordsPerPage={15}
+          page={page}
+          onPageChange={setPage}
+          minHeight={200}
+        />
+      </DataState>
       <EquipoProteccionModal
         opened={modalOpened}
         onClose={handleClose}
@@ -128,6 +137,6 @@ export function EquiposProteccionTab() {
         opened={asignarOpened}
         onClose={closeAsignar}
       />
-    </Box>
+    </Stack>
   )
 }

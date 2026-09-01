@@ -2,14 +2,13 @@
 
 import { confirmar } from '@/components/ui'
 import { useState } from 'react'
-import { Box, Group, Button, Badge, Text } from '@mantine/core'
+import { Group, Button, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import {
-  IconPlus, IconChartBar, IconLink, IconLock,
+  IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useCampaniasPsicosocial, usePsicosocialMutations } from '../hooks/usePsicosocial'
 import { CrearCampaniaPsicosocialModal } from './CrearCampaniaPsicosocialModal'
 import { ResultadosPsicosocialesModal } from './ResultadosPsicosocialesModal'
@@ -17,7 +16,7 @@ import type { CampaniaPsicosocial } from '../services/psicosocialService'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function CampaniasPsicosocialTab() {
-  const { data: campanias = [], isLoading } = useCampaniasPsicosocial()
+  const { data: campanias = [], isLoading, error } = useCampaniasPsicosocial()
   const { cerrarCampania } = usePsicosocialMutations()
   const [crearOpened, { open: openCrear, close: closeCrear }] = useDisclosure(false)
   const [resultadosOpened, { open: openResultados, close: closeResultados }] = useDisclosure(false)
@@ -57,9 +56,9 @@ export function CampaniasPsicosocialTab() {
       title: 'Estado',
       width: 100,
       render: (c) => (
-        <Badge color={c.activa ? 'emerald' : 'gray'} variant="light" size="sm">
+        <StatusBadge tone={c.activa ? 'success' : 'neutral'}>
           {c.activa ? 'Abierta' : 'Cerrada'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -111,7 +110,7 @@ export function CampaniasPsicosocialTab() {
   ]
 
   return (
-    <Box>
+    <Stack gap="md">
       <Group justify="space-between" mb="md">
         <Text size="sm" c="dimmed">
           Cuestionario anónimo de evaluación de riesgo psicosocial (Ministerio del Trabajo, 58 ítems).
@@ -121,12 +120,22 @@ export function CampaniasPsicosocialTab() {
         </Button>
       </Group>
 
-      <SgthTable
-        records={campanias}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!campanias.length}
+        emptyProps={{
+          icon: IconClipboardList,
+          title: 'Sin campañas psicosociales',
+          description: 'Aún no se ha abierto ninguna campaña de evaluación.',
+        }}
+      >
+        <SgthTable
+          records={campanias}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
 
       <CrearCampaniaPsicosocialModal opened={crearOpened} onClose={closeCrear} />
       <ResultadosPsicosocialesModal
@@ -134,6 +143,6 @@ export function CampaniasPsicosocialTab() {
         onClose={() => { setCampaniaSeleccionada(null); closeResultados() }}
         campaniaId={campaniaSeleccionada}
       />
-    </Box>
+    </Stack>
   )
 }

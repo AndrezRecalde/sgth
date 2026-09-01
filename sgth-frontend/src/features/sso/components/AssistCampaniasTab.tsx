@@ -2,14 +2,13 @@
 
 import { confirmar } from '@/components/ui'
 import { useState } from 'react'
-import { Box, Group, Button, Badge, Text } from '@mantine/core'
+import { Group, Button, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import {
-  IconPlus, IconChartBar, IconLink, IconLock,
+  IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useCampaniasAssist, useAssistMutations } from '../hooks/useAssist'
 import { CrearCampaniaAssistModal } from './CrearCampaniaAssistModal'
 import { ResultadosAssistModal } from './ResultadosAssistModal'
@@ -17,7 +16,7 @@ import type { CampaniaAssist } from '../services/assistService'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function AssistCampaniasTab() {
-  const { data: campanias = [], isLoading } = useCampaniasAssist()
+  const { data: campanias = [], isLoading, error } = useCampaniasAssist()
   const { cerrarCampania } = useAssistMutations()
   const [crearOpened, { open: openCrear, close: closeCrear }] = useDisclosure(false)
   const [resultadosOpened, { open: openResultados, close: closeResultados }] = useDisclosure(false)
@@ -57,9 +56,9 @@ export function AssistCampaniasTab() {
       title: 'Estado',
       width: 100,
       render: (c) => (
-        <Badge color={c.activa ? 'emerald' : 'gray'} variant="light" size="sm">
+        <StatusBadge tone={c.activa ? 'success' : 'neutral'}>
           {c.activa ? 'Abierta' : 'Cerrada'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -111,7 +110,7 @@ export function AssistCampaniasTab() {
   ]
 
   return (
-    <Box>
+    <Stack gap="md">
       <Group justify="space-between" mb="md">
         <Text size="sm" c="dimmed">
           Tamizaje anónimo de consumo de sustancias (ASSIST v3.1, OMS/OPS) — Fase 4 del programa de
@@ -122,12 +121,22 @@ export function AssistCampaniasTab() {
         </Button>
       </Group>
 
-      <SgthTable
-        records={campanias}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!campanias.length}
+        emptyProps={{
+          icon: IconClipboardList,
+          title: 'Sin campañas ASSIST',
+          description: 'Aún no se ha abierto ninguna campaña de tamizaje.',
+        }}
+      >
+        <SgthTable
+          records={campanias}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
 
       <CrearCampaniaAssistModal opened={crearOpened} onClose={closeCrear} />
       <ResultadosAssistModal
@@ -135,6 +144,6 @@ export function AssistCampaniasTab() {
         onClose={() => { setCampaniaSeleccionada(null); closeResultados() }}
         campaniaId={campaniaSeleccionada}
       />
-    </Box>
+    </Stack>
   )
 }

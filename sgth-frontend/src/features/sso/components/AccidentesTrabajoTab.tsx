@@ -2,11 +2,10 @@
 
 import { confirmar } from '@/components/ui'
 import { useState } from 'react'
-import { Box, Button, Group, Badge, Text } from '@mantine/core'
+import { Button, Group, Badge, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
+import { IconPlus, IconEdit, IconTrash, IconAlertTriangle } from '@tabler/icons-react'
+import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '../hooks/useAccidentesTrabajo'
 import { AccidenteTrabajoModal } from './AccidenteTrabajoModal'
 import { GRAVEDAD_COLORS, TIPO_EVENTO_ACCIDENTE_COLORS, TIPO_EVENTO_ACCIDENTE_OPTIONS } from '../schemas/accidenteTrabajo.schema'
@@ -20,7 +19,7 @@ export function AccidentesTrabajoTab() {
   const [modalOpened, { open, close }] = useDisclosure(false)
 
   const { eliminar } = useAccidenteTrabajoMutations()
-  const { data, isLoading } = useAccidentesTrabajo({ page })
+  const { data, isLoading, error } = useAccidentesTrabajo({ page })
   const records = data?.data ?? []
 
   const handleEdit = (accidente: AccidenteTrabajo) => {
@@ -75,9 +74,9 @@ export function AccidentesTrabajoTab() {
       title: 'Investigación',
       width: 130,
       render: (a) => (
-        <Badge color={a.estado ? 'orange' : 'emerald'} variant="light" size="sm">
+        <StatusBadge tone={a.estado ? 'warning' : 'success'}>
           {a.estado ? 'Abierta' : 'Cerrada'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -111,7 +110,7 @@ export function AccidentesTrabajoTab() {
   ]
 
   return (
-    <Box>
+    <Stack gap="md">
       <Group justify="flex-end" mb="md">
         <Button
           leftSection={<IconPlus size={16} />}
@@ -122,21 +121,31 @@ export function AccidentesTrabajoTab() {
           Nuevo accidente
         </Button>
       </Group>
-      <SgthTable
-        records={records}
-        columns={columns}
-        fetching={isLoading}
-        totalRecords={data?.total ?? 0}
-        recordsPerPage={15}
-        page={page}
-        onPageChange={setPage}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!records.length}
+        emptyProps={{
+          icon: IconAlertTriangle,
+          title: 'Sin accidentes registrados',
+          description: 'No se han registrado accidentes ni incidentes de trabajo.',
+        }}
+      >
+        <SgthTable
+          records={records}
+          columns={columns}
+          totalRecords={data?.total ?? 0}
+          recordsPerPage={15}
+          page={page}
+          onPageChange={setPage}
+          minHeight={200}
+        />
+      </DataState>
       <AccidenteTrabajoModal
         opened={modalOpened}
         onClose={handleClose}
         accidente={editAccidente}
       />
-    </Box>
+    </Stack>
   )
 }
