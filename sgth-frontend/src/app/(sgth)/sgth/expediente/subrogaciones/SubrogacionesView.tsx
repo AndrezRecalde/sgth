@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Group, Text, Badge, Select } from '@mantine/core'
+import { Button, Text, Badge, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconArrowsExchange, IconPlus, IconPlayerStop, IconBan } from '@tabler/icons-react'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
@@ -12,7 +12,10 @@ import { CancelarSubrogacionModal } from '@/features/expediente/components/Cance
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { Subrogacion, TipoSubrogacion, UnidadConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'
+import {
+  DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions,
+  Toolbar, confirmar,
+} from '@/components/ui'
 
 const TIPO_LABELS: Record<TipoSubrogacion, string> = {
   subrogacion: 'Subrogación',
@@ -53,7 +56,7 @@ export function SubrogacionesView() {
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
   const unidadOptions = unidades.map((u) => ({ value: String(u.id), label: u.nombre ?? `Unidad ${u.id}` }))
 
-  const { data: subrogaciones = [], isLoading } = useSubrogacionesVigentes({
+  const { data: subrogaciones = [], isLoading, error } = useSubrogacionesVigentes({
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
     tipo: (tipo as TipoSubrogacion) || undefined,
   })
@@ -118,7 +121,7 @@ export function SubrogacionesView() {
       render: ({ estado, movimiento_personal }) => (
         estado === 'pendiente' ? (
           <div>
-            <Badge color="yellow" variant="light" size="sm">Pendiente</Badge>
+            <StatusBadge tone="warning">Pendiente</StatusBadge>
             <Text size="xs" c="dimmed" mt={2}>
               {movimiento_personal?.codigo_registro
                 ? `Acción ${movimiento_personal.codigo_registro}`
@@ -126,7 +129,7 @@ export function SubrogacionesView() {
             </Text>
           </div>
         ) : (
-          <Badge color="emerald" variant="light" size="sm">Activa</Badge>
+          <StatusBadge tone="success">Activa</StatusBadge>
         )
       ),
     },
@@ -173,17 +176,17 @@ export function SubrogacionesView() {
         description="Administración de subrogaciones y encargos de puestos vacantes del GAD Provincial de Esmeraldas"
       />
 
-      <Group justify="flex-end" mb="md">
-        <Button
-          color="emerald" variant="light"
-          leftSection={<IconPlus size={16} />}
-          onClick={openModal}
-        >
-          Nueva subrogación / encargo
-        </Button>
-      </Group>
-
-      <Group gap="sm" mb="md">
+      <Toolbar
+        actions={
+          <Button
+            color="emerald" variant="light"
+            leftSection={<IconPlus size={16} />}
+            onClick={openModal}
+          >
+            Nueva subrogación / encargo
+          </Button>
+        }
+      >
         <Select
           label="Unidad administrativa"
           placeholder="Todas"
@@ -208,27 +211,29 @@ export function SubrogacionesView() {
           onChange={setTipo}
           style={{ minWidth: 180 }}
         />
-      </Group>
+      </Toolbar>
 
-      {!isLoading && lista.length === 0 ? (
-        <EmptyState
-          icon={IconArrowsExchange}
-          title="Sin subrogaciones/encargos vigentes"
-          description="Aquí aparecerán las subrogaciones y encargos pendientes de aprobación y los que ya surten efecto."
-          action={
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!lista.length}
+        emptyProps={{
+          icon: IconArrowsExchange,
+          title: 'Sin subrogaciones/encargos vigentes',
+          description: 'Aquí aparecerán las subrogaciones y encargos pendientes de aprobación y los que ya surten efecto.',
+          action: (
             <Button color="emerald" variant="light" leftSection={<IconPlus size={14} />} onClick={openModal}>
               Nueva subrogación / encargo
             </Button>
-          }
-        />
-      ) : (
+          ),
+        }}
+      >
         <SgthTable
           records={lista}
           columns={columns}
-          fetching={isLoading}
           minHeight={200}
         />
-      )}
+      </DataState>
 
       <SubrogacionModal opened={modalOpened} onClose={closeModal} />
       <CancelarSubrogacionModal

@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export const cumplimientoSchema = z.object({
   estado: z.enum(['cumple', 'no_cumple', 'en_proceso']),
@@ -13,11 +14,11 @@ export const ESTADO_CUMPLIMIENTO_OPTIONS = [
   { value: 'en_proceso', label: 'En proceso' },
 ]
 
-export const ESTADO_CUMPLIMIENTO_COLORS: Record<string, string> = {
-  cumple: 'emerald',
-  no_cumple: 'red',
-  en_proceso: 'yellow',
-  no_registrado: 'gray',
+export const TONO_ESTADO_CUMPLIMIENTO: Record<string, SemanticTone> = {
+  cumple: 'success',
+  no_cumple: 'danger',
+  en_proceso: 'warning',
+  no_registrado: 'neutral',
 }
 
 export const ESTADO_CUMPLIMIENTO_LABELS: Record<string, string> = {

@@ -1,15 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Group, TextInput, Button, Badge, Text, Skeleton, Alert, Accordion } from '@mantine/core'
+import { Group, TextInput, Button, Badge, Text, Skeleton, Alert, Accordion, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconSearch, IconList, IconAlertCircle, IconEdit } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
+import { SgthTable, StatusBadge, Toolbar } from '@/components/ui'
 import { useListaSeguimientoPrograma } from '../hooks/useProgramaDrogas'
 import { CatalogoActividadesProgramaModal } from './CatalogoActividadesProgramaModal'
 import { RegistrarSeguimientoProgramaModal } from './RegistrarSeguimientoProgramaModal'
-import { ESTADO_ACTIVIDAD_PROGRAMA_COLORS, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '../schemas/programaDrogas.schema'
+import { TONO_ACTIVIDAD_PROGRAMA, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '../schemas/programaDrogas.schema'
 import { formatFecha } from '@/lib/fecha'
 import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -40,9 +40,9 @@ export function ProgramaDrogasTab() {
       title: 'Estado',
       width: 130,
       render: (fila) => (
-        <Badge color={ESTADO_ACTIVIDAD_PROGRAMA_COLORS[fila.estado] ?? 'gray'} variant="light" size="sm">
+        <StatusBadge tone={TONO_ACTIVIDAD_PROGRAMA[fila.estado] ?? 'neutral'}>
           {ESTADO_ACTIVIDAD_PROGRAMA_LABELS[fila.estado] ?? fila.estado}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -64,9 +64,24 @@ export function ProgramaDrogasTab() {
   ]
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md" align="flex-end">
-        <Group align="flex-end">
+    <Stack gap="md">
+      <Toolbar
+        actions={
+          <>
+            <Button
+              leftSection={<IconSearch size={16} />}
+              color="emerald"
+              onClick={handleConsultar}
+              disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
+            >
+              Consultar
+            </Button>
+            <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
+              Catálogo de actividades
+            </Button>
+          </>
+        }
+      >
           <TextInput
             label="Período"
             placeholder="2026 o 2026-07"
@@ -75,19 +90,7 @@ export function ProgramaDrogasTab() {
             value={periodoInput}
             onChange={(e) => setPeriodoInput(e.currentTarget.value)}
           />
-          <Button
-            leftSection={<IconSearch size={16} />}
-            color="emerald"
-            onClick={handleConsultar}
-            disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
-          >
-            Consultar
-          </Button>
-        </Group>
-        <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
-          Catálogo de actividades
-        </Button>
-      </Group>
+      </Toolbar>
 
       <Text size="sm" c="dimmed" mb="md">
         Matriz de las 6 fases del Programa de prevención integral de drogas (Instructivo MDT-MSP-2019-038).
@@ -144,6 +147,6 @@ export function ProgramaDrogasTab() {
         fila={filaSeleccionada}
         periodo={periodo ?? ''}
       />
-    </Box>
+    </Stack>
   )
 }

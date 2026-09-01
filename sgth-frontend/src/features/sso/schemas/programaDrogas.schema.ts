@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export const actividadProgramaSchema = z.object({
   fase: z.enum([
@@ -46,9 +47,9 @@ export const ESTADO_ACTIVIDAD_PROGRAMA_LABELS: Record<string, string> = {
   no_ejecutada: 'No ejecutada',
 }
 
-export const ESTADO_ACTIVIDAD_PROGRAMA_COLORS: Record<string, string> = {
-  pendiente: 'gray',
-  en_proceso: 'yellow',
-  ejecutada: 'emerald',
-  no_ejecutada: 'red',
+export const TONO_ACTIVIDAD_PROGRAMA: Record<string, SemanticTone> = {
+  pendiente: 'neutral',
+  en_proceso: 'warning',
+  ejecutada: 'success',
+  no_ejecutada: 'danger',
 }
