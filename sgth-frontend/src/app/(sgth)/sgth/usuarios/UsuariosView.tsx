@@ -85,10 +85,10 @@ export function UsuariosView() {
     openDrawer()
   }
 
-  const handleCloseDrawer = () => {
-    setUsuarioSel(null)
-    closeDrawer()
-  }
+  // No se limpia `usuarioSel` al cerrar: el drawer elige entre alta y edición
+  // según ese valor, así que ponerlo a null aquí cambiaría el contenido a mitad
+  // de la animación de salida. `handleNuevo` ya lo limpia antes de abrir.
+  const handleCloseDrawer = closeDrawer
 
   const handlePermisos = (u: Usuario) => {
     setPermisosUsr(u)
