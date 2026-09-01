@@ -1,10 +1,14 @@
 "use client";
-import { confirmar } from '@/components/ui'
 import { useState } from "react";
-import { Box, Button, Group, Select } from "@mantine/core";
+import { Button, Select, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCubePlus } from "@tabler/icons-react";
-import { SgthTable } from "@/components/ui/SgthTable";
+import {
+  DataState,
+  SgthTable,
+  Toolbar,
+  confirmar,
+} from "@/components/ui";
 import { usePuestos } from "../hooks/usePuestos";
 import { usePuestoMutations } from "../hooks/usePuestoMutations";
 import {
@@ -29,7 +33,7 @@ export function PuestosTab() {
   const { eliminar } = usePuestoMutations();
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 });
   const unidadIdNum = unidadIds.length > 0 ? Number(unidadIds[0]) : undefined;
-  const { data, isLoading } = usePuestos({
+  const { data, isLoading, error } = usePuestos({
     page,
     per_page: 15,
     unidad_administrativa_id: unidadIdNum,
@@ -76,11 +80,25 @@ export function PuestosTab() {
   };
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md">
+    <Stack gap="md">
+      <Toolbar
+        actions={
+          <Button
+            leftSection={<IconCubePlus size={16} />}
+            color="emerald"
+            variant="light"
+            onClick={() => {
+              setEditPuesto(null);
+              open();
+            }}
+          >
+            Nuevo puesto
+          </Button>
+        }
+      >
         <Select
-          label="Filtrar por gestión"
-          placeholder="Filtrar por gestión"
+          label="Gestión"
+          placeholder="Todas las gestiones"
           data={unidadOptions}
           searchable
           clearable
@@ -89,33 +107,34 @@ export function PuestosTab() {
           value={unidadIds[0] ?? ""}
           onChange={(v) => setUnidadIds(v ? [v] : [])}
         />
-        <Button
-          leftSection={<IconCubePlus size={16} />}
-          color="emerald"
-          variant="light"
-          onClick={() => {
-            setEditPuesto(null);
-            open();
-          }}
-        >
-          Nuevo puesto
-        </Button>
-      </Group>
+      </Toolbar>
 
-      <SgthTable
-        records={records}
-        columns={getPuestoColumns({
-          onEdit: handleEdit,
-          onDelete: handleDelete,
-          onActividades: handleActividades,
-        })}
-        fetching={isLoading}
-        totalRecords={data?.total || records.length || 0}
-        recordsPerPage={15}
-        page={page}
-        onPageChange={setPage}
-        minHeight={200}
-      />
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!records.length}
+        emptyProps={{
+          icon: IconCubePlus,
+          title: "Sin puestos",
+          description: unidadIds.length
+            ? "Esta gestión no tiene puestos registrados."
+            : "Aún no hay puestos en la plantilla institucional.",
+        }}
+      >
+        <SgthTable
+          records={records}
+          columns={getPuestoColumns({
+            onEdit: handleEdit,
+            onDelete: handleDelete,
+            onActividades: handleActividades,
+          })}
+          totalRecords={data?.total || records.length || 0}
+          recordsPerPage={15}
+          page={page}
+          onPageChange={setPage}
+          minHeight={200}
+        />
+      </DataState>
 
       <PuestoModal
         opened={modalOpened}
@@ -128,6 +147,6 @@ export function PuestosTab() {
         onClose={handleCerrarDrawer}
         puesto={actividadesPuesto}
       />
-    </Box>
+    </Stack>
   );
 }

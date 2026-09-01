@@ -1,13 +1,18 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
 import { useState } from "react";
-import { Badge, Box, Button, Group, Text, TextInput } from "@mantine/core";
+import { Button, Stack, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconReceipt, IconTrash } from "@tabler/icons-react";
 import type { DataTableColumn } from "mantine-datatable";
-import { SgthTable } from "@/components/ui/SgthTable";
-import { TableActions } from "@/components/ui/TableActions";
+import {
+  DataState,
+  SgthTable,
+  StatusBadge,
+  TableActions,
+  Toolbar,
+  confirmar,
+} from "@/components/ui";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { usePartidasPresupuestarias } from "../hooks/usePartidasPresupuestarias";
 import { usePartidaPresupuestariaMutations } from "../hooks/usePartidaPresupuestariaMutations";
@@ -23,7 +28,7 @@ export function PartidasPresupuestariasTab() {
 
   const contained = useContainedInput();
   const { eliminar } = usePartidaPresupuestariaMutations();
-  const { data: partidas = [], isLoading } = usePartidasPresupuestarias(
+  const { data: partidas = [], isLoading, error } = usePartidasPresupuestarias(
     search ? { search } : undefined,
   );
 
@@ -65,13 +70,9 @@ export function PartidasPresupuestariasTab() {
       title: "Disponibilidad",
       width: 150,
       render: ({ disponible }) => (
-        <Badge
-          color={disponible ? "emerald" : "orange"}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge tone={disponible ? "success" : "warning"}>
           {disponible ? "Verificada" : "Sin verificar"}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -79,9 +80,9 @@ export function PartidasPresupuestariasTab() {
       title: "Estado",
       width: 90,
       render: ({ activo }) => (
-        <Badge color={activo ? "emerald" : "gray"} variant="light" size="sm">
+        <StatusBadge tone={activo ? "success" : "neutral"}>
           {activo ? "Activa" : "Inactiva"}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -124,38 +125,54 @@ export function PartidasPresupuestariasTab() {
   ];
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md">
+    <Stack gap="md">
+      <Toolbar
+        actions={
+          <Button
+            leftSection={<IconPlus size={16} />}
+            color="emerald"
+            variant="light"
+            onClick={() => {
+              setEditPartida(null);
+              open();
+            }}
+          >
+            Nueva partida
+          </Button>
+        }
+      >
         <TextInput
-          label="Filtrar por código o descripción"
+          label="Código o descripción"
           placeholder="Buscar partida..."
           onChange={(e) => setSearch(e.currentTarget.value)}
           {...contained}
           style={{ minWidth: 280 }}
         />
-        <Button
-          leftSection={<IconPlus size={16} />}
-          color="emerald"
-          variant="light"
-          onClick={() => {
-            setEditPartida(null);
-            open();
-          }}
-        >
-          Nueva partida
-        </Button>
-      </Group>
-      <SgthTable
-        records={partidas as PartidaPresupuestaria[]}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
+      </Toolbar>
+
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!partidas.length}
+        emptyProps={{
+          icon: IconReceipt,
+          title: "Sin partidas presupuestarias",
+          description: search
+            ? "Ninguna partida coincide con la búsqueda."
+            : "Aún no hay partidas registradas.",
+        }}
+      >
+        <SgthTable
+          records={partidas as PartidaPresupuestaria[]}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
       <PartidaPresupuestariaModal
         opened={modalOpened}
         onClose={handleClose}
         partida={editPartida}
       />
-    </Box>
+    </Stack>
   );
 }

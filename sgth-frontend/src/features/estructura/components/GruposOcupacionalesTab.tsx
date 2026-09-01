@@ -1,7 +1,10 @@
 "use client";
 
-import { Box, Badge, Text, Group, Select } from "@mantine/core";
-import { SgthTable } from "@/components/ui/SgthTable";
+import { Badge, Select, Stack, Text } from "@mantine/core";
+import { IconLayersIntersect } from "@tabler/icons-react";
+import { DataState, SgthTable, StatusBadge, Toolbar } from "@/components/ui";
+import { REGIMEN_LABELS, REGIMEN_TONOS } from "@/lib/regimen";
+import type { SemanticTone } from "@/config/design.tokens";
 import { useGruposOcupacionales } from "../hooks/useGruposOcupacionales";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useState } from "react";
@@ -26,17 +29,17 @@ const REGIMEN_OPTIONS = [
   { value: "codigo_trabajo", label: "Código del Trabajo" },
 ];
 
-const COMPLEJIDAD_COLORS: Record<string, string> = {
-  bajo: "gray",
-  medio: "orange",
-  alto: "emerald",
+const TONO_COMPLEJIDAD: Record<string, SemanticTone> = {
+  bajo: "neutral",
+  medio: "warning",
+  alto: "success",
 };
 
 export function GruposOcupacionalesTab() {
   const [regimen, setRegimen] = useState<string>("");
   const contained = useContainedInput();
 
-  const { data: grupos = [], isLoading } = useGruposOcupacionales();
+  const { data: grupos = [], isLoading, error } = useGruposOcupacionales();
 
   const filtrados = regimen
     ? (grupos as GrupoOcupacional[]).filter((g) => g.regimen === regimen)
@@ -84,13 +87,9 @@ export function GruposOcupacionalesTab() {
       title: "Régimen",
       width: 130,
       render: ({ regimen }) => (
-        <Badge
-          color={regimen === "losep" ? "blue" : "orange"}
-          variant="light"
-          size="sm"
-        >
-          {regimen === "losep" ? "LOSEP" : "Cód. Trabajo"}
-        </Badge>
+        <StatusBadge tone={REGIMEN_TONOS[regimen] ?? "neutral"}>
+          {REGIMEN_LABELS[regimen] ?? regimen}
+        </StatusBadge>
       ),
     },
     {
@@ -99,14 +98,10 @@ export function GruposOcupacionalesTab() {
       width: 110,
       render: ({ nivel_complejidad }) =>
         nivel_complejidad ? (
-          <Badge
-            color={COMPLEJIDAD_COLORS[nivel_complejidad] ?? "gray"}
-            variant="dot"
-            size="sm"
-          >
+          <StatusBadge tone={TONO_COMPLEJIDAD[nivel_complejidad] ?? "neutral"}>
             {nivel_complejidad.charAt(0).toUpperCase() +
               nivel_complejidad.slice(1)}
-          </Badge>
+          </StatusBadge>
         ) : (
           <Text size="sm" c="dimmed">
             -
@@ -116,11 +111,11 @@ export function GruposOcupacionalesTab() {
   ];
 
   return (
-    <Box>
-      <Group justify="flex-end" mb="md">
+    <Stack gap="md">
+      <Toolbar>
         <Select
-          label="Buscar por Régimen"
-          placeholder="Filtrar por régimen"
+          label="Régimen"
+          placeholder="Todos los regímenes"
           data={REGIMEN_OPTIONS}
           clearable
           {...contained}
@@ -128,13 +123,26 @@ export function GruposOcupacionalesTab() {
           value={regimen}
           onChange={(v) => setRegimen(v ?? "")}
         />
-      </Group>
-      <SgthTable
-        records={filtrados}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
-    </Box>
+      </Toolbar>
+
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!filtrados.length}
+        emptyProps={{
+          icon: IconLayersIntersect,
+          title: "Sin grupos ocupacionales",
+          description: regimen
+            ? "Ningún grupo ocupacional pertenece a ese régimen."
+            : "Aún no hay grupos ocupacionales en el catálogo.",
+        }}
+      >
+        <SgthTable
+          records={filtrados}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
+    </Stack>
   );
 }

@@ -1,19 +1,24 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
 import { useState } from "react";
-import { Box, Button, Group, TextInput } from "@mantine/core";
+import { Button, Stack, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlus } from "@tabler/icons-react";
-import { SgthTable } from "@/components/ui/SgthTable";
-import { TableActions } from "@/components/ui/TableActions";
+import { IconBriefcase, IconPlus } from "@tabler/icons-react";
+import {
+  DataState,
+  SgthTable,
+  StatusBadge,
+  TableActions,
+  Toolbar,
+  confirmar,
+} from "@/components/ui";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useCargos } from "../hooks/useCargos";
 import { useCargoMutations } from "../hooks/useCargoMutations";
 import { CargoModal } from "./CargoModal";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import type { Cargo } from "@/types/api";
-import { Badge, Text } from "@mantine/core";
+import { Text } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
 
 export function CargosTab() {
@@ -23,7 +28,7 @@ export function CargosTab() {
 
   const contained = useContainedInput();
   const { eliminar } = useCargoMutations();
-  const { data: cargos = [], isLoading } = useCargos(
+  const { data: cargos = [], isLoading, error } = useCargos(
     search ? { search } : undefined,
   );
 
@@ -59,9 +64,9 @@ export function CargosTab() {
       title: "Estado",
       width: 90,
       render: ({ activo }) => (
-        <Badge color={activo ? "emerald" : "gray"} variant="light" size="sm">
+        <StatusBadge tone={activo ? "success" : "neutral"}>
           {activo ? "Activo" : "Inactivo"}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -101,38 +106,54 @@ export function CargosTab() {
   ];
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md">
+    <Stack gap="md">
+      <Toolbar
+        actions={
+          <Button
+            leftSection={<IconPlus size={16} />}
+            color="emerald"
+            variant="light"
+            onClick={() => {
+              setEditCargo(null);
+              open();
+            }}
+          >
+            Nuevo cargo
+          </Button>
+        }
+      >
         <TextInput
-          label="Filtar por cargo"
+          label="Cargo"
           placeholder="Buscar cargo..."
           onChange={(e) => setSearch(e.currentTarget.value)}
           {...contained}
           style={{ minWidth: 280 }}
         />
-        <Button
-          leftSection={<IconPlus size={16} />}
-          color="emerald"
-          variant="light"
-          onClick={() => {
-            setEditCargo(null);
-            open();
-          }}
-        >
-          Nuevo cargo
-        </Button>
-      </Group>
-      <SgthTable
-        records={cargos as Cargo[]}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-      />
+      </Toolbar>
+
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!cargos.length}
+        emptyProps={{
+          icon: IconBriefcase,
+          title: "Sin cargos",
+          description: search
+            ? "Ningún cargo coincide con la búsqueda."
+            : "Aún no hay cargos registrados en el catálogo.",
+        }}
+      >
+        <SgthTable
+          records={cargos as Cargo[]}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
       <CargoModal
         opened={modalOpened}
         onClose={handleClose}
         cargo={editCargo}
       />
-    </Box>
+    </Stack>
   );
 }
