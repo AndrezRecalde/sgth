@@ -95,10 +95,11 @@ export function UsuariosView() {
     openPermisos()
   }
 
-  const handleClosePermisos = () => {
-    setPermisosUsr(null)
-    closePermisos()
-  }
+  // Igual que en el drawer de usuario: no se limpia al cerrar. Al quedarse sin
+  // `usuario`, el panel recalculaba los permisos heredados con cero roles y el
+  // contador del pie saltaba de 12 a 19 a la vista, durante la animación de
+  // salida. `handlePermisos` ya asigna el usuario antes de abrir.
+  const handleClosePermisos = closePermisos
 
   const nombreDe = (u: Usuario) =>
     u.nombre_completo || u.servidor?.nombre || u.email || '(Sin nombre)'
@@ -229,10 +230,7 @@ export function UsuariosView() {
 
       <AsignarServidorModal
         opened={asignarOpened}
-        onClose={() => {
-          setAsignarUsr(null)
-          closeAsignar()
-        }}
+        onClose={closeAsignar}
         usuario={asignarUsr}
       />
     </PageShell>
