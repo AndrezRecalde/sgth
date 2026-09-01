@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Group, Badge, Text, Card, Select, ThemeIcon, Skeleton } from '@mantine/core'
+import { Stack, Badge, Text, Select } from '@mantine/core'
 import {
   IconClipboardHeart,
   IconPlayerPlay,
@@ -20,34 +20,27 @@ import {
 import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
 import {
   TIPO_EVENTO_OPTIONS,
-  ESTADO_SOLICITUD_COLORS,
+  TONO_ESTADO_SOLICITUD,
+  TONO_DICTAMEN,
+  DICTAMEN_LABELS,
   ESTADO_SOLICITUD_LABELS,
 } from '@/features/dispensario/services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from
   '@/features/dispensario/services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'
-
-const DICTAMEN_COLORS: Record<string, string> = {
-  apto:                   'emerald',
-  apto_con_restricciones: 'orange',
-  no_apto:                'red',
-}
-
-const DICTAMEN_LABELS: Record<string, string> = {
-  apto:                   'Apto',
-  apto_con_restricciones: 'Apto c/restricciones',
-  no_apto:                'No apto',
-}
+import {
+  DataState, PageHeader, PageShell, SgthTable, StatusBadge,
+  TableActions, Toolbar, confirmar,
+} from '@/components/ui'
 
 export default function SsoPage() {
   const router    = useRouter()
-  const contained = useContainedInput()
+  const contained = useContainedInput('sm')
   const { hasPermiso } = useAuth()
   const [filtroEstado, setFiltroEstado] =
     useState<string>('pendiente')
 
-  const { data, isLoading } = useSolicitudesCertificacion({
+  const { data, isLoading, error } = useSolicitudesCertificacion({
     estado:   filtroEstado || undefined,
     per_page: 20,
   })
@@ -144,13 +137,9 @@ export default function SsoPage() {
       title:    'Signos vitales',
       width:    150,
       render: (s) => (
-        <Badge
-          size="sm"
-          variant="light"
-          color={s.constantes_vitales ? 'emerald' : 'orange'}
-        >
+        <StatusBadge tone={s.constantes_vitales ? 'success' : 'warning'}>
           {s.constantes_vitales ? 'Tomados' : 'Pendiente'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -159,21 +148,13 @@ export default function SsoPage() {
       width:    160,
       render: (s) => (
         <Stack gap={4}>
-          <Badge
-            size="sm"
-            variant="light"
-            color={ESTADO_SOLICITUD_COLORS[s.estado] ?? 'gray'}
-          >
+          <StatusBadge tone={TONO_ESTADO_SOLICITUD[s.estado] ?? 'neutral'}>
             {ESTADO_SOLICITUD_LABELS[s.estado] ?? s.estado}
-          </Badge>
+          </StatusBadge>
           {s.dictamen && (
-            <Badge
-              size="xs"
-              variant="dot"
-              color={DICTAMEN_COLORS[s.dictamen] ?? 'gray'}
-            >
+            <StatusBadge size="xs" tone={TONO_DICTAMEN[s.dictamen] ?? 'neutral'}>
               {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
-            </Badge>
+            </StatusBadge>
           )}
         </Stack>
       ),
@@ -247,77 +228,52 @@ export default function SsoPage() {
     <PageShell>
       <PageHeader
         title="Salud Ocupacional"
-        description="Solicitudes de certificación médica de Talento Humano"
+        description="Solo se pueden crear fichas FEMO a partir de una solicitud de Talento Humano"
+        actions={
+          pendientes > 0 ? (
+            <StatusBadge tone="warning" size="md">
+              {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
+            </StatusBadge>
+          ) : undefined
+        }
       />
 
-      <Card withBorder radius="lg" p="lg">
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Group gap="xs">
-              <ThemeIcon
-                color="blue" variant="light"
-                size="md" radius="md"
-              >
-                <IconClipboardHeart size={16} />
-              </ThemeIcon>
-              <Stack gap={0}>
-                <Text fw={600} size="sm">
-                  Solicitudes de Talento Humano
-                </Text>
-                <Text size="xs" c="dimmed">
-                  Solo se pueden crear fichas FEMO a partir
-                  de una solicitud de RRHH
-                </Text>
-              </Stack>
-            </Group>
-            {pendientes > 0 && (
-              <Badge size="md" variant="light" color="orange">
-                {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
-              </Badge>
-            )}
-          </Group>
+      <Toolbar>
+        <Select
+          label="Estado"
+          placeholder="Todas"
+          data={[
+            { value: '',           label: 'Todas'       },
+            { value: 'pendiente',  label: 'Pendientes'  },
+            { value: 'en_proceso', label: 'En proceso'  },
+            { value: 'completada', label: 'Completadas' },
+            { value: 'cancelada',  label: 'Canceladas'  },
+          ]}
+          style={{ minWidth: 200 }}
+          {...contained}
+          value={filtroEstado}
+          onChange={(v) => setFiltroEstado(v ?? '')}
+        />
+      </Toolbar>
 
-          <Select
-            placeholder="Filtrar por estado"
-            data={[
-              { value: '',           label: 'Todas'       },
-              { value: 'pendiente',  label: 'Pendientes'  },
-              { value: 'en_proceso', label: 'En proceso'  },
-              { value: 'completada', label: 'Completadas' },
-              { value: 'cancelada',  label: 'Canceladas'  },
-            ]}
-            style={{ width: 200 }}
-            {...contained}
-            value={filtroEstado}
-            onChange={(v) => setFiltroEstado(v ?? '')}
-          />
-
-          {isLoading ? (
-            <Stack gap="xs">
-              <Skeleton height={64} radius="md" />
-              <Skeleton height={64} radius="md" />
-              <Skeleton height={64} radius="md" />
-            </Stack>
-          ) : solicitudes.length === 0 ? (
-            <EmptyState
-              icon={IconClipboardHeart}
-              title="Sin solicitudes"
-              description={
-                filtroEstado === 'pendiente'
-                  ? 'No hay solicitudes de certificación pendientes de Talento Humano.'
-                  : 'No hay solicitudes en este estado.'
-              }
-            />
-          ) : (
-            <SgthTable
-              records={solicitudes}
-              columns={columns}
-              fetching={isLoading}
-              minHeight={200}
-            />
-          )}
-        </Stack>
-      </Card>
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!solicitudes.length}
+        emptyProps={{
+          icon: IconClipboardHeart,
+          title: 'Sin solicitudes',
+          description: filtroEstado === 'pendiente'
+            ? 'No hay solicitudes de certificación pendientes de Talento Humano.'
+            : 'No hay solicitudes en este estado.',
+        }}
+      >
+        <SgthTable
+          records={solicitudes}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
     </PageShell>
   )
 }

@@ -1,21 +1,25 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Group, Badge, Text, Card, Select, ThemeIcon, Skeleton } from '@mantine/core'
+import { Stack, Badge, Text, Select } from '@mantine/core'
 import { IconClipboardHeart } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import {
   TIPO_EVENTO_OPTIONS,
-  ESTADO_SOLICITUD_COLORS,
+  TONO_ESTADO_SOLICITUD,
+  TONO_DICTAMEN,
+  DICTAMEN_LABELS,
   ESTADO_SOLICITUD_LABELS,
 } from '@/features/dispensario/services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from
   '@/features/dispensario/services/solicitudCertificacionService'
 import type { UnidadConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable } from '@/components/ui'
+import {
+  DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar,
+} from '@/components/ui'
 
 const ANIO_ACTUAL = new Date().getFullYear()
 
@@ -27,20 +31,8 @@ function generarOpcionesAnio(): { value: string; label: string }[] {
   return opciones
 }
 
-const DICTAMEN_COLORS: Record<string, string> = {
-  apto:                   'emerald',
-  apto_con_restricciones: 'orange',
-  no_apto:                'red',
-}
-
-const DICTAMEN_LABELS: Record<string, string> = {
-  apto:                   'Apto',
-  apto_con_restricciones: 'Apto c/restricciones',
-  no_apto:                'No apto',
-}
-
 export default function CertificacionesMedicasPage() {
-  const contained = useContainedInput()
+  const contained = useContainedInput('sm')
   const [filtroEstado, setFiltroEstado] = useState<string>('')
   const [filtroUnidad, setFiltroUnidad] = useState<string>('')
   const [filtroAnio, setFiltroAnio] =
@@ -55,7 +47,7 @@ export default function CertificacionesMedicasPage() {
     })),
   ]
 
-  const { data, isLoading } = useSolicitudesCertificacion({
+  const { data, isLoading, error } = useSolicitudesCertificacion({
     estado:   filtroEstado || undefined,
     unidad_administrativa_id: filtroUnidad ? Number(filtroUnidad) : undefined,
     anio:     filtroAnio ? Number(filtroAnio) : undefined,
@@ -155,21 +147,13 @@ export default function CertificacionesMedicasPage() {
       width:    160,
       render: (s) => (
         <Stack gap={4}>
-          <Badge
-            size="sm"
-            variant="light"
-            color={ESTADO_SOLICITUD_COLORS[s.estado] ?? 'gray'}
-          >
+          <StatusBadge tone={TONO_ESTADO_SOLICITUD[s.estado] ?? 'neutral'}>
             {ESTADO_SOLICITUD_LABELS[s.estado] ?? s.estado}
-          </Badge>
+          </StatusBadge>
           {s.dictamen && (
-            <Badge
-              size="xs"
-              variant="dot"
-              color={DICTAMEN_COLORS[s.dictamen] ?? 'gray'}
-            >
+            <StatusBadge size="xs" tone={TONO_DICTAMEN[s.dictamen] ?? 'neutral'}>
               {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
-            </Badge>
+            </StatusBadge>
           )}
         </Stack>
       ),
@@ -180,88 +164,62 @@ export default function CertificacionesMedicasPage() {
     <PageShell>
       <PageHeader
         title="Certificaciones médicas"
-        description="Seguimiento de solicitudes enviadas al dispensario médico"
+        description="Vista de solo lectura de las solicitudes enviadas al Dispensario. La atención médica se gestiona desde allí."
       />
 
-      <Card withBorder radius="lg" p="lg">
-        <Stack gap="md">
-          <Group gap="xs">
-            <ThemeIcon
-              color="blue" variant="light"
-              size="md" radius="md"
-            >
-              <IconClipboardHeart size={16} />
-            </ThemeIcon>
-            <Stack gap={0}>
-              <Text fw={600} size="sm">
-                Solicitudes de certificación médica
-              </Text>
-              <Text size="xs" c="dimmed">
-                Vista de solo lectura. La atención médica se
-                gestiona desde el Dispensario.
-              </Text>
-            </Stack>
-          </Group>
+      <Toolbar>
+        <Select
+          label="Estado"
+          placeholder="Todas"
+          data={[
+            { value: '',           label: 'Todas'       },
+            { value: 'pendiente',  label: 'Pendientes'  },
+            { value: 'en_proceso', label: 'En proceso'  },
+            { value: 'completada', label: 'Completadas' },
+            { value: 'cancelada',  label: 'Canceladas'  },
+          ]}
+          style={{ minWidth: 180 }}
+          {...contained}
+          value={filtroEstado}
+          onChange={(v) => setFiltroEstado(v ?? '')}
+        />
+        <Select
+          label="Unidad administrativa"
+          placeholder="Todas las unidades"
+          data={unidadOptions}
+          searchable
+          style={{ minWidth: 240 }}
+          {...contained}
+          value={filtroUnidad}
+          onChange={(v) => setFiltroUnidad(v ?? '')}
+        />
+        <Select
+          label="Año"
+          placeholder="Todos los años"
+          data={generarOpcionesAnio()}
+          style={{ minWidth: 150 }}
+          {...contained}
+          value={filtroAnio}
+          onChange={(v) => setFiltroAnio(v ?? '')}
+        />
+      </Toolbar>
 
-          <Group gap="sm" wrap="wrap">
-            <Select
-              label="Estado"
-              placeholder="Filtrar por estado"
-              data={[
-                { value: '',           label: 'Todas'       },
-                { value: 'pendiente',  label: 'Pendientes'  },
-                { value: 'en_proceso', label: 'En proceso'  },
-                { value: 'completada', label: 'Completadas' },
-                { value: 'cancelada',  label: 'Canceladas'  },
-              ]}
-              style={{ width: 180 }}
-              {...contained}
-              value={filtroEstado}
-              onChange={(v) => setFiltroEstado(v ?? '')}
-            />
-            <Select
-              label="Unidad administrativa"
-              placeholder="Todas las unidades"
-              data={unidadOptions}
-              searchable
-              style={{ width: 240 }}
-              {...contained}
-              value={filtroUnidad}
-              onChange={(v) => setFiltroUnidad(v ?? '')}
-            />
-            <Select
-              label="Año"
-              placeholder="Todos los años"
-              data={generarOpcionesAnio()}
-              style={{ width: 150 }}
-              {...contained}
-              value={filtroAnio}
-              onChange={(v) => setFiltroAnio(v ?? '')}
-            />
-          </Group>
-
-          {isLoading ? (
-            <Stack gap="xs">
-              <Skeleton height={64} radius="md" />
-              <Skeleton height={64} radius="md" />
-              <Skeleton height={64} radius="md" />
-            </Stack>
-          ) : solicitudes.length === 0 ? (
-            <EmptyState
-              icon={IconClipboardHeart}
-              title="Sin solicitudes"
-              description="No se han enviado solicitudes de certificación médica."
-            />
-          ) : (
-            <SgthTable
-              records={solicitudes}
-              columns={columns}
-              fetching={isLoading}
-              minHeight={200}
-            />
-          )}
-        </Stack>
-      </Card>
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!solicitudes.length}
+        emptyProps={{
+          icon: IconClipboardHeart,
+          title: 'Sin solicitudes',
+          description: 'No se han enviado solicitudes de certificación médica.',
+        }}
+      >
+        <SgthTable
+          records={solicitudes}
+          columns={columns}
+          minHeight={200}
+        />
+      </DataState>
     </PageShell>
   )
 }

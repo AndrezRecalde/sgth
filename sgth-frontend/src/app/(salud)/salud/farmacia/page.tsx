@@ -16,9 +16,9 @@ import {
   IconX,
   IconShoppingCart,
   IconCubePlus,
+  IconPill,
 } from "@tabler/icons-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { SgthTable } from "@/components/ui/SgthTable";
+import { DataState, PageHeader, SgthTable, Toolbar } from "@/components/ui";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import {
   useInventarioMedicinas,
@@ -33,7 +33,7 @@ import { getMedicinasColumns } from "@/features/dispensario/components/medicinas
 import type { InventarioMedicina } from "@/features/dispensario/services/inventarioMedicinaService";
 
 export default function FarmaciaPage() {
-  const contained = useContainedInput();
+  const contained = useContainedInput("sm");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
@@ -55,7 +55,7 @@ export default function FarmaciaPage() {
   const [kardexOpened, { open: abrirKardex, close: cerrarKardex }] =
     useDisclosure(false);
 
-  const { data, isLoading } = useInventarioMedicinas({
+  const { data, isLoading, error } = useInventarioMedicinas({
     page,
     per_page: 15,
     search: query || undefined,
@@ -120,45 +120,33 @@ export default function FarmaciaPage() {
         title="Farmacia"
         description="Gestión del inventario de medicinas"
         actions={
-          <Button
-            component={Link}
-            href="/salud/farmacia/adquisiciones"
-            variant="light"
-            color="blue"
-            leftSection={<IconShoppingCart size={14} />}
-          >
-            Adquisiciones
-          </Button>
+          <Group gap="xs">
+            <Button
+              component={Link}
+              href="/salud/farmacia/adquisiciones"
+              variant="light"
+              color="blue"
+              leftSection={<IconShoppingCart size={14} />}
+            >
+              Adquisiciones
+            </Button>
+            <Button
+              variant="light"
+              color="emerald"
+              leftSection={<IconCubePlus size={14} />}
+              onClick={() => {
+                setMedicinaSel(null);
+                abrirModal();
+              }}
+            >
+              Nueva medicina
+            </Button>
+          </Group>
         }
       />
 
-      <Group justify="space-between" wrap="wrap" gap="sm">
-        <Group gap="xs">
-          <TextInput
-            placeholder="Buscar por nombre, código o principio activo"
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleBuscar();
-            }}
-            style={{ width: 300 }}
-            rightSection={
-              search ? (
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => {
-                    setSearch("");
-                    setQuery("");
-                    setPage(1);
-                  }}
-                >
-                  <IconX size={12} />
-                </ActionIcon>
-              ) : null
-            }
-          />
+      <Toolbar
+        actions={
           <Button
             variant="light"
             leftSection={<IconSearch size={14} />}
@@ -166,23 +154,38 @@ export default function FarmaciaPage() {
           >
             Buscar
           </Button>
-        </Group>
-
-        <Button
-          variant="light"
-          color="emerald"
-          leftSection={<IconCubePlus size={14} />}
-          onClick={() => {
-            setMedicinaSel(null);
-            abrirModal();
+        }
+      >
+        <TextInput
+          label="Buscar"
+          placeholder="Nombre, código o principio activo"
+          {...contained}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleBuscar();
           }}
-        >
-          Nueva medicina
-        </Button>
-      </Group>
+          style={{ minWidth: 300 }}
+          rightSection={
+            search ? (
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={() => {
+                  setSearch("");
+                  setQuery("");
+                  setPage(1);
+                }}
+              >
+                <IconX size={12} />
+              </ActionIcon>
+            ) : null
+          }
+        />
 
-      <Group gap="xs">
-        <Chip
+        <Group gap="xs">
+          <Chip
           checked={filtroEstado === "activos"}
           onChange={() => {
             setFiltroEstado(filtroEstado === "activos" ? "todos" : "activos");
@@ -225,18 +228,31 @@ export default function FarmaciaPage() {
             Stock bajo
           </Chip>
         </Indicator>
-      </Group>
+        </Group>
+      </Toolbar>
 
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!medicinas.length}
+        emptyProps={{
+          icon: IconPill,
+          title: "Sin medicinas",
+          description: query || filtroStockBajo
+            ? "Ninguna medicina coincide con los filtros aplicados."
+            : "Aún no hay medicinas registradas en el inventario.",
+        }}
+      >
       <SgthTable
         records={medicinas}
         columns={columns}
-        fetching={isLoading}
         minHeight={200}
         totalRecords={data?.total ?? 0}
         recordsPerPage={15}
         page={page}
         onPageChange={setPage}
       />
+      </DataState>
 
       <MedicinaModal
         opened={modalOpened}

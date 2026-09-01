@@ -9,13 +9,14 @@ import {
   Skeleton,
 } from "@mantine/core";
 import { IconDownload, IconStethoscope } from "@tabler/icons-react";
-import { SgthTable } from "@/components/ui/SgthTable";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyState, SgthTable, StatusBadge } from "@/components/ui";
 import { useSolicitudesCertificacion } from "@/features/dispensario/hooks/useSolicitudCertificacion";
 import { usePdfFemo } from "@/features/dispensario/hooks/usePdfFemo";
 import {
   TIPO_EVENTO_OPTIONS,
-  ESTADO_SOLICITUD_COLORS,
+  TONO_ESTADO_SOLICITUD,
+  TONO_DICTAMEN,
+  DICTAMEN_LABELS,
   ESTADO_SOLICITUD_LABELS,
 } from "@/features/dispensario/services/solicitudCertificacionService";
 import type { SolicitudCertificacion } from "@/features/dispensario/services/solicitudCertificacionService";
@@ -24,18 +25,6 @@ import type { DataTableColumn } from "mantine-datatable";
 interface Props {
   servidorId: number;
 }
-
-const DICTAMEN_COLORS: Record<string, string> = {
-  apto: "emerald",
-  apto_con_restricciones: "orange",
-  no_apto: "red",
-};
-
-const DICTAMEN_LABELS: Record<string, string> = {
-  apto: "Apto",
-  apto_con_restricciones: "Apto c/restricciones",
-  no_apto: "No apto",
-};
 
 export function SaludOcupacionalTab({ servidorId }: Props) {
   const { data, isLoading } = useSolicitudesCertificacion({
@@ -78,21 +67,13 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
       width: 140,
       render: (s) => (
         <Stack gap={4}>
-          <Badge
-            size="sm"
-            variant="light"
-            color={ESTADO_SOLICITUD_COLORS[s.estado] ?? "gray"}
-          >
+          <StatusBadge tone={TONO_ESTADO_SOLICITUD[s.estado] ?? "neutral"}>
             {ESTADO_SOLICITUD_LABELS[s.estado] ?? s.estado}
-          </Badge>
+          </StatusBadge>
           {s.dictamen && (
-            <Badge
-              size="xs"
-              variant="dot"
-              color={DICTAMEN_COLORS[s.dictamen] ?? "gray"}
-            >
+            <StatusBadge size="xs" tone={TONO_DICTAMEN[s.dictamen] ?? "neutral"}>
               {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
-            </Badge>
+            </StatusBadge>
           )}
         </Stack>
       ),

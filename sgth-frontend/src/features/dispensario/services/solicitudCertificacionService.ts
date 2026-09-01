@@ -1,4 +1,5 @@
 import api from '@/lib/axios'
+import type { SemanticTone } from '@/config/design.tokens'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
 export interface SolicitudConstantesVitales {
@@ -116,11 +117,27 @@ export const TIPO_EVENTO_OPTIONS = [
   { value: 'especial',   label: 'Especial'                  },
 ]
 
-export const ESTADO_SOLICITUD_COLORS: Record<string, string> = {
-  pendiente:   'orange',
-  en_proceso:  'blue',
-  completada:  'emerald',
-  cancelada:   'red',
+export const TONO_ESTADO_SOLICITUD: Record<string, SemanticTone> = {
+  pendiente:   'warning',
+  en_proceso:  'info',
+  completada:  'success',
+  cancelada:   'danger',
+}
+
+/**
+ * El dictamen del Dispensario. «Apto con restricciones» es una advertencia,
+ * no un fallo: el candidato entra, pero con condiciones que alguien debe leer.
+ */
+export const TONO_DICTAMEN: Record<string, SemanticTone> = {
+  apto:                   'success',
+  apto_con_restricciones: 'warning',
+  no_apto:                'danger',
+}
+
+export const DICTAMEN_LABELS: Record<string, string> = {
+  apto:                   'Apto',
+  apto_con_restricciones: 'Apto c/restricciones',
+  no_apto:                'No apto',
 }
 
 export const ESTADO_SOLICITUD_LABELS: Record<string, string> = {
