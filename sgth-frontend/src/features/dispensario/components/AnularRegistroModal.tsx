@@ -8,6 +8,11 @@ import { useState } from 'react'
 import { IconAlertTriangle, IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 
+interface MotivoOption {
+  value: string
+  label: string
+}
+
 interface Props {
   opened:      boolean
   onClose:     () => void
@@ -15,9 +20,15 @@ interface Props {
   descripcion: string
   onConfirmar: (motivo: string) => void
   loading:     boolean
+  /**
+   * Motivos ofrecidos. Por defecto los de un registro clínico; una farmacia
+   * anula por otras razones —cantidades mal digitadas, un paciente que no
+   * volvió— y ahí sobra preguntar por el diagnóstico.
+   */
+  motivos?:    MotivoOption[]
 }
 
-const MOTIVOS_PREDEFINIDOS = [
+const MOTIVOS_CLINICOS: MotivoOption[] = [
   { value: 'duplicado',            label: 'Registro duplicado'       },
   { value: 'error_digitacion',     label: 'Error de digitación'      },
   { value: 'diagnostico_incorrecto', label: 'Diagnóstico incorrecto' },
@@ -28,6 +39,7 @@ const MOTIVOS_PREDEFINIDOS = [
 export function AnularRegistroModal({
   opened, onClose, titulo, descripcion,
   onConfirmar, loading,
+  motivos = MOTIVOS_CLINICOS,
 }: Props) {
   const contained = useContainedInput()
   const [motivoSel, setMotivoSel] = useState<string>('')
@@ -35,7 +47,7 @@ export function AnularRegistroModal({
 
   const motivoFinal = motivoSel === 'otro'
     ? motivoLibre.trim()
-    : MOTIVOS_PREDEFINIDOS.find(m => m.value === motivoSel)?.label ?? ''
+    : motivos.find(m => m.value === motivoSel)?.label ?? ''
 
   const puedeConfirmar = !!motivoSel &&
     (motivoSel !== 'otro' || motivoLibre.trim().length >= 5)
@@ -75,7 +87,7 @@ export function AnularRegistroModal({
         <Select
           label="Motivo de anulación"
           placeholder="Seleccione un motivo"
-          data={MOTIVOS_PREDEFINIDOS}
+          data={motivos}
           {...contained}
           value={motivoSel}
           onChange={(v) => {
