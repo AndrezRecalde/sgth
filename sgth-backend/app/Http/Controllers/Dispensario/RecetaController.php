@@ -93,6 +93,40 @@ final class RecetaController extends Controller
         return ApiResponse::ok($receta);
     }
 
+    /**
+     * Anula una receta para que no se entregue lo que falta. La anula quien la
+     * emitió —siguiendo la misma regla que el odontograma— o la administración
+     * del dispensario, que es quien atiende el mostrador cuando el paciente
+     * ya no vuelve.
+     */
+    public function anular(
+        Request $request,
+        int $id
+    ): JsonResponse {
+        $request->validate([
+            'motivo_anulacion' => ['required', 'string', 'max:255'],
+        ]);
+
+        $receta = RecetaMedica::with('consultaMedica')->findOrFail($id);
+
+        $esAdministracion = $request->user()->hasRole('admin-dispensario');
+        $laEmitio = $receta->consultaMedica?->medico_id === $request->user()->id;
+
+        if (! $esAdministracion && ! $laEmitio) {
+            return ApiResponse::error(
+                'Solo quien emitió la receta puede anularla.', null, 403
+            );
+        }
+
+        $anulada = $this->recetaService->anularReceta(
+            $id,
+            $request->string('motivo_anulacion')->value(),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok($anulada, 'Receta anulada correctamente.');
+    }
+
     public function despachar(
         Request $request,
         int $id

@@ -1112,6 +1112,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::post('{id}/despachar', [RecetaController::class, 'despachar'])
                 ->middleware('role:enfermera|admin-dispensario');
+            Route::post('{id}/anular', [RecetaController::class, 'anular'])
+                ->middleware('role:medico|odontologo|admin-dispensario');
             Route::patch('{recetaId}/items/{itemId}',
                 [ItemRecetaController::class, 'update']
             )->middleware('role:medico|odontologo');

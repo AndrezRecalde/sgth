@@ -100,9 +100,10 @@ export const recetaService = {
       { params: { consulta_medica_id: consultaId } }
     ).then(r => r.data.datos),
 
-  anular: (id: number) =>
-    api.patch<ApiResponse<RecetaMedica>>(
-      `/dispensario/recetas/${id}/anular`
+  anular: (id: number, motivo: string) =>
+    api.post<ApiResponse<RecetaMedica>>(
+      `/dispensario/recetas/${id}/anular`,
+      { motivo_anulacion: motivo }
     ).then(r => r.data.datos),
 
   actualizarItem: (

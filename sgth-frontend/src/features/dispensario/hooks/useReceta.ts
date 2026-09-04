@@ -122,6 +122,33 @@ export function useRecetasFarmacia(params?: {
   })
 }
 
+export function useAnularReceta() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      recetaService.anular(id, motivo),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Receta anulada',
+        message: 'La receta ya no aparecerá pendiente de entrega.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      // Anular no mueve stock: lo entregado ya salió y su egreso sigue en pie.
+      qc.invalidateQueries({ queryKey: ['recetas'] })
+      qc.invalidateQueries({ queryKey: ['consultas'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'No se pudo anular',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
 export function useDespacharReceta() {
   const qc = useQueryClient()
 

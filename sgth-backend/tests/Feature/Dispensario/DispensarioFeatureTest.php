@@ -418,3 +418,109 @@ test('no_se_anula_una_adquisicion_cuyo_stock_ya_se_consumio', function () {
     expect($medicina->refresh()->stock_actual)->toBe(30);
     expect($adquisicion->refresh()->anulado_en)->toBeNull();
 });
+
+test('anular_receta_parcial_la_cierra_sin_devolver_lo_ya_entregado', function () {
+    $medicina = InventarioMedicina::create([
+        'codigo' => 'MED-7001',
+        'nombre' => 'Losartán',
+        'principio_activo' => 'Losartán',
+        'presentacion' => 'tableta',
+        'stock_actual' => 50,
+        'stock_minimo' => 5,
+        'estado' => true,
+    ]);
+
+    $historia = HistoriaClinica::create([
+        'servidor_id' => $this->paciente->id,
+        'grupo_sanguineo' => 'O+',
+    ]);
+
+    $consulta = ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id' => $this->medico->id,
+        'fecha_consulta' => now()->format('Y-m-d'),
+        'hora_consulta' => '09:00:00',
+        'motivo_consulta' => 'Control',
+        'diagnostico_detallado' => 'Hipertensión',
+    ]);
+
+    $servicio = app(RecetaService::class);
+
+    $receta = $servicio->emitirReceta([
+        'consulta_medica_id' => $consulta->id,
+        'fecha_emision' => now()->format('Y-m-d'),
+    ], [[
+        'inventario_medicina_id' => $medicina->id,
+        'cantidad_prescrita' => 20,
+        'dosis' => '1 tableta',
+        'frecuencia' => 'Cada 12 horas',
+        'duracion' => '10 días',
+    ]])['receta'];
+
+    $item = ItemReceta::where('receta_medica_id', $receta->id)->first();
+    $servicio->despacharReceta($receta->id, [
+        ['item_receta_id' => $item->id, 'cantidad' => 8],
+    ], $this->medico->id);
+
+    expect($receta->refresh()->estado)->toBe('despachada_parcial');
+    expect($medicina->refresh()->stock_actual)->toBe(42);
+
+    $anulada = $servicio->anularReceta(
+        $receta->id, 'El paciente no volvió', $this->medico->id
+    );
+
+    expect($anulada->estado)->toBe('anulada');
+    expect($anulada->motivo_anulacion)->toBe('El paciente no volvió');
+    // Lo entregado salió del estante y su egreso sigue vigente.
+    expect($medicina->refresh()->stock_actual)->toBe(42);
+});
+
+test('no_se_anula_una_receta_ya_despachada_por_completo', function () {
+    $medicina = InventarioMedicina::create([
+        'codigo' => 'MED-7002',
+        'nombre' => 'Metformina',
+        'principio_activo' => 'Metformina',
+        'presentacion' => 'tableta',
+        'stock_actual' => 30,
+        'stock_minimo' => 5,
+        'estado' => true,
+    ]);
+
+    $historia = HistoriaClinica::create([
+        'servidor_id' => $this->paciente->id,
+        'grupo_sanguineo' => 'A+',
+    ]);
+
+    $consulta = ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id' => $this->medico->id,
+        'fecha_consulta' => now()->format('Y-m-d'),
+        'hora_consulta' => '10:00:00',
+        'motivo_consulta' => 'Control',
+        'diagnostico_detallado' => 'Diabetes',
+    ]);
+
+    $servicio = app(RecetaService::class);
+
+    $receta = $servicio->emitirReceta([
+        'consulta_medica_id' => $consulta->id,
+        'fecha_emision' => now()->format('Y-m-d'),
+    ], [[
+        'inventario_medicina_id' => $medicina->id,
+        'cantidad_prescrita' => 10,
+        'dosis' => '1 tableta',
+        'frecuencia' => 'Diaria',
+        'duracion' => '10 días',
+    ]])['receta'];
+
+    $item = ItemReceta::where('receta_medica_id', $receta->id)->first();
+    $servicio->despacharReceta($receta->id, [
+        ['item_receta_id' => $item->id, 'cantidad' => 10],
+    ], $this->medico->id);
+
+    expect($receta->refresh()->estado)->toBe('despachada_completa');
+
+    expect(fn () => $servicio->anularReceta(
+        $receta->id, 'Error', $this->medico->id
+    ))->toThrow(App\Exceptions\ReglaNegocioException::class);
+});

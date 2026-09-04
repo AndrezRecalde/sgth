@@ -44,6 +44,14 @@ export const MOTIVOS_ANULAR_ADQUISICION: MotivoOption[] = [
   { value: 'otro',                label: 'Otro'                         },
 ]
 
+export const MOTIVOS_ANULAR_RECETA: MotivoOption[] = [
+  { value: 'no_retiro',        label: 'El paciente no retiró'   },
+  { value: 'cambio_tratamiento', label: 'Cambio de tratamiento' },
+  { value: 'error_digitacion', label: 'Error de digitación'     },
+  { value: 'paciente_incorrecto', label: 'Paciente incorrecto'  },
+  { value: 'otro',             label: 'Otro'                    },
+]
+
 export function AnularRegistroModal({
   opened, onClose, titulo, descripcion,
   onConfirmar, loading,

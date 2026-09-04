@@ -49,6 +49,44 @@ final class RecetaService implements RecetaServiceInterface
         });
     }
 
+    /**
+     * Anula una receta para que no se entregue lo que falta.
+     *
+     * No devuelve stock: lo ya despachado salió físicamente del estante y su
+     * egreso sigue vigente en el kardex. Anular cierra la receta, y por eso
+     * alcanza también a las parciales — si no, una receta a medio entregar se
+     * quedaría para siempre en la cola de despacho cuando el paciente no
+     * vuelve o el médico cambia el tratamiento.
+     */
+    public function anularReceta(
+        int $recetaId,
+        string $motivo,
+        int $anuladoPor
+    ): RecetaMedica {
+        return DB::transaction(function () use ($recetaId, $motivo, $anuladoPor) {
+            $receta = RecetaMedica::lockForUpdate()->findOrFail($recetaId);
+
+            if ($receta->estado === 'anulada') {
+                throw new ReglaNegocioException('La receta ya fue anulada.');
+            }
+
+            if ($receta->estado === 'despachada_completa') {
+                throw new ReglaNegocioException(
+                    'No se puede anular una receta ya despachada por completo.'
+                );
+            }
+
+            $receta->update([
+                'estado'           => 'anulada',
+                'anulado_en'       => now(),
+                'anulado_por'      => $anuladoPor,
+                'motivo_anulacion' => $motivo,
+            ]);
+
+            return $receta;
+        });
+    }
+
     public function despacharReceta(int $recetaId, array $itemsDespachados, int $despachadoPor): RecetaMedica
     {
         return DB::transaction(function () use ($recetaId, $itemsDespachados, $despachadoPor) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
-import { IconCheck, IconEye } from '@tabler/icons-react'
+import { IconCheck, IconEye, IconBan } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import type { SemanticTone } from '@/config/design.tokens'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -35,10 +35,11 @@ export function getNombrePaciente(r: RecetaMedica): string {
 interface ColumnActions {
   /** Abre el modal de despacho, o el detalle si la receta ya está cerrada. */
   onAbrir: (receta: RecetaMedica) => void
+  onAnular: (receta: RecetaMedica) => void
 }
 
 export function getRecetasColumns(
-  { onAbrir }: ColumnActions
+  { onAbrir, onAnular }: ColumnActions
 ): DataTableColumn<RecetaMedica>[] {
   return [
     {
@@ -107,14 +108,24 @@ export function getRecetasColumns(
         const cerrada = r.estado === 'despachada_completa'
           || r.estado === 'anulada'
         return (
-          <TableActions actions={[{
-            label:   cerrada ? 'Ver detalle' : 'Despachar',
-            icon:    cerrada
-              ? <IconEye size={14} />
-              : <IconCheck size={14} />,
-            color:   cerrada ? 'blue' : 'emerald',
-            onClick: () => onAbrir(r),
-          }]} />
+          <TableActions actions={[
+            {
+              label:   cerrada ? 'Ver detalle' : 'Despachar',
+              icon:    cerrada
+                ? <IconEye size={14} />
+                : <IconCheck size={14} />,
+              color:   cerrada ? 'blue' : 'emerald',
+              onClick: () => onAbrir(r),
+            },
+            // Anular cierra lo que falta por entregar, así que solo tiene
+            // sentido mientras quede algo pendiente.
+            ...(cerrada ? [] : [{
+              label:   'Anular receta',
+              icon:    <IconBan size={14} />,
+              color:   'orange',
+              onClick: () => onAnular(r),
+            }]),
+          ]} />
         )
       },
     },
