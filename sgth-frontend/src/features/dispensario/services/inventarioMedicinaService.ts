@@ -28,12 +28,15 @@ export interface MovimientoInventario {
   }
 }
 
+/**
+ * Alta de catálogo: define qué medicamento maneja la farmacia, no cuánto
+ * tiene. Nace en cero y sus existencias entran por adquisición.
+ */
 export interface CrearMedicinaData {
   nombre:            string
   principio_activo:  string
   presentacion:      string
   concentracion?:    string | null
-  stock_actual:      number
   stock_minimo:      number
   fecha_caducidad?:  string | null
   lote?:             string | null
@@ -55,10 +58,16 @@ export const inventarioMedicinaService = {
       '/dispensario/inventario/medicinas', { params }
     ).then(r => r.data.datos),
 
-  buscar: (q: string) =>
+  /**
+   * `incluirAgotadas` solo lo pide Adquisiciones: al reponer hace falta ver
+   * justamente lo que está en cero. Al recetar se ofrece solo lo disponible.
+   */
+  buscar: (q: string, incluirAgotadas = false) =>
     api.get<ApiResponse<InventarioMedicina[]>>(
       '/dispensario/inventario/medicinas/buscar',
-      { params: { q } }
+      // Va como 1, no como true: en la cadena de consulta `true` viaja como
+      // texto y la regla `boolean` de Laravel solo admite 1/0.
+      { params: { q, incluir_agotadas: incluirAgotadas ? 1 : undefined } }
     ).then(r => r.data.datos),
 
   obtener: (id: number) =>
@@ -74,12 +83,6 @@ export const inventarioMedicinaService = {
   actualizar: (id: number, data: ActualizarMedicinaData) =>
     api.put<ApiResponse<InventarioMedicina>>(
       `/dispensario/inventario/medicinas/${id}`, data
-    ).then(r => r.data.datos),
-
-  ingresarStock: (id: number, cantidad: number, motivo: string) =>
-    api.post<ApiResponse<InventarioMedicina>>(
-      `/dispensario/inventario/medicinas/${id}/ingresar-stock`,
-      { cantidad, motivo }
     ).then(r => r.data.datos),
 
   ajustarInventario: (id: number, nuevoStock: number, motivo: string) =>

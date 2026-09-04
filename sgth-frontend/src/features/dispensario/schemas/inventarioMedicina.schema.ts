@@ -20,7 +20,6 @@ export const medicinaSchema = z.object({
   principio_activo: z.string().min(2, 'Mínimo 2 caracteres'),
   presentacion:     z.string().min(1, 'Seleccione la presentación'),
   concentracion:    z.string().optional().nullable(),
-  stock_actual:     z.number().min(0, 'No puede ser negativo'),
   stock_minimo:     z.number().min(0, 'No puede ser negativo'),
   fecha_caducidad:  z.string().optional().nullable(),
   lote:             z.string().optional().nullable(),

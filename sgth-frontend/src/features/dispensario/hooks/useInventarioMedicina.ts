@@ -80,22 +80,6 @@ export function useInventarioMutations() {
     onError,
   })
 
-  const ingresarStock = useMutation({
-    mutationFn: ({ id, cantidad, motivo }: {
-      id: number; cantidad: number; motivo: string
-    }) => inventarioMedicinaService.ingresarStock(id, cantidad, motivo),
-    onSuccess: () => {
-      notifications.show({
-        title:   'Stock ingresado',
-        message: 'El stock fue actualizado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
-      invalidar()
-    },
-    onError,
-  })
-
   const ajustarInventario = useMutation({
     mutationFn: ({ id, nuevoStock, motivo }: {
       id: number; nuevoStock: number; motivo: string
@@ -131,8 +115,5 @@ export function useInventarioMutations() {
     onError,
   })
 
-  return {
-    crear, actualizar, ingresarStock,
-    ajustarInventario, toggleEstado,
-  }
+  return { crear, actualizar, ajustarInventario, toggleEstado }
 }

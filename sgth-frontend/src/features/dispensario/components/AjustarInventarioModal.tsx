@@ -85,10 +85,9 @@ export function AjustarInventarioModal({
             variant="light"
           >
             <Text size="xs">
-              Use esta opción solo para corregir el inventario
-              tras un conteo físico. Para nuevas compras o
-              donaciones, use &laquo;Ingresar stock&raquo; o el módulo
-              de Adquisiciones.
+              Use esta opción solo para corregir el inventario tras un conteo
+              físico, una merma o una caducidad. Las compras y donaciones
+              entran por Adquisiciones, con su documento de respaldo.
             </Text>
           </Alert>
 

@@ -26,7 +26,6 @@ class StoreInventarioMedicinaRequest extends FormRequest
             'principio_activo' => ['required', 'string', 'max:255'],
             'presentacion'     => ['required', new Enum(PresentacionMedicamento::class)],
             'concentracion'    => ['nullable', 'string', 'max:100'],
-            'stock_actual'     => ['required', 'integer', 'min:0'],
             'stock_minimo'     => ['required', 'integer', 'min:0'],
             'fecha_caducidad'  => ['nullable', 'date'],
             'lote'             => ['nullable', 'string', 'max:100'],

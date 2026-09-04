@@ -43,10 +43,17 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return InventarioMedicina::findOrFail($id);
     }
 
-    public function buscar(string $termino): Collection
-    {
+    /**
+     * Busca en el catálogo activo. Quien receta solo puede elegir lo que hay
+     * en existencia; quien registra una adquisición necesita ver también lo
+     * agotado, que es justamente lo que va a reponer.
+     */
+    public function buscar(
+        string $termino,
+        bool $soloConStock = true
+    ): Collection {
         return InventarioMedicina::where('estado', true)
-            ->where('stock_actual', '>', 0)
+            ->when($soloConStock, fn ($q) => $q->where('stock_actual', '>', 0))
             ->where(function ($q) use ($termino) {
                 $q->where('nombre', 'ilike', "%{$termino}%")
                   ->orWhere('principio_activo', 'ilike', "%{$termino}%")
@@ -57,30 +64,21 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
             ->get();
     }
 
+    /**
+     * Da de alta un medicamento en el CATÁLOGO. Define qué maneja la farmacia,
+     * no cuánto tiene: nace siempre en cero y sus existencias entran después
+     * por adquisición, para que todo aumento de stock tenga respaldo.
+     */
     public function ingresarMedicina(
         array $datos,
         int $registradoPor
     ): InventarioMedicina {
-        return DB::transaction(function () use ($datos, $registradoPor) {
-            $medicina = InventarioMedicina::create([
-                ...$datos,
-                'codigo'     => $this->generarCodigo(),
-                'created_by' => $registradoPor,
-            ]);
-
-            if ($medicina->stock_actual > 0) {
-                MovimientoInventarioMed::create([
-                    'inventario_medicina_id' => $medicina->id,
-                    'tipo_movimiento'        => 'ingreso',
-                    'cantidad'               => $medicina->stock_actual,
-                    'stock_resultante'       => $medicina->stock_actual,
-                    'motivo'                 => 'Ingreso inicial al inventario',
-                    'registrado_por'         => $registradoPor,
-                ]);
-            }
-
-            return $medicina;
-        });
+        return InventarioMedicina::create([
+            ...$datos,
+            'stock_actual' => 0,
+            'codigo'       => $this->generarCodigo(),
+            'created_by'   => $registradoPor,
+        ]);
     }
 
     private function generarCodigo(): string
@@ -106,40 +104,6 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         $medicina = InventarioMedicina::findOrFail($id);
         $medicina->update($datos);
         return $medicina;
-    }
-
-    public function ingresarStock(
-        int $id,
-        int $cantidad,
-        string $motivo,
-        int $registradoPor
-    ): InventarioMedicina {
-        if ($cantidad <= 0) {
-            throw new ReglaNegocioException(
-                'La cantidad a ingresar debe ser mayor a cero.'
-            );
-        }
-
-        return DB::transaction(function () use (
-            $id, $cantidad, $motivo, $registradoPor
-        ) {
-            $medicina = InventarioMedicina::lockForUpdate()
-                ->findOrFail($id);
-
-            $medicina->stock_actual += $cantidad;
-            $medicina->save();
-
-            MovimientoInventarioMed::create([
-                'inventario_medicina_id' => $medicina->id,
-                'tipo_movimiento'        => 'ingreso',
-                'cantidad'               => $cantidad,
-                'stock_resultante'       => $medicina->stock_actual,
-                'motivo'                 => $motivo,
-                'registrado_por'         => $registradoPor,
-            ]);
-
-            return $medicina;
-        });
     }
 
     public function ajustarInventario(

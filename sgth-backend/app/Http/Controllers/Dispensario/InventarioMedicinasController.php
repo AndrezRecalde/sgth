@@ -28,11 +28,13 @@ final class InventarioMedicinasController extends Controller
     public function buscar(Request $request): JsonResponse
     {
         $request->validate([
-            'q' => ['required', 'string', 'min:2'],
+            'q'                => ['required', 'string', 'min:2'],
+            'incluir_agotadas' => ['nullable', 'boolean'],
         ]);
 
         $resultados = $this->inventarioService->buscar(
-            $request->string('q')->value()
+            $request->string('q')->value(),
+            soloConStock: !$request->boolean('incluir_agotadas')
         );
 
         return ApiResponse::ok($resultados);
@@ -68,27 +70,6 @@ final class InventarioMedicinasController extends Controller
 
         return ApiResponse::ok(
             $actualizado, 'Medicina actualizada.'
-        );
-    }
-
-    public function ingresarStock(
-        Request $request,
-        int $medicina
-    ): JsonResponse {
-        $request->validate([
-            'cantidad' => ['required', 'integer', 'min:1'],
-            'motivo'   => ['required', 'string', 'max:255'],
-        ]);
-
-        $actualizado = $this->inventarioService->ingresarStock(
-            $medicina,
-            $request->integer('cantidad'),
-            $request->string('motivo')->value(),
-            $request->user()->id
-        );
-
-        return ApiResponse::ok(
-            $actualizado, 'Stock ingresado correctamente.'
         );
     }
 

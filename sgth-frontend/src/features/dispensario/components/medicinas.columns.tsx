@@ -3,7 +3,6 @@
 import { Text, Badge, Group, Tooltip } from "@mantine/core";
 import {
   IconEdit,
-  IconPlus,
   IconHistory,
   IconBan,
   IconCircleCheck,
@@ -16,7 +15,6 @@ import type { InventarioMedicina } from "../services/inventarioMedicinaService";
 
 interface ColumnActions {
   onEditar: (m: InventarioMedicina) => void;
-  onIngresarStock: (m: InventarioMedicina) => void;
   onAjustar: (m: InventarioMedicina) => void;
   onVerKardex: (m: InventarioMedicina) => void;
   onToggleEstado: (m: InventarioMedicina) => void;
@@ -158,11 +156,6 @@ export function getMedicinasColumns(
               label: "Editar",
               icon: <IconEdit size={14} />,
               onClick: () => actions.onEditar(m),
-            },
-            {
-              label: "Ingresar stock",
-              icon: <IconPlus size={14} />,
-              onClick: () => actions.onIngresarStock(m),
             },
             {
               label: "Ajustar inventario",

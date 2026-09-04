@@ -124,13 +124,14 @@ test('registrar_consulta_actualiza_estado_de_agenda_a_atendida', function () {
     expect($agenda->estado)->toBe('atendido');
 });
 
-test('ingresar_medicina_registra_movimiento_kardex_automatico', function () {
+test('alta_de_medicina_nace_sin_stock_ni_movimiento_de_kardex', function () {
     $this->actingAs($this->medico, 'sanctum');
 
     $service = app(InventarioMedicinasService::class);
-    
+
+    // Aunque el llamador insista con un stock inicial, el alta define
+    // catálogo, no existencias: el stock solo entra por adquisición.
     $medicina = $service->ingresarMedicina([
-        'codigo' => 'MED-001',
         'nombre' => 'Paracetamol',
         'principio_activo' => 'Paracetamol',
         'concentracion' => '500mg',
@@ -142,13 +143,90 @@ test('ingresar_medicina_registra_movimiento_kardex_automatico', function () {
     ], $this->medico->id);
 
     expect($medicina)->toBeInstanceOf(InventarioMedicina::class);
+    expect($medicina->stock_actual)->toBe(0);
+    expect($medicina->codigo)->toBe('MED-0001');
 
-    $movimiento = MovimientoInventarioMed::where('inventario_medicina_id', $medicina->id)->first();
-    
-    expect($movimiento)->not->toBeNull();
+    expect(
+        MovimientoInventarioMed::where('inventario_medicina_id', $medicina->id)->count()
+    )->toBe(0);
+});
+
+test('adquisicion_es_la_puerta_de_entrada_de_stock_y_deja_folio_en_el_kardex', function () {
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre' => 'Ibuprofeno',
+        'principio_activo' => 'Ibuprofeno',
+        'concentracion' => '400mg',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    $adquisicion = app(App\Services\Dispensario\AdquisicionService::class)->registrar(
+        [
+            'tipo' => 'compra',
+            'numero_documento' => 'FACT-001234',
+            'proveedor_o_donante' => 'Farmaenlace S.A.',
+            'fecha_adquisicion' => now()->toDateString(),
+        ],
+        [['inventario_medicina_id' => $medicina->id, 'cantidad' => 250]],
+        $this->medico->id
+    );
+
+    $medicina->refresh();
+    expect($medicina->stock_actual)->toBe(250);
+
+    $movimiento = MovimientoInventarioMed::where(
+        'inventario_medicina_id', $medicina->id
+    )->first();
+
     expect($movimiento->tipo_movimiento)->toBe('ingreso');
-    expect($movimiento->cantidad)->toBe(100);
-    expect($movimiento->stock_resultante)->toBe(100);
+    expect($movimiento->cantidad)->toBe(250);
+    expect($movimiento->stock_resultante)->toBe(250);
+    // El motivo es el rastro auditable: folio, documento y proveedor.
+    expect($movimiento->motivo)->toContain($adquisicion->folio);
+    expect($movimiento->motivo)->toContain('FACT-001234');
+    expect($movimiento->motivo)->toContain('Farmaenlace S.A.');
+});
+
+test('buscar_oculta_las_agotadas_al_recetar_pero_las_muestra_al_adquirir', function () {
+    $service = app(InventarioMedicinasService::class);
+
+    $agotada = $service->ingresarMedicina([
+        'nombre' => 'Amoxicilina',
+        'principio_activo' => 'Amoxicilina',
+        'presentacion' => 'capsula',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    expect($service->buscar('Amoxi')->pluck('id'))->not->toContain($agotada->id);
+    expect($service->buscar('Amoxi', soloConStock: false)->pluck('id'))
+        ->toContain($agotada->id);
+});
+
+test('endpoint_de_busqueda_acepta_el_indicador_de_agotadas_de_la_query', function () {
+    // La prueba de servicio no cubre la validación del request, y ahí es donde
+    // el indicador se cayó: en la cadena de consulta `true` viaja como texto y
+    // la regla `boolean` solo admite 1/0.
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $agotada = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre' => 'Loratadina',
+        'principio_activo' => 'Loratadina',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    $this->getJson('/api/v1/dispensario/inventario/medicinas/buscar?q=Lorat')
+        ->assertOk()
+        ->assertJsonMissing(['id' => $agotada->id]);
+
+    $this->getJson('/api/v1/dispensario/inventario/medicinas/buscar?q=Lorat&incluir_agotadas=1')
+        ->assertOk()
+        ->assertJsonFragment(['id' => $agotada->id]);
 });
 
 test('emitir_y_despachar_receta_descuenta_stock_y_registra_kardex', function () {

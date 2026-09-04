@@ -26,7 +26,6 @@ import {
   useStockBajoCount,
 } from "@/features/dispensario/hooks/useInventarioMedicina";
 import { MedicinaModal } from "@/features/dispensario/components/MedicinaModal";
-import { IngresarStockModal } from "@/features/dispensario/components/IngresarStockModal";
 import { AjustarInventarioModal } from "@/features/dispensario/components/AjustarInventarioModal";
 import { KardexDrawer } from "@/features/dispensario/components/KardexDrawer";
 import { getMedicinasColumns } from "@/features/dispensario/components/medicinas.columns";
@@ -47,8 +46,6 @@ export function FarmaciaView() {
   );
 
   const [modalOpened, { open: abrirModal, close: cerrarModal }] =
-    useDisclosure(false);
-  const [stockOpened, { open: abrirStock, close: cerrarStock }] =
     useDisclosure(false);
   const [ajustarOpened, { open: abrirAjustar, close: cerrarAjustar }] =
     useDisclosure(false);
@@ -81,10 +78,6 @@ export function FarmaciaView() {
     onEditar: (m) => {
       setMedicinaSel(m);
       abrirModal();
-    },
-    onIngresarStock: (m) => {
-      setMedicinaSel(m);
-      abrirStock();
     },
     onAjustar: (m) => {
       setMedicinaSel(m);
@@ -261,15 +254,6 @@ export function FarmaciaView() {
           cerrarModal();
         }}
         initialValues={medicinaSel}
-      />
-
-      <IngresarStockModal
-        opened={stockOpened}
-        onClose={() => {
-          setMedicinaSel(null);
-          cerrarStock();
-        }}
-        medicina={medicinaSel}
       />
 
       <AjustarInventarioModal

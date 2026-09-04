@@ -16,9 +16,18 @@ const RETARDO_BUSQUEDA_MS = 300;
 interface Props {
   onSeleccionar: (id: number, nombre: string) => void;
   onCrearNueva: () => void;
+  /**
+   * Adquisiciones lo activa: al reponer hay que poder elegir justamente lo
+   * que está en cero. Al recetar se ofrece solo lo que hay en existencia.
+   */
+  incluirAgotadas?: boolean;
 }
 
-export function BuscarMedicinaSelect({ onSeleccionar, onCrearNueva }: Props) {
+export function BuscarMedicinaSelect({
+  onSeleccionar,
+  onCrearNueva,
+  incluirAgotadas = false,
+}: Props) {
   const contained = useContainedInput();
   const [termino, setTermino] = useState("");
   const combobox = useCombobox({
@@ -31,8 +40,8 @@ export function BuscarMedicinaSelect({ onSeleccionar, onCrearNueva }: Props) {
   const consulta = termino.length < 2 ? "" : terminoConRetardo;
 
   const { data: resultados = [], isFetching } = useQuery({
-    queryKey: ["medicinas-buscar", consulta],
-    queryFn: () => inventarioMedicinaService.buscar(consulta),
+    queryKey: ["medicinas-buscar", consulta, incluirAgotadas],
+    queryFn: () => inventarioMedicinaService.buscar(consulta, incluirAgotadas),
     enabled: consulta.length >= 2,
     staleTime: 1000 * 30,
   });
@@ -97,8 +106,13 @@ export function BuscarMedicinaSelect({ onSeleccionar, onCrearNueva }: Props) {
                       </Text>
                     )}
                   </Text>
-                  <Text size="xs" c="dimmed">
-                    Stock: {m.stock_actual}
+                  <Text
+                    size="xs"
+                    c={m.stock_actual === 0 ? "orange" : "dimmed"}
+                  >
+                    {m.stock_actual === 0
+                      ? "Agotada"
+                      : `Stock: ${m.stock_actual}`}
                   </Text>
                 </Group>
               </Combobox.Option>

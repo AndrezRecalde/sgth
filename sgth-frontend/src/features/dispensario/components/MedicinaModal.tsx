@@ -9,8 +9,11 @@ import {
   NumberInput,
   Button,
   Select,
+  Alert,
+  Text,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
+import { IconInfoCircle } from "@tabler/icons-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -71,7 +74,6 @@ export function MedicinaModal({
       principio_activo: "",
       presentacion: "",
       concentracion: "",
-      stock_actual: 0,
       stock_minimo: 0,
       fecha_caducidad: "",
       lote: "",
@@ -87,7 +89,6 @@ export function MedicinaModal({
               principio_activo: initialValues.principio_activo,
               presentacion: initialValues.presentacion,
               concentracion: initialValues.concentracion ?? "",
-              stock_actual: initialValues.stock_actual,
               stock_minimo: initialValues.stock_minimo,
               fecha_caducidad: initialValues.fecha_caducidad ?? "",
               lote: initialValues.lote ?? "",
@@ -97,7 +98,6 @@ export function MedicinaModal({
               principio_activo: "",
               presentacion: "",
               concentracion: "",
-              stock_actual: 0,
               stock_minimo: 0,
               fecha_caducidad: "",
               lote: "",
@@ -133,7 +133,7 @@ export function MedicinaModal({
         reset();
         onClose();
         if (!isEditing && onCreated) {
-          onCreated(medicina as InventarioMedicina);
+          onCreated(medicina);
         }
       })
       .catch(() => {});
@@ -151,6 +151,20 @@ export function MedicinaModal({
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
+          {!isEditing && (
+            <Alert
+              icon={<IconInfoCircle size={14} />}
+              color="blue"
+              variant="light"
+            >
+              <Text size="xs">
+                Aquí se define el medicamento, no sus existencias: nace con
+                stock en cero. Las unidades entran desde Adquisiciones, con su
+                documento de respaldo.
+              </Text>
+            </Alert>
+          )}
+
           {isEditing && initialValues && (
             <TextInput
               label="Código"
@@ -216,23 +230,6 @@ export function MedicinaModal({
             )}
           />
 
-          <Controller
-            name="stock_actual"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label="Stock inicial"
-                disabled={isEditing}
-                description={
-                  isEditing ? 'Use "Ingresar stock" para modificar' : undefined
-                }
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(Number(v) || 0)}
-                error={errors.stock_actual?.message}
-              />
-            )}
-          />
           <Controller
             name="stock_minimo"
             control={control}
