@@ -976,3 +976,110 @@ test('sin_nada_que_avisar_el_job_no_envia_correo', function () {
 
     Illuminate\Support\Facades\Mail::assertNothingQueued();
 });
+
+test('la_valoracion_de_signos_vitales_distingue_normal_atencion_y_critico', function () {
+    $normales = [
+        'presion_sistolica' => 120, 'presion_diastolica' => 75,
+        'frecuencia_cardiaca' => 72, 'frecuencia_respiratoria' => 16,
+        'temperatura_c' => 36.6, 'saturacion_oxigeno' => 98,
+    ];
+
+    $evaluar = fn (array $cambios = [], ?int $edad = 40) =>
+        App\Services\Dispensario\ValoracionSignosVitales::evaluar(
+            array_merge($normales, $cambios), $edad
+        );
+
+    expect($evaluar()['nivel'])->toBe(App\Enums\NivelAlertaTriaje::NORMAL);
+    expect($evaluar()['hallazgos'])->toBeEmpty();
+
+    // Fuera de rango pero no crítico.
+    expect($evaluar(['temperatura_c' => 37.8])['nivel'])
+        ->toBe(App\Enums\NivelAlertaTriaje::ATENCION);
+
+    // Una saturación de 85 es lo que no puede pasar desapercibido.
+    $critico = $evaluar(['saturacion_oxigeno' => 85]);
+    expect($critico['nivel'])->toBe(App\Enums\NivelAlertaTriaje::CRITICO);
+    expect($critico['hallazgos'][0]['constante'])->toBe('saturacion_oxigeno');
+    expect($critico['hallazgos'][0]['etiqueta'])->toBe('Saturación de oxígeno');
+
+    // El peor hallazgo manda sobre el resto.
+    $mixto = $evaluar(['temperatura_c' => 37.8, 'presion_sistolica' => 200]);
+    expect($mixto['nivel'])->toBe(App\Enums\NivelAlertaTriaje::CRITICO);
+    expect($mixto['hallazgos'])->toHaveCount(2);
+
+    // Una constante ausente no inventa un hallazgo.
+    expect($evaluar(['glucosa' => null])['nivel'])
+        ->toBe(App\Enums\NivelAlertaTriaje::NORMAL);
+});
+
+test('en_un_menor_no_se_emite_juicio_sobre_los_signos_vitales', function () {
+    // Una frecuencia de 120 es normal en un niño y crítica en un adulto:
+    // aplicar la tabla de adulto llenaría la cola de falsos críticos.
+    $constantes = [
+        'presion_sistolica' => 100, 'presion_diastolica' => 65,
+        'frecuencia_cardiaca' => 120, 'frecuencia_respiratoria' => 24,
+        'temperatura_c' => 36.8, 'saturacion_oxigeno' => 98,
+    ];
+
+    $enNino = App\Services\Dispensario\ValoracionSignosVitales::evaluar($constantes, 6);
+    expect($enNino['nivel'])->toBe(App\Enums\NivelAlertaTriaje::NO_EVALUADO);
+    expect($enNino['hallazgos'])->toBeEmpty();
+
+    $enAdulto = App\Services\Dispensario\ValoracionSignosVitales::evaluar($constantes, 40);
+    expect($enAdulto['nivel'])->not->toBe(App\Enums\NivelAlertaTriaje::NO_EVALUADO);
+
+    // Sin fecha de nacimiento se valora como adulto.
+    expect(App\Services\Dispensario\ValoracionSignosVitales::evaluar($constantes, null)['nivel'])
+        ->toBe($enAdulto['nivel']);
+});
+
+test('registrar_un_triaje_critico_guarda_el_nivel_y_lo_expone_en_la_cola', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    HistoriaClinica::create([
+        'numero_historia' => 'HC-TRIAJE-1',
+        'cedula_paciente' => $this->paciente->cedula,
+        'tipo_paciente'   => 'servidor',
+        'servidor_id'     => $this->paciente->id,
+        'estado'          => true,
+    ]);
+
+    $agenda = AgendaMedica::create([
+        'servidor_id'      => $this->paciente->id,
+        'medico_id'        => $this->medico->id,
+        'fecha'            => now()->format('Y-m-d'),
+        'hora_inicio'      => '08:00:00',
+        'hora_fin'         => '08:30:00',
+        'motivo_solicitud' => 'Malestar',
+        'estado'           => 'en_espera',
+        'requiere_triaje'  => true,
+        'registrado_en'    => now(),
+    ], $this->medico->id);
+
+    $this->postJson("/api/v1/dispensario/agenda/{$agenda->id}/triaje", [
+        'presion_sistolica' => 200, 'presion_diastolica' => 120,
+        'frecuencia_cardiaca' => 95, 'frecuencia_respiratoria' => 18,
+        'temperatura_c' => 36.8, 'saturacion_oxigeno' => 88,
+        'peso_kg' => 80, 'talla_cm' => 170,
+    ])->assertCreated();
+
+    $triaje = App\Models\Dispensario\Triaje::where('agenda_medica_id', $agenda->id)->first();
+
+    expect($triaje->nivel_alerta)->toBe(App\Enums\NivelAlertaTriaje::CRITICO);
+    expect(collect($triaje->hallazgos_alerta)->pluck('constante'))
+        ->toContain('presion_sistolica', 'saturacion_oxigeno');
+
+    // Tomar el triaje saca el turno de la lista de pendientes y lo pasa a sala.
+    expect($agenda->refresh()->estado)->toBe('en_sala');
+
+    // Y la cola lo entrega con su nivel, que es donde se ve la urgencia.
+    $cola = $this->getJson('/api/v1/dispensario/agenda?fecha=' . now()->toDateString())
+        ->assertOk()
+        ->json('datos.data');
+
+    $turno = collect($cola)->firstWhere('id', $agenda->id);
+    expect($turno['triaje']['nivel_alerta'])->toBe('critico');
+});

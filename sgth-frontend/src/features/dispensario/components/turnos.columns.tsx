@@ -3,9 +3,10 @@
 import { Text, Badge, Group, Stack } from '@mantine/core'
 import {
   IconUser, IconUsers, IconX, IconClipboardCheck,
-  IconStethoscope,
+  IconStethoscope, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
+import { NIVEL_ALERTA } from '../constants/signosVitales'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { AgendaMedica } from '../services/agendaService'
 
@@ -121,15 +122,35 @@ export function getTurnosColumns(
       accessor: 'estado',
       title:    'Estado',
       width:    150,
-      render: (turno) => (
-        <Badge
-          size="sm"
-          variant="light"
-          color={ESTADO_COLORS[turno.estado] ?? 'gray'}
-        >
-          {ESTADO_LABELS[turno.estado] ?? turno.estado}
-        </Badge>
-      ),
+      render: (turno) => {
+        // El nivel del triaje va junto al estado, no en columna propia: es lo
+        // que hay que ver de un vistazo al recorrer la cola, y solo existe
+        // cuando ya se tomaron los signos vitales.
+        const nivel = turno.triaje?.nivel_alerta
+        const destacar = nivel === 'critico' || nivel === 'atencion'
+
+        return (
+          <Stack gap={4}>
+            <Badge
+              size="sm"
+              variant="light"
+              color={ESTADO_COLORS[turno.estado] ?? 'gray'}
+            >
+              {ESTADO_LABELS[turno.estado] ?? turno.estado}
+            </Badge>
+            {destacar && (
+              <Badge
+                size="xs"
+                variant="filled"
+                color={nivel === 'critico' ? 'red' : 'orange'}
+                leftSection={<IconAlertTriangle size={10} />}
+              >
+                {NIVEL_ALERTA[nivel].etiqueta}
+              </Badge>
+            )}
+          </Stack>
+        )
+      },
     },
     {
       accessor: 'acciones',

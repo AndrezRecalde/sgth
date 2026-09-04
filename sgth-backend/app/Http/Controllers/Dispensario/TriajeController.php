@@ -7,6 +7,7 @@ use App\Http\Requests\Dispensario\StoreTriajeRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\Triaje;
+use App\Services\Dispensario\ValoracionSignosVitales;
 use Illuminate\Http\JsonResponse;
 
 class TriajeController extends Controller
@@ -25,6 +26,14 @@ class TriajeController extends Controller
             ? round($datos['peso_kg'] / ($tallaMetros ** 2), 2)
             : null;
 
+        // La valoración se guarda con el triaje: la cola y el historial deben
+        // mostrar lo que se valoró con estas cifras, no lo que diría la tabla
+        // de umbrales el día que alguien consulte el registro.
+        $valoracion = ValoracionSignosVitales::evaluar(
+            $datos,
+            $this->edadDelPaciente($agenda)
+        );
+
         $triaje = Triaje::updateOrCreate(
             ['agenda_medica_id' => $agenda->id],
             [
@@ -33,6 +42,8 @@ class TriajeController extends Controller
                 'historia_clinica_id' => $this->resolverHistoriaClinicaId($agenda),
                 'enfermera_id'        => $request->user()->id,
                 'imc'                 => $imc,
+                'nivel_alerta'        => $valoracion['nivel'],
+                'hallazgos_alerta'    => $valoracion['hallazgos'],
                 'registrado_en'       => now(),
             ]
         );
@@ -73,6 +84,20 @@ class TriajeController extends Controller
             ->first();
 
         return ApiResponse::ok($ultimoTriaje);
+    }
+
+    /**
+     * Edad del paciente del turno, sea servidor o carga familiar. Sin fecha de
+     * nacimiento devuelve null, y entonces se valora como adulto: es lo que
+     * más se parece a la población que atiende el dispensario.
+     */
+    private function edadDelPaciente(AgendaMedica $agenda): ?int
+    {
+        $nacimiento = $agenda->servidor_id
+            ? $agenda->servidor?->fecha_nacimiento
+            : $agenda->cargaFamiliar?->fecha_nacimiento;
+
+        return $nacimiento?->age;
     }
 
     private function resolverHistoriaClinicaId(
