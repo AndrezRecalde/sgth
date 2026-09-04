@@ -4,6 +4,7 @@ import {
   Modal, Stack, NumberInput, Textarea,
   Button, Group, Text, Badge, Alert,
 } from '@mantine/core'
+import { useEffect } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { IconCheck, IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -31,8 +32,17 @@ export function AjustarInventarioModal({
     control, register, handleSubmit, reset,
     formState: { errors },
   } = useForm<FormData>({
-    defaultValues: { nuevo_stock: medicina?.stock_actual ?? 0, motivo: '' },
+    defaultValues: { nuevo_stock: 0, motivo: '' },
   })
+
+  // El modal vive montado en la vista, así que los `defaultValues` se fijaron
+  // cuando todavía no había medicina elegida y el conteo arrancaba en cero.
+  // Se resiembra en cada apertura con el stock de la medicina en cuestión.
+  useEffect(() => {
+    if (opened && medicina) {
+      reset({ nuevo_stock: medicina.stock_actual, motivo: '' })
+    }
+  }, [opened, medicina, reset])
 
   const nuevoStock = useWatch({ control, name: 'nuevo_stock' })
 
@@ -75,10 +85,9 @@ export function AjustarInventarioModal({
             variant="light"
           >
             <Text size="xs">
-              Use esta opción solo para corregir el inventario
-              tras un conteo físico. Para nuevas compras o
-              donaciones, use &laquo;Ingresar stock&raquo; o el módulo
-              de Adquisiciones.
+              Use esta opción solo para corregir el inventario tras un conteo
+              físico, una merma o una caducidad. Las compras y donaciones
+              entran por Adquisiciones, con su documento de respaldo.
             </Text>
           </Alert>
 

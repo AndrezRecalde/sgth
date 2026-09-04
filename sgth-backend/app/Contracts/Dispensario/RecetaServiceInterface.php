@@ -9,4 +9,10 @@ interface RecetaServiceInterface
     public function emitirReceta(array $datosReceta, array $items): array;
 
     public function despacharReceta(int $recetaId, array $itemsDespachados, int $despachadoPor): RecetaMedica;
+
+    public function anularReceta(
+        int $recetaId,
+        string $motivo,
+        int $anuladoPor
+    ): RecetaMedica;
 }

@@ -3,12 +3,12 @@
 import { Text, Badge, Group, Tooltip } from "@mantine/core";
 import {
   IconEdit,
-  IconPlus,
   IconHistory,
   IconBan,
   IconCircleCheck,
   IconAdjustments,
   IconAlertTriangle,
+  IconTrash,
 } from "@tabler/icons-react";
 import { TableActions } from "@/components/ui/TableActions";
 import type { DataTableColumn } from "mantine-datatable";
@@ -16,7 +16,7 @@ import type { InventarioMedicina } from "../services/inventarioMedicinaService";
 
 interface ColumnActions {
   onEditar: (m: InventarioMedicina) => void;
-  onIngresarStock: (m: InventarioMedicina) => void;
+  onDarDeBaja: (m: InventarioMedicina) => void;
   onAjustar: (m: InventarioMedicina) => void;
   onVerKardex: (m: InventarioMedicina) => void;
   onToggleEstado: (m: InventarioMedicina) => void;
@@ -159,11 +159,14 @@ export function getMedicinasColumns(
               icon: <IconEdit size={14} />,
               onClick: () => actions.onEditar(m),
             },
-            {
-              label: "Ingresar stock",
-              icon: <IconPlus size={14} />,
-              onClick: () => actions.onIngresarStock(m),
-            },
+            ...(m.stock_actual > 0
+              ? [{
+                  label: "Dar de baja existencias",
+                  icon: <IconTrash size={14} />,
+                  color: "orange",
+                  onClick: () => actions.onDarDeBaja(m),
+                }]
+              : []),
             {
               label: "Ajustar inventario",
               icon: <IconAdjustments size={14} />,
@@ -174,8 +177,11 @@ export function getMedicinasColumns(
               icon: <IconHistory size={14} />,
               onClick: () => actions.onVerKardex(m),
             },
+            // «Retirar del catálogo» y no «dar de baja»: esto desactiva el
+            // medicamento, no mueve existencias, y ya hay una baja de stock
+            // justo encima con la que se confundía.
             {
-              label: m.estado ? "Dar de baja" : "Reactivar",
+              label: m.estado ? "Retirar del catálogo" : "Reactivar",
               icon: m.estado ? (
                 <IconBan size={14} />
               ) : (

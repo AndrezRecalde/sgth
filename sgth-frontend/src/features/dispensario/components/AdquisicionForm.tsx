@@ -157,6 +157,7 @@ export function AdquisicionForm({ onCreada }: Props) {
               <Text size="sm" fw={500}>Medicamentos</Text>
 
               <BuscarMedicinaSelect
+                incluirAgotadas
                 onSeleccionar={(id, nombre) => {
                   append({
                     inventario_medicina_id: id,

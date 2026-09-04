@@ -10,7 +10,7 @@ import { NavItemNested } from './NavItemNested'
 import { SubsistemaSwitcher } from './SubsistemaSwitcher'
 import { useAuth } from '@/hooks/useAuth'
 import { useStockBajoCount } from '@/features/dispensario/hooks/useInventarioMedicina'
-import { buildNav } from '@/config/nav'
+import { buildNav, ROLES_INVENTARIO_MED } from '@/config/nav'
 import { SUBSISTEMAS } from '@/config/subsistemas'
 import { ROUTES, type Subsistema } from '@/config/routes'
 import classes from './Sidebar.module.css'
@@ -26,13 +26,22 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
   const pathname = usePathname()
   const permisos = usuario?.permisos ?? []
   const permisosKey = permisos.join(',')
+  const roles = usuario?.roles ?? []
+  const rolesKey = roles.join(',')
 
-  const { data: stockBajo = 0 } = useStockBajoCount()
+  // El contador se pedía en todas las cargas de todos los subsistemas, así que
+  // a quien no es del dispensario le devolvía un 403 cada vez. Solo se consulta
+  // donde el badge se pinta y a quien el backend deja entrar al inventario.
+  const { data: stockBajo = 0 } = useStockBajoCount({
+    enabled: subsistema === 'salud' &&
+      roles.some((rol) => ROLES_INVENTARIO_MED.includes(rol)),
+  })
 
   /**
-   * Menú del subsistema: filtrado por permisos y con los badges dinámicos ya
-   * inyectados en la estructura. Hoy el único badge es el conteo de medicinas
-   * bajo mínimo, que cuelga tanto del ítem Farmacia como de su hijo Inventario.
+   * Menú del subsistema: filtrado por permisos y roles, y con los badges
+   * dinámicos ya inyectados en la estructura. Hoy el único badge es el conteo
+   * de medicinas bajo mínimo, que cuelga tanto del ítem Farmacia como de su
+   * hijo Inventario.
    */
   const grupos = useMemo(() => {
     const badgeDe = (href: string) =>
@@ -40,7 +49,7 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
         ? String(stockBajo)
         : undefined
 
-    return buildNav(subsistema, permisos).map((grupo) => ({
+    return buildNav(subsistema, permisos, roles).map((grupo) => ({
       ...grupo,
       items: grupo.items.map((item) => ({
         ...item,
@@ -51,9 +60,10 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
         })),
       })),
     }))
-    // Se depende del contenido de `permisos`, no de su identidad de array.
+    // Se depende del contenido de `permisos` y `roles`, no de su identidad de
+    // array, que es nueva en cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subsistema, permisosKey, stockBajo])
+  }, [subsistema, permisosKey, rolesKey, stockBajo])
 
   /**
    * Un destino está activo si es la coincidencia MÁS LARGA con la ruta actual.

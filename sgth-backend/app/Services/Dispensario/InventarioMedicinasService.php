@@ -43,10 +43,40 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return InventarioMedicina::findOrFail($id);
     }
 
-    public function buscar(string $termino): Collection
+    /**
+     * Cuántas medicinas están bajo mínimo, para la insignia del menú.
+     *
+     * Solo cuenta las activas, igual que el job de alertas y el tablero. El
+     * frontend lo pedía reutilizando el listado sin filtrar por estado, así que
+     * la insignia incluía medicinas retiradas del catálogo y los tres números
+     * discrepaban entre sí. Reponer lo que ya no se despacha no urge.
+     */
+    public function contarStockBajo(): int
     {
         return InventarioMedicina::where('estado', true)
-            ->where('stock_actual', '>', 0)
+            ->whereColumn('stock_actual', '<=', 'stock_minimo')
+            ->count();
+    }
+
+    /**
+     * Busca en el catálogo activo.
+     *
+     * Quien receta solo puede elegir lo que la farmacia podrá entregarle: con
+     * existencias y sin caducar, porque el despacho rechaza lo vencido y de
+     * nada sirve prescribir algo que se frenará en el mostrador. Quien registra
+     * una adquisición necesita ver todo el catálogo, incluido lo agotado y lo
+     * vencido, que es justamente lo que va a reponer.
+     */
+    public function buscar(
+        string $termino,
+        bool $soloDespachables = true
+    ): Collection {
+        return InventarioMedicina::where('estado', true)
+            ->when($soloDespachables, fn ($q) => $q
+                ->where('stock_actual', '>', 0)
+                ->where(fn ($sub) => $sub
+                    ->whereNull('fecha_caducidad')
+                    ->orWhereDate('fecha_caducidad', '>=', now()->toDateString())))
             ->where(function ($q) use ($termino) {
                 $q->where('nombre', 'ilike', "%{$termino}%")
                   ->orWhere('principio_activo', 'ilike', "%{$termino}%")
@@ -57,40 +87,48 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
             ->get();
     }
 
+    /**
+     * Da de alta un medicamento en el CATÁLOGO. Define qué maneja la farmacia,
+     * no cuánto tiene: nace siempre en cero y sus existencias entran después
+     * por adquisición, para que todo aumento de stock tenga respaldo.
+     */
     public function ingresarMedicina(
         array $datos,
         int $registradoPor
     ): InventarioMedicina {
-        return DB::transaction(function () use ($datos, $registradoPor) {
-            $medicina = InventarioMedicina::create([
-                ...$datos,
-                'codigo'     => $this->generarCodigo(),
-                'created_by' => $registradoPor,
-            ]);
-
-            if ($medicina->stock_actual > 0) {
-                MovimientoInventarioMed::create([
-                    'inventario_medicina_id' => $medicina->id,
-                    'tipo_movimiento'        => 'ingreso',
-                    'cantidad'               => $medicina->stock_actual,
-                    'stock_resultante'       => $medicina->stock_actual,
-                    'motivo'                 => 'Ingreso inicial al inventario',
-                    'registrado_por'         => $registradoPor,
-                ]);
-            }
-
-            return $medicina;
-        });
+        // La transacción no es por el `create`, que es una sola escritura, sino
+        // por el bloqueo que toma `generarCodigo`: se libera al cerrarla.
+        return DB::transaction(fn () => InventarioMedicina::create([
+            ...$datos,
+            'stock_actual' => 0,
+            'codigo'       => $this->generarCodigo(),
+            'created_by'   => $registradoPor,
+        ]));
     }
 
+    /**
+     * Siguiente código del catálogo.
+     *
+     * Se toma el MÁXIMO de los que siguen el patrón, no el código del último
+     * id: si alguna vez entra una fila con otro formato, `(int)` la leía como
+     * cero y el siguiente código chocaría contra el índice único. Se miran
+     * también las borradas, para no reutilizar un código ya emitido.
+     *
+     * El bloqueo de aviso serializa leer el máximo y escribir el nuevo código
+     * entre altas simultáneas, y lo libera el cierre de la transacción.
+     */
     private function generarCodigo(): string
     {
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32('inventario_medicina_codigo'),
+        ]);
+
         $ultimoCodigo = InventarioMedicina::withTrashed()
-            ->orderByDesc('id')
-            ->value('codigo');
+            ->where('codigo', 'like', 'MED-%')
+            ->max('codigo');
 
         $ultimoSecuencial = $ultimoCodigo
-            ? (int) str_replace('MED-', '', $ultimoCodigo)
+            ? (int) substr($ultimoCodigo, strlen('MED-'))
             : 0;
 
         $secuencial = str_pad(
@@ -108,7 +146,16 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return $medicina;
     }
 
-    public function ingresarStock(
+    /**
+     * Saca existencias del inventario por una causa conocida: caducidad, merma,
+     * rotura, contaminación.
+     *
+     * Se distingue del ajuste a propósito. El ajuste dice «el conteo físico da
+     * X» y no explica la diferencia; la baja dice cuántas unidades salen y por
+     * qué. Sin ella, bloquear el despacho de caducados dejaría ese stock
+     * atrapado sin más salida que un ajuste que no nombra la causa.
+     */
+    public function registrarBaja(
         int $id,
         int $cantidad,
         string $motivo,
@@ -116,7 +163,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
     ): InventarioMedicina {
         if ($cantidad <= 0) {
             throw new ReglaNegocioException(
-                'La cantidad a ingresar debe ser mayor a cero.'
+                'La cantidad a dar de baja debe ser mayor a cero.'
             );
         }
 
@@ -126,13 +173,21 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
             $medicina = InventarioMedicina::lockForUpdate()
                 ->findOrFail($id);
 
-            $medicina->stock_actual += $cantidad;
+            if ($medicina->stock_actual < $cantidad) {
+                throw new ReglaNegocioException(
+                    "No se pueden dar de baja {$cantidad} unidades de " .
+                    "{$medicina->nombre}: solo quedan " .
+                    "{$medicina->stock_actual}."
+                );
+            }
+
+            $medicina->stock_actual -= $cantidad;
             $medicina->save();
 
             MovimientoInventarioMed::create([
                 'inventario_medicina_id' => $medicina->id,
-                'tipo_movimiento'        => 'ingreso',
-                'cantidad'               => $cantidad,
+                'tipo_movimiento'        => 'baja',
+                'cantidad'               => -$cantidad,
                 'stock_resultante'       => $medicina->stock_actual,
                 'motivo'                 => $motivo,
                 'registrado_por'         => $registradoPor,

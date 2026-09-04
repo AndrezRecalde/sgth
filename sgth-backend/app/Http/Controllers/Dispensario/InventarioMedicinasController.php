@@ -25,14 +25,23 @@ final class InventarioMedicinasController extends Controller
         return ApiResponse::ok($medicinas, 'Listado de medicinas.');
     }
 
+    public function contarStockBajo(): JsonResponse
+    {
+        return ApiResponse::ok(
+            ['total' => $this->inventarioService->contarStockBajo()]
+        );
+    }
+
     public function buscar(Request $request): JsonResponse
     {
         $request->validate([
-            'q' => ['required', 'string', 'min:2'],
+            'q'                => ['required', 'string', 'min:2'],
+            'incluir_agotadas' => ['nullable', 'boolean'],
         ]);
 
         $resultados = $this->inventarioService->buscar(
-            $request->string('q')->value()
+            $request->string('q')->value(),
+            soloDespachables: !$request->boolean('incluir_agotadas')
         );
 
         return ApiResponse::ok($resultados);
@@ -71,7 +80,7 @@ final class InventarioMedicinasController extends Controller
         );
     }
 
-    public function ingresarStock(
+    public function registrarBaja(
         Request $request,
         int $medicina
     ): JsonResponse {
@@ -80,7 +89,7 @@ final class InventarioMedicinasController extends Controller
             'motivo'   => ['required', 'string', 'max:255'],
         ]);
 
-        $actualizado = $this->inventarioService->ingresarStock(
+        $actualizado = $this->inventarioService->registrarBaja(
             $medicina,
             $request->integer('cantidad'),
             $request->string('motivo')->value(),
@@ -88,7 +97,7 @@ final class InventarioMedicinasController extends Controller
         );
 
         return ApiResponse::ok(
-            $actualizado, 'Stock ingresado correctamente.'
+            $actualizado, 'Existencias dadas de baja correctamente.'
         );
     }
 
@@ -119,7 +128,7 @@ final class InventarioMedicinasController extends Controller
 
         $mensaje = $actualizado->estado
             ? 'Medicina reactivada.'
-            : 'Medicina dada de baja.';
+            : 'Medicina retirada del catálogo.';
 
         return ApiResponse::ok($actualizado, $mensaje);
     }

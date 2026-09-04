@@ -5,6 +5,11 @@ export interface NavItem {
   href:       string
   icon:       string
   permiso?:   string
+  /**
+   * Roles que pueden ver el destino, cuando el backend lo protege por rol y no
+   * por permiso —como todo el Dispensario—. Basta con tener uno de ellos.
+   */
+  roles?:     string[]
   badge?:     string
   children?:  Omit<NavItem, 'children'>[]
 }
@@ -302,6 +307,9 @@ export const NAV_SALUD: NavGroup[] = [
             label: 'Adquisiciones',
             href:  ROUTES.SALUD.FARMACIA + '/adquisiciones',
             icon:  'IconShoppingCart',
+            // El backend reserva todo el módulo a admin-dispensario, así que
+            // ofrecerlo al resto solo lleva a una pantalla que responde 403.
+            roles: ['admin-dispensario'],
           },
           {
             label: 'Despacho',
@@ -432,6 +440,15 @@ export const ROLES_SALUD = [
   'admin-dispensario', 'tecnico-dtic',
 ]
 
+/**
+ * Quiénes pueden consultar el inventario de medicinas. Es más estrecho que
+ * `ROLES_SALUD`, que incluye a `tecnico-dtic`: el backend no lo deja entrar al
+ * inventario, así que pedírselo solo produce un 403 en cada carga.
+ */
+export const ROLES_INVENTARIO_MED = [
+  'medico', 'odontologo', 'enfermera', 'admin-dispensario',
+]
+
 export const ROLES_PORTAL = [
   'servidor', 'director', 'jefe-unidad',
   'medico', 'odontologo', 'enfermera',
@@ -453,22 +470,42 @@ export function getSubsistemasDisponibles(
 }
 
 // ── Helper: nav filtrado por permisos ─
+/**
+ * Menú del subsistema recortado a lo que el usuario puede abrir de verdad.
+ *
+ * El filtro se aplica también a los `children`: antes solo miraba el primer
+ * nivel, así que una pantalla anidada se ofrecía a todo el mundo aunque
+ * declarase restricción, y quien la abría se encontraba un 403. Un ítem padre
+ * que se queda sin hijos visibles desaparece con ellos, salvo que él mismo sea
+ * un destino permitido.
+ */
 export function buildNav(
   subsistema: 'sgth' | 'salud' | 'portal',
-  permisos: string[]
+  permisos: string[],
+  roles: string[] = [],
 ): NavGroup[] {
   const navMap = {
     sgth:   NAV_SGTH,
     salud:  NAV_SALUD,
     portal: NAV_PORTAL,
   }
-  const nav = navMap[subsistema]
-  return nav.map(group => ({
-    ...group,
-    items: group.items.filter(
-      item => !item.permiso || permisos.includes(item.permiso)
-    ),
-  })).filter(group => group.items.length > 0)
+
+  const visible = (item: { permiso?: string; roles?: string[] }) =>
+    (!item.permiso || permisos.includes(item.permiso)) &&
+    (!item.roles || item.roles.some(rol => roles.includes(rol)))
+
+  return navMap[subsistema]
+    .map(group => ({
+      ...group,
+      items: group.items
+        .filter(visible)
+        .map(item => ({
+          ...item,
+          children: item.children?.filter(visible),
+        }))
+        .filter(item => !item.children || item.children.length > 0),
+    }))
+    .filter(group => group.items.length > 0)
 }
 
 // ── Navegación derivada ───────────────
@@ -490,10 +527,11 @@ export interface NavLeaf {
 export function flattenNav(
   subsistema: 'sgth' | 'salud' | 'portal',
   permisos: string[],
+  roles: string[] = [],
 ): NavLeaf[] {
   const leaves: NavLeaf[] = []
 
-  for (const group of buildNav(subsistema, permisos)) {
+  for (const group of buildNav(subsistema, permisos, roles)) {
     for (const item of group.items) {
       if (item.children?.length) {
         for (const child of item.children) {

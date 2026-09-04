@@ -6,7 +6,7 @@ import {
   ThemeIcon, 
 } from '@mantine/core'
 import {
-  IconPill, IconCheck,
+  IconPill, IconCheck, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -28,6 +28,16 @@ function getNombrePaciente(receta: RecetaMedica): string {
     return `${historia.carga_familiar.nombres} ${historia.carga_familiar.apellidos}`
   }
   return '—'
+}
+
+/** ¿Caducó ya? El día impreso en el envase todavía es válido. */
+function estaCaducado(fecha?: string | null): boolean {
+  if (!fecha) return false
+  const [y, m, d] = fecha.slice(0, 10).split('-').map(Number)
+  const caduca = new Date(y, m - 1, d)
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  return caduca < hoy
 }
 
 const ESTADO_ITEM: Record<string, { label: string; color: string }> = {
@@ -56,7 +66,9 @@ export function DespacharRecetaModal({
     receta?.items.forEach(item => {
       const faltante = item.cantidad_prescrita -
         (item.cantidad_despachada ?? 0)
-      init[item.id!] = faltante > 0 ? faltante : 0
+      // Lo caducado arranca en cero: el despacho lo rechazaría igualmente.
+      const caducado = estaCaducado(item.inventario?.fecha_caducidad)
+      init[item.id!] = !caducado && faltante > 0 ? faltante : 0
     })
     setCantidades(init)
   }
@@ -143,9 +155,23 @@ export function DespacharRecetaModal({
                 (item.cantidad_despachada ?? 0)
               const estadoItem = ESTADO_ITEM[item.estado ?? 'pendiente']
                 ?? { label: item.estado, color: 'gray' }
+              const caducado = estaCaducado(item.inventario?.fecha_caducidad)
               return (
                 <Card key={item.id} withBorder radius="md" p="sm">
                   <Stack gap="xs">
+                    {caducado && (
+                      <Alert
+                        icon={<IconAlertTriangle size={14} />}
+                        color="red"
+                        variant="light"
+                        p="xs"
+                      >
+                        <Text size="xs">
+                          Estas existencias caducaron. No se pueden entregar:
+                          deben darse de baja desde Inventario.
+                        </Text>
+                      </Alert>
+                    )}
                     <Group justify="space-between" wrap="nowrap">
                       <Group gap="xs" wrap="nowrap">
                         <ThemeIcon
@@ -197,6 +223,7 @@ export function DespacharRecetaModal({
                         size="xs"
                         min={0}
                         max={faltante}
+                        disabled={caducado}
                         {...contained}
                         value={cantidades[item.id!] ?? 0}
                         onChange={(v) => setCantidades(prev => ({

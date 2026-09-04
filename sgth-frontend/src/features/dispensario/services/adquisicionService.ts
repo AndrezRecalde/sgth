@@ -21,7 +21,13 @@ export interface Adquisicion {
   fecha_adquisicion:    string
   observaciones?:       string | null
   documento_respaldo?:  string | null
+  anulado_en?:          string | null
+  motivo_anulacion?:    string | null
   registrador?: {
+    nombre_completo?: string
+    usuario_ti?: string
+  }
+  anulador?: {
     nombre_completo?: string
     usuario_ti?: string
   }
@@ -59,6 +65,17 @@ export const adquisicionService = {
   crear: (data: CrearAdquisicionData) =>
     api.post<ApiResponse<Adquisicion>>(
       '/dispensario/adquisiciones', data
+    ).then(r => r.data.datos),
+
+  descargarDocumento: (id: number) =>
+    api.get(`/dispensario/adquisiciones/${id}/documento`, {
+      responseType: 'blob',
+    }).then(r => r.data as Blob),
+
+  anular: (id: number, motivo: string) =>
+    api.post<ApiResponse<Adquisicion>>(
+      `/dispensario/adquisiciones/${id}/anular`,
+      { motivo_anulacion: motivo }
     ).then(r => r.data.datos),
 
   subirDocumento: (id: number, archivo: File) => {

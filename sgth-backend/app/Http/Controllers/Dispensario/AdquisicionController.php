@@ -9,6 +9,7 @@ use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 final class AdquisicionController extends Controller
 {
@@ -48,6 +49,25 @@ final class AdquisicionController extends Controller
         return ApiResponse::ok($adquisicion);
     }
 
+    public function anular(
+        Request $request,
+        int $id
+    ): JsonResponse {
+        $request->validate([
+            'motivo_anulacion' => ['required', 'string', 'max:255'],
+        ]);
+
+        $adquisicion = $this->service->anular(
+            $id,
+            $request->string('motivo_anulacion')->value(),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok(
+            $adquisicion, 'Adquisición anulada correctamente.'
+        );
+    }
+
     public function subirDocumento(
         Request $request,
         int $id
@@ -56,14 +76,54 @@ final class AdquisicionController extends Controller
             'documento' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ]);
 
+        // Disco privado: una factura o un acta de donación no debe quedar
+        // servida por URL a cualquiera que la adivine. Se entrega por el
+        // endpoint de abajo, que pasa por la sesión.
         $ruta = $request->file('documento')->store(
-            'adquisiciones', 'public'
+            'adquisiciones', 'local'
         );
 
         $adquisicion = $this->service->subirDocumento($id, $ruta);
 
         return ApiResponse::ok(
             $adquisicion, 'Documento subido correctamente.'
+        );
+    }
+
+    /**
+     * Entrega el respaldo para verlo en el navegador. Hasta ahora el archivo se
+     * subía y no había forma de recuperarlo: la pantalla solo mostraba una
+     * insignia diciendo que existía.
+     */
+    public function verDocumento(int $id): SymfonyResponse
+    {
+        $adquisicion = $this->service->obtener($id);
+
+        if (! $adquisicion->documento_respaldo) {
+            return ApiResponse::error(
+                'Esta adquisición no tiene documento de respaldo.', null, 404
+            );
+        }
+
+        if (! Storage::disk('local')->exists($adquisicion->documento_respaldo)) {
+            return ApiResponse::error(
+                'El documento de respaldo ya no está disponible.', null, 404
+            );
+        }
+
+        $extension = pathinfo(
+            $adquisicion->documento_respaldo, PATHINFO_EXTENSION
+        );
+
+        return response(
+            Storage::disk('local')->get($adquisicion->documento_respaldo),
+            200,
+            [
+                'Content-Type' => Storage::disk('local')
+                    ->mimeType($adquisicion->documento_respaldo),
+                'Content-Disposition' => 'inline; filename="respaldo-'
+                    . $adquisicion->folio . '.' . $extension . '"',
+            ]
         );
     }
 }

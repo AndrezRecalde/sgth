@@ -11,7 +11,12 @@ import { DespacharRecetaModal } from
 import { getRecetasColumns } from
   '@/features/dispensario/components/recetas.columns'
 import { usePersonalMedico } from '@/features/dispensario/hooks/useAgenda'
-import { useRecetasFarmacia } from '@/features/dispensario/hooks/useReceta'
+import {
+  useRecetasFarmacia, useAnularReceta,
+} from '@/features/dispensario/hooks/useReceta'
+import {
+  AnularRegistroModal, MOTIVOS_ANULAR_RECETA,
+} from '@/features/dispensario/components/AnularRegistroModal'
 import type { RecetaMedica } from
   '@/features/dispensario/services/recetaService'
 import {
@@ -69,6 +74,10 @@ export function DespachoView() {
   const [recetaSel, setRecetaSel] = useState<RecetaMedica | null>(null)
   const [modalOpened, { open: abrirModal, close: cerrarModal }] =
     useDisclosure(false)
+  const [anularOpened, { open: abrirAnular, close: cerrarAnular }] =
+    useDisclosure(false)
+
+  const anular = useAnularReceta()
 
   const { data: medicos = [] } = usePersonalMedico('medico')
 
@@ -92,7 +101,8 @@ export function DespachoView() {
   }
 
   const columns = getRecetasColumns({
-    onAbrir: (r) => { setRecetaSel(r); abrirModal() },
+    onAbrir:  (r) => { setRecetaSel(r); abrirModal() },
+    onAnular: (r) => { setRecetaSel(r); abrirAnular() },
   })
 
   return (
@@ -204,6 +214,26 @@ export function DespachoView() {
         opened={modalOpened}
         onClose={() => { cerrarModal(); setRecetaSel(null) }}
         receta={recetaSel}
+      />
+
+      <AnularRegistroModal
+        opened={anularOpened}
+        onClose={() => { cerrarAnular(); setRecetaSel(null) }}
+        titulo="Anular receta"
+        descripcion={
+          recetaSel?.estado === 'despachada_parcial'
+            ? 'Se cerrará lo que falta por entregar; lo ya despachado no se devuelve.'
+            : 'La receta dejará de figurar pendiente de entrega.'
+        }
+        motivos={MOTIVOS_ANULAR_RECETA}
+        loading={anular.isPending}
+        onConfirmar={(motivo) => {
+          if (!recetaSel) return
+          anular.mutate(
+            { id: recetaSel.id, motivo },
+            { onSuccess: () => { cerrarAnular(); setRecetaSel(null) } }
+          )
+        }}
       />
     </PageShell>
   )

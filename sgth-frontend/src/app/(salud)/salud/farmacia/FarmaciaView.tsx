@@ -26,7 +26,7 @@ import {
   useStockBajoCount,
 } from "@/features/dispensario/hooks/useInventarioMedicina";
 import { MedicinaModal } from "@/features/dispensario/components/MedicinaModal";
-import { IngresarStockModal } from "@/features/dispensario/components/IngresarStockModal";
+import { DarDeBajaStockModal } from "@/features/dispensario/components/DarDeBajaStockModal";
 import { AjustarInventarioModal } from "@/features/dispensario/components/AjustarInventarioModal";
 import { KardexDrawer } from "@/features/dispensario/components/KardexDrawer";
 import { getMedicinasColumns } from "@/features/dispensario/components/medicinas.columns";
@@ -48,7 +48,7 @@ export function FarmaciaView() {
 
   const [modalOpened, { open: abrirModal, close: cerrarModal }] =
     useDisclosure(false);
-  const [stockOpened, { open: abrirStock, close: cerrarStock }] =
+  const [bajaOpened, { open: abrirBaja, close: cerrarBaja }] =
     useDisclosure(false);
   const [ajustarOpened, { open: abrirAjustar, close: cerrarAjustar }] =
     useDisclosure(false);
@@ -82,9 +82,9 @@ export function FarmaciaView() {
       setMedicinaSel(m);
       abrirModal();
     },
-    onIngresarStock: (m) => {
+    onDarDeBaja: (m) => {
       setMedicinaSel(m);
-      abrirStock();
+      abrirBaja();
     },
     onAjustar: (m) => {
       setMedicinaSel(m);
@@ -96,11 +96,12 @@ export function FarmaciaView() {
     },
     onToggleEstado: (m) =>
       confirmar({
-        title: m.estado ? "Dar de baja medicina" : "Reactivar medicina",
+        title: m.estado ? "Retirar del catálogo" : "Reactivar medicina",
         message: m.estado ? (
           <>
-            Se dará de baja <b>{m.nombre}</b>. Dejará de aparecer en
-            despachos y recetas.
+            <b>{m.nombre}</b> dejará de aparecer en despachos y recetas.
+            Sus existencias no se mueven: para sacarlas del inventario
+            use «Dar de baja existencias».
           </>
         ) : (
           <>
@@ -109,7 +110,7 @@ export function FarmaciaView() {
           </>
         ),
         destructiva: m.estado,
-        confirmLabel: m.estado ? "Dar de baja" : "Reactivar",
+        confirmLabel: m.estado ? "Retirar" : "Reactivar",
         onConfirm: () => toggleEstado.mutate(m.id),
       }),
   });
@@ -263,11 +264,11 @@ export function FarmaciaView() {
         initialValues={medicinaSel}
       />
 
-      <IngresarStockModal
-        opened={stockOpened}
+      <DarDeBajaStockModal
+        opened={bajaOpened}
         onClose={() => {
           setMedicinaSel(null);
-          cerrarStock();
+          cerrarBaja();
         }}
         medicina={medicinaSel}
       />

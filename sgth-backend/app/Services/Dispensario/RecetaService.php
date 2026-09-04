@@ -49,6 +49,44 @@ final class RecetaService implements RecetaServiceInterface
         });
     }
 
+    /**
+     * Anula una receta para que no se entregue lo que falta.
+     *
+     * No devuelve stock: lo ya despachado salió físicamente del estante y su
+     * egreso sigue vigente en el kardex. Anular cierra la receta, y por eso
+     * alcanza también a las parciales — si no, una receta a medio entregar se
+     * quedaría para siempre en la cola de despacho cuando el paciente no
+     * vuelve o el médico cambia el tratamiento.
+     */
+    public function anularReceta(
+        int $recetaId,
+        string $motivo,
+        int $anuladoPor
+    ): RecetaMedica {
+        return DB::transaction(function () use ($recetaId, $motivo, $anuladoPor) {
+            $receta = RecetaMedica::lockForUpdate()->findOrFail($recetaId);
+
+            if ($receta->estado === 'anulada') {
+                throw new ReglaNegocioException('La receta ya fue anulada.');
+            }
+
+            if ($receta->estado === 'despachada_completa') {
+                throw new ReglaNegocioException(
+                    'No se puede anular una receta ya despachada por completo.'
+                );
+            }
+
+            $receta->update([
+                'estado'           => 'anulada',
+                'anulado_en'       => now(),
+                'anulado_por'      => $anuladoPor,
+                'motivo_anulacion' => $motivo,
+            ]);
+
+            return $receta;
+        });
+    }
+
     public function despacharReceta(int $recetaId, array $itemsDespachados, int $despachadoPor): RecetaMedica
     {
         return DB::transaction(function () use ($recetaId, $itemsDespachados, $despachadoPor) {
@@ -78,6 +116,17 @@ final class RecetaService implements RecetaServiceInterface
                 }
 
                 $medicina = InventarioMedicina::lockForUpdate()->findOrFail($item->inventario_medicina_id);
+
+                // Un medicamento vencido no sale del estante. El sistema lo
+                // pintaba en rojo y lo anotaba en el log, pero lo despachaba
+                // igual, que es lo único de la farmacia capaz de hacer daño.
+                if ($medicina->estaCaducado()) {
+                    throw new ReglaNegocioException(
+                        "No se puede despachar {$medicina->nombre}: caducó el " .
+                        $medicina->fecha_caducidad->format('d/m/Y') .
+                        '. Dé de baja esas existencias antes de continuar.'
+                    );
+                }
 
                 // Validar que exista stock suficiente para el despacho físico
                 if ($medicina->stock_actual < $cantidadADespachar) {

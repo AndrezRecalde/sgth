@@ -17,6 +17,7 @@ class RecetaMedica extends Model
     protected $fillable = [
         'consulta_medica_id', 'fecha_emision', 'estado',
         'indicaciones_generales', 'despachado_por', 'despachado_en',
+        'anulado_en', 'anulado_por', 'motivo_anulacion',
         'created_by', 'updated_by'
     ];
 
@@ -25,7 +26,13 @@ class RecetaMedica extends Model
         return [
             'fecha_emision' => 'date',
             'despachado_en' => 'datetime',
+            'anulado_en'    => 'datetime',
         ];
+    }
+
+    public function anulador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulado_por');
     }
 
     public function consultaMedica(): BelongsTo

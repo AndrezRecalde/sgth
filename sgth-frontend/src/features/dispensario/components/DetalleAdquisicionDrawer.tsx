@@ -2,12 +2,13 @@
 
 import {
   Drawer, Stack, Group, Text, Badge,
-  ThemeIcon, Table, Divider,
+  ThemeIcon, Table, Divider, Alert, Button,
 } from '@mantine/core'
 import {
-  IconShoppingCart, IconFileText,
+  IconShoppingCart, IconFileText, IconBan, IconFileSearch,
 } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { useDescargarDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
 
 interface Props {
@@ -27,6 +28,7 @@ export function DetalleAdquisicionDrawer({
   opened, onClose, adquisicion,
 }: Props) {
   const { isMobile } = useMobileBreakpoint()
+  const descargarDocumento = useDescargarDocumentoAdquisicion()
 
   return (
     <Drawer
@@ -58,6 +60,28 @@ export function DetalleAdquisicionDrawer({
     >
       {adquisicion && (
         <Stack gap="md">
+          {adquisicion.anulado_en && (
+            <Alert
+              icon={<IconBan size={16} />}
+              color="orange"
+              variant="light"
+              title="Adquisición anulada"
+            >
+              <Text size="xs">
+                {adquisicion.motivo_anulacion}
+                {' — '}
+                {adquisicion.anulador?.nombre_completo
+                  ?? adquisicion.anulador?.usuario_ti ?? '—'}
+                {', '}
+                {formatFecha(adquisicion.anulado_en)}
+              </Text>
+              <Text size="xs" mt={4} c="dimmed">
+                Lo que aportó se devolvió al inventario con su contrapartida en
+                el kardex.
+              </Text>
+            </Alert>
+          )}
+
           <Table variant="vertical" layout="fixed" verticalSpacing="sm">
             <Table.Tbody>
               <Table.Tr>
@@ -117,14 +141,29 @@ export function DetalleAdquisicionDrawer({
                 <Table.Th>Documento de respaldo</Table.Th>
                 <Table.Td>
                   <Group justify="flex-end">
-                    <Badge
-                      size="sm"
-                      variant="outline"
-                      color={adquisicion.documento_respaldo ? 'emerald' : 'gray'}
-                      rightSection={<IconFileText size={12} />}
-                    >
-                      {adquisicion.documento_respaldo ? 'ADJUNTO' : 'PENDIENTE'}
-                    </Badge>
+                    {adquisicion.documento_respaldo ? (
+                      <Button
+                        size="compact-xs"
+                        variant="light"
+                        color="blue"
+                        leftSection={<IconFileSearch size={12} />}
+                        loading={descargarDocumento.isPending}
+                        onClick={() => descargarDocumento.mutate({
+                          id: adquisicion.id, folio: adquisicion.folio,
+                        })}
+                      >
+                        Descargar
+                      </Button>
+                    ) : (
+                      <Badge
+                        size="sm"
+                        variant="outline"
+                        color="gray"
+                        rightSection={<IconFileText size={12} />}
+                      >
+                        PENDIENTE
+                      </Badge>
+                    )}
                   </Group>
                 </Table.Td>
               </Table.Tr>

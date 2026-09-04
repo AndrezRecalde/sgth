@@ -14,9 +14,12 @@ export interface ItemReceta {
   observaciones?:          string | null
   estado?:                 string
   inventario?: {
-    nombre:         string
-    presentacion?:  string
-    concentracion?: string | null
+    nombre:            string
+    presentacion?:     string
+    concentracion?:    string | null
+    stock_actual?:     number
+    /** El despacho rechaza lo vencido, así que la fila lo avisa antes. */
+    fecha_caducidad?:  string | null
   } | null
 }
 
@@ -100,9 +103,10 @@ export const recetaService = {
       { params: { consulta_medica_id: consultaId } }
     ).then(r => r.data.datos),
 
-  anular: (id: number) =>
-    api.patch<ApiResponse<RecetaMedica>>(
-      `/dispensario/recetas/${id}/anular`
+  anular: (id: number, motivo: string) =>
+    api.post<ApiResponse<RecetaMedica>>(
+      `/dispensario/recetas/${id}/anular`,
+      { motivo_anulacion: motivo }
     ).then(r => r.data.datos),
 
   actualizarItem: (

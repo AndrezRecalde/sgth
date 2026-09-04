@@ -1112,6 +1112,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::post('{id}/despachar', [RecetaController::class, 'despachar'])
                 ->middleware('role:enfermera|admin-dispensario');
+            Route::post('{id}/anular', [RecetaController::class, 'anular'])
+                ->middleware('role:medico|odontologo|admin-dispensario');
             Route::patch('{recetaId}/items/{itemId}',
                 [ItemRecetaController::class, 'update']
             )->middleware('role:medico|odontologo');
@@ -1126,11 +1128,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::get('medicinas/buscar',
                     [InventarioMedicinasController::class, 'buscar']);
+                Route::get('medicinas/stock-bajo',
+                    [InventarioMedicinasController::class, 'contarStockBajo']);
                 Route::apiResource('medicinas', InventarioMedicinasController::class);
                 Route::get('medicinas/{id}/kardex',
                     [InventarioMedicinasController::class, 'kardex']);
-                Route::post('medicinas/{medicina}/ingresar-stock',
-                    [InventarioMedicinasController::class, 'ingresarStock']);
+                Route::post('medicinas/{medicina}/baja',
+                    [InventarioMedicinasController::class, 'registrarBaja']);
                 Route::post('medicinas/{medicina}/ajustar-inventario',
                     [InventarioMedicinasController::class, 'ajustarInventario']);
             });
@@ -1142,6 +1146,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('/', [AdquisicionController::class, 'store']);
                 Route::get('{id}', [AdquisicionController::class, 'show']);
                 Route::post('{id}/documento', [AdquisicionController::class, 'subirDocumento']);
+                Route::get('{id}/documento', [AdquisicionController::class, 'verDocumento']);
+                Route::post('{id}/anular', [AdquisicionController::class, 'anular']);
             });
 
         // Signos vitales de la solicitud (enfermería, previo al FEMO)

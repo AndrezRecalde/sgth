@@ -26,10 +26,15 @@ export function useKardexMedicina(id: number | null) {
   })
 }
 
-export function useStockBajoCount() {
+/**
+ * `enabled` lo usa el menú lateral, que vive en los tres subsistemas: solo
+ * tiene sentido pedir el conteo a quien puede entrar al inventario.
+ */
+export function useStockBajoCount({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['inventario-medicinas', 'stock-bajo-count'],
     queryFn:  () => inventarioMedicinaService.contarStockBajo(),
+    enabled,
     staleTime: 1000 * 60,
     refetchInterval: 1000 * 60 * 5,
   })
@@ -80,18 +85,20 @@ export function useInventarioMutations() {
     onError,
   })
 
-  const ingresarStock = useMutation({
+  const registrarBaja = useMutation({
     mutationFn: ({ id, cantidad, motivo }: {
       id: number; cantidad: number; motivo: string
-    }) => inventarioMedicinaService.ingresarStock(id, cantidad, motivo),
+    }) => inventarioMedicinaService.registrarBaja(id, cantidad, motivo),
     onSuccess: () => {
       notifications.show({
-        title:   'Stock ingresado',
-        message: 'El stock fue actualizado correctamente.',
-        color:   'emerald',
+        title:   'Existencias dadas de baja',
+        message: 'Las unidades salieron del inventario y quedó constancia en el kardex.',
+        color:   'orange',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       invalidar()
+      // Lo que se retiró ya no debe ofrecerse al recetar.
+      qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
     onError,
   })
@@ -119,20 +126,23 @@ export function useInventarioMutations() {
     mutationFn: (id: number) =>
       inventarioMedicinaService.toggleEstado(id),
     onSuccess: (data) => {
-      const estado = data?.estado ? 'reactivada' : 'dada de baja'
+      const reactivada = !!data?.estado
       notifications.show({
-        title:   `Medicina ${estado}`,
-        message: `La medicina fue ${estado} correctamente.`,
-        color:   'emerald',
+        title:   reactivada
+          ? 'Medicina reactivada'
+          : 'Medicina retirada del catálogo',
+        message: reactivada
+          ? 'Vuelve a estar disponible para recetar y despachar.'
+          : 'Deja de aparecer en recetas y despachos. Sus existencias no se movieron.',
+        color:   reactivada ? 'emerald' : 'orange',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       invalidar()
+      // Deja de estar disponible —o vuelve a estarlo— para recetar.
+      qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
     onError,
   })
 
-  return {
-    crear, actualizar, ingresarStock,
-    ajustarInventario, toggleEstado,
-  }
+  return { crear, actualizar, registrarBaja, ajustarInventario, toggleEstado }
 }
