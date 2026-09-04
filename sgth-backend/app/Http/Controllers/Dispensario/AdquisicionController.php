@@ -48,6 +48,25 @@ final class AdquisicionController extends Controller
         return ApiResponse::ok($adquisicion);
     }
 
+    public function anular(
+        Request $request,
+        int $id
+    ): JsonResponse {
+        $request->validate([
+            'motivo_anulacion' => ['required', 'string', 'max:255'],
+        ]);
+
+        $adquisicion = $this->service->anular(
+            $id,
+            $request->string('motivo_anulacion')->value(),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok(
+            $adquisicion, 'Adquisición anulada correctamente.'
+        );
+    }
+
     public function subirDocumento(
         Request $request,
         int $id

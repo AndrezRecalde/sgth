@@ -1140,6 +1140,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('/', [AdquisicionController::class, 'store']);
                 Route::get('{id}', [AdquisicionController::class, 'show']);
                 Route::post('{id}/documento', [AdquisicionController::class, 'subirDocumento']);
+                Route::post('{id}/anular', [AdquisicionController::class, 'anular']);
             });
 
         // Signos vitales de la solicitud (enfermería, previo al FEMO)

@@ -40,6 +40,34 @@ export function useRegistrarAdquisicion() {
   })
 }
 
+export function useAnularAdquisicion() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      adquisicionService.anular(id, motivo),
+    onSuccess: (data) => {
+      notifications.show({
+        title:   'Adquisición anulada',
+        message: `El folio ${data.folio} fue anulado y el stock devuelto.`,
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['adquisiciones'] })
+      // Anular descuenta lo que la adquisición había sumado.
+      qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
+      qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'No se pudo anular',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
 export function useSubirDocumentoAdquisicion() {
   const qc = useQueryClient()
 

@@ -16,7 +16,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
     public function listar(array $filtros): LengthAwarePaginator
     {
         $query = AdquisicionMedicamento::with([
-            'registrador', 'items.medicina',
+            'registrador', 'anulador', 'items.medicina',
         ])->orderBy('created_at', 'desc');
 
         if (!empty($filtros['tipo'])) {
@@ -38,7 +38,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
     public function obtener(int $id): AdquisicionMedicamento
     {
         return AdquisicionMedicamento::with([
-            'registrador', 'items.medicina',
+            'registrador', 'anulador', 'items.medicina',
         ])->findOrFail($id);
     }
 
@@ -105,6 +105,81 @@ final class AdquisicionService implements AdquisicionServiceInterface
             }
 
             return $adquisicion->load(['items.medicina', 'registrador']);
+        });
+    }
+
+    /**
+     * Anula una adquisición mal registrada devolviendo al kardex lo que
+     * aportó.
+     *
+     * El kardex es inmutable, así que anular no borra el ingreso: escribe su
+     * contrapartida. Y solo procede mientras las existencias sigan íntegras;
+     * si ya se despachó parte de lo que entró, revertir la cantidad completa
+     * afirmaría que volvió al estante algo que físicamente ya salió. Ese caso
+     * se corrige por «Ajustar inventario», que pide motivo.
+     */
+    public function anular(
+        int $id,
+        string $motivo,
+        int $anuladoPor
+    ): AdquisicionMedicamento {
+        return DB::transaction(function () use ($id, $motivo, $anuladoPor) {
+            $adquisicion = AdquisicionMedicamento::with('items.medicina')
+                ->findOrFail($id);
+
+            if ($adquisicion->anulado_en !== null) {
+                throw new ReglaNegocioException(
+                    "La adquisición {$adquisicion->folio} ya fue anulada."
+                );
+            }
+
+            // Se comprueban todos los ítems antes de tocar ninguno, para que
+            // el rechazo nombre lo que falta en vez de morir a medio camino.
+            $medicinas = [];
+
+            foreach ($adquisicion->items as $item) {
+                $medicina = InventarioMedicina::lockForUpdate()
+                    ->findOrFail($item->inventario_medicina_id);
+
+                if ($medicina->stock_actual < $item->cantidad) {
+                    throw new ReglaNegocioException(
+                        "No se puede anular: de {$medicina->nombre} entraron " .
+                        "{$item->cantidad} unidades y hoy quedan " .
+                        "{$medicina->stock_actual}. Corrija por ajuste de " .
+                        'inventario.'
+                    );
+                }
+
+                $medicinas[$item->id] = $medicina;
+            }
+
+            $motivoKardex = "Anulación de {$adquisicion->folio} — {$motivo}";
+
+            foreach ($adquisicion->items as $item) {
+                $medicina = $medicinas[$item->id];
+
+                $medicina->stock_actual -= $item->cantidad;
+                $medicina->save();
+
+                MovimientoInventarioMed::create([
+                    'inventario_medicina_id' => $medicina->id,
+                    'tipo_movimiento'        => 'anulacion',
+                    'cantidad'               => -$item->cantidad,
+                    'stock_resultante'       => $medicina->stock_actual,
+                    'motivo'                 => $motivoKardex,
+                    'registrado_por'         => $anuladoPor,
+                ]);
+            }
+
+            $adquisicion->update([
+                'anulado_en'       => now(),
+                'anulado_por'      => $anuladoPor,
+                'motivo_anulacion' => $motivo,
+            ]);
+
+            return $adquisicion->load([
+                'items.medicina', 'registrador', 'anulador',
+            ]);
         });
     }
 

@@ -338,3 +338,83 @@ test('emitir_receta_con_stock_insuficiente_incluye_alerta', function () {
     expect($resultado)->toHaveKey('alertas_alergias');
     expect($resultado['alertas_alergias'])->toBeArray();
 });
+
+test('anular_adquisicion_devuelve_el_stock_con_contrapartida_en_el_kardex', function () {
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre' => 'Omeprazol',
+        'principio_activo' => 'Omeprazol',
+        'presentacion' => 'capsula',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    $servicio = app(App\Services\Dispensario\AdquisicionService::class);
+
+    $adquisicion = $servicio->registrar(
+        [
+            'tipo' => 'compra',
+            'numero_documento' => 'FACT-9001',
+            'proveedor_o_donante' => 'Difare S.A.',
+            'fecha_adquisicion' => now()->toDateString(),
+        ],
+        [['inventario_medicina_id' => $medicina->id, 'cantidad' => 80]],
+        $this->medico->id
+    );
+
+    expect($medicina->refresh()->stock_actual)->toBe(80);
+
+    $anulada = $servicio->anular(
+        $adquisicion->id, 'Error de digitación', $this->medico->id
+    );
+
+    expect($anulada->anulado_en)->not->toBeNull();
+    expect($anulada->motivo_anulacion)->toBe('Error de digitación');
+    expect($medicina->refresh()->stock_actual)->toBe(0);
+
+    // El ingreso original sigue en el kardex: la anulación escribe su
+    // contrapartida en vez de borrarlo.
+    $movimientos = MovimientoInventarioMed::where(
+        'inventario_medicina_id', $medicina->id
+    )->orderBy('id')->get();
+
+    expect($movimientos)->toHaveCount(2);
+    expect($movimientos[0]->tipo_movimiento)->toBe('ingreso');
+    expect($movimientos[1]->tipo_movimiento)->toBe('anulacion');
+    expect($movimientos[1]->cantidad)->toBe(-80);
+    expect($movimientos[1]->stock_resultante)->toBe(0);
+    expect($movimientos[1]->motivo)->toContain($adquisicion->folio);
+});
+
+test('no_se_anula_una_adquisicion_cuyo_stock_ya_se_consumio', function () {
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre' => 'Ranitidina',
+        'principio_activo' => 'Ranitidina',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    $servicio = app(App\Services\Dispensario\AdquisicionService::class);
+
+    $adquisicion = $servicio->registrar(
+        [
+            'tipo' => 'donacion',
+            'numero_documento' => 'ACTA-77',
+            'proveedor_o_donante' => 'Cruz Roja',
+            'fecha_adquisicion' => now()->toDateString(),
+        ],
+        [['inventario_medicina_id' => $medicina->id, 'cantidad' => 40]],
+        $this->medico->id
+    );
+
+    // Se consume parte por un ajuste, como si se hubieran despachado.
+    app(InventarioMedicinasService::class)->ajustarInventario(
+        $medicina->id, 30, 'Conteo físico', $this->medico->id
+    );
+
+    expect(fn () => $servicio->anular(
+        $adquisicion->id, 'Error de digitación', $this->medico->id
+    ))->toThrow(App\Exceptions\ReglaNegocioException::class);
+
+    // Ni el stock ni la adquisición se tocaron.
+    expect($medicina->refresh()->stock_actual)->toBe(30);
+    expect($adquisicion->refresh()->anulado_en)->toBeNull();
+});

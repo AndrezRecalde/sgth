@@ -20,13 +20,20 @@ class AdquisicionMedicamento extends Model
         'proveedor_o_donante', 'fecha_adquisicion',
         'observaciones', 'documento_respaldo',
         'registrado_por',
+        'anulado_en', 'anulado_por', 'motivo_anulacion',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha_adquisicion' => 'date',
+            'anulado_en'        => 'datetime',
         ];
+    }
+
+    public function anulador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulado_por');
     }
 
     public function items(): HasMany

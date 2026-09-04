@@ -2,10 +2,10 @@
 
 import {
   Drawer, Stack, Group, Text, Badge,
-  ThemeIcon, Table, Divider,
+  ThemeIcon, Table, Divider, Alert,
 } from '@mantine/core'
 import {
-  IconShoppingCart, IconFileText,
+  IconShoppingCart, IconFileText, IconBan,
 } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import type { Adquisicion } from '../services/adquisicionService'
@@ -58,6 +58,28 @@ export function DetalleAdquisicionDrawer({
     >
       {adquisicion && (
         <Stack gap="md">
+          {adquisicion.anulado_en && (
+            <Alert
+              icon={<IconBan size={16} />}
+              color="orange"
+              variant="light"
+              title="Adquisición anulada"
+            >
+              <Text size="xs">
+                {adquisicion.motivo_anulacion}
+                {' — '}
+                {adquisicion.anulador?.nombre_completo
+                  ?? adquisicion.anulador?.usuario_ti ?? '—'}
+                {', '}
+                {formatFecha(adquisicion.anulado_en)}
+              </Text>
+              <Text size="xs" mt={4} c="dimmed">
+                Lo que aportó se devolvió al inventario con su contrapartida en
+                el kardex.
+              </Text>
+            </Alert>
+          )}
+
           <Table variant="vertical" layout="fixed" verticalSpacing="sm">
             <Table.Tbody>
               <Table.Tr>

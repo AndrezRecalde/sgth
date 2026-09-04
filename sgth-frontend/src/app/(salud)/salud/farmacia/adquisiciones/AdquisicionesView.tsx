@@ -13,7 +13,10 @@ import { getAdquisicionesColumns } from
   '@/features/dispensario/components/adquisiciones.columns'
 import { DetalleAdquisicionDrawer } from
   '@/features/dispensario/components/DetalleAdquisicionDrawer'
-import { useAdquisiciones } from
+import {
+  AnularRegistroModal, MOTIVOS_ANULAR_ADQUISICION,
+} from '@/features/dispensario/components/AnularRegistroModal'
+import { useAdquisiciones, useAnularAdquisicion } from
   '@/features/dispensario/hooks/useAdquisicion'
 import { useDisclosure } from '@mantine/hooks'
 import type { Adquisicion } from
@@ -69,6 +72,10 @@ function HistorialAdquisiciones() {
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const [detalleOpened,
     { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
+  const [anularOpened,
+    { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
+
+  const anular = useAnularAdquisicion()
 
   const { data, isLoading } = useAdquisiciones({
     page, per_page: 15,
@@ -82,6 +89,7 @@ function HistorialAdquisiciones() {
       setAdquisicionSel(a)
       abrirModal()
     },
+    onAnular: (a) => { setAdquisicionSel(a); abrirAnular() },
   })
 
   return (
@@ -107,6 +115,24 @@ function HistorialAdquisiciones() {
         opened={detalleOpened}
         onClose={() => { setAdquisicionSel(null); cerrarDetalle() }}
         adquisicion={adquisicionSel}
+      />
+
+      <AnularRegistroModal
+        opened={anularOpened}
+        onClose={() => { setAdquisicionSel(null); cerrarAnular() }}
+        titulo="Anular adquisición"
+        descripcion={
+          `Se devolverá al inventario lo que aportó ${adquisicionSel?.folio ?? ''}.`
+        }
+        motivos={MOTIVOS_ANULAR_ADQUISICION}
+        loading={anular.isPending}
+        onConfirmar={(motivo) => {
+          if (!adquisicionSel) return
+          anular.mutate(
+            { id: adquisicionSel.id, motivo },
+            { onSuccess: () => { setAdquisicionSel(null); cerrarAnular() } }
+          )
+        }}
       />
     </Stack>
   )

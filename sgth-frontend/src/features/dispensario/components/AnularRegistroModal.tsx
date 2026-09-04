@@ -36,6 +36,14 @@ const MOTIVOS_CLINICOS: MotivoOption[] = [
   { value: 'otro',                 label: 'Otro'                     },
 ]
 
+export const MOTIVOS_ANULAR_ADQUISICION: MotivoOption[] = [
+  { value: 'error_digitacion',    label: 'Error de digitación'          },
+  { value: 'cantidades',          label: 'Cantidades incorrectas'       },
+  { value: 'documento',           label: 'Documento o proveedor errado' },
+  { value: 'duplicado',           label: 'Registro duplicado'           },
+  { value: 'otro',                label: 'Otro'                         },
+]
+
 export function AnularRegistroModal({
   opened, onClose, titulo, descripcion,
   onConfirmar, loading,

@@ -17,6 +17,12 @@ interface AdquisicionServiceInterface
         int $registradoPor
     ): AdquisicionMedicamento;
 
+    public function anular(
+        int $id,
+        string $motivo,
+        int $anuladoPor
+    ): AdquisicionMedicamento;
+
     public function subirDocumento(
         int $id,
         string $rutaArchivo
