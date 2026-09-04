@@ -1,6 +1,7 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type { AgendaMedica } from './agendaService'
+import type { NivelAlerta } from '../constants/signosVitales'
 
 export interface Triaje {
   id:                       number
@@ -18,6 +19,14 @@ export interface Triaje {
   saturacion_oxigeno:       number
   glucosa?:                 number | null
   observaciones_enfermera?: string | null
+  /** Lo calcula el backend al registrar: es el nivel con el que se valoró. */
+  nivel_alerta?:            NivelAlerta | null
+  hallazgos_alerta?:        {
+    constante: string
+    etiqueta:  string
+    valor:     number
+    nivel:     NivelAlerta
+  }[] | null
   registrado_en?:           string | null
 }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models\Dispensario;
 
+use App\Enums\NivelAlertaTriaje;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,8 @@ class Triaje extends Model
         'saturacion_oxigeno',
         'glucosa',
         'observaciones_enfermera',
+        'nivel_alerta',
+        'hallazgos_alerta',
         'registrado_en'
     ];
 
@@ -46,6 +49,8 @@ class Triaje extends Model
         'frecuencia_respiratoria' => 'integer',
         'saturacion_oxigeno'      => 'decimal:1',
         'glucosa'                 => 'decimal:2',
+        'nivel_alerta'            => NivelAlertaTriaje::class,
+        'hallazgos_alerta'        => 'array',
         'registrado_en'           => 'datetime',
     ];
 

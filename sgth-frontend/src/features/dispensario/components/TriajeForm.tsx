@@ -9,13 +9,15 @@ import {
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
-  IconCheck, IconUser, IconUsers, IconScale,
+  IconCheck, IconUser, IconUsers, IconScale, IconAlertTriangle,
   IconHeartbeat,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarTriaje } from '../hooks/useTriaje'
 import { UltimoTriajeReferencia } from './UltimoTriajeReferencia'
 import { triajeSchema, type TriajeFormData } from '../schemas/triaje.schema'
+import { hallazgos, NIVEL_ALERTA } from '../constants/signosVitales'
+import { StatusBadge } from '@/components/ui'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
 
@@ -78,6 +80,16 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
     [peso, talla]
   )
   const clasificacion = clasificacionImc(imc)
+
+  // Las constantes se vigilan mientras se escriben: el aviso tiene que llegar
+  // con el paciente delante, no al guardar. El nivel que queda registrado lo
+  // decide el backend; esto solo lo adelanta.
+  const constantes = useWatch({ control })
+  const alterados = useMemo(
+    () => hallazgos(constantes as Record<string, number | null | undefined>),
+    [constantes]
+  )
+  const hayCritico = alterados.some((h) => h.nivel === 'critico')
 
   const onSubmit = (values: TriajeFormData) => {
     registrar.mutate(
@@ -331,13 +343,48 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
             )}
           />
 
+          {alterados.length > 0 && (
+            <Alert
+              icon={<IconAlertTriangle size={16} />}
+              color={hayCritico ? 'red' : 'orange'}
+              variant="light"
+              radius="md"
+              title={
+                hayCritico
+                  ? 'Signos vitales críticos'
+                  : 'Signos vitales fuera de rango'
+              }
+            >
+              <Stack gap={6}>
+                {alterados.map((h) => (
+                  <Group key={h.campo} gap="xs" wrap="nowrap">
+                    <StatusBadge
+                      tone={NIVEL_ALERTA[h.nivel].tono}
+                      size="xs"
+                    >
+                      {NIVEL_ALERTA[h.nivel].etiqueta}
+                    </StatusBadge>
+                    <Text size="xs">
+                      {h.etiqueta}: <strong>{h.valor}</strong>
+                    </Text>
+                  </Group>
+                ))}
+                <Text size="xs" c="dimmed">
+                  {hayCritico
+                    ? 'El turno quedará marcado como crítico en la cola. Valore si el paciente puede esperar.'
+                    : 'El turno quedará marcado en la cola para que el médico lo vea.'}
+                </Text>
+              </Stack>
+            </Alert>
+          )}
+
           <Group justify="flex-end" mt="sm">
             <Button variant="default" onClick={onCancelar}>
               Cancelar
             </Button>
             <Button
               type="submit"
-              color="emerald"
+              color={hayCritico ? 'red' : 'emerald'}
               leftSection={<IconCheck size={14} />}
               loading={registrar.isPending}
             >

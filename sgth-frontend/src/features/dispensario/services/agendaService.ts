@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
+import type { Triaje } from './triajeService'
 
 export type EstadoAgenda =
   | 'en_espera'
@@ -41,7 +42,11 @@ export interface AgendaMedica {
     nombres: string
     apellidos: string
   } | null
-  triaje?: unknown | null
+  /**
+   * Lo carga el listado de la cola. Estaba como `unknown`, así que su nivel de
+   * alerta no se podía leer sin aserciones.
+   */
+  triaje?: Triaje | null
   consulta_medica?: {
     id: number
     tipo_atencion?: string

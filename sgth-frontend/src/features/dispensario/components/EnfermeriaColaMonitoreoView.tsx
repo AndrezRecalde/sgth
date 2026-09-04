@@ -33,6 +33,7 @@ export function EnfermeriaColaMonitoreoView() {
   const [fecha, setFecha] = useState<Date | null>(new Date())
   const [vista, setVista] = useState<VistaMonitoreo>('todos')
   const [turnoTriaje, setTurnoTriaje] = useState<AgendaMedica | null>(null)
+  const [soloAlertas, setSoloAlertas] = useState(false)
   const [drawerOpened, { open: abrirDrawer, close: cerrarDrawer }] =
     useDisclosure(false)
 
@@ -42,7 +43,17 @@ export function EnfermeriaColaMonitoreoView() {
   const { data: pendientesTriaje = [] } = useTriajesPendientes()
   const cancelar = useCancelarTurno()
 
-  const turnos = data?.data ?? []
+  const turnosDelDia = data?.data ?? []
+
+  const conAlerta = turnosDelDia.filter((t) =>
+    t.triaje?.nivel_alerta === 'critico' ||
+    t.triaje?.nivel_alerta === 'atencion'
+  )
+
+  // El orden no cambia solo: quién pasa antes lo decide quien atiende. Este
+  // filtro solo permite mirar primero a los que el triaje marcó, sin que nadie
+  // quede desplazado de la cola sin saber por qué.
+  const turnos = soloAlertas ? conAlerta : turnosDelDia
 
   // Si se eligió tomar el triaje de un turno
   // desde la lista de pendientes
@@ -79,6 +90,16 @@ export function EnfermeriaColaMonitoreoView() {
             Pendientes de triaje
             {pendientesTriaje.length > 0 ? ` (${pendientesTriaje.length})` : ''}
           </Chip>
+          {vista === 'todos' && conAlerta.length > 0 && (
+            <Chip
+              checked={soloAlertas}
+              onChange={() => setSoloAlertas((v) => !v)}
+              color="red"
+              size="sm"
+            >
+              Con alerta ({conAlerta.length})
+            </Chip>
+          )}
         </Group>
         <ActionIcon
           size="xl"
