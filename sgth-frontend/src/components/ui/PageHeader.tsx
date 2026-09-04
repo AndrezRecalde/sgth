@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ActionIcon, Group, Stack, Text, Title, Tooltip } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
+import classes from './PageHeader.module.css'
 
 interface Props {
   title: string
@@ -22,6 +23,10 @@ interface Props {
  *
  * Tampoco lleva separador inferior: el aire de `PageShell` ya separa la
  * cabecera del contenido.
+ *
+ * Cuando el título y las acciones no caben en una fila —un teléfono, o una
+ * cabecera con varios botones— las acciones bajan a la suya. El reparto vive
+ * en `PageHeader.module.css`.
  */
 export function PageHeader({
   title,
@@ -31,8 +36,13 @@ export function PageHeader({
   backLabel = 'Volver',
 }: Props) {
   return (
-    <Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
-      <Group gap="sm" wrap="nowrap" align="center" style={{ minWidth: 0 }}>
+    <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
+      <Group
+        gap="sm"
+        wrap="nowrap"
+        align="center"
+        className={classes.identidad}
+      >
         {backHref && (
           <Tooltip label={backLabel}>
             <ActionIcon
@@ -58,7 +68,7 @@ export function PageHeader({
       </Group>
 
       {actions && (
-        <Group gap="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Group gap="sm" wrap="wrap" style={{ flexShrink: 0 }}>
           {actions}
         </Group>
       )}

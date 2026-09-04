@@ -1,0 +1,18 @@
+/* El bloque de identidad —título y descripción— crece para ocupar el ancho
+   libre, pero lo que importa es su base de 20rem: es la que obliga a la
+   cabecera a partirse en dos filas cuando el título y las acciones ya no caben
+   juntos, y baja los botones a su propia fila.
+
+   Antes la cabecera era `nowrap` con las acciones a `flex-shrink: 0`. En un
+   teléfono eso dejaba al título como única pieza encogible: la descripción se
+   partía en una columna de una palabra por línea y el título, que no baja del
+   ancho de su palabra más larga, terminaba pintándose por debajo de los
+   botones. Es el mismo fallo que tenía la barra de filtros, con el mismo
+   remedio (ver `Toolbar.module.css`).
+
+   `min-width: 0` se queda por el motivo contrario: sin él, un título largo sin
+   espacios estira la fila entera y saca la cabecera del contenedor. */
+.identidad {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
