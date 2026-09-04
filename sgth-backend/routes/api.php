@@ -1131,6 +1131,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::apiResource('medicinas', InventarioMedicinasController::class);
                 Route::get('medicinas/{id}/kardex',
                     [InventarioMedicinasController::class, 'kardex']);
+                Route::post('medicinas/{medicina}/baja',
+                    [InventarioMedicinasController::class, 'registrarBaja']);
                 Route::post('medicinas/{medicina}/ajustar-inventario',
                     [InventarioMedicinasController::class, 'ajustarInventario']);
             });

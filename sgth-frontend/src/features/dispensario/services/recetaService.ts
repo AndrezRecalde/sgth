@@ -14,9 +14,12 @@ export interface ItemReceta {
   observaciones?:          string | null
   estado?:                 string
   inventario?: {
-    nombre:         string
-    presentacion?:  string
-    concentracion?: string | null
+    nombre:            string
+    presentacion?:     string
+    concentracion?:    string | null
+    stock_actual?:     number
+    /** El despacho rechaza lo vencido, así que la fila lo avisa antes. */
+    fecha_caducidad?:  string | null
   } | null
 }
 

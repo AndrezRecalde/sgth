@@ -34,7 +34,7 @@ final class InventarioMedicinasController extends Controller
 
         $resultados = $this->inventarioService->buscar(
             $request->string('q')->value(),
-            soloConStock: !$request->boolean('incluir_agotadas')
+            soloDespachables: !$request->boolean('incluir_agotadas')
         );
 
         return ApiResponse::ok($resultados);
@@ -70,6 +70,27 @@ final class InventarioMedicinasController extends Controller
 
         return ApiResponse::ok(
             $actualizado, 'Medicina actualizada.'
+        );
+    }
+
+    public function registrarBaja(
+        Request $request,
+        int $medicina
+    ): JsonResponse {
+        $request->validate([
+            'cantidad' => ['required', 'integer', 'min:1'],
+            'motivo'   => ['required', 'string', 'max:255'],
+        ]);
+
+        $actualizado = $this->inventarioService->registrarBaja(
+            $medicina,
+            $request->integer('cantidad'),
+            $request->string('motivo')->value(),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok(
+            $actualizado, 'Existencias dadas de baja correctamente.'
         );
     }
 

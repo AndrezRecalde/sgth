@@ -14,7 +14,7 @@ interface InventarioMedicinasServiceInterface
 
     public function buscar(
         string $termino,
-        bool $soloConStock = true
+        bool $soloDespachables = true
     ): Collection;
 
     public function ingresarMedicina(
@@ -25,6 +25,13 @@ interface InventarioMedicinasServiceInterface
     public function actualizar(
         int $id,
         array $datos
+    ): InventarioMedicina;
+
+    public function registrarBaja(
+        int $id,
+        int $cantidad,
+        string $motivo,
+        int $registradoPor
     ): InventarioMedicina;
 
     public function ajustarInventario(

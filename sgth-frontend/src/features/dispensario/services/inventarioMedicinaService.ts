@@ -85,6 +85,12 @@ export const inventarioMedicinaService = {
       `/dispensario/inventario/medicinas/${id}`, data
     ).then(r => r.data.datos),
 
+  registrarBaja: (id: number, cantidad: number, motivo: string) =>
+    api.post<ApiResponse<InventarioMedicina>>(
+      `/dispensario/inventario/medicinas/${id}/baja`,
+      { cantidad, motivo }
+    ).then(r => r.data.datos),
+
   ajustarInventario: (id: number, nuevoStock: number, motivo: string) =>
     api.post<ApiResponse<InventarioMedicina>>(
       `/dispensario/inventario/medicinas/${id}/ajustar-inventario`,

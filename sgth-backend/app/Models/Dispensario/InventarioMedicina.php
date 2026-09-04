@@ -28,4 +28,17 @@ class InventarioMedicina extends Model
             'estado'          => 'boolean',
         ];
     }
+
+    /**
+     * Una medicina sin fecha registrada no se considera caducada: no hay dato
+     * que lo afirme, y bloquear por omisión dejaría la farmacia parada.
+     *
+     * El día de la caducidad todavía es válido, que es como se lee la fecha
+     * impresa en el envase.
+     */
+    public function estaCaducado(): bool
+    {
+        return $this->fecha_caducidad !== null
+            && $this->fecha_caducidad->startOfDay()->isBefore(now()->startOfDay());
+    }
 }

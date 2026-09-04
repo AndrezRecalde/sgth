@@ -85,6 +85,24 @@ export function useInventarioMutations() {
     onError,
   })
 
+  const registrarBaja = useMutation({
+    mutationFn: ({ id, cantidad, motivo }: {
+      id: number; cantidad: number; motivo: string
+    }) => inventarioMedicinaService.registrarBaja(id, cantidad, motivo),
+    onSuccess: () => {
+      notifications.show({
+        title:   'Existencias dadas de baja',
+        message: 'Las unidades salieron del inventario y quedó constancia en el kardex.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+      // Lo que se retiró ya no debe ofrecerse al recetar.
+      qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
+    },
+    onError,
+  })
+
   const ajustarInventario = useMutation({
     mutationFn: ({ id, nuevoStock, motivo }: {
       id: number; nuevoStock: number; motivo: string
@@ -120,5 +138,5 @@ export function useInventarioMutations() {
     onError,
   })
 
-  return { crear, actualizar, ajustarInventario, toggleEstado }
+  return { crear, actualizar, registrarBaja, ajustarInventario, toggleEstado }
 }

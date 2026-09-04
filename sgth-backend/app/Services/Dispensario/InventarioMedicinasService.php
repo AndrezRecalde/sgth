@@ -44,16 +44,24 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
     }
 
     /**
-     * Busca en el catálogo activo. Quien receta solo puede elegir lo que hay
-     * en existencia; quien registra una adquisición necesita ver también lo
-     * agotado, que es justamente lo que va a reponer.
+     * Busca en el catálogo activo.
+     *
+     * Quien receta solo puede elegir lo que la farmacia podrá entregarle: con
+     * existencias y sin caducar, porque el despacho rechaza lo vencido y de
+     * nada sirve prescribir algo que se frenará en el mostrador. Quien registra
+     * una adquisición necesita ver todo el catálogo, incluido lo agotado y lo
+     * vencido, que es justamente lo que va a reponer.
      */
     public function buscar(
         string $termino,
-        bool $soloConStock = true
+        bool $soloDespachables = true
     ): Collection {
         return InventarioMedicina::where('estado', true)
-            ->when($soloConStock, fn ($q) => $q->where('stock_actual', '>', 0))
+            ->when($soloDespachables, fn ($q) => $q
+                ->where('stock_actual', '>', 0)
+                ->where(fn ($sub) => $sub
+                    ->whereNull('fecha_caducidad')
+                    ->orWhereDate('fecha_caducidad', '>=', now()->toDateString())))
             ->where(function ($q) use ($termino) {
                 $q->where('nombre', 'ilike', "%{$termino}%")
                   ->orWhere('principio_activo', 'ilike', "%{$termino}%")
@@ -104,6 +112,57 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         $medicina = InventarioMedicina::findOrFail($id);
         $medicina->update($datos);
         return $medicina;
+    }
+
+    /**
+     * Saca existencias del inventario por una causa conocida: caducidad, merma,
+     * rotura, contaminación.
+     *
+     * Se distingue del ajuste a propósito. El ajuste dice «el conteo físico da
+     * X» y no explica la diferencia; la baja dice cuántas unidades salen y por
+     * qué. Sin ella, bloquear el despacho de caducados dejaría ese stock
+     * atrapado sin más salida que un ajuste que no nombra la causa.
+     */
+    public function registrarBaja(
+        int $id,
+        int $cantidad,
+        string $motivo,
+        int $registradoPor
+    ): InventarioMedicina {
+        if ($cantidad <= 0) {
+            throw new ReglaNegocioException(
+                'La cantidad a dar de baja debe ser mayor a cero.'
+            );
+        }
+
+        return DB::transaction(function () use (
+            $id, $cantidad, $motivo, $registradoPor
+        ) {
+            $medicina = InventarioMedicina::lockForUpdate()
+                ->findOrFail($id);
+
+            if ($medicina->stock_actual < $cantidad) {
+                throw new ReglaNegocioException(
+                    "No se pueden dar de baja {$cantidad} unidades de " .
+                    "{$medicina->nombre}: solo quedan " .
+                    "{$medicina->stock_actual}."
+                );
+            }
+
+            $medicina->stock_actual -= $cantidad;
+            $medicina->save();
+
+            MovimientoInventarioMed::create([
+                'inventario_medicina_id' => $medicina->id,
+                'tipo_movimiento'        => 'baja',
+                'cantidad'               => -$cantidad,
+                'stock_resultante'       => $medicina->stock_actual,
+                'motivo'                 => $motivo,
+                'registrado_por'         => $registradoPor,
+            ]);
+
+            return $medicina;
+        });
     }
 
     public function ajustarInventario(

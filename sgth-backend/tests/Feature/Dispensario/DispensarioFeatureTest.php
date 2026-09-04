@@ -200,7 +200,7 @@ test('buscar_oculta_las_agotadas_al_recetar_pero_las_muestra_al_adquirir', funct
     ], $this->medico->id);
 
     expect($service->buscar('Amoxi')->pluck('id'))->not->toContain($agotada->id);
-    expect($service->buscar('Amoxi', soloConStock: false)->pluck('id'))
+    expect($service->buscar('Amoxi', soloDespachables: false)->pluck('id'))
         ->toContain($agotada->id);
 });
 
@@ -595,4 +595,178 @@ test('pedir_el_respaldo_de_una_adquisicion_que_no_lo_tiene_responde_404', functi
 
     $this->getJson("/api/v1/dispensario/adquisiciones/{$adquisicion->id}/documento")
         ->assertNotFound();
+});
+
+test('no_se_despacha_un_medicamento_caducado', function () {
+    $medicina = InventarioMedicina::create([
+        'codigo' => 'MED-8001',
+        'nombre' => 'Azitromicina',
+        'principio_activo' => 'Azitromicina',
+        'presentacion' => 'tableta',
+        'stock_actual' => 50,
+        'stock_minimo' => 5,
+        'fecha_caducidad' => now()->subDay(),
+        'estado' => true,
+    ]);
+
+    $historia = HistoriaClinica::create([
+        'servidor_id' => $this->paciente->id,
+        'grupo_sanguineo' => 'O+',
+    ]);
+
+    $consulta = ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id' => $this->medico->id,
+        'fecha_consulta' => now()->format('Y-m-d'),
+        'hora_consulta' => '11:00:00',
+        'motivo_consulta' => 'Infección',
+        'diagnostico_detallado' => 'Faringitis',
+    ]);
+
+    $servicio = app(RecetaService::class);
+
+    $receta = $servicio->emitirReceta([
+        'consulta_medica_id' => $consulta->id,
+        'fecha_emision' => now()->format('Y-m-d'),
+    ], [[
+        'inventario_medicina_id' => $medicina->id,
+        'cantidad_prescrita' => 6,
+        'dosis' => '1 tableta',
+        'frecuencia' => 'Diaria',
+        'duracion' => '6 días',
+    ]])['receta'];
+
+    $item = ItemReceta::where('receta_medica_id', $receta->id)->first();
+
+    expect(fn () => $servicio->despacharReceta($receta->id, [
+        ['item_receta_id' => $item->id, 'cantidad' => 6],
+    ], $this->medico->id))->toThrow(App\Exceptions\ReglaNegocioException::class);
+
+    // Ni salió del estante ni quedó rastro de egreso.
+    expect($medicina->refresh()->stock_actual)->toBe(50);
+    expect(MovimientoInventarioMed::where('inventario_medicina_id', $medicina->id)->count())
+        ->toBe(0);
+});
+
+test('el_dia_de_la_caducidad_todavia_se_puede_despachar', function () {
+    $medicina = InventarioMedicina::create([
+        'codigo' => 'MED-8002',
+        'nombre' => 'Cefalexina',
+        'principio_activo' => 'Cefalexina',
+        'presentacion' => 'capsula',
+        'stock_actual' => 20,
+        'stock_minimo' => 5,
+        'fecha_caducidad' => now(),
+        'estado' => true,
+    ]);
+
+    $historia = HistoriaClinica::create([
+        'servidor_id' => $this->paciente->id,
+        'grupo_sanguineo' => 'O+',
+    ]);
+
+    $consulta = ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id' => $this->medico->id,
+        'fecha_consulta' => now()->format('Y-m-d'),
+        'hora_consulta' => '12:00:00',
+        'motivo_consulta' => 'Infección',
+        'diagnostico_detallado' => 'Faringitis',
+    ]);
+
+    $servicio = app(RecetaService::class);
+
+    $receta = $servicio->emitirReceta([
+        'consulta_medica_id' => $consulta->id,
+        'fecha_emision' => now()->format('Y-m-d'),
+    ], [[
+        'inventario_medicina_id' => $medicina->id,
+        'cantidad_prescrita' => 4,
+        'dosis' => '1 cápsula',
+        'frecuencia' => 'Diaria',
+        'duracion' => '4 días',
+    ]])['receta'];
+
+    $item = ItemReceta::where('receta_medica_id', $receta->id)->first();
+    $servicio->despacharReceta($receta->id, [
+        ['item_receta_id' => $item->id, 'cantidad' => 4],
+    ], $this->medico->id);
+
+    expect($medicina->refresh()->stock_actual)->toBe(16);
+});
+
+test('dar_de_baja_saca_las_existencias_caducadas_con_su_motivo', function () {
+    $medicina = InventarioMedicina::create([
+        'codigo' => 'MED-8003',
+        'nombre' => 'Dexametasona',
+        'principio_activo' => 'Dexametasona',
+        'presentacion' => 'inyectable',
+        'stock_actual' => 30,
+        'stock_minimo' => 5,
+        'fecha_caducidad' => now()->subMonth(),
+        'estado' => true,
+    ]);
+
+    $servicio = app(InventarioMedicinasService::class);
+
+    $servicio->registrarBaja(
+        $medicina->id, 30, 'Caducidad — lote vencido', $this->medico->id
+    );
+
+    expect($medicina->refresh()->stock_actual)->toBe(0);
+
+    $movimiento = MovimientoInventarioMed::where(
+        'inventario_medicina_id', $medicina->id
+    )->latest('id')->first();
+
+    expect($movimiento->tipo_movimiento)->toBe('baja');
+    expect($movimiento->cantidad)->toBe(-30);
+    expect($movimiento->stock_resultante)->toBe(0);
+    expect($movimiento->motivo)->toContain('Caducidad');
+
+    // Y no se puede dar de baja más de lo que hay.
+    expect(fn () => $servicio->registrarBaja(
+        $medicina->id, 1, 'Merma', $this->medico->id
+    ))->toThrow(App\Exceptions\ReglaNegocioException::class);
+});
+
+test('el_kardex_rechaza_un_tipo_de_movimiento_desconocido', function () {
+    $medicina = InventarioMedicina::create([
+        'codigo' => 'MED-8004',
+        'nombre' => 'Salbutamol',
+        'principio_activo' => 'Salbutamol',
+        'presentacion' => 'spray',
+        'stock_actual' => 10,
+        'stock_minimo' => 2,
+        'estado' => true,
+    ]);
+
+    expect(fn () => MovimientoInventarioMed::create([
+        'inventario_medicina_id' => $medicina->id,
+        'tipo_movimiento'        => 'inventado',
+        'cantidad'               => 1,
+        'stock_resultante'       => 11,
+        'motivo'                 => 'Tipo que no existe',
+        'registrado_por'         => $this->medico->id,
+    ]))->toThrow(Illuminate\Database\QueryException::class);
+});
+
+test('recetar_no_ofrece_lo_caducado_pero_adquirir_si', function () {
+    $servicio = app(InventarioMedicinasService::class);
+
+    $caducada = InventarioMedicina::create([
+        'codigo' => 'MED-8005',
+        'nombre' => 'Nitrofurantoina',
+        'principio_activo' => 'Nitrofurantoina',
+        'presentacion' => 'capsula',
+        'stock_actual' => 40,
+        'stock_minimo' => 5,
+        'fecha_caducidad' => now()->subWeek(),
+        'estado' => true,
+    ]);
+
+    // Tiene stock de sobra, pero el despacho la rechazaría.
+    expect($servicio->buscar('Nitro')->pluck('id'))->not->toContain($caducada->id);
+    expect($servicio->buscar('Nitro', soloDespachables: false)->pluck('id'))
+        ->toContain($caducada->id);
 });

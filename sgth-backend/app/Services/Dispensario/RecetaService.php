@@ -117,6 +117,17 @@ final class RecetaService implements RecetaServiceInterface
 
                 $medicina = InventarioMedicina::lockForUpdate()->findOrFail($item->inventario_medicina_id);
 
+                // Un medicamento vencido no sale del estante. El sistema lo
+                // pintaba en rojo y lo anotaba en el log, pero lo despachaba
+                // igual, que es lo único de la farmacia capaz de hacer daño.
+                if ($medicina->estaCaducado()) {
+                    throw new ReglaNegocioException(
+                        "No se puede despachar {$medicina->nombre}: caducó el " .
+                        $medicina->fecha_caducidad->format('d/m/Y') .
+                        '. Dé de baja esas existencias antes de continuar.'
+                    );
+                }
+
                 // Validar que exista stock suficiente para el despacho físico
                 if ($medicina->stock_actual < $cantidadADespachar) {
                     throw new ReglaNegocioException("Stock insuficiente para el medicamento: {$medicina->nombre}. Stock actual: {$medicina->stock_actual}");
