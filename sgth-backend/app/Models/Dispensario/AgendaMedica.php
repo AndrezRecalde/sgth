@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\User;
 use App\Models\Expediente\Servidor;
@@ -58,9 +59,24 @@ class AgendaMedica extends Model
         return $this->servidor ?? $this->cargaFamiliar;
     }
 
+    /**
+     * Todas las tomas de signos vitales del turno, de la más antigua a la más
+     * reciente. Un turno puede tener varias: una corrección de digitación, o
+     * una segunda medición porque el paciente llevaba rato esperando.
+     */
+    public function triajes(): HasMany
+    {
+        return $this->hasMany(Triaje::class)->orderBy('id');
+    }
+
+    /**
+     * La toma vigente, que es la última. Antes esto era un `hasOne` a secas y
+     * rehacer el triaje sobrescribía la fila anterior: la lectura previa
+     * desaparecía sin dejar constancia de que existió.
+     */
     public function triaje(): HasOne
     {
-        return $this->hasOne(Triaje::class);
+        return $this->hasOne(Triaje::class)->latestOfMany();
     }
 
     public function consultaMedica(): HasOne

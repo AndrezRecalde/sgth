@@ -23,6 +23,15 @@ export function useUltimoTriaje(agendaId: number) {
   })
 }
 
+/** Las tomas ya registradas del turno, para poder compararlas al rehacer. */
+export function useHistorialTriaje(agendaId: number) {
+  return useQuery({
+    queryKey: ['triaje', 'historial', agendaId],
+    queryFn:  () => triajeService.historial(agendaId),
+    enabled:  !!agendaId,
+  })
+}
+
 export function useRegistrarTriaje() {
   const qc = useQueryClient()
 

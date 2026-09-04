@@ -59,6 +59,12 @@ export const triajeService = {
       `/dispensario/agenda/${agendaId}/triaje/ultimo`
     ).then(r => r.data.datos),
 
+  /** Todas las tomas del turno, de la más antigua a la más reciente. */
+  historial: (agendaId: number) =>
+    api.get<ApiResponse<Triaje[]>>(
+      `/dispensario/agenda/${agendaId}/triaje/historial`
+    ).then(r => r.data.datos),
+
   registrar: (agendaId: number, data: CrearTriajeData) =>
     api.post<ApiResponse<Triaje>>(
       `/dispensario/agenda/${agendaId}/triaje`, data

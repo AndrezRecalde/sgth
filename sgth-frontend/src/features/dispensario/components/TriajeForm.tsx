@@ -15,6 +15,7 @@ import {
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarTriaje } from '../hooks/useTriaje'
 import { UltimoTriajeReferencia } from './UltimoTriajeReferencia'
+import { TomasPreviasTriaje } from './TomasPreviasTriaje'
 import { triajeSchema, type TriajeFormData } from '../schemas/triaje.schema'
 import { hallazgos, NIVEL_ALERTA } from '../constants/signosVitales'
 import { StatusBadge } from '@/components/ui'
@@ -127,6 +128,8 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 ? 'Medicina General' : 'Odontología'}
             </Badge>
           </Group>
+
+          <TomasPreviasTriaje agendaId={turno.id} />
 
           <UltimoTriajeReferencia agendaId={turno.id} />
 

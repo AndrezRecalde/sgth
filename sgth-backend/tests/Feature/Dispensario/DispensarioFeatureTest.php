@@ -1083,3 +1083,65 @@ test('registrar_un_triaje_critico_guarda_el_nivel_y_lo_expone_en_la_cola', funct
     $turno = collect($cola)->firstWhere('id', $agenda->id);
     expect($turno['triaje']['nivel_alerta'])->toBe('critico');
 });
+
+test('rehacer_un_triaje_conserva_la_toma_anterior', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    HistoriaClinica::create([
+        'numero_historia' => 'HC-REHACER-1',
+        'cedula_paciente' => $this->paciente->cedula,
+        'tipo_paciente'   => 'servidor',
+        'servidor_id'     => $this->paciente->id,
+        'estado'          => true,
+    ]);
+
+    $agenda = AgendaMedica::create([
+        'servidor_id' => $this->paciente->id, 'medico_id' => $this->medico->id,
+        'fecha' => now()->format('Y-m-d'), 'hora_inicio' => '10:00:00',
+        'hora_fin' => '10:30:00', 'motivo_solicitud' => 'Control',
+        'estado' => 'en_espera', 'requiere_triaje' => true,
+        'registrado_en' => now(),
+    ], $this->medico->id);
+
+    $tomar = fn (float $temperatura) => $this->postJson(
+        "/api/v1/dispensario/agenda/{$agenda->id}/triaje",
+        [
+            'presion_sistolica' => 120, 'presion_diastolica' => 75,
+            'frecuencia_cardiaca' => 70, 'frecuencia_respiratoria' => 16,
+            'temperatura_c' => $temperatura, 'saturacion_oxigeno' => 98,
+            'peso_kg' => 70, 'talla_cm' => 170,
+        ]
+    );
+
+    // Primera toma: una fiebre que luego resulta ser un error de digitación.
+    $tomar(39.5)->assertCreated();
+    // Segunda toma, corrigiendo.
+    $tomar(36.5)->assertCreated();
+
+    $tomas = App\Models\Dispensario\Triaje::where('agenda_medica_id', $agenda->id)
+        ->orderBy('id')->get();
+
+    // Las dos quedan: antes la segunda pisaba la primera y nadie podía saber
+    // que se había registrado una fiebre.
+    expect($tomas)->toHaveCount(2);
+    expect((float) $tomas[0]->temperatura_c)->toBe(39.5);
+    expect((float) $tomas[1]->temperatura_c)->toBe(36.5);
+    expect($tomas[0]->nivel_alerta)->toBe(App\Enums\NivelAlertaTriaje::CRITICO);
+    expect($tomas[1]->nivel_alerta)->toBe(App\Enums\NivelAlertaTriaje::NORMAL);
+
+    // La vigente es la última: es la que ve el médico y la que marca la cola.
+    expect((float) $agenda->fresh()->triaje->temperatura_c)->toBe(36.5);
+
+    // Y el historial las devuelve en orden.
+    $historial = $this->getJson("/api/v1/dispensario/agenda/{$agenda->id}/triaje/historial")
+        ->assertOk()->json('datos');
+    expect($historial)->toHaveCount(2);
+
+    // El turno tampoco reaparece como pendiente por tener varias tomas.
+    $pendientes = $this->getJson('/api/v1/dispensario/triaje/pendientes')
+        ->assertOk()->json('datos');
+    expect(collect($pendientes)->pluck('id'))->not->toContain($agenda->id);
+});

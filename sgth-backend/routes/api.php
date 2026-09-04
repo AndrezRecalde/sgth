@@ -1002,6 +1002,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::get('ultimo', [TriajeController::class, 'ultimoPorAgenda'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            Route::get('historial', [TriajeController::class, 'historial'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
         });
 
         // Dashboard Estadístico — SOLO admin-dispensario (y máxima autoridad)
