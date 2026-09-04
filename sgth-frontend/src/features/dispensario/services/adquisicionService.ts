@@ -67,6 +67,11 @@ export const adquisicionService = {
       '/dispensario/adquisiciones', data
     ).then(r => r.data.datos),
 
+  descargarDocumento: (id: number) =>
+    api.get(`/dispensario/adquisiciones/${id}/documento`, {
+      responseType: 'blob',
+    }).then(r => r.data as Blob),
+
   anular: (id: number, motivo: string) =>
     api.post<ApiResponse<Adquisicion>>(
       `/dispensario/adquisiciones/${id}/anular`,

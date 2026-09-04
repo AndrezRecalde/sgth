@@ -524,3 +524,75 @@ test('no_se_anula_una_receta_ya_despachada_por_completo', function () {
         $receta->id, 'Error', $this->medico->id
     ))->toThrow(App\Exceptions\ReglaNegocioException::class);
 });
+
+test('el_respaldo_de_una_adquisicion_se_guarda_privado_y_se_sirve_tras_la_sesion', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre' => 'Enalapril',
+        'principio_activo' => 'Enalapril',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    $adquisicion = app(App\Services\Dispensario\AdquisicionService::class)->registrar(
+        [
+            'tipo' => 'compra',
+            'numero_documento' => 'FACT-5555',
+            'proveedor_o_donante' => 'Difare S.A.',
+            'fecha_adquisicion' => now()->toDateString(),
+        ],
+        [['inventario_medicina_id' => $medicina->id, 'cantidad' => 10]],
+        $this->medico->id
+    );
+
+    $this->postJson(
+        "/api/v1/dispensario/adquisiciones/{$adquisicion->id}/documento",
+        ['documento' => Illuminate\Http\UploadedFile::fake()->create('factura.pdf', 100, 'application/pdf')]
+    )->assertOk();
+
+    $ruta = $adquisicion->refresh()->documento_respaldo;
+
+    // En disco privado, no en el público servido por URL.
+    expect($ruta)->not->toBeNull();
+    Illuminate\Support\Facades\Storage::disk('local')->assertExists($ruta);
+
+    // Y se recupera: antes se subía y no había forma de volver a verlo.
+    $this->get("/api/v1/dispensario/adquisiciones/{$adquisicion->id}/documento")
+        ->assertOk()
+        ->assertHeader('Content-Disposition',
+            'inline; filename="respaldo-' . $adquisicion->folio . '.pdf"');
+});
+
+test('pedir_el_respaldo_de_una_adquisicion_que_no_lo_tiene_responde_404', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre' => 'Captopril',
+        'principio_activo' => 'Captopril',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    $adquisicion = app(App\Services\Dispensario\AdquisicionService::class)->registrar(
+        [
+            'tipo' => 'donacion',
+            'numero_documento' => 'ACTA-12',
+            'proveedor_o_donante' => 'Cruz Roja',
+            'fecha_adquisicion' => now()->toDateString(),
+        ],
+        [['inventario_medicina_id' => $medicina->id, 'cantidad' => 5]],
+        $this->medico->id
+    );
+
+    $this->getJson("/api/v1/dispensario/adquisiciones/{$adquisicion->id}/documento")
+        ->assertNotFound();
+});

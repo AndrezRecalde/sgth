@@ -2,12 +2,13 @@
 
 import {
   Drawer, Stack, Group, Text, Badge,
-  ThemeIcon, Table, Divider, Alert,
+  ThemeIcon, Table, Divider, Alert, Button,
 } from '@mantine/core'
 import {
-  IconShoppingCart, IconFileText, IconBan,
+  IconShoppingCart, IconFileText, IconBan, IconFileSearch,
 } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { useDescargarDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
 
 interface Props {
@@ -27,6 +28,7 @@ export function DetalleAdquisicionDrawer({
   opened, onClose, adquisicion,
 }: Props) {
   const { isMobile } = useMobileBreakpoint()
+  const descargarDocumento = useDescargarDocumentoAdquisicion()
 
   return (
     <Drawer
@@ -139,14 +141,29 @@ export function DetalleAdquisicionDrawer({
                 <Table.Th>Documento de respaldo</Table.Th>
                 <Table.Td>
                   <Group justify="flex-end">
-                    <Badge
-                      size="sm"
-                      variant="outline"
-                      color={adquisicion.documento_respaldo ? 'emerald' : 'gray'}
-                      rightSection={<IconFileText size={12} />}
-                    >
-                      {adquisicion.documento_respaldo ? 'ADJUNTO' : 'PENDIENTE'}
-                    </Badge>
+                    {adquisicion.documento_respaldo ? (
+                      <Button
+                        size="compact-xs"
+                        variant="light"
+                        color="blue"
+                        leftSection={<IconFileSearch size={12} />}
+                        loading={descargarDocumento.isPending}
+                        onClick={() => descargarDocumento.mutate({
+                          id: adquisicion.id, folio: adquisicion.folio,
+                        })}
+                      >
+                        Descargar
+                      </Button>
+                    ) : (
+                      <Badge
+                        size="sm"
+                        variant="outline"
+                        color="gray"
+                        rightSection={<IconFileText size={12} />}
+                      >
+                        PENDIENTE
+                      </Badge>
+                    )}
                   </Group>
                 </Table.Td>
               </Table.Tr>

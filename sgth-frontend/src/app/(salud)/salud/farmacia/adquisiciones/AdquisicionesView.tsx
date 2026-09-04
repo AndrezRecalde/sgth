@@ -16,8 +16,9 @@ import { DetalleAdquisicionDrawer } from
 import {
   AnularRegistroModal, MOTIVOS_ANULAR_ADQUISICION,
 } from '@/features/dispensario/components/AnularRegistroModal'
-import { useAdquisiciones, useAnularAdquisicion } from
-  '@/features/dispensario/hooks/useAdquisicion'
+import {
+  useAdquisiciones, useAnularAdquisicion, useDescargarDocumentoAdquisicion,
+} from '@/features/dispensario/hooks/useAdquisicion'
 import { useDisclosure } from '@mantine/hooks'
 import type { Adquisicion } from
   '@/features/dispensario/services/adquisicionService'
@@ -75,7 +76,8 @@ function HistorialAdquisiciones() {
   const [anularOpened,
     { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
 
-  const anular = useAnularAdquisicion()
+  const anular       = useAnularAdquisicion()
+  const descargarDocumento = useDescargarDocumentoAdquisicion()
 
   const { data, isLoading } = useAdquisiciones({
     page, per_page: 15,
@@ -85,6 +87,8 @@ function HistorialAdquisiciones() {
 
   const columns = getAdquisicionesColumns({
     onVerDetalle: (a) => { setAdquisicionSel(a); abrirDetalle() },
+    onDescargarDocumento: (a) =>
+      descargarDocumento.mutate({ id: a.id, folio: a.folio }),
     onSubirDocumento: (a) => {
       setAdquisicionSel(a)
       abrirModal()

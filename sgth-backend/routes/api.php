@@ -1142,6 +1142,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('/', [AdquisicionController::class, 'store']);
                 Route::get('{id}', [AdquisicionController::class, 'show']);
                 Route::post('{id}/documento', [AdquisicionController::class, 'subirDocumento']);
+                Route::get('{id}/documento', [AdquisicionController::class, 'verDocumento']);
                 Route::post('{id}/anular', [AdquisicionController::class, 'anular']);
             });
 

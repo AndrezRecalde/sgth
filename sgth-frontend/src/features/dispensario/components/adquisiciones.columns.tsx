@@ -2,7 +2,7 @@
 
 import { Text, Badge, Group, Stack } from '@mantine/core'
 import {
-  IconFileText, IconEye, IconBan,
+  IconFileText, IconEye, IconBan, IconFileSearch,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -10,6 +10,7 @@ import type { Adquisicion } from '../services/adquisicionService'
 
 interface ColumnActions {
   onVerDetalle:     (a: Adquisicion) => void
+  onDescargarDocumento:   (a: Adquisicion) => void
   onSubirDocumento: (a: Adquisicion) => void
   onAnular:         (a: Adquisicion) => void
 }
@@ -119,6 +120,12 @@ export function getAdquisicionesColumns(
             color:   'blue',
             onClick: () => actions.onVerDetalle(a),
           },
+          ...(a.documento_respaldo ? [{
+            label:   'Descargar respaldo',
+            icon:    <IconFileSearch size={14} />,
+            color:   'blue',
+            onClick: () => actions.onDescargarDocumento(a),
+          }] : []),
           // Una adquisición anulada ya no admite respaldo ni segunda
           // anulación: solo queda consultarla.
           ...(a.anulado_en ? [] : [

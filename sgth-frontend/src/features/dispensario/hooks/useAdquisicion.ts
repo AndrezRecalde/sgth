@@ -14,6 +14,38 @@ export function useAdquisiciones(params?: Record<string, unknown>) {
   })
 }
 
+/**
+ * Descarga el respaldo. Va por `axios` y no por un enlace directo porque el
+ * archivo vive en disco privado y se sirve tras la sesión.
+ *
+ * Se entrega con un enlace sintético, como el PDF del FEMO, y no con
+ * `window.open`: al abrirse desde el callback de la mutación ya se perdió el
+ * gesto del usuario, y el navegador lo bloquea como ventana emergente.
+ */
+export function useDescargarDocumentoAdquisicion() {
+  return useMutation({
+    mutationFn: ({ id }: { id: number; folio: string }) =>
+      adquisicionService.descargarDocumento(id),
+    onSuccess: (blob, { folio }) => {
+      const url = URL.createObjectURL(blob)
+      const enlace = document.createElement('a')
+      enlace.href = url
+      enlace.download = `respaldo-${folio}.pdf`
+      document.body.appendChild(enlace)
+      enlace.click()
+      document.body.removeChild(enlace)
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'No se pudo descargar el documento',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
 export function useRegistrarAdquisicion() {
   const qc = useQueryClient()
 
