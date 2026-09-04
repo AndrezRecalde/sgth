@@ -110,9 +110,19 @@ vuelvas a introducir listas de ese tipo.**
 
 ## Permisos y roles
 
-- `buildNav(subsistema, permisos)` filtra por la propiedad `permiso` del ítem.
+- `buildNav(subsistema, permisos, roles)` filtra por `permiso` y por `roles`,
+  **en los ítems y en sus `children`**. Hasta el 2026-09-04 solo miraba el
+  primer nivel, así que una pantalla anidada con restricción se ofrecía a todo
+  el mundo y quien la abría se encontraba un 403.
+- Se usa `roles` cuando el backend protege la ruta por rol y no por permiso,
+  que es el caso de todo el Dispensario. Basta con tener uno de los listados.
+- Un ítem padre que se queda sin hijos visibles desaparece con ellos.
 - `getSubsistemasDisponibles(roles)` decide a qué subsistemas puede entrar el
   usuario; el conmutador solo ofrece menú si hay más de uno.
+
+Lo mismo vale para lo que el menú dispara de fondo: el contador de stock bajo
+del sidebar se pedía en los tres subsistemas y devolvía 403 a quien no es del
+dispensario. Va tras `ROLES_INVENTARIO_MED`.
 
 Filtrar el menú **no es** control de acceso. El backend sigue siendo quien
 autoriza cada petición.

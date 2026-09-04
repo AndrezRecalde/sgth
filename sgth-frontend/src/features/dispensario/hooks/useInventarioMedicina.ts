@@ -26,10 +26,15 @@ export function useKardexMedicina(id: number | null) {
   })
 }
 
-export function useStockBajoCount() {
+/**
+ * `enabled` lo usa el menú lateral, que vive en los tres subsistemas: solo
+ * tiene sentido pedir el conteo a quien puede entrar al inventario.
+ */
+export function useStockBajoCount({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['inventario-medicinas', 'stock-bajo-count'],
     queryFn:  () => inventarioMedicinaService.contarStockBajo(),
+    enabled,
     staleTime: 1000 * 60,
     refetchInterval: 1000 * 60 * 5,
   })

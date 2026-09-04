@@ -48,12 +48,18 @@ export function CommandPalette({ subsistema }: Props) {
   useHotkeys([['mod+K', toggle]])
 
   // Se depende del contenido de los permisos, no de la identidad del array,
-  // que es nuevo en cada render y invalidaría el memo siempre.
+  // que es nuevo en cada render y invalidaría el memo siempre. Los roles
+  // entran por lo mismo: hay pantallas que el backend protege por rol.
   const permisosKey = (usuario?.permisos ?? []).join(',')
+  const rolesKey    = (usuario?.roles ?? []).join(',')
 
   const destinos = useMemo(
-    () => flattenNav(subsistema, permisosKey ? permisosKey.split(',') : []),
-    [subsistema, permisosKey],
+    () => flattenNav(
+      subsistema,
+      permisosKey ? permisosKey.split(',') : [],
+      rolesKey ? rolesKey.split(',') : [],
+    ),
+    [subsistema, permisosKey, rolesKey],
   )
 
   const resultados = useMemo(() => {
