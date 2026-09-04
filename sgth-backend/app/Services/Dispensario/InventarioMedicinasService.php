@@ -81,22 +81,39 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         array $datos,
         int $registradoPor
     ): InventarioMedicina {
-        return InventarioMedicina::create([
+        // La transacción no es por el `create`, que es una sola escritura, sino
+        // por el bloqueo que toma `generarCodigo`: se libera al cerrarla.
+        return DB::transaction(fn () => InventarioMedicina::create([
             ...$datos,
             'stock_actual' => 0,
             'codigo'       => $this->generarCodigo(),
             'created_by'   => $registradoPor,
-        ]);
+        ]));
     }
 
+    /**
+     * Siguiente código del catálogo.
+     *
+     * Se toma el MÁXIMO de los que siguen el patrón, no el código del último
+     * id: si alguna vez entra una fila con otro formato, `(int)` la leía como
+     * cero y el siguiente código chocaría contra el índice único. Se miran
+     * también las borradas, para no reutilizar un código ya emitido.
+     *
+     * El bloqueo de aviso serializa leer el máximo y escribir el nuevo código
+     * entre altas simultáneas, y lo libera el cierre de la transacción.
+     */
     private function generarCodigo(): string
     {
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32('inventario_medicina_codigo'),
+        ]);
+
         $ultimoCodigo = InventarioMedicina::withTrashed()
-            ->orderByDesc('id')
-            ->value('codigo');
+            ->where('codigo', 'like', 'MED-%')
+            ->max('codigo');
 
         $ultimoSecuencial = $ultimoCodigo
-            ? (int) str_replace('MED-', '', $ultimoCodigo)
+            ? (int) substr($ultimoCodigo, strlen('MED-'))
             : 0;
 
         $secuencial = str_pad(

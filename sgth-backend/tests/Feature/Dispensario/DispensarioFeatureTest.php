@@ -770,3 +770,80 @@ test('recetar_no_ofrece_lo_caducado_pero_adquirir_si', function () {
     expect($servicio->buscar('Nitro', soloDespachables: false)->pluck('id'))
         ->toContain($caducada->id);
 });
+
+test('el_folio_no_se_repite_aunque_se_borre_una_adquisicion', function () {
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre' => 'Clonazepam',
+        'principio_activo' => 'Clonazepam',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    $servicio = app(App\Services\Dispensario\AdquisicionService::class);
+
+    $registrar = fn (string $doc) => $servicio->registrar(
+        [
+            'tipo' => 'compra',
+            'numero_documento' => $doc,
+            'proveedor_o_donante' => 'Difare S.A.',
+            'fecha_adquisicion' => now()->toDateString(),
+        ],
+        [['inventario_medicina_id' => $medicina->id, 'cantidad' => 5]],
+        $this->medico->id
+    );
+
+    $primera = $registrar('F-1');
+    $segunda = $registrar('F-2');
+
+    expect($primera->folio)->toBe('ADQ-' . now()->year . '-00001');
+    expect($segunda->folio)->toBe('ADQ-' . now()->year . '-00002');
+
+    // Contar filas hacía retroceder el contador y el folio siguiente chocaba
+    // contra el índice único; derivarlo del máximo lo evita.
+    $segunda->delete();
+
+    expect($registrar('F-3')->folio)->toBe('ADQ-' . now()->year . '-00003');
+});
+
+test('el_codigo_de_medicina_no_se_repite_aunque_haya_otro_formato_o_borradas', function () {
+    $servicio = app(InventarioMedicinasService::class);
+
+    $primera = $servicio->ingresarMedicina([
+        'nombre' => 'Tramadol',
+        'principio_activo' => 'Tramadol',
+        'presentacion' => 'inyectable',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    expect($primera->codigo)->toBe('MED-0001');
+
+    // Una fila con otro formato hacía que el último id se leyera como cero.
+    InventarioMedicina::create([
+        'codigo' => 'IMPORTADO-XYZ',
+        'nombre' => 'Ketorolaco',
+        'principio_activo' => 'Ketorolaco',
+        'presentacion' => 'tableta',
+        'stock_actual' => 0,
+        'stock_minimo' => 5,
+        'estado' => true,
+    ]);
+
+    $segunda = $servicio->ingresarMedicina([
+        'nombre' => 'Diclofenaco',
+        'principio_activo' => 'Diclofenaco',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id);
+
+    expect($segunda->codigo)->toBe('MED-0002');
+
+    // Y un código ya emitido no se reutiliza aunque su medicina se borre.
+    $segunda->delete();
+
+    expect($servicio->ingresarMedicina([
+        'nombre' => 'Naproxeno',
+        'principio_activo' => 'Naproxeno',
+        'presentacion' => 'tableta',
+        'stock_minimo' => 5,
+    ], $this->medico->id)->codigo)->toBe('MED-0003');
+});
