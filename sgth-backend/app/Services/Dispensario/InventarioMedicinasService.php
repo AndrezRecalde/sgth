@@ -43,6 +43,51 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return InventarioMedicina::findOrFail($id);
     }
 
+    /** Días de antelación con que se avisa de una caducidad próxima. */
+    public const DIAS_AVISO_CADUCIDAD = 60;
+
+    /**
+     * Lo que la farmacia necesita atender hoy, en tres grupos.
+     *
+     * Las caducadas van aparte de las próximas a caducar: desde que el despacho
+     * las rechaza son existencias inmovilizadas, y lo que corresponde con ellas
+     * es darlas de baja, no reponerlas. Antes se quedaban fuera del aviso, que
+     * solo miraba de hoy en adelante.
+     *
+     * En caducidad solo entra lo que tiene existencias: una medicina vencida
+     * con stock cero no pide ninguna acción.
+     *
+     * @return array{bajo_minimo: Collection, por_caducar: Collection, caducadas: Collection}
+     */
+    public function resumenAlertas(): array
+    {
+        $activas = fn () => InventarioMedicina::where('estado', true);
+        $hoy = now()->toDateString();
+
+        return [
+            'bajo_minimo' => $activas()
+                ->whereColumn('stock_actual', '<=', 'stock_minimo')
+                ->orderBy('nombre')
+                ->get(),
+
+            'caducadas' => $activas()
+                ->where('stock_actual', '>', 0)
+                ->whereNotNull('fecha_caducidad')
+                ->whereDate('fecha_caducidad', '<', $hoy)
+                ->orderBy('fecha_caducidad')
+                ->get(),
+
+            'por_caducar' => $activas()
+                ->where('stock_actual', '>', 0)
+                ->whereNotNull('fecha_caducidad')
+                ->whereDate('fecha_caducidad', '>=', $hoy)
+                ->whereDate('fecha_caducidad', '<=', now()
+                    ->addDays(self::DIAS_AVISO_CADUCIDAD)->toDateString())
+                ->orderBy('fecha_caducidad')
+                ->get(),
+        ];
+    }
+
     /**
      * Cuántas medicinas están bajo mínimo, para la insignia del menú.
      *

@@ -875,3 +875,104 @@ test('el_conteo_de_stock_bajo_ignora_las_medicinas_retiradas_del_catalogo', func
     // solo la activa. Ahora los tres dicen lo mismo.
     expect($servicio->contarStockBajo())->toBe(1);
 });
+
+test('el_aviso_de_inventario_agrupa_caducadas_bajo_minimo_y_por_caducar', function () {
+    $servicio = app(InventarioMedicinasService::class);
+
+    // Caducada CON existencias: hay que darla de baja.
+    InventarioMedicina::create([
+        'codigo' => 'MED-9101', 'nombre' => 'Vencida con stock',
+        'principio_activo' => 'A', 'presentacion' => 'tableta',
+        'stock_actual' => 12, 'stock_minimo' => 2,
+        'fecha_caducidad' => now()->subDays(3), 'estado' => true,
+    ]);
+
+    // Caducada SIN existencias: no pide ninguna acción.
+    InventarioMedicina::create([
+        'codigo' => 'MED-9102', 'nombre' => 'Vencida sin stock',
+        'principio_activo' => 'B', 'presentacion' => 'tableta',
+        'stock_actual' => 0, 'stock_minimo' => 2,
+        'fecha_caducidad' => now()->subDays(3), 'estado' => true,
+    ]);
+
+    InventarioMedicina::create([
+        'codigo' => 'MED-9103', 'nombre' => 'Proxima a caducar',
+        'principio_activo' => 'C', 'presentacion' => 'tableta',
+        'stock_actual' => 50, 'stock_minimo' => 5,
+        'fecha_caducidad' => now()->addDays(15), 'estado' => true,
+    ]);
+
+    // Fuera de la ventana de aviso.
+    InventarioMedicina::create([
+        'codigo' => 'MED-9104', 'nombre' => 'Caduca el proximo anio',
+        'principio_activo' => 'D', 'presentacion' => 'tableta',
+        'stock_actual' => 50, 'stock_minimo' => 5,
+        'fecha_caducidad' => now()->addMonths(10), 'estado' => true,
+    ]);
+
+    InventarioMedicina::create([
+        'codigo' => 'MED-9105', 'nombre' => 'Bajo minimo',
+        'principio_activo' => 'E', 'presentacion' => 'tableta',
+        'stock_actual' => 1, 'stock_minimo' => 30, 'estado' => true,
+    ]);
+
+    // Retirada del catálogo: no se repone lo que ya no se despacha.
+    InventarioMedicina::create([
+        'codigo' => 'MED-9106', 'nombre' => 'Retirada bajo minimo',
+        'principio_activo' => 'F', 'presentacion' => 'tableta',
+        'stock_actual' => 0, 'stock_minimo' => 30, 'estado' => false,
+    ]);
+
+    $resumen = $servicio->resumenAlertas();
+
+    expect($resumen['caducadas']->pluck('nombre')->all())
+        ->toBe(['Vencida con stock']);
+    expect($resumen['por_caducar']->pluck('nombre')->all())
+        ->toBe(['Proxima a caducar']);
+    expect($resumen['bajo_minimo']->pluck('nombre')->all())
+        ->toContain('Bajo minimo')
+        ->not->toContain('Retirada bajo minimo');
+});
+
+test('el_job_de_alertas_envia_el_resumen_a_la_administracion_del_dispensario', function () {
+    Illuminate\Support\Facades\Mail::fake();
+
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->medico->update(['activo' => true]);
+
+    InventarioMedicina::create([
+        'codigo' => 'MED-9201', 'nombre' => 'Bajo minimo',
+        'principio_activo' => 'A', 'presentacion' => 'tableta',
+        'stock_actual' => 1, 'stock_minimo' => 30, 'estado' => true,
+    ]);
+
+    app(App\Jobs\Dispensario\VerificarAlertasInventarioJob::class)
+        ->handle(app(InventarioMedicinasService::class));
+
+    Illuminate\Support\Facades\Mail::assertQueued(
+        App\Mail\Dispensario\AlertasInventarioMail::class,
+        fn ($mail) => $mail->hasTo($this->medico->email)
+    );
+});
+
+test('sin_nada_que_avisar_el_job_no_envia_correo', function () {
+    Illuminate\Support\Facades\Mail::fake();
+
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+
+    InventarioMedicina::create([
+        'codigo' => 'MED-9301', 'nombre' => 'Todo en orden',
+        'principio_activo' => 'A', 'presentacion' => 'tableta',
+        'stock_actual' => 500, 'stock_minimo' => 10,
+        'fecha_caducidad' => now()->addYears(2), 'estado' => true,
+    ]);
+
+    app(App\Jobs\Dispensario\VerificarAlertasInventarioJob::class)
+        ->handle(app(InventarioMedicinasService::class));
+
+    Illuminate\Support\Facades\Mail::assertNothingQueued();
+});

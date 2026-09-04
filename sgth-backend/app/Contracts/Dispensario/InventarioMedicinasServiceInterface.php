@@ -14,6 +14,11 @@ interface InventarioMedicinasServiceInterface
 
     public function contarStockBajo(): int;
 
+    /**
+     * @return array{bajo_minimo: Collection, por_caducar: Collection, caducadas: Collection}
+     */
+    public function resumenAlertas(): array;
+
     public function buscar(
         string $termino,
         bool $soloDespachables = true
