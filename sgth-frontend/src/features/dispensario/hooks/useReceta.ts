@@ -138,6 +138,12 @@ export function useDespacharReceta() {
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       qc.invalidateQueries({ queryKey: ['recetas'] })
+      // Despachar descuenta existencias: el listado de Farmacia, el kardex y
+      // el contador de stock bajo del menú cuelgan de esta clave y quedaban
+      // mostrando el stock de antes de la entrega.
+      qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
+      // Y lo que se agotó al despachar ya no debe ofrecerse al recetar.
+      qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
     onError: (error: unknown) =>
       notifications.show({
