@@ -107,9 +107,11 @@ export const inventarioMedicinaService = {
       `/dispensario/inventario/medicinas/${id}/kardex`
     ).then(r => r.data.datos),
 
+  // Endpoint propio, no el listado con `per_page: 1`: así el conteo aplica la
+  // misma regla que el job de alertas y el tablero —solo medicinas activas— en
+  // vez de contar también las retiradas del catálogo.
   contarStockBajo: () =>
     api.get<ApiResponse<{ total: number }>>(
-      '/dispensario/inventario/medicinas',
-      { params: { stock_bajo: true, per_page: 1 } }
-    ).then(r => (r.data.datos as { total?: number })?.total ?? 0),
+      '/dispensario/inventario/medicinas/stock-bajo'
+    ).then(r => r.data.datos?.total ?? 0),
 }

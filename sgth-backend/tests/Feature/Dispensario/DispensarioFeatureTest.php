@@ -847,3 +847,31 @@ test('el_codigo_de_medicina_no_se_repite_aunque_haya_otro_formato_o_borradas', f
         'stock_minimo' => 5,
     ], $this->medico->id)->codigo)->toBe('MED-0003');
 });
+
+test('el_conteo_de_stock_bajo_ignora_las_medicinas_retiradas_del_catalogo', function () {
+    $servicio = app(InventarioMedicinasService::class);
+
+    InventarioMedicina::create([
+        'codigo' => 'MED-9001',
+        'nombre' => 'Activa bajo minimo',
+        'principio_activo' => 'X',
+        'presentacion' => 'tableta',
+        'stock_actual' => 1,
+        'stock_minimo' => 10,
+        'estado' => true,
+    ]);
+
+    InventarioMedicina::create([
+        'codigo' => 'MED-9002',
+        'nombre' => 'Retirada bajo minimo',
+        'principio_activo' => 'Y',
+        'presentacion' => 'tableta',
+        'stock_actual' => 0,
+        'stock_minimo' => 10,
+        'estado' => false,
+    ]);
+
+    // La insignia del menú contaba las dos; el job de alertas y el tablero
+    // solo la activa. Ahora los tres dicen lo mismo.
+    expect($servicio->contarStockBajo())->toBe(1);
+});

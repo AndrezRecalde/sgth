@@ -44,6 +44,21 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
     }
 
     /**
+     * Cuántas medicinas están bajo mínimo, para la insignia del menú.
+     *
+     * Solo cuenta las activas, igual que el job de alertas y el tablero. El
+     * frontend lo pedía reutilizando el listado sin filtrar por estado, así que
+     * la insignia incluía medicinas retiradas del catálogo y los tres números
+     * discrepaban entre sí. Reponer lo que ya no se despacha no urge.
+     */
+    public function contarStockBajo(): int
+    {
+        return InventarioMedicina::where('estado', true)
+            ->whereColumn('stock_actual', '<=', 'stock_minimo')
+            ->count();
+    }
+
+    /**
      * Busca en el catálogo activo.
      *
      * Quien receta solo puede elegir lo que la farmacia podrá entregarle: con

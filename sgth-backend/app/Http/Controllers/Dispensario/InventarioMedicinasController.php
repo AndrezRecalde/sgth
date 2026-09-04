@@ -25,6 +25,13 @@ final class InventarioMedicinasController extends Controller
         return ApiResponse::ok($medicinas, 'Listado de medicinas.');
     }
 
+    public function contarStockBajo(): JsonResponse
+    {
+        return ApiResponse::ok(
+            ['total' => $this->inventarioService->contarStockBajo()]
+        );
+    }
+
     public function buscar(Request $request): JsonResponse
     {
         $request->validate([

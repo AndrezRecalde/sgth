@@ -12,6 +12,8 @@ interface InventarioMedicinasServiceInterface
 
     public function obtener(int $id): InventarioMedicina;
 
+    public function contarStockBajo(): int;
+
     public function buscar(
         string $termino,
         bool $soloDespachables = true

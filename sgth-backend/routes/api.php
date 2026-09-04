@@ -1128,6 +1128,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::get('medicinas/buscar',
                     [InventarioMedicinasController::class, 'buscar']);
+                Route::get('medicinas/stock-bajo',
+                    [InventarioMedicinasController::class, 'contarStockBajo']);
                 Route::apiResource('medicinas', InventarioMedicinasController::class);
                 Route::get('medicinas/{id}/kardex',
                     [InventarioMedicinasController::class, 'kardex']);
