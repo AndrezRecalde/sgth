@@ -126,14 +126,20 @@ export function useInventarioMutations() {
     mutationFn: (id: number) =>
       inventarioMedicinaService.toggleEstado(id),
     onSuccess: (data) => {
-      const estado = data?.estado ? 'reactivada' : 'dada de baja'
+      const reactivada = !!data?.estado
       notifications.show({
-        title:   `Medicina ${estado}`,
-        message: `La medicina fue ${estado} correctamente.`,
-        color:   'emerald',
+        title:   reactivada
+          ? 'Medicina reactivada'
+          : 'Medicina retirada del catálogo',
+        message: reactivada
+          ? 'Vuelve a estar disponible para recetar y despachar.'
+          : 'Deja de aparecer en recetas y despachos. Sus existencias no se movieron.',
+        color:   reactivada ? 'emerald' : 'orange',
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       invalidar()
+      // Deja de estar disponible —o vuelve a estarlo— para recetar.
+      qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
     onError,
   })

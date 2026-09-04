@@ -128,7 +128,7 @@ final class InventarioMedicinasController extends Controller
 
         $mensaje = $actualizado->estado
             ? 'Medicina reactivada.'
-            : 'Medicina dada de baja.';
+            : 'Medicina retirada del catálogo.';
 
         return ApiResponse::ok($actualizado, $mensaje);
     }
