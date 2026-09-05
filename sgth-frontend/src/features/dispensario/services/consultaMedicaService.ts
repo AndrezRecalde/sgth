@@ -61,7 +61,32 @@ export interface ConsultaMedica {
     id: number
     nombre_completo?: string
   }
+  /** Cuándo se registró: con esto se sabe si aún se puede corregir. */
+  created_at?:              string
   recetas_medicas?: RecetaDetalle[]
+}
+
+/** Lo que la consulta decía antes de una corrección. */
+export interface VersionConsulta {
+  id:                     number
+  tipo_atencion?:         string | null
+  tipo_diagnostico?:      string | null
+  motivo_consulta?:       string | null
+  enfermedad_actual?:     string | null
+  examen_fisico?:         string | null
+  diagnostico_detallado?: string | null
+  plan_tratamiento?:      string | null
+  notas_medico?:          string | null
+  diagnostico_cie10?: {
+    codigo:      string
+    descripcion: string
+  } | null
+  created_at:             string
+  autor_del_cambio?: {
+    id: number
+    nombre_completo?: string
+    usuario_ti?: string
+  } | null
 }
 
 export interface CrearConsultaData {
@@ -96,6 +121,12 @@ export const consultaMedicaService = {
     api.get<ApiResponse<ConsultaMedica>>(
       `/dispensario/consultas/${id}`
     ).then(r => r.data.datos),
+
+  /** Lo que la consulta decía antes de cada corrección, de la más reciente. */
+  versiones: (id: number) =>
+    api.get<ApiResponse<VersionConsulta[]>>(
+      `/dispensario/consultas/${id}/versiones`
+    ).then(r => r.data.datos ?? []),
 
   /**
    * El historial de un paciente crece por años, así que va paginado y con

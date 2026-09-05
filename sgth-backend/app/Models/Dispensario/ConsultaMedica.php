@@ -52,6 +52,18 @@ class ConsultaMedica extends Model
     ];
 
     /**
+     * Los campos que componen la nota clínica: lo que se versiona al corregir.
+     *
+     * @var list<string>
+     */
+    public const CAMPOS_CLINICOS = [
+        'tipo_atencion', 'tipo_diagnostico',
+        'motivo_consulta', 'enfermedad_actual', 'examen_fisico',
+        'diagnostico_detallado', 'plan_tratamiento', 'notas_medico',
+        'diagnostico_cie10_id',
+    ];
+
+    /**
      * Pasa por el saneador los campos que vienen como HTML.
      *
      * Los demás se guardan tal cual: son texto plano y la pantalla los pinta
@@ -76,6 +88,16 @@ class ConsultaMedica extends Model
     public function historiaClinica(): BelongsTo
     {
         return $this->belongsTo(HistoriaClinica::class);
+    }
+
+    /**
+     * Las versiones anteriores de la nota, de la más reciente a la más
+     * antigua. Vacío mientras nadie la haya corregido.
+     */
+    public function versiones(): HasMany
+    {
+        return $this->hasMany(VersionConsultaMedica::class)
+            ->orderByDesc('id');
     }
 
     public function agendaMedica(): BelongsTo

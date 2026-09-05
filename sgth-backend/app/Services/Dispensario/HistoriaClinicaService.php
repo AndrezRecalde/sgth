@@ -7,6 +7,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
+use App\Models\Dispensario\VersionConsultaMedica;
 use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\Servidor;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -283,19 +284,34 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         });
     }
 
+    /**
+     * Corrige una consulta ya guardada, dejando constancia de lo que decía.
+     *
+     * Quién y hasta cuándo lo decide el controlador, que es donde vive la
+     * autorización. Aquí lo que importa es que **nada se pierde**: antes de
+     * escribir encima se archiva la versión que se está reemplazando.
+     */
     public function actualizarConsulta(
         int $consultaId,
-        array $datos
+        array $datos,
+        ?int $editadoPor = null
     ): ConsultaMedica {
         return DB::transaction(function () use (
-            $consultaId, $datos
+            $consultaId, $datos, $editadoPor
         ) {
-            $consulta = ConsultaMedica::findOrFail($consultaId);
+            $consulta = ConsultaMedica::with('diagnosticosSecundarios')
+                ->findOrFail($consultaId);
+
+            $this->archivarVersion($consulta, $editadoPor);
 
             $secundarios = $datos['diagnosticos_secundarios'] ?? null;
             $datosConsulta = Arr::except(
                 $datos, ['diagnosticos_secundarios']
             );
+
+            if ($editadoPor !== null) {
+                $datosConsulta['updated_by'] = $editadoPor;
+            }
 
             $consulta->update($datosConsulta);
 
@@ -319,6 +335,40 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 'diagnosticosSecundarios.diagnostico',
             ]);
         });
+    }
+
+    /**
+     * Archiva la nota tal y como está antes de sobrescribirla.
+     *
+     * Se guarda incluso cuando la corrección no cambie nada: saber que alguien
+     * abrió y volvió a guardar una consulta también es información, y decidir
+     * aquí qué cambio «cuenta» sería ponerle criterio a un registro clínico.
+     */
+    private function archivarVersion(
+        ConsultaMedica $consulta,
+        ?int $editadoPor
+    ): void {
+        if ($editadoPor === null) {
+            return;
+        }
+
+        $version = Arr::only(
+            $consulta->getAttributes(),
+            ['diagnostico_cie10_id']
+        );
+
+        foreach (ConsultaMedica::CAMPOS_CLINICOS as $campo) {
+            $version[$campo] = $consulta->{$campo};
+        }
+
+        VersionConsultaMedica::create([
+            ...$version,
+            'consulta_medica_id'       => $consulta->id,
+            'diagnosticos_secundarios' => $consulta->diagnosticosSecundarios
+                ->pluck('diagnostico_cie10_id')
+                ->all(),
+            'reemplazada_por'          => $editadoPor,
+        ]);
     }
 
     public function obtenerContextoConsulta(

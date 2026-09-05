@@ -24,7 +24,8 @@ interface HistoriaClinicaServiceInterface
 
     public function actualizarConsulta(
         int $consultaId,
-        array $datos
+        array $datos,
+        ?int $editadoPor = null
     ): ConsultaMedica;
 
     public function obtenerContextoConsulta(
