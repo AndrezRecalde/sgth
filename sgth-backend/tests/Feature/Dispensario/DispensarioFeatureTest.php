@@ -1258,3 +1258,49 @@ test('el_triaje_engancha_la_historia_que_quedo_del_preocupacional', function () 
     expect($delPreocupacional->servidor_id)->toBe($this->paciente->id);
     expect($delPreocupacional->tipo_paciente)->toBe('servidor');
 });
+
+test('un_familiar_tambien_puede_tener_historia_clinica', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $hija = App\Models\Expediente\CargaFamiliar::create([
+        'servidor_id'      => $this->paciente->id,
+        'cedula'           => '0801234562',
+        'nombres'          => 'Ana',
+        'apellidos'        => 'Perez',
+        'parentesco'       => App\Enums\TipoParentesco::HIJO,
+        'fecha_nacimiento' => now()->subYears(30),
+        'estado'           => true,
+    ]);
+
+    // El campo se llama carga_familiar_id. El frontend mandaba
+    // `beneficiario_id`, que no existe en la tabla desde que se renombró: la
+    // petición moría en validación y un familiar no podía tener historia.
+    $historia = $this->postJson('/api/v1/dispensario/historias-clinicas', [
+        'carga_familiar_id' => $hija->id,
+    ])->assertCreated()->json('datos');
+
+    expect($historia['carga_familiar_id'])->toBe($hija->id);
+
+    $agenda = AgendaMedica::create([
+        'carga_familiar_id' => $hija->id, 'medico_id' => $this->medico->id,
+        'fecha' => now()->format('Y-m-d'), 'hora_inicio' => '09:00:00',
+        'hora_fin' => '09:30:00', 'motivo_solicitud' => 'Fiebre',
+        'estado' => 'en_espera', 'requiere_triaje' => true,
+        'registrado_en' => now(),
+    ], $this->medico->id);
+
+    $this->postJson("/api/v1/dispensario/agenda/{$agenda->id}/triaje", [
+        'presion_sistolica' => 118, 'presion_diastolica' => 76,
+        'frecuencia_cardiaca' => 72, 'frecuencia_respiratoria' => 16,
+        'temperatura_c' => 36.6, 'saturacion_oxigeno' => 98,
+        'peso_kg' => 60, 'talla_cm' => 160,
+    ])->assertCreated();
+
+    $triaje = App\Models\Dispensario\Triaje::where(
+        'agenda_medica_id', $agenda->id
+    )->firstOrFail();
+    expect($triaje->historia_clinica_id)->toBe($historia['id']);
+});
