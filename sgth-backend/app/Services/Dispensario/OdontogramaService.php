@@ -5,6 +5,8 @@ namespace App\Services\Dispensario;
 use App\Enums\CondicionPiezaDental;
 use App\Enums\DenticionTipo;
 use App\Enums\ProcedimientoOdontologico;
+use App\Exceptions\ReglaNegocioException;
+use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\Odontograma;
 use App\Models\Dispensario\OdontogramaPieza;
@@ -66,6 +68,10 @@ final class OdontogramaService
         return DB::transaction(function () use ($datos, $userId) {
             $pieza = OdontogramaPieza::findOrFail($datos['odontograma_pieza_id']);
 
+            $this->verificarQueLaConsultaEsDelMismoPaciente(
+                $pieza, $datos['consulta_medica_id'] ?? null
+            );
+
             $procedimiento = OdontogramaProcedimiento::create([
                 'odontograma_pieza_id' => $pieza->id,
                 'consulta_medica_id' => $datos['consulta_medica_id'] ?? null,
@@ -77,13 +83,13 @@ final class OdontogramaService
                 'created_by' => $userId,
             ]);
 
-            $condicionResultante = ProcedimientoOdontologico::from($datos['procedimiento'])
-                ->condicionResultante();
-
-            $pieza->update([
-                'condicion' => $condicionResultante,
-                'updated_by' => $userId,
-            ]);
+            // Por el mismo camino que la anulación, y no fijando aquí la
+            // condición del procedimiento recién creado: si el odontólogo
+            // carga uno atrasado —una resina del mes pasado que faltaba por
+            // registrar—, la pieza no debe perder la corona que se le puso
+            // esta mañana. Manda el último procedimiento vigente por fecha,
+            // no el último que se escribió.
+            $this->recalcularCondicionPieza($pieza, $userId);
 
             return $procedimiento->load([
                 'realizadoPor:id,usuario_ti,email,servidor_id',
@@ -144,6 +150,10 @@ final class OdontogramaService
             ->whereNull('anulado_en')
             ->orderBy('fecha', 'desc')
             ->orderBy('created_at', 'desc')
+            // Dos procedimientos del mismo día pueden compartir `created_at`
+            // al segundo; sin este desempate la pieza quedaría dibujada según
+            // el orden que devolviera la base de datos.
+            ->orderBy('id', 'desc')
             ->first();
 
         $pieza->update([
@@ -152,6 +162,37 @@ final class OdontogramaService
                 : CondicionPiezaDental::SANO,
             'updated_by' => $userId,
         ]);
+    }
+
+    /**
+     * La consulta que se anota en el procedimiento tiene que ser del mismo
+     * paciente que la pieza.
+     *
+     * El endpoint recibe el id de la pieza y el de la consulta por separado y
+     * no los cruzaba, así que un cliente desincronizado —la pantalla de un
+     * paciente abierta mientras se atiende a otro— podía dejar un procedimiento
+     * de una boca colgando de la consulta de otra persona. Además de ensuciar
+     * la historia, eso rompe la corrección: quien anula compara justamente por
+     * consulta.
+     */
+    private function verificarQueLaConsultaEsDelMismoPaciente(
+        OdontogramaPieza $pieza,
+        ?int $consultaId,
+    ): void {
+        if ($consultaId === null) {
+            return;
+        }
+
+        $historiaDeLaPieza = $pieza->odontograma()->value('historia_clinica_id');
+        $historiaDeLaConsulta = ConsultaMedica::whereKey($consultaId)
+            ->value('historia_clinica_id');
+
+        if ($historiaDeLaConsulta !== $historiaDeLaPieza) {
+            throw new ReglaNegocioException(
+                'La consulta indicada no corresponde al paciente de este ' .
+                'odontograma.'
+            );
+        }
     }
 
     private function sembrarPiezas(Odontograma $odontograma, array $numeros, DenticionTipo $denticion): void
