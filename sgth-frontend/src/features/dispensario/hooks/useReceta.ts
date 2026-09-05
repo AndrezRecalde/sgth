@@ -113,12 +113,17 @@ export function useRecetasFarmacia(params?: {
   fecha_hasta?: string
   medico_id?:   number
   estado?:      string
+  page?:        number
+  per_page?:    number
 }) {
   return useQuery({
     queryKey: ['recetas', 'farmacia', params],
     queryFn:  () => recetaService.listarFarmacia(params),
     staleTime: 1000 * 15,
     refetchInterval: 1000 * 30,
+    // La página anterior se queda a la vista mientras llega la siguiente; sin
+    // esto la tabla parpadea a vacío en cada salto de página.
+    placeholderData: (anterior) => anterior,
   })
 }
 

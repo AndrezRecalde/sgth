@@ -50,5 +50,8 @@ interface InventarioMedicinasServiceInterface
 
     public function darDeBaja(int $id): InventarioMedicina;
 
-    public function kardex(int $id): Collection;
+    public function kardex(
+        int $id,
+        int $porPagina = 20
+    ): LengthAwarePaginator;
 }

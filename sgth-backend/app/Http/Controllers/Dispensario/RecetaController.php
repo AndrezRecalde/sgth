@@ -16,7 +16,7 @@ final class RecetaController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = \App\Models\Dispensario\RecetaMedica::with([
+        $query = RecetaMedica::with([
             'items.inventario',
             'consultaMedica.historiaClinica.servidor',
             'consultaMedica.historiaClinica.cargaFamiliar.servidor',
@@ -24,6 +24,42 @@ final class RecetaController extends Controller
             'consultaMedica.medico.servidor:id,nombre,apellido',
         ])->orderBy('created_at', 'desc');
 
+        $this->aplicarFiltros($query, $request);
+
+        $recetas = $query->paginate($request->integer('per_page', 15));
+
+        // Los contadores por estado van aparte porque ya no se pueden sacar de
+        // la lista: con la página cargada solo se vería lo que cabe en ella, y
+        // las insignias de la cabecera dirían «3 pendientes» cuando hay
+        // cuarenta. Se cuentan sobre los mismos filtros, en una sola consulta.
+        $resumen = $this->contarPorEstado($request);
+
+        return ApiResponse::ok(
+            $recetas,
+            'Listado de recetas.',
+            200,
+            ['resumen' => $resumen]
+        );
+    }
+
+    /** @return array<string,int> Cuántas recetas hay de cada estado. */
+    private function contarPorEstado(Request $request): array
+    {
+        $query = RecetaMedica::query();
+
+        $this->aplicarFiltros($query, $request);
+
+        return $query->selectRaw('estado, count(*) as total')
+            ->groupBy('estado')
+            ->pluck('total', 'estado')
+            ->map(fn ($total) => (int) $total)
+            ->all();
+    }
+
+    private function aplicarFiltros(
+        \Illuminate\Database\Eloquent\Builder $query,
+        Request $request
+    ): void {
         if ($request->filled('consulta_medica_id')) {
             $query->where(
                 'consulta_medica_id',
@@ -52,10 +88,6 @@ final class RecetaController extends Controller
                 $q->where('medico_id', $request->integer('medico_id'))
             );
         }
-
-        $recetas = $query->get();
-
-        return ApiResponse::ok($recetas);
     }
 
     public function store(Request $request): JsonResponse

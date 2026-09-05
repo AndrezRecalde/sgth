@@ -14,12 +14,13 @@ final class ApiResponse
         mixed $data = null,
         string $mensaje = 'Operación exitosa.',
         int $codigo = 200,
+        ?array $meta = null,
     ): JsonResponse {
         return response()->json([
             'exito'   => true,
             'mensaje' => $mensaje,
             'datos'   => $data,
-            'meta'    => null,
+            'meta'    => $meta,
         ], $codigo);
     }
 

@@ -1,13 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Drawer, Stack, Group, Text, Badge,
-  ThemeIcon, Skeleton,
+  ThemeIcon, Skeleton, Pagination, Center, Alert,
 } from '@mantine/core'
-import { IconHistory, IconArrowUp, IconArrowDown } from '@tabler/icons-react'
+import {
+  IconHistory, IconArrowUp, IconArrowDown, IconAlertTriangle,
+} from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useKardexMedicina } from '../hooks/useInventarioMedicina'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { getApiErrorMessage } from '@/types/api'
 import type { InventarioMedicina } from '../services/inventarioMedicinaService'
 
 interface Props {
@@ -25,9 +29,24 @@ function formatFecha(fecha: string): string {
 
 export function KardexDrawer({ opened, onClose, medicina }: Props) {
   const { isMobile } = useMobileBreakpoint()
-  const { data: movimientos = [], isLoading } = useKardexMedicina(
-    medicina?.id ?? null
+  const [page, setPage] = useState(1)
+
+  // Cambiar de medicina sin volver a la primera página deja el cajón mostrando
+  // la página 7 de un kardex que quizá solo tiene dos. Se ajusta durante el
+  // render y no en un efecto: así no hay un primer pintado con la página vieja.
+  const [medicinaVista, setMedicinaVista] = useState(medicina?.id)
+  if (medicina?.id !== medicinaVista) {
+    setMedicinaVista(medicina?.id)
+    setPage(1)
+  }
+
+  const { data, isLoading, isError, error } = useKardexMedicina(
+    medicina?.id ?? null,
+    page
   )
+
+  const movimientos  = data?.movimientos ?? []
+  const ultimaPagina = data?.ultimaPagina ?? 1
 
   return (
     <Drawer
@@ -54,6 +73,17 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
             <Skeleton height={56} radius="md" />
             <Skeleton height={56} radius="md" />
           </>
+        ) : isError ? (
+          // Sin esto un fallo de red se veía igual que un kardex vacío, y decía
+          // «Sin movimientos» de una medicina que sí los tiene.
+          <Alert
+            icon={<IconAlertTriangle size={16} />}
+            color="red"
+            variant="light"
+            title="No se pudo cargar el kardex"
+          >
+            <Text size="xs">{getApiErrorMessage(error)}</Text>
+          </Alert>
         ) : movimientos.length === 0 ? (
           <EmptyState
             icon={IconHistory}
@@ -108,6 +138,23 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
               </Group>
             )
           })
+        )}
+
+        {ultimaPagina > 1 && (
+          <Stack gap={4} mt="xs">
+            <Center>
+              <Pagination
+                size="sm"
+                value={page}
+                onChange={setPage}
+                total={ultimaPagina}
+                withEdges
+              />
+            </Center>
+            <Text size="xs" c="dimmed" ta="center">
+              {data?.total} movimiento{data?.total !== 1 ? 's' : ''} en total
+            </Text>
+          </Stack>
         )}
       </Stack>
     </Drawer>

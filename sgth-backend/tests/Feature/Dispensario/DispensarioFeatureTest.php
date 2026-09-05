@@ -1485,7 +1485,7 @@ test('listar_recetas_de_un_medico_sin_servidor_no_tumba_la_pantalla', function (
     ]);
 
     $recetas = $this->getJson('/api/v1/dispensario/recetas')
-        ->assertOk()->json('datos');
+        ->assertOk()->json('datos.data');
 
     // Y el médico llega con nombre: el correo, que es el respaldo cuando no
     // hay servidor. Antes esto era un 500 con «Return value must be of type
@@ -1527,4 +1527,95 @@ test('el_folio_del_turno_sale_del_mayor_no_de_contar_filas', function () {
     $segundo->delete();
 
     expect($agendar()->folio)->toBe("TUR-{$anio}-00003");
+});
+
+test('el_listado_de_recetas_pagina_y_cuenta_los_estados_completos', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = HistoriaClinica::create([
+        'numero_historia' => $this->paciente->cedula,
+        'cedula_paciente' => $this->paciente->cedula,
+        'tipo_paciente'   => 'servidor',
+        'servidor_id'     => $this->paciente->id,
+        'estado'          => true,
+    ]);
+
+    $consulta = ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id'           => $this->medico->id,
+        'fecha_consulta'      => now(),
+        'hora_consulta'       => now()->format('H:i:s'),
+        'motivo_consulta'     => 'Dolor',
+    ]);
+
+    foreach (range(1, 18) as $i) {
+        RecetaMedica::create([
+            'consulta_medica_id' => $consulta->id,
+            'fecha_emision'      => now(),
+            'estado'             => $i <= 12 ? 'pendiente' : 'anulada',
+        ]);
+    }
+
+    $respuesta = $this->getJson('/api/v1/dispensario/recetas?per_page=5')
+        ->assertOk()->json();
+
+    // La página trae cinco, no las dieciocho.
+    expect($respuesta['datos']['data'])->toHaveCount(5);
+    expect($respuesta['datos']['total'])->toBe(18);
+    expect($respuesta['datos']['last_page'])->toBe(4);
+
+    // Pero los contadores de la cabecera cuentan todas, no solo la página:
+    // con la lista recortada dirían «5 pendientes» habiendo doce.
+    expect($respuesta['meta']['resumen'])->toBe([
+        'anulada'   => 6,
+        'pendiente' => 12,
+    ]);
+
+    // Y la segunda página no repite la primera.
+    $primera = collect($respuesta['datos']['data'])->pluck('id');
+    $segunda = collect(
+        $this->getJson('/api/v1/dispensario/recetas?per_page=5&page=2')
+            ->assertOk()->json('datos.data')
+    )->pluck('id');
+
+    expect($primera->intersect($segunda))->toBeEmpty();
+});
+
+test('el_kardex_se_pagina', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = InventarioMedicina::create([
+        'codigo' => 'MED-KARDEX', 'nombre' => 'Paracetamol',
+        'principio_activo' => 'Paracetamol', 'concentracion' => '500mg',
+        'presentacion' => 'tableta', 'lote' => 'LK-1',
+        'fecha_caducidad' => now()->addYear(),
+        'stock_minimo' => 5, 'stock_actual' => 0,
+    ]);
+
+    foreach (range(1, 25) as $i) {
+        MovimientoInventarioMed::create([
+            'inventario_medicina_id' => $medicina->id,
+            'tipo_movimiento'        => 'ingreso',
+            'cantidad'               => 1,
+            'stock_resultante'       => $i,
+            'motivo'                 => "Movimiento {$i}",
+            'registrado_por'         => $this->medico->id,
+        ]);
+    }
+
+    // El kardex no deja de crecer —ninguna fila se borra— así que traerlo
+    // entero deja de ser barato solo.
+    $respuesta = $this->getJson(
+        "/api/v1/dispensario/inventario/medicinas/{$medicina->id}/kardex?per_page=10"
+    )->assertOk()->json('datos');
+
+    expect($respuesta['data'])->toHaveCount(10);
+    expect($respuesta['total'])->toBe(25);
+    expect($respuesta['last_page'])->toBe(3);
 });
