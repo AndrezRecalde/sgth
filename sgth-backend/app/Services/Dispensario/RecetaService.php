@@ -12,6 +12,10 @@ use App\Exceptions\ReglaNegocioException;
 
 final class RecetaService implements RecetaServiceInterface
 {
+    public function __construct(
+        private readonly StockPorLotes $stock
+    ) {}
+
     public function emitirReceta(array $datosReceta, array $items): array
     {
         return DB::transaction(function () use ($datosReceta, $items) {
@@ -142,20 +146,35 @@ final class RecetaService implements RecetaServiceInterface
                     'estado' => $nuevoEstadoItem
                 ]);
 
-                // Descontar inventario
-                $medicina->stock_actual -= $cantidadADespachar;
-                $medicina->save();
+                // Descontar inventario siguiendo FEFO: sale primero lo que
+                // caduca antes, y un despacho puede repartirse entre lotes.
+                $reparto = $this->stock->consumirFefo(
+                    $medicina, $cantidadADespachar
+                );
 
-                // Registrar en Kardex Inmutable
-                MovimientoInventarioMed::create([
-                    'inventario_medicina_id' => $medicina->id,
-                    'tipo_movimiento'        => 'egreso',
-                    'cantidad'               => -$cantidadADespachar,
-                    'stock_resultante'       => $medicina->stock_actual,
-                    'motivo'                 => 'Despacho de receta electrónica',
-                    'referencia_receta_id'   => $receta->id,
-                    'registrado_por'         => $despachadoPor,
-                ]);
+                // Un movimiento por lote: son unidades distintas, con
+                // caducidades distintas, las que salieron del estante, y el
+                // kardex tiene que poder decirlo. El corrido se reconstruye
+                // hacia adelante desde antes de la salida.
+                $restante = $medicina->stock_actual + $cantidadADespachar;
+
+                foreach ($reparto as $salida) {
+                    $restante -= $salida['cantidad'];
+
+                    MovimientoInventarioMed::create([
+                        'inventario_medicina_id' => $medicina->id,
+                        'lote_id'                => $salida['lote']->id,
+                        'tipo_movimiento'        => 'egreso',
+                        'cantidad'               => -$salida['cantidad'],
+                        'stock_resultante'       => $restante,
+                        'motivo'                 => count($reparto) > 1
+                            ? 'Despacho de receta electrónica (lote '
+                                . $salida['lote']->etiqueta . ')'
+                            : 'Despacho de receta electrónica',
+                        'referencia_receta_id'   => $receta->id,
+                        'registrado_por'         => $despachadoPor,
+                    ]);
+                }
             }
 
             // Evaluar estado general de la receta

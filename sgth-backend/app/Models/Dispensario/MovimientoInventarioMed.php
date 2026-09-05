@@ -14,6 +14,7 @@ class MovimientoInventarioMed extends Model
     protected $table = 'movimientos_inventario_med';
 
     protected $fillable = [
+        'lote_id',
         'inventario_medicina_id', 'tipo_movimiento', 'cantidad',
         'stock_resultante', 'motivo', 'referencia_receta_id', 'registrado_por'
     ];
@@ -21,6 +22,12 @@ class MovimientoInventarioMed extends Model
     public function inventario(): BelongsTo
     {
         return $this->belongsTo(InventarioMedicina::class, 'inventario_medicina_id');
+    }
+
+    /** Null en los movimientos anteriores al control por lotes. */
+    public function lote(): BelongsTo
+    {
+        return $this->belongsTo(LoteMedicina::class, 'lote_id');
     }
 
     public function receta(): BelongsTo

@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\DB;
 
 final class InventarioMedicinasService implements InventarioMedicinasServiceInterface
 {
+    public function __construct(
+        private readonly StockPorLotes $stock
+    ) {}
+
     public function listar(array $filtros): LengthAwarePaginator
     {
         $query = InventarioMedicina::orderBy('created_at', 'desc');
@@ -226,20 +230,56 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
                 );
             }
 
-            $medicina->stock_actual -= $cantidad;
-            $medicina->save();
+            // Sale primero lo que caduca antes, que es lo que se está tirando
+            // en el caso que da nombre a esta operación. Elegir el lote a mano
+            // llega con la pantalla, en la tercera entrega.
+            $reparto = $this->stock->consumirFefo($medicina, $cantidad);
 
-            MovimientoInventarioMed::create([
-                'inventario_medicina_id' => $medicina->id,
-                'tipo_movimiento'        => 'baja',
-                'cantidad'               => -$cantidad,
-                'stock_resultante'       => $medicina->stock_actual,
-                'motivo'                 => $motivo,
-                'registrado_por'         => $registradoPor,
-            ]);
+            $this->anotarEnKardex(
+                $medicina, $reparto, 'baja', $motivo, $registradoPor
+            );
 
             return $medicina;
         });
+    }
+
+    /**
+     * Un movimiento por lote tocado.
+     *
+     * Una salida puede repartirse entre varios lotes, y el kardex tiene que
+     * poder decirlo: son unidades distintas, con caducidades distintas, las
+     * que salieron del estante.
+     *
+     * @param list<array{lote: \App\Models\Dispensario\LoteMedicina, cantidad: int}> $reparto
+     */
+    private function anotarEnKardex(
+        InventarioMedicina $medicina,
+        array $reparto,
+        string $tipo,
+        string $motivo,
+        int $registradoPor
+    ): void {
+        // El stock ya está descontado, así que el corrido se reconstruye hacia
+        // adelante desde antes de la salida: cada fila deja el resultante que
+        // le toca, y la última coincide con el stock de la ficha.
+        $restante = $medicina->stock_actual
+            + array_sum(array_column($reparto, 'cantidad'));
+
+        foreach ($reparto as $salida) {
+            $restante -= $salida['cantidad'];
+
+            MovimientoInventarioMed::create([
+                'inventario_medicina_id' => $medicina->id,
+                'lote_id'                => $salida['lote']->id,
+                'tipo_movimiento'        => $tipo,
+                'cantidad'               => -$salida['cantidad'],
+                'stock_resultante'       => $restante,
+                'motivo'                 => count($reparto) > 1
+                    ? "{$motivo} (lote {$salida['lote']->etiqueta})"
+                    : $motivo,
+                'registrado_por'         => $registradoPor,
+            ]);
+        }
     }
 
     public function ajustarInventario(
@@ -268,17 +308,27 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
                 );
             }
 
-            $medicina->stock_actual = $nuevoStock;
-            $medicina->save();
+            $reparto = $this->stock->ajustarA($medicina, $nuevoStock);
 
-            MovimientoInventarioMed::create([
-                'inventario_medicina_id' => $medicina->id,
-                'tipo_movimiento'        => 'ajuste',
-                'cantidad'               => $diferencia,
-                'stock_resultante'       => $nuevoStock,
-                'motivo'                 => $motivo,
-                'registrado_por'         => $registradoPor,
-            ]);
+            if ($diferencia > 0) {
+                // Al alza las unidades entran en un lote sin identificar: nadie
+                // sabe de cuál son, y atribuirlas al último que entró sería
+                // inventarlo.
+                MovimientoInventarioMed::create([
+                    'inventario_medicina_id' => $medicina->id,
+                    'lote_id'                => $medicina->lotes()
+                        ->latest('id')->value('id'),
+                    'tipo_movimiento'        => 'ajuste',
+                    'cantidad'               => $diferencia,
+                    'stock_resultante'       => $medicina->stock_actual,
+                    'motivo'                 => $motivo,
+                    'registrado_por'         => $registradoPor,
+                ]);
+            } else {
+                $this->anotarEnKardex(
+                    $medicina, $reparto, 'ajuste', $motivo, $registradoPor
+                );
+            }
 
             return $medicina;
         });
