@@ -17,18 +17,22 @@ class InventarioMedicina extends Model
 
     protected $table = 'inventario_medicinas';
 
+    /**
+     * Esta ficha es el CATÁLOGO: qué medicamento maneja la farmacia. Las
+     * existencias —con su lote y su caducidad— están en `lotes_medicina`;
+     * `stock_actual` es la suma, que mantiene `StockPorLotes`.
+     */
     protected $fillable = [
         'codigo', 'nombre', 'principio_activo', 'presentacion',
-        'concentracion', 'stock_actual', 'stock_minimo', 'fecha_caducidad',
-        'lote', 'estado', 'created_by', 'updated_by'
+        'concentracion', 'stock_actual', 'stock_minimo',
+        'estado', 'created_by', 'updated_by'
     ];
 
     protected function casts(): array
     {
         return [
-            'presentacion'    => PresentacionMedicamento::class,
-            'fecha_caducidad' => 'date',
-            'estado'          => 'boolean',
+            'presentacion' => PresentacionMedicamento::class,
+            'estado'       => 'boolean',
         ];
     }
 

@@ -4,6 +4,8 @@ namespace App\Services\Reporteria;
 
 use App\Contracts\Reporteria\ReporteriaServiceInterface;
 use App\Enums\RegimenLaboral;
+use App\Models\Dispensario\InventarioMedicina;
+use App\Models\Dispensario\LoteMedicina;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -126,11 +128,14 @@ class ReporteriaService implements ReporteriaServiceInterface
             'citas_hoy' => DB::table('agendas_medicas')
                 ->whereDate('fecha', now()->toDateString())
                 ->count(),
-            'medicamentos_stock_critico' => DB::table('inventario_medicinas')
-                ->whereRaw('stock_actual <= stock_minimo')
+            // Los dos se miden sobre los lotes, que es donde están ahora las
+            // existencias y su caducidad. El crítico cuenta lo entregable: unas
+            // unidades vencidas no evitan una rotura de stock, la disimulan.
+            'medicamentos_stock_critico' => InventarioMedicina::bajoMinimo()
                 ->count(),
-            'medicamentos_por_caducar' => DB::table('inventario_medicinas')
-                ->where('fecha_caducidad', '<', now()->addDays(60))
+            'medicamentos_por_caducar' => LoteMedicina::conStock()
+                ->whereNotNull('fecha_caducidad')
+                ->whereDate('fecha_caducidad', '<', now()->addDays(60))
                 ->count()
         ];
     }

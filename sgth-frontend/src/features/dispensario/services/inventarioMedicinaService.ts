@@ -19,13 +19,6 @@ export interface InventarioMedicina {
   proxima_caducidad?: string | null
   /** Solo al pedir una medicina concreta: sus lotes con existencias, en FEFO. */
   lotes?:             LoteMedicina[]
-  /**
-   * Campos de la ficha anteriores al control por lotes. Ya no se escriben ni
-   * se leen: la caducidad vive en cada lote. Se retiran con el formulario.
-   * @deprecated usar `proxima_caducidad`
-   */
-  fecha_caducidad?:  string | null
-  lote?:             string | null
   estado:            boolean
 }
 
@@ -64,8 +57,6 @@ export interface CrearMedicinaData {
   presentacion:      string
   concentracion?:    string | null
   stock_minimo:      number
-  fecha_caducidad?:  string | null
-  lote?:             string | null
 }
 
 export interface ActualizarMedicinaData {
@@ -74,8 +65,6 @@ export interface ActualizarMedicinaData {
   presentacion:      string
   concentracion?:    string | null
   stock_minimo:      number
-  fecha_caducidad?:  string | null
-  lote?:             string | null
 }
 
 export const inventarioMedicinaService = {

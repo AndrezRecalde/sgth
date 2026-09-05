@@ -248,8 +248,11 @@ export function AdquisicionForm({ onCreada }: Props) {
             inventario_medicina_id: medicina.id,
             nombre_medicina: medicina.nombre,
             cantidad: 1,
-            lote: medicina.lote ?? '',
-            fecha_caducidad: medicina.fecha_caducidad ?? '',
+            // Vacíos: la medicina acaba de nacer en el catálogo y no tiene
+            // existencias, así que no hay lote ni caducidad que heredar. Son
+            // los de esta entrada, y los teclea quien la registra.
+            lote: '',
+            fecha_caducidad: '',
             precio_unitario: null,
           })
         }}

@@ -21,6 +21,28 @@ use Illuminate\Support\Facades\DB;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
+/**
+ * Una medicina de prueba con sus existencias donde ahora viven: en un lote.
+ *
+ * Las pruebas siguen escribiendo `fecha_caducidad` junto al stock porque es
+ * como se lee la intención —«esta medicina caduca tal día»—, pero la ficha ya
+ * no tiene ese campo: la fecha pasa al lote que el observador abre para el
+ * stock inicial.
+ */
+function medicinaDePrueba(array $datos): InventarioMedicina
+{
+    $caduca = $datos['fecha_caducidad'] ?? null;
+    unset($datos['fecha_caducidad'], $datos['lote']);
+
+    $medicina = InventarioMedicina::create($datos);
+
+    if ($caduca !== null && $medicina->stock_actual > 0) {
+        $medicina->lotes()->update(['fecha_caducidad' => $caduca]);
+    }
+
+    return $medicina;
+}
+
 beforeEach(function () {
     User::unguard();
     UnidadAdministrativa::unguard();
@@ -130,14 +152,13 @@ test('alta_de_medicina_nace_sin_stock_ni_movimiento_de_kardex', function () {
     $service = app(InventarioMedicinasService::class);
 
     // Aunque el llamador insista con un stock inicial, el alta define
-    // catálogo, no existencias: el stock solo entra por adquisición.
+    // catálogo, no existencias: el stock solo entra por adquisición, y con él
+    // su lote y su caducidad, que ya no viven en esta ficha.
     $medicina = $service->ingresarMedicina([
         'nombre' => 'Paracetamol',
         'principio_activo' => 'Paracetamol',
         'concentracion' => '500mg',
         'presentacion' => 'tableta',
-        'lote' => 'L123',
-        'fecha_caducidad' => now()->addYear(),
         'stock_minimo' => 10,
         'stock_actual' => 100,
     ], $this->medico->id);
@@ -232,7 +253,7 @@ test('endpoint_de_busqueda_acepta_el_indicador_de_agotadas_de_la_query', functio
 test('emitir_y_despachar_receta_descuenta_stock_y_registra_kardex', function () {
     $this->actingAs($this->medico, 'sanctum');
 
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-002',
         'nombre' => 'Ibuprofeno',
         'principio_activo' => 'Ibuprofeno',
@@ -297,7 +318,7 @@ test('emitir_y_despachar_receta_descuenta_stock_y_registra_kardex', function () 
 
 test('emitir_receta_con_stock_insuficiente_incluye_alerta', function () {
     // Crear medicina sin stock
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-003',
         'nombre' => 'Amoxicilina',
         'principio_activo' => 'Amoxicilina',
@@ -420,7 +441,7 @@ test('no_se_anula_una_adquisicion_cuyo_stock_ya_se_consumio', function () {
 });
 
 test('anular_receta_parcial_la_cierra_sin_devolver_lo_ya_entregado', function () {
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-7001',
         'nombre' => 'Losartán',
         'principio_activo' => 'Losartán',
@@ -476,7 +497,7 @@ test('anular_receta_parcial_la_cierra_sin_devolver_lo_ya_entregado', function ()
 });
 
 test('no_se_anula_una_receta_ya_despachada_por_completo', function () {
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-7002',
         'nombre' => 'Metformina',
         'principio_activo' => 'Metformina',
@@ -598,7 +619,7 @@ test('pedir_el_respaldo_de_una_adquisicion_que_no_lo_tiene_responde_404', functi
 });
 
 test('no_se_despacha_un_medicamento_caducado', function () {
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-8001',
         'nombre' => 'Azitromicina',
         'principio_activo' => 'Azitromicina',
@@ -649,7 +670,7 @@ test('no_se_despacha_un_medicamento_caducado', function () {
 });
 
 test('el_dia_de_la_caducidad_todavia_se_puede_despachar', function () {
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-8002',
         'nombre' => 'Cefalexina',
         'principio_activo' => 'Cefalexina',
@@ -696,7 +717,7 @@ test('el_dia_de_la_caducidad_todavia_se_puede_despachar', function () {
 });
 
 test('dar_de_baja_saca_las_existencias_caducadas_con_su_motivo', function () {
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-8003',
         'nombre' => 'Dexametasona',
         'principio_activo' => 'Dexametasona',
@@ -731,7 +752,7 @@ test('dar_de_baja_saca_las_existencias_caducadas_con_su_motivo', function () {
 });
 
 test('el_kardex_rechaza_un_tipo_de_movimiento_desconocido', function () {
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-8004',
         'nombre' => 'Salbutamol',
         'principio_activo' => 'Salbutamol',
@@ -754,7 +775,7 @@ test('el_kardex_rechaza_un_tipo_de_movimiento_desconocido', function () {
 test('recetar_no_ofrece_lo_caducado_pero_adquirir_si', function () {
     $servicio = app(InventarioMedicinasService::class);
 
-    $caducada = InventarioMedicina::create([
+    $caducada = medicinaDePrueba([
         'codigo' => 'MED-8005',
         'nombre' => 'Nitrofurantoina',
         'principio_activo' => 'Nitrofurantoina',
@@ -818,7 +839,7 @@ test('el_codigo_de_medicina_no_se_repite_aunque_haya_otro_formato_o_borradas', f
     expect($primera->codigo)->toBe('MED-0001');
 
     // Una fila con otro formato hacía que el último id se leyera como cero.
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'IMPORTADO-XYZ',
         'nombre' => 'Ketorolaco',
         'principio_activo' => 'Ketorolaco',
@@ -851,7 +872,7 @@ test('el_codigo_de_medicina_no_se_repite_aunque_haya_otro_formato_o_borradas', f
 test('el_conteo_de_stock_bajo_ignora_las_medicinas_retiradas_del_catalogo', function () {
     $servicio = app(InventarioMedicinasService::class);
 
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9001',
         'nombre' => 'Activa bajo minimo',
         'principio_activo' => 'X',
@@ -861,7 +882,7 @@ test('el_conteo_de_stock_bajo_ignora_las_medicinas_retiradas_del_catalogo', func
         'estado' => true,
     ]);
 
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9002',
         'nombre' => 'Retirada bajo minimo',
         'principio_activo' => 'Y',
@@ -880,7 +901,7 @@ test('el_aviso_de_inventario_agrupa_caducadas_bajo_minimo_y_por_caducar', functi
     $servicio = app(InventarioMedicinasService::class);
 
     // Caducada CON existencias: hay que darla de baja.
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9101', 'nombre' => 'Vencida con stock',
         'principio_activo' => 'A', 'presentacion' => 'tableta',
         'stock_actual' => 12, 'stock_minimo' => 2,
@@ -888,14 +909,14 @@ test('el_aviso_de_inventario_agrupa_caducadas_bajo_minimo_y_por_caducar', functi
     ]);
 
     // Caducada SIN existencias: no pide ninguna acción.
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9102', 'nombre' => 'Vencida sin stock',
         'principio_activo' => 'B', 'presentacion' => 'tableta',
         'stock_actual' => 0, 'stock_minimo' => 2,
         'fecha_caducidad' => now()->subDays(3), 'estado' => true,
     ]);
 
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9103', 'nombre' => 'Proxima a caducar',
         'principio_activo' => 'C', 'presentacion' => 'tableta',
         'stock_actual' => 50, 'stock_minimo' => 5,
@@ -903,21 +924,21 @@ test('el_aviso_de_inventario_agrupa_caducadas_bajo_minimo_y_por_caducar', functi
     ]);
 
     // Fuera de la ventana de aviso.
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9104', 'nombre' => 'Caduca el proximo anio',
         'principio_activo' => 'D', 'presentacion' => 'tableta',
         'stock_actual' => 50, 'stock_minimo' => 5,
         'fecha_caducidad' => now()->addMonths(10), 'estado' => true,
     ]);
 
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9105', 'nombre' => 'Bajo minimo',
         'principio_activo' => 'E', 'presentacion' => 'tableta',
         'stock_actual' => 1, 'stock_minimo' => 30, 'estado' => true,
     ]);
 
     // Retirada del catálogo: no se repone lo que ya no se despacha.
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9106', 'nombre' => 'Retirada bajo minimo',
         'principio_activo' => 'F', 'presentacion' => 'tableta',
         'stock_actual' => 0, 'stock_minimo' => 30, 'estado' => false,
@@ -944,7 +965,7 @@ test('el_job_de_alertas_envia_el_resumen_a_la_administracion_del_dispensario', f
     ));
     $this->medico->update(['activo' => true]);
 
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9201', 'nombre' => 'Bajo minimo',
         'principio_activo' => 'A', 'presentacion' => 'tableta',
         'stock_actual' => 1, 'stock_minimo' => 30, 'estado' => true,
@@ -966,7 +987,7 @@ test('sin_nada_que_avisar_el_job_no_envia_correo', function () {
         ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
     ));
 
-    InventarioMedicina::create([
+    medicinaDePrueba([
         'codigo' => 'MED-9301', 'nombre' => 'Todo en orden',
         'principio_activo' => 'A', 'presentacion' => 'tableta',
         'stock_actual' => 500, 'stock_minimo' => 10,
@@ -1592,7 +1613,7 @@ test('el_kardex_se_pagina', function () {
     ));
     $this->actingAs($this->medico, 'sanctum');
 
-    $medicina = InventarioMedicina::create([
+    $medicina = medicinaDePrueba([
         'codigo' => 'MED-KARDEX', 'nombre' => 'Paracetamol',
         'principio_activo' => 'Paracetamol', 'concentracion' => '500mg',
         'presentacion' => 'tableta', 'lote' => 'LK-1',
@@ -2049,6 +2070,7 @@ test('el_listado_dice_cuanto_se_puede_entregar_y_cuanto_esta_vencido', function 
         now()->subDays(10)->format('Y-m-d')
     );
 });
+
 test('dar_de_baja_puede_apuntar_a_un_lote_concreto', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
@@ -2140,3 +2162,26 @@ test('sin_lote_elegido_la_baja_sigue_saliendo_por_fefo', function () {
     expect($porLote['L-TARDE'])->toBe(20);
 });
 
+test('el_alta_de_catalogo_ya_no_acepta_lote_ni_caducidad', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    // El formulario ya no los pide, y si alguien los manda a mano se ignoran:
+    // el lote y la caducidad son de las existencias, que entran por
+    // adquisición. Antes se guardaban en la ficha y ahí empezaba el problema.
+    $creada = $this->postJson('/api/v1/dispensario/inventario/medicinas', [
+        'nombre'           => 'Ketorolaco',
+        'principio_activo' => 'Ketorolaco',
+        'presentacion'     => 'inyectable',
+        'concentracion'    => '30mg',
+        'stock_minimo'     => 10,
+        'lote'             => 'L-FANTASMA',
+        'fecha_caducidad'  => now()->addYear()->toDateString(),
+    ])->assertCreated()->json('datos');
+
+    expect($creada)->not->toHaveKey('lote');
+    expect($creada)->not->toHaveKey('fecha_caducidad');
+    expect($creada['stock_actual'])->toBe(0);
+});
