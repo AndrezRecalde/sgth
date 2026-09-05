@@ -39,6 +39,12 @@ final class ConsultaMedicaController extends Controller
             $query->where('medico_id', $request->medico_id);
         }
 
+        // Ahora que la consulta sabe de qué especialidad es, se puede pedir
+        // solo la de una: era la pregunta que no se podía responder.
+        if ($request->filled('especialidad')) {
+            $query->where('especialidad', $request->input('especialidad'));
+        }
+
         // El historial de un paciente crece por años. Sin poder acotarlo por
         // fechas hay que pasearse por todas las páginas para llegar al episodio
         // que se busca.

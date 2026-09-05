@@ -2728,3 +2728,26 @@ test('lo_que_se_envia_manda_sobre_lo_que_diga_el_turno', function () {
     expect($consulta->especialidad)
         ->toBe(App\Enums\EspecialidadAtencion::ODONTOLOGIA);
 });
+
+test('el_listado_de_consultas_se_puede_pedir_por_especialidad', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+    $servicio = app(HistoriaClinicaService::class);
+
+    $servicio->registrarConsulta(datosDeConsulta($historia->id, [
+        'medico_id' => $this->medico->id, 'especialidad' => 'odontologia',
+    ]));
+    $servicio->registrarConsulta(datosDeConsulta($historia->id, [
+        'medico_id' => $this->medico->id, 'especialidad' => 'medicina_general',
+    ]));
+
+    $respuesta = $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/consultas?especialidad=odontologia')
+        ->assertOk();
+
+    expect($respuesta->json('datos.data'))->toHaveCount(1);
+    expect($respuesta->json('datos.data.0.especialidad'))->toBe('odontologia');
+});
