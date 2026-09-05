@@ -120,14 +120,53 @@ final class AutoservicioService implements AutoservicioServiceInterface
         }
     }
 
+    /**
+     * Lo que el servidor puede ver de sus propias consultas.
+     *
+     * SOLO datos básicos: fecha, médico, especialidad y diagnóstico codificado.
+     * NADA CLÍNICO DETALLADO — la anamnesis, el examen físico y el plan no salen
+     * de aquí.
+     *
+     * La consulta anterior nombraba tres columnas que no existen: `fecha` (es
+     * `fecha_consulta`), `medicos.name` (el nombre está en `servidores`) y
+     * `consultas_medicas.servidor_id` (el vínculo con el paciente va por la
+     * historia clínica). El endpoint devolvía un 500 desde siempre; no se había
+     * notado porque ninguna pantalla lo pide todavía.
+     *
+     * El diagnóstico sale del CIE-10 relacionado y no de la vieja columna de
+     * texto, que nunca llegó a escribirse.
+     */
     public function obtenerMiHistoriaClinicaBasica(int $servidorId): array
     {
-        // SOLO datos básicos: fecha, médico, diagnóstico. NADA CLÍNICO DETALLADO.
         return DB::table('consultas_medicas')
+            ->join(
+                'historias_clinicas',
+                'consultas_medicas.historia_clinica_id', '=', 'historias_clinicas.id'
+            )
             ->join('users as medicos', 'consultas_medicas.medico_id', '=', 'medicos.id')
-            ->where('consultas_medicas.servidor_id', $servidorId)
-            ->select('consultas_medicas.fecha', 'medicos.name as medico', 'consultas_medicas.diagnostico_cie10')
-            ->orderBy('consultas_medicas.fecha', 'desc')
+            ->leftJoin(
+                'servidores as medico_servidor',
+                'medicos.servidor_id', '=', 'medico_servidor.id'
+            )
+            ->leftJoin(
+                'diagnosticos_cie10',
+                'consultas_medicas.diagnostico_cie10_id', '=', 'diagnosticos_cie10.id'
+            )
+            ->where('historias_clinicas.servidor_id', $servidorId)
+            ->whereNull('consultas_medicas.deleted_at')
+            ->select(
+                'consultas_medicas.fecha_consulta as fecha',
+                DB::raw(
+                    "COALESCE(
+                        NULLIF(TRIM(CONCAT(medico_servidor.nombre, ' ', medico_servidor.apellido)), ''),
+                        medicos.usuario_ti
+                     ) as medico"
+                ),
+                'consultas_medicas.especialidad',
+                'diagnosticos_cie10.codigo as diagnostico_codigo',
+                'diagnosticos_cie10.descripcion as diagnostico',
+            )
+            ->orderByDesc('consultas_medicas.fecha_consulta')
             ->get()
             ->toArray();
     }
