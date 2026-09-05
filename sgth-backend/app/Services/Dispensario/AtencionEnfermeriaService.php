@@ -49,15 +49,37 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
         });
     }
 
+    /**
+     * El folio sale del mayor ya emitido, no de contar filas.
+     *
+     * Contar da el número correcto solo mientras no falte ninguna fila, y aquí
+     * faltan de dos maneras: la tabla borra en blando —una fila retirada baja
+     * el conteo y el siguiente folio repite uno ya emitido, que choca contra el
+     * índice único porque el borrado en blando no libera el valor— y dos
+     * registros simultáneos leen el mismo conteo. Por eso se miran también las
+     * borradas y se serializa con un bloqueo de aviso, que suelta el cierre de
+     * la transacción.
+     */
     private function generarFolio(): string
     {
         $anio = now()->year;
-        $cantidadActual = AtencionEnfermeria::whereYear(
-            'created_at', $anio
-        )->count();
+
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("atencion_enfermeria_folio_{$anio}"),
+        ]);
+
+        $ultimoFolio = AtencionEnfermeria::withTrashed()
+            ->where('folio', 'like', "ENF-{$anio}-%")
+            ->max('folio');
+
+        $ultimoSecuencial = $ultimoFolio
+            ? (int) substr($ultimoFolio, strlen("ENF-{$anio}-"))
+            : 0;
+
         $secuencial = str_pad(
-            $cantidadActual + 1, 5, '0', STR_PAD_LEFT
+            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
         );
+
         return "ENF-{$anio}-{$secuencial}";
     }
 }
