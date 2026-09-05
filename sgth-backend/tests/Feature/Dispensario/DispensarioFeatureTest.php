@@ -1145,3 +1145,116 @@ test('rehacer_un_triaje_conserva_la_toma_anterior', function () {
         ->assertOk()->json('datos');
     expect(collect($pendientes)->pluck('id'))->not->toContain($agenda->id);
 });
+
+test('triaje_de_paciente_sin_historia_clinica_le_abre_una', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    // El turno se crea sin que el paciente tenga historia: antes esto mataba el
+    // guardado con «null value in column historia_clinica_id».
+    $agenda = AgendaMedica::create([
+        'servidor_id' => $this->paciente->id, 'medico_id' => $this->medico->id,
+        'fecha' => now()->format('Y-m-d'), 'hora_inicio' => '09:00:00',
+        'hora_fin' => '09:30:00', 'motivo_solicitud' => 'Malestar',
+        'estado' => 'en_espera', 'requiere_triaje' => true,
+        'registrado_en' => now(),
+    ], $this->medico->id);
+
+    expect(HistoriaClinica::where('servidor_id', $this->paciente->id)->exists())
+        ->toBeFalse();
+
+    $this->postJson("/api/v1/dispensario/agenda/{$agenda->id}/triaje", [
+        'presion_sistolica' => 120, 'presion_diastolica' => 75,
+        'frecuencia_cardiaca' => 70, 'frecuencia_respiratoria' => 16,
+        'temperatura_c' => 36.5, 'saturacion_oxigeno' => 98,
+        'peso_kg' => 70, 'talla_cm' => 170,
+    ])->assertCreated();
+
+    // Se abrió una, numerada por la cédula y a nombre del servidor.
+    $historia = HistoriaClinica::where('servidor_id', $this->paciente->id)
+        ->firstOrFail();
+    expect($historia->cedula_paciente)->toBe($this->paciente->cedula);
+    expect($historia->numero_historia)->toBe($this->paciente->cedula);
+    expect($historia->tipo_paciente)->toBe('servidor');
+
+    // Y el triaje quedó colgando de ella, no suelto.
+    $triaje = App\Models\Dispensario\Triaje::where(
+        'agenda_medica_id', $agenda->id
+    )->firstOrFail();
+    expect($triaje->historia_clinica_id)->toBe($historia->id);
+});
+
+test('abrir_la_historia_en_el_triaje_no_duplica_la_que_ya_existe', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $turno = fn (string $hora) => AgendaMedica::create([
+        'servidor_id' => $this->paciente->id, 'medico_id' => $this->medico->id,
+        'fecha' => now()->format('Y-m-d'), 'hora_inicio' => $hora,
+        'hora_fin' => '23:30:00', 'motivo_solicitud' => 'Control',
+        'estado' => 'en_espera', 'requiere_triaje' => true,
+        'registrado_en' => now(),
+    ], $this->medico->id);
+
+    $tomar = fn (int $agendaId) => $this->postJson(
+        "/api/v1/dispensario/agenda/{$agendaId}/triaje",
+        [
+            'presion_sistolica' => 118, 'presion_diastolica' => 76,
+            'frecuencia_cardiaca' => 72, 'frecuencia_respiratoria' => 16,
+            'temperatura_c' => 36.6, 'saturacion_oxigeno' => 98,
+            'peso_kg' => 70, 'talla_cm' => 170,
+        ]
+    );
+
+    $tomar($turno('09:00:00')->id)->assertCreated();
+    $tomar($turno('11:00:00')->id)->assertCreated();
+
+    // Dos turnos, dos triajes, una sola historia: la segunda vez la encuentra.
+    expect(HistoriaClinica::where('servidor_id', $this->paciente->id)->count())
+        ->toBe(1);
+});
+
+test('el_triaje_engancha_la_historia_que_quedo_del_preocupacional', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    // Así queda una historia abierta en un preocupacional: a nombre de la
+    // cédula, sin dueño todavía porque quien se evaluó aún no era servidor.
+    $delPreocupacional = HistoriaClinica::create([
+        'numero_historia' => $this->paciente->cedula,
+        'cedula_paciente' => $this->paciente->cedula,
+        'tipo_paciente'   => 'candidato',
+        'estado'          => true,
+    ]);
+
+    $agenda = AgendaMedica::create([
+        'servidor_id' => $this->paciente->id, 'medico_id' => $this->medico->id,
+        'fecha' => now()->format('Y-m-d'), 'hora_inicio' => '09:00:00',
+        'hora_fin' => '09:30:00', 'motivo_solicitud' => 'Malestar',
+        'estado' => 'en_espera', 'requiere_triaje' => true,
+        'registrado_en' => now(),
+    ], $this->medico->id);
+
+    $this->postJson("/api/v1/dispensario/agenda/{$agenda->id}/triaje", [
+        'presion_sistolica' => 118, 'presion_diastolica' => 76,
+        'frecuencia_cardiaca' => 72, 'frecuencia_respiratoria' => 16,
+        'temperatura_c' => 36.6, 'saturacion_oxigeno' => 98,
+        'peso_kg' => 70, 'talla_cm' => 170,
+    ])->assertCreated();
+
+    // No se le abre una segunda —chocaría contra el único por cédula—: se le
+    // engancha la que ya tenía, que es además donde está su historial.
+    expect(HistoriaClinica::where(
+        'cedula_paciente', $this->paciente->cedula
+    )->count())->toBe(1);
+
+    $delPreocupacional->refresh();
+    expect($delPreocupacional->servidor_id)->toBe($this->paciente->id);
+    expect($delPreocupacional->tipo_paciente)->toBe('servidor');
+});

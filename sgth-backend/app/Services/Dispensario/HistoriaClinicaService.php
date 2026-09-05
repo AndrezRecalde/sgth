@@ -4,6 +4,7 @@ namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -126,6 +127,75 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             cargaId:      $cargaId,
             userId:       $userId,
         );
+    }
+
+    /**
+     * La historia clínica del paciente de un turno, abriéndola si no la tiene.
+     *
+     * El triaje la necesita sí o sí —la columna es NOT NULL— y hasta ahora se
+     * resolvía a null cuando el paciente no tenía historia: el guardado moría
+     * con un error de base de datos en la cara de la enfermera, con el paciente
+     * delante. La historia no lleva ningún dato que deba teclear una persona
+     * (el número es la cédula, y el dueño sale del turno), así que negarse a
+     * registrar unos signos vitales por una fila que el sistema puede deducir
+     * era el peor de los dos males.
+     */
+    public function paraPacienteDeTurno(AgendaMedica $agenda): HistoriaClinica
+    {
+        $esServidor = (bool) $agenda->servidor_id;
+        $paciente   = $esServidor
+            ? $agenda->servidor
+            : $agenda->cargaFamiliar;
+
+        if (!$paciente) {
+            throw new ReglaNegocioException(
+                'El turno no tiene un paciente asociado, así que no se le ' .
+                'puede abrir una historia clínica.'
+            );
+        }
+
+        $existente = HistoriaClinica::where(
+            $esServidor ? 'servidor_id' : 'carga_familiar_id',
+            $paciente->id
+        )->first();
+
+        if ($existente) {
+            return $existente;
+        }
+
+        // Sin cédula no hay por dónde buscarla ni con qué numerarla, pero el
+        // turno sí ancla de quién es. Es un caso de borde: el buscador de
+        // pacientes trabaja por cédula, así que un paciente sin ella no llega
+        // hasta aquí por la interfaz.
+        if (!$paciente->cedula) {
+            return HistoriaClinica::create([
+                'tipo_paciente'     => $esServidor ? 'servidor' : 'familiar',
+                'servidor_id'       => $esServidor ? $paciente->id : null,
+                'carga_familiar_id' => $esServidor ? null : $paciente->id,
+                'estado'            => true,
+            ]);
+        }
+
+        $historia = HistoriaClinica::buscarOCrearPorCedula(
+            cedula:       $paciente->cedula,
+            tipoPaciente: $esServidor ? 'servidor' : 'familiar',
+            servidorId:   $esServidor ? $paciente->id : null,
+            cargaId:      $esServidor ? null : $paciente->id,
+        );
+
+        // Si la historia venía de un preocupacional existe a nombre de la
+        // cédula y sin dueño, como 'candidato'. Al atenderse ya como servidor o
+        // familiar se le engancha, en vez de abrirle una segunda que además
+        // chocaría contra el único por cédula.
+        if (!$historia->servidor_id && !$historia->carga_familiar_id) {
+            $historia->update([
+                'tipo_paciente'     => $esServidor ? 'servidor' : 'familiar',
+                'servidor_id'       => $esServidor ? $paciente->id : null,
+                'carga_familiar_id' => $esServidor ? null : $paciente->id,
+            ]);
+        }
+
+        return $historia;
     }
 
     public function registrarConsulta(array $datos): ConsultaMedica
