@@ -8,6 +8,7 @@ use App\Models\Dispensario\CertificadoMedico;
 use App\Services\Dispensario\CertificadoMedicoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class CertificadoMedicoController extends Controller
 {
@@ -82,5 +83,17 @@ class CertificadoMedicoController extends Controller
         ])->findOrFail($id);
 
         return ApiResponse::ok($certificado);
+    }
+
+    /** El PDF, para imprimirlo o entregárselo al paciente. */
+    public function pdf(int $id): Response
+    {
+        $resultado = $this->service->generarPdf($id);
+
+        return response($resultado['content'], 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'
+                . $resultado['filename'] . '"',
+        ]);
     }
 }

@@ -49,4 +49,10 @@ export const certificadoService = {
     api.get<ApiResponse<CertificadoMedico>>(
       `/dispensario/certificados-medicos/${id}`
     ).then(r => r.data.datos),
+
+  /** Va por axios y no por `window.open`: el endpoint pide el token. */
+  descargarPdf: (id: number) =>
+    api.get(`/dispensario/certificados-medicos/${id}/pdf`, {
+      responseType: 'blob',
+    }).then(r => r.data as Blob),
 }

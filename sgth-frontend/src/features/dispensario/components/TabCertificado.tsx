@@ -6,10 +6,12 @@ import {
 } from '@mantine/core'
 import {
   IconCertificate, IconPlus,
-  IconCalendar, IconUser,
+  IconCalendar, IconUser, IconDownload,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { useCertificadosPorConsulta } from '../hooks/useCertificado'
+import {
+  useCertificadosPorConsulta, useDescargarCertificado,
+} from '../hooks/useCertificado'
 import { EmitirCertificadoModal } from './EmitirCertificadoModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { AgendaMedica } from '../services/agendaService'
@@ -32,6 +34,7 @@ export function TabCertificado({ turno, consulta }: Props) {
 
   const { data: certificados = [], isLoading } =
     useCertificadosPorConsulta(consulta.id)
+  const { descargar, descargando } = useDescargarCertificado()
 
   const esFamiliar = !!turno.carga_familiar_id
 
@@ -128,6 +131,18 @@ export function TabCertificado({ turno, consulta }: Props) {
                     </Text>
                   </Group>
                 )}
+
+                <Group gap="xs" mt={4}>
+                  <Button
+                    size="compact-xs"
+                    variant="light"
+                    leftSection={<IconDownload size={13} />}
+                    loading={descargando === cert.id}
+                    onClick={() => descargar(cert.id, cert.folio)}
+                  >
+                    Descargar PDF
+                  </Button>
+                </Group>
               </Stack>
             </Card>
           ))}

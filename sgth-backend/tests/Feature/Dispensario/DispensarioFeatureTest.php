@@ -2468,6 +2468,32 @@ test('el_folio_del_certificado_sale_del_mayor_no_de_contar_filas', function () {
     expect($emitir()->folio)->toBe("CERT-{$anio}-00003");
 });
 
+test('el_certificado_se_puede_descargar_en_pdf', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $consulta = consultaParaCertificado(
+        $this->paciente->id, $this->paciente->cedula, $this->medico->id
+    );
+
+    $certificado = $this->postJson('/api/v1/dispensario/certificados-medicos', [
+        'consulta_medica_id' => $consulta->id,
+        'dias_reposo'        => 3,
+        'observaciones'      => 'Reposo domiciliario',
+    ])->assertCreated()->json('datos');
+
+    // Sin esto el certificado solo existía como fila: para un familiar, que no
+    // genera permiso, no tenía forma de salir del sistema.
+    $respuesta = $this->get(
+        "/api/v1/dispensario/certificados-medicos/{$certificado['id']}/pdf"
+    )->assertOk();
+
+    expect($respuesta->headers->get('Content-Type'))->toContain('application/pdf');
+    expect($respuesta->getContent())->toStartWith("%PDF");
+});
+
 test('el_folio_del_permiso_del_certificado_tampoco_cuenta_filas', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'medico', 'guard_name' => 'sanctum']

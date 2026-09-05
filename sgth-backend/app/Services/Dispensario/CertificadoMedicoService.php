@@ -8,6 +8,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Dispensario\ConsultaMedica;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -117,6 +118,76 @@ class CertificadoMedicoService
             'confirmado_en'  => now(),
             'creado_por'     => $emisorId,
         ]);
+    }
+
+    /**
+     * El PDF del certificado, para imprimirlo o entregarlo.
+     *
+     * Sin esto el certificado solo existía como fila. Para un servidor medio
+     * funcionaba, porque el permiso aparece en Asistencia; para un familiar no
+     * se crea permiso, así que su certificado no tenía forma de salir del
+     * sistema y no cumplía su función, que es ser un papel.
+     *
+     * @return array{content: string, filename: string}
+     */
+    public function generarPdf(int $id): array
+    {
+        $certificado = CertificadoMedico::with([
+            'consultaMedica.historiaClinica.servidor',
+            'consultaMedica.historiaClinica.cargaFamiliar.servidor',
+            'emisor.servidor', 'anulador.servidor',
+            'diagnosticoCie10', 'permisoServidor',
+        ])->findOrFail($id);
+
+        $pdf = Pdf::loadView('pdf.dispensario.certificado-medico', [
+            'certificado' => $certificado,
+            'paciente'    => $this->datosDelPaciente($certificado),
+        ])->setPaper('a4');
+
+        return [
+            'content'  => $pdf->output(),
+            'filename' => 'certificado-' .
+                ($certificado->folio ?? $certificado->id) . '.pdf',
+        ];
+    }
+
+    /**
+     * Nombre, cédula y condición del paciente, venga de servidor o de familiar.
+     *
+     * @return array{nombre: string, cedula: ?string, condicion: string}
+     */
+    private function datosDelPaciente(CertificadoMedico $certificado): array
+    {
+        $historia = $certificado->consultaMedica?->historiaClinica;
+        $servidor = $historia?->servidor;
+        $familiar = $historia?->cargaFamiliar;
+
+        if ($servidor) {
+            return [
+                'nombre'    => trim("{$servidor->nombre} {$servidor->apellido}"),
+                'cedula'    => $servidor->cedula,
+                'condicion' => 'Servidor de la institución',
+            ];
+        }
+
+        if ($familiar) {
+            $titular = $familiar->servidor;
+
+            return [
+                'nombre'    => trim("{$familiar->nombres} {$familiar->apellidos}"),
+                'cedula'    => $familiar->cedula,
+                'condicion' => 'Carga familiar'
+                    . ($titular
+                        ? " de {$titular->nombre} {$titular->apellido}"
+                        : ''),
+            ];
+        }
+
+        return [
+            'nombre'    => $historia?->nombre_paciente ?? '—',
+            'cedula'    => $historia?->cedula_paciente,
+            'condicion' => '—',
+        ];
     }
 
     /**
