@@ -41,6 +41,19 @@ export function useConsultaMedicaDetalle(id: number | null) {
   })
 }
 
+/**
+ * Las versiones anteriores de una consulta. Vacío mientras nadie la corrija,
+ * que es el caso normal.
+ */
+export function useVersionesConsulta(id: number | null) {
+  return useQuery({
+    queryKey: ['consulta-versiones', id],
+    queryFn:  () => consultaMedicaService.versiones(id!),
+    enabled:  !!id,
+    staleTime: 1000 * 30,
+  })
+}
+
 export function useActualizarConsulta() {
   const qc = useQueryClient()
 
@@ -57,6 +70,11 @@ export function useActualizarConsulta() {
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       qc.invalidateQueries({ queryKey: ['consultas'] })
+      // El panel lee la consulta por su propia clave: sin invalidarla, tras
+      // corregir seguía enseñando el texto anterior como si fuera el vigente.
+      qc.invalidateQueries({ queryKey: ['consulta-detalle-panel'] })
+      // Corregir archiva la versión anterior: el historial cambió.
+      qc.invalidateQueries({ queryKey: ['consulta-versiones'] })
     },
     onError: (error: unknown) =>
       notifications.show({

@@ -21,7 +21,9 @@ import {
   useActualizarConsulta,
 } from "../hooks/useConsultaMedica";
 import { BuscarCie10Input } from "./BuscarCie10Input";
+import { CorreccionesConsulta } from "./CorreccionesConsulta";
 import { RichTextInput } from "./RichTextInput";
+import { useAuthStore } from "@/store/auth.store";
 import {
   consultaMedicaSchema,
   type ConsultaMedicaFormData,
@@ -47,6 +49,39 @@ function formatFechaLocal(d: Date): string {
   ].join("-");
 }
 
+/**
+ * El mismo plazo que aplica el servidor (`ConsultaMedicaController`). Aquí solo
+ * decide si se ofrece el botón: quien manda es el backend, que rechaza igual
+ * aunque alguien llame a la API a mano.
+ */
+const HORAS_PARA_CORREGIR = 24;
+
+/**
+ * Por qué no se puede corregir, o null si sí se puede.
+ *
+ * La nota la firma quien atendió, y solo mientras es reciente. Pasado el plazo
+ * corregir dejaría de ser corregir: lo que corresponde es una consulta nueva.
+ */
+function motivoParaNoEditar(
+  consulta: ConsultaMedica,
+  usuarioId?: number,
+): string | null {
+  if (usuarioId !== undefined && consulta.medico_id !== usuarioId) {
+    return "Solo quien atendió la consulta puede corregirla.";
+  }
+
+  if (consulta.created_at) {
+    const horas =
+      (Date.now() - new Date(consulta.created_at).getTime()) / 3_600_000;
+
+    if (horas >= HORAS_PARA_CORREGIR) {
+      return "Ya pasaron más de 24 horas: para añadir algo, registre una consulta nueva.";
+    }
+  }
+
+  return null;
+}
+
 function SeccionVista({
   label,
   valor,
@@ -55,6 +90,9 @@ function SeccionVista({
   valor?: string | null;
 }) {
   if (!valor) return null;
+  // El HTML llega saneado del servidor: se limpia al guardar con lista blanca
+  // de las etiquetas que produce el editor, y lo que ya estaba guardado se
+  // saneó en una migración. Ver App\Support\HtmlClinico.
   const esHtml = valor.startsWith("<");
   return (
     <Stack
@@ -98,6 +136,7 @@ export function TabConsulta({
   const contained = useContainedInput();
   const registrar = useRegistrarConsulta();
   const actualizar = useActualizarConsulta();
+  const { usuario } = useAuthStore();
   const [modoEdicion, setModoEdicion] = useState(!consultaPrevia);
 
   // Al cargarse una consulta previa —o al cambiar de consulta— el formulario
@@ -202,6 +241,10 @@ export function TabConsulta({
     }
   };
 
+  const noEditable = consultaPrevia
+    ? motivoParaNoEditar(consultaPrevia, usuario?.id)
+    : null;
+
   if (!modoEdicion && consultaPrevia) {
     return (
       <Card withBorder radius="lg" p={0}>
@@ -231,18 +274,31 @@ export function TabConsulta({
               {consultaPrevia.tipo_diagnostico}
             </Badge>
           </Group>
-          <Tooltip label="Editar consulta" withArrow>
-            <Button
-              size="compact-xs"
-              variant="subtle"
-              color="blue"
-              leftSection={<IconEdit size={13} />}
-              onClick={() => setModoEdicion(true)}
-            >
-              Editar
-            </Button>
+          <Tooltip
+            label={noEditable ?? "Editar consulta"}
+            withArrow
+            multiline
+            w={noEditable ? 240 : undefined}
+          >
+            {/* El `span` sostiene el tooltip cuando el botón está deshabilitado:
+                un botón inerte no emite los eventos que lo abren, y sin el
+                motivo a la vista el bloqueo parecería un fallo. */}
+            <span>
+              <Button
+                size="compact-xs"
+                variant="subtle"
+                color="blue"
+                leftSection={<IconEdit size={13} />}
+                disabled={!!noEditable}
+                onClick={() => setModoEdicion(true)}
+              >
+                Editar
+              </Button>
+            </span>
           </Tooltip>
         </Group>
+
+        <CorreccionesConsulta consultaId={consultaPrevia.id} />
 
         <Stack gap={0} px="md" pb="md">
           <SeccionVista

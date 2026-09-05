@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Dispensario;
 
+use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,6 +11,12 @@ class UpdateConsultaMedicaRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /** Igual que en el alta: se limpia antes de validar. */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(ConsultaMedica::limpiarCamposHtml($this->all()));
     }
 
     public function rules(): array

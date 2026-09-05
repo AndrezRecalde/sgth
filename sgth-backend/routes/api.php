@@ -1079,6 +1079,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::get('/', [ConsultaMedicaController::class, 'index']);
                 Route::post('/', [ConsultaMedicaController::class, 'store']);
+                // Antes del comodín {id}, o «versiones» se leería como un id.
+                Route::get('{id}/versiones',
+                    [ConsultaMedicaController::class, 'versiones']
+                );
                 Route::get('{id}', [ConsultaMedicaController::class, 'show']);
                 Route::patch('{id}', [ConsultaMedicaController::class, 'update'])
                     ->middleware('role:medico|odontologo');

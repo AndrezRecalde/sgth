@@ -120,11 +120,20 @@ export const recetaService = {
       `/dispensario/recetas/${id}`
     ).then(r => r.data.datos),
 
+  /**
+   * Las recetas de una consulta. Comparte endpoint con el despacho, que se
+   * paginó: hay que sacar la página de dentro, y el tipo declaraba un array
+   * que ya no llegaba —TypeScript no comprueba el JSON, así que la pantalla
+   * reventaba con «recetas.map is not a function»—.
+   *
+   * `per_page` alto porque aquí no hay paginador: una consulta tiene un puñado
+   * de recetas y se enseñan todas.
+   */
   listarPorConsulta: (consultaId: number) =>
-    api.get<ApiResponse<RecetaMedica[]>>(
+    api.get<ApiResponse<PaginatedResponse<RecetaMedica>>>(
       `/dispensario/recetas`,
-      { params: { consulta_medica_id: consultaId } }
-    ).then(r => r.data.datos),
+      { params: { consulta_medica_id: consultaId, per_page: 100 } }
+    ).then(r => r.data.datos?.data ?? []),
 
   anular: (id: number, motivo: string) =>
     api.post<ApiResponse<RecetaMedica>>(

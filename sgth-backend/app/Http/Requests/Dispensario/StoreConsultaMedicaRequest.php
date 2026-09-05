@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Requests\Dispensario;
 
+use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,6 +10,15 @@ class StoreConsultaMedicaRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Se limpia antes de validar, no después: así el `max:` mide lo que de
+     * verdad se va a guardar, y no el texto con etiquetas que luego se caen.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(ConsultaMedica::limpiarCamposHtml($this->all()));
     }
 
     public function rules(): array

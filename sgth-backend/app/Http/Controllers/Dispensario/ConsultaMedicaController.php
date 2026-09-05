@@ -80,18 +80,72 @@ final class ConsultaMedicaController extends Controller
         );
     }
 
+    /**
+     * Ventana durante la que su autor puede corregir la nota.
+     *
+     * Un día es lo que ya aplica el odontograma para anular un procedimiento
+     * fuera de su consulta, y es lo que separa «me equivoqué escribiendo» de
+     * «estoy reescribiendo el pasado». Pasado ese plazo la corrección deja de
+     * ser una corrección: lo que corresponde es una consulta nueva, que es
+     * como se rectifica una historia clínica.
+     */
+    public const HORAS_PARA_CORREGIR = 24;
+
     public function update(
         UpdateConsultaMedicaRequest $request,
         int $id
     ): JsonResponse {
+        $consulta = ConsultaMedica::findOrFail($id);
+        $usuario  = $request->user();
+
+        // La nota la firma quien atendió. Hasta ahora cualquier médico podía
+        // reescribir la consulta de cualquier colega y de cualquier paciente,
+        // sin dejar rastro; el odontograma de la pestaña de al lado ya exigía
+        // ser quien registró el procedimiento.
+        if ($consulta->medico_id !== $usuario->id) {
+            return ApiResponse::error(
+                'Solo quien atendió la consulta puede corregirla. Para ' .
+                'añadir algo a la historia del paciente, registre una ' .
+                'consulta nueva.',
+                null,
+                403
+            );
+        }
+
+        if ($consulta->created_at->diffInHours(now()) >= self::HORAS_PARA_CORREGIR) {
+            return ApiResponse::error(
+                'Esta consulta ya no se puede corregir: se registró hace más ' .
+                'de ' . self::HORAS_PARA_CORREGIR . ' horas. Lo que ' .
+                'corresponde es registrar una consulta nueva.',
+                null,
+                422
+            );
+        }
+
         $consulta = $this->historiaService->actualizarConsulta(
             $id,
-            $request->validated()
+            $request->validated(),
+            $usuario->id
         );
 
         return ApiResponse::ok(
             $consulta, 'Consulta actualizada.'
         );
+    }
+
+    /**
+     * Lo que la consulta decía antes de cada corrección, de la más reciente a
+     * la más antigua. Vacío mientras nadie la haya tocado.
+     */
+    public function versiones(int $id): JsonResponse
+    {
+        $consulta = ConsultaMedica::with([
+            'versiones.autorDelCambio:id,usuario_ti,email,servidor_id',
+            'versiones.autorDelCambio.servidor:id,nombre,apellido',
+            'versiones.diagnosticoCie10',
+        ])->findOrFail($id);
+
+        return ApiResponse::ok($consulta->versiones);
     }
 
     public function marcarEnConsulta(
