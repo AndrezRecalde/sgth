@@ -2393,3 +2393,119 @@ test('corregir_una_consulta_archiva_lo_que_decia_antes', function () {
         ->diagnostico_detallado)->toBe('Ulcera gastrica');
 });
 
+
+/** Una consulta lista para emitirle un certificado. */
+function consultaParaCertificado(
+    int $servidorId,
+    string $cedula,
+    int $medicoId
+): App\Models\Dispensario\ConsultaMedica {
+    $historia = historiaDePrueba($servidorId, $cedula);
+
+    return ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id'           => $medicoId,
+        'fecha_consulta'      => now(),
+        'hora_consulta'       => now()->format('H:i:s'),
+        'motivo_consulta'     => 'Gripe',
+    ]);
+}
+
+test('el_folio_del_certificado_sale_del_mayor_no_de_contar_filas', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    // Un familiar: para el servidor titular el folio lo pone el permiso, así
+    // que la serie CERT- solo la usan los certificados de familiares.
+    $hija = App\Models\Expediente\CargaFamiliar::create([
+        'servidor_id'      => $this->paciente->id,
+        'cedula'           => '0801234571',
+        'nombres'          => 'Ana',
+        'apellidos'        => 'Perez',
+        'parentesco'       => App\Enums\TipoParentesco::HIJO,
+        'fecha_nacimiento' => now()->subYears(10),
+        'estado'           => true,
+    ]);
+
+    $historia = HistoriaClinica::create([
+        'numero_historia'   => $hija->cedula,
+        'cedula_paciente'   => $hija->cedula,
+        'tipo_paciente'     => 'familiar',
+        'carga_familiar_id' => $hija->id,
+        'estado'            => true,
+    ]);
+
+    $servicio = app(App\Services\Dispensario\CertificadoMedicoService::class);
+    $anio = date('Y');
+
+    $emitir = function () use ($historia) {
+        $consulta = ConsultaMedica::create([
+            'historia_clinica_id' => $historia->id,
+            'medico_id'           => $this->medico->id,
+            'fecha_consulta'      => now(),
+            'hora_consulta'       => now()->format('H:i:s'),
+            'motivo_consulta'     => 'Gripe',
+        ]);
+
+        return app(App\Services\Dispensario\CertificadoMedicoService::class)
+            ->emitir([
+                'consulta_medica_id' => $consulta->id,
+                'dias_reposo'        => 2,
+            ], $this->medico->id);
+    };
+
+    // Arrancaba en 00000 por no sumar uno.
+    expect($emitir()->folio)->toBe("CERT-{$anio}-00001");
+    $segundo = $emitir();
+    expect($segundo->folio)->toBe("CERT-{$anio}-00002");
+
+    // La tabla borra en blando y el folio es único: contando filas, retirar
+    // uno hacía repetir un folio vivo.
+    $segundo->delete();
+
+    expect($emitir()->folio)->toBe("CERT-{$anio}-00003");
+});
+
+test('el_folio_del_permiso_del_certificado_tampoco_cuenta_filas', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $servicio = app(App\Services\Dispensario\CertificadoMedicoService::class);
+    $anio = now()->year;
+
+    $emitir = function () {
+        $consulta = ConsultaMedica::create([
+            'historia_clinica_id' => HistoriaClinica::where(
+                'servidor_id', $this->paciente->id
+            )->value('id'),
+            'medico_id'       => $this->medico->id,
+            'fecha_consulta'  => now(),
+            'hora_consulta'   => now()->format('H:i:s'),
+            'motivo_consulta' => 'Gripe',
+        ]);
+
+        return app(App\Services\Dispensario\CertificadoMedicoService::class)
+            ->emitir([
+                'consulta_medica_id' => $consulta->id,
+                'dias_reposo'        => 1,
+            ], $this->medico->id);
+    };
+
+    historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    // El permiso también arrancaba en 00000 y también contaba filas sobre una
+    // tabla que borra en blando y tiene el folio único.
+    $primero = $emitir();
+    expect($primero->permisoServidor->folio)->toBe("PER-{$anio}-00001");
+
+    $segundo = $emitir();
+    expect($segundo->permisoServidor->folio)->toBe("PER-{$anio}-00002");
+
+    $segundo->permisoServidor->delete();
+
+    expect($emitir()->permisoServidor->folio)->toBe("PER-{$anio}-00003");
+});

@@ -98,14 +98,7 @@ class CertificadoMedicoService
         int $emisorId,
         ?string $observacion,
     ): PermisoServidor {
-        $anioActual     = $fecha->year;
-        $cantidadActual = PermisoServidor::whereYear(
-            'created_at', $anioActual
-        )->count();
-        $secuencial = str_pad(
-            $cantidadActual, 5, '0', STR_PAD_LEFT
-        );
-        $folio = "PER-{$anioActual}-{$secuencial}";
+        $folio = $this->generarFolioPermiso($fecha->year);
 
         return PermisoServidor::create([
             'servidor_id' => $servidorId,
@@ -126,15 +119,65 @@ class CertificadoMedicoService
         ]);
     }
 
+    /**
+     * El folio del permiso que acompaña al certificado, con el mismo criterio.
+     *
+     * Contaba filas de `permisos_servidor`, que también borra en blando y
+     * también tiene el folio único: un permiso retirado hacía repetir uno vivo.
+     * Y arrancaba en 00000. Se toca desde aquí porque es este servicio el que
+     * lo emite; el resto de Asistencia crea sus permisos por otro camino.
+     */
+    private function generarFolioPermiso(int $anio): string
+    {
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("permiso_servidor_folio_{$anio}"),
+        ]);
+
+        $ultimoFolio = PermisoServidor::withTrashed()
+            ->where('folio', 'like', "PER-{$anio}-%")
+            ->max('folio');
+
+        $ultimoSecuencial = $ultimoFolio
+            ? (int) substr($ultimoFolio, strlen("PER-{$anio}-"))
+            : 0;
+
+        return "PER-{$anio}-" . str_pad(
+            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
+        );
+    }
+
+    /**
+     * Siguiente folio del año, tomado del MÁXIMO ya emitido.
+     *
+     * Contaba filas, y aquí eso falla de tres maneras: la tabla borra en blando
+     * y el folio es único, así que un certificado retirado hacía repetir uno
+     * vivo; el conteo incluía los certificados de servidores, cuyo folio lo
+     * pone el permiso y no lleva este prefijo; y arrancaba en 00000 por no
+     * sumar uno.
+     *
+     * El bloqueo de aviso serializa leer el máximo y escribir el folio entre
+     * emisiones simultáneas, y lo suelta el cierre de la transacción.
+     */
     private function generarFolioCertificado(): string
     {
-        $anioActual     = date('Y');
-        $cantidadActual = CertificadoMedico::whereYear(
-            'created_at', $anioActual
-        )->count();
+        $anio = date('Y');
+
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("certificado_medico_folio_{$anio}"),
+        ]);
+
+        $ultimoFolio = CertificadoMedico::withTrashed()
+            ->where('folio', 'like', "CERT-{$anio}-%")
+            ->max('folio');
+
+        $ultimoSecuencial = $ultimoFolio
+            ? (int) substr($ultimoFolio, strlen("CERT-{$anio}-"))
+            : 0;
+
         $secuencial = str_pad(
-            $cantidadActual, 5, '0', STR_PAD_LEFT
+            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
         );
-        return "CERT-{$anioActual}-{$secuencial}";
+
+        return "CERT-{$anio}-{$secuencial}";
     }
 }
