@@ -19,7 +19,8 @@
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-activitylog": "^4.0",
         "spatie/laravel-pdf": "^2.8",
-        "spatie/laravel-permission": "^7.4"
+        "spatie/laravel-permission": "^7.4",
+        "symfony/html-sanitizer": "^7.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

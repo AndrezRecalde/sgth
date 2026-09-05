@@ -55,6 +55,9 @@ function SeccionVista({
   valor?: string | null;
 }) {
   if (!valor) return null;
+  // El HTML llega saneado del servidor: se limpia al guardar con lista blanca
+  // de las etiquetas que produce el editor, y lo que ya estaba guardado se
+  // saneó en una migración. Ver App\Support\HtmlClinico.
   const esHtml = valor.startsWith("<");
   return (
     <Stack

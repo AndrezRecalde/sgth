@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\User;
 use App\Models\Dispensario\DiagnosticoCie10;
+use App\Support\HtmlClinico;
 
 class ConsultaMedica extends Model
 {
@@ -38,6 +39,38 @@ class ConsultaMedica extends Model
             'fecha_consulta'        => 'date',
             'estado'                => 'boolean',
         ];
+    }
+
+    /**
+     * Los campos que el médico escribe con el editor enriquecido y que, por
+     * tanto, llegan como HTML.
+     *
+     * @var list<string>
+     */
+    public const CAMPOS_HTML = [
+        'enfermedad_actual', 'plan_tratamiento',
+    ];
+
+    /**
+     * Pasa por el saneador los campos que vienen como HTML.
+     *
+     * Los demás se guardan tal cual: son texto plano y la pantalla los pinta
+     * como texto, sin interpretarlos.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>  solo los campos HTML presentes, ya limpios
+     */
+    public static function limpiarCamposHtml(array $datos): array
+    {
+        $limpios = [];
+
+        foreach (self::CAMPOS_HTML as $campo) {
+            if (array_key_exists($campo, $datos) && is_string($datos[$campo])) {
+                $limpios[$campo] = HtmlClinico::limpiar($datos[$campo]);
+            }
+        }
+
+        return $limpios;
     }
 
     public function historiaClinica(): BelongsTo
