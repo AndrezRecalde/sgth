@@ -10,12 +10,16 @@ import {
   Badge,
   Card,
   Tooltip,
+  Alert,
 } from "@mantine/core";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconCheck, IconEdit, IconX } from "@tabler/icons-react";
-import { useState, useEffect } from "react";
+import {
+  IconCheck, IconEdit, IconX, IconCloud, IconCloudOff, IconHistory,
+} from "@tabler/icons-react";
+import { useState, useEffect, useRef } from "react";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { useBorradorConsulta } from "../hooks/useBorradorConsulta";
 import {
   useRegistrarConsulta,
   useActualizarConsulta,
@@ -47,6 +51,58 @@ function formatFechaLocal(d: Date): string {
     String(d.getMonth() + 1).padStart(2, "0"),
     String(d.getDate()).padStart(2, "0"),
   ].join("-");
+}
+
+/**
+ * Si hay algo que merezca guardarse, o el formulario sigue como nació.
+ *
+ * Sin esto se guardaba un borrador en cuanto se abría la consulta, y al volver
+ * a entrar la pantalla anunciaba que «recuperó lo que estaba escrito» sin que
+ * nadie hubiera escrito nada: un aviso que miente es peor que no avisar.
+ *
+ * El motivo de consulta no cuenta por sí solo: viene rellenado con lo que pidió
+ * el paciente al agendar, no con lo que el médico teclea.
+ */
+function hayAlgoEscrito(
+  valores: Partial<ConsultaMedicaFormData>,
+  motivoInicial: string,
+  cie10Principal: DiagnosticoCie10 | null,
+  cie10Secundarios: DiagnosticoCie10[],
+): boolean {
+  const conTexto = [
+    valores.enfermedad_actual,
+    valores.examen_fisico,
+    valores.diagnostico_detallado,
+    valores.plan_tratamiento,
+    valores.notas_medico,
+  ].some((v) => !!limpiarHtml(v));
+
+  return (
+    conTexto ||
+    !!cie10Principal ||
+    cie10Secundarios.length > 0 ||
+    (valores.motivo_consulta ?? "") !== motivoInicial
+  );
+}
+
+/** El texto de un campo del editor, sin las etiquetas que deja vacío. */
+function limpiarHtml(valor?: string | null): string {
+  return (valor ?? "").replace(/<[^>]*>/g, "").trim();
+}
+
+/** «hace un momento», «hace 12 minutos», o la hora si ya es de antes. */
+function formatCuando(iso: string): string {
+  const minutos = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+
+  if (minutos < 1) return "hace un momento";
+  if (minutos < 60) return `hace ${minutos} minuto${minutos === 1 ? "" : "s"}`;
+
+  return `el ${new Date(iso).toLocaleString("es-EC", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
 }
 
 /**
@@ -178,6 +234,88 @@ export function TabConsulta({
     },
   });
 
+  // El borrador solo tiene sentido en una consulta que aún no existe: una ya
+  // guardada se corrige, y esa corrección tiene su propio rastro versionado.
+  const esConsultaNueva = !consultaPrevia;
+  const motivoInicial = turno.motivo_solicitud ?? "";
+  const borradorCtl = useBorradorConsulta(turno.id, esConsultaNueva);
+  const [recuperado, setRecuperado] = useState(false);
+  const yaReseteado = useRef(false);
+
+  const contenidoBorrador = esConsultaNueva
+    ? (borradorCtl.borrador?.contenido as
+        | (ConsultaMedicaFormData & {
+            cie10_principal?: DiagnosticoCie10 | null;
+            cie10_secundarios?: DiagnosticoCie10[];
+          })
+        | undefined)
+    : undefined;
+
+  // Se recupera una sola vez, al llegar el borrador: volver a aplicarlo en cada
+  // refresco pisaría con una copia vieja lo que se está escribiendo. El ajuste
+  // se hace durante el render y no en un efecto, igual que el del modo edición
+  // de más arriba: React lo vuelve a pintar antes de que nada llegue a verse.
+  const idBorrador = borradorCtl.borrador?.id ?? null;
+  const [borradorAplicado, setBorradorAplicado] =
+    useState<number | null>(null);
+
+  if (idBorrador !== null && idBorrador !== borradorAplicado) {
+    setBorradorAplicado(idBorrador);
+
+    // Un borrador puede no llevar nada dentro: no se anuncia como recuperación
+    // de algo que nadie escribió.
+    if (
+      contenidoBorrador &&
+      hayAlgoEscrito(
+        contenidoBorrador,
+        motivoInicial,
+        contenidoBorrador.cie10_principal ?? null,
+        contenidoBorrador.cie10_secundarios ?? [],
+      )
+    ) {
+      setCie10Principal(contenidoBorrador.cie10_principal ?? null);
+      setCie10Secundarios(contenidoBorrador.cie10_secundarios ?? []);
+      setRecuperado(true);
+    }
+  }
+
+  // Los campos del formulario sí van por efecto: `reset` toca el estado interno
+  // de react-hook-form y no se puede llamar mientras se renderiza.
+  useEffect(() => {
+    if (!recuperado || yaReseteado.current || !contenidoBorrador) return;
+
+    yaReseteado.current = true;
+    const { cie10_principal, cie10_secundarios, ...campos } = contenidoBorrador;
+    void cie10_principal;
+    void cie10_secundarios;
+    reset(campos);
+  }, [recuperado, contenidoBorrador, reset]);
+
+  // Lo que hay escrito ahora mismo, para el guardado automático.
+  const valores = useWatch({ control });
+  const huella = JSON.stringify([valores, cie10Principal, cie10Secundarios]);
+
+  useEffect(() => {
+    if (!esConsultaNueva) return;
+    // Hasta que no se recupere lo guardado no se anota nada: si no, el
+    // formulario vacío del primer render pisaría el borrador que iba a llegar.
+    if (borradorCtl.cargando) return;
+    if (!hayAlgoEscrito(
+      valores, motivoInicial, cie10Principal, cie10Secundarios
+    )) {
+      return;
+    }
+
+    borradorCtl.anotar({
+      ...valores,
+      cie10_principal: cie10Principal,
+      cie10_secundarios: cie10Secundarios,
+    });
+    // `huella` resume el contenido: `valores` es un objeto nuevo en cada render
+    // y dispararía el efecto sin que nada hubiera cambiado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [huella, esConsultaNueva, borradorCtl.cargando]);
+
   useEffect(() => {
     if (consultaPrevia) {
       reset({
@@ -236,7 +374,14 @@ export function TabConsulta({
           plan_tratamiento: values.plan_tratamiento || null,
           notas_medico: values.notas_medico || null,
         },
-        { onSuccess: (consulta) => onGuardada(consulta) },
+        {
+          onSuccess: (consulta) => {
+            // El servidor ya retiró el borrador al registrar la consulta; esto
+            // corta el guardado que pudiera quedar en vuelo y limpia la caché.
+            borradorCtl.olvidar();
+            onGuardada(consulta);
+          },
+        },
       );
     }
   };
@@ -381,6 +526,78 @@ export function TabConsulta({
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack gap="sm" p="md">
+        {/* Recuperar en silencio sería peor que no recuperar: el médico tiene
+            que saber que lo que ve en pantalla es de antes, y poder tirarlo. */}
+        {recuperado && (
+          <Alert
+            icon={<IconHistory size={15} />}
+            color="blue"
+            variant="light"
+            p="xs"
+          >
+            <Group justify="space-between" wrap="nowrap" gap="xs">
+              <Text size="xs">
+                Se recuperó lo que estaba escrito
+                {borradorCtl.borrador?.updated_at && (
+                  <> (guardado {formatCuando(borradorCtl.borrador.updated_at)})</>
+                )}
+                . Todavía no es parte de la historia clínica.
+              </Text>
+              <Button
+                size="compact-xs"
+                variant="subtle"
+                color="gray"
+                onClick={() => {
+                  reset({
+                    tipo_atencion: "primera_vez",
+                    tipo_diagnostico: "presuntivo",
+                    motivo_consulta: turno.motivo_solicitud ?? "",
+                    enfermedad_actual: "",
+                    examen_fisico: "",
+                    diagnostico_detallado: "",
+                    plan_tratamiento: "",
+                    notas_medico: "",
+                  });
+                  setCie10Principal(null);
+                  setCie10Secundarios([]);
+                  setRecuperado(false);
+                  void borradorCtl.descartar();
+                }}
+              >
+                Descartar
+              </Button>
+            </Group>
+          </Alert>
+        )}
+
+        {esConsultaNueva && borradorCtl.estado !== "inactivo" && (
+          <Group gap={6} justify="flex-end">
+            {borradorCtl.estado === "error" ? (
+              <>
+                <IconCloudOff size={13} color="var(--mantine-color-orange-6)" />
+                <Text size="xs" c="orange">
+                  No se pudo guardar el borrador. Lo escrito sigue en pantalla.
+                </Text>
+              </>
+            ) : (
+              <>
+                <IconCloud size={13} color="var(--mantine-color-gray-6)" />
+                <Text size="xs" c="dimmed">
+                  {borradorCtl.estado === "guardando"
+                    ? "Guardando borrador…"
+                    : `Borrador guardado ${borradorCtl.guardadoEn
+                        ? "a las " +
+                          borradorCtl.guardadoEn.toLocaleTimeString("es-EC", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}`}
+                </Text>
+              </>
+            )}
+          </Group>
+        )}
+
         {consultaPrevia && (
           <Group justify="flex-end">
             <Button
