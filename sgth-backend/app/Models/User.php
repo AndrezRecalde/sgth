@@ -58,6 +58,17 @@ class User extends Authenticatable
         );
     }
 
+    /**
+     * Nunca devuelve null, aunque el atributo del que tira no esté cargado.
+     *
+     * Va en #[Appends], así que se calcula en cada serialización de cualquier
+     * User. Un `with('algo:id,usuario_ti,servidor_id')` —hay varios por el
+     * dispensario— deja `email` fuera, y para un usuario sin servidor el
+     * respaldo era justamente ese: devolvía null contra el tipo declarado y
+     * tumbaba la petición entera con un 500, en un listado que no tenía nada
+     * que ver. Las consultas siguen pidiendo `email` donde toca; esto es para
+     * que la próxima que lo olvide no derribe una pantalla.
+     */
     public function getNombreCompletoAttribute(): string
     {
         if ($this->servidor) {
@@ -66,7 +77,10 @@ class User extends Authenticatable
                 ($this->servidor->apellido ?? '')
             );
         }
-        return $this->email;
+
+        return $this->email
+            ?? $this->usuario_ti
+            ?? "Usuario #{$this->getKey()}";
     }
 
     public function tieneServidor(): bool

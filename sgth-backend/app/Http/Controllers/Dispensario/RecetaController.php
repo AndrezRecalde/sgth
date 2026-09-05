@@ -20,7 +20,7 @@ final class RecetaController extends Controller
             'items.inventario',
             'consultaMedica.historiaClinica.servidor',
             'consultaMedica.historiaClinica.cargaFamiliar.servidor',
-            'consultaMedica.medico:id,usuario_ti,servidor_id',
+            'consultaMedica.medico:id,usuario_ti,email,servidor_id',
             'consultaMedica.medico.servidor:id,nombre,apellido',
         ])->orderBy('created_at', 'desc');
 
