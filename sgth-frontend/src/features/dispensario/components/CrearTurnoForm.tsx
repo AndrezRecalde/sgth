@@ -49,8 +49,11 @@ export function CrearTurnoForm({
 
   const tipoAtencion = useWatch({ control, name: 'tipo_atencion' })
 
-  const { data: personal = [], isLoading: cargandoPersonal } =
+  const { data: resultadoPersonal, isLoading: cargandoPersonal } =
     usePersonalDisponible(tipoAtencion)
+
+  const personal       = resultadoPersonal?.personal ?? []
+  const hayDisponibles = resultadoPersonal?.hayDisponibles ?? true
 
   // Odontología no requiere triaje, Medicina General sí
   useEffect(() => {
@@ -133,7 +136,7 @@ export function CrearTurnoForm({
                 cargandoPersonal
                   ? 'Cargando...'
                   : personalOptions.length === 0
-                    ? 'Sin profesionales disponibles'
+                    ? 'Sin profesionales de esta especialidad'
                     : 'Seleccione el profesional'
               }
               data={personalOptions}
@@ -147,6 +150,10 @@ export function CrearTurnoForm({
           )}
         />
 
+        {/* El aviso decía «no hay profesionales marcados como disponibles»
+            cuando la lista salía vacía, pero la disponibilidad no se
+            consultaba nunca: la lista vacía solo significaba que no había
+            nadie con ese rol. Ahora cada caso dice lo suyo. */}
         {!cargandoPersonal && personalOptions.length === 0 && (
           <Alert
             icon={<IconInfoCircle size={14} />}
@@ -154,8 +161,20 @@ export function CrearTurnoForm({
             variant="light"
           >
             <Text size="xs">
-              No hay profesionales marcados como disponibles
-              para este tipo de atención en este momento.
+              No hay ningún profesional registrado para este tipo de atención.
+            </Text>
+          </Alert>
+        )}
+
+        {!cargandoPersonal && personalOptions.length > 0 && !hayDisponibles && (
+          <Alert
+            icon={<IconInfoCircle size={14} />}
+            color="orange"
+            variant="light"
+          >
+            <Text size="xs">
+              Nadie se ha marcado disponible para este tipo de atención. Se
+              muestran todos los profesionales para no detener el turno.
             </Text>
           </Alert>
         )}

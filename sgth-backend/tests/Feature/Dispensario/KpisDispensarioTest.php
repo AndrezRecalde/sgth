@@ -243,3 +243,101 @@ test('marcarse_disponible_es_solo_de_quien_atiende_pacientes', function () {
         ->assertOk()
         ->assertJsonPath('datos.disponible', true);
 });
+
+/** Un profesional del rol indicado, marcado o no como disponible. */
+function profesional(string $rol, string $usuario, bool $disponible): User
+{
+    $user = User::create([
+        'email' => "{$usuario}@example.com", 'usuario_ti' => $usuario,
+        'password' => bcrypt('123456'), 'primer_login' => false,
+        'activo' => true,
+    ]);
+    $user->assignRole(Role::firstOrCreate(
+        ['name' => $rol, 'guard_name' => 'sanctum']
+    ));
+
+    if ($disponible) {
+        DB::table('disponibilidad_medicos')->insert([
+            'user_id'        => $user->id,
+            'disponible'     => true,
+            'actualizado_en' => now(),
+            'created_at'     => now(),
+            'updated_at'     => now(),
+        ]);
+    }
+
+    return $user;
+}
+
+test('el_turno_solo_ofrece_a_quien_se_marco_disponible', function () {
+    // El selector pedía la lista completa del rol y la pantalla la presentaba
+    // como «marcados como disponibles»: el interruptor no hacía nada.
+    $disponible = profesional('medico', 'enguardia', true);
+    profesional('medico', 'encasa', false);
+
+    $respuesta = $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/disponibilidad/personal?tipo_atencion=medicina_general')
+        ->assertOk();
+
+    expect($respuesta->json('datos'))->toHaveCount(1);
+    expect($respuesta->json('datos.0.id'))->toBe($disponible->id);
+    expect($respuesta->json('meta.hay_disponibles'))->toBeTrue();
+});
+
+test('si_nadie_se_marco_disponible_se_ofrece_a_todos_diciendolo', function () {
+    profesional('medico', 'encasa', false);
+    profesional('medico', 'tambienencasa', false);
+
+    $respuesta = $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/disponibilidad/personal?tipo_atencion=medicina_general')
+        ->assertOk();
+
+    // Filtrar en firme dejaría a Recepción sin poder abrir un turno a las ocho
+    // de la mañana porque todavía nadie ha pulsado su interruptor.
+    expect($respuesta->json('datos'))->toHaveCount(2);
+    expect($respuesta->json('meta.hay_disponibles'))->toBeFalse();
+});
+
+test('un_odontologo_disponible_no_sale_para_medicina_general', function () {
+    profesional('odontologo', 'muelas', true);
+    $medico = profesional('medico', 'enguardia', true);
+
+    $general = $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/disponibilidad/personal?tipo_atencion=medicina_general')
+        ->assertOk();
+    expect($general->json('datos'))->toHaveCount(1);
+    expect($general->json('datos.0.id'))->toBe($medico->id);
+
+    $odonto = $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/disponibilidad/personal?tipo_atencion=odontologia')
+        ->assertOk();
+    expect($odonto->json('datos.0.usuario_ti') ?? $odonto->json('datos'))
+        ->toHaveCount(1);
+});
+
+test('enfermeria_no_figura_entre_los_profesionales_de_un_turno', function () {
+    // Enfermería no atiende consultas: no debe ofrecerse para asignarle un
+    // turno, ni marcada ni sin marcar.
+    profesional('enfermera', 'cuidados', true);
+
+    // Los dos roles clínicos tienen que existir: el filtro los consulta por
+    // nombre y sin ellos la búsqueda ni siquiera llega a hacerse.
+    foreach (['medico', 'odontologo'] as $rol) {
+        Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']);
+    }
+
+    foreach (['medicina_general', 'odontologia'] as $tipo) {
+        $respuesta = $this->actingAs($this->medico, 'sanctum')
+            ->getJson("/api/v1/dispensario/disponibilidad/personal?tipo_atencion={$tipo}")
+            ->assertOk();
+
+        expect(collect($respuesta->json('datos'))->pluck('nombre_completo'))
+            ->not->toContain('cuidados');
+    }
+});
+
+test('el_tipo_de_atencion_tiene_que_ser_uno_de_los_dos', function () {
+    $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/disponibilidad/personal?tipo_atencion=veterinaria')
+        ->assertStatus(422);
+});
