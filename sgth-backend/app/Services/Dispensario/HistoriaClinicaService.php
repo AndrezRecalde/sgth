@@ -6,6 +6,7 @@ use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
 use App\Enums\EspecialidadAtencion;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
+use App\Models\Dispensario\BorradorConsulta;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\VersionConsultaMedica;
@@ -277,6 +278,14 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 $this->agendaService->marcarAtendido(
                     $datos['agenda_medica_id']
                 );
+
+                // Lo que se llevaba escrito ya está en la historia clínica: el
+                // borrador deja de tener razón de ser, y dejarlo haría que al
+                // volver a abrir el turno se ofreciera recuperar una nota que
+                // ya está guardada.
+                BorradorConsulta::where(
+                    'agenda_medica_id', $datos['agenda_medica_id']
+                )->where('medico_id', $consulta->medico_id)->delete();
             }
 
             return $consulta->load([

@@ -28,6 +28,7 @@ use App\Http\Controllers\Dispensario\AlergiaPacienteController;
 use App\Http\Controllers\Dispensario\AntecedentePacienteController;
 use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
 use App\Http\Controllers\Dispensario\CertificadoMedicoController;
+use App\Http\Controllers\Dispensario\BorradorConsultaController;
 use App\Http\Controllers\Dispensario\ConsultaMedicaController;
 use App\Http\Controllers\Dispensario\DashboardDispensarioController;
 use App\Http\Controllers\Dispensario\DiagnosticoCie10Controller;
@@ -1079,6 +1080,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::get('/', [ConsultaMedicaController::class, 'index']);
                 Route::post('/', [ConsultaMedicaController::class, 'store']);
+
+                // Lo que se lleva escrito y aún no se ha guardado. Antes del
+                // comodín {id}, o «borrador» se leería como un id.
+                Route::get('borrador',
+                    [BorradorConsultaController::class, 'show']
+                )->name('dispensario.consultas.borrador.show');
+                Route::put('borrador',
+                    [BorradorConsultaController::class, 'guardar']
+                )->name('dispensario.consultas.borrador.guardar');
+                Route::delete('borrador',
+                    [BorradorConsultaController::class, 'destroy']
+                )->name('dispensario.consultas.borrador.destroy');
+
                 // Antes del comodín {id}, o «versiones» se leería como un id.
                 Route::get('{id}/versiones',
                     [ConsultaMedicaController::class, 'versiones']
