@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react'
 import { AppBreadcrumbs } from './AppBreadcrumbs'
 import { UserMenu } from './UserMenu'
+import { DisponibilidadToggle } from '@/features/dispensario/components/DisponibilidadToggle'
 import { usePaletteStore } from '@/store/ui.palette.store'
 import type { Subsistema } from '@/config/routes'
 import classes from './Topbar.module.css'
@@ -66,6 +67,10 @@ export function Topbar({
       </div>
 
       <div className={classes.right}>
+        {/* Solo en el dispensario, y dentro de él solo a quien atiende: es su
+            estado, y se cambia desde donde esté trabajando. */}
+        {subsistema === 'salud' && <DisponibilidadToggle />}
+
         <UnstyledButton
           onClick={abrirPaleta}
           className={classes.searchTrigger}

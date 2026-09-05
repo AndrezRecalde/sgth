@@ -2,6 +2,7 @@
 namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\EstadisticasDispensarioServiceInterface;
+use App\Enums\EspecialidadAtencion;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\LoteMedicina;
@@ -15,24 +16,47 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
         $inicioMes = Carbon::now()->startOfMonth();
         $finMes = Carbon::now()->endOfMonth();
 
-        // 1. Atenciones mes actual
+        // 1. Atenciones mes actual, y de qué especialidad fueron
         $atencionesMesActual = ConsultaMedica::whereBetween('created_at', [$inicioMes, $finMes])->count();
 
-        // 2. Pacientes por tipo
+        // El dato existe en la consulta desde que dejó de vivir solo en el
+        // turno. Sin este desglose, medicina general y odontología iban en el
+        // mismo número y ninguna de las dos podía justificar nada.
+        $porEspecialidad = DB::table('consultas_medicas')
+            ->whereBetween('created_at', [$inicioMes, $finMes])
+            ->select('especialidad', DB::raw('COUNT(*) as total'))
+            ->groupBy('especialidad')
+            ->pluck('total', 'especialidad');
+
+        // 2. Pacientes por tipo (mes actual)
+        // Antes no filtraba por fecha: dentro de unos KPI mensuales, este
+        // contaba desde el principio de los tiempos, así que no cuadraba con
+        // las atenciones del mes que tenía al lado.
         $pacientes = DB::table('consultas_medicas')
             ->join('historias_clinicas', 'consultas_medicas.historia_clinica_id', '=', 'historias_clinicas.id')
+            ->whereBetween('consultas_medicas.created_at', [$inicioMes, $finMes])
             ->selectRaw("
                 SUM(CASE WHEN historias_clinicas.carga_familiar_id IS NULL THEN 1 ELSE 0 END) as titulares,
                 SUM(CASE WHEN historias_clinicas.servidor_id IS NULL THEN 1 ELSE 0 END) as beneficiarios
             ")
             ->first();
 
-        // 3. Top Diagnosticos CIE-10 (mes actual)
+        // 3. Top Diagnosticos CIE-10 (mes actual), con su especialidad
         $topDiagnosticos = DB::table('consultas_medicas')
             ->join('diagnosticos_cie10', 'consultas_medicas.diagnostico_cie10_id', '=', 'diagnosticos_cie10.id')
             ->whereBetween('consultas_medicas.created_at', [$inicioMes, $finMes])
-            ->select('diagnosticos_cie10.codigo', 'diagnosticos_cie10.descripcion', DB::raw('COUNT(*) as total'))
-            ->groupBy('diagnosticos_cie10.id', 'diagnosticos_cie10.codigo', 'diagnosticos_cie10.descripcion')
+            ->select(
+                'diagnosticos_cie10.codigo',
+                'diagnosticos_cie10.descripcion',
+                'consultas_medicas.especialidad',
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy(
+                'diagnosticos_cie10.id',
+                'diagnosticos_cie10.codigo',
+                'diagnosticos_cie10.descripcion',
+                'consultas_medicas.especialidad'
+            )
             ->orderByDesc('total')
             ->limit(5)
             ->get();
@@ -55,12 +79,33 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
             ->groupBy('estado')
             ->pluck('total', 'estado');
 
-        // 6. Consultas por Médico (mes actual)
+        // 6. Consultas por Médico (mes actual), desglosadas por especialidad
+        //
+        // Se leía `users.name`, una columna que esta tabla no tiene: el nombre
+        // del profesional está en `servidores`, y `users` solo guarda el correo
+        // y el usuario de red. La consulta reventaba con «column users.name
+        // does not exist», así que estos KPI devolvían un 500 entero — nadie lo
+        // notó porque todavía no hay pantalla que los pida.
         $consultasPorMedico = DB::table('consultas_medicas')
             ->join('users', 'consultas_medicas.medico_id', '=', 'users.id')
+            ->leftJoin('servidores', 'users.servidor_id', '=', 'servidores.id')
             ->whereBetween('consultas_medicas.created_at', [$inicioMes, $finMes])
-            ->select('users.name as medico', DB::raw('COUNT(*) as total_consultas'))
-            ->groupBy('users.id', 'users.name')
+            ->select(
+                DB::raw(
+                    "COALESCE(
+                        NULLIF(TRIM(CONCAT(servidores.nombre, ' ', servidores.apellido)), ''),
+                        users.usuario_ti,
+                        users.email
+                     ) as medico"
+                ),
+                'consultas_medicas.especialidad',
+                DB::raw('COUNT(*) as total_consultas')
+            )
+            ->groupBy(
+                'users.id', 'servidores.nombre', 'servidores.apellido',
+                'users.usuario_ti', 'users.email',
+                'consultas_medicas.especialidad'
+            )
             ->orderByDesc('total_consultas')
             ->get();
 
@@ -97,6 +142,14 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
 
         return [
             'atenciones_mes_actual' => $atencionesMesActual,
+            'atenciones_por_especialidad' => [
+                'medicina_general' => (int) $porEspecialidad->get(
+                    EspecialidadAtencion::MEDICINA_GENERAL->value, 0
+                ),
+                'odontologia' => (int) $porEspecialidad->get(
+                    EspecialidadAtencion::ODONTOLOGIA->value, 0
+                ),
+            ],
             'pacientes_por_tipo' => [
                 'titulares' => (int) ($pacientes->titulares ?? 0),
                 'beneficiarios' => (int) ($pacientes->beneficiarios ?? 0),

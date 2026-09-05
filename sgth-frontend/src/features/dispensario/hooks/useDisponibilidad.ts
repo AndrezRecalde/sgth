@@ -5,10 +5,13 @@ import React from 'react'
 import { disponibilidadService } from '../services/disponibilidadService'
 import { getApiErrorMessage } from '@/types/api'
 
-export function useMiDisponibilidad() {
+export function useMiDisponibilidad(activo = true) {
   return useQuery({
     queryKey: ['mi-disponibilidad'],
     queryFn:  disponibilidadService.miEstado,
+    // El control vive en la barra superior, que se pinta en todos los
+    // subsistemas: sin esto se preguntaría el estado también a quien no atiende.
+    enabled:  activo,
     staleTime: 1000 * 60,
   })
 }
