@@ -162,14 +162,18 @@ export function getTurnosColumns(
 
         return (
           <TableActions actions={[
+            // Rehacer el triaje se permite mientras el turno siga en el
+            // dispensario: una lectura mal tecleada tenía que poder
+            // corregirse, y antes la acción quedaba inhabilitada para siempre
+            // en cuanto se registraba la primera toma. Cada toma se guarda
+            // aparte, así que corregir no borra lo anterior.
             {
-              label:    tieneTriaje
-                ? 'Triaje ya registrado'
-                : 'Tomar triaje',
+              label:    tieneTriaje ? 'Rehacer triaje' : 'Tomar triaje',
               icon:     <IconClipboardCheck size={14} />,
-              color:    tieneTriaje ? 'gray' : 'emerald',
+              color:    tieneTriaje ? 'blue' : 'emerald',
               onClick:  () => actions.onTomarTriaje?.(turno),
-              disabled: tieneTriaje || yaNoEstaEnEspera,
+              disabled: turno.estado === 'atendido'
+                || turno.estado === 'cancelado',
               hidden:   !actions.onTomarTriaje
                 || !turno.requiere_triaje,
             },

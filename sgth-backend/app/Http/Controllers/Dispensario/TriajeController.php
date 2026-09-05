@@ -34,19 +34,21 @@ class TriajeController extends Controller
             $this->edadDelPaciente($agenda)
         );
 
-        $triaje = Triaje::updateOrCreate(
-            ['agenda_medica_id' => $agenda->id],
-            [
-                ...$datos,
-                'agenda_medica_id'    => $agenda->id,
-                'historia_clinica_id' => $this->resolverHistoriaClinicaId($agenda),
-                'enfermera_id'        => $request->user()->id,
-                'imc'                 => $imc,
-                'nivel_alerta'        => $valoracion['nivel'],
-                'hallazgos_alerta'    => $valoracion['hallazgos'],
-                'registrado_en'       => now(),
-            ]
-        );
+        // Cada toma es una fila nueva. Antes esto era un `updateOrCreate` sobre
+        // la agenda: rehacer el triaje pisaba la lectura anterior y nadie podía
+        // saber que había existido. Un turno puede tener varias tomas —una
+        // corrección de digitación, o una segunda medición tras la espera— y
+        // todas quedan; la vigente es la última.
+        $triaje = Triaje::create([
+            ...$datos,
+            'agenda_medica_id'    => $agenda->id,
+            'historia_clinica_id' => $this->resolverHistoriaClinicaId($agenda),
+            'enfermera_id'        => $request->user()->id,
+            'imc'                 => $imc,
+            'nivel_alerta'        => $valoracion['nivel'],
+            'hallazgos_alerta'    => $valoracion['hallazgos'],
+            'registrado_en'       => now(),
+        ]);
 
         if ($agenda->estado === 'en_espera') {
             $agenda->update(['estado' => 'en_sala']);
@@ -57,13 +59,36 @@ class TriajeController extends Controller
         );
     }
 
+    /** La toma vigente del turno, que es la última registrada. */
     public function show(int $agendaId): JsonResponse
     {
-        $triaje = Triaje::where(
-            'agenda_medica_id', $agendaId
-        )->firstOrFail();
+        $triaje = Triaje::where('agenda_medica_id', $agendaId)
+            ->latest('id')
+            ->firstOrFail();
 
         return ApiResponse::ok($triaje);
+    }
+
+    /**
+     * Todas las tomas del turno, de la más antigua a la más reciente, con quién
+     * las registró. Es lo que permite ver que una lectura se corrigió y con qué
+     * cifras estaba antes.
+     */
+    public function historial(int $agendaId): JsonResponse
+    {
+        $tomas = Triaje::where('agenda_medica_id', $agendaId)
+            // `email` entra en el select aunque no se muestre: el accesor
+            // `nombre_completo` de User cae a él cuando el usuario no tiene
+            // servidor, y si no se cargó devuelve null contra su propio tipo
+            // declarado. El servidor va por lo mismo, para el caso normal.
+            ->with([
+                'enfermera:id,usuario_ti,email,servidor_id',
+                'enfermera.servidor:id,nombre,apellido',
+            ])
+            ->orderBy('id')
+            ->get();
+
+        return ApiResponse::ok($tomas);
     }
 
     public function ultimoPorAgenda(int $agendaId): JsonResponse
@@ -124,7 +149,10 @@ class TriajeController extends Controller
             'medico', 'servidor', 'cargaFamiliar.servidor',
         ])->where('estado', 'en_espera')
           ->where('requiere_triaje', true)
-          ->whereDoesntHave('triaje')
+          // Sobre `triajes` y no sobre `triaje`: el segundo es ahora una
+          // subconsulta «la última», y preguntarle si no existe no es lo mismo
+          // que preguntar si el turno no tiene ninguna toma.
+          ->whereDoesntHave('triajes')
           ->orderBy('registrado_en', 'asc')
           ->get();
 
