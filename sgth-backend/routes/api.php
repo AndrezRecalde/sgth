@@ -1113,6 +1113,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [CertificadoMedicoController::class, 'pdf']
         )->name('dispensario.certificados.pdf');
 
+        Route::patch('certificados-medicos/{id}/anular',
+            [CertificadoMedicoController::class, 'anular']
+        )->middleware('role:medico|odontologo|admin-dispensario')
+         ->name('dispensario.certificados.anular');
+
         Route::get('certificados-medicos/{id}',
             [CertificadoMedicoController::class, 'show']
         )->name('dispensario.certificados.show');

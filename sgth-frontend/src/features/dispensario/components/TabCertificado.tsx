@@ -6,16 +6,22 @@ import {
 } from '@mantine/core'
 import {
   IconCertificate, IconPlus,
-  IconCalendar, IconUser, IconDownload,
+  IconCalendar, IconUser, IconDownload, IconBan,
 } from '@tabler/icons-react'
+import { useState } from 'react'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  useCertificadosPorConsulta, useDescargarCertificado,
+  useCertificadosPorConsulta, useAnularCertificado,
+  useDescargarCertificado,
 } from '../hooks/useCertificado'
 import { EmitirCertificadoModal } from './EmitirCertificadoModal'
+import {
+  AnularRegistroModal, MOTIVOS_ANULAR_CERTIFICADO,
+} from './AnularRegistroModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
+import type { CertificadoMedico } from '../services/certificadoService'
 
 interface Props {
   turno:    AgendaMedica
@@ -34,7 +40,9 @@ export function TabCertificado({ turno, consulta }: Props) {
 
   const { data: certificados = [], isLoading } =
     useCertificadosPorConsulta(consulta.id)
+  const anular = useAnularCertificado(consulta.id)
   const { descargar, descargando } = useDescargarCertificado()
+  const [aAnular, setAAnular] = useState<CertificadoMedico | null>(null)
 
   const esFamiliar = !!turno.carga_familiar_id
 
@@ -70,21 +78,45 @@ export function TabCertificado({ turno, consulta }: Props) {
         />
       ) : (
         <Stack gap="sm">
-          {certificados.map((cert) => (
-            <Card key={cert.id} withBorder radius="md" p="sm">
+          {certificados.map((cert) => {
+            const anulado = !!cert.anulado_en
+            return (
+            <Card
+              key={cert.id}
+              withBorder
+              radius="md"
+              p="sm"
+              style={{ opacity: anulado ? 0.65 : 1 }}
+            >
               <Stack gap="xs">
                 <Group justify="space-between">
                   <Group gap="xs">
                     <ThemeIcon
-                      size="sm" color="blue" variant="light"
+                      size="sm"
+                      color={anulado ? 'gray' : 'blue'}
+                      variant="light"
                     >
                       <IconCertificate size={12} />
                     </ThemeIcon>
-                    <Text size="sm" fw={500} ff="monospace">
+                    <Text
+                      size="sm"
+                      fw={500}
+                      ff="monospace"
+                      td={anulado ? 'line-through' : undefined}
+                    >
                       {cert.folio}
                     </Text>
+                    {anulado && (
+                      <Badge size="xs" variant="light" color="orange">
+                        Anulado
+                      </Badge>
+                    )}
                   </Group>
-                  <Badge size="sm" variant="light" color="blue">
+                  <Badge
+                    size="sm"
+                    variant="light"
+                    color={anulado ? 'gray' : 'blue'}
+                  >
                     {cert.dias_reposo} día{cert.dias_reposo !== 1
                       ? 's' : ''} de reposo
                   </Badge>
@@ -128,11 +160,25 @@ export function TabCertificado({ turno, consulta }: Props) {
                       <Text span ff="monospace">
                         {cert.permiso_servidor.folio}
                       </Text>
+                      {anulado && ' — anulado con el certificado'}
                     </Text>
                   </Group>
                 )}
 
+                {anulado && cert.motivo_anulacion && (
+                  <Text size="xs" c="dimmed" fs="italic">
+                    Motivo: {cert.motivo_anulacion}
+                    {cert.anulador && (
+                      <> — {cert.anulador.nombre_completo
+                        ?? cert.anulador.usuario_ti}</>
+                    )}
+                  </Text>
+                )}
+
                 <Group gap="xs" mt={4}>
+                  {/* El PDF se descarga también si está anulado: lleva la
+                      marca «ANULADO» y hace falta poder enseñar qué se
+                      anuló. */}
                   <Button
                     size="compact-xs"
                     variant="light"
@@ -142,10 +188,23 @@ export function TabCertificado({ turno, consulta }: Props) {
                   >
                     Descargar PDF
                   </Button>
+
+                  {!anulado && (
+                    <Button
+                      size="compact-xs"
+                      variant="subtle"
+                      color="orange"
+                      leftSection={<IconBan size={13} />}
+                      onClick={() => setAAnular(cert)}
+                    >
+                      Anular
+                    </Button>
+                  )}
                 </Group>
               </Stack>
             </Card>
-          ))}
+            )
+          })}
         </Stack>
       )}
 
@@ -154,6 +213,28 @@ export function TabCertificado({ turno, consulta }: Props) {
         onClose={cerrarModal}
         consulta={consulta}
         esFamiliar={esFamiliar}
+      />
+
+      <AnularRegistroModal
+        opened={!!aAnular}
+        onClose={() => setAAnular(null)}
+        titulo="Anular certificado médico"
+        descripcion={
+          aAnular?.permiso_servidor
+            ? `Se anulará ${aAnular.folio} y con él el permiso ` +
+              `${aAnular.permiso_servidor.folio}, que dejará de justificar ` +
+              'la ausencia.'
+            : `Se anulará ${aAnular?.folio ?? ''}.`
+        }
+        motivos={MOTIVOS_ANULAR_CERTIFICADO}
+        loading={anular.isPending}
+        onConfirmar={(motivo) => {
+          if (!aAnular) return
+          anular.mutate(
+            { id: aAnular.id, motivo },
+            { onSuccess: () => setAAnular(null) }
+          )
+        }}
       />
     </Stack>
   )

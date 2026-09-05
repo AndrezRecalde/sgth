@@ -2468,6 +2468,87 @@ test('el_folio_del_certificado_sale_del_mayor_no_de_contar_filas', function () {
     expect($emitir()->folio)->toBe("CERT-{$anio}-00003");
 });
 
+test('anular_un_certificado_anula_tambien_su_permiso_de_asistencia', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $consulta = consultaParaCertificado(
+        $this->paciente->id, $this->paciente->cedula, $this->medico->id
+    );
+
+    $certificado = $this->postJson('/api/v1/dispensario/certificados-medicos', [
+        'consulta_medica_id' => $consulta->id,
+        'dias_reposo'        => 2,
+    ])->assertCreated()->json('datos');
+
+    // El permiso nace ACTIVO porque el médico es fuente confiable, y eso lo
+    // dejaba fuera del alcance de la anulación de Asistencia, que solo acepta
+    // los PENDIENTE. Sin esto quedaban los dos para siempre.
+    expect($certificado['permiso_servidor_id'])->not->toBeNull();
+
+    $permiso = App\Models\Asistencia\PermisoServidor::find(
+        $certificado['permiso_servidor_id']
+    );
+    expect($permiso->estado->value ?? $permiso->estado)
+        ->toBe(App\Enums\EstadoPermiso::ACTIVO->value);
+
+    $this->patchJson(
+        "/api/v1/dispensario/certificados-medicos/{$certificado['id']}/anular",
+        ['motivo_anulacion' => 'Diagnóstico corregido']
+    )->assertOk();
+
+    $enBase = App\Models\Dispensario\CertificadoMedico::find($certificado['id']);
+    expect($enBase->anulado_en)->not->toBeNull();
+    expect($enBase->anulado_por)->toBe($this->medico->id);
+    expect($enBase->motivo_anulacion)->toBe('Diagnóstico corregido');
+
+    // Y el permiso deja de justificar la ausencia.
+    $permiso->refresh();
+    expect($permiso->estado->value ?? $permiso->estado)
+        ->toBe(App\Enums\EstadoPermiso::ANULADO->value);
+    expect($permiso->anulado_por)->toBe($this->medico->id);
+
+    // Anularlo dos veces no cuela.
+    $this->patchJson(
+        "/api/v1/dispensario/certificados-medicos/{$certificado['id']}/anular",
+        ['motivo_anulacion' => 'Otra vez']
+    )->assertStatus(422);
+});
+
+test('otro_medico_no_anula_el_certificado_ajeno', function () {
+    $rol = Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    );
+    $this->medico->assignRole($rol);
+
+    $otro = App\Models\User::create([
+        'email' => 'chase@example.com', 'usuario_ti' => 'chase',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $otro->assignRole($rol);
+
+    $this->actingAs($this->medico, 'sanctum');
+    $consulta = consultaParaCertificado(
+        $this->paciente->id, $this->paciente->cedula, $this->medico->id
+    );
+
+    $certificado = $this->postJson('/api/v1/dispensario/certificados-medicos', [
+        'consulta_medica_id' => $consulta->id,
+        'dias_reposo'        => 1,
+    ])->assertCreated()->json('datos');
+
+    $this->actingAs($otro, 'sanctum');
+    $this->patchJson(
+        "/api/v1/dispensario/certificados-medicos/{$certificado['id']}/anular",
+        ['motivo_anulacion' => 'Porque si']
+    )->assertStatus(403);
+
+    expect(App\Models\Dispensario\CertificadoMedico::find($certificado['id'])
+        ->anulado_en)->toBeNull();
+});
+
 test('el_certificado_se_puede_descargar_en_pdf', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'medico', 'guard_name' => 'sanctum']

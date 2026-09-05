@@ -15,6 +15,35 @@ export function useCertificadosPorConsulta(consultaId: number) {
   })
 }
 
+export function useAnularCertificado(consultaId: number) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      certificadoService.anular(id, motivo),
+    onSuccess: (certificado) => {
+      notifications.show({
+        title:   'Certificado anulado',
+        message: certificado.permiso_servidor
+          ? 'El permiso de asistencia asociado también quedó anulado.'
+          : 'El certificado ya no es válido para justificar ausencia.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({
+        queryKey: ['certificados', 'consulta', consultaId],
+      })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
 /**
  * Descarga el PDF del certificado.
  *

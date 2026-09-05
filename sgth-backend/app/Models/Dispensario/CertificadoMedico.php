@@ -26,6 +26,9 @@ class CertificadoMedico extends Model
         'permiso_servidor_id',
         'folio',
         'tipo_paciente',
+        'anulado_en',
+        'anulado_por',
+        'motivo_anulacion',
         'created_by',
         'updated_by',
     ];
@@ -36,7 +39,13 @@ class CertificadoMedico extends Model
             'fecha_inicio' => 'date',
             'fecha_fin'    => 'date',
             'dias_reposo'  => 'integer',
+            'anulado_en'   => 'datetime',
         ];
+    }
+
+    public function estaAnulado(): bool
+    {
+        return $this->anulado_en !== null;
     }
 
     public function consultaMedica(): BelongsTo
@@ -47,6 +56,11 @@ class CertificadoMedico extends Model
     public function emisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'emitido_por');
+    }
+
+    public function anulador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulado_por');
     }
 
     public function diagnosticoCie10(): BelongsTo

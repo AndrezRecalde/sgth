@@ -121,6 +121,58 @@ class CertificadoMedicoService
     }
 
     /**
+     * Anula un certificado, y con él el permiso que creó.
+     *
+     * El permiso de Asistencia existe **por** el certificado: nace ACTIVO
+     * porque el médico es fuente confiable y se salta la confirmación de
+     * Recepción. Eso mismo lo dejaba fuera del alcance de la anulación de
+     * Asistencia, que solo acepta permisos PENDIENTE. Así que se retira desde
+     * aquí, que es de donde vino, o quedaría justificando una ausencia que ya
+     * no tiene certificado detrás.
+     *
+     * No hay plazo. Un certificado equivocado hay que poder corregirlo aunque
+     * los días de reposo ya hayan pasado; lo que quede en Asistencia es una
+     * consecuencia que corresponde asumir, no una razón para no poder tocarlo.
+     */
+    public function anular(
+        int $id,
+        string $motivo,
+        int $anuladoPor
+    ): CertificadoMedico {
+        return DB::transaction(function () use ($id, $motivo, $anuladoPor) {
+            $certificado = CertificadoMedico::with('permisoServidor')
+                ->findOrFail($id);
+
+            if ($certificado->anulado_en !== null) {
+                throw new ReglaNegocioException(
+                    "El certificado {$certificado->folio} ya fue anulado."
+                );
+            }
+
+            if ($certificado->permisoServidor) {
+                $certificado->permisoServidor->update([
+                    'estado'      => EstadoPermiso::ANULADO->value,
+                    'anulado_por' => $anuladoPor,
+                    'anulado_en'  => now(),
+                    'observacion' => 'Anulado con su certificado médico — '
+                        . $motivo,
+                ]);
+            }
+
+            $certificado->update([
+                'anulado_en'       => now(),
+                'anulado_por'      => $anuladoPor,
+                'motivo_anulacion' => $motivo,
+            ]);
+
+            return $certificado->load([
+                'consultaMedica', 'emisor', 'anulador',
+                'diagnosticoCie10', 'permisoServidor',
+            ]);
+        });
+    }
+
+    /**
      * El PDF del certificado, para imprimirlo o entregarlo.
      *
      * Sin esto el certificado solo existía como fila. Para un servidor medio
