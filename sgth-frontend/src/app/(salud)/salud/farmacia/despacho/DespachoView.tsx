@@ -23,6 +23,8 @@ import {
   DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar,
 } from '@/components/ui'
 
+const POR_PAGINA = 15
+
 const ESTADO_OPTIONS = [
   { value: 'pendiente',           label: 'Pendiente'  },
   { value: 'despachada_parcial',  label: 'Parcial'    },
@@ -70,6 +72,7 @@ export function DespachoView() {
   const [medicoId, setMedicoId] = useState<string | null>(null)
   const [rango, setRango] = useState<[Date | null, Date | null]>([null, null])
   const [estado, setEstado] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   const [recetaSel, setRecetaSel] = useState<RecetaMedica | null>(null)
   const [modalOpened, { open: abrirModal, close: cerrarModal }] =
@@ -81,16 +84,22 @@ export function DespachoView() {
 
   const { data: medicos = [] } = usePersonalMedico('medico')
 
-  const { data: recetas = [], isLoading, error } = useRecetasFarmacia({
+  const { data, isLoading, error } = useRecetasFarmacia({
     medico_id:   medicoId ? Number(medicoId) : undefined,
     fecha_desde: aIso(rango[0]),
     fecha_hasta: aIso(rango[1]),
     estado:      estado ?? undefined,
+    page,
+    per_page:    POR_PAGINA,
   })
 
-  const pendientes  = recetas.filter(r => r.estado === 'pendiente').length
-  const parciales   = recetas.filter(r => r.estado === 'despachada_parcial').length
-  const completadas = recetas.filter(r => r.estado === 'despachada_completa').length
+  const recetas = data?.recetas ?? []
+
+  // Los contadores vienen del servidor, no de la página cargada: contando lo
+  // que hay a la vista dirían «15 pendientes» habiendo cuarenta.
+  const pendientes  = data?.resumen.pendiente ?? 0
+  const parciales   = data?.resumen.despachada_parcial ?? 0
+  const completadas = data?.resumen.despachada_completa ?? 0
 
   const hayFiltros = !!(medicoId || rango[0] || estado)
 
@@ -98,6 +107,7 @@ export function DespachoView() {
     setMedicoId(null)
     setRango([null, null])
     setEstado(null)
+    setPage(1)
   }
 
   const columns = getRecetasColumns({
@@ -135,15 +145,15 @@ export function DespachoView() {
         actions={
           <>
             <Button size="xs" variant="default"
-              onClick={() => setRango(rangoHoy())}>
+              onClick={() => { setRango(rangoHoy()); setPage(1) }}>
               Hoy
             </Button>
             <Button size="xs" variant="default"
-              onClick={() => setRango(rangoSemana())}>
+              onClick={() => { setRango(rangoSemana()); setPage(1) }}>
               Esta semana
             </Button>
             <Button size="xs" variant="default"
-              onClick={() => setRango(rangoMes())}>
+              onClick={() => { setRango(rangoMes()); setPage(1) }}>
               Este mes
             </Button>
             {hayFiltros && (
@@ -165,7 +175,7 @@ export function DespachoView() {
           clearable
           {...contained}
           value={medicoId}
-          onChange={setMedicoId}
+          onChange={(v) => { setMedicoId(v); setPage(1) }}
           style={{ minWidth: 220 }}
         />
         <DatePickerInput
@@ -176,7 +186,7 @@ export function DespachoView() {
           clearable
           {...contained}
           value={rango}
-          onChange={(v) => setRango(v as [Date | null, Date | null])}
+          onChange={(v) => { setRango(v as [Date | null, Date | null]); setPage(1) }}
           style={{ minWidth: 240 }}
         />
         <Select
@@ -186,7 +196,7 @@ export function DespachoView() {
           clearable
           {...contained}
           value={estado}
-          onChange={setEstado}
+          onChange={(v) => { setEstado(v); setPage(1) }}
           style={{ minWidth: 160 }}
         />
       </Toolbar>
@@ -207,6 +217,10 @@ export function DespachoView() {
           records={recetas}
           columns={columns}
           minHeight={200}
+          totalRecords={data?.total ?? 0}
+          recordsPerPage={POR_PAGINA}
+          page={page}
+          onPageChange={setPage}
         />
       </DataState>
 

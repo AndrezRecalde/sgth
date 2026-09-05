@@ -102,10 +102,19 @@ export const inventarioMedicinaService = {
       `/dispensario/inventario/medicinas/${id}`
     ).then(r => r.data.datos),
 
-  kardex: (id: number) =>
-    api.get<ApiResponse<MovimientoInventario[]>>(
-      `/dispensario/inventario/medicinas/${id}/kardex`
-    ).then(r => r.data.datos),
+  /**
+   * Paginado: el kardex no deja de crecer —ninguna fila se borra, es el libro
+   * inmutable del inventario— así que traerlo entero deja de ser barato solo.
+   */
+  kardex: (id: number, page = 1, perPage = 20) =>
+    api.get<ApiResponse<PaginatedResponse<MovimientoInventario>>>(
+      `/dispensario/inventario/medicinas/${id}/kardex`,
+      { params: { page, per_page: perPage } }
+    ).then(r => ({
+      movimientos: r.data.datos?.data ?? [],
+      total:       r.data.datos?.total ?? 0,
+      ultimaPagina: r.data.datos?.last_page ?? 1,
+    })),
 
   // Endpoint propio, no el listado con `per_page: 1`: así el conteo aplica la
   // misma regla que el job de alertas y el tablero —solo medicinas activas— en

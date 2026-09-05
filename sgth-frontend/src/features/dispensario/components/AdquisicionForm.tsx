@@ -2,7 +2,7 @@
 
 import {
   Card, Stack, Group, Select, TextInput,
-  Textarea, Button, Table, Text, Alert,
+  Textarea, Button, Table, Text, Alert, SimpleGrid,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
@@ -95,10 +95,15 @@ export function AdquisicionForm({ onCreada }: Props) {
 
   return (
     <>
-      <Card withBorder radius="lg" p="xl">
+      {/* El acolchado se recorta en móvil: `xl` a cada lado se lleva casi un
+          quinto del ancho de un teléfono. */}
+      <Card withBorder radius="lg" p={{ base: 'md', sm: 'xl' }}>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="md">
-            <Group grow>
+            {/* Una columna en móvil. Con `Group grow` los dos campos se
+                repartían 375px a la fuerza, y la etiqueta «Fecha de
+                adquisición» se partía en dos líneas encima del propio valor. */}
+            <SimpleGrid cols={{ base: 1, sm: 2 }}>
               <Controller
                 name="tipo"
                 control={control}
@@ -126,9 +131,9 @@ export function AdquisicionForm({ onCreada }: Props) {
                   />
                 )}
               />
-            </Group>
+            </SimpleGrid>
 
-            <Group grow>
+            <SimpleGrid cols={{ base: 1, sm: 2 }}>
               <TextInput
                 label="N° de documento"
                 placeholder="Ej: CONT-2026-0045, FACT-001234"
@@ -143,7 +148,7 @@ export function AdquisicionForm({ onCreada }: Props) {
                 {...register('proveedor_o_donante')}
                 error={errors.proveedor_o_donante?.message}
               />
-            </Group>
+            </SimpleGrid>
 
             <Textarea
               label="Observaciones (opcional)"
@@ -183,6 +188,10 @@ export function AdquisicionForm({ onCreada }: Props) {
                   </Text>
                 </Alert>
               ) : (
+                // La tabla de ítems no cabe en 375px y no debe intentarlo: se
+                // desplaza dentro de su propio contenedor en vez de empujar la
+                // página entera de lado.
+                <Table.ScrollContainer minWidth={620} type="native">
                 <Table withTableBorder withColumnBorders>
                   <Table.Thead>
                     <Table.Tr>
@@ -206,6 +215,7 @@ export function AdquisicionForm({ onCreada }: Props) {
                     ))}
                   </Table.Tbody>
                 </Table>
+                </Table.ScrollContainer>
               )}
 
               {errors.items?.message && (

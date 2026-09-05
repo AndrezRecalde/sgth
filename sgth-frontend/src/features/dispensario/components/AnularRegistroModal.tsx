@@ -7,6 +7,7 @@ import {
 import { useState } from 'react'
 import { IconAlertTriangle, IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
 interface MotivoOption {
   value: string
@@ -67,6 +68,7 @@ export function AnularRegistroModal({
   motivos = MOTIVOS_CLINICOS,
 }: Props) {
   const contained = useContainedInput()
+  const { isMobile } = useMobileBreakpoint()
   const [motivoSel, setMotivoSel] = useState<string>('')
   const [motivoLibre, setMotivoLibre] = useState('')
 
@@ -94,7 +96,11 @@ export function AnularRegistroModal({
       onClose={handleClose}
       title={titulo}
       size="sm"
-      radius="xl"
+      radius={isMobile ? 0 : 'xl'}
+      // A pantalla completa en móvil: centrado, con el aviso, el select y el
+      // textarea de «otro motivo», el diálogo se comía la pantalla y dejaba los
+      // botones fuera de alcance.
+      fullScreen={isMobile}
     >
       <Stack gap="sm">
         <Alert

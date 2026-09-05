@@ -133,10 +133,13 @@ final class InventarioMedicinasController extends Controller
         return ApiResponse::ok($actualizado, $mensaje);
     }
 
-    public function kardex(int $id): JsonResponse
+    public function kardex(Request $request, int $id): JsonResponse
     {
-        $movimientos = $this->inventarioService->kardex($id);
+        $movimientos = $this->inventarioService->kardex(
+            $id,
+            $request->integer('per_page', 20)
+        );
 
-        return ApiResponse::ok($movimientos);
+        return ApiResponse::ok($movimientos, 'Kardex de la medicina.');
     }
 }

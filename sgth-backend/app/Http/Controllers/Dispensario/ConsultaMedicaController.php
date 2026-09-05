@@ -39,6 +39,21 @@ final class ConsultaMedicaController extends Controller
             $query->where('medico_id', $request->medico_id);
         }
 
+        // El historial de un paciente crece por años. Sin poder acotarlo por
+        // fechas hay que pasearse por todas las páginas para llegar al episodio
+        // que se busca.
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate(
+                'fecha_consulta', '>=', $request->input('fecha_desde')
+            );
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate(
+                'fecha_consulta', '<=', $request->input('fecha_hasta')
+            );
+        }
+
         $consultas = $query->paginate(
             $request->integer('per_page', 20)
         );

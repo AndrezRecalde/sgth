@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import type { ApiResponse } from '@/types/api'
+import type { ApiResponse, PaginatedResponse } from '@/types/api'
 import type {} from './inventarioMedicinaService'
 
 export interface ItemReceta {
@@ -70,16 +70,30 @@ export interface EmitirRecetaData {
 }
 
 export const recetaService = {
+  /**
+   * Devuelve la página y, aparte, los totales por estado. Los contadores de la
+   * cabecera no se pueden sacar de la página cargada: dirían «5 pendientes»
+   * cuando hay cuarenta.
+   */
   listarFarmacia: (params?: {
     fecha_desde?:  string
     fecha_hasta?:  string
     medico_id?:    number
     estado?:       string
+    page?:         number
+    per_page?:     number
   }) =>
-    api.get<ApiResponse<RecetaMedica[]>>(
+    api.get<ApiResponse<
+      PaginatedResponse<RecetaMedica>,
+      { resumen: Record<string, number> }
+    >>(
       '/dispensario/recetas',
       { params }
-    ).then(r => r.data.datos),
+    ).then(r => ({
+      recetas: r.data.datos?.data ?? [],
+      total:   r.data.datos?.total ?? 0,
+      resumen: r.data.meta?.resumen ?? {},
+    })),
 
   despachar: (id: number, data: DespacharRecetaData) =>
     api.post<ApiResponse<RecetaMedica>>(

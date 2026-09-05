@@ -18,10 +18,13 @@ import type { components } from './api.generated'
 import type { RegimenServidor } from '@/lib/regimen'
 
 // ── Respuesta estándar del API ───────────────
-export type ApiResponse<T = unknown> = {
+export type ApiResponse<T = unknown, M = unknown> = {
   exito: boolean
   mensaje: string
   datos: T
+  /** Datos que acompañan a la respuesta sin formar parte del recurso —por
+   *  ejemplo los totales por estado de un listado paginado. Casi siempre null. */
+  meta?: M | null
   errores?: Record<string, string[]>
 }
 

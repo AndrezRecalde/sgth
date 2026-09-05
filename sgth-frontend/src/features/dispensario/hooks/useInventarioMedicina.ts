@@ -18,11 +18,13 @@ export function useInventarioMedicinas(
   })
 }
 
-export function useKardexMedicina(id: number | null) {
+export function useKardexMedicina(id: number | null, page = 1) {
   return useQuery({
-    queryKey: ['inventario-medicinas', 'kardex', id],
-    queryFn:  () => inventarioMedicinaService.kardex(id!),
+    queryKey: ['inventario-medicinas', 'kardex', id, page],
+    queryFn:  () => inventarioMedicinaService.kardex(id!, page),
     enabled:  !!id,
+    // La página anterior se queda a la vista mientras llega la siguiente.
+    placeholderData: (anterior) => anterior,
   })
 }
 

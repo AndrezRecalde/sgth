@@ -291,7 +291,13 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return $medicina;
     }
 
-    public function kardex(int $id): Collection
+    /**
+     * El kardex se pagina porque no deja de crecer: cada entrada, despacho,
+     * baja, ajuste y anulación es una fila más, y ninguna se borra —es el libro
+     * inmutable del inventario—. Traerlo entero era barato el primer mes y deja
+     * de serlo solo.
+     */
+    public function kardex(int $id, int $porPagina = 20): LengthAwarePaginator
     {
         InventarioMedicina::findOrFail($id);
 
@@ -300,6 +306,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         )
             ->with('registrador')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->orderBy('id', 'desc')
+            ->paginate($porPagina);
     }
 }
