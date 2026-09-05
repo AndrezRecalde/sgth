@@ -97,14 +97,33 @@ export const consultaMedicaService = {
       `/dispensario/consultas/${id}`
     ).then(r => r.data.datos),
 
-  listarPorHistoria: (historiaClinicaId: number) =>
+  /**
+   * El historial de un paciente crece por años, así que va paginado y con
+   * filtros de fecha. Antes pedía `per_page: 50` y tiraba la paginación: la
+   * consulta 51 de un paciente antiguo no existía para la pantalla, sin que
+   * nada lo dijera.
+   */
+  listarPorHistoria: (
+    historiaClinicaId: number,
+    params?: {
+      page?:        number
+      per_page?:    number
+      fecha_desde?: string
+      fecha_hasta?: string
+    }
+  ) =>
     api.get<ApiResponse<PaginatedResponse<ConsultaMedica>>>(
       '/dispensario/consultas',
       { params: {
         historia_clinica_id: historiaClinicaId,
-        per_page: 50
+        per_page: 10,
+        ...params,
       }}
-    ).then(r => r.data.datos?.data ?? []),
+    ).then(r => ({
+      consultas:    r.data.datos?.data ?? [],
+      total:        r.data.datos?.total ?? 0,
+      ultimaPagina: r.data.datos?.last_page ?? 1,
+    })),
 
   actualizar: (id: number, data: Partial<CrearConsultaData>) =>
     api.patch<ApiResponse<ConsultaMedica>>(

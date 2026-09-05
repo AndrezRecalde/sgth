@@ -1619,3 +1619,48 @@ test('el_kardex_se_pagina', function () {
     expect($respuesta['total'])->toBe(25);
     expect($respuesta['last_page'])->toBe(3);
 });
+
+test('el_historial_de_consultas_se_puede_acotar_por_fechas', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = HistoriaClinica::create([
+        'numero_historia' => $this->paciente->cedula,
+        'cedula_paciente' => $this->paciente->cedula,
+        'tipo_paciente'   => 'servidor',
+        'servidor_id'     => $this->paciente->id,
+        'estado'          => true,
+    ]);
+
+    $consultaEn = function (string $fecha) use ($historia) {
+        return ConsultaMedica::create([
+            'historia_clinica_id' => $historia->id,
+            'medico_id'           => $this->medico->id,
+            'fecha_consulta'      => $fecha,
+            'hora_consulta'       => '09:00:00',
+            'motivo_consulta'     => "Consulta de {$fecha}",
+        ]);
+    };
+
+    $consultaEn('2024-03-10');
+    $vigente = $consultaEn('2026-08-20');
+    $consultaEn('2026-09-01');
+
+    $enRango = $this->getJson(
+        '/api/v1/dispensario/consultas'
+        . "?historia_clinica_id={$historia->id}"
+        . '&fecha_desde=2026-08-01&fecha_hasta=2026-08-31'
+    )->assertOk()->json('datos.data');
+
+    expect($enRango)->toHaveCount(1);
+    expect($enRango[0]['id'])->toBe($vigente->id);
+
+    // Sin filtros siguen estando las tres.
+    $todas = $this->getJson(
+        "/api/v1/dispensario/consultas?historia_clinica_id={$historia->id}"
+    )->assertOk()->json('datos.data');
+
+    expect($todas)->toHaveCount(3);
+});

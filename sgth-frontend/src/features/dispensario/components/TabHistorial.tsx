@@ -9,14 +9,21 @@ import {
   Skeleton,
   Button,
   ThemeIcon,
+  Alert,
+  Center,
+  Pagination,
 } from "@mantine/core";
-import { IconStethoscope } from "@tabler/icons-react";
+import { DatePickerInput } from "@mantine/dates";
+import {
+  IconStethoscope, IconAlertTriangle, IconRefresh,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { consultaMedicaService } from "../services/consultaMedicaService";
 import { DetalleConsultaDrawer } from "./DetalleConsultaDrawer";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getApiErrorMessage } from "@/types/api";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 
 interface Props {
@@ -86,17 +93,48 @@ function ConsultaItem({
   );
 }
 
+/** `Date` → 'YYYY-MM-DD' sin pasar por UTC, que restaría un día. */
+function aIso(d: Date | string | null): string | undefined {
+  if (!d) return undefined;
+  if (typeof d === "string") return d.slice(0, 10);
+  if (isNaN(d.getTime())) return undefined;
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
 export function TabHistorial({ historiaClinicaId }: Props) {
   const [consultaSelId, setConsultaSelId] = useState<number | null>(null);
   const [drawerOpened, { open: abrirDrawer, close: cerrarDrawer }] =
     useDisclosure(false);
 
-  const { data: consultas = [], isLoading } = useQuery({
-    queryKey: ["consultas", "historial", historiaClinicaId],
-    queryFn: () => consultaMedicaService.listarPorHistoria(historiaClinicaId),
+  const [page, setPage] = useState(1);
+  const [rango, setRango] = useState<[Date | null, Date | null]>([null, null]);
+
+  const filtros = {
+    page,
+    fecha_desde: aIso(rango[0]),
+    fecha_hasta: aIso(rango[1]),
+  };
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["consultas", "historial", historiaClinicaId, filtros],
+    queryFn: () =>
+      consultaMedicaService.listarPorHistoria(historiaClinicaId, filtros),
     enabled: !!historiaClinicaId,
     staleTime: 1000 * 30,
+    placeholderData: (anterior) => anterior,
   });
+
+  const consultas = data?.consultas ?? [];
+  const hayFiltros = !!(rango[0] || rango[1]);
+
+  const cambiarRango = (v: [Date | null, Date | null]) => {
+    setRango(v);
+    setPage(1);
+  };
 
   if (isLoading) {
     return (
@@ -107,14 +145,63 @@ export function TabHistorial({ historiaClinicaId }: Props) {
     );
   }
 
-  if (consultas.length === 0) {
+  // El fallo se dice, no se disfraza de historial vacío. Antes cualquier error
+  // dejaba la lista en cero y la pantalla afirmaba que el paciente no tenía
+  // consultas previas, que en una historia clínica es lo peor que puede decir.
+  if (isError) {
     return (
       <Stack p="md">
+        <Alert
+          icon={<IconAlertTriangle size={16} />}
+          color="red"
+          variant="light"
+          title="No se pudo cargar el historial"
+        >
+          <Stack gap="xs" align="flex-start">
+            <Text size="xs">
+              {getApiErrorMessage(error)} No quiere decir que el paciente no
+              tenga consultas previas: no se pudieron consultar.
+            </Text>
+            <Button
+              size="compact-xs"
+              variant="light"
+              color="red"
+              leftSection={<IconRefresh size={13} />}
+              onClick={() => refetch()}
+            >
+              Reintentar
+            </Button>
+          </Stack>
+        </Alert>
+      </Stack>
+    );
+  }
+
+  const filtroFechas = (
+    <DatePickerInput
+      type="range"
+      size="xs"
+      label="Filtrar por fechas"
+      placeholder="Todo el historial"
+      valueFormat="DD/MM/YYYY"
+      clearable
+      value={rango}
+      onChange={(v) => cambiarRango(v as [Date | null, Date | null])}
+    />
+  );
+
+  if (consultas.length === 0) {
+    return (
+      <Stack gap="sm" p="md">
+        {filtroFechas}
         <EmptyState
           icon={IconStethoscope}
-          title="Sin consultas previas"
-          description="Este paciente no tiene
-            consultas anteriores registradas."
+          title={hayFiltros ? "Sin consultas en ese rango" : "Sin consultas previas"}
+          description={
+            hayFiltros
+              ? "Ninguna consulta de este paciente cae en las fechas elegidas."
+              : "Este paciente no tiene consultas anteriores registradas."
+          }
         />
       </Stack>
     );
@@ -122,10 +209,14 @@ export function TabHistorial({ historiaClinicaId }: Props) {
 
   return (
     <Stack gap="sm" p="md">
+      {filtroFechas}
+
       <Text size="xs" c="dimmed">
-        {consultas.length} consulta{consultas.length !== 1 ? "s" : ""}{" "}
-        registrada{consultas.length !== 1 ? "s" : ""}
+        {data?.total} consulta{data?.total !== 1 ? "s" : ""}{" "}
+        registrada{data?.total !== 1 ? "s" : ""}
+        {hayFiltros ? " en el rango elegido" : ""}
       </Text>
+
       {consultas.map((consulta) => (
         <ConsultaItem
           key={consulta.id}
@@ -136,6 +227,18 @@ export function TabHistorial({ historiaClinicaId }: Props) {
           }}
         />
       ))}
+
+      {(data?.ultimaPagina ?? 1) > 1 && (
+        <Center>
+          <Pagination
+            size="sm"
+            value={page}
+            onChange={setPage}
+            total={data?.ultimaPagina ?? 1}
+            withEdges
+          />
+        </Center>
+      )}
 
       <DetalleConsultaDrawer
         opened={drawerOpened}
