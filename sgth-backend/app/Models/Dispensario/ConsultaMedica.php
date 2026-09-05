@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\User;
 use App\Models\Dispensario\DiagnosticoCie10;
+use App\Enums\EspecialidadAtencion;
 use App\Support\HtmlClinico;
 
 class ConsultaMedica extends Model
@@ -17,7 +18,7 @@ class ConsultaMedica extends Model
     protected $table = 'consultas_medicas';
 
     protected $fillable = [
-        'historia_clinica_id', 'agenda_medica_id',
+        'historia_clinica_id', 'agenda_medica_id', 'especialidad',
         'medico_id', 'fecha_consulta', 'hora_consulta',
         'motivo_consulta', 'enfermedad_actual',
         'examen_fisico', 'diagnostico_detallado',
@@ -37,6 +38,7 @@ class ConsultaMedica extends Model
             'plan_tratamiento'      => 'encrypted',
             'notas_medico'          => 'encrypted',
             'fecha_consulta'        => 'date',
+            'especialidad'          => EspecialidadAtencion::class,
             'estado'                => 'boolean',
         ];
     }

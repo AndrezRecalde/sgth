@@ -38,6 +38,8 @@ export interface ConsultaMedica {
   id:                       number
   historia_clinica_id:      number
   agenda_medica_id?:        number | null
+  /** De qué especialidad fue la atención. La consulta ya no depende del turno para saberlo. */
+  especialidad?:            'medicina_general' | 'odontologia'
   medico_id:                number
   fecha_consulta:           string
   hora_consulta:            string

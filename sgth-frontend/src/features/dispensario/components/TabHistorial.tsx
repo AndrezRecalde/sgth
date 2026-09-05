@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import {
-  IconStethoscope, IconAlertTriangle, IconRefresh,
+  IconStethoscope, IconAlertTriangle, IconRefresh, IconDental,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
@@ -45,17 +45,36 @@ function ConsultaItem({
   consulta: ConsultaMedica;
   onVerDetalle: (id: number) => void;
 }) {
+  const esOdontologia = consulta.especialidad === "odontologia";
+
   return (
     <Card withBorder radius="md" p="sm">
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">
           <Group gap="xs">
-            <ThemeIcon size="sm" color="blue" variant="light">
-              <IconStethoscope size={12} />
+            {/* El historial mezcla las dos especialidades; hasta ahora no
+                había forma de distinguirlas de un vistazo. */}
+            <ThemeIcon
+              size="sm"
+              color={esOdontologia ? "teal" : "blue"}
+              variant="light"
+            >
+              {esOdontologia
+                ? <IconDental size={12} />
+                : <IconStethoscope size={12} />}
             </ThemeIcon>
             <Text size="sm" fw={500}>
               {formatFecha(consulta.fecha_consulta)}
             </Text>
+            {consulta.especialidad && (
+              <Badge
+                size="xs"
+                variant="light"
+                color={esOdontologia ? "teal" : "blue"}
+              >
+                {esOdontologia ? "Odontología" : "Medicina general"}
+              </Badge>
+            )}
             {consulta.tipo_atencion && (
               <Badge size="xs" variant="light" color="gray">
                 {consulta.tipo_atencion.replace("_", " ")}

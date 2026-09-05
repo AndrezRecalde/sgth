@@ -270,6 +270,7 @@ test('emitir_y_despachar_receta_descuenta_stock_y_registra_kardex', function () 
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id' => $this->medico->id,
         'fecha_consulta' => now()->format('Y-m-d'),
@@ -336,6 +337,7 @@ test('emitir_receta_con_stock_insuficiente_incluye_alerta', function () {
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id' => $this->medico->id,
         'fecha_consulta' => now()->format('Y-m-d'),
@@ -457,6 +459,7 @@ test('anular_receta_parcial_la_cierra_sin_devolver_lo_ya_entregado', function ()
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id' => $this->medico->id,
         'fecha_consulta' => now()->format('Y-m-d'),
@@ -513,6 +516,7 @@ test('no_se_anula_una_receta_ya_despachada_por_completo', function () {
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id' => $this->medico->id,
         'fecha_consulta' => now()->format('Y-m-d'),
@@ -636,6 +640,7 @@ test('no_se_despacha_un_medicamento_caducado', function () {
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id' => $this->medico->id,
         'fecha_consulta' => now()->format('Y-m-d'),
@@ -687,6 +692,7 @@ test('el_dia_de_la_caducidad_todavia_se_puede_despachar', function () {
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id' => $this->medico->id,
         'fecha_consulta' => now()->format('Y-m-d'),
@@ -1494,6 +1500,7 @@ test('listar_recetas_de_un_medico_sin_servidor_no_tumba_la_pantalla', function (
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id'           => $this->medico->id,
         'fecha_consulta'      => now(),
@@ -1567,6 +1574,7 @@ test('el_listado_de_recetas_pagina_y_cuenta_los_estados_completos', function () 
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id'           => $this->medico->id,
         'fecha_consulta'      => now(),
@@ -1659,6 +1667,7 @@ test('el_historial_de_consultas_se_puede_acotar_por_fechas', function () {
 
     $consultaEn = function (string $fecha) use ($historia) {
         return ConsultaMedica::create([
+            'especialidad' => 'medicina_general',
             'historia_clinica_id' => $historia->id,
             'medico_id'           => $this->medico->id,
             'fecha_consulta'      => $fecha,
@@ -1794,6 +1803,7 @@ test('un_despacho_puede_repartirse_entre_lotes_y_el_kardex_lo_dice', function ()
     ]);
 
     $consulta = ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id'           => $this->medico->id,
         'fecha_consulta'      => now(),
@@ -2403,6 +2413,7 @@ function consultaParaCertificado(
     $historia = historiaDePrueba($servidorId, $cedula);
 
     return ConsultaMedica::create([
+        'especialidad' => 'medicina_general',
         'historia_clinica_id' => $historia->id,
         'medico_id'           => $medicoId,
         'fecha_consulta'      => now(),
@@ -2442,6 +2453,7 @@ test('el_folio_del_certificado_sale_del_mayor_no_de_contar_filas', function () {
 
     $emitir = function () use ($historia) {
         $consulta = ConsultaMedica::create([
+            'especialidad' => 'medicina_general',
             'historia_clinica_id' => $historia->id,
             'medico_id'           => $this->medico->id,
             'fecha_consulta'      => now(),
@@ -2586,6 +2598,7 @@ test('el_folio_del_permiso_del_certificado_tampoco_cuenta_filas', function () {
 
     $emitir = function () {
         $consulta = ConsultaMedica::create([
+            'especialidad' => 'medicina_general',
             'historia_clinica_id' => HistoriaClinica::where(
                 'servidor_id', $this->paciente->id
             )->value('id'),
@@ -2615,4 +2628,126 @@ test('el_folio_del_permiso_del_certificado_tampoco_cuenta_filas', function () {
     $segundo->permisoServidor->delete();
 
     expect($emitir()->permisoServidor->folio)->toBe("PER-{$anio}-00003");
+});
+
+/**
+ * La especialidad de la consulta.
+ *
+ * Constaba solo en el turno, y la consulta apunta al turno con una FK que
+ * admite nulo: cualquier conteo por especialidad tenía que pasar por una fila
+ * que puede no estar, y las consultas sin turno no salían por ninguna parte.
+ */
+test('la_consulta_hereda_la_especialidad_de_su_turno', function () {
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $turno = AgendaMedica::create([
+        'medico_id'     => $this->medico->id,
+        'servidor_id'   => $this->paciente->id,
+        'folio'         => 'TUR-TEST-0001',
+        'tipo_atencion' => 'odontologia',
+        'fecha'         => now()->toDateString(),
+        'hora_inicio'   => '09:00:00',
+        'hora_fin'      => '09:30:00',
+        'estado'        => 'en_espera',
+    ]);
+
+    $consulta = app(HistoriaClinicaService::class)->registrarConsulta(
+        datosDeConsulta($historia->id, [
+            'agenda_medica_id' => $turno->id,
+            'medico_id'        => $this->medico->id,
+        ])
+    );
+
+    expect($consulta->especialidad)
+        ->toBe(App\Enums\EspecialidadAtencion::ODONTOLOGIA);
+});
+
+test('sin_turno_la_especialidad_sale_del_rol_de_quien_atiende', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'odontologo', 'guard_name' => 'sanctum']
+    ));
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $consulta = app(HistoriaClinicaService::class)->registrarConsulta(
+        datosDeConsulta($historia->id, ['medico_id' => $this->medico->id])
+    );
+
+    expect($consulta->especialidad)
+        ->toBe(App\Enums\EspecialidadAtencion::ODONTOLOGIA);
+});
+
+test('quien_ejerce_las_dos_especialidades_tiene_que_decir_cual_es', function () {
+    foreach (['medico', 'odontologo'] as $rol) {
+        $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+            ['name' => $rol, 'guard_name' => 'sanctum']
+        ));
+    }
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    // Sin turno que lo aclare, adivinar sería inventar el dato: mejor negarse.
+    expect(fn () => app(HistoriaClinicaService::class)->registrarConsulta(
+        datosDeConsulta($historia->id, ['medico_id' => $this->medico->id])
+    ))->toThrow(App\Exceptions\ReglaNegocioException::class);
+
+    // Y diciéndolo, se guarda.
+    $consulta = app(HistoriaClinicaService::class)->registrarConsulta(
+        datosDeConsulta($historia->id, [
+            'medico_id'    => $this->medico->id,
+            'especialidad' => 'odontologia',
+        ])
+    );
+
+    expect($consulta->especialidad)
+        ->toBe(App\Enums\EspecialidadAtencion::ODONTOLOGIA);
+});
+
+test('lo_que_se_envia_manda_sobre_lo_que_diga_el_turno', function () {
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $turno = AgendaMedica::create([
+        'medico_id'     => $this->medico->id,
+        'servidor_id'   => $this->paciente->id,
+        'folio'         => 'TUR-TEST-0002',
+        'tipo_atencion' => 'medicina_general',
+        'fecha'         => now()->toDateString(),
+        'hora_inicio'   => '10:00:00',
+        'hora_fin'      => '10:30:00',
+        'estado'        => 'en_espera',
+    ]);
+
+    $consulta = app(HistoriaClinicaService::class)->registrarConsulta(
+        datosDeConsulta($historia->id, [
+            'agenda_medica_id' => $turno->id,
+            'medico_id'        => $this->medico->id,
+            'especialidad'     => 'odontologia',
+        ])
+    );
+
+    expect($consulta->especialidad)
+        ->toBe(App\Enums\EspecialidadAtencion::ODONTOLOGIA);
+});
+
+test('el_listado_de_consultas_se_puede_pedir_por_especialidad', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+    $servicio = app(HistoriaClinicaService::class);
+
+    $servicio->registrarConsulta(datosDeConsulta($historia->id, [
+        'medico_id' => $this->medico->id, 'especialidad' => 'odontologia',
+    ]));
+    $servicio->registrarConsulta(datosDeConsulta($historia->id, [
+        'medico_id' => $this->medico->id, 'especialidad' => 'medicina_general',
+    ]));
+
+    $respuesta = $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/consultas?especialidad=odontologia')
+        ->assertOk();
+
+    expect($respuesta->json('datos.data'))->toHaveCount(1);
+    expect($respuesta->json('datos.data.0.especialidad'))->toBe('odontologia');
 });

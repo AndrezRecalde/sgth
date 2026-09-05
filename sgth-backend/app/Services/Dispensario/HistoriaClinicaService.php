@@ -3,6 +3,7 @@
 namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
+use App\Enums\EspecialidadAtencion;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\ConsultaMedica;
@@ -10,6 +11,7 @@ use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\VersionConsultaMedica;
 use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\Servidor;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Contracts\Dispensario\AgendaServiceInterface;
 use Illuminate\Support\Arr;
@@ -260,6 +262,8 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 $datos, ['diagnosticos_secundarios']
             );
 
+            $datosConsulta['especialidad'] = $this->resolverEspecialidad($datos);
+
             $consulta = ConsultaMedica::create($datosConsulta);
 
             foreach ($secundarios as $cie10Id) {
@@ -282,6 +286,51 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 'diagnosticosSecundarios.diagnostico',
             ]);
         });
+    }
+
+    /**
+     * De qué especialidad es la consulta.
+     *
+     * Por orden: lo que se envía explícitamente, lo que dice el turno, y el rol
+     * de quien atiende. Nunca se adivina: si el profesional tiene los dos roles
+     * y no hay turno que lo aclare, la consulta no se guarda sin especialidad,
+     * porque una consulta sin especialidad es precisamente lo que había que
+     * dejar de crear.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function resolverEspecialidad(array $datos): EspecialidadAtencion
+    {
+        if (! empty($datos['especialidad'])) {
+            return EspecialidadAtencion::from($datos['especialidad']);
+        }
+
+        if (! empty($datos['agenda_medica_id'])) {
+            $delTurno = AgendaMedica::whereKey($datos['agenda_medica_id'])
+                ->value('tipo_atencion');
+
+            $especialidad = EspecialidadAtencion::tryFrom((string) $delTurno);
+
+            if ($especialidad !== null) {
+                return $especialidad;
+            }
+        }
+
+        $medico = User::find($datos['medico_id'] ?? null);
+
+        $porRol = collect(EspecialidadAtencion::cases())
+            ->filter(fn ($e) => $medico?->hasRole($e->rol()) ?? false);
+
+        if ($porRol->count() === 1) {
+            return $porRol->first();
+        }
+
+        throw new ReglaNegocioException(
+            $porRol->count() > 1
+                ? 'Indique si la consulta es de medicina general o de ' .
+                  'odontología: quien atiende ejerce las dos.'
+                : 'No se pudo determinar la especialidad de la consulta.'
+        );
     }
 
     /**
