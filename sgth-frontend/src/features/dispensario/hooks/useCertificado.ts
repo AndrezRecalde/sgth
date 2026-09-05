@@ -15,6 +15,73 @@ export function useCertificadosPorConsulta(consultaId: number) {
   })
 }
 
+export function useAnularCertificado(consultaId: number) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      certificadoService.anular(id, motivo),
+    onSuccess: (certificado) => {
+      notifications.show({
+        title:   'Certificado anulado',
+        message: certificado.permiso_servidor
+          ? 'El permiso de asistencia asociado también quedó anulado.'
+          : 'El certificado ya no es válido para justificar ausencia.',
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({
+        queryKey: ['certificados', 'consulta', consultaId],
+      })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
+  })
+}
+
+/**
+ * Descarga el PDF del certificado.
+ *
+ * Por enlace sintético y no por `window.open`: el navegador bloquea la ventana
+ * emergente si el clic ya no es el gesto del usuario, y el endpoint necesita el
+ * token, que solo lleva axios. Es el mismo camino que el PDF del FEMO.
+ */
+export function useDescargarCertificado() {
+  const [descargando, setDescargando] = React.useState<number | null>(null)
+
+  const descargar = async (id: number, folio?: string | null) => {
+    setDescargando(id)
+    try {
+      const blob = await certificadoService.descargarPdf(id)
+      const url  = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href     = url
+      link.download = `certificado-${folio ?? id}.pdf`
+      link.target   = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (error: unknown) {
+      notifications.show({
+        title:   'No se pudo generar el PDF',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      })
+    } finally {
+      setDescargando(null)
+    }
+  }
+
+  return { descargar, descargando }
+}
+
 export function useEmitirCertificado(consultaId: number) {
   const qc = useQueryClient()
 

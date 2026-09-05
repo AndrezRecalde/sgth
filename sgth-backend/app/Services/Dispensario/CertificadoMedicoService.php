@@ -8,6 +8,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Dispensario\ConsultaMedica;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -98,14 +99,7 @@ class CertificadoMedicoService
         int $emisorId,
         ?string $observacion,
     ): PermisoServidor {
-        $anioActual     = $fecha->year;
-        $cantidadActual = PermisoServidor::whereYear(
-            'created_at', $anioActual
-        )->count();
-        $secuencial = str_pad(
-            $cantidadActual, 5, '0', STR_PAD_LEFT
-        );
-        $folio = "PER-{$anioActual}-{$secuencial}";
+        $folio = $this->generarFolioPermiso($fecha->year);
 
         return PermisoServidor::create([
             'servidor_id' => $servidorId,
@@ -126,15 +120,187 @@ class CertificadoMedicoService
         ]);
     }
 
+    /**
+     * Anula un certificado, y con él el permiso que creó.
+     *
+     * El permiso de Asistencia existe **por** el certificado: nace ACTIVO
+     * porque el médico es fuente confiable y se salta la confirmación de
+     * Recepción. Eso mismo lo dejaba fuera del alcance de la anulación de
+     * Asistencia, que solo acepta permisos PENDIENTE. Así que se retira desde
+     * aquí, que es de donde vino, o quedaría justificando una ausencia que ya
+     * no tiene certificado detrás.
+     *
+     * No hay plazo. Un certificado equivocado hay que poder corregirlo aunque
+     * los días de reposo ya hayan pasado; lo que quede en Asistencia es una
+     * consecuencia que corresponde asumir, no una razón para no poder tocarlo.
+     */
+    public function anular(
+        int $id,
+        string $motivo,
+        int $anuladoPor
+    ): CertificadoMedico {
+        return DB::transaction(function () use ($id, $motivo, $anuladoPor) {
+            $certificado = CertificadoMedico::with('permisoServidor')
+                ->findOrFail($id);
+
+            if ($certificado->anulado_en !== null) {
+                throw new ReglaNegocioException(
+                    "El certificado {$certificado->folio} ya fue anulado."
+                );
+            }
+
+            if ($certificado->permisoServidor) {
+                $certificado->permisoServidor->update([
+                    'estado'      => EstadoPermiso::ANULADO->value,
+                    'anulado_por' => $anuladoPor,
+                    'anulado_en'  => now(),
+                    'observacion' => 'Anulado con su certificado médico — '
+                        . $motivo,
+                ]);
+            }
+
+            $certificado->update([
+                'anulado_en'       => now(),
+                'anulado_por'      => $anuladoPor,
+                'motivo_anulacion' => $motivo,
+            ]);
+
+            return $certificado->load([
+                'consultaMedica', 'emisor', 'anulador',
+                'diagnosticoCie10', 'permisoServidor',
+            ]);
+        });
+    }
+
+    /**
+     * El PDF del certificado, para imprimirlo o entregarlo.
+     *
+     * Sin esto el certificado solo existía como fila. Para un servidor medio
+     * funcionaba, porque el permiso aparece en Asistencia; para un familiar no
+     * se crea permiso, así que su certificado no tenía forma de salir del
+     * sistema y no cumplía su función, que es ser un papel.
+     *
+     * @return array{content: string, filename: string}
+     */
+    public function generarPdf(int $id): array
+    {
+        $certificado = CertificadoMedico::with([
+            'consultaMedica.historiaClinica.servidor',
+            'consultaMedica.historiaClinica.cargaFamiliar.servidor',
+            'emisor.servidor', 'anulador.servidor',
+            'diagnosticoCie10', 'permisoServidor',
+        ])->findOrFail($id);
+
+        $pdf = Pdf::loadView('pdf.dispensario.certificado-medico', [
+            'certificado' => $certificado,
+            'paciente'    => $this->datosDelPaciente($certificado),
+        ])->setPaper('a4');
+
+        return [
+            'content'  => $pdf->output(),
+            'filename' => 'certificado-' .
+                ($certificado->folio ?? $certificado->id) . '.pdf',
+        ];
+    }
+
+    /**
+     * Nombre, cédula y condición del paciente, venga de servidor o de familiar.
+     *
+     * @return array{nombre: string, cedula: ?string, condicion: string}
+     */
+    private function datosDelPaciente(CertificadoMedico $certificado): array
+    {
+        $historia = $certificado->consultaMedica?->historiaClinica;
+        $servidor = $historia?->servidor;
+        $familiar = $historia?->cargaFamiliar;
+
+        if ($servidor) {
+            return [
+                'nombre'    => trim("{$servidor->nombre} {$servidor->apellido}"),
+                'cedula'    => $servidor->cedula,
+                'condicion' => 'Servidor de la institución',
+            ];
+        }
+
+        if ($familiar) {
+            $titular = $familiar->servidor;
+
+            return [
+                'nombre'    => trim("{$familiar->nombres} {$familiar->apellidos}"),
+                'cedula'    => $familiar->cedula,
+                'condicion' => 'Carga familiar'
+                    . ($titular
+                        ? " de {$titular->nombre} {$titular->apellido}"
+                        : ''),
+            ];
+        }
+
+        return [
+            'nombre'    => $historia?->nombre_paciente ?? '—',
+            'cedula'    => $historia?->cedula_paciente,
+            'condicion' => '—',
+        ];
+    }
+
+    /**
+     * El folio del permiso que acompaña al certificado, con el mismo criterio.
+     *
+     * Contaba filas de `permisos_servidor`, que también borra en blando y
+     * también tiene el folio único: un permiso retirado hacía repetir uno vivo.
+     * Y arrancaba en 00000. Se toca desde aquí porque es este servicio el que
+     * lo emite; el resto de Asistencia crea sus permisos por otro camino.
+     */
+    private function generarFolioPermiso(int $anio): string
+    {
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("permiso_servidor_folio_{$anio}"),
+        ]);
+
+        $ultimoFolio = PermisoServidor::withTrashed()
+            ->where('folio', 'like', "PER-{$anio}-%")
+            ->max('folio');
+
+        $ultimoSecuencial = $ultimoFolio
+            ? (int) substr($ultimoFolio, strlen("PER-{$anio}-"))
+            : 0;
+
+        return "PER-{$anio}-" . str_pad(
+            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
+        );
+    }
+
+    /**
+     * Siguiente folio del año, tomado del MÁXIMO ya emitido.
+     *
+     * Contaba filas, y aquí eso falla de tres maneras: la tabla borra en blando
+     * y el folio es único, así que un certificado retirado hacía repetir uno
+     * vivo; el conteo incluía los certificados de servidores, cuyo folio lo
+     * pone el permiso y no lleva este prefijo; y arrancaba en 00000 por no
+     * sumar uno.
+     *
+     * El bloqueo de aviso serializa leer el máximo y escribir el folio entre
+     * emisiones simultáneas, y lo suelta el cierre de la transacción.
+     */
     private function generarFolioCertificado(): string
     {
-        $anioActual     = date('Y');
-        $cantidadActual = CertificadoMedico::whereYear(
-            'created_at', $anioActual
-        )->count();
+        $anio = date('Y');
+
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("certificado_medico_folio_{$anio}"),
+        ]);
+
+        $ultimoFolio = CertificadoMedico::withTrashed()
+            ->where('folio', 'like', "CERT-{$anio}-%")
+            ->max('folio');
+
+        $ultimoSecuencial = $ultimoFolio
+            ? (int) substr($ultimoFolio, strlen("CERT-{$anio}-"))
+            : 0;
+
         $secuencial = str_pad(
-            $cantidadActual, 5, '0', STR_PAD_LEFT
+            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
         );
-        return "CERT-{$anioActual}-{$secuencial}";
+
+        return "CERT-{$anio}-{$secuencial}";
     }
 }

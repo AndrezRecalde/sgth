@@ -1108,6 +1108,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [CertificadoMedicoController::class, 'store']
         )->name('dispensario.certificados.store');
 
+        // Antes del comodín {id}, o los segmentos literales se leerían como id.
+        Route::get('certificados-medicos/{id}/pdf',
+            [CertificadoMedicoController::class, 'pdf']
+        )->name('dispensario.certificados.pdf');
+
+        Route::patch('certificados-medicos/{id}/anular',
+            [CertificadoMedicoController::class, 'anular']
+        )->middleware('role:medico|odontologo|admin-dispensario')
+         ->name('dispensario.certificados.anular');
+
         Route::get('certificados-medicos/{id}',
             [CertificadoMedicoController::class, 'show']
         )->name('dispensario.certificados.show');

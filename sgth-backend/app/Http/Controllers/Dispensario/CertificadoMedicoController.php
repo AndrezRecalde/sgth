@@ -8,6 +8,7 @@ use App\Models\Dispensario\CertificadoMedico;
 use App\Services\Dispensario\CertificadoMedicoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class CertificadoMedicoController extends Controller
 {
@@ -77,10 +78,65 @@ class CertificadoMedicoController extends Controller
             'consultaMedica.historiaClinica.servidor',
             'consultaMedica.historiaClinica.cargaFamiliar',
             'emisor',
+            'anulador',
             'diagnosticoCie10',
             'permisoServidor',
         ])->findOrFail($id);
 
         return ApiResponse::ok($certificado);
+    }
+
+    /**
+     * Anula el certificado y, con él, el permiso que creó.
+     *
+     * Lo puede hacer quien lo emitió o la administración del dispensario, la
+     * misma regla que ya rige para anular una receta: el mostrador tiene que
+     * poder corregir cuando el médico ya no está.
+     */
+    public function anular(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'motivo_anulacion' => ['required', 'string', 'max:255'],
+        ]);
+
+        $certificado = CertificadoMedico::findOrFail($id);
+
+        $esAdministracion = $request->user()->hasRole('admin-dispensario');
+        $loEmitio = $certificado->emitido_por === $request->user()->id;
+
+        if (! $esAdministracion && ! $loEmitio) {
+            return ApiResponse::error(
+                'Solo quien emitió el certificado o la administración del ' .
+                'dispensario pueden anularlo.',
+                null,
+                403
+            );
+        }
+
+        $certificado = $this->service->anular(
+            $id,
+            $request->string('motivo_anulacion')->value(),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok(
+            $certificado,
+            $certificado->permiso_servidor_id
+                ? 'Certificado anulado. El permiso de asistencia asociado ' .
+                  'también quedó anulado.'
+                : 'Certificado anulado correctamente.'
+        );
+    }
+
+    /** El PDF, para imprimirlo o entregárselo al paciente. */
+    public function pdf(int $id): Response
+    {
+        $resultado = $this->service->generarPdf($id);
+
+        return response($resultado['content'], 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'
+                . $resultado['filename'] . '"',
+        ]);
     }
 }
