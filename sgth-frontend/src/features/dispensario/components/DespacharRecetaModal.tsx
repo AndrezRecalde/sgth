@@ -11,7 +11,7 @@ import {
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDespacharReceta } from '../hooks/useReceta'
-import type { RecetaMedica } from '../services/recetaService'
+import type { RecetaMedica, ItemReceta } from '../services/recetaService'
 
 interface Props {
   opened:  boolean
@@ -30,14 +30,19 @@ function getNombrePaciente(receta: RecetaMedica): string {
   return '—'
 }
 
-/** ¿Caducó ya? El día impreso en el envase todavía es válido. */
-function estaCaducado(fecha?: string | null): boolean {
-  if (!fecha) return false
-  const [y, m, d] = fecha.slice(0, 10).split('-').map(Number)
-  const caduca = new Date(y, m - 1, d)
-  const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
-  return caduca < hoy
+/**
+ * Cuántas unidades de este ítem se pueden entregar hoy.
+ *
+ * Sale de los lotes vigentes, no de la fecha de la ficha. Con lotes mezclados
+ * esa fecha era la de la última entrada, así que bloqueaba el ítem entero
+ * habiendo existencias buenas —o lo dejaba pasar habiendo un lote viejo ya
+ * vencido—. Si el backend no manda el dato, se cae al stock total, que es lo
+ * que había antes.
+ */
+function entregable(item: ItemReceta): number {
+  return item.inventario?.stock_despachable
+    ?? item.inventario?.stock_actual
+    ?? 0
 }
 
 const ESTADO_ITEM: Record<string, { label: string; color: string }> = {
@@ -66,9 +71,9 @@ export function DespacharRecetaModal({
     receta?.items.forEach(item => {
       const faltante = item.cantidad_prescrita -
         (item.cantidad_despachada ?? 0)
-      // Lo caducado arranca en cero: el despacho lo rechazaría igualmente.
-      const caducado = estaCaducado(item.inventario?.fecha_caducidad)
-      init[item.id!] = !caducado && faltante > 0 ? faltante : 0
+      // Arranca en lo que falta, pero sin pasarse de lo que hay entregable:
+      // proponer una cantidad que el mostrador va a rechazar no ayuda a nadie.
+      init[item.id!] = Math.max(0, Math.min(faltante, entregable(item)))
     })
     setCantidades(init)
   }
@@ -155,11 +160,13 @@ export function DespacharRecetaModal({
                 (item.cantidad_despachada ?? 0)
               const estadoItem = ESTADO_ITEM[item.estado ?? 'pendiente']
                 ?? { label: item.estado, color: 'gray' }
-              const caducado = estaCaducado(item.inventario?.fecha_caducidad)
+              const hayEntregable = entregable(item)
+              const caducadas = item.inventario?.stock_caducado ?? 0
+              const tope = Math.min(faltante, hayEntregable)
               return (
                 <Card key={item.id} withBorder radius="md" p="sm">
                   <Stack gap="xs">
-                    {caducado && (
+                    {hayEntregable === 0 ? (
                       <Alert
                         icon={<IconAlertTriangle size={14} />}
                         color="red"
@@ -167,8 +174,26 @@ export function DespacharRecetaModal({
                         p="xs"
                       >
                         <Text size="xs">
-                          Estas existencias caducaron. No se pueden entregar:
-                          deben darse de baja desde Inventario.
+                          {caducadas > 0
+                            ? `No hay existencias entregables: las ${caducadas}
+                               unidades que quedan están caducadas y deben
+                               darse de baja desde Inventario.`
+                            : 'No quedan existencias de este medicamento.'}
+                        </Text>
+                      </Alert>
+                    ) : caducadas > 0 && (
+                      // Hay de lo bueno y de lo vencido a la vez. Antes esto
+                      // bloqueaba el ítem entero; ahora se entrega lo bueno y
+                      // se avisa de lo otro, que hay que dar de baja.
+                      <Alert
+                        icon={<IconAlertTriangle size={14} />}
+                        color="orange"
+                        variant="light"
+                        p="xs"
+                      >
+                        <Text size="xs">
+                          Se entregarán {hayEntregable} unid. sin caducar. Otras{' '}
+                          {caducadas} están vencidas y deben darse de baja.
                         </Text>
                       </Alert>
                     )}
@@ -222,13 +247,13 @@ export function DespacharRecetaModal({
                         label="Cantidad a despachar"
                         size="xs"
                         min={0}
-                        max={faltante}
-                        disabled={caducado}
+                        max={tope}
+                        disabled={hayEntregable === 0}
                         {...contained}
                         value={cantidades[item.id!] ?? 0}
                         onChange={(v) => setCantidades(prev => ({
                           ...prev,
-                          [item.id!]: Math.min(Number(v) || 0, faltante),
+                          [item.id!]: Math.min(Number(v) || 0, tope),
                         }))}
                       />
                     </Group>

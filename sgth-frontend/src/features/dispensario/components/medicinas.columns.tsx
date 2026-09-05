@@ -67,7 +67,12 @@ export function getMedicinasColumns(
       accessor: "stock_actual",
       title: "Stock",
       render: (m) => {
-        const stockBajo = m.stock_actual <= m.stock_minimo;
+        // Lo que se enseña es lo entregable, no el total: ochenta unidades
+        // vencidas no son ochenta unidades para quien está en la ventanilla.
+        const despachable = m.stock_despachable ?? m.stock_actual;
+        const caducado = m.stock_caducado ?? 0;
+        const stockBajo = despachable <= m.stock_minimo;
+
         return (
           <Group gap={4} wrap="nowrap">
             <Text
@@ -75,7 +80,7 @@ export function getMedicinasColumns(
               fw={stockBajo ? 600 : 400}
               c={stockBajo ? "red" : undefined}
             >
-              {m.stock_actual}
+              {despachable}
             </Text>
             {stockBajo && (
               <Tooltip label={`Stock mínimo: ${m.stock_minimo}`} withArrow>
@@ -88,15 +93,30 @@ export function getMedicinasColumns(
             <Text size="xs" c="dimmed">
               unid.
             </Text>
+            {caducado > 0 && (
+              <Tooltip
+                label={`${caducado} unid. vencidas, pendientes de dar de baja`}
+                withArrow
+              >
+                <Badge size="xs" variant="light" color="red">
+                  +{caducado}
+                </Badge>
+              </Tooltip>
+            )}
           </Group>
         );
       },
     },
     {
-      accessor: "fecha_caducidad",
+      accessor: "proxima_caducidad",
       title: "Caducidad",
       render: (m) => {
-        if (!m.fecha_caducidad) {
+        // La del lote que saldría primero, no la de la última entrada: con
+        // varios lotes en el estante, la de la ficha era la que se hubiera
+        // escrito al final y podía tapar un lote ya vencido.
+        const proxima = m.proxima_caducidad ?? m.fecha_caducidad;
+
+        if (!proxima) {
           return (
             <Text size="sm" c="dimmed">
               —
@@ -105,7 +125,7 @@ export function getMedicinasColumns(
         }
 
         const hoy = new Date();
-        const caduca = new Date(m.fecha_caducidad);
+        const caduca = new Date(proxima);
         const dias = Math.floor(
           (caduca.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24),
         );

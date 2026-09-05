@@ -8,8 +8,20 @@ export interface InventarioMedicina {
   principio_activo:  string
   presentacion:      string
   concentracion?:    string | null
+  /** Lo que hay físicamente en el estante, vencido incluido. */
   stock_actual:      number
   stock_minimo:      number
+  /** Unidades en lotes sin caducar: lo que de verdad se puede entregar. */
+  stock_despachable?: number
+  /** Unidades inmovilizadas por vencidas, a la espera de darse de baja. */
+  stock_caducado?:    number
+  /** La caducidad del lote que saldría primero, que es la que manda. */
+  proxima_caducidad?: string | null
+  /**
+   * Campos de la ficha anteriores al control por lotes. Ya no se escriben ni
+   * se leen: la caducidad vive en cada lote. Se retiran con el formulario.
+   * @deprecated usar `proxima_caducidad`
+   */
   fecha_caducidad?:  string | null
   lote?:             string | null
   estado:            boolean

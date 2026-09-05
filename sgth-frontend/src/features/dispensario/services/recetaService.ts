@@ -17,8 +17,17 @@ export interface ItemReceta {
     nombre:            string
     presentacion?:     string
     concentracion?:    string | null
+    /** Lo que hay en el estante, vencido incluido. */
     stock_actual?:     number
-    /** El despacho rechaza lo vencido, así que la fila lo avisa antes. */
+    /** Lo que se puede entregar: unidades en lotes sin caducar. */
+    stock_despachable?: number
+    /** Lo inmovilizado por vencido, que hay que dar de baja. */
+    stock_caducado?:    number
+    /**
+     * Caducidad de la ficha, anterior al control por lotes. Ya no decide nada
+     * —lo hace el stock despachable, que sale de los lotes—.
+     * @deprecated
+     */
     fecha_caducidad?:  string | null
   } | null
 }
