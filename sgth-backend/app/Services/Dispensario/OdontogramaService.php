@@ -5,6 +5,8 @@ namespace App\Services\Dispensario;
 use App\Enums\CondicionPiezaDental;
 use App\Enums\DenticionTipo;
 use App\Enums\ProcedimientoOdontologico;
+use App\Exceptions\ReglaNegocioException;
+use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\Odontograma;
 use App\Models\Dispensario\OdontogramaPieza;
@@ -65,6 +67,10 @@ final class OdontogramaService
     {
         return DB::transaction(function () use ($datos, $userId) {
             $pieza = OdontogramaPieza::findOrFail($datos['odontograma_pieza_id']);
+
+            $this->verificarQueLaConsultaEsDelMismoPaciente(
+                $pieza, $datos['consulta_medica_id'] ?? null
+            );
 
             $procedimiento = OdontogramaProcedimiento::create([
                 'odontograma_pieza_id' => $pieza->id,
@@ -156,6 +162,37 @@ final class OdontogramaService
                 : CondicionPiezaDental::SANO,
             'updated_by' => $userId,
         ]);
+    }
+
+    /**
+     * La consulta que se anota en el procedimiento tiene que ser del mismo
+     * paciente que la pieza.
+     *
+     * El endpoint recibe el id de la pieza y el de la consulta por separado y
+     * no los cruzaba, así que un cliente desincronizado —la pantalla de un
+     * paciente abierta mientras se atiende a otro— podía dejar un procedimiento
+     * de una boca colgando de la consulta de otra persona. Además de ensuciar
+     * la historia, eso rompe la corrección: quien anula compara justamente por
+     * consulta.
+     */
+    private function verificarQueLaConsultaEsDelMismoPaciente(
+        OdontogramaPieza $pieza,
+        ?int $consultaId,
+    ): void {
+        if ($consultaId === null) {
+            return;
+        }
+
+        $historiaDeLaPieza = $pieza->odontograma()->value('historia_clinica_id');
+        $historiaDeLaConsulta = ConsultaMedica::whereKey($consultaId)
+            ->value('historia_clinica_id');
+
+        if ($historiaDeLaConsulta !== $historiaDeLaPieza) {
+            throw new ReglaNegocioException(
+                'La consulta indicada no corresponde al paciente de este ' .
+                'odontograma.'
+            );
+        }
     }
 
     private function sembrarPiezas(Odontograma $odontograma, array $numeros, DenticionTipo $denticion): void

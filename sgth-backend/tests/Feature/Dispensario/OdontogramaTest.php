@@ -543,3 +543,26 @@ test('un_procedimiento_atrasado_no_pisa_la_condicion_vigente', function () {
 
     expect($pieza->fresh()->condicion)->toBe(CondicionPiezaDental::CORONA);
 });
+
+test('el_procedimiento_no_acepta_la_consulta_de_otro_paciente', function () {
+    $odontograma = app(OdontogramaService::class)
+        ->obtenerPorHistoriaClinica($this->historia->id, $this->odontologo->id);
+    $pieza = $odontograma->piezas->firstWhere('numero_pieza', 37);
+
+    $otraHistoria = historiaDeFamiliar($this->paciente->id, 40, '0899000033');
+    $consultaAjena = ConsultaMedica::create([
+        'historia_clinica_id' => $otraHistoria->id,
+        'medico_id'           => $this->odontologo->id,
+        'fecha_consulta'      => now(),
+        'hora_consulta'       => '11:00:00',
+        'motivo_consulta'     => 'Otro paciente',
+    ]);
+
+    $this->actingAs($this->odontologo, 'sanctum')
+        ->postJson('/api/v1/dispensario/odontograma/procedimientos', [
+            'odontograma_pieza_id' => $pieza->id,
+            'consulta_medica_id'   => $consultaAjena->id,
+            'procedimiento'        => 'resina',
+        ])
+        ->assertStatus(422);
+});
