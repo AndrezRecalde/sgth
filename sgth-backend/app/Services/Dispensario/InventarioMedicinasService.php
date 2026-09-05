@@ -221,7 +221,8 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         int $id,
         int $cantidad,
         string $motivo,
-        int $registradoPor
+        int $registradoPor,
+        ?int $loteId = null
     ): InventarioMedicina {
         if ($cantidad <= 0) {
             throw new ReglaNegocioException(
@@ -230,7 +231,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         }
 
         return DB::transaction(function () use (
-            $id, $cantidad, $motivo, $registradoPor
+            $id, $cantidad, $motivo, $registradoPor, $loteId
         ) {
             $medicina = InventarioMedicina::lockForUpdate()
                 ->findOrFail($id);
@@ -243,10 +244,17 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
                 );
             }
 
-            // Sale primero lo que caduca antes, que es lo que se está tirando
-            // en el caso que da nombre a esta operación. Elegir el lote a mano
-            // llega con la pantalla, en la tercera entrega.
-            $reparto = $this->stock->consumirFefo($medicina, $cantidad);
+            // Con lote elegido sale de ese y solo de ese: una caja rota o un
+            // lote retirado por el fabricante son de uno concreto, y hacerlo
+            // salir por FEFO anotaría una mentira en el kardex. Sin elegir,
+            // FEFO, que es lo que sirve para tirar lo vencido.
+            $reparto = $loteId
+                ? $this->stock->consumirDeLote(
+                    $medicina,
+                    LoteMedicina::findOrFail($loteId),
+                    $cantidad
+                )
+                : $this->stock->consumirFefo($medicina, $cantidad);
 
             $this->anotarEnKardex(
                 $medicina, $reparto, 'baja', $motivo, $registradoPor
@@ -287,9 +295,9 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
                 'tipo_movimiento'        => $tipo,
                 'cantidad'               => -$salida['cantidad'],
                 'stock_resultante'       => $restante,
-                'motivo'                 => count($reparto) > 1
-                    ? "{$motivo} (lote {$salida['lote']->etiqueta})"
-                    : $motivo,
+                // El lote va en su columna, no dentro del texto: repetirlo aquí
+                // sería duplicar lo que el kardex ya muestra en su fila.
+                'motivo'                 => $motivo,
                 'registrado_por'         => $registradoPor,
             ]);
         }
@@ -367,7 +375,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return MovimientoInventarioMed::where(
             'inventario_medicina_id', $id
         )
-            ->with('registrador')
+            ->with(['registrador', 'lote'])
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->paginate($porPagina);

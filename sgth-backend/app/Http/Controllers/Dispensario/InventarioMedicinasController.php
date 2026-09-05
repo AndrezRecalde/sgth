@@ -87,13 +87,17 @@ final class InventarioMedicinasController extends Controller
         $request->validate([
             'cantidad' => ['required', 'integer', 'min:1'],
             'motivo'   => ['required', 'string', 'max:255'],
+            // Opcional: sin lote sale por FEFO, que es lo que sirve para tirar
+            // lo vencido. Con lote sale de ese, para una rotura o una retirada.
+            'lote_id'  => ['nullable', 'integer', 'exists:lotes_medicina,id'],
         ]);
 
         $actualizado = $this->inventarioService->registrarBaja(
             $medicina,
             $request->integer('cantidad'),
             $request->string('motivo')->value(),
-            $request->user()->id
+            $request->user()->id,
+            $request->filled('lote_id') ? $request->integer('lote_id') : null
         );
 
         return ApiResponse::ok(

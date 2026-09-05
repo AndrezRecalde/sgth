@@ -17,6 +17,8 @@ export interface InventarioMedicina {
   stock_caducado?:    number
   /** La caducidad del lote que saldría primero, que es la que manda. */
   proxima_caducidad?: string | null
+  /** Solo al pedir una medicina concreta: sus lotes con existencias, en FEFO. */
+  lotes?:             LoteMedicina[]
   /**
    * Campos de la ficha anteriores al control por lotes. Ya no se escriben ni
    * se leen: la caducidad vive en cada lote. Se retiran con el formulario.
@@ -27,6 +29,16 @@ export interface InventarioMedicina {
   estado:            boolean
 }
 
+/** Un lote: lo que entró de una vez, con su caducidad propia. */
+export interface LoteMedicina {
+  id:                 number
+  /** Null en los lotes que nadie identificó; se muestran «Sin identificar». */
+  codigo_lote?:       string | null
+  fecha_caducidad?:   string | null
+  cantidad_ingresada: number
+  stock_actual:       number
+}
+
 export interface MovimientoInventario {
   id:                number
   tipo_movimiento:   string
@@ -34,6 +46,8 @@ export interface MovimientoInventario {
   stock_resultante:  number
   motivo:            string
   created_at:        string
+  /** Null en los movimientos anteriores al control por lotes. */
+  lote?:             LoteMedicina | null
   registrador?: {
     nombre_completo?: string
     usuario_ti?: string
@@ -97,10 +111,17 @@ export const inventarioMedicinaService = {
       `/dispensario/inventario/medicinas/${id}`, data
     ).then(r => r.data.datos),
 
-  registrarBaja: (id: number, cantidad: number, motivo: string) =>
+  /**
+   * `loteId` es opcional: sin él sale por FEFO —lo que caduca antes, que es lo
+   * que se tira—, con él sale de ese lote, para una rotura o una retirada del
+   * fabricante.
+   */
+  registrarBaja: (
+    id: number, cantidad: number, motivo: string, loteId?: number | null
+  ) =>
     api.post<ApiResponse<InventarioMedicina>>(
       `/dispensario/inventario/medicinas/${id}/baja`,
-      { cantidad, motivo }
+      { cantidad, motivo, lote_id: loteId ?? undefined }
     ).then(r => r.data.datos),
 
   ajustarInventario: (id: number, nuevoStock: number, motivo: string) =>

@@ -2049,3 +2049,94 @@ test('el_listado_dice_cuanto_se_puede_entregar_y_cuanto_esta_vencido', function 
         now()->subDays(10)->format('Y-m-d')
     );
 });
+test('dar_de_baja_puede_apuntar_a_un_lote_concreto', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = medicinaVacia($this->medico->id, 'Cefalexina');
+    $stock = app(App\Services\Dispensario\StockPorLotes::class);
+
+    $pronto = $stock->ingresar(
+        $medicina, 30, 'L-PRONTO', now()->addMonth()->toDateString()
+    );
+    $tarde = $stock->ingresar(
+        $medicina->refresh(), 40, 'L-TARDE', now()->addYear()->toDateString()
+    );
+
+    // Una caja rota es de un lote en particular. Por FEFO habrían salido del
+    // que caduca antes, y el kardex diría algo que no pasó.
+    $this->postJson(
+        "/api/v1/dispensario/inventario/medicinas/{$medicina->id}/baja",
+        ['cantidad' => 10, 'motivo' => 'Rotura', 'lote_id' => $tarde->id]
+    )->assertOk();
+
+    $porLote = $medicina->refresh()->lotes()->pluck('stock_actual', 'codigo_lote');
+    expect($porLote['L-PRONTO'])->toBe(30);
+    expect($porLote['L-TARDE'])->toBe(30);
+
+    // Y el movimiento apunta al lote del que salió.
+    $baja = MovimientoInventarioMed::where('inventario_medicina_id', $medicina->id)
+        ->where('tipo_movimiento', 'baja')->latest('id')->firstOrFail();
+    expect($baja->lote_id)->toBe($tarde->id);
+    expect($baja->lote->codigo_lote)->toBe('L-TARDE');
+    // El motivo se queda limpio: el lote va en su columna, no en el texto.
+    expect($baja->motivo)->toBe('Rotura');
+
+    expect($pronto->refresh()->stock_actual)->toBe(30);
+    expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
+        ->toBeTrue();
+});
+
+test('no_se_da_de_baja_mas_de_lo_que_tiene_el_lote_elegido', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = medicinaVacia($this->medico->id, 'Cefalexina');
+    $stock = app(App\Services\Dispensario\StockPorLotes::class);
+
+    $pequeno = $stock->ingresar(
+        $medicina, 5, 'L-PEQUENO', now()->addMonth()->toDateString()
+    );
+    $stock->ingresar(
+        $medicina->refresh(), 100, 'L-GRANDE', now()->addYear()->toDateString()
+    );
+
+    // Hay 105 en total, pero el lote elegido solo tiene 5: el rechazo mira el
+    // lote y no el montón, que es lo que hace útil elegirlo.
+    $this->postJson(
+        "/api/v1/dispensario/inventario/medicinas/{$medicina->id}/baja",
+        ['cantidad' => 20, 'motivo' => 'Rotura', 'lote_id' => $pequeno->id]
+    )->assertStatus(422);
+
+    expect($medicina->refresh()->stock_actual)->toBe(105);
+});
+
+test('sin_lote_elegido_la_baja_sigue_saliendo_por_fefo', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = medicinaVacia($this->medico->id, 'Cefalexina');
+    $stock = app(App\Services\Dispensario\StockPorLotes::class);
+
+    $stock->ingresar($medicina, 20, 'L-TARDE', now()->addYear()->toDateString());
+    $stock->ingresar(
+        $medicina->refresh(), 20, 'L-VENCIDO', now()->subDay()->toDateString()
+    );
+
+    // Es el caso que da nombre a la operación: tirar lo vencido.
+    $this->postJson(
+        "/api/v1/dispensario/inventario/medicinas/{$medicina->id}/baja",
+        ['cantidad' => 20, 'motivo' => 'Caducidad']
+    )->assertOk();
+
+    $porLote = $medicina->refresh()->lotes()->pluck('stock_actual', 'codigo_lote');
+    expect($porLote['L-VENCIDO'])->toBe(0);
+    expect($porLote['L-TARDE'])->toBe(20);
+});
+

@@ -114,6 +114,47 @@ final class StockPorLotes
     }
 
     /**
+     * Saca unidades de un lote concreto.
+     *
+     * FEFO acierta cuando se tira lo vencido, que es el caso que da nombre a
+     * dar de baja, pero no cubre el otro: una caja rota o un lote que retira el
+     * fabricante son de un lote en particular, y obligar a que salga el más
+     * próximo a caducar sería anotar una mentira en el kardex.
+     *
+     * @return Reparto de un solo elemento, para que quien llame anote igual
+     *                 que en los repartos de varios.
+     */
+    public function consumirDeLote(
+        InventarioMedicina $medicina,
+        LoteMedicina $lote,
+        int $cantidad
+    ): array {
+        if ($lote->inventario_medicina_id !== $medicina->id) {
+            throw new ReglaNegocioException(
+                "El lote {$lote->etiqueta} no pertenece a {$medicina->nombre}."
+            );
+        }
+
+        $lote = $medicina->lotes()->whereKey($lote->getKey())
+            ->lockForUpdate()->firstOrFail();
+
+        if ($lote->stock_actual < $cantidad) {
+            throw new ReglaNegocioException(
+                "El lote {$lote->etiqueta} tiene {$lote->stock_actual} " .
+                "unidades y se piden {$cantidad}."
+            );
+        }
+
+        $lote->stock_actual -= $cantidad;
+        $lote->save();
+
+        $medicina->stock_actual -= $cantidad;
+        $medicina->save();
+
+        return [['lote' => $lote, 'cantidad' => $cantidad]];
+    }
+
+    /**
      * Devuelve al lote lo que aportó una entrada que se anula.
      *
      * Solo procede si el lote sigue íntegro. Si ya salió parte de él, revertir

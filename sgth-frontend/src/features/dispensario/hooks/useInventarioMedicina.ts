@@ -18,6 +18,22 @@ export function useInventarioMedicinas(
   })
 }
 
+/**
+ * Los lotes con existencias de una medicina, en orden FEFO.
+ *
+ * Se piden al abrir el diálogo de baja: el listado no los trae, y elegir de
+ * qué lote sale una baja necesita verlos con su caducidad y sus unidades.
+ */
+export function useLotesDeMedicina(id: number | null, enabled = true) {
+  return useQuery({
+    queryKey: ['inventario-medicinas', 'lotes', id],
+    queryFn:  () => inventarioMedicinaService.obtener(id!)
+      .then(m => m.lotes ?? []),
+    enabled:  !!id && enabled,
+    staleTime: 0,
+  })
+}
+
 export function useKardexMedicina(id: number | null, page = 1) {
   return useQuery({
     queryKey: ['inventario-medicinas', 'kardex', id, page],
@@ -88,9 +104,9 @@ export function useInventarioMutations() {
   })
 
   const registrarBaja = useMutation({
-    mutationFn: ({ id, cantidad, motivo }: {
-      id: number; cantidad: number; motivo: string
-    }) => inventarioMedicinaService.registrarBaja(id, cantidad, motivo),
+    mutationFn: ({ id, cantidad, motivo, loteId }: {
+      id: number; cantidad: number; motivo: string; loteId?: number | null
+    }) => inventarioMedicinaService.registrarBaja(id, cantidad, motivo, loteId),
     onSuccess: () => {
       notifications.show({
         title:   'Existencias dadas de baja',

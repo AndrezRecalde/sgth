@@ -38,7 +38,8 @@ interface InventarioMedicinasServiceInterface
         int $id,
         int $cantidad,
         string $motivo,
-        int $registradoPor
+        int $registradoPor,
+        ?int $loteId = null
     ): InventarioMedicina;
 
     public function ajustarInventario(
