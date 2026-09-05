@@ -22,9 +22,9 @@ class ConsultaMedica extends Model
         'medico_id', 'fecha_consulta', 'hora_consulta',
         'motivo_consulta', 'enfermedad_actual',
         'examen_fisico', 'diagnostico_detallado',
-        'diagnostico_cie10', 'diagnostico_cie10_id',
+        'diagnostico_cie10_id',
         'tipo_atencion', 'tipo_diagnostico',
-        'plan_tratamiento', 'notas_medico', 'estado',
+        'plan_tratamiento', 'notas_medico',
         'created_by', 'updated_by'
     ];
 
@@ -39,7 +39,6 @@ class ConsultaMedica extends Model
             'notas_medico'          => 'encrypted',
             'fecha_consulta'        => 'date',
             'especialidad'          => EspecialidadAtencion::class,
-            'estado'                => 'boolean',
         ];
     }
 

@@ -73,7 +73,6 @@ final class ConsultaMedicaController extends Controller
         $datos = [
             ...$request->validated(),
             'medico_id'  => $request->user()->id,
-            'estado'     => true,
             'created_by' => $request->user()->id,
         ];
 

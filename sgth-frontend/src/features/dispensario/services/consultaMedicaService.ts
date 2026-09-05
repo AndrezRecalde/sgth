@@ -49,7 +49,6 @@ export interface ConsultaMedica {
   enfermedad_actual?:       string | null
   examen_fisico?:           string | null
   diagnostico_detallado:    string
-  diagnostico_cie10?:       number | null
   diagnostico_cie10_id?:    number | null
   diagnostico_cie10_principal?: {
     id:          number
