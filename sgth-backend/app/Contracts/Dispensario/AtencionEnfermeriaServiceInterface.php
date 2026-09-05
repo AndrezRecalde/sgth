@@ -10,4 +10,10 @@ interface AtencionEnfermeriaServiceInterface
     public function listar(array $filtros): LengthAwarePaginator;
 
     public function registrar(array $datos, int $enfermeraId): AtencionEnfermeria;
+
+    public function anular(
+        int $id,
+        string $motivo,
+        int $anuladoPor
+    ): AtencionEnfermeria;
 }

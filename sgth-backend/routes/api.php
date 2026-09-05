@@ -1034,6 +1034,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [AtencionEnfermeriaController::class, 'store']
         )->name('dispensario.atenciones-enfermeria.store');
 
+        Route::patch('atenciones-enfermeria/{id}/anular',
+            [AtencionEnfermeriaController::class, 'anular']
+        )->name('dispensario.atenciones-enfermeria.anular');
+
         Route::get('catalogo-servicios-enfermeria',
             [AtencionEnfermeriaController::class, 'catalogo']
         )->name('dispensario.catalogo-servicios-enfermeria');
