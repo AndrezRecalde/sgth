@@ -57,6 +57,9 @@ export function useActualizarConsulta() {
         icon:    React.createElement(IconCheck, { size: 16 }),
       })
       qc.invalidateQueries({ queryKey: ['consultas'] })
+      // El panel lee la consulta por su propia clave: sin invalidarla, tras
+      // corregir seguía enseñando el texto anterior como si fuera el vigente.
+      qc.invalidateQueries({ queryKey: ['consulta-detalle-panel'] })
     },
     onError: (error: unknown) =>
       notifications.show({
