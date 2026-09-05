@@ -16,7 +16,7 @@ final class ResultadoMedicoController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = ResultadoMedico::with([
-            'subidoPor:id,usuario_ti,servidor_id',
+            'subidoPor:id,usuario_ti,email,servidor_id',
             'subidoPor.servidor:id,nombre,apellido',
         ])
             ->orderBy('fecha_resultado', 'desc');
@@ -71,7 +71,7 @@ final class ResultadoMedicoController extends Controller
 
         return ApiResponse::created(
             $resultado->load([
-                'subidoPor:id,usuario_ti,servidor_id',
+                'subidoPor:id,usuario_ti,email,servidor_id',
                 'subidoPor.servidor:id,nombre,apellido',
             ]),
             'Resultado médico registrado correctamente.'

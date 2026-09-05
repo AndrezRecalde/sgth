@@ -23,7 +23,7 @@ final class FemoService
         $query = FichaSaludOcupacional::with([
             'servidor:id,nombre,apellido,cedula',
             'postulante:id,nombres,apellidos,cedula',
-            'evaluador:id,usuario_ti,servidor_id',
+            'evaluador:id,usuario_ti,email,servidor_id',
             'evaluador.servidor:id,nombre,apellido',
         ])->orderBy('fecha_evaluacion', 'desc');
 
@@ -60,7 +60,7 @@ final class FemoService
             'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula,fecha_nacimiento,genero,tipo_sangre,tiene_discapacidad,tiene_enfermedad_catastrofica',
             'servidor.historiaClinica:id,servidor_id,numero_historia',
             'postulante:id,cedula,nombres,segundo_nombre,apellidos,segundo_apellido,fecha_nacimiento,genero,tipo_sangre',
-            'evaluador:id,usuario_ti,servidor_id',
+            'evaluador:id,usuario_ti,email,servidor_id',
             // El código médico va en la sección O de la ficha impresa.
             'evaluador.servidor:id,nombre,apellido,cedula,codigo_medico',
             'puesto.cargo:id,nombre,codigo_ciuo',

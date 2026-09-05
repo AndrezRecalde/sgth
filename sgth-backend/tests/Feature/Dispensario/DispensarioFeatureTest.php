@@ -1450,3 +1450,81 @@ test('el_folio_de_enfermeria_sale_del_mayor_no_de_contar_filas', function () {
 
     expect($registrar()['folio'])->toBe("ENF-{$anio}-00003");
 });
+
+test('listar_recetas_de_un_medico_sin_servidor_no_tumba_la_pantalla', function () {
+    // El médico de la suite no tiene servidor asociado, que es el caso que
+    // rompía: `nombre_completo` va en #[Appends] y para un usuario sin servidor
+    // cae al correo, que el `with(...)` parcial dejaba fuera del select.
+    expect($this->medico->servidor_id)->toBeNull();
+
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = HistoriaClinica::create([
+        'numero_historia' => $this->paciente->cedula,
+        'cedula_paciente' => $this->paciente->cedula,
+        'tipo_paciente'   => 'servidor',
+        'servidor_id'     => $this->paciente->id,
+        'estado'          => true,
+    ]);
+
+    $consulta = ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id'           => $this->medico->id,
+        'fecha_consulta'      => now(),
+        'hora_consulta'       => now()->format('H:i:s'),
+        'motivo_consulta'     => 'Dolor',
+    ]);
+
+    RecetaMedica::create([
+        'consulta_medica_id' => $consulta->id,
+        'fecha_emision'      => now(),
+        'estado'             => 'pendiente',
+    ]);
+
+    $recetas = $this->getJson('/api/v1/dispensario/recetas')
+        ->assertOk()->json('datos');
+
+    // Y el médico llega con nombre: el correo, que es el respaldo cuando no
+    // hay servidor. Antes esto era un 500 con «Return value must be of type
+    // string, null returned».
+    expect($recetas)->toHaveCount(1);
+    expect($recetas[0]['consulta_medica']['medico']['nombre_completo'])
+        ->toBe($this->medico->email);
+});
+
+test('nombre_completo_no_devuelve_null_aunque_falte_el_correo', function () {
+    // La red debajo: cualquier `with` que se olvide de `email` mañana.
+    $medico = App\Models\User::query()
+        ->select('id', 'usuario_ti', 'servidor_id')
+        ->findOrFail($this->medico->id);
+
+    expect($medico->nombre_completo)->toBe($this->medico->usuario_ti);
+    expect(fn () => $medico->toArray())->not->toThrow(TypeError::class);
+});
+
+test('el_folio_del_turno_sale_del_mayor_no_de_contar_filas', function () {
+    $service = app(AgendaService::class);
+
+    $agendar = fn () => $service->agendarCita([
+        'servidor_id'      => $this->paciente->id,
+        'medico_id'        => $this->medico->id,
+        'tipo_atencion'    => 'medicina_general',
+        'motivo_solicitud' => 'Control',
+    ], $this->medico->id);
+
+    $anio = now()->year;
+
+    expect($agendar()->folio)->toBe("TUR-{$anio}-00001");
+    $segundo = $agendar();
+    expect($segundo->folio)->toBe("TUR-{$anio}-00002");
+
+    // La tabla borra en blando. Contando filas, retirar una bajaba el conteo y
+    // el siguiente turno repetía un folio ya emitido, que el índice único
+    // rechaza porque el borrado en blando no libera el valor.
+    $segundo->delete();
+
+    expect($agendar()->folio)->toBe("TUR-{$anio}-00003");
+});

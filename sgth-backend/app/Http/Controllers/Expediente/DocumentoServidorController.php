@@ -26,7 +26,7 @@ class DocumentoServidorController extends Controller
         $this->authorize('ver', $servidor);
 
         $documentos = DocumentoServidor::where('servidor_id', $servidorId)
-            ->with('subidoPor:id,usuario_ti,servidor_id')
+            ->with('subidoPor:id,usuario_ti,email,servidor_id')
             ->orderByDesc('created_at')
             ->get();
 

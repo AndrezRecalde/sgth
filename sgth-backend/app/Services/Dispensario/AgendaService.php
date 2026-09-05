@@ -243,15 +243,39 @@ final class AgendaService implements AgendaServiceInterface
     }
 
 
+    /**
+     * El folio sale del mayor ya emitido, no de contar filas.
+     *
+     * Contar acierta solo mientras no falte ninguna fila, y aquí faltan de dos
+     * maneras: la tabla borra en blando —una fila retirada baja el conteo y el
+     * siguiente folio repite uno ya emitido, que el índice único rechaza porque
+     * el borrado en blando no libera el valor— y dos turnos pedidos a la vez
+     * leen el mismo conteo. Lo segundo es lo que muerde de verdad en un
+     * mostrador: dos personas admitiendo pacientes en el mismo minuto.
+     *
+     * Mismo arreglo que ADQ-, MED- y ENF-. El bloqueo de aviso serializa leer
+     * el máximo y escribir el folio, y lo suelta el cierre de la transacción.
+     */
     private function generarFolio(string $fecha): string
     {
         $anio = substr($fecha, 0, 4);
-        $cantidadActual = AgendaMedica::whereYear(
-            'fecha', $anio
-        )->count();
+
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("agenda_medica_folio_{$anio}"),
+        ]);
+
+        $ultimoFolio = AgendaMedica::withTrashed()
+            ->where('folio', 'like', "TUR-{$anio}-%")
+            ->max('folio');
+
+        $ultimoSecuencial = $ultimoFolio
+            ? (int) substr($ultimoFolio, strlen("TUR-{$anio}-"))
+            : 0;
+
         $secuencial = str_pad(
-            $cantidadActual + 1, 5, '0', STR_PAD_LEFT
+            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
         );
+
         return "TUR-{$anio}-{$secuencial}";
     }
 }

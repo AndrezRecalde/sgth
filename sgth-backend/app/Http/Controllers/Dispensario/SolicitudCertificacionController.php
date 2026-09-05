@@ -37,7 +37,7 @@ final class SolicitudCertificacionController extends Controller
             'convocatoria:id,codigo,titulo,puesto_id',
             'convocatoria.puesto.cargo:id,nombre',
             'convocatoria.puesto.unidadAdministrativa:id,nombre',
-            'solicitadoPor:id,usuario_ti,servidor_id',
+            'solicitadoPor:id,usuario_ti,email,servidor_id',
             'solicitadoPor.servidor:id,nombre,apellido',
             'constantesVitales',
         ])->orderBy('created_at', 'desc');
