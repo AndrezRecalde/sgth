@@ -257,7 +257,7 @@ test('emitir_y_despachar_receta_descuenta_stock_y_registra_kardex', function () 
         'diagnostico_detallado' => 'Inflamación',
     ]);
 
-    $service = new RecetaService();
+    $service = app(RecetaService::class);
     
     $resultado = $service->emitirReceta([
         'consulta_medica_id' => $consulta->id,
@@ -323,7 +323,7 @@ test('emitir_receta_con_stock_insuficiente_incluye_alerta', function () {
         'diagnostico_detallado' => 'Infeccion',
     ]);
 
-    $service = new RecetaService();
+    $service = app(RecetaService::class);
     $resultado = $service->emitirReceta(
         ['consulta_medica_id' => $consulta->id, 'fecha_emision' => now()->format('Y-m-d'), 'indicaciones_generales' => 'Ninguna'],
         [['inventario_medicina_id' => $medicina->id,
@@ -1663,4 +1663,268 @@ test('el_historial_de_consultas_se_puede_acotar_por_fechas', function () {
     )->assertOk()->json('datos.data');
 
     expect($todas)->toHaveCount(3);
+});
+
+/**
+ * Una medicina de catálogo, sin existencias: el stock entra por adquisiciones.
+ */
+function medicinaVacia(int $creadaPor, string $nombre = 'Amoxicilina'): InventarioMedicina
+{
+    return app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre'           => $nombre,
+        'principio_activo' => $nombre,
+        'concentracion'    => '500mg',
+        'presentacion'     => 'capsula',
+        'stock_minimo'     => 5,
+    ], $creadaPor);
+}
+
+/** Registra una entrada con su lote y su caducidad. */
+function entrada(
+    InventarioMedicina $medicina,
+    int $cantidad,
+    ?string $lote,
+    ?string $caduca,
+    int $porQuien,
+    string $documento = 'FACT-1'
+): App\Models\Dispensario\AdquisicionMedicamento {
+    return app(App\Services\Dispensario\AdquisicionService::class)->registrar(
+        [
+            'tipo'                => 'compra',
+            'numero_documento'    => $documento,
+            'proveedor_o_donante' => 'Farmaenlace S.A.',
+            'fecha_adquisicion'   => now()->toDateString(),
+        ],
+        [[
+            'inventario_medicina_id' => $medicina->id,
+            'cantidad'               => $cantidad,
+            'lote'                   => $lote,
+            'fecha_caducidad'        => $caduca,
+        ]],
+        $porQuien
+    );
+}
+
+test('cada_entrada_abre_su_lote_y_la_suma_cuadra_con_el_stock', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    entrada($medicina, 100, 'L-MARZO', '2027-03-31', $this->medico->id);
+    entrada($medicina, 50,  'L-DICIEMBRE', '2027-12-31', $this->medico->id, 'FACT-2');
+
+    $lotes = $medicina->lotes()->orderBy('id')->get();
+
+    // Antes esto era una sola fila que decía «150, caduca en diciembre», y las
+    // cien de marzo quedaban invisibles.
+    expect($lotes)->toHaveCount(2);
+    expect($lotes[0]->codigo_lote)->toBe('L-MARZO');
+    expect($lotes[0]->stock_actual)->toBe(100);
+    expect($lotes[1]->codigo_lote)->toBe('L-DICIEMBRE');
+    expect($lotes[1]->stock_actual)->toBe(50);
+
+    // El invariante que sostiene todo lo demás.
+    expect($medicina->refresh()->stock_actual)->toBe(150);
+    expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
+        ->toBeTrue();
+
+    // Y cada ingreso del kardex apunta a su lote.
+    $ingresos = MovimientoInventarioMed::where('inventario_medicina_id', $medicina->id)
+        ->where('tipo_movimiento', 'ingreso')->orderBy('id')->get();
+    expect($ingresos->pluck('lote_id')->all())
+        ->toBe($lotes->pluck('id')->all());
+});
+
+test('el_despacho_saca_primero_lo_que_caduca_antes', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    // El de diciembre entra primero: si mandara el orden de llegada en vez de
+    // la caducidad, saldría este.
+    entrada($medicina, 40, 'L-DICIEMBRE', '2027-12-31', $this->medico->id);
+    entrada($medicina, 40, 'L-MARZO', '2027-03-31', $this->medico->id, 'FACT-2');
+
+    $reparto = app(App\Services\Dispensario\StockPorLotes::class)
+        ->consumirFefo($medicina->refresh(), 10);
+
+    expect($reparto)->toHaveCount(1);
+    expect($reparto[0]['lote']->codigo_lote)->toBe('L-MARZO');
+    expect($reparto[0]['cantidad'])->toBe(10);
+
+    $porLote = $medicina->lotes()->pluck('stock_actual', 'codigo_lote');
+    expect($porLote['L-MARZO'])->toBe(30);
+    expect($porLote['L-DICIEMBRE'])->toBe(40);
+});
+
+test('un_despacho_puede_repartirse_entre_lotes_y_el_kardex_lo_dice', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    entrada($medicina, 20, 'L-MARZO', '2027-03-31', $this->medico->id);
+    entrada($medicina, 30, 'L-DICIEMBRE', '2027-12-31', $this->medico->id, 'FACT-2');
+
+    $historia = HistoriaClinica::create([
+        'numero_historia' => $this->paciente->cedula,
+        'cedula_paciente' => $this->paciente->cedula,
+        'tipo_paciente'   => 'servidor',
+        'servidor_id'     => $this->paciente->id,
+        'estado'          => true,
+    ]);
+
+    $consulta = ConsultaMedica::create([
+        'historia_clinica_id' => $historia->id,
+        'medico_id'           => $this->medico->id,
+        'fecha_consulta'      => now(),
+        'hora_consulta'       => now()->format('H:i:s'),
+        'motivo_consulta'     => 'Infección',
+    ]);
+
+    $receta = RecetaMedica::create([
+        'consulta_medica_id' => $consulta->id,
+        'fecha_emision'      => now(),
+        'estado'             => 'pendiente',
+    ]);
+
+    $item = ItemReceta::create([
+        'receta_medica_id'       => $receta->id,
+        'inventario_medicina_id' => $medicina->id,
+        'cantidad_prescrita'     => 30,
+        'cantidad_despachada'    => 0,
+        'dosis'                  => '1 cápsula',
+        'frecuencia'             => 'cada 8 horas',
+        'duracion'               => '10 días',
+        'estado'                 => 'pendiente',
+    ]);
+
+    // Treinta unidades no caben en el lote de marzo: veinte salen de ahí y
+    // diez del siguiente. Eso antes no se podía ni expresar.
+    app(RecetaService::class)->despacharReceta(
+        $receta->id,
+        [['item_receta_id' => $item->id, 'cantidad' => 30]],
+        $this->medico->id
+    );
+
+    $egresos = MovimientoInventarioMed::where('inventario_medicina_id', $medicina->id)
+        ->where('tipo_movimiento', 'egreso')->orderBy('id')->get();
+
+    expect($egresos)->toHaveCount(2);
+    expect($egresos[0]->lote->codigo_lote)->toBe('L-MARZO');
+    expect($egresos[0]->cantidad)->toBe(-20);
+    expect($egresos[0]->stock_resultante)->toBe(30);
+    expect($egresos[1]->lote->codigo_lote)->toBe('L-DICIEMBRE');
+    expect($egresos[1]->cantidad)->toBe(-10);
+    expect($egresos[1]->stock_resultante)->toBe(20);
+
+    $medicina->refresh();
+    expect($medicina->stock_actual)->toBe(20);
+    expect($medicina->lotes()->where('codigo_lote', 'L-MARZO')->value('stock_actual'))
+        ->toBe(0);
+    expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
+        ->toBeTrue();
+});
+
+test('anular_una_entrada_mira_su_propio_lote_y_no_el_stock_total', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    $servicio = app(App\Services\Dispensario\AdquisicionService::class);
+    $stock    = app(App\Services\Dispensario\StockPorLotes::class);
+
+    // Entra un lote y se despacha entero.
+    $primera = entrada($medicina, 20, 'L-UNO', '2027-03-31', $this->medico->id);
+    $stock->consumirFefo($medicina->refresh(), 20);
+
+    // Entra otro lote después, con más unidades. El stock total vuelve a estar
+    // alto, y con la comprobación anterior —que miraba el total— la anulación
+    // de la primera entrada colaba, afirmando que volvían al estante veinte
+    // unidades que ya se habían entregado.
+    entrada($medicina->refresh(), 50, 'L-DOS', '2027-12-31', $this->medico->id, 'FACT-2');
+    expect($medicina->refresh()->stock_actual)->toBe(50);
+
+    expect(fn () => $servicio->anular(
+        $primera->id, 'Error de digitación', $this->medico->id
+    ))->toThrow(App\Exceptions\ReglaNegocioException::class);
+
+    // El stock no se movió por el intento.
+    expect($medicina->refresh()->stock_actual)->toBe(50);
+    expect($stock->cuadra($medicina))->toBeTrue();
+});
+
+test('anular_una_entrada_intacta_devuelve_su_lote', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    $adquisicion = entrada($medicina, 20, 'L-UNO', '2027-03-31', $this->medico->id);
+
+    app(App\Services\Dispensario\AdquisicionService::class)->anular(
+        $adquisicion->id, 'Error de digitación', $this->medico->id
+    );
+
+    $medicina->refresh();
+    expect($medicina->stock_actual)->toBe(0);
+    expect($medicina->lotes()->where('codigo_lote', 'L-UNO')->value('stock_actual'))
+        ->toBe(0);
+    expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
+        ->toBeTrue();
+});
+
+test('el_ajuste_a_la_baja_retira_lo_que_caduca_mas_tarde', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    entrada($medicina, 30, 'L-MARZO', '2027-03-31', $this->medico->id);
+    entrada($medicina, 30, 'L-DICIEMBRE', '2027-12-31', $this->medico->id, 'FACT-2');
+
+    // Faltan diez y nadie sabe de cuál lote. Se retiran del que caduca más
+    // tarde a propósito: dejar en los libros las de caducidad próxima hace que
+    // el sistema siga avisando de ellas. Entre avisar de más y callar, una
+    // farmacia avisa de más.
+    app(InventarioMedicinasService::class)->ajustarInventario(
+        $medicina->id, 50, 'Recuento físico', $this->medico->id
+    );
+
+    $porLote = $medicina->refresh()->lotes()->pluck('stock_actual', 'codigo_lote');
+    expect($porLote['L-MARZO'])->toBe(30);
+    expect($porLote['L-DICIEMBRE'])->toBe(20);
+    expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
+        ->toBeTrue();
+});
+
+test('el_ajuste_al_alza_abre_un_lote_sin_identificar', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    entrada($medicina, 30, 'L-MARZO', '2027-03-31', $this->medico->id);
+
+    app(InventarioMedicinasService::class)->ajustarInventario(
+        $medicina->id, 45, 'Aparecieron en bodega', $this->medico->id
+    );
+
+    // Las quince de más no se le cuelgan al lote de marzo: nadie sabe de cuál
+    // son, y decir que son de ese sería inventarlo.
+    $sinIdentificar = $medicina->lotes()->whereNull('codigo_lote')->first();
+    expect($sinIdentificar)->not->toBeNull();
+    expect($sinIdentificar->stock_actual)->toBe(15);
+    expect($medicina->lotes()->where('codigo_lote', 'L-MARZO')->value('stock_actual'))
+        ->toBe(30);
+    expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
+        ->toBeTrue();
+});
+
+test('dar_de_baja_retira_primero_lo_que_caduca_antes', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaVacia($this->medico->id);
+
+    entrada($medicina, 20, 'L-DICIEMBRE', '2027-12-31', $this->medico->id);
+    entrada($medicina, 20, 'L-MARZO', '2027-03-31', $this->medico->id, 'FACT-2');
+
+    // Dar de baja es lo que se hace con lo caducado, así que sale por FEFO.
+    app(InventarioMedicinasService::class)->registrarBaja(
+        $medicina->id, 20, 'Caducado', $this->medico->id
+    );
+
+    $porLote = $medicina->refresh()->lotes()->pluck('stock_actual', 'codigo_lote');
+    expect($porLote['L-MARZO'])->toBe(0);
+    expect($porLote['L-DICIEMBRE'])->toBe(20);
+    expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
+        ->toBeTrue();
 });

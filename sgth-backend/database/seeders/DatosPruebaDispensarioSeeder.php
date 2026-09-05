@@ -8,8 +8,10 @@ use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\ItemAdquisicion;
 use App\Models\Dispensario\ItemReceta;
+use App\Models\Dispensario\LoteMedicina;
 use App\Models\Dispensario\MovimientoInventarioMed;
 use App\Models\Dispensario\RecetaMedica;
+use App\Models\Dispensario\Triaje;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Services\Dispensario\AdquisicionService;
@@ -220,6 +222,11 @@ class DatosPruebaDispensarioSeeder extends Seeder
                 // Conserva la marca: la adquisición sobrescribe el lote de la
                 // medicina, y es por el lote por donde se reconocen al limpiar.
                 'lote'                   => self::MARCA . '-' . strtoupper(substr($clave, 0, 6)),
+                // La caducidad viaja con la entrada, no solo en la ficha: es
+                // la del lote que se abre, y sin ella los escenarios de este
+                // seeder —«por caducar», «caducado»— nacían sin fecha.
+                'fecha_caducidad'        => $medicinas[$clave]->fecha_caducidad
+                    ->toDateString(),
                 'precio_unitario'        => $tipo === 'compra' ? 0.35 : null,
             ];
         }
@@ -380,10 +387,21 @@ class DatosPruebaDispensarioSeeder extends Seeder
         ItemReceta::withTrashed()->whereIn('receta_medica_id', $recetas)->forceDelete();
         RecetaMedica::withTrashed()->whereIn('id', $recetas)->forceDelete();
         ConsultaMedica::whereIn('id', $consultas)->forceDelete();
+
+        // Los triajes cuelgan de la historia con RESTRICT, así que van antes.
+        // No los sembramos nosotros: aparecen cuando alguien atiende a un
+        // paciente de prueba, y sin esto la segunda pasada del seeder moría.
+        Triaje::whereIn('historia_clinica_id', $historias)->delete();
+
         HistoriaClinica::whereIn('id', $historias)->forceDelete();
 
         ItemAdquisicion::whereIn('adquisicion_id', $adquisiciones)->delete();
         AdquisicionMedicamento::withTrashed()->whereIn('id', $adquisiciones)->forceDelete();
+
+        // Los lotes también sujetan la medicina con RESTRICT: son sus
+        // existencias, y borrar el catálogo dejándolos huérfanos no tendría
+        // sentido.
+        LoteMedicina::whereIn('inventario_medicina_id', $medicinas)->delete();
 
         InventarioMedicina::withTrashed()->whereIn('id', $medicinas)->forceDelete();
     }

@@ -7,12 +7,17 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AdquisicionMedicamento;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\ItemAdquisicion;
+use App\Models\Dispensario\LoteMedicina;
 use App\Models\Dispensario\MovimientoInventarioMed;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 final class AdquisicionService implements AdquisicionServiceInterface
 {
+    public function __construct(
+        private readonly StockPorLotes $stock
+    ) {}
+
     public function listar(array $filtros): LengthAwarePaginator
     {
         $query = AdquisicionMedicamento::with([
@@ -71,7 +76,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
                 "{$datos['proveedor_o_donante']}";
 
             foreach ($items as $item) {
-                ItemAdquisicion::create([
+                $itemAdquisicion = ItemAdquisicion::create([
                     'adquisicion_id'         => $adquisicion->id,
                     'inventario_medicina_id' => $item['inventario_medicina_id'],
                     'cantidad'               => $item['cantidad'],
@@ -83,8 +88,22 @@ final class AdquisicionService implements AdquisicionServiceInterface
                 $medicina = InventarioMedicina::lockForUpdate()
                     ->findOrFail($item['inventario_medicina_id']);
 
-                $medicina->stock_actual += $item['cantidad'];
+                // Cada entrada abre su propio lote, con su caducidad. Antes se
+                // sumaba al montón y se sobrescribían el lote y la fecha de la
+                // ficha, así que dos entradas con caducidades distintas se
+                // volvían indistinguibles.
+                $lote = $this->stock->ingresar(
+                    medicina:          $medicina,
+                    cantidad:          $item['cantidad'],
+                    codigoLote:        $item['lote'] ?? null,
+                    fechaCaducidad:    $item['fecha_caducidad'] ?? null,
+                    itemAdquisicionId: $itemAdquisicion->id,
+                );
 
+                // La ficha sigue llevando lote y caducidad de la última
+                // entrada: es lo que todavía leen las alertas y el bloqueo de
+                // despacho. Deja de escribirse cuando esas lecturas pasen a
+                // mirar los lotes, en la segunda entrega.
                 if (!empty($item['lote'])) {
                     $medicina->lote = $item['lote'];
                 }
@@ -96,6 +115,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
 
                 MovimientoInventarioMed::create([
                     'inventario_medicina_id' => $medicina->id,
+                    'lote_id'                => $lote->id,
                     'tipo_movimiento'        => 'ingreso',
                     'cantidad'               => $item['cantidad'],
                     'stock_resultante'       => $medicina->stock_actual,
@@ -135,34 +155,50 @@ final class AdquisicionService implements AdquisicionServiceInterface
 
             // Se comprueban todos los ítems antes de tocar ninguno, para que
             // el rechazo nombre lo que falta en vez de morir a medio camino.
-            $medicinas = [];
+            $lotes = [];
 
             foreach ($adquisicion->items as $item) {
                 $medicina = InventarioMedicina::lockForUpdate()
                     ->findOrFail($item->inventario_medicina_id);
 
-                if ($medicina->stock_actual < $item->cantidad) {
+                // Se mira el lote que abrió esta entrada, no el stock total de
+                // la medicina: con el total, otra entrada posterior podía tapar
+                // que de este lote ya había salido producto.
+                $lote = LoteMedicina::where('item_adquisicion_id', $item->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                $quedan = $lote?->stock_actual ?? $medicina->stock_actual;
+
+                if ($quedan < $item->cantidad) {
                     throw new ReglaNegocioException(
                         "No se puede anular: de {$medicina->nombre} entraron " .
-                        "{$item->cantidad} unidades y hoy quedan " .
-                        "{$medicina->stock_actual}. Corrija por ajuste de " .
-                        'inventario.'
+                        "{$item->cantidad} unidades y hoy quedan {$quedan}. " .
+                        'Corrija por ajuste de inventario.'
                     );
                 }
 
-                $medicinas[$item->id] = $medicina;
+                $lotes[$item->id] = [$medicina, $lote];
             }
 
             $motivoKardex = "Anulación de {$adquisicion->folio} — {$motivo}";
 
             foreach ($adquisicion->items as $item) {
-                $medicina = $medicinas[$item->id];
+                [$medicina, $lote] = $lotes[$item->id];
 
-                $medicina->stock_actual -= $item->cantidad;
-                $medicina->save();
+                if ($lote) {
+                    $this->stock->revertirIngreso($lote, $item->cantidad);
+                    $medicina->refresh();
+                } else {
+                    // Adquisiciones anteriores al control por lotes: no hay
+                    // lote que devolver, solo el stock agregado.
+                    $medicina->stock_actual -= $item->cantidad;
+                    $medicina->save();
+                }
 
                 MovimientoInventarioMed::create([
                     'inventario_medicina_id' => $medicina->id,
+                    'lote_id'                => $lote?->id,
                     'tipo_movimiento'        => 'anulacion',
                     'cantidad'               => -$item->cantidad,
                     'stock_resultante'       => $medicina->stock_actual,
