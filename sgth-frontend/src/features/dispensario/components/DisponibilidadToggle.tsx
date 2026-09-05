@@ -1,6 +1,6 @@
 'use client'
 
-import { Switch, Group, Text, Badge, Skeleton } from '@mantine/core'
+import { Button, Skeleton, Text, Tooltip, Box } from '@mantine/core'
 import {
   useMiDisponibilidad,
   useAlternarDisponibilidad,
@@ -9,46 +9,71 @@ import { useAuth } from '@/hooks/useAuth'
 
 const ROLES_CLINICOS = ['medico', 'odontologo']
 
+/**
+ * El estado de disponibilidad de quien atiende, en la barra superior.
+ *
+ * Vivía en la página de inicio del dispensario, y eso obligaba a volver allí
+ * para cambiarlo. Pero marcarse disponible no es una tarea: es un estado que se
+ * cambia mientras se está haciendo otra cosa —al salir a almorzar, con la
+ * pantalla de consultas delante—. Ese rodeo es justo lo que hace que nadie lo
+ * mantenga al día, y Recepción asigna turnos mirando esta lista: una que nadie
+ * actualiza es peor que no tenerla.
+ *
+ * Solo lo ve quien atiende pacientes. El resto del personal del dispensario no
+ * aparece en esa lista, así que el control no le dice nada.
+ */
 export function DisponibilidadToggle() {
   const { usuario } = useAuth()
-  const { data, isLoading } = useMiDisponibilidad()
+  const roles = (usuario?.roles as string[]) ?? []
+  const esClinico = roles.some(r => ROLES_CLINICOS.includes(r))
+
+  const { data, isLoading } = useMiDisponibilidad(esClinico)
   const alternar = useAlternarDisponibilidad()
 
-  // Marcarse disponible solo tiene sentido para quien atiende pacientes; al
-  // resto del personal no se le muestra nada. La comprobación vivía en la
-  // página, que por lo demás no necesitaba ser de cliente.
-  const roles = (usuario?.roles as string[]) ?? []
-  if (!roles.some(r => ROLES_CLINICOS.includes(r))) {
-    return null
-  }
+  if (!esClinico) return null
 
   if (isLoading) {
-    return <Skeleton height={32} width={220} radius="xl" />
+    return <Skeleton height={30} width={120} radius="xl" />
   }
 
   const disponible = data?.disponible ?? false
 
   return (
-    <Group gap="sm">
-      <Switch
-        checked={disponible}
-        onChange={() => alternar.mutate()}
-        disabled={alternar.isPending}
-        color="emerald"
-        size="md"
-      />
-      <Text size="sm" fw={500}>
-        {disponible
-          ? 'Disponible para atención'
-          : 'No disponible'}
-      </Text>
-      <Badge
-        size="xs"
+    <Tooltip
+      label={disponible
+        ? 'Apareces disponible para atención. Pulsa para dejar de estarlo.'
+        : 'No apareces disponible. Pulsa para marcarte disponible.'}
+      withArrow
+    >
+      <Button
+        size="compact-sm"
+        radius="xl"
         variant="light"
         color={disponible ? 'emerald' : 'gray'}
+        loading={alternar.isPending}
+        onClick={() => alternar.mutate()}
+        aria-label={disponible
+          ? 'Disponible para atención'
+          : 'No disponible para atención'}
+        leftSection={
+          <Box
+            w={8}
+            h={8}
+            style={{
+              borderRadius: '50%',
+              backgroundColor: disponible
+                ? 'var(--mantine-color-emerald-6)'
+                : 'var(--mantine-color-gray-5)',
+            }}
+          />
+        }
       >
-        {disponible ? 'En línea' : 'Fuera de turno'}
-      </Badge>
-    </Group>
+        {/* En pantallas estrechas queda solo el punto de color: la barra
+            superior no tiene sitio para más, y el color ya dice el estado. */}
+        <Text size="xs" fw={500} visibleFrom="sm">
+          {disponible ? 'Disponible' : 'No disponible'}
+        </Text>
+      </Button>
+    </Tooltip>
   )
 }

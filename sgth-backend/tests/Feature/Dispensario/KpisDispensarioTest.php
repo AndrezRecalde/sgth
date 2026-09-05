@@ -11,6 +11,7 @@ use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Services\Dispensario\EstadisticasDispensarioService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -209,4 +210,36 @@ test('los_kpis_se_sirven_por_la_api', function () {
 
     expect($respuesta->json('datos.atenciones_por_especialidad.odontologia'))
         ->toBe(1);
+});
+
+test('marcarse_disponible_es_solo_de_quien_atiende_pacientes', function () {
+    // La guarda existía solo en la pantalla, que ocultaba el control. Por la
+    // API una enfermera podía marcarse disponible: la lista de disponibles
+    // filtra por rol al leer, pero la fila quedaba escrita igual.
+    $enfermera = User::create([
+        'email' => 'enfermera@example.com', 'usuario_ti' => 'enfermera',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $enfermera->assignRole(Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+
+    $this->actingAs($enfermera, 'sanctum')
+        ->postJson('/api/v1/dispensario/disponibilidad/alternar')
+        ->assertStatus(403);
+
+    expect(DB::table('disponibilidad_medicos')->count())->toBe(0);
+
+    $medico = User::create([
+        'email' => 'clinico@example.com', 'usuario_ti' => 'clinico',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $medico->assignRole(Role::firstOrCreate(
+        ['name' => 'odontologo', 'guard_name' => 'sanctum']
+    ));
+
+    $this->actingAs($medico, 'sanctum')
+        ->postJson('/api/v1/dispensario/disponibilidad/alternar')
+        ->assertOk()
+        ->assertJsonPath('datos.disponible', true);
 });

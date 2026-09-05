@@ -1015,13 +1015,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [PersonalMedicoController::class, 'index']
         )->name('dispensario.personal-medico');
 
+        // Marcarse disponible es de quien atiende pacientes. La guarda existía
+        // solo en la pantalla, que ocultaba el control: por la API cualquiera
+        // del dispensario podía marcarse disponible, y aunque la lista de
+        // disponibles filtra por rol al leer, la fila quedaba escrita igual.
         Route::get('disponibilidad/mi-estado',
             [DisponibilidadController::class, 'miEstado']
-        )->name('dispensario.disponibilidad.miEstado');
+        )->middleware('role:medico|odontologo')
+         ->name('dispensario.disponibilidad.miEstado');
 
         Route::post('disponibilidad/alternar',
             [DisponibilidadController::class, 'alternar']
-        )->name('dispensario.disponibilidad.alternar');
+        )->middleware('role:medico|odontologo')
+         ->name('dispensario.disponibilidad.alternar');
 
         Route::get('pacientes/buscar',
             [PacienteController::class, 'buscar']

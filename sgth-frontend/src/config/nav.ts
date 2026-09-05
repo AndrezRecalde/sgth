@@ -257,9 +257,14 @@ export const NAV_SALUD: NavGroup[] = [
     label: 'Dispensario',
     items: [
       {
+        // El tablero es de gestión —incluye consultas por profesional— y el
+        // endpoint solo lo sirve a estos dos roles. Sin declararlos aquí, el
+        // menú le prometía un tablero a todo el personal del dispensario y a
+        // la mayoría le abría una página vacía.
         label: 'Dashboard',
         href:  ROUTES.SALUD.HOME,
         icon:  'IconHome',
+        roles: ['admin-dispensario', 'maxima-autoridad'],
       },
       {
         label: 'Consultas',
