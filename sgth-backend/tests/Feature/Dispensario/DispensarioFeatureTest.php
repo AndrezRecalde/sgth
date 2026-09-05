@@ -1504,3 +1504,27 @@ test('nombre_completo_no_devuelve_null_aunque_falte_el_correo', function () {
     expect($medico->nombre_completo)->toBe($this->medico->usuario_ti);
     expect(fn () => $medico->toArray())->not->toThrow(TypeError::class);
 });
+
+test('el_folio_del_turno_sale_del_mayor_no_de_contar_filas', function () {
+    $service = app(AgendaService::class);
+
+    $agendar = fn () => $service->agendarCita([
+        'servidor_id'      => $this->paciente->id,
+        'medico_id'        => $this->medico->id,
+        'tipo_atencion'    => 'medicina_general',
+        'motivo_solicitud' => 'Control',
+    ], $this->medico->id);
+
+    $anio = now()->year;
+
+    expect($agendar()->folio)->toBe("TUR-{$anio}-00001");
+    $segundo = $agendar();
+    expect($segundo->folio)->toBe("TUR-{$anio}-00002");
+
+    // La tabla borra en blando. Contando filas, retirar una bajaba el conteo y
+    // el siguiente turno repetía un folio ya emitido, que el índice único
+    // rechaza porque el borrado en blando no libera el valor.
+    $segundo->delete();
+
+    expect($agendar()->folio)->toBe("TUR-{$anio}-00003");
+});
