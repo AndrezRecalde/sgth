@@ -925,9 +925,11 @@ test('el_aviso_de_inventario_agrupa_caducadas_bajo_minimo_y_por_caducar', functi
 
     $resumen = $servicio->resumenAlertas();
 
-    expect($resumen['caducadas']->pluck('nombre')->all())
+    // Caducidad va por lote, no por medicina: es el lote el que caduca, y una
+    // sola fecha por ficha era justamente el error que arrastraba el módulo.
+    expect($resumen['caducadas']->pluck('medicina.nombre')->all())
         ->toBe(['Vencida con stock']);
-    expect($resumen['por_caducar']->pluck('nombre')->all())
+    expect($resumen['por_caducar']->pluck('medicina.nombre')->all())
         ->toBe(['Proxima a caducar']);
     expect($resumen['bajo_minimo']->pluck('nombre')->all())
         ->toContain('Bajo minimo')
@@ -1927,4 +1929,123 @@ test('dar_de_baja_retira_primero_lo_que_caduca_antes', function () {
     expect($porLote['L-DICIEMBRE'])->toBe(20);
     expect(app(App\Services\Dispensario\StockPorLotes::class)->cuadra($medicina))
         ->toBeTrue();
+});
+
+/**
+ * El caso que resume la entrega: una medicina con un lote vencido y otro bueno.
+ * Con un solo campo de caducidad en la ficha era indescriptible, y el sistema
+ * se equivocaba en una dirección o en la otra según cuál hubiera entrado
+ * último.
+ */
+function medicinaConDosLotes(int $creadaPor): InventarioMedicina
+{
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre'           => 'Cefalexina',
+        'principio_activo' => 'Cefalexina',
+        'concentracion'    => '500mg',
+        'presentacion'     => 'capsula',
+        'stock_minimo'     => 5,
+    ], $creadaPor);
+
+    $stock = app(App\Services\Dispensario\StockPorLotes::class);
+
+    // Primero el vencido, para que FEFO lo encuentre antes.
+    $stock->ingresar($medicina, 40, 'L-VENCIDO', now()->subDays(10)->toDateString());
+    $stock->ingresar($medicina->refresh(), 60, 'L-BUENO', now()->addYear()->toDateString());
+
+    return $medicina->refresh();
+}
+
+test('se_despacha_lo_bueno_aunque_haya_un_lote_vencido_al_lado', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaConDosLotes($this->medico->id);
+
+    // Antes el bloqueo miraba la fecha de la ficha. Con el lote vencido por
+    // medio, o paraba el despacho entero teniendo sesenta unidades buenas, o
+    // dejaba salir las vencidas. Ahora sale lo bueno y solo lo bueno.
+    $reparto = app(App\Services\Dispensario\StockPorLotes::class)
+        ->consumirParaDespacho($medicina, 10);
+
+    expect($reparto)->toHaveCount(1);
+    expect($reparto[0]['lote']->codigo_lote)->toBe('L-BUENO');
+
+    $porLote = $medicina->refresh()->lotes()->pluck('stock_actual', 'codigo_lote');
+    expect($porLote['L-VENCIDO'])->toBe(40);
+    expect($porLote['L-BUENO'])->toBe(50);
+});
+
+test('el_despacho_se_frena_cuando_lo_bueno_no_alcanza_y_dice_cuanto_hay_vencido', function () {
+    $this->actingAs($this->medico, 'sanctum');
+    $medicina = medicinaConDosLotes($this->medico->id);
+
+    // Hay cien unidades en total, pero solo sesenta entregables. El rechazo
+    // tiene que nombrar las cuarenta inmovilizadas, o quien está en el
+    // mostrador no entiende por qué el sistema dice que no hay.
+    expect(fn () => app(App\Services\Dispensario\StockPorLotes::class)
+        ->consumirParaDespacho($medicina, 80))
+        ->toThrow(
+            App\Exceptions\ReglaNegocioException::class,
+            'No hay existencias entregables de Cefalexina: se piden 80 '
+            . 'unidades y quedan 60 sin caducar, más 40 vencidas que deben '
+            . 'darse de baja.'
+        );
+
+    // Y no se movió nada.
+    expect($medicina->refresh()->stock_actual)->toBe(100);
+});
+
+test('el_bajo_minimo_no_cuenta_las_unidades_vencidas', function () {
+    $this->actingAs($this->medico, 'sanctum');
+
+    $medicina = app(InventarioMedicinasService::class)->ingresarMedicina([
+        'nombre'           => 'Ranitidina',
+        'principio_activo' => 'Ranitidina',
+        'concentracion'    => '150mg',
+        'presentacion'     => 'tableta',
+        'stock_minimo'     => 30,
+    ], $this->medico->id);
+
+    // Ochenta unidades, todas vencidas. El stock de la ficha dice ochenta, así
+    // que con la regla anterior esta medicina no aparecía en la alerta de
+    // reposición: parecía llena estando vacía de hecho.
+    app(App\Services\Dispensario\StockPorLotes::class)->ingresar(
+        $medicina, 80, 'L-VIEJO', now()->subMonth()->toDateString()
+    );
+
+    $servicio = app(InventarioMedicinasService::class);
+
+    expect($servicio->resumenAlertas()['bajo_minimo']->pluck('nombre'))
+        ->toContain('Ranitidina');
+
+    // Y el buscador de quien receta tampoco la ofrece: no hay nada que entregar.
+    expect($servicio->buscar('Ranitidina')->pluck('nombre'))
+        ->not->toContain('Ranitidina');
+
+    // Quien registra una adquisición sí la ve, que es justo lo que va a reponer.
+    expect($servicio->buscar('Ranitidina', soloDespachables: false)->pluck('nombre'))
+        ->toContain('Ranitidina');
+});
+
+test('el_listado_dice_cuanto_se_puede_entregar_y_cuanto_esta_vencido', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'admin-dispensario', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+    medicinaConDosLotes($this->medico->id);
+
+    $fila = collect(
+        $this->getJson('/api/v1/dispensario/inventario/medicinas?search=Cefalexina')
+            ->assertOk()->json('datos.data')
+    )->firstWhere('nombre', 'Cefalexina');
+
+    // La ficha sigue diciendo cien, que es lo que hay físicamente en el
+    // estante, pero ahora se sabe qué parte de esas cien sirve.
+    expect($fila['stock_actual'])->toBe(100);
+    expect((int) $fila['stock_despachable'])->toBe(60);
+    expect((int) $fila['stock_caducado'])->toBe(40);
+
+    // Y la caducidad que manda es la del lote que saldría primero.
+    expect($fila['proxima_caducidad'])->toStartWith(
+        now()->subDays(10)->format('Y-m-d')
+    );
 });

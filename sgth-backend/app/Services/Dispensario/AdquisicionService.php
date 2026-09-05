@@ -100,18 +100,11 @@ final class AdquisicionService implements AdquisicionServiceInterface
                     itemAdquisicionId: $itemAdquisicion->id,
                 );
 
-                // La ficha sigue llevando lote y caducidad de la última
-                // entrada: es lo que todavía leen las alertas y el bloqueo de
-                // despacho. Deja de escribirse cuando esas lecturas pasen a
-                // mirar los lotes, en la segunda entrega.
-                if (!empty($item['lote'])) {
-                    $medicina->lote = $item['lote'];
-                }
-                if (!empty($item['fecha_caducidad'])) {
-                    $medicina->fecha_caducidad = $item['fecha_caducidad'];
-                }
-
-                $medicina->save();
+                // `inventario_medicinas.lote` y `.fecha_caducidad` ya no se
+                // tocan: eran el origen del problema —cada entrada pisaba la
+                // anterior— y ahora nadie los lee. Se quedan en la tabla con lo
+                // último que se escribió en ellos hasta que la tercera entrega
+                // los retire junto con los campos del formulario.
 
                 MovimientoInventarioMed::create([
                     'inventario_medicina_id' => $medicina->id,

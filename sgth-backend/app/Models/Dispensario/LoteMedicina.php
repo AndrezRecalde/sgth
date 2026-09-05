@@ -83,6 +83,25 @@ class LoteMedicina extends Model
     }
 
     /**
+     * Lo que todavía se puede entregar. Sin fecha entra aquí: no hay dato que
+     * afirme que caducó, y bloquear por omisión dejaría la farmacia parada.
+     */
+    public function scopeVigentes(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereNull('fecha_caducidad')
+            ->orWhereDate('fecha_caducidad', '>=', now()->toDateString()));
+    }
+
+    /** Lo vencido: existencias inmovilizadas a la espera de darse de baja. */
+    public function scopeCaducados(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('fecha_caducidad')
+            ->whereDate('fecha_caducidad', '<', now()->toDateString());
+    }
+
+    /**
      * First Expired, First Out: sale antes lo que caduca antes.
      *
      * Los lotes sin fecha van al final —no se puede afirmar que caduquen

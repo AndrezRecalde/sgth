@@ -18,10 +18,10 @@ Estas existencias **no se pueden despachar**. Corresponde darlas de baja desde
 Inventario para que dejen de figurar como disponibles.
 
 <x-mail::table>
-| Medicina | Existencias | Caducó |
-| :------- | ----------: | :----- |
-@foreach ($caducadas as $medicina)
-| {{ $medicina->nombre }} {{ $medicina->concentracion }} | {{ $medicina->stock_actual }} | {{ $medicina->fecha_caducidad->format('d/m/Y') }} |
+| Medicina | Lote | Existencias | Caducó |
+| :------- | :--- | ----------: | :----- |
+@foreach ($caducadas as $lote)
+| {{ $lote->medicina->nombre }} {{ $lote->medicina->concentracion }} | {{ $lote->etiqueta }} | {{ $lote->stock_actual }} | {{ $lote->fecha_caducidad->format('d/m/Y') }} |
 @endforeach
 </x-mail::table>
 @endif
@@ -35,7 +35,7 @@ Conviene reponerlas por adquisición antes de que se agoten.
 | Medicina | Existencias | Mínimo |
 | :------- | ----------: | -----: |
 @foreach ($bajoMinimo as $medicina)
-| {{ $medicina->nombre }} {{ $medicina->concentracion }} | {{ $medicina->stock_actual }} | {{ $medicina->stock_minimo }} |
+| {{ $medicina->nombre }} {{ $medicina->concentracion }} | {{ $medicina->stock_despachable }} | {{ $medicina->stock_minimo }} |
 @endforeach
 </x-mail::table>
 @endif
@@ -47,10 +47,10 @@ Todavía se pueden entregar. Priorizar su despacho evita tener que darlas de
 baja más adelante.
 
 <x-mail::table>
-| Medicina | Existencias | Caduca |
-| :------- | ----------: | :----- |
-@foreach ($porCaducar as $medicina)
-| {{ $medicina->nombre }} {{ $medicina->concentracion }} | {{ $medicina->stock_actual }} | {{ $medicina->fecha_caducidad->format('d/m/Y') }} |
+| Medicina | Lote | Existencias | Caduca |
+| :------- | :--- | ----------: | :----- |
+@foreach ($porCaducar as $lote)
+| {{ $lote->medicina->nombre }} {{ $lote->medicina->concentracion }} | {{ $lote->etiqueta }} | {{ $lote->stock_actual }} | {{ $lote->fecha_caducidad->format('d/m/Y') }} |
 @endforeach
 </x-mail::table>
 @endif

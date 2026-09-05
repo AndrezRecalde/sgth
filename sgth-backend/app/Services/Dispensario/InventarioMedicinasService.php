@@ -5,6 +5,7 @@ namespace App\Services\Dispensario;
 use App\Contracts\Dispensario\InventarioMedicinasServiceInterface;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\InventarioMedicina;
+use App\Models\Dispensario\LoteMedicina;
 use App\Models\Dispensario\MovimientoInventarioMed;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,7 +19,8 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
 
     public function listar(array $filtros): LengthAwarePaginator
     {
-        $query = InventarioMedicina::orderBy('created_at', 'desc');
+        $query = InventarioMedicina::conResumenDeLotes()
+            ->orderBy('created_at', 'desc');
 
         if (!empty($filtros['search'])) {
             $termino = $filtros['search'];
@@ -36,7 +38,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         }
 
         if (!empty($filtros['stock_bajo'])) {
-            $query->whereColumn('stock_actual', '<=', 'stock_minimo');
+            $query->bajoMinimo();
         }
 
         return $query->paginate($filtros['per_page'] ?? 20);
@@ -44,7 +46,9 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
 
     public function obtener(int $id): InventarioMedicina
     {
-        return InventarioMedicina::findOrFail($id);
+        return InventarioMedicina::conResumenDeLotes()
+            ->with(['lotes' => fn ($q) => $q->conStock()->fefo()])
+            ->findOrFail($id);
     }
 
     /** Días de antelación con que se avisa de una caducidad próxima. */
@@ -61,33 +65,40 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
      * En caducidad solo entra lo que tiene existencias: una medicina vencida
      * con stock cero no pide ninguna acción.
      *
+     * Bajo mínimo va por medicina, porque reponer es una decisión del producto.
+     * Caducidad va por LOTE, porque lo que caduca es el lote: una fila por
+     * medicina con una sola fecha era justamente el error que arrastraba el
+     * módulo, y dejaba tapado un lote a punto de vencer detrás de otro más
+     * reciente.
+     *
      * @return array{bajo_minimo: Collection, por_caducar: Collection, caducadas: Collection}
      */
     public function resumenAlertas(): array
     {
-        $activas = fn () => InventarioMedicina::where('estado', true);
-        $hoy = now()->toDateString();
+        $limite = now()->addDays(self::DIAS_AVISO_CADUCIDAD)->toDateString();
+
+        $lotesDeActivas = fn () => LoteMedicina::with('medicina')
+            ->conStock()
+            ->whereHas('medicina', fn ($q) => $q->where('estado', true));
 
         return [
-            'bajo_minimo' => $activas()
-                ->whereColumn('stock_actual', '<=', 'stock_minimo')
+            // Sobre lo despachable: ochenta unidades vencidas no reponen nada.
+            'bajo_minimo' => InventarioMedicina::where('estado', true)
+                ->conResumenDeLotes()
+                ->bajoMinimo()
                 ->orderBy('nombre')
                 ->get(),
 
-            'caducadas' => $activas()
-                ->where('stock_actual', '>', 0)
-                ->whereNotNull('fecha_caducidad')
-                ->whereDate('fecha_caducidad', '<', $hoy)
-                ->orderBy('fecha_caducidad')
+            'caducadas' => $lotesDeActivas()
+                ->caducados()
+                ->fefo()
                 ->get(),
 
-            'por_caducar' => $activas()
-                ->where('stock_actual', '>', 0)
+            'por_caducar' => $lotesDeActivas()
+                ->vigentes()
                 ->whereNotNull('fecha_caducidad')
-                ->whereDate('fecha_caducidad', '>=', $hoy)
-                ->whereDate('fecha_caducidad', '<=', now()
-                    ->addDays(self::DIAS_AVISO_CADUCIDAD)->toDateString())
-                ->orderBy('fecha_caducidad')
+                ->whereDate('fecha_caducidad', '<=', $limite)
+                ->fefo()
                 ->get(),
         ];
     }
@@ -103,7 +114,7 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
     public function contarStockBajo(): int
     {
         return InventarioMedicina::where('estado', true)
-            ->whereColumn('stock_actual', '<=', 'stock_minimo')
+            ->bajoMinimo()
             ->count();
     }
 
@@ -121,11 +132,13 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         bool $soloDespachables = true
     ): Collection {
         return InventarioMedicina::where('estado', true)
+            ->conResumenDeLotes()
+            // Despachable es tener al menos un lote vigente con existencias, no
+            // que el campo de la ficha diga una fecha futura: con lotes
+            // mezclados ese campo dejaba fuera stock bueno y colaba stock
+            // vencido, según cuál hubiera entrado el último.
             ->when($soloDespachables, fn ($q) => $q
-                ->where('stock_actual', '>', 0)
-                ->where(fn ($sub) => $sub
-                    ->whereNull('fecha_caducidad')
-                    ->orWhereDate('fecha_caducidad', '>=', now()->toDateString())))
+                ->whereHas('lotes', fn ($sub) => $sub->conStock()->vigentes()))
             ->where(function ($q) use ($termino) {
                 $q->where('nombre', 'ilike', "%{$termino}%")
                   ->orWhere('principio_activo', 'ilike', "%{$termino}%")

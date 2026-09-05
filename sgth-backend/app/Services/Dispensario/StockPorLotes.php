@@ -77,6 +77,43 @@ final class StockPorLotes
     }
 
     /**
+     * Como el anterior, pero sin tocar lo vencido.
+     *
+     * Es lo que usa el despacho. La diferencia con dar de baja es toda: dar de
+     * baja va justamente a por lo caducado, y entregar no puede.
+     *
+     * Antes el bloqueo miraba la fecha de la ficha —la de la última entrada— y
+     * por eso se equivocaba en las dos direcciones: paraba un despacho entero
+     * porque el último lote que entró estaba vencido aunque hubiera existencias
+     * buenas, y dejaba salir un lote viejo caducado porque la ficha llevaba la
+     * fecha de otro más reciente. Ahora no hay margen: solo salen lotes
+     * vigentes, y si no alcanzan, el rechazo dice cuántas unidades hay
+     * inmovilizadas por vencidas.
+     *
+     * @return Reparto
+     */
+    public function consumirParaDespacho(
+        InventarioMedicina $medicina,
+        int $cantidad
+    ): array {
+        $despachable = (int) $medicina->lotes()->vigentes()->sum('stock_actual');
+
+        if ($despachable < $cantidad) {
+            $caducado = (int) $medicina->lotes()->caducados()->sum('stock_actual');
+
+            throw new ReglaNegocioException(
+                "No hay existencias entregables de {$medicina->nombre}: se " .
+                "piden {$cantidad} unidades y quedan {$despachable} sin " .
+                ($caducado > 0
+                    ? "caducar, más {$caducado} vencidas que deben darse de baja."
+                    : 'caducar.')
+            );
+        }
+
+        return $this->consumir($medicina, $cantidad, fefo: true, soloVigentes: true);
+    }
+
+    /**
      * Devuelve al lote lo que aportó una entrada que se anula.
      *
      * Solo procede si el lote sigue íntegro. Si ya salió parte de él, revertir
@@ -161,7 +198,8 @@ final class StockPorLotes
     private function consumir(
         InventarioMedicina $medicina,
         int $cantidad,
-        bool $fefo
+        bool $fefo,
+        bool $soloVigentes = false
     ): array {
         if ($cantidad <= 0) {
             throw new ReglaNegocioException(
@@ -176,7 +214,10 @@ final class StockPorLotes
             );
         }
 
-        $query = $medicina->lotes()->conStock()->lockForUpdate();
+        $query = $medicina->lotes()
+            ->conStock()
+            ->when($soloVigentes, fn ($q) => $q->vigentes())
+            ->lockForUpdate();
 
         $lotes = $fefo
             ? $query->fefo()->get()

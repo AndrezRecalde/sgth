@@ -4,6 +4,7 @@ namespace App\Services\Dispensario;
 use App\Contracts\Dispensario\EstadisticasDispensarioServiceInterface;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\InventarioMedicina;
+use App\Models\Dispensario\LoteMedicina;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -64,23 +65,35 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
             ->get();
 
         // 7. Alertas de inventario
-        $medicamentosBajoStock = InventarioMedicina::whereRaw('stock_actual <= stock_minimo')
-            ->select('nombre', 'stock_actual', 'stock_minimo')
-            ->get();
-
-        $limiteCaducidad = Carbon::now()->addDays(60);
-        $medicamentosPorCaducar = InventarioMedicina::whereNotNull('fecha_caducidad')
-            ->where('fecha_caducidad', '<=', $limiteCaducidad)
-            ->select('nombre', 'fecha_caducidad', 'lote')
+        // Bajo mínimo se mide sobre lo despachable: las unidades vencidas no
+        // evitan una rotura de stock, solo la disimulan.
+        $medicamentosBajoStock = InventarioMedicina::bajoMinimo()
+            ->conResumenDeLotes()
             ->get()
-            ->map(function ($medicina) {
-                return [
-                    'nombre' => $medicina->nombre,
-                    'lote' => $medicina->lote,
-                    'fecha_caducidad' => Carbon::parse($medicina->fecha_caducidad)->format('Y-m-d'),
-                    'dias_restantes' => Carbon::now()->startOfDay()->diffInDays(Carbon::parse($medicina->fecha_caducidad)->startOfDay(), false),
-                ];
-            });
+            ->map(fn ($medicina) => [
+                'nombre'       => $medicina->nombre,
+                'stock_actual' => (int) $medicina->stock_despachable,
+                'stock_minimo' => $medicina->stock_minimo,
+            ]);
+
+        // El aviso va por lote, que es lo que caduca. Antes salía una fila por
+        // medicina con la fecha de la última entrada, así que un lote a punto
+        // de vencer quedaba tapado por otro más reciente.
+        $limiteCaducidad = Carbon::now()->addDays(60);
+        $medicamentosPorCaducar = LoteMedicina::with('medicina:id,nombre')
+            ->conStock()
+            ->whereNotNull('fecha_caducidad')
+            ->whereDate('fecha_caducidad', '<=', $limiteCaducidad)
+            ->fefo()
+            ->get()
+            ->map(fn (LoteMedicina $lote) => [
+                'nombre'          => $lote->medicina->nombre,
+                'lote'            => $lote->etiqueta,
+                'stock'           => $lote->stock_actual,
+                'fecha_caducidad' => $lote->fecha_caducidad->format('Y-m-d'),
+                'dias_restantes'  => (int) Carbon::now()->startOfDay()
+                    ->diffInDays($lote->fecha_caducidad->startOfDay(), false),
+            ]);
 
         return [
             'atenciones_mes_actual' => $atencionesMesActual,

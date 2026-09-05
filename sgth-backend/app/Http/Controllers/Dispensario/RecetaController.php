@@ -17,7 +17,9 @@ final class RecetaController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = RecetaMedica::with([
-            'items.inventario',
+            // Con el resumen de lotes: quien despacha necesita saber cuánto de
+            // ese stock se puede entregar, no cuánto hay en el estante.
+            'items.inventario' => fn ($q) => $q->conResumenDeLotes(),
             'consultaMedica.historiaClinica.servidor',
             'consultaMedica.historiaClinica.cargaFamiliar.servidor',
             'consultaMedica.medico:id,usuario_ti,email,servidor_id',
@@ -117,7 +119,9 @@ final class RecetaController extends Controller
     public function show(int $id): JsonResponse
     {
         $receta = RecetaMedica::with([
-            'items.inventario',
+            // Con el resumen de lotes: quien despacha necesita saber cuánto de
+            // ese stock se puede entregar, no cuánto hay en el estante.
+            'items.inventario' => fn ($q) => $q->conResumenDeLotes(),
             'consultaMedica.historiaClinica.servidor',
             'consultaMedica.historiaClinica.cargaFamiliar',
         ])->findOrFail($id);

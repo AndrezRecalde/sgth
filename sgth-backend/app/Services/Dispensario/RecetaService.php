@@ -121,21 +121,12 @@ final class RecetaService implements RecetaServiceInterface
 
                 $medicina = InventarioMedicina::lockForUpdate()->findOrFail($item->inventario_medicina_id);
 
-                // Un medicamento vencido no sale del estante. El sistema lo
-                // pintaba en rojo y lo anotaba en el log, pero lo despachaba
-                // igual, que es lo único de la farmacia capaz de hacer daño.
-                if ($medicina->estaCaducado()) {
-                    throw new ReglaNegocioException(
-                        "No se puede despachar {$medicina->nombre}: caducó el " .
-                        $medicina->fecha_caducidad->format('d/m/Y') .
-                        '. Dé de baja esas existencias antes de continuar.'
-                    );
-                }
-
-                // Validar que exista stock suficiente para el despacho físico
-                if ($medicina->stock_actual < $cantidadADespachar) {
-                    throw new ReglaNegocioException("Stock insuficiente para el medicamento: {$medicina->nombre}. Stock actual: {$medicina->stock_actual}");
-                }
+                // Un medicamento vencido no sale del estante, y ahora la
+                // comprobación es exacta: la hace el propio consumo, que solo
+                // toca lotes vigentes. Antes se miraba la fecha de la ficha —la
+                // de la última entrada— y se erraba en las dos direcciones:
+                // paraba el despacho entero teniendo existencias buenas, o
+                // dejaba salir un lote viejo ya caducado.
 
                 // Actualizar el estado del ítem
                 $nuevaCantidadDespachada = $item->cantidad_despachada + $cantidadADespachar;
@@ -148,7 +139,7 @@ final class RecetaService implements RecetaServiceInterface
 
                 // Descontar inventario siguiendo FEFO: sale primero lo que
                 // caduca antes, y un despacho puede repartirse entre lotes.
-                $reparto = $this->stock->consumirFefo(
+                $reparto = $this->stock->consumirParaDespacho(
                     $medicina, $cantidadADespachar
                 );
 
