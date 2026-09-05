@@ -1304,3 +1304,70 @@ test('un_familiar_tambien_puede_tener_historia_clinica', function () {
     )->firstOrFail();
     expect($triaje->historia_clinica_id)->toBe($historia['id']);
 });
+
+test('crear_la_historia_de_un_familiar_no_confunde_la_de_un_candidato', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    // Una historia de preocupacional: sin servidor, porque quien se evaluó
+    // todavía no lo era. No tiene nada que ver con el familiar de abajo.
+    HistoriaClinica::create([
+        'numero_historia' => '0899999999',
+        'cedula_paciente' => '0899999999',
+        'tipo_paciente'   => 'candidato',
+        'estado'          => true,
+    ]);
+
+    $hija = App\Models\Expediente\CargaFamiliar::create([
+        'servidor_id'      => $this->paciente->id,
+        'cedula'           => '0801234563',
+        'nombres'          => 'Camila',
+        'apellidos'        => 'Perez',
+        'parentesco'       => App\Enums\TipoParentesco::HIJO,
+        'fecha_nacimiento' => now()->subYears(12),
+        'estado'           => true,
+    ]);
+
+    // El guardia de duplicados comparaba contra servidor_id y carga_familiar_id
+    // a la vez, y `where(col, null)` en Eloquent se vuelve `col IS NULL`: la
+    // historia del candidato hacía saltar «ya cuenta con una historia clínica»
+    // a un familiar que no tenía ninguna.
+    $historia = $this->postJson('/api/v1/dispensario/historias-clinicas', [
+        'carga_familiar_id' => $hija->id,
+    ])->assertCreated()->json('datos');
+
+    expect($historia['carga_familiar_id'])->toBe($hija->id);
+    expect($historia['tipo_paciente'])->toBe('familiar');
+
+    // Y queda numerada por su cédula aunque la petición solo mandara el id:
+    // es como se la busca después.
+    expect($historia['cedula_paciente'])->toBe($hija->cedula);
+    expect($historia['numero_historia'])->toBe($hija->cedula);
+
+    // El mismo paciente dos veces no abre dos historias.
+    $otraVez = $this->postJson('/api/v1/dispensario/historias-clinicas', [
+        'carga_familiar_id' => $hija->id,
+    ])->assertCreated()->json('datos');
+
+    expect($otraVez['id'])->toBe($historia['id']);
+    expect(HistoriaClinica::where('carga_familiar_id', $hija->id)->count())
+        ->toBe(1);
+});
+
+test('crear_la_historia_conserva_el_grupo_sanguineo_que_se_envio', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    // Se resolvía por cédula y se devolvía sin más, así que el grupo sanguíneo
+    // enviado en el alta se perdía por el camino sin decir nada.
+    $historia = $this->postJson('/api/v1/dispensario/historias-clinicas', [
+        'servidor_id'     => $this->paciente->id,
+        'grupo_sanguineo' => 'O+',
+    ])->assertCreated()->json('datos');
+
+    expect(HistoriaClinica::find($historia['id'])->grupo_sanguineo)->toBe('O+');
+});

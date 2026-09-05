@@ -7,6 +7,8 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
+use App\Models\Expediente\CargaFamiliar;
+use App\Models\Expediente\Servidor;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Contracts\Dispensario\AgendaServiceInterface;
 use Illuminate\Support\Arr;
@@ -73,24 +75,51 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
 
     public function crearHistoria(array $datos): HistoriaClinica
     {
-        $cedula = $datos['cedula_paciente']
-            ?? $datos['cedula']
-            ?? null;
+        $servidorId = $datos['servidor_id']       ?? null;
+        $cargaId    = $datos['carga_familiar_id'] ?? null;
 
-        if ($cedula) {
-            return HistoriaClinica::buscarOCrearPorCedula(
-                cedula:       $cedula,
-                tipoPaciente: $datos['tipo_paciente'] ?? 'servidor',
-                servidorId:   $datos['servidor_id']       ?? null,
-                cargaId:      $datos['carga_familiar_id'] ?? null,
-                userId:       $datos['created_by']        ?? null,
+        if (!$servidorId && !$cargaId) {
+            throw new ReglaNegocioException(
+                'Debe indicar de qué paciente es la historia clínica: ' .
+                'un servidor o un familiar.'
             );
         }
 
+        $cedula = $datos['cedula_paciente'] ?? $datos['cedula'] ?? null;
+
+        // La interfaz manda solo el id del paciente, pero la historia se numera
+        // por cédula y se busca por ella. Sacarla aquí evita que una historia
+        // creada desde la pantalla quede sin número y sin forma de encontrarla.
+        if (!$cedula) {
+            $cedula = $servidorId
+                ? Servidor::whereKey($servidorId)->value('cedula')
+                : CargaFamiliar::whereKey($cargaId)->value('cedula');
+        }
+
+        $tipoPaciente = $datos['tipo_paciente']
+            ?? ($servidorId ? 'servidor' : 'familiar');
+
+        if ($cedula) {
+            $historia = HistoriaClinica::buscarOCrearPorCedula(
+                cedula:       $cedula,
+                tipoPaciente: $tipoPaciente,
+                servidorId:   $servidorId,
+                cargaId:      $cargaId,
+                userId:       $datos['created_by'] ?? null,
+            );
+
+            return $this->completarDatosClinicos($historia, $datos);
+        }
+
+        // Sin cédula solo queda el dueño. Se compara contra la clave que de
+        // verdad llegó: antes se comparaba contra las dos, y `where(col, null)`
+        // en Eloquent se convierte en `col IS NULL`, así que cualquier historia
+        // de candidato —que no tiene servidor— hacía saltar el «ya cuenta con
+        // una historia» a un paciente que no tenía ninguna.
         $existente = HistoriaClinica::where(
-            'servidor_id', $datos['servidor_id'] ?? null
-        )->orWhere(
-            'carga_familiar_id', $datos['carga_familiar_id'] ?? null
+            $servidorId
+                ? ['servidor_id' => $servidorId]
+                : ['carga_familiar_id' => $cargaId]
         )->first();
 
         if ($existente) {
@@ -100,7 +129,31 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             );
         }
 
-        return HistoriaClinica::create($datos);
+        return HistoriaClinica::create([
+            ...$datos,
+            'tipo_paciente' => $tipoPaciente,
+        ]);
+    }
+
+    /**
+     * Los datos clínicos que trae el alta y que `buscarOCrearPorCedula` no
+     * conoce. Sin esto un grupo sanguíneo enviado al crear la historia se
+     * perdía por el camino sin decir nada.
+     */
+    private function completarDatosClinicos(
+        HistoriaClinica $historia,
+        array $datos
+    ): HistoriaClinica {
+        $extra = array_filter(
+            Arr::only($datos, ['grupo_sanguineo', 'medicacion_habitual']),
+            fn ($valor) => $valor !== null && $valor !== ''
+        );
+
+        if ($extra) {
+            $historia->update($extra);
+        }
+
+        return $historia;
     }
 
     public function buscarPorCedula(string $cedula): ?HistoriaClinica
