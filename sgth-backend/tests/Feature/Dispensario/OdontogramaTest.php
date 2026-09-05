@@ -370,6 +370,7 @@ test('no_se_anula_un_procedimiento_de_otra_consulta', function () {
     $pieza = $odontograma->piezas->firstWhere('numero_pieza', 14);
 
     $consultaVieja = ConsultaMedica::create([
+        'especialidad' => 'odontologia',
         'historia_clinica_id' => $this->historia->id,
         'medico_id'           => $this->odontologo->id,
         'fecha_consulta'      => now()->subMonth(),
@@ -377,6 +378,7 @@ test('no_se_anula_un_procedimiento_de_otra_consulta', function () {
         'motivo_consulta'     => 'Control',
     ]);
     $consultaDeHoy = ConsultaMedica::create([
+        'especialidad' => 'odontologia',
         'historia_clinica_id' => $this->historia->id,
         'medico_id'           => $this->odontologo->id,
         'fecha_consulta'      => now(),
@@ -551,6 +553,7 @@ test('el_procedimiento_no_acepta_la_consulta_de_otro_paciente', function () {
 
     $otraHistoria = historiaDeFamiliar($this->paciente->id, 40, '0899000033');
     $consultaAjena = ConsultaMedica::create([
+        'especialidad' => 'odontologia',
         'historia_clinica_id' => $otraHistoria->id,
         'medico_id'           => $this->odontologo->id,
         'fecha_consulta'      => now(),

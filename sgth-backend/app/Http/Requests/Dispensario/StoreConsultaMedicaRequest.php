@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Requests\Dispensario;
 
+use App\Enums\EspecialidadAtencion;
 use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -26,6 +27,10 @@ class StoreConsultaMedicaRequest extends FormRequest
         return [
             'historia_clinica_id'     => ['required', 'integer', 'exists:historias_clinicas,id'],
             'agenda_medica_id'        => ['nullable', 'integer', 'exists:agendas_medicas,id'],
+            // Opcional: normalmente la deduce el turno o el rol de quien
+            // atiende. Solo hace falta enviarla cuando no hay turno y el
+            // profesional tiene los dos roles.
+            'especialidad'            => ['nullable', Rule::enum(EspecialidadAtencion::class)],
             'fecha_consulta'          => ['required', 'date'],
             'hora_consulta'           => ['required', 'date_format:H:i'],
             'tipo_atencion'           => ['required', Rule::in([
