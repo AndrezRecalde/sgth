@@ -20,16 +20,30 @@ class AtencionEnfermeria extends Model
         'folio', 'enfermera_id', 'servidor_id',
         'carga_familiar_id', 'catalogo_servicio_id',
         'descripcion', 'atendido_en', 'created_by',
+        'anulado_en', 'anulado_por', 'motivo_anulacion',
     ];
 
     protected function casts(): array
     {
-        return ['atendido_en' => 'datetime'];
+        return [
+            'atendido_en' => 'datetime',
+            'anulado_en'  => 'datetime',
+        ];
+    }
+
+    public function estaAnulada(): bool
+    {
+        return $this->anulado_en !== null;
     }
 
     public function enfermera(): BelongsTo
     {
         return $this->belongsTo(User::class, 'enfermera_id');
+    }
+
+    public function anulador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulado_por');
     }
 
     public function servidor(): BelongsTo

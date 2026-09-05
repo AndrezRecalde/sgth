@@ -3,6 +3,7 @@
 namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\AtencionEnfermeriaServiceInterface;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AtencionEnfermeria;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -11,10 +12,17 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
 {
     public function listar(array $filtros): LengthAwarePaginator
     {
+        // Las anuladas siguen en la lista, marcadas: la trazabilidad es
+        // precisamente poder ver que algo se registró y luego se anuló, y por
+        // qué. Quien solo quiera las vigentes filtra por `solo_vigentes`.
         $query = AtencionEnfermeria::with([
             'enfermera', 'servidor', 'cargaFamiliar.servidor',
-            'catalogoServicio',
+            'catalogoServicio', 'anulador',
         ])->orderBy('atendido_en', 'desc');
+
+        if (!empty($filtros['solo_vigentes'])) {
+            $query->whereNull('anulado_en');
+        }
 
         if (!empty($filtros['enfermera_id'])) {
             $query->where('enfermera_id', $filtros['enfermera_id']);
@@ -45,6 +53,41 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
             return $atencion->load([
                 'enfermera', 'servidor', 'cargaFamiliar.servidor',
                 'catalogoServicio',
+            ]);
+        });
+    }
+
+    /**
+     * Anular una atención: se marca, no se borra.
+     *
+     * Es un registro clínico —dice que a alguien se le puso una inyección— así
+     * que la fila se queda con quién la anuló, cuándo y por qué. Antes no había
+     * forma de deshacer nada: una atención apuntada al paciente equivocado se
+     * quedaba ahí para siempre.
+     */
+    public function anular(
+        int $id,
+        string $motivo,
+        int $anuladoPor
+    ): AtencionEnfermeria {
+        return DB::transaction(function () use ($id, $motivo, $anuladoPor) {
+            $atencion = AtencionEnfermeria::lockForUpdate()->findOrFail($id);
+
+            if ($atencion->estaAnulada()) {
+                throw new ReglaNegocioException(
+                    "La atención {$atencion->folio} ya fue anulada."
+                );
+            }
+
+            $atencion->update([
+                'anulado_en'       => now(),
+                'anulado_por'      => $anuladoPor,
+                'motivo_anulacion' => $motivo,
+            ]);
+
+            return $atencion->load([
+                'enfermera', 'servidor', 'cargaFamiliar.servidor',
+                'catalogoServicio', 'anulador',
             ]);
         });
     }

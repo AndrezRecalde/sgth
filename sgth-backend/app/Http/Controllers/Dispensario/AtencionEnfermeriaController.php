@@ -38,6 +38,23 @@ final class AtencionEnfermeriaController extends Controller
         );
     }
 
+    public function anular(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'motivo_anulacion' => ['required', 'string', 'max:255'],
+        ]);
+
+        $atencion = $this->service->anular(
+            $id,
+            $request->string('motivo_anulacion')->value(),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok(
+            $atencion, 'Atención de enfermería anulada correctamente.'
+        );
+    }
+
     public function catalogo(): JsonResponse
     {
         $catalogo = CatalogoServicioEnfermeria::activos()

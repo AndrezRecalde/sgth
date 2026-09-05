@@ -1372,6 +1372,53 @@ test('crear_la_historia_conserva_el_grupo_sanguineo_que_se_envio', function () {
     expect(HistoriaClinica::find($historia['id'])->grupo_sanguineo)->toBe('O+');
 });
 
+test('anular_una_atencion_de_enfermeria_la_marca_sin_borrarla', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $servicio = App\Models\Dispensario\CatalogoServicioEnfermeria::create([
+        'nombre' => 'Inyección intramuscular', 'activo' => true,
+    ]);
+
+    $atencion = $this->postJson('/api/v1/dispensario/atenciones-enfermeria', [
+        'servidor_id'          => $this->paciente->id,
+        'catalogo_servicio_id' => $servicio->id,
+        'descripcion'          => 'Ketorolaco 60mg',
+    ])->assertCreated()->json('datos');
+
+    $this->patchJson(
+        "/api/v1/dispensario/atenciones-enfermeria/{$atencion['id']}/anular",
+        ['motivo_anulacion' => 'Paciente incorrecto']
+    )->assertOk();
+
+    // La fila sigue ahí: es un registro clínico, dice que a alguien se le puso
+    // una inyección. Lo que cambia es que queda marcada y con el motivo.
+    $enBase = App\Models\Dispensario\AtencionEnfermeria::find($atencion['id']);
+    expect($enBase)->not->toBeNull();
+    expect($enBase->anulado_en)->not->toBeNull();
+    expect($enBase->anulado_por)->toBe($this->medico->id);
+    expect($enBase->motivo_anulacion)->toBe('Paciente incorrecto');
+
+    // Anularla dos veces no cuela.
+    $this->patchJson(
+        "/api/v1/dispensario/atenciones-enfermeria/{$atencion['id']}/anular",
+        ['motivo_anulacion' => 'Otra vez']
+    )->assertStatus(422);
+
+    // Y el listado la sigue mostrando, que es de lo que va la trazabilidad.
+    $listado = $this->getJson('/api/v1/dispensario/atenciones-enfermeria')
+        ->assertOk()->json('datos.data');
+    expect(collect($listado)->pluck('id'))->toContain($atencion['id']);
+
+    // Salvo que se pidan solo las vigentes.
+    $vigentes = $this->getJson(
+        '/api/v1/dispensario/atenciones-enfermeria?solo_vigentes=1'
+    )->assertOk()->json('datos.data');
+    expect(collect($vigentes)->pluck('id'))->not->toContain($atencion['id']);
+});
+
 test('el_folio_de_enfermeria_sale_del_mayor_no_de_contar_filas', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'enfermera', 'guard_name' => 'sanctum']

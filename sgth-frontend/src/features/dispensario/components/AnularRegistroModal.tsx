@@ -44,6 +44,15 @@ export const MOTIVOS_ANULAR_ADQUISICION: MotivoOption[] = [
   { value: 'otro',                label: 'Otro'                         },
 ]
 
+export const MOTIVOS_ANULAR_ATENCION: MotivoOption[] = [
+  { value: 'paciente_incorrecto', label: 'Paciente incorrecto'      },
+  { value: 'servicio_incorrecto', label: 'Servicio incorrecto'      },
+  { value: 'no_se_realizo',       label: 'El servicio no se realizó' },
+  { value: 'error_digitacion',    label: 'Error de digitación'      },
+  { value: 'duplicado',           label: 'Registro duplicado'       },
+  { value: 'otro',                label: 'Otro'                     },
+]
+
 export const MOTIVOS_ANULAR_RECETA: MotivoOption[] = [
   { value: 'no_retiro',        label: 'El paciente no retiró'   },
   { value: 'cambio_tratamiento', label: 'Cambio de tratamiento' },

@@ -17,11 +17,38 @@ export function useCatalogoServicios() {
 export function useAtencionesEnfermeria(filtros?: {
   fecha?: string
   enfermera_id?: number
+  /** 1 para dejar fuera las anuladas; por defecto vienen todas, marcadas. */
+  solo_vigentes?: 1
 }) {
   return useQuery({
     queryKey: ['atenciones-enfermeria', filtros],
     queryFn:  () => atencionEnfermeriaService.listar(filtros),
     staleTime: 1000 * 15,
+  })
+}
+
+export function useAnularAtencionEnfermeria() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      atencionEnfermeriaService.anular(id, motivo),
+    onSuccess: (data) => {
+      notifications.show({
+        title:   'Atención anulada',
+        message: `${data.folio} quedó anulada con su motivo.`,
+        color:   'orange',
+        icon:    React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['atenciones-enfermeria'] })
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title:   'Error',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      }),
   })
 }
 
