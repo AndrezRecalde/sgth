@@ -12,7 +12,6 @@ import {
   Alert,
   Text,
 } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,23 +30,6 @@ interface Props {
   onClose: () => void;
   initialValues?: InventarioMedicina | null;
   onCreated?: (medicina: InventarioMedicina) => void;
-}
-
-function toDate(v?: string | null): Date | null {
-  if (!v) return null;
-  const [y, m, d] = v.slice(0, 10).split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null;
-  const date = typeof d === "string" ? toDate(d) : d;
-  if (!date || isNaN(date.getTime())) return null;
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
 }
 
 export function MedicinaModal({
@@ -75,8 +57,6 @@ export function MedicinaModal({
       presentacion: "",
       concentracion: "",
       stock_minimo: 0,
-      fecha_caducidad: "",
-      lote: "",
     },
   });
 
@@ -90,8 +70,6 @@ export function MedicinaModal({
               presentacion: initialValues.presentacion,
               concentracion: initialValues.concentracion ?? "",
               stock_minimo: initialValues.stock_minimo,
-              fecha_caducidad: initialValues.fecha_caducidad ?? "",
-              lote: initialValues.lote ?? "",
             }
           : {
               nombre: "",
@@ -99,8 +77,6 @@ export function MedicinaModal({
               presentacion: "",
               concentracion: "",
               stock_minimo: 0,
-              fecha_caducidad: "",
-              lote: "",
             },
       );
     }
@@ -117,15 +93,11 @@ export function MedicinaModal({
               presentacion: values.presentacion,
               concentracion: values.concentracion || null,
               stock_minimo: values.stock_minimo,
-              fecha_caducidad: values.fecha_caducidad || null,
-              lote: values.lote || null,
             },
           })
         : crear.mutateAsync({
             ...values,
             concentracion: values.concentracion || null,
-            fecha_caducidad: values.fecha_caducidad || null,
-            lote: values.lote || null,
           });
 
     promise
@@ -210,25 +182,11 @@ export function MedicinaModal({
             {...register("concentracion")}
           />
 
-          <TextInput
-            label="Lote (opcional)"
-            {...contained}
-            {...register("lote")}
-          />
-          <Controller
-            name="fecha_caducidad"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                label="Fecha de caducidad (opcional)"
-                valueFormat="DD/MM/YYYY"
-                clearable
-                {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d))}
-              />
-            )}
-          />
+          {/* Aquí había un lote y una fecha de caducidad. Se fueron: esta
+              pantalla da de alta el CATÁLOGO —qué maneja la farmacia— y el
+              lote y la caducidad son de las existencias, que entran por
+              adquisición y cada una abre su lote. Pedirlos aquí prometía
+              guardar algo que ya no se guardaba. */}
 
           <Controller
             name="stock_minimo"

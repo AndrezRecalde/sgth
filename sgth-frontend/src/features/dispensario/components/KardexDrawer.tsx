@@ -114,13 +114,25 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
                       ? <IconArrowUp size={13} />
                       : <IconArrowDown size={13} />}
                   </ThemeIcon>
-                  <Stack gap={0}>
+                  <Stack gap={2}>
                     <Text size="sm" fw={500}>{m.motivo}</Text>
-                    <Text size="xs" c="dimmed">
-                      {formatFecha(m.created_at)} —{' '}
-                      {m.registrador?.nombre_completo
-                        ?? m.registrador?.usuario_ti ?? '—'}
-                    </Text>
+                    {/* El lote va con la fecha y no junto al motivo: los
+                        motivos de las entradas son largos —folio, documento y
+                        proveedor— y ahí la insignia se cortaba. Los
+                        movimientos anteriores al control por lotes no lo
+                        llevan, y no se les inventa: el kardex es inmutable. */}
+                    <Group gap={6} wrap="wrap">
+                      <Text size="xs" c="dimmed">
+                        {formatFecha(m.created_at)} —{' '}
+                        {m.registrador?.nombre_completo
+                          ?? m.registrador?.usuario_ti ?? '—'}
+                      </Text>
+                      {m.lote && (
+                        <Badge size="xs" variant="outline" color="gray">
+                          Lote {m.lote.codigo_lote ?? 'sin identificar'}
+                        </Badge>
+                      )}
+                    </Group>
                   </Stack>
                 </Group>
                 <Stack gap={0} align="flex-end">

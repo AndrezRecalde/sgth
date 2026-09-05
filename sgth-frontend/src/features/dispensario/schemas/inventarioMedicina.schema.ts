@@ -21,8 +21,6 @@ export const medicinaSchema = z.object({
   presentacion:     z.string().min(1, 'Seleccione la presentación'),
   concentracion:    z.string().optional().nullable(),
   stock_minimo:     z.number().min(0, 'No puede ser negativo'),
-  fecha_caducidad:  z.string().optional().nullable(),
-  lote:             z.string().optional().nullable(),
 })
 
 export type MedicinaFormData = z.infer<typeof medicinaSchema>

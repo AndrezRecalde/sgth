@@ -37,7 +37,8 @@ use Illuminate\Database\Seeder;
  * que el código real nunca habría producido.
  *
  * Es idempotente: borra sus propios datos antes de recrearlos. Los reconoce por
- * la marca SEED en `numero_historia`, `numero_documento` y `lote` — nunca por
+ * la marca SEED en `numero_historia`, `numero_documento` y el código de lote
+ * de sus existencias — nunca por
  * el nombre del medicamento, que borraría uno real homónimo. Si encuentra en el
  * catálogo una medicina que no sembró él, se detiene y lo dice en vez de
  * pisarla.
@@ -71,10 +72,15 @@ class DatosPruebaDispensarioSeeder extends Seeder
             'presentacion' => 'tableta', 'concentracion' => '10mg',
             'stock_minimo' => 20, 'caduca_en_dias' => -15, 'abastecer' => 80,
         ],
+        // Se agota de verdad: entra y se da de baja entera. Antes nacía sin
+        // existencias, y una medicina que nunca tuvo stock no tiene lote —así
+        // que la limpieza, que reconoce lo sembrado por el código de lote, no
+        // la encontraba y la segunda pasada se detenía creyéndola ajena.
         'agotado' => [
             'nombre' => 'Omeprazol', 'principio_activo' => 'Omeprazol',
             'presentacion' => 'capsula', 'concentracion' => '20mg',
-            'stock_minimo' => 25, 'caduca_en_meses' => 10, 'abastecer' => 0,
+            'stock_minimo' => 25, 'caduca_en_dias' => -40, 'abastecer' => 60,
+            'dar_de_baja_todo' => true,
         ],
         'bajo_minimo' => [
             'nombre' => 'Salbutamol', 'principio_activo' => 'Salbutamol',
@@ -112,6 +118,7 @@ class DatosPruebaDispensarioSeeder extends Seeder
         }
 
         $this->abastecer($medicinas, $medico);
+        $this->vaciarLoQueSeAgoto($medicinas, $medico);
 
         $pacientes = $this->pacientes();
 
@@ -179,22 +186,67 @@ class DatosPruebaDispensarioSeeder extends Seeder
                 return null;
             }
 
-            $caducidad = isset($datos['caduca_en_dias'])
-                ? now()->addDays($datos['caduca_en_dias'])
-                : now()->addMonths($datos['caduca_en_meses']);
-
+            // La ficha es solo catálogo: ni lote ni caducidad, que viajan con
+            // la entrada y acaban en el lote que esta abre.
             $medicinas[$clave] = $this->inventario->ingresarMedicina([
                 'nombre'           => $datos['nombre'],
                 'principio_activo' => $datos['principio_activo'],
                 'presentacion'     => $datos['presentacion'],
                 'concentracion'    => $datos['concentracion'],
                 'stock_minimo'     => $datos['stock_minimo'],
-                'fecha_caducidad'  => $caducidad->toDateString(),
-                'lote'             => self::MARCA . '-' . strtoupper(substr($clave, 0, 6)),
             ], $medico->id);
         }
 
         return $medicinas;
+    }
+
+    /**
+     * Deja en cero lo que el catálogo marca como agotado, dándolo de baja.
+     *
+     * Es la forma honesta de llegar a cero: el medicamento entró, caducó y se
+     * retiró, con su rastro en el kardex. Nacer sin existencias dejaba además
+     * una ficha sin ningún lote, y por tanto sin la marca por la que este
+     * seeder reconoce lo suyo.
+     *
+     * @param array<string, InventarioMedicina> $medicinas
+     */
+    private function vaciarLoQueSeAgoto(array $medicinas, User $medico): void
+    {
+        foreach (self::CATALOGO as $clave => $datos) {
+            if (empty($datos['dar_de_baja_todo'])) {
+                continue;
+            }
+
+            $medicina = $medicinas[$clave]->refresh();
+
+            if ($medicina->stock_actual === 0) {
+                continue;
+            }
+
+            $this->inventario->registrarBaja(
+                $medicina->id,
+                $medicina->stock_actual,
+                'Caducidad — retirado del estante',
+                $medico->id
+            );
+        }
+    }
+
+    /** La caducidad que el catálogo del seeder define para cada escenario. */
+    private function caducidadDe(string $clave): string
+    {
+        $datos = self::CATALOGO[$clave];
+
+        return (isset($datos['caduca_en_dias'])
+            ? now()->addDays($datos['caduca_en_dias'])
+            : now()->addMonths($datos['caduca_en_meses'])
+        )->toDateString();
+    }
+
+    /** El código de lote con que este seeder marca lo suyo. */
+    private function loteDe(string $clave): string
+    {
+        return self::MARCA . '-' . strtoupper(substr($clave, 0, 6));
     }
 
     /**
@@ -219,14 +271,13 @@ class DatosPruebaDispensarioSeeder extends Seeder
             $porTipo[$tipo][] = [
                 'inventario_medicina_id' => $medicinas[$clave]->id,
                 'cantidad'               => $datos['abastecer'],
-                // Conserva la marca: la adquisición sobrescribe el lote de la
-                // medicina, y es por el lote por donde se reconocen al limpiar.
-                'lote'                   => self::MARCA . '-' . strtoupper(substr($clave, 0, 6)),
-                // La caducidad viaja con la entrada, no solo en la ficha: es
-                // la del lote que se abre, y sin ella los escenarios de este
-                // seeder —«por caducar», «caducado»— nacían sin fecha.
-                'fecha_caducidad'        => $medicinas[$clave]->fecha_caducidad
-                    ->toDateString(),
+                // Conserva la marca: es por el código de lote por donde se
+                // reconoce lo sembrado al limpiar.
+                'lote'                   => $this->loteDe($clave),
+                // La caducidad viaja con la entrada porque es la del lote que
+                // se abre. Sin ella los escenarios de este seeder —«por
+                // caducar», «caducado»— nacerían sin fecha.
+                'fecha_caducidad'        => $this->caducidadDe($clave),
                 'precio_unitario'        => $tipo === 'compra' ? 0.35 : null,
             ];
         }
@@ -372,8 +423,12 @@ class DatosPruebaDispensarioSeeder extends Seeder
             ->whereIn('consulta_medica_id', $consultas)
             ->pluck('id');
 
+        // Se reconocen por el código de lote de sus existencias: la ficha ya no
+        // guarda ninguno, porque el lote es de las existencias y no del
+        // producto.
         $medicinas = InventarioMedicina::withTrashed()
-            ->where('lote', 'like', self::MARCA . '-%')
+            ->whereHas('lotes', fn ($q) => $q
+                ->where('codigo_lote', 'like', self::MARCA . '-%'))
             ->pluck('id');
 
         $adquisiciones = AdquisicionMedicamento::withTrashed()

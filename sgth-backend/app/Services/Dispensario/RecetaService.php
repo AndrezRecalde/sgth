@@ -158,10 +158,9 @@ final class RecetaService implements RecetaServiceInterface
                         'tipo_movimiento'        => 'egreso',
                         'cantidad'               => -$salida['cantidad'],
                         'stock_resultante'       => $restante,
-                        'motivo'                 => count($reparto) > 1
-                            ? 'Despacho de receta electrónica (lote '
-                                . $salida['lote']->etiqueta . ')'
-                            : 'Despacho de receta electrónica',
+                        // El lote va en su columna del kardex, no dentro del
+                        // texto: repetirlo aquí sería duplicarlo en la fila.
+                        'motivo'                 => 'Despacho de receta electrónica',
                         'referencia_receta_id'   => $receta->id,
                         'registrado_por'         => $despachadoPor,
                     ]);

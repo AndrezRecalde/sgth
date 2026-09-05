@@ -111,10 +111,10 @@ export function getMedicinasColumns(
       accessor: "proxima_caducidad",
       title: "Caducidad",
       render: (m) => {
-        // La del lote que saldría primero, no la de la última entrada: con
-        // varios lotes en el estante, la de la ficha era la que se hubiera
-        // escrito al final y podía tapar un lote ya vencido.
-        const proxima = m.proxima_caducidad ?? m.fecha_caducidad;
+        // La del lote que saldría primero. La ficha ya no guarda ninguna: la
+        // que tenía era la de la última entrada, y con varios lotes en el
+        // estante podía tapar uno ya vencido.
+        const proxima = m.proxima_caducidad;
 
         if (!proxima) {
           return (

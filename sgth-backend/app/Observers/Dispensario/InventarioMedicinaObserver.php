@@ -22,7 +22,9 @@ class InventarioMedicinaObserver
         if ($inventario->stock_actual > 0) {
             $inventario->lotes()->create([
                 'codigo_lote'        => null,
-                'fecha_caducidad'    => $inventario->fecha_caducidad,
+                // Sin fecha: quien crea la ficha con existencias directamente
+                // no está declarando de qué lote son ni cuándo caducan.
+                'fecha_caducidad'    => null,
                 'cantidad_ingresada' => $inventario->stock_actual,
                 'stock_actual'       => $inventario->stock_actual,
             ]);

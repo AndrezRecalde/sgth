@@ -27,8 +27,6 @@ class StoreInventarioMedicinaRequest extends FormRequest
             'presentacion'     => ['required', new Enum(PresentacionMedicamento::class)],
             'concentracion'    => ['nullable', 'string', 'max:100'],
             'stock_minimo'     => ['required', 'integer', 'min:0'],
-            'fecha_caducidad'  => ['nullable', 'date'],
-            'lote'             => ['nullable', 'string', 'max:100'],
         ];
     }
 
