@@ -77,13 +77,13 @@ final class OdontogramaService
                 'created_by' => $userId,
             ]);
 
-            $condicionResultante = ProcedimientoOdontologico::from($datos['procedimiento'])
-                ->condicionResultante();
-
-            $pieza->update([
-                'condicion' => $condicionResultante,
-                'updated_by' => $userId,
-            ]);
+            // Por el mismo camino que la anulación, y no fijando aquí la
+            // condición del procedimiento recién creado: si el odontólogo
+            // carga uno atrasado —una resina del mes pasado que faltaba por
+            // registrar—, la pieza no debe perder la corona que se le puso
+            // esta mañana. Manda el último procedimiento vigente por fecha,
+            // no el último que se escribió.
+            $this->recalcularCondicionPieza($pieza, $userId);
 
             return $procedimiento->load([
                 'realizadoPor:id,usuario_ti,email,servidor_id',
@@ -144,6 +144,10 @@ final class OdontogramaService
             ->whereNull('anulado_en')
             ->orderBy('fecha', 'desc')
             ->orderBy('created_at', 'desc')
+            // Dos procedimientos del mismo día pueden compartir `created_at`
+            // al segundo; sin este desempate la pieza quedaría dibujada según
+            // el orden que devolviera la base de datos.
+            ->orderBy('id', 'desc')
             ->first();
 
         $pieza->update([

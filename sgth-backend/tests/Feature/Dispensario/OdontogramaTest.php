@@ -521,3 +521,25 @@ test('abrir_el_odontograma_por_la_api_devuelve_las_piezas_sembradas', function (
     expect($respuesta->json('datos.historia_clinica_id'))
         ->toBe($this->historia->id);
 });
+
+// ---------------------------------------------------------------------------
+// La pieza se dibuja por fecha clínica, no por orden de escritura
+// ---------------------------------------------------------------------------
+
+test('un_procedimiento_atrasado_no_pisa_la_condicion_vigente', function () {
+    $odontograma = app(OdontogramaService::class)
+        ->obtenerPorHistoriaClinica($this->historia->id, $this->odontologo->id);
+    $pieza = $odontograma->piezas->firstWhere('numero_pieza', 27);
+
+    // Hoy se pone una corona.
+    procedimientoSobre($pieza, ProcedimientoOdontologico::CORONA, $this->odontologo);
+    expect($pieza->fresh()->condicion)->toBe(CondicionPiezaDental::CORONA);
+
+    // Después se carga una resina de hace un mes que faltaba por registrar.
+    procedimientoSobre(
+        $pieza, ProcedimientoOdontologico::RESINA, $this->odontologo,
+        ['fecha' => now()->subDays(30)->toDateString()]
+    );
+
+    expect($pieza->fresh()->condicion)->toBe(CondicionPiezaDental::CORONA);
+});
