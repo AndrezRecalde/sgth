@@ -17,19 +17,21 @@ export function usePersonalMedico(
   })
 }
 
+/**
+ * A quién asignarle un turno de esta atención.
+ *
+ * Pedía la lista completa del rol y la pantalla la presentaba como «marcados
+ * como disponibles», así que el interruptor que pulsa el médico no tenía ningún
+ * efecto sobre lo que veía Recepción. Ahora filtra de verdad, y cuando nadie se
+ * ha marcado devuelve a todos avisando de ello: bloquear el alta de turnos
+ * porque aún nadie pulsó su interruptor sería peor que el problema.
+ */
 export function usePersonalDisponible(
   tipoAtencion: 'medicina_general' | 'odontologia'
 ) {
-  const rolMap = {
-    medicina_general: 'medico',
-    odontologia:       'odontologo',
-  } as const
-
   return useQuery({
     queryKey: ['personal-medico', 'disponible', tipoAtencion],
-    queryFn:  () => personalMedicoService.listar(
-      rolMap[tipoAtencion]
-    ),
+    queryFn:  () => personalMedicoService.paraAtencion(tipoAtencion),
     staleTime: 1000 * 30,
   })
 }

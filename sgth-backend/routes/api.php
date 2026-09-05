@@ -1015,6 +1015,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [PersonalMedicoController::class, 'index']
         )->name('dispensario.personal-medico');
 
+        // A quién asignarle un turno. Lo pide Recepción, así que va con el
+        // acceso general del dispensario y no con el rol clínico.
+        Route::get('disponibilidad/personal',
+            [DisponibilidadController::class, 'paraAtencion']
+        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+         ->name('dispensario.disponibilidad.personal');
+
         // Marcarse disponible es de quien atiende pacientes. La guarda existía
         // solo en la pantalla, que ocultaba el control: por la API cualquiera
         // del dispensario podía marcarse disponible, y aunque la lista de
