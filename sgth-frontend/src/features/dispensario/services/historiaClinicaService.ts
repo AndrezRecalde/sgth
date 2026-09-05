@@ -25,7 +25,7 @@ export interface HistoriaClinica {
   cedula_paciente?:    string | null
   tipo_paciente?:      'servidor' | 'familiar' | 'candidato'
   servidor_id?:        number | null
-  beneficiario_id?:    number | null
+  carga_familiar_id?:  number | null
   grupo_sanguineo?:    string | null
   medicacion_habitual?: string | null
   estado:              boolean
@@ -35,12 +35,12 @@ export interface HistoriaClinica {
     apellido: string
     cedula: string
   } | null
-  beneficiario?: {
+  carga_familiar?: {
     id: number
-    nombre: string
-    apellido: string
-    cedula: string
-    tipo_familiar: string
+    nombres: string
+    apellidos: string
+    cedula: string | null
+    parentesco: string | null
   } | null
   alergias?:      AlergiaPaciente[]
   antecedentes?:  AntecedentePaciente[]
@@ -111,10 +111,14 @@ export const historiaClinicaService = {
       `/dispensario/historias-clinicas/${id}`
     ).then(r => r.data.datos),
 
+  // `carga_familiar_id`, no `beneficiario_id`: la columna se renombró y el
+  // backend nunca aceptó el nombre viejo. Mandarlo dejaba la petición sin
+  // paciente y moría en validación, así que un familiar no podía tener
+  // historia clínica —ni turno, que va detrás.
   crear: (data: {
-    servidor_id?:     number | null
-    beneficiario_id?: number | null
-    grupo_sanguineo?: string | null
+    servidor_id?:       number | null
+    carga_familiar_id?: number | null
+    grupo_sanguineo?:   string | null
   }) =>
     api.post<ApiResponse<HistoriaClinica>>(
       '/dispensario/historias-clinicas', data

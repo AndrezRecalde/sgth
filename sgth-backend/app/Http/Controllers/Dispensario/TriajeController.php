@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreTriajeRequest;
 use App\Http\Responses\ApiResponse;
@@ -12,6 +13,10 @@ use Illuminate\Http\JsonResponse;
 
 class TriajeController extends Controller
 {
+    public function __construct(
+        private readonly HistoriaClinicaServiceInterface $historiaService
+    ) {}
+
     public function store(
         StoreTriajeRequest $request,
         int $agendaId
@@ -39,10 +44,15 @@ class TriajeController extends Controller
         // saber que había existido. Un turno puede tener varias tomas —una
         // corrección de digitación, o una segunda medición tras la espera— y
         // todas quedan; la vigente es la última.
+        // La historia se abre aquí si el paciente aún no la tiene: la columna
+        // es NOT NULL y antes se resolvía a null, así que un turno creado sin
+        // historia mataba el guardado con un error de base de datos.
+        $historia = $this->historiaService->paraPacienteDeTurno($agenda);
+
         $triaje = Triaje::create([
             ...$datos,
             'agenda_medica_id'    => $agenda->id,
-            'historia_clinica_id' => $this->resolverHistoriaClinicaId($agenda),
+            'historia_clinica_id' => $historia->id,
             'enfermera_id'        => $request->user()->id,
             'imc'                 => $imc,
             'nivel_alerta'        => $valoracion['nivel'],
@@ -125,6 +135,10 @@ class TriajeController extends Controller
         return $nacimiento?->age;
     }
 
+    /**
+     * Solo lectura: devuelve null si el paciente no tiene historia. Registrar
+     * un triaje sí la abre, pero consultar el último no debe crear nada.
+     */
     private function resolverHistoriaClinicaId(
         AgendaMedica $agenda
     ): ?int {

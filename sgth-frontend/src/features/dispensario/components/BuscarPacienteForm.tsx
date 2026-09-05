@@ -50,7 +50,7 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
     const data = await crearHistoria.mutateAsync(
       paciente.tipo === "servidor"
         ? { servidor_id: paciente.id }
-        : { beneficiario_id: paciente.id },
+        : { carga_familiar_id: paciente.id },
     );
 
     onPacienteListo(
