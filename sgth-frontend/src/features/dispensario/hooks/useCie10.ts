@@ -15,5 +15,6 @@ export function useBuscarCie10(termino: string) {
     queryFn:  () => cie10Service.buscar(debounced),
     enabled:  debounced.length >= 2,
     staleTime: 1000 * 60,
+    placeholderData: (anterior) => anterior,
   })
 }

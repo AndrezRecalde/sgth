@@ -22,7 +22,8 @@ export function BuscarCie10Input({ value, onChange }: Props) {
     onDropdownClose: () => combobox.resetSelectedOption(),
   })
 
-  const { data: resultados = [] } = useBuscarCie10(termino)
+  const { data: busqueda } = useBuscarCie10(termino)
+  const resultados = busqueda?.resultados ?? []
 
   if (value) {
     return (
@@ -103,6 +104,17 @@ export function BuscarCie10Input({ value, onChange }: Props) {
             ))
           )}
         </Combobox.Options>
+
+        {/* El recorte a 20 se hacía en silencio: con 8918 códigos, quien
+            buscaba algo general veía veinte y creía que eran todos. */}
+        {busqueda?.hayMas && (
+          <Combobox.Footer>
+            <Text size="xs" c="dimmed">
+              Mostrando {resultados.length} de {busqueda.total}.
+              Añada otra palabra para acotar.
+            </Text>
+          </Combobox.Footer>
+        )}
       </Combobox.Dropdown>
     </Combobox>
   )
