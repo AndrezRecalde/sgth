@@ -1301,28 +1301,6 @@ export type EstadoPermiso =
 
 export type TipoPermiso = 'personal' | 'oficial' | 'enfermedad' | 'calamidad'
 
-/**
- * Lo que devuelve el endpoint público al escanear el QR del permiso impreso.
- * Es deliberadamente pobre: ni observación ni cédula completa ni ids — solo lo
- * necesario para contrastar el papel que alguien tiene en la mano.
- */
-export type VerificacionPermiso = {
-  folio:          string
-  vigente:        boolean
-  estado:         EstadoPermiso
-  estado_label:   string
-  tipo:           TipoPermiso
-  tipo_label:     string
-  servidor:       string
-  cedula_parcial: string | null
-  unidad:         string | null
-  fecha:          string | null
-  hora_inicio:    string
-  hora_fin:       string
-  emitido_en:     string | null
-  verificado_en:  string
-}
-
 export type PermisoServidor = {
   id:               number
   servidor_id:      number

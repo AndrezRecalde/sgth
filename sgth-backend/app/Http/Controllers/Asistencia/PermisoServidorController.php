@@ -124,8 +124,37 @@ class PermisoServidorController extends Controller
 
     public function show(int $id, Request $request)
     {
-        $permiso = PermisoServidor::with(['servidor'])->findOrFail($id);
+        return $this->detalle(
+            PermisoServidor::with(['servidor'])->findOrFail($id),
+            $request
+        );
+    }
 
+    /**
+     * El mismo detalle, buscado por el folio impreso en el papel.
+     *
+     * Es lo que abre el QR del permiso. Quien lo escanea es Talento Humano con
+     * el documento firmado en la mano: no va a teclear un id que no aparece
+     * por ningún lado, pero el folio lo lleva impreso al lado del código.
+     *
+     * Va autenticado y pasa por la misma policy que el detalle por id. Hubo
+     * una versión pública de esta consulta —pensada para que un guardia
+     * comprobara la autenticidad del papel—, pero ese caso de uso no existe en
+     * la institución y un endpoint sin sesión sobre folios correlativos no se
+     * sostiene solo porque a nadie se le ocurra recorrerlos.
+     */
+    public function showPorFolio(string $folio, Request $request)
+    {
+        return $this->detalle(
+            PermisoServidor::with(['servidor', 'unidadAdministrativa', 'jefe'])
+                ->where('folio', $folio)
+                ->firstOrFail(),
+            $request
+        );
+    }
+
+    private function detalle(PermisoServidor $permiso, Request $request)
+    {
         $this->authorize('ver', $permiso);
 
         $this->ocultarObservacionSiCorresponde($permiso, $request->user());

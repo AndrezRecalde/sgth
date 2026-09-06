@@ -63,13 +63,15 @@
   // QR en formato SVG para evitar fallos si no hay Imagick
   $qrSrc = null;
   try {
-    // Esta ruta apuntaba a `/api/v1/asistencia/permisos/verificar/...`, que no
-    // existe: la pública es `/api/v1/permisos/verificar/...`. Todo QR impreso
-    // hasta ahora daba 404. Y aunque hubiera acertado, quien escanea con el
-    // celular es una persona —el guardia de la puerta, el jefe que recibe el
-    // papel—, no un cliente HTTP: se manda a la página del frontend, que
-    // consulta ese endpoint y muestra el resultado legible.
-    $urlQr = rtrim(config('app.frontend_url'), '/') . "/verificar-permiso/{$folio}";
+    // El QR es la herramienta de Talento Humano: se escanea el papel firmado y
+    // se confirma o se rechaza ahí mismo, sin buscar el folio a mano en el
+    // listado. Por eso lleva a la pantalla del permiso dentro del sistema y no
+    // a un endpoint de la API — quien escanea es una persona con un documento
+    // en la mano, y necesita botones, no JSON.
+    //
+    // Apuntaba a `/api/v1/asistencia/permisos/verificar/{folio}`, una ruta que
+    // nunca existió: todo QR impreso hasta ahora daba 404.
+    $urlQr = rtrim(config('app.frontend_url'), '/') . "/sgth/asistencia/permisos/{$folio}";
     $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
       ->size(100)->margin(1)->generate($urlQr);
     if (!empty($qrSvg)) {

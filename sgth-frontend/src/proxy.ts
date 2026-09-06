@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { destinoSeguro } from '@/lib/destino'
 
 /**
  * Rutas abiertas a cualquiera, con sesión o sin ella.
@@ -11,14 +12,12 @@ import type { NextRequest } from 'next/server'
  * Y el organigrama, que es información pública de la institución: se consulta
  * desde fuera, sin cuenta de por medio.
  *
- * `/verificar-permiso` es lo que abre el QR impreso en el formulario de
- * permiso. Quien lo escanea suele ser el guardia de la puerta o quien recibe
- * el papel: puede no tener usuario del sistema, y aunque lo tuviera no va a
- * iniciar sesión en el celular para comprobar un folio. La página no revela
- * el motivo ni la cédula completa — eso lo garantiza el endpoint, no esta
- * lista.
+ * El QR del permiso llegó a estar aquí, cuando se pensaba para que un guardia
+ * comprobara la autenticidad del papel. No es ese su uso: lo escanea Talento
+ * Humano para confirmar o rechazar el documento, así que va al sistema con
+ * sesión como cualquier otra pantalla.
  */
-const RUTAS_ABIERTAS = ['/assist', '/psicosocial', '/organigrama', '/verificar-permiso']
+const RUTAS_ABIERTAS = ['/assist', '/psicosocial', '/organigrama']
 
 /**
  * Rutas de autenticación: se ven sin sesión, y CON sesión sobran.
@@ -29,6 +28,7 @@ const RUTA_CAMBIAR_PASSWORD = '/cambiar-password'
 
 const empiezaPor = (pathname: string, rutas: string[]) =>
   rutas.some(ruta => pathname === ruta || pathname.startsWith(`${ruta}/`))
+
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -53,9 +53,23 @@ export function proxy(request: NextRequest) {
   const esAutenticacion   = empiezaPor(pathname, RUTAS_AUTENTICACION)
   const isCambiarPassword = pathname.startsWith(RUTA_CAMBIAR_PASSWORD)
 
-  // Sin token → solo puede ver rutas públicas
+  // Sin token → solo puede ver rutas públicas.
+  //
+  // Se recuerda a dónde iba. Antes se perdía, y con el inicio de sesión
+  // siempre aterrizando en el portal daba igual: se entraba por la pantalla
+  // principal. Deja de dar igual con el QR del permiso, que se escanea desde
+  // el celular —donde casi nunca hay sesión abierta— y cuya única razón de ser
+  // es llevar a ese permiso concreto. Sin esto, quien escanea inicia sesión y
+  // acaba en el portal, sin el folio y sin saber qué pasó.
   if (!token && !esAutenticacion) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const login = new URL('/login', request.url)
+    const destino = pathname + request.nextUrl.search
+
+    if (destino !== '/') {
+      login.searchParams.set('next', destino)
+    }
+
+    return NextResponse.redirect(login)
   }
 
   // Con token en ruta pública → va al dashboard o cambiar-password
@@ -63,7 +77,12 @@ export function proxy(request: NextRequest) {
     if (primerLogin === 'true') {
       return NextResponse.redirect(new URL(RUTA_CAMBIAR_PASSWORD, request.url))
     }
-    return NextResponse.redirect(new URL('/', request.url))
+
+    // Si venía de un enlace concreto —el QR de un permiso, por ejemplo— y ya
+    // tiene sesión, se le lleva ahí y no a la pantalla principal.
+    return NextResponse.redirect(
+      new URL(destinoSeguro(request.nextUrl.searchParams.get('next')), request.url)
+    )
   }
 
   // Con token y primer_login pendiente → solo puede ir a cambiar-password

@@ -4,7 +4,6 @@ use App\Http\Controllers\Actividades\ActividadLaboralController;
 use App\Http\Controllers\Admin\PermisoController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Asistencia\ConsolidadoPermisoController;
-use App\Http\Controllers\Asistencia\FolioPermisoController;
 use App\Http\Controllers\Asistencia\MarcacionController;
 use App\Http\Controllers\Asistencia\PeriodoVacacionController;
 use App\Http\Controllers\Asistencia\PermisoServidorController;
@@ -140,16 +139,13 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:5,1');
     });
 
-    // Endpoint público para escanear el QR del permiso físico.
-    //
-    // Los folios son secuenciales (PER-2026-00001, 00002...), así que sin
-    // límite de tasa alguien los recorre uno por uno hasta vaciar el año. El
-    // throttle no lo impide del todo —nada lo impide en un endpoint público—
-    // pero lo vuelve lento y ruidoso, que es lo que se pide de una barrera
-    // así. La otra mitad del arreglo está en el controlador: ya no devuelve
-    // el modelo entero, solo lo que hace falta para verificar un papel.
-    Route::get('permisos/verificar/{folio}', [FolioPermisoController::class, 'verificar'])
-        ->middleware('throttle:20,1');
+    // El QR del permiso impreso ya no abre nada público: lo escanea Talento
+    // Humano para confirmar o rechazar el documento, así que lleva a la
+    // pantalla autenticada y la consulta por folio vive dentro de la sesión
+    // (`asistencia/permisos/folio/{folio}`). La verificación anónima que había
+    // aquí servía a un caso —el guardia comprobando que el papel es auténtico—
+    // que no existe en la institución, y exponía folios correlativos a quien
+    // quisiera recorrerlos.
 
     // Endpoint público protegido criptográficamente mediante firmas temporales (URL firmada)
     Route::get('sgd/documentos/{documento}/descargar', [DocumentoInstitucionalController::class, 'descargar'])
@@ -501,10 +497,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::prefix('permisos')->group(function () {
             Route::get('/', [PermisoServidorController::class, 'index']);
             Route::post('/', [PermisoServidorController::class, 'store']);
-            Route::get('{id}', [PermisoServidorController::class, 'show']);
+            // Antes que '{id}', y con '{id}' restringido a números: si no, el
+            // comodín se traga 'folio/PER-2026-00045' y lo intenta buscar como
+            // id. Es el mismo tropiezo que ya costó un arreglo en Nómina y
+            // Actividades (933de6c).
+            Route::get('folio/{folio}', [PermisoServidorController::class, 'showPorFolio'])
+                ->name('asistencia.permisos.por-folio');
+
+            Route::get('{id}', [PermisoServidorController::class, 'show'])
+                ->whereNumber('id');
             Route::get('{id}/exportar', [PermisoServidorController::class, 'exportar'])
+                ->whereNumber('id')
                 ->name('asistencia.permisos.exportar');
             Route::put('{id}/anular', [PermisoServidorController::class, 'anular'])
+                ->whereNumber('id')
                 ->middleware('role:admin-uath|asistente-uath');
 
             Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar'])

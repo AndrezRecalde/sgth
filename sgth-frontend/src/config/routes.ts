@@ -9,11 +9,6 @@ export const ROUTES = {
   // dentro o fuera de la institución, puede consultar su estructura.
   PUBLICO: {
     ORGANIGRAMA: '/organigrama',
-
-    // La abre el QR impreso en el formulario de permiso. Quien escanea puede
-    // no tener usuario del sistema —el guardia de la puerta, por ejemplo—.
-    VERIFICAR_PERMISO: (folio: string) =>
-      `/verificar-permiso/${encodeURIComponent(folio)}`,
   },
 
   // ── SGTH (Talento Humano) ─────────────
@@ -31,6 +26,14 @@ export const ROUTES = {
     NOMINA:           '/sgth/nomina',
     ASISTENCIA:       '/sgth/asistencia',
     ASISTENCIA_PERMISOS:    '/sgth/asistencia/permisos',
+
+    // A donde lleva el QR impreso en el formulario: Talento Humano escanea el
+    // papel firmado y resuelve el permiso ahí mismo. La arma el PDF a partir
+    // de `app.frontend_url`, así que si esta ruta cambia hay que cambiarla
+    // también en `resources/views/permisos/permiso-pdf.blade.php`.
+    ASISTENCIA_PERMISO: (folio: string) =>
+      `/sgth/asistencia/permisos/${encodeURIComponent(folio)}`,
+
     ASISTENCIA_VACACIONES:  '/sgth/asistencia/vacaciones',
     ASISTENCIA_PERIODOS:    '/sgth/asistencia/periodos',
     ASISTENCIA_CONSOLIDADO: '/sgth/asistencia/consolidado',

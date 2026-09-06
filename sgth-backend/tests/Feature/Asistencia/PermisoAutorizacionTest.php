@@ -301,42 +301,71 @@ test('el consolidado institucional no es para cualquiera', function () {
         ->assertStatus(200);
 });
 
-// ── Verificación pública del QR ──────────────────────────────────────
+// ── El folio del QR ──────────────────────────────────────────────────
+//
+// El QR del papel lo escanea Talento Humano para confirmar o rechazar, así que
+// la consulta por folio va dentro de la sesión y con la misma policy que el
+// detalle por id. Hubo una versión pública —pensada para que un guardia
+// comprobara la autenticidad del documento—; ese caso de uso no existe en la
+// institución y se retiró.
 
-test('el folio público confirma el permiso sin entregar el expediente', function () {
-    permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70017',
-        TipoPermiso::ENFERMEDAD, 'Diagnóstico confidencial');
+test('el folio del QR no se consulta sin sesión', function () {
+    permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70017');
 
-    $respuesta = $this->getJson('/api/v1/permisos/verificar/PER-2026-70017')
-        ->assertStatus(200);
+    $this->getJson('/api/v1/asistencia/permisos/folio/PER-2026-70017')
+        ->assertStatus(401);
 
-    $datos = $respuesta->json('datos');
-
-    expect($datos)->not->toHaveKey('observacion')
-        ->and($datos)->not->toHaveKey('servidor_id')
-        ->and($datos['cedula_parcial'])->toBe('08*****111')
-        ->and($datos['cedula_parcial'])->not->toBe('0801111111')
-        ->and($datos['servidor'])->toBe('ALFA ANA')
-        ->and($datos['vigente'])->toBeTrue()
-        ->and($datos['tipo_label'])->toBe('Por enfermedad');
-
-    $crudo = $respuesta->getContent();
-    expect($crudo)->not->toContain('Diagnóstico confidencial')
-        ->and($crudo)->not->toContain('0801111111');
+    // Y la ruta pública que existía ya no está.
+    $this->getJson('/api/v1/permisos/verificar/PER-2026-70017')
+        ->assertStatus(404);
 });
 
-test('un permiso anulado se verifica como no vigente', function () {
+test('talento humano abre el permiso por su folio', function () {
     permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70018',
-        estado: EstadoPermiso::ANULADO);
+        TipoPermiso::ENFERMEDAD, 'Reposo por gripe');
 
-    $respuesta = $this->getJson('/api/v1/permisos/verificar/PER-2026-70018')
+    $respuesta = $this->actingAs($this->uath, 'sanctum')
+        ->getJson('/api/v1/asistencia/permisos/folio/PER-2026-70018')
         ->assertStatus(200);
 
-    expect($respuesta->json('datos.vigente'))->toBeFalse()
-        ->and($respuesta->json('datos.estado_label'))->toBe('Anulado');
+    expect($respuesta->json('datos.folio'))->toBe('PER-2026-70018')
+        ->and($respuesta->json('datos.observacion'))->toBe('Reposo por gripe')
+        ->and($respuesta->json('datos.servidor.cedula'))->toBe('0801111111');
+});
+
+test('el folio no es una llave maestra: sigue mandando la policy', function () {
+    permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70019',
+        TipoPermiso::ENFERMEDAD, 'Diagnóstico confidencial');
+
+    // Un servidor de otra unidad tiene el folio —está impreso en el papel—,
+    // pero eso no le da acceso.
+    $this->actingAs($this->ajeno, 'sanctum')
+        ->getJson('/api/v1/asistencia/permisos/folio/PER-2026-70019')
+        ->assertStatus(403);
+});
+
+test('recepción ve el permiso por folio pero no su motivo médico', function () {
+    permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70021',
+        TipoPermiso::ENFERMEDAD, 'Diagnóstico confidencial');
+
+    $respuesta = $this->actingAs($this->recepcion, 'sanctum')
+        ->getJson('/api/v1/asistencia/permisos/folio/PER-2026-70021')
+        ->assertStatus(200);
+
+    expect($respuesta->json('datos.observacion'))->toBeNull();
+    expect($respuesta->getContent())->not->toContain('Diagnóstico confidencial');
 });
 
 test('un folio inventado no existe', function () {
-    $this->getJson('/api/v1/permisos/verificar/PER-2026-99999')
+    $this->actingAs($this->uath, 'sanctum')
+        ->getJson('/api/v1/asistencia/permisos/folio/PER-2026-99999')
+        ->assertStatus(404);
+});
+
+test('el folio no se cuela por la ruta del id', function () {
+    // `GET permisos/{id}` quedó restringido a números: sin eso, el comodín se
+    // tragaba 'folio/PER-...' y lo buscaba como id.
+    $this->actingAs($this->uath, 'sanctum')
+        ->getJson('/api/v1/asistencia/permisos/PER-2026-70018')
         ->assertStatus(404);
 });
