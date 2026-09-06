@@ -3,6 +3,7 @@ namespace App\Services\InventarioTi;
 use App\Contracts\InventarioTi\InventarioTiServiceInterface;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\AsignacionBien;
+use App\Models\InventarioTi\MantenimientoBien;
 use App\Models\InventarioTi\TipoBien;
 use App\Models\InventarioTi\OrigenBien;
 use Illuminate\Support\Facades\DB;
@@ -33,13 +34,33 @@ final class InventarioTiService implements InventarioTiServiceInterface
         });
     }
 
+    /**
+     * La vida del bien: quién lo ha tenido y qué se le ha hecho.
+     *
+     * Devolvía un molde vacío —`bien` a null y las dos listas sin nada— y el
+     * controlador ni siquiera tenía el método que la ruta declaraba, así que
+     * `bienes/{id}/historial` respondía con un 500. Los modelos y sus tablas
+     * estaban completos desde el principio.
+     *
+     * @return array{bien: BienInformatico, asignaciones: mixed, mantenimientos: mixed}
+     */
     public function obtenerFichaTecnicaCompleta(array $filtros): array
     {
-        // Retorna un mock estructurado con el bien y sus relaciones
+        $bien = BienInformatico::with(['tipo', 'marca', 'origen'])
+            ->findOrFail($filtros['bien_informatico_id']);
+
         return [
-            'bien' => null,
-            'asignaciones' => [],
-            'mantenimientos' => []
+            'bien' => $bien,
+            // De la más reciente a la más antigua: lo que interesa de un
+            // historial es dónde está el bien ahora y de dónde viene.
+            'asignaciones' => AsignacionBien::with('servidor:id,nombre,apellido,cedula')
+                ->where('bien_informatico_id', $bien->id)
+                ->orderByDesc('fecha_asignacion')
+                ->get(),
+            'mantenimientos' => MantenimientoBien::with('tecnico:id,usuario_ti,servidor_id')
+                ->where('bien_informatico_id', $bien->id)
+                ->orderByDesc('fecha_mantenimiento')
+                ->get(),
         ];
     }
 
@@ -53,13 +74,21 @@ final class InventarioTiService implements InventarioTiServiceInterface
     {
         return DB::transaction(function () use ($datos) {
             $bien = BienInformatico::findOrFail($datos['bien_informatico_id']);
-            $bien->update(['estado' => 'dado_de_baja']);
 
-            // Simula generar acta en PDF y guardado en SGD
+            // La columna es `estado_operativo`. Escribía `estado`, que no
+            // existe en la tabla ni en el `fillable`, así que Eloquent lo
+            // descartaba en silencio: la baja respondía que sí y el bien se
+            // quedaba activo.
+            $bien->update(['estado_operativo' => 'dado_de_baja']);
+
             return [
                 'bien_informatico_id' => $bien->id,
-                'acta_pdf' => '/storage/actas/baja_' . $bien->id . '.pdf',
-                'sgd_referencia' => 'SGD-BAJA-' . time()
+                'estado_operativo'    => $bien->estado_operativo,
+                'motivo'              => $datos['motivo'],
+                // El acta en PDF y su archivo en el SGD no están construidos.
+                // Antes se devolvía una ruta y una referencia inventadas, que
+                // no llevaban a ningún sitio; es preferible decir que faltan.
+                'acta_pendiente'      => true,
             ];
         });
     }

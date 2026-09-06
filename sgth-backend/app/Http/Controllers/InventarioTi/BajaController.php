@@ -16,9 +16,14 @@ class BajaController extends Controller
 
     public function index()
     {
-        // Lista los bienes que están marcados con estado dado_de_baja
-        $bienes = BienInformatico::where('estado', 'dado_de_baja')->latest()->get();
-        return ApiResponse::ok($bienes, 'Bienes informáticos en proceso de baja.');
+        // La columna es `estado_operativo`; `estado` no existe en esta tabla y
+        // la consulta reventaba con un error de Postgres.
+        $bienes = BienInformatico::with(['tipo', 'marca'])
+            ->where('estado_operativo', 'dado_de_baja')
+            ->latest()
+            ->get();
+
+        return ApiResponse::ok($bienes, 'Bienes informáticos dados de baja.');
     }
 
     public function store(Request $request)
@@ -29,12 +34,15 @@ class BajaController extends Controller
             'documento_respaldo' => 'nullable|string'
         ]);
 
-        // Delegamos al servicio toda la lógica:
-        // 1. Cambiar estado a dado_de_baja
-        // 2. Generar acta PDF con PdfService
-        // 3. Archivar acta en SGD
+        // El servicio marca el bien como dado de baja. El acta en PDF y su
+        // archivo en el SGD todavía no están construidos, así que la respuesta
+        // ya no dice que se generaron: lo anterior devolvía una ruta de PDF y
+        // una referencia de SGD inventadas.
         $resultado = $this->service->procesarBaja($validated);
 
-        return ApiResponse::created($resultado, 'Proceso de baja iniciado. Acta generada y archivada.');
+        return ApiResponse::created(
+            $resultado,
+            'Bien dado de baja. El acta queda pendiente de generar.'
+        );
     }
 }
