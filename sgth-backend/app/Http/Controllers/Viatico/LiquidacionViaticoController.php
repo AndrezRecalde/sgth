@@ -49,9 +49,10 @@ class LiquidacionViaticoController extends Controller
     public function listarActividades(
         int $viaticoId
     ): JsonResponse {
-        $liquidacion = $this->getLiquidacion($viaticoId);
+        $liquidacion = $this->liquidacionExistente($viaticoId);
+
         return ApiResponse::ok(
-            $liquidacion->actividades,
+            $liquidacion?->actividades ?? [],
             'Actividades listadas.'
         );
     }
@@ -103,9 +104,10 @@ class LiquidacionViaticoController extends Controller
     public function listarFacturas(
         int $viaticoId
     ): JsonResponse {
-        $liquidacion = $this->getLiquidacion($viaticoId);
+        $liquidacion = $this->liquidacionExistente($viaticoId);
+
         return ApiResponse::ok(
-            $liquidacion->detallesFactura()->with('categoria')->get(),
+            $liquidacion?->detallesFactura()->with('categoria')->get() ?? [],
             'Facturas listadas.'
         );
     }
@@ -134,8 +136,13 @@ class LiquidacionViaticoController extends Controller
             if (in_array($f['tipo_comprobante'], ['factura', 'recibo'])
                 && empty($f['ruc_proveedor'])
             ) {
+                // El 422 va en su sitio: como tercer argumento. Puesto en el
+                // segundo se colaba en el cuerpo como si fuera el detalle del
+                // error, y el código de estado salía bien de pura casualidad,
+                // porque 422 es el valor por defecto.
                 return ApiResponse::error(
                     "La factura #{$i} requiere RUC del proveedor.",
+                    null,
                     422
                 );
             }
@@ -206,14 +213,18 @@ class LiquidacionViaticoController extends Controller
         int $viaticoId,
         Request $request
     ): JsonResponse {
-        $viatico     = Viatico::findOrFail($viaticoId);
-        $liquidacion = $this->getLiquidacion($viaticoId);
+        $viatico = Viatico::findOrFail($viaticoId);
 
-        $liquidacion->load(['actividades', 'detallesFactura']);
+        // Sin crearla: confirmar una liquidación que no existe se rechaza igual
+        // que una vacía, y abría una fila para acto seguido negarse a cerrarla.
+        $liquidacion = $this->liquidacionExistente($viaticoId);
 
-        if ($liquidacion->actividades->isEmpty()) {
+        $liquidacion?->load(['actividades', 'detallesFactura']);
+
+        if (! $liquidacion || $liquidacion->actividades->isEmpty()) {
             return ApiResponse::error(
                 'Debe registrar al menos una actividad.',
+                null,
                 422
             );
         }
@@ -221,6 +232,7 @@ class LiquidacionViaticoController extends Controller
         if ($liquidacion->detallesFactura->isEmpty()) {
             return ApiResponse::error(
                 'Debe registrar al menos un comprobante.',
+                null,
                 422
             );
         }
@@ -240,9 +252,23 @@ class LiquidacionViaticoController extends Controller
         );
     }
 
+    /**
+     * La liquidación del viático, abriéndola si aún no existe.
+     *
+     * Solo para lo que escribe. Antes la usaban también los dos listados, que
+     * son GET: pedir la lista de actividades creaba la liquidación, con lo que
+     * abrir la pantalla dejaba una fila aunque no se registrara nada. Un GET no
+     * debe cambiar el estado del sistema.
+     *
+     * Comprueba primero que el viático exista. Sin eso, un id inventado no daba
+     * un 404 sino una violación de clave foránea contra `liquidaciones_viatico`
+     * —un 500 con la traza de Postgres en la cara—.
+     */
     private function getLiquidacion(
         int $viaticoId
     ): LiquidacionViatico {
+        Viatico::findOrFail($viaticoId);
+
         return LiquidacionViatico::firstOrCreate(
             ['viatico_id' => $viaticoId],
             [
@@ -252,5 +278,20 @@ class LiquidacionViaticoController extends Controller
                 'created_by'          => request()->user()->id,
             ]
         );
+    }
+
+    /**
+     * La liquidación si la hay, y nada si el viático aún no tiene ninguna.
+     *
+     * Que un viático no esté liquidado no es un error: es el estado normal
+     * hasta que alguien registra sus actividades y comprobantes. Lo que sí es
+     * un error es preguntar por un viático que no existe.
+     */
+    private function liquidacionExistente(
+        int $viaticoId
+    ): ?LiquidacionViatico {
+        Viatico::findOrFail($viaticoId);
+
+        return LiquidacionViatico::where('viatico_id', $viaticoId)->first();
     }
 }
