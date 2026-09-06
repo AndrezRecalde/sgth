@@ -16,15 +16,20 @@ class TecnicoDticController extends Controller
 
     public function index()
     {
-        // En una implementación real, se cargarían las relaciones necesarias
-        $tecnicos = TecnicoDtic::with('servidor')->latest()->get();
+        // La relación es `user`, no `servidor`: la tabla guarda `user_id`. Con
+        // `servidor` el listado reventaba en cuanto había un técnico, y sobre
+        // base vacía no se notaba porque Eloquent no llega a resolverla.
+        $tecnicos = TecnicoDtic::with('user.servidor')->latest()->get();
         return ApiResponse::ok($tecnicos, 'Técnicos DTIC listados correctamente.');
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'servidor_id' => 'required|exists:servidores,id|unique:tecnicos_dtic',
+            // Era `servidor_id`, columna que esta tabla no tiene: la propia
+            // regla `unique` consultaba por ella y reventaba, así que dar de
+            // alta un técnico era imposible.
+            'user_id' => 'required|exists:users,id|unique:tecnicos_dtic,user_id',
             'area_dtic_id' => 'required|exists:areas_dtic,id',
             'nivel' => 'required|integer|min:1|max:3',
             'estado' => 'nullable|string|max:50'
@@ -33,6 +38,14 @@ class TecnicoDticController extends Controller
         $tecnico = TecnicoDtic::create($validated);
         
         return ApiResponse::created($tecnico, 'Técnico registrado exitosamente.');
+    }
+
+    /** El `apiResource` declaraba esta ruta y el método no existía: 500 seguro. */
+    public function show(int $id)
+    {
+        $tecnico = TecnicoDtic::with('user.servidor')->findOrFail($id);
+
+        return ApiResponse::ok($tecnico, 'Técnico DTIC obtenido correctamente.');
     }
 
     public function update(Request $request, int $id)

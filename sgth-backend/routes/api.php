@@ -738,12 +738,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('encuestas-satisfaccion',
                 [EncuestaSatisfaccionController::class, 'index'])
                 ->middleware('role:admin-ti|auditor');
-            Route::get('encuestas-satisfaccion/{encuesta}',
-                [EncuestaSatisfaccionController::class, 'show'])
-                ->middleware('role:admin-ti');
+
+            // «resultados» antes del comodín, o encajaba en `{encuesta}` y
+            // acababa en `show()` con esa palabra por id: la ruta era
+            // inalcanzable y devolvía un 500.
             Route::get('encuestas-satisfaccion/resultados',
                 [EncuestaSatisfaccionController::class, 'resultados'])
                 ->middleware('role:admin-ti|director|maxima-autoridad');
+
+            Route::get('encuestas-satisfaccion/{encuesta}',
+                [EncuestaSatisfaccionController::class, 'show'])
+                ->whereNumber('encuesta')
+                ->middleware('role:admin-ti');
         });
 
     // Módulo 08: Evaluación del Desempeño

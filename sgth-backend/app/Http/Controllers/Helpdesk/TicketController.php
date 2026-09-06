@@ -38,7 +38,13 @@ class TicketController extends Controller
 
     public function show(int $id)
     {
-        $ticket = Ticket::with(['categoria', 'sla', 'tecnico.servidor', 'bien_informatico', 'comentarios'])->findOrFail($id);
+        // `bien_informatico` no es una relación: la del modelo se llama `bien`.
+        // Con eso y la de comentarios, que faltaba, el detalle de un ticket
+        // reventaba en cuanto existía el ticket.
+        $ticket = Ticket::with([
+            'categoria', 'sla', 'tecnico.servidor', 'bien',
+            'comentarios.user.servidor',
+        ])->findOrFail($id);
         return ApiResponse::ok($ticket, 'Detalle del ticket.');
     }
 
