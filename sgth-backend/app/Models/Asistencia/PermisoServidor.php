@@ -6,15 +6,17 @@ use App\Enums\EstadoPermiso;
 use App\Enums\TipoPermiso;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
-use App\Observers\Asistencia\PermisoServidorObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Estructura\UnidadAdministrativa;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[ObservedBy(PermisoServidorObserver::class)]
+// Aquí colgaba un `#[ObservedBy(PermisoServidorObserver::class)]` cuyo observer
+// estaba vacío desde que se creó: solo tenía un `//`. Un observer registrado y
+// sin nada dentro no es un punto de extensión, es una pista falsa — quien
+// busque dónde se engancha el ciclo de vida de un permiso lo encuentra y no
+// encuentra nada. Las reglas del permiso viven en `PermisoService`.
 class PermisoServidor extends Model
 {
     use HasFactory, SoftDeletes;
