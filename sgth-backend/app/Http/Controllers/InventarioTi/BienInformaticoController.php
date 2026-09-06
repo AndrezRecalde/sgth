@@ -38,4 +38,19 @@ final class BienInformaticoController extends Controller
     {
         return ApiResponse::ok([], 'Bien dado de baja');
     }
+
+    /**
+     * La vida del bien: quién lo ha tenido y qué se le ha hecho.
+     *
+     * La ruta declaraba este método y el controlador no lo tenía, así que
+     * `bienes/{id}/historial` devolvía un 500 desde que se escribió.
+     */
+    public function historial(int $id): JsonResponse
+    {
+        $ficha = $this->service->obtenerFichaTecnicaCompleta([
+            'bien_informatico_id' => $id,
+        ]);
+
+        return ApiResponse::ok($ficha, 'Historial del bien informático.');
+    }
 }
