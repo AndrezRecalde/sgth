@@ -47,6 +47,37 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiResponse::noAutorizado();
         });
 
+        /*
+         * Un permiso o un rol que el código exige y que no está en la base.
+         *
+         * El middleware `permission:` no llega aquí: por dentro usa la variante
+         * indulgente de Spatie, que si el permiso no existe responde «no lo
+         * tienes» y acaba en un 403 correcto. Esto es para cuando el permiso se
+         * consulta con `hasPermissionTo()` —la variante estricta, que se usa a
+         * propósito donde hace falta saltarse el Gate::before—: ahí Spatie lo
+         * trata como error de programación y deja salir un 500. Con el efecto
+         * perverso de que solo lo ve quien pasó el filtro anterior.
+         *
+         * Un 403 es la respuesta honesta: nadie puede tener un permiso que no
+         * existe, y para quien está delante de la pantalla el hecho es el mismo.
+         *
+         * Pero se registra como error, y con el nombre que faltaba. Sin eso, un
+         * permiso sin sembrar dejaría a todo el mundo fuera de esa pantalla en
+         * silencio y con un 403 de aspecto perfectamente normal, que es la
+         * clase de avería que tarda semanas en encontrarse.
+         */
+        $exceptions->render(function (
+            \Spatie\Permission\Exceptions\PermissionDoesNotExist
+            |\Spatie\Permission\Exceptions\RoleDoesNotExist $e
+        ) {
+            \Illuminate\Support\Facades\Log::error(
+                'Falta sembrar un permiso o un rol que el sistema exige.',
+                ['detalle' => $e->getMessage()]
+            );
+
+            return ApiResponse::noAutorizado();
+        });
+
         $exceptions->render(function (AuthenticationException $e) {
             $mensaje = $e->getMessage() === 'Unauthenticated.' 
                 ? 'No autenticado. Por favor inicie sesión.' 

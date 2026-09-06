@@ -56,10 +56,15 @@ final class VinculacionInicialController extends Controller
      * Se comprueba con hasPermissionTo() y no con can(), a propósito.
      *
      * AppServiceProvider registra un Gate::before que devuelve true para
-     * 'admin-ti' y 'admin-uath', de modo que can() —y con él el middleware
-     * 'permission'— aprueba cualquier cosa para esos roles. Como esta vía se
-     * salta la Acción de Personal y debe poder revocarse a una persona
-     * concreta al terminar la migración, aquí se consulta el permiso real.
+     * 'admin-ti' —solo ese rol; el comentario decía también 'admin-uath' y no
+     * es lo que hace el código—, de modo que can() —y con él el middleware
+     * 'permission'— aprueba cualquier cosa para él. Como esta vía se salta la
+     * Acción de Personal y debe poder revocarse a una persona concreta al
+     * terminar la migración, aquí se consulta el permiso real.
+     *
+     * `hasPermissionTo()` es la variante estricta: si el permiso no está en la
+     * base lanza en vez de devolver false. Eso lo recoge el renderizador de
+     * bootstrap/app.php, que lo convierte en 403 y lo deja en el registro.
      */
     private function exigirPermiso(): void
     {
