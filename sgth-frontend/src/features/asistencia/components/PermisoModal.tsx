@@ -17,7 +17,6 @@ import {
 import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
@@ -31,6 +30,14 @@ import { useUnidades } from "@/features/estructura/hooks/useUnidades";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
 import { asistenciaService } from "../services/asistenciaService";
+import {
+  esTipoRetroactivo,
+  fromDate,
+  minimoPlanificable,
+  permisoSchema,
+  toDate,
+  type PermisoFormData,
+} from "./permiso.schema";
 import type {
   UnidadConRelaciones,
   ServidorConRelaciones,
@@ -44,37 +51,9 @@ const TIPO_OPTIONS = [
   { value: "calamidad", label: "Calamidad doméstica" },
 ];
 
-const schema = z.object({
-  unidad_administrativa_id: z.number({
-    error: "Seleccione la unidad",
-  }),
-  servidor_id: z.number({ error: "Seleccione el servidor" })
-    .min(1, "Seleccione el servidor"),
-  jefe_id: z.number({ error: "Seleccione el jefe" }).optional().nullable(),
-  tipo: z.enum(["personal", "oficial", "enfermedad", "calamidad"]),
-  fecha: z.string().min(1, "La fecha es requerida"),
-  hora_inicio: z.string().min(1, "Requerido"),
-  hora_fin: z.string().min(1, "Requerido"),
-  observacion: z.string().optional().nullable(),
-});
-
-type FormData = z.infer<typeof schema>;
-
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null;
-  const [y, m, d] = v.split("-").map(Number);
-  return new Date(y, m - 1, d);
-};
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null;
-  if (typeof d === "string") return d.substring(0, 10);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
-
 interface Props {
   opened: boolean;
   onClose: () => void;
-  isAdmin?: boolean;
 }
 
 export function PermisoModal({ opened, onClose }: Props) {
@@ -131,8 +110,8 @@ export function PermisoModal({ opened, onClose }: Props) {
     register,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<PermisoFormData>({
+    resolver: zodResolver(permisoSchema),
     defaultValues: {
       unidad_administrativa_id: undefined,
       servidor_id: undefined,
@@ -146,6 +125,7 @@ export function PermisoModal({ opened, onClose }: Props) {
   });
 
   const tipoWatch = useWatch({ control, name: "tipo" });
+  const esRetroactivo = esTipoRetroactivo(tipoWatch);
 
   const handleClose = () => {
     reset();
@@ -155,7 +135,7 @@ export function PermisoModal({ opened, onClose }: Props) {
     onClose();
   };
 
-  const onSubmit = async (values: FormData) => {
+  const onSubmit = async (values: PermisoFormData) => {
     const result = await crear.mutateAsync({
       unidad_administrativa_id: values.unidad_administrativa_id,
       servidor_id:              values.servidor_id,
@@ -328,8 +308,24 @@ export function PermisoModal({ opened, onClose }: Props) {
                 py={6}
               >
                 <Text size="xs">
-                  Los permisos personales tienen un máximo de 4 horas y se
-                  descuentan del saldo de vacaciones.
+                  Máximo 4 horas <b>por día</b> — se suman los permisos
+                  personales que el servidor ya tenga esa fecha. Se descuentan
+                  del saldo de vacaciones, así que hace falta un período abierto
+                  con saldo suficiente.
+                </Text>
+              </Alert>
+            )}
+
+            {esRetroactivo && (
+              <Alert
+                icon={<IconInfoCircle size={14} />}
+                color="blue"
+                variant="light"
+                py={6}
+              >
+                <Text size="xs">
+                  Se registra con la fecha en que ocurrió, nunca a futuro. El
+                  respaldo tiene 72 horas laborables para llegar a Recepción.
                 </Text>
               </Alert>
             )}
@@ -343,7 +339,14 @@ export function PermisoModal({ opened, onClose }: Props) {
                   label="Fecha del permiso"
                   placeholder="Seleccionar fecha"
                   valueFormat="YYYY-MM-DD"
-                  minDate={new Date()}
+                  // El calendario impedía elegir días pasados para todos los
+                  // tipos, así que una enfermedad de ayer no podía registrarse
+                  // desde aquí — justo el caso para el que existe el plazo de
+                  // 72 horas. Ahora el rango depende del tipo, igual que en el
+                  // backend: enfermedad y calamidad solo hacia atrás, personal
+                  // y oficial desde tres días hábiles atrás en adelante.
+                  minDate={esRetroactivo ? undefined : minimoPlanificable()}
+                  maxDate={esRetroactivo ? new Date() : undefined}
                   {...contained}
                   value={toDate(field.value)}
                   onChange={(d) => field.onChange(fromDate(d ?? null) ?? "")}

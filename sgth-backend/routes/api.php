@@ -511,6 +511,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:recepcion|admin-uath|asistente-uath');
             Route::post('{id}/validar-ts', [PermisoServidorController::class, 'validar'])
                 ->middleware('role:trabajo-social|admin-uath');
+
+            // Recepción rechaza el documento físico que llega mal. El estado
+            // RECHAZADO estaba en el enum desde el principio y nada lo asignaba.
+            Route::post('{id}/rechazar', [PermisoServidorController::class, 'rechazar'])
+                ->middleware('role:recepcion|admin-uath|asistente-uath');
+
+            // Deshace una confirmación hecha por error y devuelve el saldo
+            // vacacional descontado. Sin rol de ruta: lo decide la policy,
+            // porque el permiso que exige (anular-permiso) hoy solo lo tiene
+            // admin-uath y ponerlo también aquí lo diría dos veces.
+            Route::post('{id}/revertir-confirmacion',
+                [PermisoServidorController::class, 'revertirConfirmacion']);
         });
     });
 

@@ -75,6 +75,18 @@ export const asistenciaService = {
         `/asistencia/permisos/${id}/validar-ts`
       ).then(r => r.data.datos),
 
+    // Recepción rechaza el documento físico que llega mal.
+    rechazar: (id: number, motivo: string) =>
+      api.post<ApiResponse<PermisoServidor>>(
+        `/asistencia/permisos/${id}/rechazar`, { motivo }
+      ).then(r => r.data.datos),
+
+    // Deshace una confirmación hecha por error y devuelve el saldo descontado.
+    revertirConfirmacion: (id: number, motivo: string) =>
+      api.post<ApiResponse<PermisoServidor>>(
+        `/asistencia/permisos/${id}/revertir-confirmacion`, { motivo }
+      ).then(r => r.data.datos),
+
     exportar: (id: number) =>
       api.get(`/asistencia/permisos/${id}/exportar`, {
         responseType: 'blob',

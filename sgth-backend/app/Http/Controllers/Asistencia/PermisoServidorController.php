@@ -7,6 +7,7 @@ use App\Enums\EstadoPermiso;
 use App\Enums\Permiso;
 use App\Enums\TipoPermiso;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Asistencia\MotivoPermisoRequest;
 use App\Http\Requests\Asistencia\StorePermisoServidorRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\PermisoServidor;
@@ -144,6 +145,31 @@ class PermisoServidorController extends Controller
         // Validación de Trabajo Social para Enfermedad y Calamidad
         $permiso = $this->permisoService->validarTrabajoSocial($id, $request->user()->id);
         return ApiResponse::ok($permiso, 'Permiso validado por Trabajo Social.');
+    }
+
+    public function rechazar(int $id, MotivoPermisoRequest $request)
+    {
+        $this->authorize('rechazar', PermisoServidor::findOrFail($id));
+
+        $permiso = $this->permisoService->rechazar(
+            $id, $request->user()->id, $request->validated()['motivo']
+        );
+
+        return ApiResponse::ok($permiso, 'Permiso rechazado por Recepción.');
+    }
+
+    public function revertirConfirmacion(int $id, MotivoPermisoRequest $request)
+    {
+        $this->authorize('revertir', PermisoServidor::findOrFail($id));
+
+        $permiso = $this->permisoService->revertirConfirmacion(
+            $id, $request->user()->id, $request->validated()['motivo']
+        );
+
+        return ApiResponse::ok(
+            $permiso,
+            'Confirmación revertida. El permiso vuelve a PENDIENTE y se devolvió el saldo descontado.'
+        );
     }
 
     public function anular(int $id, Request $request)

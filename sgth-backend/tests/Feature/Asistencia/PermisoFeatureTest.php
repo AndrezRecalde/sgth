@@ -101,6 +101,23 @@ test('permiso_oficial_requiere_observacion', function () {
 });
 
 test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {
+    // Confirmar un permiso personal descuenta del saldo vacacional, y ahora
+    // exige que haya de dónde descontar: antes, sin período abierto, el
+    // descuento se saltaba en silencio y las horas se concedían gratis.
+    \App\Models\Asistencia\PeriodoVacacion::create([
+        'servidor_id'          => $this->servidorSubordinado->id,
+        'anio'                 => (int) now()->format('Y'),
+        'fecha_inicio_periodo' => now()->startOfYear()->toDateString(),
+        'fecha_fin_periodo'    => now()->endOfYear()->toDateString(),
+        'regimen'              => 'losep',
+        'anios_antiguedad'     => 2,
+        'dias_generados'       => 15,
+        'dias_utilizados'      => 0,
+        'dias_saldo'           => 15,
+        'saldo_acumulado'      => 15,
+        'estado'               => 'abierto',
+    ]);
+
     $permiso = PermisoServidor::create([
         'servidor_id' => $this->servidorSubordinado->id,
         'tipo' => TipoPermiso::PERSONAL->value,

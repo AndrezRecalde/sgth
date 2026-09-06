@@ -1,89 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Stack,
-  Group,
-  Button,
-  Text,
-  Badge,
-  TextInput,
-  Chip,
-  ActionIcon,
-} from "@mantine/core";
+import React, { useState } from "react";
+import { ActionIcon, Button, Chip, Group, Stack, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
-  IconX,
-  IconShieldCheck,
   IconClipboardList,
-  IconPrinter,
-  IconSearch,
   IconCubePlus,
+  IconSearch,
+  IconX,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import React from "react";
-import {
-  DataState,
-  SgthTable,
-  StatusBadge,
-  TableActions,
-  Toolbar,
-  confirmar,
-} from "@/components/ui";
-import { SEMANTIC_COLOR, type SemanticTone } from "@/config/design.tokens";
+import { DataState, SgthTable, Toolbar } from "@/components/ui";
+import { SEMANTIC_COLOR } from "@/config/design.tokens";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { PermisoModal } from "./PermisoModal";
+import { MotivoPermisoModal } from "./MotivoPermisoModal";
+import { getPermisosColumns } from "./permisos.columns";
+import { ESTADO_LABELS, FILTROS_ESTADO, TONO_ESTADO } from "./permisos.constants";
 import { usePermisos } from "../hooks/usePermisos";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
 import { asistenciaService } from "../services/asistenciaService";
 import type { PermisoServidor } from "@/types/api";
-import type { DataTableColumn } from "mantine-datatable";
 
-const TONO_ESTADO: Record<string, SemanticTone> = {
-  pendiente: "warning",
-  activo: "info",
-  validado_trabajo_social: "success",
-  anulado: "danger",
-};
-const ESTADO_LABELS: Record<string, string> = {
-  pendiente: "Pendiente",
-  activo: "Activo",
-  validado_trabajo_social: "Validado TS",
-  anulado: "Anulado",
-};
-const TIPO_LABELS: Record<string, string> = {
-  personal: "Personal",
-  oficial: "Oficial",
-  enfermedad: "Enfermedad",
-  calamidad: "Calamidad",
-};
+/** Qué acción abrió el modal de motivo. */
+type AccionConMotivo = "rechazar" | "revertir";
 
 export function PermisosTab() {
   const [opened, { open, close }] = useDisclosure(false);
   const contained = useContainedInput("sm");
 
-  // ── Filtros ──────────────────────────────────────
   const [filtroEstado, setFiltroEstado] = useState<string>("pendiente");
   const [busquedaFolio, setBusquedaFolio] = useState<string>("");
   const [folioQuery, setFolioQuery] = useState<string>("");
+  const [exportandoId, setExportandoId] = useState<number | null>(null);
+  const [conMotivo, setConMotivo] = useState<
+    { accion: AccionConMotivo; permiso: PermisoServidor } | null
+  >(null);
 
-  // Construir params para el backend
-  const filtros = {
+  const { data, isLoading, error } = usePermisos({
     estado: filtroEstado === "todos" ? undefined : filtroEstado,
     folio: folioQuery || undefined,
     per_page: 50,
-  };
-
-  const { data, isLoading, error } = usePermisos(filtros);
+  });
   const lista = (data?.data ?? []) as PermisoServidor[];
 
   const {
     confirmar: confirmarPermiso,
     anular,
     validarTs,
+    rechazar,
+    revertirConfirmacion,
   } = usePermisoMutations();
-  const [exportandoId, setExportandoId] = useState<number | null>(null);
 
   const handleExportar = async (id: number) => {
     setExportandoId(id);
@@ -129,155 +97,26 @@ export function PermisosTab() {
     }
   };
 
-  const columns: DataTableColumn<PermisoServidor>[] = [
-    {
-      accessor: "folio",
-      title: "Folio",
-      width: 145,
-      render: ({ folio }) => (
-        <Text size="sm" ff="monospace" fw={500}>
-          {folio ?? "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "servidor",
-      title: "Servidor",
-      render: (p) => {
-        const s = p.servidor;
-        if (!s)
-          return (
-            <Text size="sm" c="dimmed">
-              —
-            </Text>
-          );
-        return (
-          <Text size="sm">
-            {[s.apellido, s.nombre].filter(Boolean).join(" ")}
-          </Text>
-        );
-      },
-    },
-    {
-      accessor: "tipo",
-      title: "Tipo",
-      width: 100,
-      render: ({ tipo }) => (
-        <Badge size="sm" variant="light" color="blue">
-          {TIPO_LABELS[tipo as string] ?? tipo}
-        </Badge>
-      ),
-    },
-    {
-      accessor: "fecha",
-      title: "Fecha",
-      width: 110,
-      render: ({ fecha }) => (
-        <Text size="sm">
-          {fecha
-            ? new Date(fecha).toLocaleDateString("es-EC", {
-                timeZone: "UTC",
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })
-            : "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "hora_inicio",
-      title: "Horario / Tiempo",
-      width: 140,
-      render: ({ hora_inicio, hora_fin }) => {
-        if (!hora_inicio || !hora_fin) {
-          return (
-            <Text size="sm" c="dimmed">
-              —
-            </Text>
-          );
-        }
-        const hi = (hora_inicio as string).substring(0, 5);
-        const hf = (hora_fin as string).substring(0, 5);
-        const [hI, mI] = hi.split(":").map(Number);
-        const [hF, mF] = hf.split(":").map(Number);
-        const minutos = hF * 60 + mF - (hI * 60 + mI);
-        const horas = Math.floor(minutos / 60);
-        const mins = minutos % 60;
-        const duracion =
-          horas > 0 ? `${horas}h${mins > 0 ? ` ${mins}m` : ""}` : `${mins}m`;
-        return (
-          <Stack gap={2}>
-            <Text size="sm" ff="monospace">
-              {hi} — {hf}
-            </Text>
-            <Badge size="xs" color="blue" variant="light">
-              {duracion}
-            </Badge>
-          </Stack>
-        );
-      },
-    },
-    {
-      accessor: "estado",
-      title: "Estado",
-      width: 120,
-      render: ({ estado }) => (
-        <StatusBadge tone={TONO_ESTADO[estado as string] ?? "neutral"}>
-          {ESTADO_LABELS[estado as string] ?? estado}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: "acciones",
-      title: "",
-      width: 50,
-      render: (p) => (
-        <TableActions
-          actions={[
-            {
-              label:
-                exportandoId === p.id ? "Exportando..." : "Imprimir permiso",
-              icon: <IconPrinter size={14} />,
-              color: "blue",
-              onClick: () => handleExportar(p.id),
-            },
-            {
-              label: "Confirmar recepción",
-              icon: <IconCheck size={14} />,
-              color: "blue",
-              onClick: () => p.folio && confirmarPermiso.mutate(p.folio),
-              hidden: (p.estado as string) !== "pendiente",
-            },
-            {
-              label: "Validar Trabajo Social",
-              icon: <IconShieldCheck size={14} />,
-              color: "emerald",
-              onClick: () => validarTs.mutate(p.id),
-              hidden:
-                (p.estado as string) !== "activo" ||
-                !["enfermedad", "calamidad"].includes(p.tipo as string),
-            },
-            {
-              label: "Anular",
-              icon: <IconX size={14} />,
-              color: "red",
-              onClick: () =>
-                confirmar({
-                  title: "Anular permiso",
-                  message:
-                    "Se anulará este permiso y dejará de contar para el servidor.",
-                  destructiva: true,
-                  confirmLabel: "Anular",
-                  onConfirm: () => anular.mutate(p.id),
-                }),
-              hidden: (p.estado as string) !== "pendiente",
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const enviarMotivo = (motivo: string) => {
+    if (!conMotivo) return;
+
+    const { accion, permiso } = conMotivo;
+    const mutacion = accion === "rechazar" ? rechazar : revertirConfirmacion;
+
+    mutacion.mutate({ id: permiso.id, motivo }, { onSuccess: () => setConMotivo(null) });
+  };
+
+  const columns = getPermisosColumns({
+    exportandoId,
+    onExportar: handleExportar,
+    onConfirmar: (folio) => confirmarPermiso.mutate(folio),
+    onValidarTs: (id) => validarTs.mutate(id),
+    onAnular: (id) => anular.mutate(id),
+    onRechazar: (permiso) => setConMotivo({ accion: "rechazar", permiso }),
+    onRevertir: (permiso) => setConMotivo({ accion: "revertir", permiso }),
+  });
+
+  const esRechazo = conMotivo?.accion === "rechazar";
 
   return (
     <Stack gap="md">
@@ -329,22 +168,16 @@ export function PermisosTab() {
           }
         />
         <Group gap="xs">
-          {[
-            { value: "todos", label: "Todos" },
-            { value: "pendiente", label: "Pendiente" },
-            { value: "activo", label: "Activo" },
-            { value: "validado_trabajo_social", label: "Validado TS" },
-            { value: "anulado", label: "Anulado" },
-          ].map((op) => (
+          {FILTROS_ESTADO.map((valor) => (
             <Chip
-              key={op.value}
+              key={valor}
               // El chip toma el color del mismo tono semántico que la
               // etiqueta de estado, para que filtro y resultado coincidan.
-              color={SEMANTIC_COLOR[TONO_ESTADO[op.value] ?? "neutral"]}
-              checked={filtroEstado === op.value}
-              onChange={() => setFiltroEstado(op.value)}
+              color={SEMANTIC_COLOR[TONO_ESTADO[valor] ?? "neutral"]}
+              checked={filtroEstado === valor}
+              onChange={() => setFiltroEstado(valor)}
             >
-              {op.label}
+              {valor === "todos" ? "Todos" : ESTADO_LABELS[valor]}
             </Chip>
           ))}
         </Group>
@@ -362,14 +195,32 @@ export function PermisosTab() {
             : "No hay permisos en este estado.",
         }}
       >
-        <SgthTable
-          records={lista}
-          columns={columns}
-          minHeight={200}
-        />
+        <SgthTable records={lista} columns={columns} minHeight={200} />
       </DataState>
 
       <PermisoModal opened={opened} onClose={close} />
+
+      <MotivoPermisoModal
+        opened={conMotivo !== null}
+        onClose={() => setConMotivo(null)}
+        title={esRechazo ? "Rechazar documento" : "Revertir confirmación"}
+        confirmLabel={esRechazo ? "Rechazar" : "Revertir"}
+        cargando={esRechazo ? rechazar.isPending : revertirConfirmacion.isPending}
+        onConfirm={enviarMotivo}
+        descripcion={
+          esRechazo ? (
+            <>
+              El permiso <b>{conMotivo?.permiso.folio}</b> quedará rechazado y no
+              amparará la ausencia.
+            </>
+          ) : (
+            <>
+              El permiso <b>{conMotivo?.permiso.folio}</b> volverá a pendiente y
+              se devolverá al servidor el saldo de vacaciones descontado.
+            </>
+          )
+        }
+      />
     </Stack>
   );
 }

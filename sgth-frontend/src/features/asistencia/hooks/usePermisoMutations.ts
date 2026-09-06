@@ -74,6 +74,39 @@ export function usePermisoMutations() {
     onError,
   });
 
+  const rechazar = useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      asistenciaService.permisos.rechazar(id, motivo),
+    onSuccess: () => {
+      notifications.show({
+        title: "Permiso rechazado",
+        message: "El documento fue rechazado y el motivo quedó registrado.",
+        color: "orange",
+        icon: React.createElement(IconCheck, { size: 16 }),
+      });
+      invalidar();
+    },
+    onError,
+  });
+
+  const revertirConfirmacion = useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      asistenciaService.permisos.revertirConfirmacion(id, motivo),
+    onSuccess: () => {
+      notifications.show({
+        title: "Confirmación revertida",
+        message:
+          "El permiso vuelve a pendiente y se devolvió el saldo descontado.",
+        color: "emerald",
+        icon: React.createElement(IconCheck, { size: 16 }),
+      });
+      invalidar();
+      // El saldo vacacional cambió: lo que lo muestre tiene que releerlo.
+      qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
+    },
+    onError,
+  });
+
   const validarTs = useMutation({
     mutationFn: (id: number) => asistenciaService.permisos.validarTs(id),
     onSuccess: () => {
@@ -88,5 +121,5 @@ export function usePermisoMutations() {
     onError,
   });
 
-  return { crear, confirmar, anular, validarTs };
+  return { crear, confirmar, anular, validarTs, rechazar, revertirConfirmacion };
 }

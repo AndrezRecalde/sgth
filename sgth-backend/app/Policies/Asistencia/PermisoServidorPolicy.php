@@ -74,6 +74,28 @@ class PermisoServidorPolicy
     }
 
     /**
+     * Rechazar el documento físico es trabajo de quien lo recibe.
+     *
+     * Talento Humano también puede: opera Recepción cuando no hay nadie, igual
+     * que ya ocurre con la confirmación.
+     */
+    public function rechazar(User $user, PermisoServidor $permiso): bool
+    {
+        return $user->can(Permiso::CONFIRMAR_RECEPCION->value)
+            || $user->can(Permiso::ANULAR_PERMISO->value);
+    }
+
+    /**
+     * Deshacer una confirmación devuelve saldo de vacaciones ya descontado, así
+     * que no es una corrección de mostrador: se pide el mismo permiso que
+     * anular, que hoy solo tiene admin-uath.
+     */
+    public function revertir(User $user, PermisoServidor $permiso): bool
+    {
+        return $user->can(Permiso::ANULAR_PERMISO->value);
+    }
+
+    /**
      * ¿Puede leer el motivo, además del permiso?
      *
      * La observación no es un campo más. En un permiso PERSONAL es la vida

@@ -11,6 +11,23 @@ use Illuminate\Http\JsonResponse;
 
 class ConsolidadoPermisoController extends Controller
 {
+    /**
+     * Los estados que cuentan como tiempo de permiso concedido.
+     *
+     * Antes se decía al revés —«todos menos anulado y pendiente»— y repetido
+     * en las tres acciones. Con esa forma, `falta_injustificada` y `rechazado`
+     * entraban en el consolidado: una falta injustificada es exactamente el
+     * permiso que NO se concedió, y sumaba horas al informe. Al programarse el
+     * job que las marca, ese estado dejó de ser teórico y el error habría
+     * empezado a notarse solo.
+     *
+     * @var list<string>
+     */
+    private const ESTADOS_CONCEDIDOS = [
+        'activo',
+        'validado_trabajo_social',
+    ];
+
     public function consolidado(Request $request): JsonResponse
     {
         $request->validate([
@@ -29,7 +46,7 @@ class ConsolidadoPermisoController extends Controller
             ])
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->where('tipo', $tipo)
-            ->whereNotIn('estado', ['anulado', 'pendiente'])
+            ->whereIn('estado', self::ESTADOS_CONCEDIDOS)
             ->get();
 
         // Agrupar por servidor
@@ -101,7 +118,7 @@ class ConsolidadoPermisoController extends Controller
             ])
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->where('tipo', $tipo)
-            ->whereNotIn('estado', ['anulado', 'pendiente'])
+            ->whereIn('estado', self::ESTADOS_CONCEDIDOS)
             ->get();
 
         $consolidado = $permisos
@@ -175,7 +192,7 @@ class ConsolidadoPermisoController extends Controller
             ])
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->where('tipo', $tipo)
-            ->whereNotIn('estado', ['anulado', 'pendiente'])
+            ->whereIn('estado', self::ESTADOS_CONCEDIDOS)
             ->get();
 
         $consolidado = $permisos

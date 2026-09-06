@@ -34,10 +34,12 @@ class PermisoServidor extends Model
         'confirmado_en',
         'validado_ts_por',
         'validado_ts_en',
+        'rechazado_por',
+        'rechazado_en',
+        'motivo_rechazo',
         'anulado_por',
         'anulado_en',
         'vence_en',
-        'qr_ruta',
         'unidad_administrativa_id',
         'jefe_id',
         'creado_por',
@@ -53,6 +55,7 @@ class PermisoServidor extends Model
             'hora_fin'       => 'string',
             'confirmado_en'  => 'datetime',
             'validado_ts_en' => 'datetime',
+            'rechazado_en'   => 'datetime',
             'anulado_en'     => 'datetime',
             'vence_en'       => 'datetime',
         ];
@@ -72,6 +75,11 @@ class PermisoServidor extends Model
     public function validadoTsPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validado_ts_por');
+    }
+
+    public function rechazadoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rechazado_por');
     }
 
     public function anuladoPor(): BelongsTo
