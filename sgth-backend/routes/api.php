@@ -441,16 +441,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     Route::prefix('nomina')->group(function () {
         Route::get('/', [NominaController::class, 'index']);
         Route::post('/', [NominaController::class, 'calcular']);
-        Route::get('{id}', [NominaController::class, 'show']);
-        Route::post('{id}/cerrar', [NominaController::class, 'cerrar']);
 
-        Route::get('{nominaId}/rol-pago/{servidorId}', [RolPagoController::class, 'show']);
-
+        // Los segmentos literales, antes del comodín. `GET nomina/conceptos`
+        // encajaba en `nomina/{id}` y acababa en `NominaController::show()`
+        // con la palabra «conceptos» por id: las tres rutas de aquí abajo eran
+        // inalcanzables y devolvían un 500 desde que se escribieron.
         Route::get('conceptos', [ConceptoNominaController::class, 'index']);
         Route::get('handoffs', [HandoffErpController::class, 'index']);
 
         Route::apiResource('descuentos-recurrentes', DescuentoRecurrenteController::class)
             ->middleware('role:admin-uath|asistente-uath');
+
+        // Y el comodín solo acepta números, para que el orden deje de ser lo
+        // único que sostiene esto cuando alguien añada otra ruta literal.
+        Route::get('{id}', [NominaController::class, 'show'])->whereNumber('id');
+        Route::post('{id}/cerrar', [NominaController::class, 'cerrar'])
+            ->whereNumber('id');
+
+        Route::get('{nominaId}/rol-pago/{servidorId}', [RolPagoController::class, 'show'])
+            ->whereNumber(['nominaId', 'servidorId']);
     });
 
     // Módulo 04: Asistencia, Permisos y Vacaciones
@@ -1324,13 +1333,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // Módulo 16 — Actividades Laborales
     Route::prefix('actividades')
         ->group(function () {
-            Route::apiResource('/', ActividadLaboralController::class)
-                ->parameters(['' => 'actividad']); // Para que las rutas resource funcionen con /
+            // Los segmentos literales van antes del recurso: su `{actividad}`
+            // se tragaba `por-unidad`, que acababa en `show()` con esa palabra
+            // por id y devolvía un 500 desde que se escribió.
             Route::get('por-unidad',
                 [ActividadLaboralController::class, 'porUnidad'])
                 ->middleware('role:jefe-unidad|director|admin-uath');
             Route::post('exportar-informe',
                 [ActividadLaboralController::class, 'exportarInforme']);
+
+            Route::apiResource('/', ActividadLaboralController::class)
+                ->parameters(['' => 'actividad']) // Para que funcionen con /
+                // El comodín solo acepta números, para que el orden deje de ser
+                // lo único que sostiene esto.
+                ->where(['actividad' => '[0-9]+']);
         });
 
     // Módulo 17 — Bienestar y Clima
