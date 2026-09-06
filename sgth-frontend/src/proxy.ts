@@ -10,8 +10,15 @@ import type { NextRequest } from 'next/server'
  *
  * Y el organigrama, que es información pública de la institución: se consulta
  * desde fuera, sin cuenta de por medio.
+ *
+ * `/verificar-permiso` es lo que abre el QR impreso en el formulario de
+ * permiso. Quien lo escanea suele ser el guardia de la puerta o quien recibe
+ * el papel: puede no tener usuario del sistema, y aunque lo tuviera no va a
+ * iniciar sesión en el celular para comprobar un folio. La página no revela
+ * el motivo ni la cédula completa — eso lo garantiza el endpoint, no esta
+ * lista.
  */
-const RUTAS_ABIERTAS = ['/assist', '/psicosocial', '/organigrama']
+const RUTAS_ABIERTAS = ['/assist', '/psicosocial', '/organigrama', '/verificar-permiso']
 
 /**
  * Rutas de autenticación: se ven sin sesión, y CON sesión sobran.

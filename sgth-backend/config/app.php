@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | URL del Frontend
+    |--------------------------------------------------------------------------
+    |
+    | Dónde vive la aplicación Next.js. Hasta ahora solo la conocía
+    | `config/cors.php`, leyendo la variable de entorno a pelo; desde aquí
+    | también la usan los documentos que se imprimen y llevan un QR, que tiene
+    | que abrir una página para una persona y no un endpoint JSON de la API.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'https://sgth.gad.gob.ec'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

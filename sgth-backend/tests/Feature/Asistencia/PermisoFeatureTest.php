@@ -22,6 +22,12 @@ beforeEach(function () {
     Servidor::unguard();
     PermisoServidor::unguard();
 
+    // El módulo pasó a resolver el acceso con la matriz de permisos del
+    // seeder en vez de con dos roles escritos a mano en el controlador, así
+    // que los usuarios de prueba ya no pueden nacer sin rol: sin `ver-permisos`
+    // el listado responde 403, que es justamente lo que se quería.
+    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+
     $this->userJefe = User::create([
         'email' => 'jefe@example.com',
         'usuario_ti' => 'jefe_u',
@@ -66,6 +72,9 @@ beforeEach(function () {
     // silencio, así que el usuario y su servidor nunca quedaban enlazados.
     $this->userJefe->update(['servidor_id' => $this->servidorJefe->id]);
     $this->userSubordinado->update(['servidor_id' => $this->servidorSubordinado->id]);
+
+    $this->userJefe->assignRole('jefe-unidad');
+    $this->userSubordinado->assignRole('servidor');
 });
 
 test('permiso_personal_no_puede_exceder_4_horas', function () {
@@ -102,8 +111,6 @@ test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {
         'vence_en' => now()->addDays(4),
         'folio' => 'PER-2026-00001',
     ]);
-
-    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
 
     $userRecepcion = User::create([
         'email' => 'rec@example.com',

@@ -9,6 +9,11 @@ export const ROUTES = {
   // dentro o fuera de la institución, puede consultar su estructura.
   PUBLICO: {
     ORGANIGRAMA: '/organigrama',
+
+    // La abre el QR impreso en el formulario de permiso. Quien escanea puede
+    // no tener usuario del sistema —el guardia de la puerta, por ejemplo—.
+    VERIFICAR_PERMISO: (folio: string) =>
+      `/verificar-permiso/${encodeURIComponent(folio)}`,
   },
 
   // ── SGTH (Talento Humano) ─────────────

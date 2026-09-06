@@ -3,7 +3,7 @@ import type {
   ApiResponse, MarcacionBiometrica,
   PermisoServidor, Vacacion,
   PeriodoVacacion, ResumenPeriodos, PrevisualizacionRecalculo, ConsolidadoPermisoResponse,
-  PaginatedResponse
+  PaginatedResponse, VerificacionPermiso
 } from '@/types/api'
 
 export const asistenciaService = {
@@ -79,6 +79,14 @@ export const asistenciaService = {
       api.get(`/asistencia/permisos/${id}/exportar`, {
         responseType: 'blob',
       }).then(r => r.data),
+
+    // Endpoint público: es el que abre el QR del permiso impreso, y quien lo
+    // escanea —el guardia de la puerta, el jefe que recibe el papel— no tiene
+    // sesión. No lleva prefijo `/asistencia`.
+    verificar: (folio: string) =>
+      api.get<ApiResponse<VerificacionPermiso>>(
+        `/permisos/verificar/${encodeURIComponent(folio)}`
+      ).then(r => r.data.datos),
   },
 
   periodos: {

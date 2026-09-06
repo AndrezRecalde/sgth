@@ -44,9 +44,15 @@
   $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i:s');
   $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i:s');
 
-  $observacion = mb_strtoupper(
-    $permiso->observacion ?: 'SIN OBSERVACIONES', 'UTF-8'
-  );
+  // Quien imprime no siempre puede leer el motivo: un permiso por enfermedad
+  // lleva un dato de salud y uno personal, un asunto privado. La decisión la
+  // toma la policy y llega resuelta desde el controlador; aquí no se razona.
+  // Por si alguien renderiza esta vista sin pasarla, el valor seguro es callar.
+  $puedeVerObservacion = $mostrarObservacion ?? false;
+
+  $observacion = $puedeVerObservacion
+    ? mb_strtoupper($permiso->observacion ?: 'SIN OBSERVACIONES', 'UTF-8')
+    : 'RESERVADO';
 
   $folio = $permiso->folio ?? 'S/N';
 
@@ -57,7 +63,13 @@
   // QR en formato SVG para evitar fallos si no hay Imagick
   $qrSrc = null;
   try {
-    $urlQr = config('app.url') . "/api/v1/asistencia/permisos/verificar/{$folio}";
+    // Esta ruta apuntaba a `/api/v1/asistencia/permisos/verificar/...`, que no
+    // existe: la pública es `/api/v1/permisos/verificar/...`. Todo QR impreso
+    // hasta ahora daba 404. Y aunque hubiera acertado, quien escanea con el
+    // celular es una persona —el guardia de la puerta, el jefe que recibe el
+    // papel—, no un cliente HTTP: se manda a la página del frontend, que
+    // consulta ese endpoint y muestra el resultado legible.
+    $urlQr = rtrim(config('app.frontend_url'), '/') . "/verificar-permiso/{$folio}";
     $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
       ->size(100)->margin(1)->generate($urlQr);
     if (!empty($qrSvg)) {

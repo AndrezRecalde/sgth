@@ -140,8 +140,16 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:5,1');
     });
 
-    // Endpoint público para escanear el QR del permiso físico
-    Route::get('permisos/verificar/{folio}', [FolioPermisoController::class, 'verificar']);
+    // Endpoint público para escanear el QR del permiso físico.
+    //
+    // Los folios son secuenciales (PER-2026-00001, 00002...), así que sin
+    // límite de tasa alguien los recorre uno por uno hasta vaciar el año. El
+    // throttle no lo impide del todo —nada lo impide en un endpoint público—
+    // pero lo vuelve lento y ruidoso, que es lo que se pide de una barrera
+    // así. La otra mitad del arreglo está en el controlador: ya no devuelve
+    // el modelo entero, solo lo que hace falta para verificar un papel.
+    Route::get('permisos/verificar/{folio}', [FolioPermisoController::class, 'verificar'])
+        ->middleware('throttle:20,1');
 
     // Endpoint público protegido criptográficamente mediante firmas temporales (URL firmada)
     Route::get('sgd/documentos/{documento}/descargar', [DocumentoInstitucionalController::class, 'descargar'])
@@ -544,7 +552,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             )->name('periodos.generar-todos');
         });
 
+    // El consolidado es un informe de toda la institución: nombres, cédulas,
+    // unidades y horas de ausencia de cada servidor. Estaba abierto a
+    // cualquier usuario autenticado —un servidor raso podía descargarlo en
+    // Excel—. Se cierra al mismo permiso que gobierna «ver los permisos de
+    // todos», que es exactamente lo que este informe hace, en agregado.
     Route::prefix('asistencia/consolidado-permisos')
+        ->middleware('permission:ver-permisos-todos')
         ->group(function () {
             Route::get(
                 '/',
