@@ -27,6 +27,14 @@ class AreaDticController extends Controller
         return ApiResponse::created($area, 'Área DTIC creada exitosamente.');
     }
 
+    /** El `apiResource` declaraba esta ruta y el método no existía: 500 seguro. */
+    public function show(int $id)
+    {
+        $registro = AreaDtic::findOrFail($id);
+
+        return ApiResponse::ok($registro, 'Área DTIC obtenida correctamente.');
+    }
+
     public function update(Request $request, int $id)
     {
         $area = AreaDtic::findOrFail($id);
