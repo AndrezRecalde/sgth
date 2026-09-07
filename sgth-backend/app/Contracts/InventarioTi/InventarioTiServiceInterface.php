@@ -11,6 +11,9 @@ interface InventarioTiServiceInterface
 
     public function asignarBien(array $datos): AsignacionBien;
 
+    /** @return array{content: string, filename: string} */
+    public function generarActaEntrega(int $id): array;
+
     public function obtenerFichaTecnicaCompleta(array $filtros): array;
 
     public function registrarAuditoriaFisica(array $datos);

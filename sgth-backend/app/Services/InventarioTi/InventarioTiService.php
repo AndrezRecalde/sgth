@@ -6,6 +6,8 @@ use App\Models\InventarioTi\AsignacionBien;
 use App\Models\InventarioTi\MantenimientoBien;
 use App\Models\InventarioTi\TipoBien;
 use App\Models\InventarioTi\OrigenBien;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 final class InventarioTiService implements InventarioTiServiceInterface
 {
@@ -25,13 +27,93 @@ final class InventarioTiService implements InventarioTiServiceInterface
             return BienInformatico::create($datos);
         });
     }
+    /**
+     * Entregar un bien a un servidor, que queda como su custodio.
+     *
+     * Escribía en `url_acta_pdf` una ruta compuesta a mano —
+     * `/storage/actas/acta_entrega_{id}.pdf`— hacia un archivo que nadie
+     * generaba nunca, y el controlador respondía «Acta PDF generada». Quien
+     * entregaba el equipo se quedaba con la constancia de que el acta existía
+     * y con un enlace que no llevaba a ningún sitio; el acta es justamente el
+     * documento que respalda la custodia, así que faltaba lo único que este
+     * registro tenía que producir.
+     *
+     * Ahora el acta se arma de verdad, y bajo demanda: `generarActaEntrega()`.
+     * Por eso no queda ninguna ruta que guardar.
+     */
     public function asignarBien(array $datos): AsignacionBien
     {
         return DB::transaction(function () use ($datos) {
-            $asignacion = AsignacionBien::create($datos);
-            $asignacion->update(['url_acta_pdf' => '/storage/actas/acta_entrega_' . $asignacion->id . '.pdf']);
-            return $asignacion;
+            // Quién entrega lo pone el sistema, no el cuerpo de la petición:
+            // es el dato que después firma el acta.
+            $datos['created_by'] = auth()->id();
+
+            return AsignacionBien::create($datos);
         });
+    }
+
+    /**
+     * El acta de entrega-recepción del bien, en PDF.
+     *
+     * Se genera al pedirla y no se archiva: es el mismo criterio del resto de
+     * documentos del sistema —el certificado médico, la acción de personal—,
+     * y evita que el papel y el registro puedan contradecirse.
+     *
+     * El número sale del id de la asignación. No es un folio por año como el
+     * de permisos o viáticos: esa numeración necesitaría su propia columna y
+     * su candado, y aquí basta con que dos actas nunca compartan número.
+     *
+     * @return array{content: string, filename: string}
+     */
+    public function generarActaEntrega(int $id): array
+    {
+        $asignacion = AsignacionBien::with([
+            'bien.tipo', 'bien.marca', 'bien.origen',
+            'servidor.unidadAdministrativa',
+            'servidor.puesto.cargo', 'servidor.puesto.unidadAdministrativa',
+        ])->findOrFail($id);
+
+        $numero = 'ACT-' . str_pad((string) $asignacion->id, 6, '0', STR_PAD_LEFT);
+
+        $pdf = Pdf::loadView('pdf.inventario.acta-entrega', [
+            'asignacion' => $asignacion,
+            'numero'     => $numero,
+            'entrega'    => $this->firmaDeQuienEntrega($asignacion),
+            'logo'       => public_path('images/logo-gadpe.png'),
+        ])->setPaper('a4', 'portrait');
+
+        return [
+            'content'  => $pdf->output(),
+            'filename' => 'acta-entrega-' . $numero . '.pdf',
+        ];
+    }
+
+    /**
+     * Quién entregó el bien, tomado de la columna sellada al registrar la
+     * asignación y no de quien imprima hoy: una reimpresión no puede
+     * atribuirle el acto a otra persona.
+     *
+     * Sin ese dato —las asignaciones anteriores a este cambio no lo tienen— se
+     * imprime el rótulo de la dirección responsable, que es cierto, en vez de
+     * un nombre inventado.
+     *
+     * @return array{nombre: ?string, cargo: string}
+     */
+    private function firmaDeQuienEntrega(AsignacionBien $asignacion): array
+    {
+        $cargoPorDefecto = 'Dirección de Tecnologías de la Información y Comunicación';
+
+        $servidor = User::with('servidor.puesto.cargo')
+            ->find($asignacion->created_by)?->servidor;
+
+        if (! $servidor) {
+            return ['nombre' => null, 'cargo' => $cargoPorDefecto];
+        }
+
+        return [
+            'nombre' => trim($servidor->nombre . ' ' . $servidor->apellido),
+            'cargo'  => $servidor->puesto?->cargo?->nombre ?? $cargoPorDefecto,
+        ];
     }
 
     /**
