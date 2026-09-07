@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { asistenciaService } from '../services/asistenciaService'
 
 interface FiltrosPermiso {
+  page?:                     number
   folio?:                    string
   estado?:                   string
   tipo?:                     string

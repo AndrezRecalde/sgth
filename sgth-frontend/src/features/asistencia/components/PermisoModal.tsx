@@ -17,7 +17,6 @@ import {
 import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconInfoCircle,
@@ -29,7 +28,7 @@ import { useContainedInput } from "@/hooks/useContainedInput";
 import { useUnidades } from "@/features/estructura/hooks/useUnidades";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
-import { asistenciaService } from "../services/asistenciaService";
+import { useExportarPermiso } from "../hooks/useExportarPermiso";
 import {
   esTipoRetroactivo,
   fromDate,
@@ -65,24 +64,27 @@ export function PermisoModal({ opened, onClose }: Props) {
   const [permisoCreado, setPermisoCreado] = useState<PermisoServidor | null>(
     null,
   );
-  const [exportando, setExportando] = useState(false);
+  const { exportar, exportandoId } = useExportarPermiso();
   const [unidadSelId, setUnidadSelId] = useState<number | null>(null);
 
   // Datos
   const { data: unidadesRaw } = useUnidades({ nivel: 2 });
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[];
 
-  const { data: servidoresData } = useServidores({
-    per_page: 200,
-  });
-  const todosServidores = (servidoresData?.data ??
-    []) as ServidorConRelaciones[];
-
-  // Filtrar servidores de la unidad seleccionada
+  // Los servidores se piden ya filtrados por unidad.
+  //
+  // Antes se traían los primeros 200 y se filtraba en el navegador. Con más de
+  // 200 servidores en la institución —que los hay— las unidades que caían
+  // fuera de esa primera página aparecían vacías: el desplegable decía «Sin
+  // servidores en esta unidad» y no había forma de registrarles un permiso.
+  // Es el mismo patrón que ya usan MovimientoModal y SubrogacionModal.
+  const { data: servidoresData } = useServidores(
+    unidadSelId
+      ? { unidad_administrativa_id: unidadSelId, per_page: 100 }
+      : undefined,
+  );
   const servidoresUnidad = unidadSelId
-    ? todosServidores.filter(
-        (s) => Number(s.unidad_administrativa?.id) === unidadSelId,
-      )
+    ? ((servidoresData?.data ?? []) as ServidorConRelaciones[])
     : [];
 
   const unidadOptions = unidades.map((u) => ({
@@ -150,34 +152,10 @@ export function PermisoModal({ opened, onClose }: Props) {
     setPaso(1);
   };
 
-  const handleExportar = async () => {
+  const handleExportar = () => {
     if (!permisoCreado) return;
-    setExportando(true);
-    try {
-      const blob = await asistenciaService.permisos.exportar(
-        Number(permisoCreado.id),
-      );
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `permiso_${permisoCreado.folio ?? permisoCreado.id}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      notifications.show({
-        title: "PDF descargado",
-        message: "El permiso fue exportado correctamente.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
-    } catch {
-      notifications.show({
-        title: "Error",
-        message: "No se pudo exportar el PDF.",
-        color: "red",
-      });
-    } finally {
-      setExportando(false);
-    }
+
+    exportar(Number(permisoCreado.id), permisoCreado.folio);
   };
 
   return (
@@ -430,7 +408,7 @@ export function PermisoModal({ opened, onClose }: Props) {
                 variant="light"
                 color="blue"
                 leftSection={<IconFileDownload size={16} />}
-                loading={exportando}
+                loading={exportandoId !== null}
                 onClick={handleExportar}
               >
                 Exportar PDF
