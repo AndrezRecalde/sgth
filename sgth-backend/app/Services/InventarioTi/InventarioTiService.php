@@ -7,25 +7,179 @@ use App\Models\InventarioTi\MantenimientoBien;
 use App\Models\InventarioTi\TipoBien;
 use App\Models\InventarioTi\OrigenBien;
 use App\Models\User;
+use App\Exceptions\ReglaNegocioException;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 final class InventarioTiService implements InventarioTiServiceInterface
 {
+    /** Estados que este servicio admite escribir desde una edición normal. */
+    public const ESTADOS_OPERATIVOS = [
+        'activo', 'en_mantenimiento', 'robado', 'perdido',
+    ];
+
+    public const CONDICIONES_FISICAS = ['bueno', 'regular', 'malo'];
+
     public function registrarBien(array $datos): BienInformatico
     {
         return DB::transaction(function () use ($datos) {
-            // Calcular vida útil si tenemos el origen y el tipo
-            if (!empty($datos['origen_bien_id']) && !empty($datos['tipo_bien_id'])) {
-                $origen = OrigenBien::find($datos['origen_bien_id']);
-                $tipo = TipoBien::find($datos['tipo_bien_id']);
-                if ($origen && $tipo && $tipo->anios_vida_util > 0) {
-                    $datos['fecha_fin_vida_util'] = \Carbon\Carbon::parse($origen->fecha_adquisicion)->addYears($tipo->anios_vida_util);
-                }
-            }
-            // Generación de QR
-            $datos['codigo_qr'] = $datos['codigo_institucional'] . '-QR';
+            $datos['fecha_fin_vida_util'] = $this->finDeVidaUtil($datos)
+                ?? ($datos['fecha_fin_vida_util'] ?? null);
+
+            $datos['codigo_qr']  = $datos['codigo_institucional'] . '-QR';
+            $datos['created_by'] = auth()->id();
+
             return BienInformatico::create($datos);
         });
+    }
+
+    /**
+     * El inventario. Devolvía `[]` con el mensaje «Bienes listados».
+     *
+     * Una lista vacía se lee como «no hay bienes registrados», no como «esto no
+     * está construido»: es el listado del que cuelga todo el módulo, y estaba
+     * hueco.
+     *
+     * @param  array<string, mixed>  $filtros
+     */
+    public function listarBienes(array $filtros): LengthAwarePaginator
+    {
+        $query = BienInformatico::with(['tipo', 'marca', 'origen'])
+            ->latest('id');
+
+        if (! empty($filtros['search'])) {
+            $termino = $filtros['search'];
+
+            // Los tres campos por los que se busca un equipo en la mano: la
+            // etiqueta pegada, la serie del fabricante y el modelo.
+            $query->where(function ($q) use ($termino) {
+                $q->where('codigo_institucional', 'ilike', "%{$termino}%")
+                  ->orWhere('numero_serie', 'ilike', "%{$termino}%")
+                  ->orWhere('modelo', 'ilike', "%{$termino}%");
+            });
+        }
+
+        foreach (['tipo_bien_id', 'marca_id', 'estado_operativo', 'condicion_fisica'] as $campo) {
+            if (! empty($filtros[$campo])) {
+                $query->where($campo, $filtros[$campo]);
+            }
+        }
+
+        // Topado: sin límite, `per_page` permitía traerse el inventario entero
+        // en una petición.
+        $porPagina = min((int) ($filtros['per_page'] ?? 20), 100);
+
+        return $query->paginate(max($porPagina, 1));
+    }
+
+    /** Devolvía `['id' => $id]`: el eco del parámetro, no el bien. */
+    public function obtenerBien(int $id): BienInformatico
+    {
+        return BienInformatico::with(['tipo', 'marca', 'origen'])->findOrFail($id);
+    }
+
+    /**
+     * Editar un bien. Respondía «Bien actualizado» sin tocar la base.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    public function actualizarBien(int $id, array $datos): BienInformatico
+    {
+        return DB::transaction(function () use ($id, $datos) {
+            $bien = BienInformatico::lockForUpdate()->findOrFail($id);
+
+            // Dar de baja es un acto con motivo y respaldo documental, y tiene
+            // su propio flujo. Colarlo por una edición dejaría el bien fuera de
+            // servicio sin constancia de por qué.
+            if (($datos['estado_operativo'] ?? null) === 'dado_de_baja') {
+                throw new ReglaNegocioException(
+                    'La baja de un bien se registra en «bajas», que exige el motivo: '
+                    . 'no puede hacerse editando su estado operativo.'
+                );
+            }
+
+            // El código del QR se deriva del institucional. Si uno cambia y el
+            // otro no, la etiqueta pegada al equipo deja de encontrarlo al
+            // escanearla.
+            if (
+                array_key_exists('codigo_institucional', $datos)
+                && $datos['codigo_institucional'] !== $bien->codigo_institucional
+            ) {
+                $datos['codigo_qr'] = $datos['codigo_institucional'] . '-QR';
+            }
+
+            // La vida útil sale del tipo y del origen: si cambia cualquiera de
+            // los dos, la fecha anterior ya no corresponde.
+            $nuevoFin = $this->finDeVidaUtil([
+                'tipo_bien_id'   => $datos['tipo_bien_id']   ?? $bien->tipo_bien_id,
+                'origen_bien_id' => $datos['origen_bien_id'] ?? $bien->origen_bien_id,
+            ]);
+
+            if ($nuevoFin !== null) {
+                $datos['fecha_fin_vida_util'] = $nuevoFin;
+            }
+
+            $datos['updated_by'] = auth()->id();
+
+            $bien->update($datos);
+
+            return $bien->fresh(['tipo', 'marca', 'origen']);
+        });
+    }
+
+    /**
+     * Retirar del inventario un bien registrado por error.
+     *
+     * Respondía «Bien dado de baja» sin borrar nada, y además nombraba otra
+     * cosa: la baja —el bien que se retira del servicio— se registra en
+     * «bajas», con su motivo, y el bien sigue existiendo en el inventario.
+     * Esto de aquí borra la ficha.
+     *
+     * Por eso solo procede mientras la ficha no tenga historia: un bien que ya
+     * fue entregado a alguien o pasó por mantenimiento no es un error de
+     * digitación, y borrarlo se llevaría por delante el rastro de quién lo tuvo.
+     */
+    public function retirarBien(int $id): void
+    {
+        DB::transaction(function () use ($id) {
+            $bien = BienInformatico::findOrFail($id);
+
+            $asignaciones   = AsignacionBien::where('bien_informatico_id', $bien->id)->count();
+            $mantenimientos = MantenimientoBien::where('bien_informatico_id', $bien->id)->count();
+
+            if ($asignaciones > 0 || $mantenimientos > 0) {
+                throw new ReglaNegocioException(
+                    "El bien «{$bien->codigo_institucional}» tiene historial "
+                    . "({$asignaciones} asignación(es) y {$mantenimientos} mantenimiento(s)): "
+                    . 'no puede borrarse del inventario. Si salió de servicio, regístrelo como baja.'
+                );
+            }
+
+            $bien->delete();
+        });
+    }
+
+    /**
+     * La fecha en que el bien agota su vida útil: la adquisición más los años
+     * que su tipo declara. Null cuando falta cualquiera de los dos datos.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function finDeVidaUtil(array $datos): ?\Carbon\Carbon
+    {
+        if (empty($datos['origen_bien_id']) || empty($datos['tipo_bien_id'])) {
+            return null;
+        }
+
+        $origen = OrigenBien::find($datos['origen_bien_id']);
+        $tipo   = TipoBien::find($datos['tipo_bien_id']);
+
+        if (! $origen || ! $tipo || $tipo->anios_vida_util <= 0) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($origen->fecha_adquisicion)
+            ->addYears($tipo->anios_vida_util);
     }
     /**
      * Entregar un bien a un servidor, que queda como su custodio.
