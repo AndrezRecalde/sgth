@@ -1,24 +1,48 @@
 # SGTH — Tareas programadas (scheduler)
 
-Nueve tareas corren solas. Ninguna avisa cuando **no** corre: si el scheduler
-está caído, nada falla — las cosas simplemente no ocurren, y eso se descubre
-semanas después. Por eso este documento existe.
+Nueve tareas corren solas, y una décima está apagada a propósito. Ninguna avisa
+cuando **no** corre: si el scheduler está caído, nada falla — las cosas
+simplemente no ocurren, y eso se descubre semanas después. Por eso este
+documento existe.
 
 Todas se declaran en [`sgth-backend/routes/console.php`](../sgth-backend/routes/console.php).
+
+> **Si tocas `console.php`, actualiza esta tabla en el mismo cambio.** Un
+> documento que existe para que nadie pase por alto una tarea silenciosa no
+> sirve de nada si él mismo se queda atrás. Ya pasó dos veces en un mismo día:
+> se apagó LOTAIP y se agregó el vencimiento de permisos, y la tabla siguió
+> describiendo lo contrario. La lista real siempre está en
+> `php artisan schedule:list`; si no coincide con lo de abajo, lo que está mal
+> es lo de abajo.
 
 ## Qué corre y qué pasa si no corre
 
 | Hora | Tarea | Qué hace | Si no corre |
 |---|---|---|---|
-| 01:00 | `lotaip:generar-reportes` | Reportes de transparencia Art. 7 LOTAIP | Incumplimiento de publicación |
 | 02:00 | `backup:base-datos` | Respaldo de PostgreSQL | **No hay respaldos.** Un respaldo que nadie ejecuta no es un respaldo |
 | 03:30 | `sanctum:prune-expired --hours=24` | Borra los tokens del API caducados hace más de un día | La tabla `personal_access_tokens` crece sin fin. No rompe nada: Sanctum ya los rechaza |
 | 05:00 | `sgth:contratos:detectar-vencidos` | Genera en borrador la Cesación de Funciones de los contratos de Servicios Profesionales vencidos | Los contratos vencen y nadie se entera; el servidor sigue figurando como vigente |
 | 05:30 | `sgth:subrogaciones:caducar` | Cierra las subrogaciones y encargos cuyo plazo ya venció | El estado guardado miente. La pantalla queda bien igual —filtra por fecha—, pero cualquier reporte que consulte el estado se equivoca |
 | 06:00 | `VerificarAlertasInventarioJob` | Alertas de stock del dispensario | Se agota medicación sin aviso |
+| 06:15 L-V | `VencerPermisosJob` | Marca como falta injustificada el permiso cuyo respaldo físico no llegó a Recepción dentro de las 72 horas laborables (Art. 33 LOSEP) | Ningún permiso caduca nunca. Todos se quedan «pendientes» y la ausencia sigue amparada por un documento que nadie presentó |
 | 07:00 L-V | `sgth:visto-bueno:control-plazos` | Plazos del Art. 183 del Código del Trabajo en los trámites de visto bueno | Se vencen plazos legales |
 | cada 15 min | `EnviarAlertaSlaJob` | Alertas de SLA del helpdesk | Los tickets se pasan del SLA sin escalar |
-| 1 de enero | `generar-periodos-vacaciones` | Crea los períodos anuales de vacaciones | Nadie puede solicitar vacaciones del año nuevo |
+| 1 de enero | `generar-periodos-vacaciones` | Crea los períodos anuales de vacaciones | Nadie puede solicitar vacaciones del año nuevo **ni confirmar un permiso personal**, que se descuenta de ese saldo |
+
+`VencerPermisosJob` corre en días laborables porque el plazo se cuenta en días
+hábiles: un sábado no vence nada y no hay nada que revisar. Va a las 06:15 y no
+a las 06:00 para no solaparse con las alertas de inventario.
+
+## Apagada a propósito
+
+| Tarea | Estado | Por qué |
+|---|---|---|
+| `lotaip:generar-reportes` | Comentada en `console.php` | Publica en `storage/app/public/lotaip/`, servido por URL directa y sin autenticación, y los tres reportes que arma no están construidos: la nómina consolidada devuelve una lista vacía, la estructura orgánica trae dos filas de ejemplo y el distributivo está limitado a diez servidores. Publicar eso como información de transparencia es peor que no publicar nada |
+
+El comando sigue existiendo y puede ejecutarse a mano. Volver a programarlo
+tiene que ser una decisión, no el efecto secundario de arreglar la consulta que
+hoy lo hace fallar — mientras falla, no publica; si alguien arregla la consulta
+sin mirar esto, empieza a publicar.
 
 ## Producción
 
@@ -44,12 +68,15 @@ día anterior. Si el respaldo de las 02:00 está, el scheduler corrió.
 
 ## Desarrollo local
 
-**No lo dejes corriendo.** Dos razones concretas, no teóricas:
+**No lo dejes corriendo.** Tres razones concretas, no teóricas:
 
 - `sgth:contratos:detectar-vencidos` genera acciones de personal en borrador
   sobre los datos sembrados. Aparecen en la bandeja como si alguien las hubiera
   registrado.
 - `EnviarAlertaSlaJob` corre cada 15 minutos y envía correos desde tu máquina.
+- `VencerPermisosJob` convierte en faltas injustificadas los permisos
+  pendientes que sembraste. Si el dato de prueba tiene una fecha vieja —y suele
+  tenerla—, nace vencido y desaparece del estado en el que lo dejaste.
 
 Y la máquina de desarrollo no está encendida a las 02:00 ni a las 05:00, así
 que igual no probarías nada: solo acumularías ejecuciones al azar.
