@@ -693,6 +693,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // Asignaciones
             Route::apiResource('asignaciones', AsignacionBienController::class)
                 ->middleware('role:tecnico-dtic|admin-ti');
+            // El acta de entrega-recepción: el papel que se firma al entregar
+            // el equipo, y la única salida documental de este registro.
+            Route::get('asignaciones/{asignacion}/acta',
+                [AsignacionBienController::class, 'acta'])
+                ->middleware('role:tecnico-dtic|admin-ti');
 
             // Mantenimientos
             Route::apiResource('mantenimientos', MantenimientoBienController::class)

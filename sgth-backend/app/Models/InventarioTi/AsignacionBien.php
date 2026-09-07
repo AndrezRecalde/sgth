@@ -14,7 +14,7 @@ class AsignacionBien extends Model
     protected $table = 'asignaciones_bien';
     protected $fillable = [
         'bien_informatico_id', 'servidor_id', 'fecha_asignacion',
-        'fecha_devolucion', 'observaciones', 'url_acta_pdf', 'estado',
+        'fecha_devolucion', 'observaciones', 'estado',
         'created_by', 'updated_by'
     ];
 
