@@ -106,6 +106,16 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiResponse::error($e->getMessage(), null, 403);
         });
 
+        /*
+         * Un reporte que todavía no se puede armar porque falta el dato.
+         *
+         * 501 y no 422: no hay nada que quien lo pide pueda corregir en su
+         * petición. El mensaje dice qué falta, que es lo único útil aquí.
+         */
+        $exceptions->render(function (\App\Exceptions\ReporteNoDisponibleException $e) {
+            return ApiResponse::error($e->getMessage(), null, 501);
+        });
+
         // Red de seguridad para violaciones de restricción única no
         // atrapadas por una validación previa (ej. dos flujos distintos
         // intentando crear el mismo registro único a la vez). No sustituye
