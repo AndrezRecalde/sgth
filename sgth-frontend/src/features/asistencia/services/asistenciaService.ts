@@ -34,6 +34,7 @@ export const asistenciaService = {
 
   permisos: {
     listar: (params?: {
+      page?:                     number
       folio?:                    string
       estado?:                   string
       tipo?:                     string
