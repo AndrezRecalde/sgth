@@ -8,6 +8,7 @@ use Spatie\LaravelPdf\Facades\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReporteGenericoExport;
 use App\Helpers\DiasHabilesHelper;
+use Illuminate\Support\Facades\Log;
 
 class GenerarReportesLotaipCommand extends Command
 {
@@ -26,7 +27,7 @@ class GenerarReportesLotaipCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(ReporteriaServiceInterface $reporteriaService): void
+    public function handle(ReporteriaServiceInterface $reporteriaService): int
     {
         $this->info('Iniciando generación de reportes LOTAIP...');
 
@@ -39,7 +40,8 @@ class GenerarReportesLotaipCommand extends Command
 
         if (!$hoy->isSameDay($primerDiaHabil) && !$this->option('force')) {
             $this->info("Hoy ({$hoy->toDateString()}) no es el primer día hábil del mes. El primer día hábil es {$primerDiaHabil->toDateString()}. Abortando ejecución.");
-            return;
+
+            return self::SUCCESS;
         }
 
         $mesAnio = $hoy->format('Y_m');
@@ -66,8 +68,27 @@ class GenerarReportesLotaipCommand extends Command
 
             $this->info('Reportes LOTAIP generados y publicados exitosamente en storage/app/public/lotaip/.');
 
-        } catch (\Exception $e) {
+            return self::SUCCESS;
+
+        } catch (\Throwable $e) {
+            // El fallo moría aquí, escrito solo en la consola: en una tarea
+            // programada a la una de la madrugada eso equivale a no decir nada,
+            // y el planificador la daba por buena. Lleva fallando desde
+            // siempre sin que constara en ningún sitio.
+            //
+            // Ahora queda en el registro y el comando termina con código de
+            // error, para que quien vigile las tareas lo vea. Se devuelve
+            // FAILURE en vez de relanzar: el fallo ya está anotado con su
+            // detalle, y lo que necesita quien vigila es el código de salida,
+            // no una traza suelta en la consola del planificador.
+            Log::error('No se pudieron generar los reportes LOTAIP.', [
+                'excepcion' => $e->getMessage(),
+                'archivo'   => $e->getFile() . ':' . $e->getLine(),
+            ]);
+
             $this->error('Error generando reportes LOTAIP: ' . $e->getMessage());
+
+            return self::FAILURE;
         }
     }
 }
