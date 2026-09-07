@@ -63,6 +63,26 @@
 □ Feriados 2026 y 2027 registrados
 □ Unidades administrativas del GAD cargadas
 □ Escala RMU grados 1-20 cargada
+□ Períodos de vacaciones del año en curso generados
+  Asistencia → Períodos de vacaciones → «Generar para todos»
+  (o POST /api/v1/asistencia/periodos-vacaciones/generar-todos
+  con {"anio": <año>})
+  Sin esto no se puede confirmar ningún permiso PERSONAL de un
+  servidor LOSEP: esas horas se descuentan del saldo de vacaciones,
+  y sin período abierto no hay de dónde descontarlas. Recepción ve
+  el rechazo, el permiso se queda en pendiente, y pasados los tres
+  días hábiles de plazo VencerPermisosJob lo marca como falta
+  injustificada.
+  La tarea generar-periodos-vacaciones solo corre el 1 de enero, así
+  que si el go-live cae cualquier otro día hay que hacerlo a mano
+  esta vez.
+  Se puede repetir sin miedo: no fuerza nada, deja intactos los
+  períodos ya cerrados, y omite a los regímenes que no generan
+  vacaciones.
+□ Verificado sobre un servidor LOSEP real: crear un permiso PERSONAL
+  y confirmarlo. Es lo que prueba que el punto anterior quedó bien;
+  la lista de períodos puede verse llena y aun así faltar el del año
+  en curso para quien ingresó hace poco.
 
 ## CAPACITACIÓN
 □ Personal de TI capacitado en administración del sistema
