@@ -75,10 +75,30 @@ export const asistenciaService = {
         `/asistencia/permisos/${id}/validar-ts`
       ).then(r => r.data.datos),
 
+    // Recepción rechaza el documento físico que llega mal.
+    rechazar: (id: number, motivo: string) =>
+      api.post<ApiResponse<PermisoServidor>>(
+        `/asistencia/permisos/${id}/rechazar`, { motivo }
+      ).then(r => r.data.datos),
+
+    // Deshace una confirmación hecha por error y devuelve el saldo descontado.
+    revertirConfirmacion: (id: number, motivo: string) =>
+      api.post<ApiResponse<PermisoServidor>>(
+        `/asistencia/permisos/${id}/revertir-confirmacion`, { motivo }
+      ).then(r => r.data.datos),
+
     exportar: (id: number) =>
       api.get(`/asistencia/permisos/${id}/exportar`, {
         responseType: 'blob',
       }).then(r => r.data),
+
+    // El detalle por el folio impreso, que es lo que trae el QR: Talento
+    // Humano escanea el papel firmado y llega directo a este permiso, sin
+    // buscarlo a mano en el listado.
+    porFolio: (folio: string) =>
+      api.get<ApiResponse<PermisoServidor>>(
+        `/asistencia/permisos/folio/${encodeURIComponent(folio)}`
+      ).then(r => r.data.datos),
   },
 
   periodos: {

@@ -1287,8 +1287,17 @@ export type MarcacionBiometrica = {
   PermisoHasta:                   string | null
 }
 
+// `rechazado` y `falta_injustificada` faltaban aunque el backend los declara
+// desde la primera migración. El segundo dejó de ser teórico al programar
+// VencerPermisosJob: hasta entonces el job existía pero nadie lo corría, así
+// que ningún permiso llegaba nunca a ese estado.
 export type EstadoPermiso =
-  'pendiente' | 'activo' | 'validado_trabajo_social' | 'anulado'
+  | 'pendiente'
+  | 'activo'
+  | 'validado_trabajo_social'
+  | 'anulado'
+  | 'rechazado'
+  | 'falta_injustificada'
 
 export type TipoPermiso = 'personal' | 'oficial' | 'enfermedad' | 'calamidad'
 

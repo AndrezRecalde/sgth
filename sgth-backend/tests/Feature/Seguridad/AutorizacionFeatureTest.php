@@ -118,13 +118,19 @@ test('rol_recepcion_solo_puede_confirmar_permisos', function () {
     ]);
     $userRecepcion->assignRole('recepcion');
 
+    // OFICIAL y no PERSONAL: lo que se comprueba aquí es quién puede confirmar
+    // y quién no, y un permiso personal arrastra al módulo de vacaciones —al
+    // confirmarlo se descuenta del saldo, y desde que esa regla se comprueba de
+    // verdad hace falta un período abierto—. El tipo no cambia nada de lo que
+    // este test afirma, y así deja de depender de otro módulo.
     $permiso = PermisoServidor::create([
         'servidor_id' => $this->servidorB->id,
         'folio' => 'PER-001',
-        'tipo' => TipoPermiso::PERSONAL->value,
+        'tipo' => TipoPermiso::OFICIAL->value,
         'fecha' => now()->format('Y-m-d'),
         'hora_inicio' => '08:00:00',
         'hora_fin' => '10:00:00',
+        'observacion' => 'Diligencia institucional',
         'estado' => \App\Enums\EstadoPermiso::PENDIENTE->value,
         'vence_en' => now()->addDays(2)->format('Y-m-d H:i:s'),
     ]);

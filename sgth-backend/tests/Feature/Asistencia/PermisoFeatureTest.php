@@ -22,6 +22,12 @@ beforeEach(function () {
     Servidor::unguard();
     PermisoServidor::unguard();
 
+    // El módulo pasó a resolver el acceso con la matriz de permisos del
+    // seeder en vez de con dos roles escritos a mano en el controlador, así
+    // que los usuarios de prueba ya no pueden nacer sin rol: sin `ver-permisos`
+    // el listado responde 403, que es justamente lo que se quería.
+    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+
     $this->userJefe = User::create([
         'email' => 'jefe@example.com',
         'usuario_ti' => 'jefe_u',
@@ -66,6 +72,9 @@ beforeEach(function () {
     // silencio, así que el usuario y su servidor nunca quedaban enlazados.
     $this->userJefe->update(['servidor_id' => $this->servidorJefe->id]);
     $this->userSubordinado->update(['servidor_id' => $this->servidorSubordinado->id]);
+
+    $this->userJefe->assignRole('jefe-unidad');
+    $this->userSubordinado->assignRole('servidor');
 });
 
 test('permiso_personal_no_puede_exceder_4_horas', function () {
@@ -92,6 +101,23 @@ test('permiso_oficial_requiere_observacion', function () {
 });
 
 test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {
+    // Confirmar un permiso personal descuenta del saldo vacacional, y ahora
+    // exige que haya de dónde descontar: antes, sin período abierto, el
+    // descuento se saltaba en silencio y las horas se concedían gratis.
+    \App\Models\Asistencia\PeriodoVacacion::create([
+        'servidor_id'          => $this->servidorSubordinado->id,
+        'anio'                 => (int) now()->format('Y'),
+        'fecha_inicio_periodo' => now()->startOfYear()->toDateString(),
+        'fecha_fin_periodo'    => now()->endOfYear()->toDateString(),
+        'regimen'              => 'losep',
+        'anios_antiguedad'     => 2,
+        'dias_generados'       => 15,
+        'dias_utilizados'      => 0,
+        'dias_saldo'           => 15,
+        'saldo_acumulado'      => 15,
+        'estado'               => 'abierto',
+    ]);
+
     $permiso = PermisoServidor::create([
         'servidor_id' => $this->servidorSubordinado->id,
         'tipo' => TipoPermiso::PERSONAL->value,
@@ -102,8 +128,6 @@ test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {
         'vence_en' => now()->addDays(4),
         'folio' => 'PER-2026-00001',
     ]);
-
-    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
 
     $userRecepcion = User::create([
         'email' => 'rec@example.com',

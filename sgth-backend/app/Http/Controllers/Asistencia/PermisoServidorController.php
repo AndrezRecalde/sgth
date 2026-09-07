@@ -4,20 +4,30 @@ namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\PermisoServiceInterface;
 use App\Enums\EstadoPermiso;
+use App\Enums\Permiso;
 use App\Enums\TipoPermiso;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Asistencia\MotivoPermisoRequest;
 use App\Http\Requests\Asistencia\StorePermisoServidorRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\PermisoServidor;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class PermisoServidorController extends Controller
 {
+    /** Techo del paginador: `?per_page=100000` traía la tabla entera. */
+    private const PER_PAGE_MAX = 100;
+
     public function __construct(private PermisoServiceInterface $permisoService) {}
 
     public function index(Request $request)
     {
-        $user  = $request->user();
+        $user = $request->user();
+
+        $this->authorize('verAny', PermisoServidor::class);
+
         $query = PermisoServidor::with([
             'servidor',
             'jefe',
@@ -57,25 +67,16 @@ class PermisoServidorController extends Controller
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        // ── Control de acceso ────────────────────────────
-        if (!$user->hasRole(['admin-uath', 'asistente-uath'])) {
-            if (
-                $user->servidor &&
-                $user->servidor->puesto &&
-                $user->servidor->puesto->es_jefe
-            ) {
-                $unidadId = $user->servidor->unidad_administrativa_id;
-                $query->whereHas('servidor', function ($q) use ($unidadId) {
-                    $q->where('unidad_administrativa_id', $unidadId);
-                });
-            } else {
-                $servidorId = $user->servidor->id ?? 0;
-                $query->where('servidor_id', $servidorId);
-            }
-        }
+        $this->aplicarAlcance($query, $user);
 
-        $perPage  = $request->integer('per_page', 20);
+        $perPage = min(max($request->integer('per_page', 20), 1), self::PER_PAGE_MAX);
         $permisos = $query->paginate($perPage);
+
+        // La observación se tapa fila por fila con la misma regla que en el
+        // detalle: un listado no puede filtrar lo que el detalle protege.
+        $permisos->getCollection()->each(
+            fn (PermisoServidor $p) => $this->ocultarObservacionSiCorresponde($p, $user)
+        );
 
         return ApiResponse::ok($permisos, 'Listado de permisos');
     }
@@ -123,14 +124,40 @@ class PermisoServidorController extends Controller
 
     public function show(int $id, Request $request)
     {
-        $permiso = PermisoServidor::with(['servidor'])->findOrFail($id);
-        
-        $user = $request->user();
-        
-        // Regla de privacidad: Jefe no puede ver motivo de permiso personal de su subordinado
-        if ($permiso->tipo === TipoPermiso::PERSONAL && $user->servidor && $permiso->servidor_id !== $user->servidor->id) {
-            $permiso->makeHidden('observacion');
-        }
+        return $this->detalle(
+            PermisoServidor::with(['servidor'])->findOrFail($id),
+            $request
+        );
+    }
+
+    /**
+     * El mismo detalle, buscado por el folio impreso en el papel.
+     *
+     * Es lo que abre el QR del permiso. Quien lo escanea es Talento Humano con
+     * el documento firmado en la mano: no va a teclear un id que no aparece
+     * por ningún lado, pero el folio lo lleva impreso al lado del código.
+     *
+     * Va autenticado y pasa por la misma policy que el detalle por id. Hubo
+     * una versión pública de esta consulta —pensada para que un guardia
+     * comprobara la autenticidad del papel—, pero ese caso de uso no existe en
+     * la institución y un endpoint sin sesión sobre folios correlativos no se
+     * sostiene solo porque a nadie se le ocurra recorrerlos.
+     */
+    public function showPorFolio(string $folio, Request $request)
+    {
+        return $this->detalle(
+            PermisoServidor::with(['servidor', 'unidadAdministrativa', 'jefe'])
+                ->where('folio', $folio)
+                ->firstOrFail(),
+            $request
+        );
+    }
+
+    private function detalle(PermisoServidor $permiso, Request $request)
+    {
+        $this->authorize('ver', $permiso);
+
+        $this->ocultarObservacionSiCorresponde($permiso, $request->user());
 
         return ApiResponse::ok($permiso, 'Detalle del permiso');
     }
@@ -149,10 +176,37 @@ class PermisoServidorController extends Controller
         return ApiResponse::ok($permiso, 'Permiso validado por Trabajo Social.');
     }
 
+    public function rechazar(int $id, MotivoPermisoRequest $request)
+    {
+        $this->authorize('rechazar', PermisoServidor::findOrFail($id));
+
+        $permiso = $this->permisoService->rechazar(
+            $id, $request->user()->id, $request->validated()['motivo']
+        );
+
+        return ApiResponse::ok($permiso, 'Permiso rechazado por Recepción.');
+    }
+
+    public function revertirConfirmacion(int $id, MotivoPermisoRequest $request)
+    {
+        $this->authorize('revertir', PermisoServidor::findOrFail($id));
+
+        $permiso = $this->permisoService->revertirConfirmacion(
+            $id, $request->user()->id, $request->validated()['motivo']
+        );
+
+        return ApiResponse::ok(
+            $permiso,
+            'Confirmación revertida. El permiso vuelve a PENDIENTE y se devolvió el saldo descontado.'
+        );
+    }
+
     public function anular(int $id, Request $request)
     {
         $permiso = PermisoServidor::findOrFail($id);
-        
+
+        $this->authorize('anular', $permiso);
+
         $estadoActual = $permiso->estado instanceof EstadoPermiso
             ? $permiso->estado->value
             : (string) $permiso->estado;
@@ -169,7 +223,7 @@ class PermisoServidorController extends Controller
         return ApiResponse::ok($permiso, 'Permiso anulado correctamente.');
     }
 
-    public function exportar(int $id): mixed
+    public function exportar(int $id, Request $request): mixed
     {
         $permiso = PermisoServidor::with([
             'servidor.puesto.cargo',
@@ -178,11 +232,85 @@ class PermisoServidorController extends Controller
             'creadoPor',
         ])->findOrFail($id);
 
+        $this->authorize('exportar', $permiso);
+
+        // El PDF lleva el motivo impreso. Quien no puede leerlo en pantalla
+        // tampoco puede sacarlo en papel: la vista recibe la decisión ya
+        // tomada y no vuelve a razonarla.
         $pdf = app('dompdf.wrapper')
-            ->loadView('permisos.permiso-pdf', compact('permiso'));
+            ->loadView('permisos.permiso-pdf', [
+                'permiso' => $permiso,
+                'mostrarObservacion' => $request->user()->can('verObservacion', $permiso),
+            ]);
 
         $nombreArchivo = "permiso_{$permiso->folio}.pdf";
 
         return $pdf->download($nombreArchivo);
+    }
+
+    // ── Apoyos ───────────────────────────────────────────────────────
+
+    /**
+     * Recorta el listado a lo que el usuario tiene derecho a ver.
+     *
+     * Antes esto miraba dos roles escritos a mano (`admin-uath`,
+     * `asistente-uath`) y mandaba a todo lo demás a «solo lo mío», con dos
+     * efectos: máxima autoridad y auditoría —que sí tienen
+     * `ver-permisos-todos` en el seeder— no veían nada, y Recepción y Trabajo
+     * Social tenían endpoints para confirmar y validar pero ninguna pantalla
+     * donde encontrar qué confirmar o validar. Ahora manda la matriz de
+     * permisos, que es donde esas decisiones ya estaban tomadas.
+     */
+    private function aplicarAlcance(Builder $query, User $user): void
+    {
+        if ($user->can(Permiso::VER_PERMISOS_TODOS->value)) {
+            return;
+        }
+
+        $servidorId = $user->servidor_id;
+        $unidadId   = $user->servidor?->unidad_administrativa_id;
+
+        $esJefe = $unidadId && (
+            $user->can(Permiso::VER_ASISTENCIA_UNIDAD->value)
+            || (bool) ($user->servidor?->puesto?->es_jefe)
+        );
+
+        $query->where(function (Builder $q) use ($user, $servidorId, $unidadId, $esJefe) {
+            // Lo propio, siempre.
+            $q->where('servidor_id', $servidorId ?? 0);
+
+            if ($esJefe) {
+                $q->orWhere(function (Builder $sub) use ($unidadId) {
+                    $sub->where('unidad_administrativa_id', $unidadId)
+                        ->orWhere(function (Builder $sinUnidad) use ($unidadId) {
+                            $sinUnidad->whereNull('unidad_administrativa_id')
+                                ->whereHas('servidor', fn ($s) => $s->where(
+                                    'unidad_administrativa_id', $unidadId
+                                ));
+                        });
+                });
+            }
+
+            // Recepción trabaja contra el documento físico: necesita ver lo
+            // que está pendiente de confirmar, de cualquier unidad.
+            if ($user->can(Permiso::CONFIRMAR_RECEPCION->value)) {
+                $q->orWhere('estado', EstadoPermiso::PENDIENTE->value);
+            }
+
+            // Trabajo Social solo valida enfermedad y calamidad.
+            if ($user->can(Permiso::VALIDAR_TRABAJO_SOCIAL->value)) {
+                $q->orWhereIn('tipo', [
+                    TipoPermiso::ENFERMEDAD->value,
+                    TipoPermiso::CALAMIDAD->value,
+                ]);
+            }
+        });
+    }
+
+    private function ocultarObservacionSiCorresponde(PermisoServidor $permiso, User $user): void
+    {
+        if (! $user->can('verObservacion', $permiso)) {
+            $permiso->makeHidden('observacion');
+        }
     }
 }

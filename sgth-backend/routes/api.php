@@ -4,7 +4,6 @@ use App\Http\Controllers\Actividades\ActividadLaboralController;
 use App\Http\Controllers\Admin\PermisoController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Asistencia\ConsolidadoPermisoController;
-use App\Http\Controllers\Asistencia\FolioPermisoController;
 use App\Http\Controllers\Asistencia\MarcacionController;
 use App\Http\Controllers\Asistencia\PeriodoVacacionController;
 use App\Http\Controllers\Asistencia\PermisoServidorController;
@@ -140,8 +139,13 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:5,1');
     });
 
-    // Endpoint público para escanear el QR del permiso físico
-    Route::get('permisos/verificar/{folio}', [FolioPermisoController::class, 'verificar']);
+    // El QR del permiso impreso ya no abre nada público: lo escanea Talento
+    // Humano para confirmar o rechazar el documento, así que lleva a la
+    // pantalla autenticada y la consulta por folio vive dentro de la sesión
+    // (`asistencia/permisos/folio/{folio}`). La verificación anónima que había
+    // aquí servía a un caso —el guardia comprobando que el papel es auténtico—
+    // que no existe en la institución, y exponía folios correlativos a quien
+    // quisiera recorrerlos.
 
     // Endpoint público protegido criptográficamente mediante firmas temporales (URL firmada)
     Route::get('sgd/documentos/{documento}/descargar', [DocumentoInstitucionalController::class, 'descargar'])
@@ -493,16 +497,38 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::prefix('permisos')->group(function () {
             Route::get('/', [PermisoServidorController::class, 'index']);
             Route::post('/', [PermisoServidorController::class, 'store']);
-            Route::get('{id}', [PermisoServidorController::class, 'show']);
+            // Antes que '{id}', y con '{id}' restringido a números: si no, el
+            // comodín se traga 'folio/PER-2026-00045' y lo intenta buscar como
+            // id. Es el mismo tropiezo que ya costó un arreglo en Nómina y
+            // Actividades (933de6c).
+            Route::get('folio/{folio}', [PermisoServidorController::class, 'showPorFolio'])
+                ->name('asistencia.permisos.por-folio');
+
+            Route::get('{id}', [PermisoServidorController::class, 'show'])
+                ->whereNumber('id');
             Route::get('{id}/exportar', [PermisoServidorController::class, 'exportar'])
+                ->whereNumber('id')
                 ->name('asistencia.permisos.exportar');
             Route::put('{id}/anular', [PermisoServidorController::class, 'anular'])
+                ->whereNumber('id')
                 ->middleware('role:admin-uath|asistente-uath');
 
             Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar'])
                 ->middleware('role:recepcion|admin-uath|asistente-uath');
             Route::post('{id}/validar-ts', [PermisoServidorController::class, 'validar'])
                 ->middleware('role:trabajo-social|admin-uath');
+
+            // Recepción rechaza el documento físico que llega mal. El estado
+            // RECHAZADO estaba en el enum desde el principio y nada lo asignaba.
+            Route::post('{id}/rechazar', [PermisoServidorController::class, 'rechazar'])
+                ->middleware('role:recepcion|admin-uath|asistente-uath');
+
+            // Deshace una confirmación hecha por error y devuelve el saldo
+            // vacacional descontado. Sin rol de ruta: lo decide la policy,
+            // porque el permiso que exige (anular-permiso) hoy solo lo tiene
+            // admin-uath y ponerlo también aquí lo diría dos veces.
+            Route::post('{id}/revertir-confirmacion',
+                [PermisoServidorController::class, 'revertirConfirmacion']);
         });
     });
 
@@ -544,7 +570,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             )->name('periodos.generar-todos');
         });
 
+    // El consolidado es un informe de toda la institución: nombres, cédulas,
+    // unidades y horas de ausencia de cada servidor. Estaba abierto a
+    // cualquier usuario autenticado —un servidor raso podía descargarlo en
+    // Excel—. Se cierra al mismo permiso que gobierna «ver los permisos de
+    // todos», que es exactamente lo que este informe hace, en agregado.
     Route::prefix('asistencia/consolidado-permisos')
+        ->middleware('permission:ver-permisos-todos')
         ->group(function () {
             Route::get(
                 '/',

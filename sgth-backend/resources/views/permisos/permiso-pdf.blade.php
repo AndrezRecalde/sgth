@@ -44,9 +44,15 @@
   $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i:s');
   $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i:s');
 
-  $observacion = mb_strtoupper(
-    $permiso->observacion ?: 'SIN OBSERVACIONES', 'UTF-8'
-  );
+  // Quien imprime no siempre puede leer el motivo: un permiso por enfermedad
+  // lleva un dato de salud y uno personal, un asunto privado. La decisión la
+  // toma la policy y llega resuelta desde el controlador; aquí no se razona.
+  // Por si alguien renderiza esta vista sin pasarla, el valor seguro es callar.
+  $puedeVerObservacion = $mostrarObservacion ?? false;
+
+  $observacion = $puedeVerObservacion
+    ? mb_strtoupper($permiso->observacion ?: 'SIN OBSERVACIONES', 'UTF-8')
+    : 'RESERVADO';
 
   $folio = $permiso->folio ?? 'S/N';
 
@@ -57,7 +63,15 @@
   // QR en formato SVG para evitar fallos si no hay Imagick
   $qrSrc = null;
   try {
-    $urlQr = config('app.url') . "/api/v1/asistencia/permisos/verificar/{$folio}";
+    // El QR es la herramienta de Talento Humano: se escanea el papel firmado y
+    // se confirma o se rechaza ahí mismo, sin buscar el folio a mano en el
+    // listado. Por eso lleva a la pantalla del permiso dentro del sistema y no
+    // a un endpoint de la API — quien escanea es una persona con un documento
+    // en la mano, y necesita botones, no JSON.
+    //
+    // Apuntaba a `/api/v1/asistencia/permisos/verificar/{folio}`, una ruta que
+    // nunca existió: todo QR impreso hasta ahora daba 404.
+    $urlQr = rtrim(config('app.frontend_url'), '/') . "/sgth/asistencia/permisos/{$folio}";
     $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
       ->size(100)->margin(1)->generate($urlQr);
     if (!empty($qrSvg)) {

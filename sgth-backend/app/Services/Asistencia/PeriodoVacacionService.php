@@ -350,6 +350,52 @@ class PeriodoVacacionService
     }
 
     /**
+     * El período abierto de un año, o null si no hay ninguno.
+     *
+     * `descontarDias()` hace `return` en silencio cuando no lo encuentra, que
+     * es correcto para una vacación ya aprobada —no se va a deshacer por eso—
+     * pero deja un agujero en permisos: el permiso personal se concede, no
+     * descuenta nada, y las horas desaparecen. Quien necesite decidir *antes*
+     * de conceder pregunta aquí.
+     */
+    public function periodoAbierto(int $servidorId, int $anio): ?PeriodoVacacion
+    {
+        return PeriodoVacacion::where('servidor_id', $servidorId)
+            ->where('anio', $anio)
+            ->where('estado', 'abierto')
+            ->first();
+    }
+
+    /**
+     * Devuelve días a un período: el inverso exacto de `descontarDias()`.
+     *
+     * Hace falta para deshacer una confirmación de permiso hecha por error;
+     * hasta ahora el descuento era un camino de una sola dirección.
+     *
+     * Ojo con `saldo_acumulado`: al descontar se le aplica un `max(0, ...)`,
+     * así que si ya estaba en cero el descuento no se registró ahí y esta
+     * devolución lo sube. La asimetría viene del modelo de períodos, no de
+     * aquí — y de que un permiso descuente a la vez de `dias_utilizados` y de
+     * `saldo_acumulado`, que parece contarlo dos veces. Se respeta el
+     * comportamiento existente en vez de corregirlo de paso.
+     */
+    public function devolverDias(
+        int $servidorId,
+        float $dias,
+        int $anio
+    ): void {
+        $periodo = $this->periodoAbierto($servidorId, $anio);
+
+        if (!$periodo || $dias <= 0) return;
+
+        $periodo->dias_utilizados = max(0, $periodo->dias_utilizados - $dias);
+        $periodo->dias_saldo      = max(0, $periodo->dias_generados - $periodo->dias_utilizados);
+        $periodo->saldo_acumulado = $periodo->saldo_acumulado + $dias;
+
+        $periodo->save();
+    }
+
+    /**
      * Devuelve el saldo total disponible del servidor
      * sumando todos los períodos abiertos.
      */

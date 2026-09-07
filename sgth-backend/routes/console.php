@@ -64,6 +64,21 @@ Schedule::command('sanctum:prune-expired --hours=24')
     ->dailyAt('03:30')
     ->onOneServer();
 
+use App\Jobs\Asistencia\VencerPermisosJob;
+
+// Las 72 horas laborables del Art. 33 de la LOSEP: el permiso cuyo respaldo
+// físico no llegó a Recepción dentro del plazo pasa a falta injustificada.
+//
+// El job existía desde el primer sprint del módulo y nunca se programó, así
+// que la regla solo corría dentro de su propio test: en producción ningún
+// permiso caducaba jamás y todos quedaban «pendientes» para siempre. Se corre
+// en días laborables porque el plazo se cuenta en días hábiles; un sábado no
+// vence nada y no hay nada que revisar.
+Schedule::job(new VencerPermisosJob)
+    ->weekdays()
+    ->dailyAt('06:15')
+    ->onOneServer();
+
 use App\Jobs\GenerarPeriodosAnualesJob;
 
 Schedule::call(function () {
