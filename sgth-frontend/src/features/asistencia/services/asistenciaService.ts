@@ -180,6 +180,7 @@ export const asistenciaService = {
 
   vacaciones: {
     listar: (params?: {
+      page?:                     number
       folio?:                    string
       estado?:                   string
       motivo?:                   string

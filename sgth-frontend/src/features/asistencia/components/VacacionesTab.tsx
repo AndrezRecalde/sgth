@@ -1,349 +1,80 @@
 "use client";
 
-import React from "react";
 import { useState } from "react";
-import {
-  Stack,
-  Group,
-  Button,
-  Text,
-  TextInput,
-  Chip,
-  ActionIcon,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  IconBeach,
-  IconCheck,
-  IconX,
-  IconPrinter,
-  IconSearch,
-  IconCubePlus,
-} from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
-import {
-  DataState,
-  SgthTable,
-  StatusBadge,
-  TableActions,
-  Toolbar,
-  confirmar,
-} from "@/components/ui";
-import { SEMANTIC_COLOR, type SemanticTone } from "@/config/design.tokens";
-import { useContainedInput } from "@/hooks/useContainedInput";
+import { Stack } from "@mantine/core";
+import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
+import { IconBeach } from "@tabler/icons-react";
+import { DataState, PAGINACION_ES, SgthTable } from "@/components/ui";
 import { VacacionModal } from "./VacacionModal";
+import {
+  FILTROS_INICIALES,
+  VacacionesFiltros,
+  type FiltrosVacacion,
+} from "./VacacionesFiltros";
+import { getVacacionesColumns } from "./vacaciones.columns";
 import { useVacaciones } from "../hooks/useVacaciones";
 import { useVacacionMutations } from "../hooks/useVacacionMutations";
-import { asistenciaService } from "../services/asistenciaService";
-import type { Vacacion, EstadoVacacion, MotivoVacacion } from "@/types/api";
-import type { DataTableColumn } from "mantine-datatable";
+import { useExportarVacacion } from "../hooks/useExportarVacacion";
+import type { Vacacion } from "@/types/api";
 
-const TONO_ESTADO: Record<EstadoVacacion, SemanticTone> = {
-  pendiente: "warning",
-  aprobada: "success",
-  rechazada: "danger",
-  gozada: "neutral",
-};
-const ESTADO_LABELS: Record<EstadoVacacion, string> = {
-  pendiente: "Pendiente",
-  aprobada: "Aprobada",
-  rechazada: "Rechazada",
-  gozada: "Gozada",
-};
-const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
-  vacaciones_anuales: "Vacaciones Anuales",
-  permiso_cargo_vacaciones: "Cargo a Vacaciones",
-  licencia_sin_goce: "Licencia sin Goce",
-  matrimonio: "Matrimonio",
-  capacitacion: "Capacitación",
-  enfermedad: "Enfermedad",
-  maternidad: "Maternidad",
-  paternidad: "Paternidad",
-  estudios_sin_remuneracion: "Estudios sin Rem.",
-  calamidad_domestica: "Calamidad",
-  licencia_con_goce: "Licencia con Goce",
-};
+// El folio escrito entraba directo en la clave de consulta: cada tecla pediría
+// un listado paginado entero, y solo importa el último.
+const RETARDO_BUSQUEDA_MS = 300;
+
+/** El mismo tamaño de página que el resto de los listados del sistema. */
+const POR_PAGINA = 15;
 
 export function VacacionesTab() {
   const [opened, { open, close }] = useDisclosure(false);
-  const contained = useContainedInput("sm");
 
-  // ── Filtros ──────────────────────────────────────
-  const [filtroEstado, setFiltroEstado] = useState<string>("pendiente");
-  const [busquedaFolio, setBusquedaFolio] = useState<string>("");
-  const [folioQuery, setFolioQuery] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const [filtros, setFiltros] = useState<FiltrosVacacion>(FILTROS_INICIALES);
+  const { exportar, exportandoId } = useExportarVacacion();
 
-  const filtros = {
-    estado: filtroEstado === "todos" ? undefined : filtroEstado,
-    folio: folioQuery || undefined,
-    per_page: 50,
+  const [folioConRetardo] = useDebouncedValue(
+    filtros.folio,
+    RETARDO_BUSQUEDA_MS,
+  );
+
+  // Cambiar un filtro sin volver a la primera página consultaría esa misma
+  // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
+  // saldría en blanco aunque hubiera coincidencias.
+  const cambiarFiltros = (cambio: Partial<FiltrosVacacion>) => {
+    setFiltros((actuales) => ({ ...actuales, ...cambio }));
+    setPage(1);
   };
 
-  const { data, isLoading, error } = useVacaciones(filtros);
-  const lista = (
-    Array.isArray(data)
-      ? data
-      : ((data as { data?: Vacacion[] } | null)?.data ?? [])
-  ) as Vacacion[];
+  const { data, isLoading, error } = useVacaciones({
+    page,
+    per_page: POR_PAGINA,
+    estado: filtros.estado === "todos" ? undefined : filtros.estado,
+    motivo: filtros.motivo ?? undefined,
+    unidad_administrativa_id: filtros.unidadId
+      ? Number(filtros.unidadId)
+      : undefined,
+    fecha_desde: filtros.fechaDesde ?? undefined,
+    fecha_hasta: filtros.fechaHasta ?? undefined,
+    folio: folioConRetardo || undefined,
+  });
+
+  const lista = (data?.data ?? []) as Vacacion[];
 
   const { actualizar } = useVacacionMutations();
-  const [exportandoId, setExportandoId] = useState<number | null>(null);
 
-  const handleExportar = async (id: number) => {
-    setExportandoId(id);
-    notifications.show({
-      id: `export-vacacion-${id}`,
-      title: "Exportando solicitud...",
-      message: "Generando el documento PDF, espere.",
-      color: "blue",
-      loading: true,
-      autoClose: false,
-      withCloseButton: false,
-    });
-    try {
-      const blob = await asistenciaService.vacaciones.exportar(id);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `vacacion_${id}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      notifications.update({
-        id: `export-vacacion-${id}`,
-        title: "PDF descargado",
-        message: "La solicitud fue exportada correctamente.",
-        color: "emerald",
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
-    } catch {
-      notifications.update({
-        id: `export-vacacion-${id}`,
-        title: "Error",
-        message: "No se pudo exportar la solicitud.",
-        color: "red",
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-      });
-    } finally {
-      setExportandoId(null);
-    }
-  };
-
-  const columns: DataTableColumn<Vacacion>[] = [
-    {
-      accessor: "folio",
-      title: "Folio",
-      width: 145,
-      render: ({ folio }) => (
-        <Text size="sm" ff="monospace" fw={500}>
-          {folio ?? "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "servidor",
-      title: "Servidor",
-      render: (v) => {
-        const s = v.servidor;
-        if (!s)
-          return (
-            <Text size="sm" c="dimmed">
-              —
-            </Text>
-          );
-        return (
-          <Text size="sm">
-            {[s.apellido, s.nombre].filter(Boolean).join(" ")}
-          </Text>
-        );
-      },
-    },
-    {
-      accessor: "motivo",
-      title: "Motivo",
-      render: ({ motivo }) => (
-        <Text size="sm">{MOTIVO_LABELS[motivo] ?? motivo}</Text>
-      ),
-    },
-    {
-      accessor: "fecha_inicio",
-      title: "Desde",
-      width: 110,
-      render: ({ fecha_inicio }) => (
-        <Text size="sm">
-          {fecha_inicio
-            ? new Date(fecha_inicio).toLocaleDateString("es-EC", {
-                timeZone: "UTC",
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })
-            : "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "fecha_fin",
-      title: "Hasta",
-      width: 110,
-      render: ({ fecha_fin }) => (
-        <Text size="sm">
-          {fecha_fin
-            ? new Date(fecha_fin).toLocaleDateString("es-EC", {
-                timeZone: "UTC",
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })
-            : "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "dias_solicitados",
-      title: "Días",
-      width: 70,
-      render: ({ dias_solicitados }) => (
-        <Text size="sm" ta="center">
-          {dias_solicitados}
-        </Text>
-      ),
-    },
-    {
-      accessor: "estado",
-      title: "Estado",
-      width: 110,
-      render: ({ estado }) => (
-        <StatusBadge tone={TONO_ESTADO[estado] ?? "neutral"}>
-          {ESTADO_LABELS[estado] ?? estado}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: "acciones",
-      title: "",
-      width: 50,
-      render: (v) => (
-        <TableActions
-          actions={[
-            {
-              label:
-                exportandoId === v.id ? "Exportando..." : "Imprimir solicitud",
-              icon: <IconPrinter size={14} />,
-              color: "blue",
-              onClick: () => handleExportar(v.id),
-            },
-            {
-              label: "Aprobar",
-              icon: <IconCheck size={14} />,
-              color: "emerald",
-              onClick: () =>
-                actualizar.mutate({
-                  id: v.id,
-                  data: { estado: "aprobada" },
-                }),
-              hidden: v.estado !== "pendiente",
-            },
-            {
-              label: "Rechazar",
-              icon: <IconX size={14} />,
-              color: "red",
-              onClick: () =>
-                confirmar({
-                  title: "Rechazar solicitud",
-                  message:
-                    "Se rechazará esta solicitud de vacaciones y el servidor será notificado.",
-                  destructiva: true,
-                  confirmLabel: "Rechazar",
-                  onConfirm: () =>
-                    actualizar.mutate({
-                      id: v.id,
-                      data: { estado: "rechazada" },
-                    }),
-                }),
-              hidden: v.estado !== "pendiente",
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const columns = getVacacionesColumns({
+    exportandoId,
+    onExportar: (id) => exportar(id),
+    onAprobar: (id) => actualizar.mutate({ id, data: { estado: "aprobada" } }),
+    onRechazar: (id) => actualizar.mutate({ id, data: { estado: "rechazada" } }),
+  });
 
   return (
     <Stack gap="md">
-      <Toolbar
-        actions={
-          <>
-            <Button
-              variant="light"
-              leftSection={<IconSearch size={14} />}
-              onClick={() => setFolioQuery(busquedaFolio)}
-            >
-              Buscar
-            </Button>
-            <Button
-              color="emerald"
-              variant="light"
-              leftSection={<IconCubePlus size={16} />}
-              onClick={open}
-            >
-              Nueva solicitud
-            </Button>
-          </>
-        }
-      >
-        <TextInput
-          label="Folio"
-          placeholder="Ej: VAC-2026-00001"
-          {...contained}
-          value={busquedaFolio}
-          onChange={(e) => setBusquedaFolio(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") setFolioQuery(busquedaFolio);
-          }}
-          style={{ minWidth: 280 }}
-          rightSection={
-            busquedaFolio && (
-              <ActionIcon
-                size="sm"
-                color="gray"
-                variant="subtle"
-                onClick={() => {
-                  setBusquedaFolio("");
-                  setFolioQuery("");
-                }}
-              >
-                <IconX size={12} />
-              </ActionIcon>
-            )
-          }
-        />
-        <Group gap="xs">
-          {[
-            { value: "todos", label: "Todos" },
-            { value: "pendiente", label: "Pendiente" },
-            { value: "aprobada", label: "Aprobada" },
-            { value: "rechazada", label: "Rechazada" },
-            { value: "gozada", label: "Gozada" },
-          ].map((op) => (
-            <Chip
-              key={op.value}
-              // Mismo tono semántico que la etiqueta de estado de la fila.
-              color={SEMANTIC_COLOR[
-                TONO_ESTADO[op.value as EstadoVacacion] ?? "neutral"
-              ]}
-              checked={filtroEstado === op.value}
-              onChange={() => setFiltroEstado(op.value)}
-            >
-              {op.label}
-            </Chip>
-          ))}
-        </Group>
-      </Toolbar>
+      <VacacionesFiltros
+        filtros={filtros}
+        onCambiar={cambiarFiltros}
+        onNueva={open}
+      />
 
       <DataState
         loading={isLoading}
@@ -352,14 +83,24 @@ export function VacacionesTab() {
         emptyProps={{
           icon: IconBeach,
           title: "Sin solicitudes de vacaciones",
-          description: folioQuery
-            ? `No se encontraron solicitudes con folio «${folioQuery}»`
-            : "No hay solicitudes en este estado.",
+          description: folioConRetardo
+            ? `No se encontraron solicitudes con folio «${folioConRetardo}»`
+            : "No hay solicitudes que coincidan con los filtros.",
         }}
       >
         <SgthTable
+          // Solo `paginationText`: `recordsPerPageLabel` pertenece a la
+          // variante de mantine-datatable que además exige
+          // `recordsPerPageOptions` y `onRecordsPerPageChange`, y sin ellas no
+          // compila. Es la misma razón por la que `PermisosTab` no usa
+          // `PAGINACION_ES` entero.
+          paginationText={PAGINACION_ES.paginationText}
           records={lista}
           columns={columns}
+          totalRecords={data?.total ?? lista.length}
+          recordsPerPage={POR_PAGINA}
+          page={page}
+          onPageChange={setPage}
           minHeight={200}
         />
       </DataState>
