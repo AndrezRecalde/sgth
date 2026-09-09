@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
+use App\Enums\EspecialidadAtencion;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreConsultaMedicaRequest;
 use App\Http\Requests\Dispensario\UpdateConsultaMedicaRequest;
@@ -10,6 +11,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 final class ConsultaMedicaController extends Controller
 {
@@ -17,8 +19,52 @@ final class ConsultaMedicaController extends Controller
         private readonly HistoriaClinicaServiceInterface $historiaService
     ) {}
 
+    /** Techo del paginador, el mismo que aplica el listado de recetas. */
+    private const PER_PAGE_MAX = 100;
+
+    /**
+     * Cuántas consultas trae una página.
+     *
+     * El valor iba directo a `paginate()`, y `limit()` de Laravel ignora los
+     * negativos: `?per_page=-1` salía sin LIMIT y devolvía la tabla entera de
+     * una vez, con las notas clínicas de todos los pacientes descifradas en la
+     * misma respuesta.
+     */
+    private function porPagina(Request $request): int
+    {
+        return min(
+            max($request->integer('per_page', 20), 1),
+            self::PER_PAGE_MAX
+        );
+    }
+
+    /**
+     * Revisa los filtros antes de que lleguen a la consulta.
+     *
+     * El listado no validaba nada —a diferencia de `store`, que sí— y eso se
+     * notaba de dos maneras, las mismas que ya se corrigieron en el listado de
+     * recetas: `?fecha_desde=hola` viajaba tal cual hasta Postgres y volvía
+     * como un 500 («invalid input syntax for type date»), y
+     * `?especialidad=inventado` respondía 200 con la lista vacía, así que
+     * quien se equivocaba escribiendo concluía que el paciente no tenía
+     * consultas. En una historia clínica eso es lo peor que se puede decir.
+     */
+    private function validarFiltros(Request $request): void
+    {
+        $request->validate([
+            'historia_clinica_id' => ['sometimes', 'integer'],
+            'medico_id'           => ['sometimes', 'integer'],
+            'especialidad'        => ['sometimes', Rule::enum(EspecialidadAtencion::class)],
+            'fecha_desde'         => ['sometimes', 'date'],
+            'fecha_hasta'         => ['sometimes', 'date', 'after_or_equal:fecha_desde'],
+            'per_page'            => ['sometimes', 'integer'],
+        ]);
+    }
+
     public function index(Request $request): JsonResponse
     {
+        $this->validarFiltros($request);
+
         $query = ConsultaMedica::with([
             'historiaClinica.servidor',
             'historiaClinica.cargaFamiliar',
@@ -26,7 +72,16 @@ final class ConsultaMedicaController extends Controller
             'recetasMedicas',
             'diagnosticoCie10Principal',
             'diagnosticosSecundarios.diagnostico',
-        ])->orderBy('fecha_consulta', 'desc');
+        ])
+            ->orderBy('fecha_consulta', 'desc')
+            // La hora ordena dentro del día, y el id desempata lo que quede.
+            // Sin esto el orden era solo por `fecha_consulta`, que es un `date`:
+            // las consultas de un mismo día empataban y Postgres repartía las
+            // páginas como le convenía, sin tener por qué coincidir entre sí.
+            // El historial de un paciente con varias atenciones el mismo día
+            // repetía unas y se saltaba otras al pasar de página.
+            ->orderBy('hora_consulta', 'desc')
+            ->orderBy('id', 'desc');
 
         if ($request->filled('historia_clinica_id')) {
             $query->where(
@@ -60,9 +115,7 @@ final class ConsultaMedicaController extends Controller
             );
         }
 
-        $consultas = $query->paginate(
-            $request->integer('per_page', 20)
-        );
+        $consultas = $query->paginate($this->porPagina($request));
 
         return ApiResponse::ok($consultas, 'Listado de consultas.');
     }
@@ -151,15 +204,6 @@ final class ConsultaMedicaController extends Controller
         ])->findOrFail($id);
 
         return ApiResponse::ok($consulta->versiones);
-    }
-
-    public function marcarEnConsulta(
-        Request $request,
-        int $id
-    ): JsonResponse {
-        $agenda = \App\Models\Dispensario\AgendaMedica::findOrFail($id);
-        $agenda->update(['estado' => 'en_consulta']);
-        return ApiResponse::ok($agenda, 'Turno en consulta.');
     }
 
     public function show(int $id): JsonResponse

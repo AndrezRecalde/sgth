@@ -17,6 +17,14 @@ enum EstadoReceta: string
     case DESPACHADA_COMPLETA = 'despachada_completa';
     case ANULADA             = 'anulada';
 
+    /**
+     * Todo lo recetado se adquiere fuera: la farmacia no maneja ninguno de los
+     * medicamentos. Es un estado terminal desde el momento de emitirse, y
+     * existe para que una receta así no se quede eternamente en la cola del
+     * mostrador esperando una entrega que nadie puede hacer.
+     */
+    case EXTERNA             = 'externa';
+
     /** @return list<string> */
     public static function valores(): array
     {

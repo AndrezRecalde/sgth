@@ -1,23 +1,25 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import {
-  Stack, Text, Button, Group, Badge,
+  Stack, Text, Button, Group,
   Card, ThemeIcon,
 } from '@mantine/core'
 import { IconPill, IconPlus } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { recetaService } from '../services/recetaService'
+import { esItemExterno, nombreDeItem, recetaService } from '../services/recetaService'
 import { RecetaModal } from './RecetaModal'
 import { EditarItemRecetaModal } from './EditarItemRecetaModal'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useEmitirReceta, useAccionesItem } from '../hooks/useReceta'
+import { useAuthStore } from '@/store/auth.store'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
+import type { SemanticTone } from '@/config/design.tokens'
 import type { ItemReceta, RecetaMedica } from '../services/recetaService'
 import {
   IconEdit, IconTrash,
@@ -34,12 +36,22 @@ function formatFecha(fecha: string): string {
   })
 }
 
-const ESTADO_RECETA: Record<string, { label: string; color: string }> = {
-  pendiente:           { label: 'Pendiente',  color: 'gray'   },
-  despachada_parcial:  { label: 'Parcial',    color: 'orange' },
-  despachada_completa: { label: 'Despachada', color: 'emerald'},
-  anulada:             { label: 'Anulada',    color: 'red'    },
+const ESTADO_RECETA: Record<string, { label: string; tone: SemanticTone }> = {
+  pendiente:           { label: 'Pendiente',  tone: 'neutral' },
+  despachada_parcial:  { label: 'Parcial',    tone: 'warning' },
+  despachada_completa: { label: 'Despachada', tone: 'success' },
+  anulada:             { label: 'Anulada',    tone: 'danger'  },
+  // No es un problema ni un logro: la farmacia no tiene nada que hacer con
+  // ella, y con eso queda cerrada.
+  externa:             { label: 'Externa',    tone: 'neutral' },
 }
+
+/**
+ * Estados en los que la receta todavía se puede retocar, los mismos que acepta
+ * el servidor. `externa` es terminal para la farmacia, no para el médico: que
+ * nada se entregue aquí no impide corregir la dosis de lo recetado.
+ */
+const EDITABLES = ['pendiente', 'externa']
 
 function ItemsRecetaTable({
   receta,
@@ -52,22 +64,39 @@ function ItemsRecetaTable({
   const [editOpened,
     { open: abrirEdit, close: cerrarEdit }] = useDisclosure(false)
   const { quitarItem } = useAccionesItem(consulta.id)
-  const esPendiente = receta.estado === 'pendiente'
+  const { usuario } = useAuthStore()
+
+  // Retocar la receta es cosa de quien la firmó, y el servidor lo rechaza con
+  // un 403 aunque se llame a la API a mano. Aquí solo decide si se ofrecen los
+  // botones: enseñar un «Editar» que siempre va a fallar es peor que no
+  // enseñarlo.
+  const puedeRetocar = EDITABLES.includes(receta.estado)
+    && (usuario?.id === undefined || consulta.medico_id === usuario.id)
 
   const columns = [
     {
-      accessor: 'nombre_medicina',
+      accessor: 'medicina',
       title:    'Medicina',
       render: (item: ItemReceta) => (
-        <Stack gap={0}>
-          <Text size="sm" fw={500}>
-            {item.inventario?.nombre ?? item.nombre_medicina ?? '—'}
-          </Text>
-          {item.inventario?.concentracion && (
+        // La insignia va debajo del nombre y no a su lado: esta columna se
+        // estrecha con el ancho de la pantalla, y en línea quedaba cortada por
+        // el borde justo en el aviso que hay que leer.
+        <Stack gap={2} align="flex-start">
+          <Text size="sm" fw={500}>{nombreDeItem(item)}</Text>
+          {esItemExterno(item) ? (
+            <>
+              <StatusBadge tone="warning" size="xs">
+                Fuera de farmacia
+              </StatusBadge>
+              <Text size="xs" c="dimmed">
+                El paciente lo adquiere fuera del dispensario.
+              </Text>
+            </>
+          ) : item.inventario?.concentracion ? (
             <Text size="xs" c="dimmed">
               {item.inventario.concentracion}
             </Text>
-          )}
+          ) : null}
         </Stack>
       ),
     },
@@ -103,7 +132,7 @@ function ItemsRecetaTable({
         <Text size="sm">{item.duracion}</Text>
       ),
     },
-    ...(esPendiente ? [{
+    ...(puedeRetocar ? [{
       accessor: 'acciones',
       title:    '',
       width:    50,
@@ -198,7 +227,7 @@ export function TabReceta({ turno, consulta }: Props) {
         <Stack gap="sm">
           {recetas.map((receta) => {
             const estadoConfig = ESTADO_RECETA[receta.estado]
-              ?? { label: receta.estado, color: 'gray' }
+              ?? { label: receta.estado, tone: 'neutral' as SemanticTone }
             return (
               <Card key={receta.id} withBorder radius="md" p="sm">
                 <Stack gap="xs">
@@ -213,13 +242,9 @@ export function TabReceta({ turno, consulta }: Props) {
                         {formatFecha(receta.fecha_emision)}
                       </Text>
                     </Group>
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color={estadoConfig.color}
-                    >
+                    <StatusBadge tone={estadoConfig.tone}>
                       {estadoConfig.label}
-                    </Badge>
+                    </StatusBadge>
                   </Group>
 
                   {receta.indicaciones_generales && (

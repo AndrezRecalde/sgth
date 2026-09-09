@@ -7,12 +7,15 @@ import {
 import { IconTrash } from '@tabler/icons-react'
 import { Controller, type Control } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { StatusBadge } from '@/components/ui'
 import type { RecetaFormData } from '../schemas/receta.schema'
 
 interface Props {
   index:      number
   control:    Control<RecetaFormData>
   nombre:     string
+  /** La farmacia no lo maneja: no hay ficha de inventario ni stock que mirar. */
+  externo:    boolean
   stock:      number
   concentracion?: string | null
   presentacion?:  string | null
@@ -20,7 +23,7 @@ interface Props {
 }
 
 export function ItemRecetaRow({
-  index, control, nombre, stock,
+  index, control, nombre, externo, stock,
   concentracion, presentacion, onEliminar,
 }: Props) {
   const contained = useContainedInput()
@@ -31,16 +34,31 @@ export function ItemRecetaRow({
       radius="md"
       p="sm"
       style={{
-        borderLeft: '3px solid var(--mantine-color-blue-6)',
+        borderLeft: `3px solid var(--mantine-color-${
+          externo ? 'amber' : 'blue'
+        }-6)`,
       }}
     >
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start">
-          <Stack gap={0}>
-            <Text size="sm" fw={500}>{nombre}</Text>
+          <Stack gap={4}>
+            <Group gap="xs" wrap="nowrap">
+              <Text size="sm" fw={500}>{nombre}</Text>
+              {externo && (
+                <StatusBadge tone="warning" size="xs">
+                  Fuera de farmacia
+                </StatusBadge>
+              )}
+            </Group>
             <Text size="xs" c="dimmed">
-              {[concentracion, presentacion].filter(Boolean).join(' · ')}
-              {stock !== undefined && ` · Stock: ${stock} unid.`}
+              {externo
+                ? 'El dispensario no lo maneja: el paciente lo adquiere fuera.'
+                : [
+                    [concentracion, presentacion].filter(Boolean).join(' · '),
+                    stock === 0
+                      ? 'Sin existencias hoy'
+                      : `Stock: ${stock} unid.`,
+                  ].filter(Boolean).join(' · ')}
             </Text>
           </Stack>
           <ActionIcon

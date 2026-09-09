@@ -10,7 +10,10 @@ export interface DiagnosticoSecundario {
 
 export interface ItemRecetaDetalle {
   id:                     number
-  inventario_medicina_id: number
+  /** Null en un medicamento que la farmacia no maneja. */
+  inventario_medicina_id: number | null
+  /** El nombre escrito a mano cuando el medicamento está fuera del catálogo. */
+  medicamento_externo?:   string | null
   cantidad_prescrita:     number
   cantidad_despachada:    number
   estado:                 string

@@ -12,6 +12,8 @@ const TONO_ESTADO: Record<string, SemanticTone> = {
   despachada_parcial:  'info',
   despachada_completa: 'success',
   anulada:             'danger',
+  // Nada que entregar aquí: ni es trabajo pendiente ni salió mal.
+  externa:             'neutral',
 }
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -19,7 +21,21 @@ const ESTADO_LABELS: Record<string, string> = {
   despachada_parcial:  'Parcial',
   despachada_completa: 'Completada',
   anulada:             'Anulada',
+  externa:             'Externa',
 }
+
+/**
+ * Estados en los que no queda nada que despachar. `externa` entra desde que se
+ * emite: todo lo recetado se adquiere fuera del dispensario.
+ */
+const SIN_DESPACHO = ['despachada_completa', 'anulada', 'externa']
+
+/**
+ * Anular cierra lo que falta por entregar, así que no procede sobre una receta
+ * ya cerrada. Una `externa` sí se anula —es la única vía para retirarla cuando
+ * el médico cambia el tratamiento— y el servidor la acepta igual.
+ */
+const NO_ANULABLES = ['despachada_completa', 'anulada']
 
 export function getNombrePaciente(r: RecetaMedica): string {
   const historia = r.consulta_medica?.historia_clinica
@@ -105,8 +121,7 @@ export function getRecetasColumns(
       title:    '',
       width:    50,
       render: (r) => {
-        const cerrada = r.estado === 'despachada_completa'
-          || r.estado === 'anulada'
+        const cerrada = SIN_DESPACHO.includes(r.estado)
         return (
           <TableActions actions={[
             {
@@ -117,9 +132,7 @@ export function getRecetasColumns(
               color:   cerrada ? 'blue' : 'emerald',
               onClick: () => onAbrir(r),
             },
-            // Anular cierra lo que falta por entregar, así que solo tiene
-            // sentido mientras quede algo pendiente.
-            ...(cerrada ? [] : [{
+            ...(NO_ANULABLES.includes(r.estado) ? [] : [{
               label:   'Anular receta',
               icon:    <IconBan size={14} />,
               color:   'orange',

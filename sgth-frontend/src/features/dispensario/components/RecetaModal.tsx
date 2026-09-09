@@ -73,7 +73,7 @@ export function RecetaModal({
       setMedicinaMeta((prev) => ({
         ...prev,
         [id]: {
-          stock:         medicina.stock_actual,
+          stock:         medicina.stock_despachable ?? medicina.stock_actual,
           concentracion: medicina.concentracion,
           presentacion:  medicina.presentacion,
         },
@@ -87,7 +87,25 @@ export function RecetaModal({
 
     append({
       inventario_medicina_id: id,
-      nombre_medicina: nombre,
+      medicamento_externo: null,
+      nombre,
+      cantidad_prescrita: 1,
+      dosis: "",
+      frecuencia: "",
+      duracion: "",
+      observaciones: "",
+    });
+  };
+
+  /**
+   * Un medicamento que la farmacia no maneja. No lleva ficha de inventario, así
+   * que tampoco hay stock que consultar: el paciente lo adquiere fuera.
+   */
+  const handleMedicamentoExterno = (nombre: string) => {
+    append({
+      inventario_medicina_id: null,
+      medicamento_externo: nombre,
+      nombre,
       cantidad_prescrita: 1,
       dosis: "",
       frecuencia: "",
@@ -113,6 +131,7 @@ export function RecetaModal({
         indicaciones_generales: values.indicaciones_generales || null,
         items: values.items.map((item) => ({
           inventario_medicina_id: item.inventario_medicina_id,
+          medicamento_externo: item.medicamento_externo,
           cantidad_prescrita: item.cantidad_prescrita,
           dosis: item.dosis,
           frecuencia: item.frecuencia,
@@ -175,9 +194,13 @@ export function RecetaModal({
               Medicamentos
             </Text>
 
+            {/* Se ofrece el catálogo entero, agotados incluidos: lo que hay hoy
+                en el estante no decide el tratamiento. El despacho ya entrega
+                lo que puede y avisa de lo que no. */}
             <BuscarMedicinaSelect
               onSeleccionar={handleSeleccionarMedicina}
-              onCrearNueva={() => {}}
+              onMedicamentoExterno={handleMedicamentoExterno}
+              incluirAgotadas
             />
 
             {fields.length === 0 ? (
@@ -187,19 +210,24 @@ export function RecetaModal({
                 variant="light"
               >
                 <Text size="xs">
-                  Busca y agrega al menos un medicamento a la receta.
+                  Busca y agrega al menos un medicamento a la receta. Si el
+                  dispensario no lo maneja, escribe su nombre y elige
+                  «Recetar como medicamento externo».
                 </Text>
               </Alert>
             ) : (
               <Stack gap="sm">
                 {fields.map((field, i) => {
-                  const meta = medicinaMeta[field.inventario_medicina_id]
+                  const meta = field.inventario_medicina_id !== null
+                    ? medicinaMeta[field.inventario_medicina_id]
+                    : undefined
                   return (
                     <ItemRecetaRow
                       key={field.id}
                       index={i}
                       control={control}
-                      nombre={field.nombre_medicina}
+                      nombre={field.nombre}
+                      externo={field.inventario_medicina_id === null}
                       stock={meta?.stock ?? 0}
                       concentracion={meta?.concentracion}
                       presentacion={meta?.presentacion}
