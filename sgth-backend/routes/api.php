@@ -1207,6 +1207,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::post('/', [RecetaController::class, 'store'])
                 ->middleware('role:medico|odontologo');
+            // Antes del comodín {id}, o «pdf» se leería como parte de él.
+            Route::get('{id}/pdf', [RecetaController::class, 'pdf'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->name('dispensario.recetas.pdf');
             Route::get('{id}', [RecetaController::class, 'show'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::post('{id}/despachar', [RecetaController::class, 'despachar'])

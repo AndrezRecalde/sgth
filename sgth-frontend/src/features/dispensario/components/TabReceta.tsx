@@ -5,7 +5,7 @@ import {
   Stack, Text, Button, Group,
   Card, ThemeIcon,
 } from '@mantine/core'
-import { IconPill, IconPlus } from '@tabler/icons-react'
+import { IconPill, IconPlus, IconPrinter } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -15,7 +15,7 @@ import { EditarItemRecetaModal } from './EditarItemRecetaModal'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { useEmitirReceta, useAccionesItem } from '../hooks/useReceta'
+import { useEmitirReceta, useAccionesItem, useRecetaPdf } from '../hooks/useReceta'
 import { useAuthStore } from '@/store/auth.store'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
@@ -186,6 +186,7 @@ export function TabReceta({ turno, consulta }: Props) {
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const emitir = useEmitirReceta(consulta.id)
+  const { abrir: abrirPdf, abriendo } = useRecetaPdf()
 
   const { data: recetas = [], isLoading } = useQuery({
     queryKey: ['recetas', 'consulta', consulta.id],
@@ -242,9 +243,26 @@ export function TabReceta({ turno, consulta }: Props) {
                         {formatFecha(receta.fecha_emision)}
                       </Text>
                     </Group>
-                    <StatusBadge tone={estadoConfig.tone}>
-                      {estadoConfig.label}
-                    </StatusBadge>
+                    <Group gap="xs">
+                      {receta.folio && (
+                        <Text size="xs" c="dimmed" ff="monospace">
+                          {receta.folio}
+                        </Text>
+                      )}
+                      <StatusBadge tone={estadoConfig.tone}>
+                        {estadoConfig.label}
+                      </StatusBadge>
+                      <Button
+                        size="compact-xs"
+                        variant="light"
+                        color="ocean"
+                        leftSection={<IconPrinter size={13} />}
+                        loading={abriendo === receta.id}
+                        onClick={() => abrirPdf(receta.id)}
+                      >
+                        Imprimir
+                      </Button>
+                    </Group>
                   </Group>
 
                   {receta.indicaciones_generales && (

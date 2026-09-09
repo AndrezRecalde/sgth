@@ -22,12 +22,15 @@ final class RecetaService implements RecetaServiceInterface
         return DB::transaction(function () use ($datosReceta, $items) {
             // La receta inicia como pendiente
             $datosReceta['estado'] = 'pendiente';
+            $datosReceta['folio']  = $this->generarFolio();
             $receta = RecetaMedica::create($datosReceta);
             $alertasAlergias = [];
 
             // Obtener alergias del paciente tipo medicamento
             $consulta = ConsultaMedica::with('historiaClinica.alergias')->find($datosReceta['consulta_medica_id'] ?? null);
-            $alergiasMedicamento = $consulta ? $consulta->historiaClinica->alergias()->where('tipo', 'medicamento')->get() : collect();
+            // Solo las vigentes: una alergia anulada es una que se descartó, y
+            // seguir avisando de ella enseña a ignorar el aviso.
+            $alergiasMedicamento = $consulta ? $consulta->historiaClinica->alergias()->activas()->where('tipo', 'medicamento')->get() : collect();
 
             $todosExternos = true;
 
@@ -78,6 +81,39 @@ final class RecetaService implements RecetaServiceInterface
                 'alertas_alergias' => array_values(array_unique($alertasAlergias))
             ];
         });
+    }
+
+    /**
+     * Siguiente folio del año, tomado del MÁXIMO ya emitido.
+     *
+     * Se lee el máximo y no se cuentan filas, por lo mismo que en el
+     * certificado médico: la tabla borra en blando y el folio es único, así que
+     * contar haría que una receta retirada hiciera repetir el folio de una
+     * viva.
+     *
+     * El bloqueo de aviso serializa leer el máximo y escribir el folio entre
+     * emisiones simultáneas —dos médicos recetando a la vez—, y lo suelta el
+     * cierre de la transacción que ya envuelve a `emitirReceta`.
+     */
+    private function generarFolio(): string
+    {
+        $anio = date('Y');
+
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("receta_medica_folio_{$anio}"),
+        ]);
+
+        $ultimo = RecetaMedica::withTrashed()
+            ->where('folio', 'like', "REC-{$anio}-%")
+            ->max('folio');
+
+        $secuencial = $ultimo
+            ? (int) substr($ultimo, strlen("REC-{$anio}-")) + 1
+            : 1;
+
+        return "REC-{$anio}-" . str_pad(
+            (string) $secuencial, 5, '0', STR_PAD_LEFT
+        );
     }
 
     /**

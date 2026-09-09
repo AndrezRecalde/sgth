@@ -12,7 +12,7 @@ import { getRecetasColumns } from
   '@/features/dispensario/components/recetas.columns'
 import { usePersonalMedico } from '@/features/dispensario/hooks/useAgenda'
 import {
-  useRecetasFarmacia, useAnularReceta,
+  useRecetasFarmacia, useAnularReceta, useRecetaPdf,
 } from '@/features/dispensario/hooks/useReceta'
 import {
   AnularRegistroModal, MOTIVOS_ANULAR_RECETA,
@@ -83,6 +83,7 @@ export function DespachoView() {
     useDisclosure(false)
 
   const anular = useAnularReceta()
+  const { abrir: abrirPdf } = useRecetaPdf()
 
   const { data: medicos = [] } = usePersonalMedico('medico')
 
@@ -113,8 +114,9 @@ export function DespachoView() {
   }
 
   const columns = getRecetasColumns({
-    onAbrir:  (r) => { setRecetaSel(r); abrirModal() },
-    onAnular: (r) => { setRecetaSel(r); abrirAnular() },
+    onAbrir:    (r) => { setRecetaSel(r); abrirModal() },
+    onAnular:   (r) => { setRecetaSel(r); abrirAnular() },
+    onImprimir: (r) => abrirPdf(r.id),
   })
 
   return (

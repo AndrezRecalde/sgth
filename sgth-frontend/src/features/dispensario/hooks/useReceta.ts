@@ -127,6 +127,54 @@ export function useRecetasFarmacia(params?: {
   })
 }
 
+/**
+ * Abre el impreso de la receta.
+ *
+ * Se abre en una pestaña en vez de descargarse, al contrario que el
+ * certificado: lo que se hace con una receta es imprimirla ahí mismo para
+ * dársela al paciente, y bajarla al disco añade un paso y deja el documento
+ * clínico tirado en Descargas.
+ */
+export function useRecetaPdf() {
+  const [abriendo, setAbriendo] = React.useState<number | null>(null)
+
+  const abrir = async (id: number) => {
+    setAbriendo(id)
+    try {
+      const blob = await recetaService.descargarPdf(id)
+      const url  = URL.createObjectURL(blob)
+
+      // La ventana se abre dentro del gesto del clic, si no el navegador la
+      // toma por emergente y la bloquea.
+      const ventana = window.open(url, '_blank')
+
+      if (!ventana) {
+        notifications.show({
+          title:   'Permite las ventanas emergentes',
+          message: 'El navegador bloqueó la pestaña con la receta.',
+          color:   'orange',
+          icon:    React.createElement(IconAlertTriangle, { size: 16 }),
+        })
+      }
+
+      // Se revoca tarde: antes la pestaña recién abierta se quedaba sin nada
+      // que mostrar.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (error: unknown) {
+      notifications.show({
+        title:   'No se pudo generar la receta',
+        message: getApiErrorMessage(error),
+        color:   'red',
+        icon:    React.createElement(IconX, { size: 16 }),
+      })
+    } finally {
+      setAbriendo(null)
+    }
+  }
+
+  return { abrir, abriendo }
+}
+
 export function useAnularReceta() {
   const qc = useQueryClient()
 

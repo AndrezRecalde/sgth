@@ -40,6 +40,11 @@ export interface ItemReceta {
 
 export interface RecetaMedica {
   id:                      number
+  /**
+   * El número del impreso, `REC-2026-00001`. Es lo que se dicta por teléfono y
+   * lo que se cita para cotejar una receta en el mostrador.
+   */
+  folio?:                  string | null
   consulta_medica_id:      number
   fecha_emision:           string
   estado:                  string
@@ -175,6 +180,12 @@ export const recetaService = {
       `/dispensario/recetas/${recetaId}/items/${itemId}`,
       data
     ).then(r => r.data.datos),
+
+  /** Va por axios y no por `window.open`: el endpoint pide el token. */
+  descargarPdf: (id: number) =>
+    api.get(`/dispensario/recetas/${id}/pdf`, {
+      responseType: 'blob',
+    }).then(r => r.data as Blob),
 
   quitarItem: (recetaId: number, itemId: number) =>
     api.delete<ApiResponse<unknown>>(
