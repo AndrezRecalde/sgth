@@ -166,6 +166,7 @@ export interface SolicitudLoteResultado {
 
 export const solicitudCertificacionService = {
   listar: (params?: {
+    page?:        number
     estado?:      string
     tipo_evento?: string
     servidor_id?: number

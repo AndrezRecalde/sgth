@@ -8,8 +8,14 @@ import {
   Button,
   Skeleton,
 } from "@mantine/core";
+import { useState } from "react";
 import { IconDownload, IconStethoscope } from "@tabler/icons-react";
-import { EmptyState, SgthTable, StatusBadge } from "@/components/ui";
+import {
+  EmptyState,
+  PAGINACION_ES,
+  SgthTable,
+  StatusBadge,
+} from "@/components/ui";
 import { useSolicitudesCertificacion } from "@/features/dispensario/hooks/useSolicitudCertificacion";
 import { usePdfFemo } from "@/features/dispensario/hooks/usePdfFemo";
 import {
@@ -26,10 +32,16 @@ interface Props {
   servidorId: number;
 }
 
+/** El mismo tamaño de página que el resto de los listados del sistema. */
+const POR_PAGINA = 15;
+
 export function SaludOcupacionalTab({ servidorId }: Props) {
+  const [page, setPage] = useState(1);
+
   const { data, isLoading } = useSolicitudesCertificacion({
+    page,
+    per_page: POR_PAGINA,
     servidor_id: servidorId,
-    per_page: 50,
   });
   const solicitudes = data?.data ?? [];
   const { descargarFemo, loading: descargando } = usePdfFemo();
@@ -126,8 +138,16 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
         />
       ) : (
         <SgthTable
+          // Solo `paginationText`: el objeto entero no compila, porque
+          // `recordsPerPageLabel` exige `recordsPerPageOptions` y
+          // `onRecordsPerPageChange`.
+          paginationText={PAGINACION_ES.paginationText}
           records={solicitudes}
           columns={columns}
+          totalRecords={data?.total ?? solicitudes.length}
+          recordsPerPage={POR_PAGINA}
+          page={page}
+          onPageChange={setPage}
           fetching={isLoading}
           minHeight={100}
         />
