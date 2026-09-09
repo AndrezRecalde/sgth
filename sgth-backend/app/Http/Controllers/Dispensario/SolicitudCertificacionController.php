@@ -40,7 +40,11 @@ final class SolicitudCertificacionController extends Controller
             'solicitadoPor:id,usuario_ti,email,servidor_id',
             'solicitadoPor.servidor:id,nombre,apellido',
             'constantesVitales',
-        ])->orderBy('created_at', 'desc');
+        ])
+            // created_at es timestamp(0): sin desempate por id, dos páginas
+            // del mismo resultado pueden solaparse.
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc');
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
