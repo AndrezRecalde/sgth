@@ -22,6 +22,17 @@
 □ APP_KEY generado con php artisan key:generate
 □ APP_DEBUG=false en producción
 □ APP_ENV=production
+□ FRONTEND_URL apuntando al dominio real del frontend
+  Se usa en dos sitios y ninguno avisa si está mal:
+  · config/cors.php la mete en allowed_origins — si no coincide
+    con el dominio desde el que se sirve el frontend, el navegador
+    bloquea TODAS las peticiones a la API y el sistema no arranca
+  · el QR del PDF de permisos apunta ahí (resources/views/permisos/
+    permiso-pdf.blade.php); mal puesta, Talento Humano escanea el
+    papel firmado y no llega a ninguna parte
+  Sin la variable, ambos caen al valor por defecto de config/app.php,
+  que es https://sgth.gad.gob.ec y puede no ser el dominio de este
+  despliegue.
 □ php artisan config:cache ejecutado
 □ php artisan route:cache ejecutado
 □ php artisan view:cache ejecutado
@@ -31,7 +42,9 @@
 □ scheduler corriendo con restart:unless-stopped
 □ php artisan queue:restart ejecutado tras deploy
 □ Verificar que jobs de nómina procesan correctamente
-□ php artisan schedule:list muestra las 8 tareas registradas
+□ php artisan schedule:list muestra las 9 tareas registradas
+  (si el número no cuadra, manda schedule:list y no este documento;
+  docs/scheduler.md las lista una por una)
 □ Logs del contenedor scheduler muestran ejecuciones cada minuto
   (que el contenedor esté "up" no prueba que las tareas corran)
 □ Ver docs/scheduler.md: qué hace cada tarea y qué se rompe si no corre
