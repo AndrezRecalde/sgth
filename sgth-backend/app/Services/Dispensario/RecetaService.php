@@ -2,6 +2,7 @@
 namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\RecetaServiceInterface;
+use App\Enums\EstadoReceta;
 use App\Models\Dispensario\RecetaMedica;
 use App\Models\Dispensario\ItemReceta;
 use App\Models\Dispensario\InventarioMedicina;
@@ -28,12 +29,27 @@ final class RecetaService implements RecetaServiceInterface
             $consulta = ConsultaMedica::with('historiaClinica.alergias')->find($datosReceta['consulta_medica_id'] ?? null);
             $alergiasMedicamento = $consulta ? $consulta->historiaClinica->alergias()->where('tipo', 'medicamento')->get() : collect();
 
+            $todosExternos = true;
+
             foreach ($items as $item) {
-                $medicina = InventarioMedicina::findOrFail($item['inventario_medicina_id']);
+                // Un ítem es del catálogo o es externo; el CHECK de la tabla y
+                // StoreRecetaMedicaRequest garantizan que sea exactamente uno.
+                $esExterno = empty($item['inventario_medicina_id']);
+
+                // Lo que hay que contrastar con las alergias es el nombre del
+                // fármaco, venga de la ficha del inventario o escrito a mano:
+                // la alergia del paciente no distingue de dónde salió.
+                $nombre = $esExterno
+                    ? trim((string) $item['medicamento_externo'])
+                    : InventarioMedicina::findOrFail(
+                        $item['inventario_medicina_id']
+                    )->nombre;
+
+                $todosExternos = $todosExternos && $esExterno;
 
                 // Validar alergias (informativo)
                 foreach ($alergiasMedicamento as $alergia) {
-                    if (stripos($medicina->nombre, $alergia->descripcion) !== false || stripos($alergia->descripcion, $medicina->nombre) !== false) {
+                    if (stripos($nombre, $alergia->descripcion) !== false || stripos($alergia->descripcion, $nombre) !== false) {
                         $alertasAlergias[] = "Advertencia: El paciente tiene alergia registrada a {$alergia->descripcion} con severidad {$alergia->severidad}";
                     }
                 }
@@ -42,8 +58,19 @@ final class RecetaService implements RecetaServiceInterface
                 ItemReceta::create(array_merge($item, [
                     'receta_medica_id' => $receta->id,
                     'cantidad_despachada' => 0,
-                    'estado' => 'pendiente'
+                    // El externo nace cerrado: no hay entrega que esperar, y
+                    // dejarlo «pendiente» lo tendría eternamente en la cola.
+                    'estado' => $esExterno
+                        ? ItemReceta::NO_DISPONIBLE
+                        : 'pendiente',
                 ]));
+            }
+
+            // Si no hay nada que la farmacia maneje, el mostrador no tiene nada
+            // que hacer con esta receta: se cierra al emitirse en vez de
+            // quedarse pendiente de una entrega que nadie puede hacer.
+            if ($todosExternos) {
+                $receta->update(['estado' => EstadoReceta::EXTERNA->value]);
             }
 
             return [
@@ -96,7 +123,11 @@ final class RecetaService implements RecetaServiceInterface
         return DB::transaction(function () use ($recetaId, $itemsDespachados, $despachadoPor) {
             $receta = RecetaMedica::with('items')->findOrFail($recetaId);
 
-            if (in_array($receta->estado, ['despachada_completa', 'anulada'])) {
+            if (in_array($receta->estado, [
+                EstadoReceta::DESPACHADA_COMPLETA->value,
+                EstadoReceta::ANULADA->value,
+                EstadoReceta::EXTERNA->value,
+            ])) {
                 throw new ReglaNegocioException("La receta no puede ser despachada porque su estado es: {$receta->estado}");
             }
 
@@ -111,6 +142,18 @@ final class RecetaService implements RecetaServiceInterface
                 $item = $receta->items->where('id', $itemRecetaId)->first();
                 if (!$item) {
                     throw new ReglaNegocioException("El ítem de receta {$itemRecetaId} no pertenece a esta receta.");
+                }
+
+                // De un medicamento que la farmacia no maneja no hay nada que
+                // sacar del estante. Se rechaza aquí y no más abajo para no
+                // dejar que llegue a buscar una ficha de inventario que no
+                // existe: el paciente lo adquiere fuera.
+                if ($item->esExterno()) {
+                    throw new ReglaNegocioException(
+                        "«{$item->medicamento_externo}» no lo maneja la " .
+                        'farmacia: el paciente lo adquiere fuera y no se ' .
+                        'despacha desde el dispensario.'
+                    );
                 }
 
                 // No se puede despachar más de lo prescrito
@@ -170,8 +213,18 @@ final class RecetaService implements RecetaServiceInterface
             // Evaluar estado general de la receta
             $receta->load('items'); // Recargar para estado actualizado
             
-            $todosCompletos = $receta->items->every(fn($i) => $i->estado === 'despachado_completo');
-            $todosPendientes = $receta->items->every(fn($i) => $i->estado === 'pendiente');
+            // Los externos no cuentan para nada de esto: la farmacia ya hizo
+            // con ellos todo lo que podía hacer, que es nada. Sin excluirlos,
+            // una receta con un solo medicamento externo no llegaría jamás a
+            // «despachada completa» por muy entregado que estuviera el resto.
+            $delCatalogo = $receta->items->reject->esExterno();
+
+            $todosCompletos = $delCatalogo->every(
+                fn ($i) => $i->estado === 'despachado_completo'
+            );
+            $todosPendientes = $delCatalogo->every(
+                fn ($i) => $i->estado === 'pendiente'
+            );
 
             if ($todosCompletos) {
                 $estadoReceta = 'despachada_completa';

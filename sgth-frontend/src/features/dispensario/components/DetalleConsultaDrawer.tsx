@@ -194,10 +194,13 @@ export function DetalleConsultaDrawer({
                           <Table.Tr key={item.id}>
                             <Table.Td>
                               <Text size="xs" fw={500}>
-                                {item.inventario?.nombre ?? '—'}
+                                {item.inventario?.nombre
+                                  ?? item.medicamento_externo ?? '—'}
                               </Text>
                               <Text size="xs" c="dimmed">
-                                {item.inventario?.concentracion ?? ''}
+                                {item.inventario
+                                  ? item.inventario.concentracion ?? ''
+                                  : 'Fuera de farmacia'}
                               </Text>
                             </Table.Td>
                             <Table.Td>

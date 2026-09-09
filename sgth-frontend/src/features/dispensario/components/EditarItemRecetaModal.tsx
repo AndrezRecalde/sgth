@@ -9,6 +9,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAccionesItem } from '../hooks/useReceta'
+import { nombreDeItem } from '../services/recetaService'
 import type { ItemReceta } from '../services/recetaService'
 
 interface Props {
@@ -82,11 +83,9 @@ export function EditarItemRecetaModal({
       title={
         <Text size="sm" fw={600}>
           Editar medicamento
-          {(item.inventario?.nombre || item.nombre_medicina) && (
-            <Text span c="dimmed" ml={4}>
-              — {item.inventario?.nombre ?? item.nombre_medicina}
-            </Text>
-          )}
+          <Text span c="dimmed" ml={4}>
+            — {nombreDeItem(item)}
+          </Text>
         </Text>
       }
       size="sm"

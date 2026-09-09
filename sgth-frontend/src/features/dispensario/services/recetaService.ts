@@ -4,8 +4,14 @@ import type {} from './inventarioMedicinaService'
 
 export interface ItemReceta {
   id?:                     number
-  inventario_medicina_id:  number
-  nombre_medicina?:        string
+  /** Null en un medicamento que la farmacia no maneja. */
+  inventario_medicina_id:  number | null
+  /**
+   * El nombre escrito a mano de un medicamento fuera del catálogo. Null en los
+   * del catálogo, que llevan `inventario`. Siempre viene uno de los dos: la
+   * tabla tiene un CHECK que lo garantiza.
+   */
+  medicamento_externo?:    string | null
   cantidad_prescrita:      number
   cantidad_despachada?:    number
   dosis:                   string
@@ -76,6 +82,19 @@ export interface EmitirRecetaData {
   fecha_emision:           string
   indicaciones_generales?: string | null
   items:                   ItemReceta[]
+}
+
+/**
+ * Cómo se llama lo recetado: el nombre del catálogo, o el que escribió el
+ * médico cuando la farmacia no lo maneja.
+ */
+export function nombreDeItem(item: ItemReceta): string {
+  return item.inventario?.nombre ?? item.medicamento_externo ?? '—'
+}
+
+/** Si la farmacia no maneja este medicamento y no hay nada que despachar. */
+export function esItemExterno(item: ItemReceta): boolean {
+  return item.inventario_medicina_id === null
 }
 
 export const recetaService = {

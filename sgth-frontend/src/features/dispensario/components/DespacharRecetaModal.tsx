@@ -11,6 +11,7 @@ import {
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDespacharReceta } from '../hooks/useReceta'
+import { esItemExterno, nombreDeItem } from '../services/recetaService'
 import type { RecetaMedica, ItemReceta } from '../services/recetaService'
 
 interface Props {
@@ -68,7 +69,7 @@ export function DespacharRecetaModal({
   if (semilla !== semillaAplicada) {
     setSemillaAplicada(semilla)
     const init: Record<number, number> = {}
-    receta?.items.forEach(item => {
+    receta?.items.filter(item => ! esItemExterno(item)).forEach(item => {
       const faltante = item.cantidad_prescrita -
         (item.cantidad_despachada ?? 0)
       // Arranca en lo que falta, pero sin pasarse de lo que hay entregable:
@@ -81,8 +82,14 @@ export function DespacharRecetaModal({
   if (!receta) return null
 
   const nombrePaciente = getNombrePaciente(receta)
+
+  // Lo que la farmacia no maneja va aparte: no se despacha ni se cuenta como
+  // trabajo pendiente del mostrador, pero tiene que verse, porque es
+  // justamente lo que hay que decirle al paciente que compre fuera.
+  const itemsExternos = receta.items.filter(esItemExterno)
+
   const itemsPendientes = receta.items.filter(
-    item => item.estado !== 'despachado_completo'
+    item => ! esItemExterno(item) && item.estado !== 'despachado_completo'
   )
 
   const handleDespachar = () => {
@@ -143,6 +150,40 @@ export function DespacharRecetaModal({
           )}
         </Card>
 
+        {/* Antes que la lista de entrega: quien atiende el mostrador tiene que
+            poder decirle al paciente, de entrada, qué no va a llevarse de
+            aquí. */}
+        {itemsExternos.length > 0 && (
+          <Alert
+            icon={<IconAlertTriangle size={14} />}
+            color="amber"
+            variant="light"
+            title={
+              itemsExternos.length === 1
+                ? 'Un medicamento no lo maneja la farmacia'
+                : `${itemsExternos.length} medicamentos no los maneja la farmacia`
+            }
+          >
+            <Stack gap={4} mt={4}>
+              {itemsExternos.map(item => (
+                <Text size="xs" key={item.id}>
+                  <Text span fw={600} c="inherit">
+                    {nombreDeItem(item)}
+                  </Text>
+                  {' — '}
+                  {item.cantidad_prescrita} unid. · {item.dosis} ·{' '}
+                  {item.frecuencia} · {item.duracion}
+                </Text>
+              ))}
+              <Text size="xs" c="dimmed">
+                {itemsExternos.length === 1
+                  ? 'El paciente lo adquiere fuera del dispensario. No se despacha ni descuenta existencias.'
+                  : 'El paciente los adquiere fuera del dispensario. No se despachan ni descuentan existencias.'}
+              </Text>
+            </Stack>
+          </Alert>
+        )}
+
         <Text size="sm" fw={500}>
           Medicamentos a despachar
         </Text>
@@ -150,7 +191,9 @@ export function DespacharRecetaModal({
         {itemsPendientes.length === 0 ? (
           <Alert color="emerald" variant="light">
             <Text size="sm">
-              Todos los ítems de esta receta ya fueron despachados.
+              {itemsExternos.length === receta.items.length
+                ? 'Esta receta no tiene nada que la farmacia pueda entregar.'
+                : 'Todos los ítems de esta receta ya fueron despachados.'}
             </Text>
           </Alert>
         ) : (
@@ -206,7 +249,7 @@ export function DespacharRecetaModal({
                         </ThemeIcon>
                         <Stack gap={0}>
                           <Text size="sm" fw={500}>
-                            {item.inventario?.nombre ?? '—'}
+                            {nombreDeItem(item)}
                           </Text>
                           <Text size="xs" c="dimmed">
                             {item.inventario?.concentracion ?? ''}

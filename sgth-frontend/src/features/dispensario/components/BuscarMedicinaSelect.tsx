@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Combobox, TextInput, useCombobox, Text, Group } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { IconCubePlus } from "@tabler/icons-react";
+import { IconCubePlus, IconPencilPlus } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useQuery } from "@tanstack/react-query";
 import { inventarioMedicinaService } from "../services/inventarioMedicinaService";
@@ -15,10 +15,22 @@ const RETARDO_BUSQUEDA_MS = 300;
 
 interface Props {
   onSeleccionar: (id: number, nombre: string) => void;
-  onCrearNueva: () => void;
   /**
-   * Adquisiciones lo activa: al reponer hay que poder elegir justamente lo
-   * que está en cero. Al recetar se ofrece solo lo que hay en existencia.
+   * Da de alta una medicina en el catálogo. Lo usa Adquisiciones, que es donde
+   * tiene sentido: define qué maneja la farmacia. Sin este callback la opción
+   * no se ofrece.
+   */
+  onCrearNueva?: () => void;
+  /**
+   * Receta lo escrito como medicamento externo: uno que la farmacia no maneja
+   * y que el paciente adquiere fuera. Sin este callback no se ofrece.
+   */
+  onMedicamentoExterno?: (nombre: string) => void;
+  /**
+   * Tanto Adquisiciones como Recetas lo activan, por motivos distintos: al
+   * reponer hay que poder elegir justamente lo que está en cero, y al recetar
+   * no se prescribe según lo que hay hoy en el estante —eso lo resuelve el
+   * despacho, entregando lo que pueda—.
    */
   incluirAgotadas?: boolean;
 }
@@ -26,6 +38,7 @@ interface Props {
 export function BuscarMedicinaSelect({
   onSeleccionar,
   onCrearNueva,
+  onMedicamentoExterno,
   incluirAgotadas = false,
 }: Props) {
   const contained = useContainedInput();
@@ -57,7 +70,13 @@ export function BuscarMedicinaSelect({
       store={combobox}
       onOptionSubmit={(id) => {
         if (id === "__nueva__") {
-          onCrearNueva();
+          onCrearNueva?.();
+          setTermino("");
+          combobox.closeDropdown();
+          return;
+        }
+        if (id === "__externa__") {
+          onMedicamentoExterno?.(termino.trim());
           setTermino("");
           combobox.closeDropdown();
           return;
@@ -119,14 +138,30 @@ export function BuscarMedicinaSelect({
             ))
           )}
 
-          <Combobox.Option value="__nueva__">
-            <Group gap={6} c="emerald">
-              <IconCubePlus size={13} />
-              <Text size="sm" fw={500}>
-                Crear medicina nueva
-              </Text>
-            </Group>
-          </Combobox.Option>
+          {onCrearNueva && (
+            <Combobox.Option value="__nueva__">
+              <Group gap={6} c="emerald">
+                <IconCubePlus size={13} />
+                <Text size="sm" fw={500}>
+                  Crear medicina nueva
+                </Text>
+              </Group>
+            </Combobox.Option>
+          )}
+
+          {/* Lo que la farmacia no maneja también se receta: el paciente lo
+              adquiere fuera. Solo con algo escrito, que es el nombre que se
+              va a guardar. */}
+          {onMedicamentoExterno && termino.trim().length >= 2 && (
+            <Combobox.Option value="__externa__">
+              <Group gap={6} c="emerald" wrap="nowrap">
+                <IconPencilPlus size={13} />
+                <Text size="sm" fw={500}>
+                  Recetar «{termino.trim()}» como medicamento externo
+                </Text>
+              </Group>
+            </Combobox.Option>
+          )}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>

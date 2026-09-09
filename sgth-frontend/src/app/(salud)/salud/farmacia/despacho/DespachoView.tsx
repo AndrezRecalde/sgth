@@ -30,6 +30,8 @@ const ESTADO_OPTIONS = [
   { value: 'despachada_parcial',  label: 'Parcial'    },
   { value: 'despachada_completa', label: 'Completada' },
   { value: 'anulada',             label: 'Anulada'    },
+  // Todo lo recetado se adquiere fuera: la farmacia no entrega nada.
+  { value: 'externa',             label: 'Externa'    },
 ]
 
 /** `Date` de Mantine → 'YYYY-MM-DD' sin pasar por UTC, que restaría un día. */

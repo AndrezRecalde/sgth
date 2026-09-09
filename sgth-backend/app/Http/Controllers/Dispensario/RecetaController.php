@@ -3,9 +3,11 @@ namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\EstadoReceta;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dispensario\StoreRecetaMedicaRequest;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Dispensario\RecetaServiceInterface;
 use App\Models\Dispensario\RecetaMedica;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -150,24 +152,13 @@ final class RecetaController extends Controller
         }
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreRecetaMedicaRequest $request): JsonResponse
     {
-        $request->validate([
-            'consulta_medica_id'             => ['required', 'integer', 'exists:consultas_medicas,id'],
-            'fecha_emision'                  => ['required', 'date'],
-            'indicaciones_generales'         => ['nullable', 'string', 'max:1000'],
-            'items'                          => ['required', 'array', 'min:1'],
-            'items.*.inventario_medicina_id' => ['required', 'integer', 'exists:inventario_medicinas,id'],
-            'items.*.cantidad_prescrita'     => ['required', 'integer', 'min:1'],
-            'items.*.dosis'                  => ['required', 'string', 'max:100'],
-            'items.*.frecuencia'             => ['required', 'string', 'max:100'],
-            'items.*.duracion'               => ['required', 'string', 'max:100'],
-            'items.*.observaciones'          => ['nullable', 'string', 'max:500'],
-        ]);
+        $datos       = $request->validated();
+        $items       = $datos['items'];
+        $datosReceta = Arr::except($datos, ['items']);
 
-        $datosReceta = $request->except('items');
-        $items       = $request->input('items', []);
-        $result      = $this->recetaService->emitirReceta(
+        $result = $this->recetaService->emitirReceta(
             $datosReceta, $items
         );
 
