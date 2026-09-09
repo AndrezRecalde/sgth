@@ -17,7 +17,10 @@ class ViaticoController extends Controller
         \Illuminate\Http\Request $request
     ): JsonResponse {
         $query = \App\Models\Viatico\Viatico::with(['servidor'])
-            ->orderByDesc('created_at');
+            // created_at es timestamp(0): sin desempate por id, dos páginas
+            // del mismo resultado pueden solaparse.
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         // Filtro por estado
         if ($request->filled('estado')) {

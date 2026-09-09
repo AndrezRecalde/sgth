@@ -29,7 +29,10 @@ final class ConvocatoriaController extends Controller
             'puesto.unidadAdministrativa',
         ])
             ->where('es_contenedor_permanente', false)
-            ->orderBy('created_at', 'desc');
+            // created_at es timestamp(0): sin desempate por id, dos páginas
+            // del mismo resultado pueden solaparse.
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc');
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
