@@ -50,7 +50,12 @@
 □ Ver docs/scheduler.md: qué hace cada tarea y qué se rompe si no corre
 
 ## SEGURIDAD
-□ CORS configurado solo para dominio del GAD
+□ CORS: revisar allowed_origins en config/cors.php
+  Son dos: FRONTEND_URL —que debe ser el dominio real, ver APLICACIÓN—
+  y http://localhost:3000, escrito a mano y presente también en
+  producción. Ese localhost está ahí a propósito por ahora; queda
+  anotado para que se revise, no para darlo por correcto. Si algún
+  día se decide quitarlo, es una línea de config/cors.php.
 □ Rate limiting activo en endpoint de login
 □ HTTPS forzado en Nginx (redirigir HTTP a HTTPS)
 □ APP_DEBUG=false verificado

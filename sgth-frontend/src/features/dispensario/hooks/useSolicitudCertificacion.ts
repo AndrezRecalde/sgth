@@ -6,6 +6,7 @@ import { solicitudCertificacionService } from '../services/solicitudCertificacio
 import { getApiErrorMessage } from '@/types/api'
 
 export function useSolicitudesCertificacion(params?: {
+  page?:        number
   estado?:      string
   tipo_evento?: string
   servidor_id?: number

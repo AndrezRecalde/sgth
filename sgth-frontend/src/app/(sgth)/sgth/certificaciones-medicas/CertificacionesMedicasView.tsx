@@ -1,27 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Badge, Text, Select } from '@mantine/core'
+import { Select } from '@mantine/core'
 import { IconClipboardHeart } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import {
-  TIPO_EVENTO_OPTIONS,
-  TONO_ESTADO_SOLICITUD,
-  TONO_DICTAMEN,
-  DICTAMEN_LABELS,
-  ESTADO_SOLICITUD_LABELS,
-} from '@/features/dispensario/services/solicitudCertificacionService'
-import type { SolicitudCertificacion } from
-  '@/features/dispensario/services/solicitudCertificacionService'
+import { getCertificacionesColumns } from '@/features/dispensario/components/solicitudes-certificacion.columns'
 import type { UnidadConRelaciones } from '@/types/api'
-import type { DataTableColumn } from 'mantine-datatable'
 import {
-  DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar,
+  DataState, PageHeader, PageShell, PAGINACION_ES, SgthTable, Toolbar,
 } from '@/components/ui'
 
 const ANIO_ACTUAL = new Date().getFullYear()
+
+/** El mismo tamaño de página que el resto de los listados del sistema. */
+const POR_PAGINA = 15
 
 function generarOpcionesAnio(): { value: string; label: string }[] {
   const opciones = [{ value: '', label: 'Todos los años' }]
@@ -33,10 +27,11 @@ function generarOpcionesAnio(): { value: string; label: string }[] {
 
 export function CertificacionesMedicasView() {
   const contained = useContainedInput('sm')
+
+  const [page, setPage] = useState(1)
   const [filtroEstado, setFiltroEstado] = useState<string>('')
   const [filtroUnidad, setFiltroUnidad] = useState<string>('')
-  const [filtroAnio, setFiltroAnio] =
-    useState<string>(String(ANIO_ACTUAL))
+  const [filtroAnio, setFiltroAnio] = useState<string>(String(ANIO_ACTUAL))
 
   const { data: unidades = [] } = useTodasUnidades()
   const unidadOptions = [
@@ -48,117 +43,24 @@ export function CertificacionesMedicasView() {
   ]
 
   const { data, isLoading, error } = useSolicitudesCertificacion({
-    estado:   filtroEstado || undefined,
+    page,
+    per_page: POR_PAGINA,
+    estado: filtroEstado || undefined,
     unidad_administrativa_id: filtroUnidad ? Number(filtroUnidad) : undefined,
-    anio:     filtroAnio ? Number(filtroAnio) : undefined,
-    per_page: 20,
+    anio: filtroAnio ? Number(filtroAnio) : undefined,
   })
+
   const solicitudes = data?.data ?? []
 
-  const getLabelTipo = (tipo: string) =>
-    TIPO_EVENTO_OPTIONS.find(o => o.value === tipo)?.label ?? tipo
+  // Cambiar un filtro sin volver a la primera página consultaría esa misma
+  // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
+  // saldría en blanco aunque hubiera coincidencias.
+  const filtrar = (aplicar: () => void) => {
+    aplicar()
+    setPage(1)
+  }
 
-  const getUnidadNombre = (s: SolicitudCertificacion) =>
-    s.servidor?.unidad_administrativa?.nombre
-      ?? s.convocatoria?.puesto?.unidad_administrativa?.nombre
-      ?? null
-
-  const columns: DataTableColumn<SolicitudCertificacion>[] = [
-    {
-      accessor: 'tipo_evento',
-      title:    'Tipo de evaluación',
-      width:    180,
-      render: (s) => (
-        <Badge size="sm" variant="light" color="blue">
-          {getLabelTipo(s.tipo_evento)}
-        </Badge>
-      ),
-    },
-    {
-      accessor: 'paciente',
-      title:    'Servidor / Candidato',
-      render: (s) => (
-        <Stack gap={0}>
-          <Text size="sm" fw={500}>{s.nombres_paciente}</Text>
-          <Text size="xs" c="dimmed" ff="monospace">
-            {s.cedula_paciente}
-          </Text>
-          {s.puesto_solicitado && (
-            <Text size="xs" c="dimmed">
-              {s.puesto_solicitado}
-            </Text>
-          )}
-        </Stack>
-      ),
-    },
-    {
-      accessor: 'unidad',
-      title:    'Unidad administrativa',
-      width:    180,
-      render: (s) => (
-        <Text size="sm">{getUnidadNombre(s) ?? '—'}</Text>
-      ),
-    },
-    {
-      accessor: 'origen',
-      title:    'Origen',
-      width:    150,
-      render: (s) => (
-        <Stack gap={0}>
-          <Text size="xs" c="dimmed" tt="capitalize">
-            {s.origen === 'reclutamiento' ? 'Reclutamiento'
-              : s.origen === 'expediente' ? 'Expediente'
-              : 'Automático'}
-          </Text>
-          {s.solicitado_por?.servidor && (
-            <Text size="xs" c="dimmed">
-              {s.solicitado_por.servidor.nombre}{' '}
-              {s.solicitado_por.servidor.apellido}
-            </Text>
-          )}
-        </Stack>
-      ),
-    },
-    {
-      accessor: 'fecha_limite',
-      title:    'Fecha límite',
-      width:    110,
-      render: (s) => {
-        if (!s.fecha_limite) return <Text size="sm">—</Text>
-        const fecha   = new Date(s.fecha_limite)
-        const hoy     = new Date()
-        const urgente = fecha <= hoy && s.estado !== 'completada'
-        return (
-          <Text
-            size="sm"
-            c={urgente ? 'red' : undefined}
-            fw={urgente ? 600 : undefined}
-          >
-            {fecha.toLocaleDateString('es-EC', {
-              day: '2-digit', month: 'short', year: 'numeric',
-            })}
-          </Text>
-        )
-      },
-    },
-    {
-      accessor: 'estado',
-      title:    'Estado',
-      width:    160,
-      render: (s) => (
-        <Stack gap={4}>
-          <StatusBadge tone={TONO_ESTADO_SOLICITUD[s.estado] ?? 'neutral'}>
-            {ESTADO_SOLICITUD_LABELS[s.estado] ?? s.estado}
-          </StatusBadge>
-          {s.dictamen && (
-            <StatusBadge size="xs" tone={TONO_DICTAMEN[s.dictamen] ?? 'neutral'}>
-              {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
-            </StatusBadge>
-          )}
-        </Stack>
-      ),
-    },
-  ]
+  const columns = getCertificacionesColumns()
 
   return (
     <PageShell>
@@ -181,7 +83,7 @@ export function CertificacionesMedicasView() {
           style={{ minWidth: 180 }}
           {...contained}
           value={filtroEstado}
-          onChange={(v) => setFiltroEstado(v ?? '')}
+          onChange={(v) => filtrar(() => setFiltroEstado(v ?? ''))}
         />
         <Select
           label="Unidad administrativa"
@@ -191,7 +93,7 @@ export function CertificacionesMedicasView() {
           style={{ minWidth: 240 }}
           {...contained}
           value={filtroUnidad}
-          onChange={(v) => setFiltroUnidad(v ?? '')}
+          onChange={(v) => filtrar(() => setFiltroUnidad(v ?? ''))}
         />
         <Select
           label="Año"
@@ -200,7 +102,7 @@ export function CertificacionesMedicasView() {
           style={{ minWidth: 150 }}
           {...contained}
           value={filtroAnio}
-          onChange={(v) => setFiltroAnio(v ?? '')}
+          onChange={(v) => filtrar(() => setFiltroAnio(v ?? ''))}
         />
       </Toolbar>
 
@@ -215,8 +117,16 @@ export function CertificacionesMedicasView() {
         }}
       >
         <SgthTable
+          // Solo `paginationText`: el objeto entero no compila, porque
+          // `recordsPerPageLabel` exige `recordsPerPageOptions` y
+          // `onRecordsPerPageChange`.
+          paginationText={PAGINACION_ES.paginationText}
           records={solicitudes}
           columns={columns}
+          totalRecords={data?.total ?? solicitudes.length}
+          recordsPerPage={POR_PAGINA}
+          page={page}
+          onPageChange={setPage}
           minHeight={200}
         />
       </DataState>
