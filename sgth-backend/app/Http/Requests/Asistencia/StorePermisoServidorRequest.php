@@ -37,6 +37,9 @@ class StorePermisoServidorRequest extends FormRequest
             'unidad_administrativa_id' => 'nullable|exists:unidades_administrativas,id',
             'servidor_id' => 'nullable|exists:servidores,id',
             'jefe_id'     => 'nullable|exists:servidores,id',
+            // En true, el jefe lo resuelve el servicio y `jefe_id` se ignora:
+            // ver PermisoService::jefeDeTalentoHumano().
+            'dirigido_a_talento_humano' => ['sometimes', 'boolean'],
             'creado_por'  => 'nullable|exists:users,id',
         ];
     }

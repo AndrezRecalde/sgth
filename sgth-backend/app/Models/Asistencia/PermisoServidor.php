@@ -44,6 +44,7 @@ class PermisoServidor extends Model
         'vence_en',
         'unidad_administrativa_id',
         'jefe_id',
+        'dirigido_a_talento_humano',
         'creado_por',
     ];
 
@@ -58,6 +59,7 @@ class PermisoServidor extends Model
             'confirmado_en'  => 'datetime',
             'validado_ts_en' => 'datetime',
             'rechazado_en'   => 'datetime',
+            'dirigido_a_talento_humano' => 'boolean',
             'anulado_en'     => 'datetime',
             'vence_en'       => 'datetime',
         ];

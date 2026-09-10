@@ -29,6 +29,15 @@
       ])), 'UTF-8')
     : '';
 
+  // Cuando el permiso se dirige a Talento Humano firma su jefe, no el
+  // inmediato. Se lee de la columna y no comparando ids: el jefe de Talento
+  // Humano es también el inmediato de quienes trabajan en esa unidad.
+  $dirigidoATh = (bool) ($permiso->dirigido_a_talento_humano ?? false);
+  $rotuloJefe  = $dirigidoATh ? 'Jefe de Talento Humano' : 'Jefe Inmediato';
+  $cargoJefe   = $dirigidoATh
+    ? \App\Enums\RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO->cargoPorDefecto()
+    : 'JEFE INMEDIATO';
+
   $unidad = mb_strtoupper(
     $permiso->unidadAdministrativa->nombre ?? '', 'UTF-8'
   );
@@ -263,11 +272,11 @@
     <tr>
       <td>
         <div class="firma-box">
-          <div class="f-lbl">Firma: Jefe Inmediato</div>
+          <div class="f-lbl">Firma: {{ $rotuloJefe }}</div>
           <div style="height: 55px;"></div>
           <div class="firma-line"></div>
           <div class="f-name">{{ $nombreJefe ?: '__________________' }}</div>
-          <div class="f-cargo">JEFE INMEDIATO</div>
+          <div class="f-cargo">{{ $cargoJefe }}</div>
         </div>
       </td>
       <td>
