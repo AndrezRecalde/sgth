@@ -59,7 +59,7 @@ export function RecetaModal({
     resolver: zodResolver(recetaSchema),
     defaultValues: {
       indicaciones_generales: "",
-      omitir_alergias: false,
+      omitir_alergias: true,
       items: [],
     },
   });
@@ -195,7 +195,13 @@ export function RecetaModal({
           {/* Decide qué se imprime, no qué se registra: las alergias siguen en
               la historia clínica y a la vista del dispensario en cualquier
               caso. Va aquí, junto a lo demás que afecta al papel, y no entre
-              los medicamentos. */}
+              los medicamentos.
+
+              Viene marcada: la receta pasa por manos de compañeros de trabajo
+              del paciente, y una alergia sigue siendo dato de salud. Al
+              desmarcarla se imprimen, que es lo que conviene cuando el paciente
+              va a comprar fuera y quien despache allí no tiene otra forma de
+              saberlas. */}
           <Controller
             name="omitir_alergias"
             control={control}
@@ -203,9 +209,10 @@ export function RecetaModal({
               <Checkbox
                 label="No imprimir las alergias en esta receta"
                 description={
-                  "Márcalo solo si el alérgeno delataría el diagnóstico del " +
-                  "paciente. El impreso dirá que se consulten en el " +
-                  "dispensario, sin afirmar que no las tiene."
+                  "Viene marcado. El impreso dirá que se consulten en el " +
+                  "dispensario, sin afirmar que el paciente no las tenga. " +
+                  "Desmárcalo para imprimirlas, útil si va a comprar en una " +
+                  "farmacia externa."
                 }
                 checked={field.value}
                 onChange={(e) => field.onChange(e.currentTarget.checked)}

@@ -32,9 +32,12 @@ export const itemRecetaSchema = z.object({
 export const recetaSchema = z.object({
   indicaciones_generales: z.string().optional().nullable(),
   /**
-   * Solo afecta al impreso. Existe para el caso en que el alérgeno delate el
-   * diagnóstico —un antirretroviral, un citostático, un antipsicótico—, que es
-   * algo que únicamente el médico puede juzgar y caso por caso.
+   * Solo afecta al impreso; las alergias siguen en la historia clínica y a la
+   * vista del dispensario. Viene en `true`: la receta pasa por manos de
+   * compañeros de trabajo del paciente y una alergia sigue siendo dato de
+   * salud. El médico lo desmarca cuando conviene que viajen en el papel —el
+   * paciente va a comprar fuera y quien despache allí no puede saberlas de
+   * otro modo—.
    */
   omitir_alergias:        z.boolean(),
   items: z.array(itemRecetaSchema).min(1, 'Agregue al menos un medicamento'),

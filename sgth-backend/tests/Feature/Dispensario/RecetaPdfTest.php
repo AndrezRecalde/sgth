@@ -260,7 +260,9 @@ it('imprime las alergias con la salvedad de que pueden estar incompletas', funct
     ]);
 
     $html = impresoDe(emitirParaPdf(
-        [['inventario_medicina_id' => $medicina->id]], $this->consulta
+        [['inventario_medicina_id' => $medicina->id]],
+        $this->consulta,
+        ['omitir_alergias' => false]
     ));
 
     expect($html)->toContain('Penicilina')
@@ -274,7 +276,9 @@ it('dice que no hay alergias registradas en vez de callar', function () {
     $medicina = medicinaPdf('PDF-007', 'Diclofenaco');
 
     $html = impresoDe(emitirParaPdf(
-        [['inventario_medicina_id' => $medicina->id]], $this->consulta
+        [['inventario_medicina_id' => $medicina->id]],
+        $this->consulta,
+        ['omitir_alergias' => false]
     ));
 
     // Sin el bloque, quien recibía la receta no podía distinguir «no tiene
@@ -311,16 +315,52 @@ it('no delata al paciente cuando el medico omite las alergias', function () {
         ->and($html)->toContain('Consúltelas en el Dispensario');
 });
 
-it('imprime las alergias por defecto, sin que nadie lo pida', function () {
+it('omite las alergias por defecto, sin que nadie lo pida', function () {
     $medicina = medicinaPdf('PDF-009', 'Ranitidina');
+
+    $this->historia->alergias()->create([
+        'tipo'        => 'medicamento',
+        'descripcion' => 'Efavirenz',
+        'severidad'   => 'grave',
+    ]);
 
     $recetaId = emitirParaPdf(
         [['inventario_medicina_id' => $medicina->id]], $this->consulta
     );
 
-    // Omitir es la excepción y se pide a mano: si el campo no viaja, el
-    // impreso protege por defecto.
-    expect(RecetaMedica::find($recetaId)->omitir_alergias)->toBeFalse();
+    // El defecto vive en la columna y no solo en el formulario: quien llame a
+    // la API sin mandar el campo tiene que obtener la misma política.
+    expect(RecetaMedica::find($recetaId)->omitir_alergias)->toBeTrue();
+
+    $html = impresoDe($recetaId);
+
+    expect($html)->not->toContain('Efavirenz')
+        // Omitir nunca es afirmar que no las tiene.
+        ->and($html)->not->toContain('sin alergias registradas')
+        ->and($html)->toContain('Consúltelas en el Dispensario');
+});
+
+it('imprime las alergias cuando el medico lo pide', function () {
+    $medicina = medicinaPdf('PDF-013', 'Cetirizina');
+
+    $this->historia->alergias()->create([
+        'tipo'        => 'medicamento',
+        'descripcion' => 'Penicilina',
+        'severidad'   => 'grave',
+    ]);
+
+    $recetaId = emitirParaPdf(
+        [['inventario_medicina_id' => $medicina->id]],
+        $this->consulta,
+        ['omitir_alergias' => false]
+    );
+
+    // Es lo que conviene cuando el paciente va a comprar fuera: allí nadie
+    // puede conocer la alergia de otro modo.
+    $html = impresoDe($recetaId);
+
+    expect($html)->toContain('Penicilina')
+        ->and($html)->toContain('Según lo registrado en la historia clínica');
 });
 
 it('marca con un asterisco lo que el paciente compra fuera', function () {
