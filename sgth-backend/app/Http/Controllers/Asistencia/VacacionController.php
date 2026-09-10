@@ -2,12 +2,14 @@
 namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\VacacionServiceInterface;
-use App\Enums\MotivoVacacion;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Asistencia\StoreVacacionRequest;
 use App\Http\Requests\Asistencia\UpdateVacacionRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\Vacacion;
+use App\Models\Expediente\Servidor;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class VacacionController extends Controller
@@ -18,6 +20,8 @@ class VacacionController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('verAny', Vacacion::class);
+
         $query = Vacacion::with([
             'servidor',
             'jefe',
@@ -61,6 +65,8 @@ class VacacionController extends Controller
             $query->whereDate('fecha_inicio', '<=', $request->fecha_hasta);
         }
 
+        $this->aplicarAlcance($query, $request->user());
+
         $perPage    = $request->integer('per_page', 20);
         $vacaciones = $query->paginate($perPage);
 
@@ -69,6 +75,8 @@ class VacacionController extends Controller
 
     public function saldo(int $servidorId)
     {
+        $this->authorize('verSaldo', [Vacacion::class, Servidor::findOrFail($servidorId)]);
+
         $saldo = $this->vacacionService->calcularSaldoActual($servidorId);
         return ApiResponse::ok(['saldo_dias' => $saldo], 'Saldo de vacaciones calculado.');
     }
@@ -82,6 +90,8 @@ class VacacionController extends Controller
             return ApiResponse::error('No se identificó el servidor.', 422);
         }
 
+        $this->authorize('crear', [Vacacion::class, Servidor::findOrFail($servidorId)]);
+
         $datos = array_merge($request->validated(), [
             'creado_por'    => $request->user()->id,
             'fecha_emision' => now()->toDateString(),
@@ -93,50 +103,20 @@ class VacacionController extends Controller
 
     public function update(UpdateVacacionRequest $request, int $id)
     {
-        $vacacion = Vacacion::with(['servidor'])->findOrFail($id);
-
-        $estadoAnterior = $vacacion->estado instanceof \App\Enums\EstadoVacacion
-            ? $vacacion->estado->value
-            : (string) $vacacion->estado;
+        $this->authorize('resolver', Vacacion::findOrFail($id));
 
         $nuevoEstado = $request->validated('estado');
-        $vacacion->estado = $nuevoEstado;
 
-        if ($nuevoEstado === 'aprobada') {
-            $vacacion->aprobado_por = $request->user()->id;
-            $vacacion->save();
-
-            // Descontar del período solo si:
-            // 1. El estado anterior NO era aprobada (evitar doble descuento)
-            // 2. El motivo descuenta vacaciones
-            if ($estadoAnterior !== 'aprobada') {
-                $motivo = $vacacion->motivo instanceof \App\Enums\MotivoVacacion
-                    ? $vacacion->motivo
-                    : \App\Enums\MotivoVacacion::tryFrom((string)$vacacion->motivo);
-
-                if ($motivo?->descuentaVacaciones() && $vacacion->servidor_id) {
-                    $anio = \Carbon\Carbon::parse($vacacion->fecha_inicio)->year;
-                    app(\App\Services\Asistencia\PeriodoVacacionService::class)
-                        ->descontarDias(
-                            $vacacion->servidor_id,
-                            (float) $vacacion->dias_solicitados,
-                            $anio
-                        );
-                }
-            }
-        } else {
-            $vacacion->save();
-        }
-
-        return ApiResponse::ok(
-            $vacacion->fresh(['servidor', 'jefe', 'creadoPor']),
-            "Solicitud resuelta como {$nuevoEstado}."
+        $vacacion = $this->vacacionService->resolver(
+            $id, $nuevoEstado, $request->user()
         );
+
+        return ApiResponse::ok($vacacion, "Solicitud resuelta como {$nuevoEstado}.");
     }
 
     public function exportar(int $id): mixed
     {
-        $vacacion = \App\Models\Asistencia\Vacacion::with([
+        $vacacion = Vacacion::with([
             'servidor.puesto.cargo',
             'servidor',
             'jefe',
@@ -146,6 +126,8 @@ class VacacionController extends Controller
             'aprobadoPor',
         ])->findOrFail($id);
 
+        $this->authorize('exportar', $vacacion);
+
         $pdf = app('dompdf.wrapper')
             ->setPaper('letter', 'portrait')
             ->loadView('vacaciones.vacacion-pdf', [
@@ -154,5 +136,38 @@ class VacacionController extends Controller
 
         $folio = $vacacion->folio ?? $vacacion->id;
         return $pdf->download("vacacion_{$folio}.pdf");
+    }
+
+    // ── Apoyos ───────────────────────────────────────────────────────
+
+    /**
+     * Recorta el listado a lo que el usuario tiene derecho a ver.
+     *
+     * Quien no tiene alcance institucional llegó hasta aquí con
+     * `ver-vacaciones-unidad`: ve las de su unidad y las propias. Es el mismo
+     * criterio que `PermisoServidorController::aplicarAlcance()`.
+     */
+    private function aplicarAlcance(Builder $query, User $user): void
+    {
+        if ($user->can('verTodas', Vacacion::class)) {
+            return;
+        }
+
+        $servidorId = $user->servidor_id;
+        $unidadId   = $user->servidor?->unidad_administrativa_id;
+
+        $query->where(function (Builder $q) use ($servidorId, $unidadId) {
+            $q->where('servidor_id', $servidorId ?? 0);
+
+            if ($unidadId) {
+                $q->orWhere('unidad_administrativa_id', $unidadId)
+                    ->orWhere(function (Builder $sinUnidad) use ($unidadId) {
+                        $sinUnidad->whereNull('unidad_administrativa_id')
+                            ->whereHas('servidor', fn ($s) => $s->where(
+                                'unidad_administrativa_id', $unidadId
+                            ));
+                    });
+            }
+        });
     }
 }

@@ -123,11 +123,14 @@ export const NAV_SGTH: NavGroup[] = [
             label: 'Vacaciones',
             href:  ROUTES.SGTH.ASISTENCIA_VACACIONES,
             icon:  'IconBeach',
+            permiso: 'ver-vacaciones-unidad',
           },
           {
+            // Casi todo en esta pantalla genera o recalcula saldos.
             label: 'Períodos de vacaciones',
             href:  ROUTES.SGTH.ASISTENCIA_PERIODOS,
             icon:  'IconCalendarStats',
+            permiso: 'gestionar-vacaciones',
           },
           {
             label: 'Consolidado de permisos',

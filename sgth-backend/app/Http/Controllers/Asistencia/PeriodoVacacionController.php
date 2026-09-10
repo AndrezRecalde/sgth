@@ -4,10 +4,18 @@ namespace App\Http\Controllers\Asistencia;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\PeriodoVacacion;
+use App\Models\Asistencia\Vacacion;
+use App\Models\Expediente\Servidor;
 use App\Services\Asistencia\PeriodoVacacionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * La autorización va por `VacacionPolicy`: consultar el resumen sigue la regla
+ * de leer las vacaciones de ese servidor, y todo lo que genera o recalcula
+ * exige `gestionar-vacaciones`. Antes cualquier usuario autenticado podía
+ * disparar «Generar todos» o recalcular un año ya cerrado.
+ */
 class PeriodoVacacionController extends Controller
 {
     public function __construct(
@@ -19,6 +27,8 @@ class PeriodoVacacionController extends Controller
      */
     public function resumen(int $servidorId): JsonResponse
     {
+        $this->authorize('verSaldo', [Vacacion::class, Servidor::findOrFail($servidorId)]);
+
         $resumen = $this->periodoService->resumen($servidorId);
         return ApiResponse::ok($resumen, 'Resumen de períodos de vacaciones.');
     }
@@ -28,8 +38,10 @@ class PeriodoVacacionController extends Controller
      */
     public function generar(Request $request, int $servidorId): JsonResponse
     {
+        $this->authorize('gestionarPeriodos', Vacacion::class);
+
         $anio    = $request->input('anio', now()->year);
-        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
+        $servidor = Servidor::findOrFail($servidorId);
         $periodo  = $this->periodoService->generarPeriodo($servidor, (int)$anio);
 
         return ApiResponse::ok($periodo, "Período {$anio} generado correctamente.");
@@ -44,11 +56,13 @@ class PeriodoVacacionController extends Controller
      */
     public function previsualizarRecalculo(Request $request, int $servidorId): JsonResponse
     {
+        $this->authorize('gestionarPeriodos', Vacacion::class);
+
         $datos = $request->validate([
             'anio' => ['required', 'integer', 'min:2000', 'max:2100'],
         ]);
 
-        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
+        $servidor = Servidor::findOrFail($servidorId);
 
         $previsualizacion = $this->periodoService->previsualizarRecalculo(
             $servidor, (int) $datos['anio']
@@ -74,11 +88,13 @@ class PeriodoVacacionController extends Controller
      */
     public function recalcularCerrado(Request $request, int $servidorId): JsonResponse
     {
+        $this->authorize('gestionarPeriodos', Vacacion::class);
+
         $datos = $request->validate([
             'anio' => ['required', 'integer', 'min:2000', 'max:2100'],
         ]);
 
-        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
+        $servidor = Servidor::findOrFail($servidorId);
 
         $periodo = PeriodoVacacion::where('servidor_id', $servidorId)
             ->where('anio', $datos['anio'])
@@ -121,6 +137,8 @@ class PeriodoVacacionController extends Controller
      */
     public function generarTodos(Request $request): JsonResponse
     {
+        $this->authorize('gestionarPeriodos', Vacacion::class);
+
         $anio      = $request->input('anio', now()->year);
         $resultados = $this->periodoService->generarPeriodosAnuales((int)$anio);
 

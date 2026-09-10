@@ -2,10 +2,12 @@
 
 use App\Enums\RegimenLaboral;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Services\Asistencia\VacacionService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -18,10 +20,12 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
  * profesionales —agregado el 2026-08-29— eso significaba calcularle vacaciones
  * con la escala LOSEP.
  *
- * Y lo hacía con consecuencia: `calcularSaldoActual()` cae a un cálculo legacy
- * cuando no hay saldo en los períodos, y ese camino multiplica los días del
- * motor por los años de antigüedad. Un servicios profesionales terminaba con
- * un saldo positivo inventado.
+ * Y lo hacía con consecuencia: `calcularSaldoActual()` caía entonces a un
+ * cálculo legacy que multiplicaba los días del motor por los años de
+ * antigüedad, y un servicios profesionales terminaba con un saldo inventado.
+ * Ese cálculo ya se retiró —el saldo sale solo de los períodos—, pero la regla
+ * del régimen se sigue comprobando: aunque el contratado civil arrastre un
+ * período de cuando era de otro régimen, no tiene saldo que gozar.
  */
 beforeEach(function () {
     UnidadAdministrativa::unguard();
@@ -43,23 +47,39 @@ beforeEach(function () {
         'estado'                       => true,
     ]);
 
+    // Un período abierto con 15 días, igual para los dos regímenes: lo único
+    // que cambia entre los tests es quién es el titular.
+    $this->darPeriodo = fn (Servidor $servidor) => PeriodoVacacion::create([
+        'servidor_id'          => $servidor->id,
+        'anio'                 => now()->year,
+        'fecha_inicio_periodo' => Carbon::create(now()->year, 1, 1),
+        'fecha_fin_periodo'    => Carbon::create(now()->year, 12, 31),
+        'regimen'              => 'losep',
+        'anios_antiguedad'     => 4,
+        'dias_generados'       => 15,
+        'dias_utilizados'      => 0,
+        'dias_saldo'           => 15,
+        'saldo_acumulado'      => 15,
+        'estado'               => 'abierto',
+    ]);
+
     $this->servicio = new VacacionService();
 });
 
 test('un servicios profesionales no tiene saldo de vacaciones', function () {
     $servidor = ($this->crearServidor)(RegimenLaboral::SERVICIOS_PROFESIONALES, '0800000101');
+    ($this->darPeriodo)($servidor);
 
-    // Sin períodos generados, el cálculo legacy le habría dado 15 días por
-    // cada uno de sus 4 años de antigüedad.
     expect($this->servicio->calcularSaldoActual($servidor->id))->toBe(0.0);
 });
 
-test('un LOSEP con la misma antigüedad sí tiene saldo', function () {
+test('un LOSEP con el mismo período sí tiene saldo', function () {
     // Control: si el saldo diera cero para todos, el test anterior no probaría
     // nada.
     $servidor = ($this->crearServidor)(RegimenLaboral::LOSEP, '0800000102');
+    ($this->darPeriodo)($servidor);
 
-    expect($this->servicio->calcularSaldoActual($servidor->id))->toBeGreaterThan(0.0);
+    expect($this->servicio->calcularSaldoActual($servidor->id))->toBe(15.0);
 });
 
 test('pedir vacaciones con un contrato civil se rechaza por el régimen', function () {

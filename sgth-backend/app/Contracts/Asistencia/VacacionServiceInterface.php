@@ -4,6 +4,7 @@ namespace App\Contracts\Asistencia;
 
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
+use App\Models\User;
 
 interface VacacionServiceInterface
 {
@@ -21,6 +22,13 @@ interface VacacionServiceInterface
      * @param  array  $datos  ['fecha_inicio', 'fecha_fin']
      */
     public function solicitar(array $datos, int $servidorId): Vacacion;
+
+    /**
+     * Aprueba o rechaza una solicitud PENDIENTE; aprobar descuenta los días.
+     *
+     * @param  'aprobada'|'rechazada'  $nuevoEstado
+     */
+    public function resolver(int $vacacionId, string $nuevoEstado, User $resolutor): Vacacion;
 
     /**
      * Calcula el saldo actual de vacaciones del servidor.

@@ -8,10 +8,12 @@ import type { DataTableColumn } from 'mantine-datatable'
 import type { Vacacion } from '@/types/api'
 
 interface ColumnActions {
-  exportandoId: number | null
-  onExportar:   (id: number) => void
-  onAprobar:    (id: number) => void
-  onRechazar:   (id: number) => void
+  exportandoId:  number | null
+  /** `aprobar-vacaciones`: sin él, Aprobar y Rechazar no se ofrecen. */
+  puedeResolver: boolean
+  onExportar:    (id: number) => void
+  onAprobar:     (id: number) => void
+  onRechazar:    (id: number) => void
 }
 
 /** Las fechas vienen como `date` sin hora: se leen en UTC o se corren un día. */
@@ -109,7 +111,7 @@ export function getVacacionesColumns(
               icon: <IconCheck size={14} />,
               color: 'emerald',
               onClick: () => actions.onAprobar(v.id),
-              hidden: v.estado !== 'pendiente',
+              hidden: !actions.puedeResolver || v.estado !== 'pendiente',
             },
             {
               label: 'Rechazar',
@@ -124,7 +126,7 @@ export function getVacacionesColumns(
                   confirmLabel: 'Rechazar',
                   onConfirm: () => actions.onRechazar(v.id),
                 }),
-              hidden: v.estado !== 'pendiente',
+              hidden: !actions.puedeResolver || v.estado !== 'pendiente',
             },
           ]}
         />
