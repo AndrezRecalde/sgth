@@ -3,13 +3,14 @@
 import {
   Modal, Stack, Text, Group, Badge,
   NumberInput, Button, Alert, Card,
-  ThemeIcon, 
+  ThemeIcon, Grid,
 } from '@mantine/core'
 import {
   IconPill, IconCheck, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useDespacharReceta } from '../hooks/useReceta'
 import { esItemExterno, nombreDeItem } from '../services/recetaService'
 import type { RecetaMedica, ItemReceta } from '../services/recetaService'
@@ -57,6 +58,7 @@ export function DespacharRecetaModal({
 }: Props) {
   const contained  = useContainedInput()
   const despachar  = useDespacharReceta()
+  const { isMobile } = useMobileBreakpoint()
 
   const [cantidades, setCantidades] = useState<Record<number, number>>({})
 
@@ -117,12 +119,16 @@ export function DespacharRecetaModal({
   }
 
   return (
+    // A pantalla completa en el teléfono, como el de emitir: despachar es
+    // rellenar cantidades ítem por ítem, y en una ventana flotante de 375px eso
+    // ocurre dentro de un recuadro que apenas deja ver dos medicamentos.
     <Modal
       opened={opened}
       onClose={handleClose}
       title="Despachar receta médica"
       size="lg"
-      radius="xl"
+      fullScreen={isMobile}
+      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="sm">
         <Card withBorder radius="md" p="sm">
@@ -267,39 +273,47 @@ export function DespacharRecetaModal({
                       </Badge>
                     </Group>
 
-                    <Group grow align="flex-end" gap="sm">
-                      <Stack gap={2}>
+                    {/* Los tres números caben en una fila hasta en el teléfono;
+                        el campo baja a ancho completo. Con `Group grow`, a
+                        375px los cuatro se repartían el ancho a partes iguales
+                        y la etiqueta «Cantidad a despachar» quedaba cortada
+                        justo en el único elemento con el que hay que
+                        interactuar. */}
+                    <Grid align="flex-end" gap="sm">
+                      <Grid.Col span={{ base: 4, sm: 3 }}>
                         <Text size="xs" c="dimmed">Prescrito</Text>
                         <Text size="sm" fw={500}>
                           {item.cantidad_prescrita}
                         </Text>
-                      </Stack>
-                      <Stack gap={2}>
+                      </Grid.Col>
+                      <Grid.Col span={{ base: 4, sm: 3 }}>
                         <Text size="xs" c="dimmed">Ya despachado</Text>
                         <Text size="sm">
                           {item.cantidad_despachada ?? 0}
                         </Text>
-                      </Stack>
-                      <Stack gap={2}>
+                      </Grid.Col>
+                      <Grid.Col span={{ base: 4, sm: 2 }}>
                         <Text size="xs" c="dimmed">Faltante</Text>
                         <Text size="sm" fw={500} c="orange">
                           {faltante}
                         </Text>
-                      </Stack>
-                      <NumberInput
-                        label="Cantidad a despachar"
-                        size="xs"
-                        min={0}
-                        max={tope}
-                        disabled={hayEntregable === 0}
-                        {...contained}
-                        value={cantidades[item.id!] ?? 0}
-                        onChange={(v) => setCantidades(prev => ({
-                          ...prev,
-                          [item.id!]: Math.min(Number(v) || 0, tope),
-                        }))}
-                      />
-                    </Group>
+                      </Grid.Col>
+                      <Grid.Col span={{ base: 12, sm: 4 }}>
+                        <NumberInput
+                          label="Cantidad a despachar"
+                          size="xs"
+                          min={0}
+                          max={tope}
+                          disabled={hayEntregable === 0}
+                          {...contained}
+                          value={cantidades[item.id!] ?? 0}
+                          onChange={(v) => setCantidades(prev => ({
+                            ...prev,
+                            [item.id!]: Math.min(Number(v) || 0, tope),
+                          }))}
+                        />
+                      </Grid.Col>
+                    </Grid>
                   </Stack>
                 </Card>
               )
