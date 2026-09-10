@@ -2,7 +2,7 @@
 
 import { ActionIcon, Button, Chip, Group, Select, TextInput } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { IconCubePlus, IconSearch, IconX } from '@tabler/icons-react'
+import { IconCubePlus, IconX } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -81,7 +81,8 @@ export function VacacionesFiltros({ filtros, onCambiar, onNueva }: Props) {
         {...contained}
         value={filtros.folio}
         onChange={(e) => onCambiar({ folio: e.currentTarget.value })}
-        leftSection={<IconSearch size={14} />}
+        // Sin `leftSection`: en un campo contained la lupa se monta encima de
+        // la etiqueta (07-formularios). El marcador ya dice qué se busca.
         style={{ minWidth: 220 }}
         rightSection={
           filtros.folio ? (
@@ -121,28 +122,35 @@ export function VacacionesFiltros({ filtros, onCambiar, onNueva }: Props) {
         style={{ minWidth: 240 }}
       />
 
-      <DatePickerInput
-        label="Desde"
-        placeholder="Sin límite"
-        valueFormat="YYYY-MM-DD"
-        clearable
-        {...contained}
-        value={toDate(filtros.fechaDesde)}
-        onChange={(d) => onCambiar({ fechaDesde: fromDate(d ?? null) })}
-        style={{ minWidth: 150 }}
-      />
+      {/*
+        Desde y Hasta son un solo filtro —un rango— y van juntos. Sueltos, la
+        barra partía la fila entre los dos: «Desde» quedaba arriba y «Hasta»
+        abajo a la izquierda, sin nada que los relacionara.
+      */}
+      <Group gap="sm" wrap="nowrap" align="flex-end">
+        <DatePickerInput
+          label="Desde"
+          placeholder="Sin límite"
+          valueFormat="YYYY-MM-DD"
+          clearable
+          {...contained}
+          value={toDate(filtros.fechaDesde)}
+          onChange={(d) => onCambiar({ fechaDesde: fromDate(d ?? null) })}
+          style={{ minWidth: 150 }}
+        />
 
-      <DatePickerInput
-        label="Hasta"
-        placeholder="Sin límite"
-        valueFormat="YYYY-MM-DD"
-        clearable
-        minDate={toDate(filtros.fechaDesde) ?? undefined}
-        {...contained}
-        value={toDate(filtros.fechaHasta)}
-        onChange={(d) => onCambiar({ fechaHasta: fromDate(d ?? null) })}
-        style={{ minWidth: 150 }}
-      />
+        <DatePickerInput
+          label="Hasta"
+          placeholder="Sin límite"
+          valueFormat="YYYY-MM-DD"
+          clearable
+          minDate={toDate(filtros.fechaDesde) ?? undefined}
+          {...contained}
+          value={toDate(filtros.fechaHasta)}
+          onChange={(d) => onCambiar({ fechaHasta: fromDate(d ?? null) })}
+          style={{ minWidth: 150 }}
+        />
+      </Group>
 
       <Group gap="xs">
         {FILTROS_ESTADO.map((valor) => (
