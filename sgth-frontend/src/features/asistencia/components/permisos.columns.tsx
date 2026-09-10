@@ -5,6 +5,7 @@ import {
   IconArrowBackUp, IconCheck, IconPrinter, IconShieldCheck, IconX,
 } from '@tabler/icons-react'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import {
   ESTADOS_CONFIRMADOS, ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO,
 } from './permisos.constants'
@@ -56,9 +57,11 @@ export function getPermisosColumns(
     {
       accessor: 'tipo',
       title: 'Tipo',
-      width: 100,
+      // «ENFERMEDAD» mide 89 px y la celda lleva 32 de relleno: con 100 se
+      // salía por la derecha, igual que CALAMIDAD y PERSONAL.
+      width: 130,
       render: ({ tipo }) => (
-        <Badge size="sm" variant="light" color="blue">
+        <Badge size="sm" variant="light" color={SEMANTIC_COLOR.info}>
           {TIPO_LABELS[tipo as string] ?? tipo}
         </Badge>
       ),
@@ -89,7 +92,7 @@ export function getPermisosColumns(
             <Text size="sm" ff="monospace">
               {hora_inicio.substring(0, 5)} — {hora_fin.substring(0, 5)}
             </Text>
-            <Badge size="xs" color="blue" variant="light">
+            <Badge size="xs" color={SEMANTIC_COLOR.info} variant="light">
               {duracion(hora_inicio, hora_fin)}
             </Badge>
           </Stack>
@@ -112,7 +115,11 @@ export function getPermisosColumns(
         )
 
         return (
-          <Badge size="sm" variant="light" color={dias <= 1 ? 'red' : 'amber'}>
+          <Badge
+            size="sm"
+            variant="light"
+            color={SEMANTIC_COLOR[dias <= 1 ? 'danger' : 'warning']}
+          >
             {dias <= 0 ? 'Vencido' : dias === 1 ? 'Hoy' : `${dias} días`}
           </Badge>
         )
@@ -121,7 +128,9 @@ export function getPermisosColumns(
     {
       accessor: 'estado',
       title: 'Estado',
-      width: 140,
+      // «FALTA INJUSTIFICADA» mide 133 px: con 140 de celda y 32 de relleno
+      // desbordaba 25.
+      width: 180,
       render: ({ estado }) => (
         <StatusBadge tone={TONO_ESTADO[estado as string] ?? 'neutral'}>
           {ESTADO_LABELS[estado as string] ?? estado}
