@@ -1,6 +1,4 @@
 @php
-  $servPath  = public_path('images/servidor-bg.png');
-  $recepPath = public_path('images/recepcion-bg.png');
   $logoPath  = public_path('images/logo-gadpe.png');
 
   $tipoLabels = [
@@ -38,8 +36,14 @@
     ? \App\Enums\RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO->cargoPorDefecto()
     : 'JEFE INMEDIATO';
 
+  // Los permisos antiguos no guardaban unidad y el campo salía vacío. El
+  // servicio ya rellena la del servidor al crear; aquí se hace lo mismo al
+  // imprimir los que quedaron sin ella.
   $unidad = mb_strtoupper(
-    $permiso->unidadAdministrativa->nombre ?? '', 'UTF-8'
+    $permiso->unidadAdministrativa->nombre
+      ?? $permiso->servidor->unidadAdministrativa->nombre
+      ?? '',
+    'UTF-8'
   );
 
   $fechaPermiso = $permiso->fecha instanceof \Carbon\Carbon
@@ -50,8 +54,8 @@
     ? \Carbon\Carbon::parse($permiso->created_at)->format('Y-m-d H:i:s')
     : now()->format('Y-m-d H:i:s');
 
-  $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i:s');
-  $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i:s');
+  $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i');
+  $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i');
 
   // Quien imprime no siempre puede leer el motivo: un permiso por enfermedad
   // lleva un dato de salud y uno personal, un asunto privado. La decisión la
@@ -94,8 +98,8 @@
   $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null;
 
   $copies = [
-    ['bgClass' => 'bg-servidor',  'label' => 'COPIA SERVIDOR'],
-    ['bgClass' => 'bg-recepcion', 'label' => 'COPIA TALENTO HUMANO'],
+    ['marca' => 'SERVIDOR',       'label' => 'COPIA SERVIDOR'],
+    ['marca' => 'TALENTO HUMANO', 'label' => 'COPIA TALENTO HUMANO'],
   ];
 @endphp
 <!DOCTYPE html>
@@ -132,17 +136,25 @@
     page-break-inside: avoid;
   }
 
-  .bg-servidor {
-    background-image: url('{{ $servPath }}');
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-  .bg-recepcion {
-    background-image: url('{{ $recepPath }}');
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
+  /* Marca de agua: a qué copia pertenece el papel.
+
+     Era una imagen de fondo, y las celdas de la tabla y los recuadros de firma
+     —con su propio fondo— la tapaban: solo asomaban trozos entre ellos. Ahora
+     es texto dibujado ENCIMA del contenido y casi transparente, así que se ve
+     entera sin estorbar la lectura. Y dice lo mismo que el pie de la copia:
+     la imagen de la segunda decía RECEPCIÓN mientras el pie decía TALENTO
+     HUMANO. */
+  .marca-agua {
+    position: absolute;
+    top: 190px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 56px;
+    font-weight: bold;
+    color: #64748b;
+    opacity: 0.10;
+    transform: rotate(-24deg);
   }
 
   /* ── HEADER ── */
@@ -212,7 +224,7 @@
 
 @foreach($copies as $i => $copy)
 
-<div class="copia {{ $copy['bgClass'] }}">
+<div class="copia">
 
   {{-- ══ HEADER ══ --}}
   <table class="header-table">
@@ -275,7 +287,11 @@
           <div class="f-lbl">Firma: {{ $rotuloJefe }}</div>
           <div style="height: 55px;"></div>
           <div class="firma-line"></div>
-          <div class="f-name">{{ $nombreJefe ?: '__________________' }}</div>
+          {{-- Sin jefe asignado no se imprimen guiones: debajo de la línea de
+               firma quedaba una segunda línea más corta, como un error. El
+               espacio conserva la altura para que los recuadros no se
+               descuadren. --}}
+          <div class="f-name">@if($nombreJefe){{ $nombreJefe }}@else&nbsp;@endif</div>
           <div class="f-cargo">{{ $cargoJefe }}</div>
         </div>
       </td>
@@ -313,11 +329,20 @@
 
   <div class="copy-label">{{ $copy['label'] }} — SGTH GADPE</div>
 
+  {{-- Al final a propósito: lo que va después se pinta encima. --}}
+  <div class="marca-agua">{{ $copy['marca'] }}</div>
+
 </div>
 
 @if(!$loop->last)
+{{--
+  Sin tijeras: Helvetica no tiene ese símbolo y salía «? CORTAR AQUÍ ?».
+  DejaVu Sans sí lo dibuja, pero dompdf incrusta la fuente entera y el PDF
+  pasaba de ~160 KB a más del doble por dos caracteres. La línea discontinua
+  ya marca el corte.
+--}}
 <div class="separador">
-  ✂ &nbsp;&nbsp;&nbsp; CORTAR AQUÍ &nbsp;&nbsp;&nbsp; ✂
+  CORTAR AQUÍ
 </div>
 @endif
 
