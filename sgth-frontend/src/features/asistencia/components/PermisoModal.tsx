@@ -13,7 +13,6 @@ import {
   Stepper,
   Alert,
   Divider,
-  Switch,
 } from "@mantine/core";
 import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useForm, Controller, useWatch } from "react-hook-form";
@@ -30,6 +29,7 @@ import { useUnidades } from "@/features/estructura/hooks/useUnidades";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
 import { useExportarPermiso } from "../hooks/useExportarPermiso";
+import { DirigirATalentoHumano } from "./DirigirATalentoHumano";
 import {
   esTipoRetroactivo,
   fromDate,
@@ -130,6 +130,7 @@ export function PermisoModal({ opened, onClose }: Props) {
 
   const tipoWatch = useWatch({ control, name: "tipo" });
   const dirigidoATh = useWatch({ control, name: "dirigido_a_talento_humano" });
+  const servidorWatch = useWatch({ control, name: "servidor_id" });
   const esRetroactivo = esTipoRetroactivo(tipoWatch);
 
   const handleClose = () => {
@@ -203,6 +204,7 @@ export function PermisoModal({ opened, onClose }: Props) {
                     setUnidadSelId(id ?? null);
                     setValue("servidor_id", 0);
                     setValue("jefe_id", null);
+                    setValue("dirigido_a_talento_humano", false);
                   }}
                   error={errors.unidad_administrativa_id?.message}
                 />
@@ -230,9 +232,13 @@ export function PermisoModal({ opened, onClose }: Props) {
                       disabled={!unidadSelId}
                       {...contained}
                       value={field.value ? String(field.value) : null}
-                      onChange={(v) =>
-                        field.onChange(v ? Number(v) : undefined)
-                      }
+                      onChange={(v) => {
+                        field.onChange(v ? Number(v) : undefined);
+                        // La opción de Talento Humano se confirmó para otro
+                        // servidor: si el nuevo es el propio jefe de TH ya no
+                        // cabe, y en cualquier caso hay que volver a decidirla.
+                        setValue("dirigido_a_talento_humano", false);
+                      }}
                       error={errors.servidor_id?.message}
                     />
                   )}
@@ -280,12 +286,10 @@ export function PermisoModal({ opened, onClose }: Props) {
               name="dirigido_a_talento_humano"
               control={control}
               render={({ field }) => (
-                <Switch
-                  label="Dirigir al jefe de Talento Humano"
-                  description="Omite al jefe inmediato: el permiso lo firma quien dirija la unidad de Talento Humano."
-                  checked={field.value}
-                  onChange={(e) => {
-                    const activo = e.currentTarget.checked;
+                <DirigirATalentoHumano
+                  activo={field.value}
+                  servidorId={servidorWatch || undefined}
+                  onCambiar={(activo) => {
                     field.onChange(activo);
                     if (activo) setValue("jefe_id", null);
                   }}
