@@ -9,8 +9,9 @@ import {
   Group,
   Text,
   Alert,
+  Checkbox,
 } from "@mantine/core";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconCheck, IconInfoCircle } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -58,6 +59,7 @@ export function RecetaModal({
     resolver: zodResolver(recetaSchema),
     defaultValues: {
       indicaciones_generales: "",
+      omitir_alergias: false,
       items: [],
     },
   });
@@ -129,6 +131,7 @@ export function RecetaModal({
         consulta_medica_id: consulta.id,
         fecha_emision: fecha,
         indicaciones_generales: values.indicaciones_generales || null,
+        omitir_alergias: values.omitir_alergias,
         items: values.items.map((item) => ({
           inventario_medicina_id: item.inventario_medicina_id,
           medicamento_externo: item.medicamento_externo,
@@ -187,6 +190,27 @@ export function RecetaModal({
             minRows={2}
             {...contained}
             {...register("indicaciones_generales")}
+          />
+
+          {/* Decide qué se imprime, no qué se registra: las alergias siguen en
+              la historia clínica y a la vista del dispensario en cualquier
+              caso. Va aquí, junto a lo demás que afecta al papel, y no entre
+              los medicamentos. */}
+          <Controller
+            name="omitir_alergias"
+            control={control}
+            render={({ field }) => (
+              <Checkbox
+                label="No imprimir las alergias en esta receta"
+                description={
+                  "Márcalo solo si el alérgeno delataría el diagnóstico del " +
+                  "paciente. El impreso dirá que se consulten en el " +
+                  "dispensario, sin afirmar que no las tiene."
+                }
+                checked={field.value}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
+              />
+            )}
           />
 
           <Stack gap="xs">

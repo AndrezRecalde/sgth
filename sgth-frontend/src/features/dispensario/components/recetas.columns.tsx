@@ -1,7 +1,7 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
-import { IconCheck, IconEye, IconBan } from '@tabler/icons-react'
+import { IconCheck, IconEye, IconBan, IconPrinter } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import type { SemanticTone } from '@/config/design.tokens'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -52,12 +52,22 @@ interface ColumnActions {
   /** Abre el modal de despacho, o el detalle si la receta ya está cerrada. */
   onAbrir: (receta: RecetaMedica) => void
   onAnular: (receta: RecetaMedica) => void
+  /** Abre el impreso para entregárselo al paciente. */
+  onImprimir: (receta: RecetaMedica) => void
 }
 
 export function getRecetasColumns(
-  { onAbrir, onAnular }: ColumnActions
+  { onAbrir, onAnular, onImprimir }: ColumnActions
 ): DataTableColumn<RecetaMedica>[] {
   return [
+    {
+      accessor: 'folio',
+      title:    'Receta N°',
+      width:    130,
+      render: (r) => (
+        <Text size="sm" ff="monospace">{r.folio ?? '—'}</Text>
+      ),
+    },
     {
       accessor: 'fecha_emision',
       title:    'Fecha emisión',
@@ -131,6 +141,12 @@ export function getRecetasColumns(
                 : <IconCheck size={14} />,
               color:   cerrada ? 'blue' : 'emerald',
               onClick: () => onAbrir(r),
+            },
+            {
+              label:   'Imprimir receta',
+              icon:    <IconPrinter size={14} />,
+              color:   'ocean',
+              onClick: () => onImprimir(r),
             },
             ...(NO_ANULABLES.includes(r.estado) ? [] : [{
               label:   'Anular receta',

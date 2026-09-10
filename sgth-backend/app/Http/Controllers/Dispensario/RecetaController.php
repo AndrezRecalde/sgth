@@ -7,9 +7,11 @@ use App\Http\Requests\Dispensario\StoreRecetaMedicaRequest;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Dispensario\RecetaServiceInterface;
 use App\Models\Dispensario\RecetaMedica;
+use App\Services\Dispensario\PdfRecetaService;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 
 final class RecetaController extends Controller
@@ -18,8 +20,21 @@ final class RecetaController extends Controller
     private const PER_PAGE_MAX = 100;
 
     public function __construct(
-        private readonly RecetaServiceInterface $recetaService
+        private readonly RecetaServiceInterface $recetaService,
+        private readonly PdfRecetaService $pdfService
     ) {}
+
+    /** El impreso, para entregárselo al paciente o archivarlo. */
+    public function pdf(int $id): Response
+    {
+        $resultado = $this->pdfService->generarContent($id);
+
+        return response($resultado['content'], 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'
+                . $resultado['filename'] . '"',
+        ]);
+    }
 
     public function index(Request $request): JsonResponse
     {
