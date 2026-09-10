@@ -322,3 +322,48 @@ it('imprime las alergias por defecto, sin que nadie lo pida', function () {
     // impreso protege por defecto.
     expect(RecetaMedica::find($recetaId)->omitir_alergias)->toBeFalse();
 });
+
+it('marca con un asterisco lo que el paciente compra fuera', function () {
+    $medicina = medicinaPdf('PDF-010', 'Metformina');
+
+    $html = impresoDe(emitirParaPdf([
+        ['inventario_medicina_id' => $medicina->id],
+        ['medicamento_externo' => 'Empagliflozina 10 mg'],
+    ], $this->consulta));
+
+    // Sin la marca, el paciente sale del mostrador sin saber cuál de los dos
+    // tiene que ir a comprar.
+    expect($html)->toContain('Empagliflozina 10 mg</span><span class="marca-externo">*</span>')
+        ->and($html)->toContain('No se entrega en el Dispensario Médico del GADPE')
+        // Y lo del catálogo no se marca. Se busca por el principio activo, que
+        // es lo que el impreso pone en negrita al recetar en genérico.
+        ->and($html)->toContain('metformina</span>')
+        ->and($html)->not->toContain('metformina</span><span class="marca-externo">');
+});
+
+it('no pone la nota al pie si todo sale del dispensario', function () {
+    $medicina = medicinaPdf('PDF-011', 'Enalapril');
+
+    $html = impresoDe(emitirParaPdf(
+        [['inventario_medicina_id' => $medicina->id]], $this->consulta
+    ));
+
+    // Se busca la etiqueta y no la clase: el nombre de la clase está siempre
+    // en la hoja de estilos, así que buscarlo a secas nunca fallaría.
+    expect($html)->not->toContain('<span class="marca-externo">')
+        ->and($html)->not->toContain('No se entrega en el Dispensario');
+});
+
+it('no marca lo que esta en el catalogo aunque hoy este agotado', function () {
+    // Agotado no es externo: mañana puede haber, y la receta se despacha
+    // después. Marcarlo diría del fármaco algo que solo es cierto hoy.
+    $agotada = medicinaPdf('PDF-012', 'Salbutamol');
+
+    expect($agotada->stock_actual)->toBe(0);
+
+    $html = impresoDe(emitirParaPdf(
+        [['inventario_medicina_id' => $agotada->id]], $this->consulta
+    ));
+
+    expect($html)->not->toContain('<span class="marca-externo">');
+});
