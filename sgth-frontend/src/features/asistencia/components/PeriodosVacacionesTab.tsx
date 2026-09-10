@@ -27,6 +27,7 @@ import { useContainedInput } from "@/hooks/useContainedInput";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
+import { TopeAcumulacionCard } from "./TopeAcumulacionCard";
 import {
   SgthTable,
   StatusBadge,
@@ -134,6 +135,10 @@ export function PeriodosVacacionesTab() {
   const periodos = (resumen?.periodos ?? []) as PeriodoVacacion[];
   const saldoTotal = resumen?.saldo_total ?? 0;
   const alertaLimite = resumen?.alerta_limite ?? false;
+  // El tope de su régimen: 60 en LOSEP, tres años de lo que genera en el
+  // Código del Trabajo. Antes el aviso decía «límite LOSEP» a cualquiera.
+  const tope = resumen?.tope ?? null;
+  const excedente = resumen?.excedente ?? 0;
 
   const columns: DataTableColumn<PeriodoVacacion>[] = [
     {
@@ -231,10 +236,12 @@ export function PeriodosVacacionesTab() {
       accessor: "dias_saldo",
       title: "Saldo",
       width: 130,
-      render: ({ dias_saldo, dias_generados }) => {
+      render: ({ dias_saldo, dias_generados, dias_utilizados, dias_vencidos }) => {
         const saldo = Number(dias_saldo);
         const generado = Number(dias_generados);
-        const usado = generado - saldo;
+        // Lo gozado, sin lo vencido por el tope: eso no se usó, se perdió.
+        const usado = Number(dias_utilizados);
+        const vencidos = Number(dias_vencidos ?? 0);
         const pct =
           generado > 0
             ? Math.min(100, Math.round((usado / generado) * 100))
@@ -275,6 +282,11 @@ export function PeriodosVacacionesTab() {
                 }}
               />
             </div>
+            {vencidos > 0 && (
+              <Text size="xs" c="red">
+                {vencidos.toFixed(1)} vencidos por el tope
+              </Text>
+            )}
           </Stack>
         );
       },
@@ -283,9 +295,10 @@ export function PeriodosVacacionesTab() {
       accessor: "saldo_acumulado",
       title: "Acumulado",
       width: 100,
-      render: ({ saldo_acumulado, regimen }) => {
+      render: ({ saldo_acumulado }) => {
         const acum = Number(saldo_acumulado);
-        const enAlerta = acum >= 45 && regimen === "losep";
+        // El mismo umbral que el resumen: el 75 % del tope de su régimen.
+        const enAlerta = tope !== null && acum >= tope * 0.75;
         return (
           <Group gap={4}>
             <Text size="sm" fw={600} c={enAlerta ? "orange" : "inherit"}>
@@ -376,6 +389,9 @@ export function PeriodosVacacionesTab() {
         </Group>
       </Card>
 
+      {/* ── Tope de acumulación: quién está cerca o lo pasa ── */}
+      <TopeAcumulacionCard />
+
       <Divider label="Consulta por servidor" labelPosition="left" />
 
       {/* ── PANEL INFERIOR: Consulta individual ── */}
@@ -447,10 +463,11 @@ export function PeriodosVacacionesTab() {
             >
               {Number(saldoTotal).toFixed(1)} días
             </Badge>
-            {alertaLimite && (
+            {alertaLimite && tope !== null && (
               <Text size="xs" c="orange" fw={500}>
-                Servidor acumula más de 45 días — debe gozar vacaciones
-                pronto (límite LOSEP: 60 días)
+                {excedente > 0
+                  ? `Pasa su tope de ${tope.toFixed(0)} días por ${excedente.toFixed(1)}: Talento Humano debe decidir si vence el excedente.`
+                  : `Se acerca a su tope de ${tope.toFixed(0)} días: conviene que goce vacaciones pronto.`}
               </Text>
             )}
           </Group>

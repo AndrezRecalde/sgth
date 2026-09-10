@@ -1385,6 +1385,8 @@ export type PeriodoVacacion = {
   anios_antiguedad:     number
   dias_generados:       number | string
   dias_utilizados:      number | string
+  /** Perdidos por pasar el tope de acumulación: no son días gozados. */
+  dias_vencidos?:       number | string
   dias_saldo:           number | string
   saldo_acumulado:      number | string
   estado:               'abierto' | 'cerrado' | 'vencido'
@@ -1419,8 +1421,32 @@ export type ResumenPeriodos = {
   periodos:      PeriodoVacacion[]
   saldo_total:   number
   alerta_limite: boolean
+  /** Tope de acumulación de su régimen: 60 en LOSEP, tres años en el CT. */
+  tope?:         number | null
+  excedente?:    number
   total_vacaciones_aprobadas?: number
   total_permisos_personales?:  number
+}
+
+/** Un servidor cerca o por encima de su tope de acumulación. */
+export type ServidorSobreTope = {
+  servidor_id: number
+  nombre:      string
+  cedula:      string
+  unidad:      string | null
+  regimen:     RegimenServidor
+  saldo:       number
+  tope:        number
+  excedente:   number
+}
+
+/** Lo que dejó vencer el excedente de un servidor. */
+export type VencimientoExcedente = {
+  dias_vencidos: number
+  saldo_antes:   number
+  saldo_despues: number
+  tope:          number
+  tramos:        { anio: number; dias: number }[]
 }
 
 export type ConsolidadoPermiso = {

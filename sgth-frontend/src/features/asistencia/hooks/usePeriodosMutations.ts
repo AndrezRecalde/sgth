@@ -3,6 +3,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import React from "react";
 import { asistenciaService } from "../services/asistenciaService";
+import { getApiErrorMessage } from "@/types/api";
 
 export function usePeriodosMutations() {
   const qc = useQueryClient();
@@ -81,5 +82,38 @@ export function usePeriodosMutations() {
     onError,
   });
 
-  return { generar, generarTodos, previsualizarRecalculo, recalcularCerrado };
+  /**
+   * Vencer el excedente sobre el tope. Quita días a una persona: el mensaje
+   * del backend dice cuántos y cómo quedó el saldo, y un error se muestra con
+   * su motivo, no con un «no se pudo» genérico.
+   */
+  const vencerExcedente = useMutation({
+    mutationFn: (servidorId: number) =>
+      asistenciaService.periodos.vencerExcedente(servidorId),
+    onSuccess: (respuesta) => {
+      notifications.show({
+        title: "Excedente vencido",
+        message: respuesta.mensaje,
+        color: "orange",
+        icon: React.createElement(IconCheck, { size: 16 }),
+        autoClose: 8000,
+      });
+      qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
+    },
+    onError: (error: unknown) =>
+      notifications.show({
+        title: "Error",
+        message: getApiErrorMessage(error),
+        color: "red",
+        icon: React.createElement(IconX, { size: 16 }),
+      }),
+  });
+
+  return {
+    generar,
+    generarTodos,
+    previsualizarRecalculo,
+    recalcularCerrado,
+    vencerExcedente,
+  };
 }
