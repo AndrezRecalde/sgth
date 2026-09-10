@@ -13,6 +13,7 @@ import {
   Stepper,
   Alert,
   Divider,
+  Switch,
 } from "@mantine/core";
 import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useForm, Controller, useWatch } from "react-hook-form";
@@ -118,6 +119,7 @@ export function PermisoModal({ opened, onClose }: Props) {
       unidad_administrativa_id: undefined,
       servidor_id: undefined,
       jefe_id: null,
+      dirigido_a_talento_humano: false,
       tipo: "personal",
       fecha: "",
       hora_inicio: "08:00",
@@ -127,6 +129,7 @@ export function PermisoModal({ opened, onClose }: Props) {
   });
 
   const tipoWatch = useWatch({ control, name: "tipo" });
+  const dirigidoATh = useWatch({ control, name: "dirigido_a_talento_humano" });
   const esRetroactivo = esTipoRetroactivo(tipoWatch);
 
   const handleClose = () => {
@@ -141,7 +144,12 @@ export function PermisoModal({ opened, onClose }: Props) {
     const result = await crear.mutateAsync({
       unidad_administrativa_id: values.unidad_administrativa_id,
       servidor_id:              values.servidor_id,
-      jefe_id:                  values.jefe_id ?? null,
+      // Con la opción activa el jefe lo resuelve el backend: mandar además un
+      // `jefe_id` sería ofrecer un dato que se va a ignorar.
+      jefe_id:                  values.dirigido_a_talento_humano
+        ? null
+        : (values.jefe_id ?? null),
+      dirigido_a_talento_humano: values.dirigido_a_talento_humano,
       tipo:                     values.tipo,
       fecha:                    values.fecha,
       hora_inicio:              values.hora_inicio,
@@ -240,16 +248,18 @@ export function PermisoModal({ opened, onClose }: Props) {
                     <Select
                       label="Jefe inmediato"
                       placeholder={
-                        !unidadSelId
-                          ? "Seleccione primero la unidad"
-                          : jefeOptions.length === 0
-                            ? "Sin jefes en esta unidad"
-                            : "Seleccionar jefe"
+                        dirigidoATh
+                          ? "Firma el jefe de Talento Humano"
+                          : !unidadSelId
+                            ? "Seleccione primero la unidad"
+                            : jefeOptions.length === 0
+                              ? "Sin jefes en esta unidad"
+                              : "Seleccionar jefe"
                       }
                       data={jefeOptions}
                       searchable
                       clearable
-                      disabled={!unidadSelId}
+                      disabled={!unidadSelId || dirigidoATh}
                       {...contained}
                       value={field.value ? String(field.value) : null}
                       onChange={(v) => field.onChange(v ? Number(v) : null)}
@@ -259,6 +269,29 @@ export function PermisoModal({ opened, onClose }: Props) {
                 />
               </Grid.Col>
             </Grid>
+
+            {/*
+              Omitir al jefe inmediato. Quien firma entonces no se elige: es el
+              jefe vigente de la unidad de Talento Humano, o quien lo subrogue,
+              y lo resuelve el backend con la misma regla que las Acciones de
+              Personal.
+            */}
+            <Controller
+              name="dirigido_a_talento_humano"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Dirigir al jefe de Talento Humano"
+                  description="Omite al jefe inmediato: el permiso lo firma quien dirija la unidad de Talento Humano."
+                  checked={field.value}
+                  onChange={(e) => {
+                    const activo = e.currentTarget.checked;
+                    field.onChange(activo);
+                    if (activo) setValue("jefe_id", null);
+                  }}
+                />
+              )}
+            />
 
             <Divider label="Datos del permiso" labelPosition="left" />
 

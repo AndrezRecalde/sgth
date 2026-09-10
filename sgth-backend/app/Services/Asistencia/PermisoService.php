@@ -4,11 +4,13 @@ namespace App\Services\Asistencia;
 
 use App\Contracts\Asistencia\PermisoServiceInterface;
 use App\Enums\EstadoPermiso;
+use App\Enums\RolFirmaAccionPersonal;
 use App\Enums\TipoPermiso;
 use App\Exceptions\ReglaNegocioException;
 use App\Helpers\DiasHabilesHelper;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Expediente\Servidor;
+use App\Services\Expediente\FirmanteAccionPersonalService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +44,8 @@ class PermisoService implements PermisoServiceInterface
     ];
 
     public function __construct(
-        private PeriodoVacacionService $periodoService
+        private PeriodoVacacionService $periodoService,
+        private FirmanteAccionPersonalService $firmantes,
     ) {}
 
     public function crear(array $datos, int $servidorId): PermisoServidor
@@ -84,10 +87,15 @@ class PermisoService implements PermisoServiceInterface
                 ?? $servidor->unidad_administrativa_id
                 ?? null;
 
+            $dirigidoATh = (bool) ($datos['dirigido_a_talento_humano'] ?? false);
+
             return PermisoServidor::create([
                 'servidor_id'              => $servidorId,
                 'unidad_administrativa_id' => $unidadId,
-                'jefe_id'                  => $datos['jefe_id'] ?? null,
+                'jefe_id'                  => $dirigidoATh
+                    ? $this->jefeDeTalentoHumano($servidorId)
+                    : ($datos['jefe_id'] ?? null),
+                'dirigido_a_talento_humano' => $dirigidoATh,
                 'creado_por'               => $datos['creado_por'] ?? null,
                 'tipo'                     => $tipo->value,
                 'fecha'                    => $fecha->toDateString(),
@@ -99,6 +107,39 @@ class PermisoService implements PermisoServiceInterface
                 'folio'                    => $this->siguienteFolio(),
             ]);
         });
+    }
+
+    /**
+     * Quién firma cuando el permiso se dirige a Talento Humano.
+     *
+     * No se elige a mano: es el jefe vigente de la unidad marcada como Talento
+     * Humano, o quien lo subrogue ese día. Es la misma regla con la que se
+     * resuelven los firmantes de las Acciones de Personal, para que no existan
+     * dos maneras de saber quién dirige la unidad y un día dejen de coincidir.
+     * Por eso lo que llegue en `jefe_id` se ignora en este caso.
+     *
+     * Se resuelve a la fecha de hoy y no a la del permiso: el papel se emite
+     * ahora y lo firma quien ocupe el cargo cuando se lo lleven.
+     *
+     * Con la jefatura vacante devuelve null y el PDF sale con el cargo pero sin
+     * nombre, que es preferible a imprimir a alguien que no va a firmar.
+     */
+    private function jefeDeTalentoHumano(int $servidorId): ?int
+    {
+        $firmante = $this->firmantes->resolver(
+            RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO,
+            now()->toDateString(),
+        )['servidor'];
+
+        if ($firmante?->id === $servidorId) {
+            throw new ReglaNegocioException(
+                'Este permiso no puede dirigirse a Talento Humano: quien lo '.
+                'solicita es el propio jefe de Talento Humano, y nadie firma '.
+                'su propio permiso.'
+            );
+        }
+
+        return $firmante?->id;
     }
 
     public function confirmarRecepcion(

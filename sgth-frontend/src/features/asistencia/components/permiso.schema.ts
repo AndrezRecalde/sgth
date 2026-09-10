@@ -6,6 +6,8 @@ export const permisoSchema = z.object({
   servidor_id: z.number({ error: 'Seleccione el servidor' })
     .min(1, 'Seleccione el servidor'),
   jefe_id: z.number({ error: 'Seleccione el jefe' }).optional().nullable(),
+  // En true, el jefe lo resuelve el backend y `jefe_id` no se envía.
+  dirigido_a_talento_humano: z.boolean(),
   tipo: z.enum(['personal', 'oficial', 'enfermedad', 'calamidad']),
   fecha: z.string().min(1, 'La fecha es requerida'),
   hora_inicio: z.string().min(1, 'Requerido'),

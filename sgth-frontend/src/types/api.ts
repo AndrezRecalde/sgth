@@ -1305,6 +1305,7 @@ export type PermisoServidor = {
   id:               number
   servidor_id:      number
   jefe_id?:         number | null
+  dirigido_a_talento_humano?: boolean
   creado_por?:      number | null
   tipo:             TipoPermiso
   fecha:            string
