@@ -92,6 +92,11 @@
         table.rp .posologia { font-size: 10px; }
         table.rp .observacion { font-size: 9px; color: #555; font-style: italic; }
 
+        .marca-externo { font-weight: bold; }
+        .nota-externos {
+            font-size: 9px; color: #555; margin-top: 4px; padding-left: 2px;
+        }
+
         .cierre {
             text-align: center; font-size: 9px; color: #555;
             letter-spacing: 1px; margin-top: 5px;
@@ -308,12 +313,15 @@
         <tr>
             <td class="num">{{ $loop->iteration }}</td>
             <td>
-                {{-- Nada distingue aquí lo que el dispensario maneja de lo que
-                     no: qué hay en este catálogo es un dato interno y del día
-                     de hoy, y la receta vale en cualquier farmacia. Marcarlo
-                     en el papel que el paciente lleva fuera solo confundiría a
-                     quien se lo despache allí. --}}
-                <span class="farmaco">{{ $generico }}</span>
+                {{-- El asterisco es para el paciente, que si no sale de aquí sin
+                     saber cuál de los seis tiene que ir a comprar. Va sin
+                     rótulo y remite a una nota al pie, para que fuera nadie lo
+                     lea como que el medicamento no está disponible: no lo
+                     maneja ESTE dispensario, y eso es un dato de esta casa, no
+                     del fármaco. Solo marca lo que está fuera del catálogo; lo
+                     que está en él pero hoy agotado, no, porque mañana puede
+                     no estarlo. --}}
+                <span class="farmaco">{{ $generico }}</span>@if ($item->esExterno())<span class="marca-externo">*</span>@endif
                 @if ($ficha)
                     <div class="presentacion">
                         {{ collect([
@@ -339,6 +347,16 @@
     @endforeach
     </tbody>
 </table>
+
+{{-- La nota va antes del cierre para que «fin de la prescripción» siga siendo
+     lo último de la lista. --}}
+@if ($items->contains->esExterno())
+    <div class="nota-externos">
+        <span class="marca-externo">*</span>
+        No se entrega en el Dispensario Médico del GADPE; adquiéralo en una
+        farmacia externa.
+    </div>
+@endif
 
 {{-- El total cierra la lista: sin él, cualquiera puede añadir una línea a
      mano debajo del último medicamento y la receta lo admitiría. --}}
