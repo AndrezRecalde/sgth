@@ -1,6 +1,6 @@
 'use client'
 
-import { RichTextEditor, Link } from '@mantine/tiptap'
+import { RichTextEditor } from '@mantine/tiptap'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
@@ -25,9 +25,24 @@ export function RichTextInput({
   maxHeight = 400,
 }: Props) {
   const editor = useEditor({
+    // El editor no se crea en el primer render, sino después. Es lo que TipTap
+    // ya hacía por su cuenta al detectar Next.js —evita que el HTML del
+    // servidor y el del navegador difieran—, pero al no estar la opción escrita
+    // lo avisaba por consola en cada montaje. Aquí se deja dicho.
+    //
+    // Va en `false` y no en `true`: aunque el componente sea de cliente, Next
+    // lo prerenderiza igual en el servidor, y con `true` TipTap cambiaría este
+    // aviso por el de «SSR detected».
+    immediatelyRender: false,
     extensions: [
-      StarterKit,
-      Link.configure({ openOnClick: false }),
+      // El enlace se configura DENTRO del StarterKit: en TipTap 3 ya lo trae, y
+      // registrarlo además por separado dejaba dos extensiones compitiendo por
+      // el nombre `link`. Ganaba una u otra sin criterio, así que
+      // `openOnClick: false` podía quedarse sin efecto y un clic en un enlace
+      // dentro de una nota clínica navegaba en vez de situar el cursor.
+      StarterKit.configure({
+        link: { openOnClick: false },
+      }),
       Highlight.configure({ multicolor: false }),
     ],
     content: value || '',
