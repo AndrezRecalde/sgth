@@ -491,6 +491,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('{id}/exportar', [VacacionController::class, 'exportar'])
                 ->name('asistencia.vacaciones.exportar');
             Route::put('{id}', [VacacionController::class, 'update']);
+            // Pendiente o aprobada sin comenzar; la aprobada devuelve sus días.
+            Route::post('{id}/anular', [VacacionController::class, 'anular'])
+                ->whereNumber('id')
+                ->name('asistencia.vacaciones.anular');
         });
 
         // Permisos

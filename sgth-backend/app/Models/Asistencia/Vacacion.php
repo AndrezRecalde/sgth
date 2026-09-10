@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy(VacacionObserver::class)]
@@ -38,6 +39,9 @@ class Vacacion extends Model
         'unidad_administrativa_id',
         'persona_reemplaza_id',
         'periodo_vacacion_id',
+        'anulado_por',
+        'anulado_en',
+        'motivo_anulacion',
     ];
 
     protected function casts(): array
@@ -49,6 +53,7 @@ class Vacacion extends Model
             'motivo'           => MotivoVacacion::class,
             'fecha_retorno'    => 'date',
             'fecha_emision'    => 'date',
+            'anulado_en'       => 'datetime',
         ];
     }
 
@@ -61,6 +66,11 @@ class Vacacion extends Model
     public function aprobadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'aprobado_por');
+    }
+
+    public function anuladoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulado_por');
     }
 
     public function jefe(): BelongsTo
@@ -89,5 +99,13 @@ class Vacacion extends Model
     public function periodoVacacion(): BelongsTo
     {
         return $this->belongsTo(PeriodoVacacion::class, 'periodo_vacacion_id');
+    }
+
+    /**
+     * De qué períodos salieron sus días, y cuántos de cada uno.
+     */
+    public function descuentos(): HasMany
+    {
+        return $this->hasMany(VacacionDescuento::class);
     }
 }

@@ -127,7 +127,7 @@ test('rechazar no descuenta y cierra la solicitud', function () {
         ->and($vacacion->fresh()->estado)->toBe('rechazada');
 });
 
-test('sin período abierto del año, aprobar se rechaza en vez de aprobar sin descontar', function () {
+test('sin ningún período abierto, aprobar se rechaza en vez de aprobar sin descontar', function () {
     $vacacion = ($this->vacacion)(5);
 
     $respuesta = ($this->resolver)($vacacion, 'aprobada');

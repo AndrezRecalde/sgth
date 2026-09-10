@@ -7,6 +7,7 @@ export const TONO_ESTADO: Record<EstadoVacacion, SemanticTone> = {
   aprobada:  'success',
   rechazada: 'danger',
   gozada:    'neutral',
+  anulada:   'neutral',
 }
 
 export const ESTADO_LABELS: Record<EstadoVacacion, string> = {
@@ -14,6 +15,7 @@ export const ESTADO_LABELS: Record<EstadoVacacion, string> = {
   aprobada:  'Aprobada',
   rechazada: 'Rechazada',
   gozada:    'Gozada',
+  anulada:   'Anulada',
 }
 
 export const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
@@ -30,6 +32,12 @@ export const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
   licencia_con_goce:         'Licencia con goce',
 }
 
+/** Los motivos que descuentan del saldo: `MotivoVacacion::descuentaVacaciones()`. */
+export const MOTIVOS_QUE_DESCUENTAN: readonly MotivoVacacion[] = [
+  'vacaciones_anuales',
+  'permiso_cargo_vacaciones',
+]
+
 /** Los estados por los que se filtra, en el orden del flujo. */
 export const FILTROS_ESTADO = [
   'todos',
@@ -37,4 +45,5 @@ export const FILTROS_ESTADO = [
   'aprobada',
   'rechazada',
   'gozada',
+  'anulada',
 ] as const

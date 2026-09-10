@@ -1,7 +1,7 @@
 'use client'
 
 import { Text } from '@mantine/core'
-import { IconCheck, IconPrinter, IconX } from '@tabler/icons-react'
+import { IconBan, IconCheck, IconPrinter, IconX } from '@tabler/icons-react'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
 import { ESTADO_LABELS, MOTIVO_LABELS, TONO_ESTADO } from './vacaciones.constants'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -9,11 +9,12 @@ import type { Vacacion } from '@/types/api'
 
 interface ColumnActions {
   exportandoId:  number | null
-  /** `aprobar-vacaciones`: sin él, Aprobar y Rechazar no se ofrecen. */
+  /** `aprobar-vacaciones`: sin él, Aprobar, Rechazar y Anular no se ofrecen. */
   puedeResolver: boolean
   onExportar:    (id: number) => void
   onAprobar:     (id: number) => void
   onRechazar:    (id: number) => void
+  onAnular:      (vacacion: Vacacion) => void
 }
 
 /** Las fechas vienen como `date` sin hora: se leen en UTC o se corren un día. */
@@ -26,6 +27,21 @@ function fecha(valor: string | null | undefined): string {
     month:    '2-digit',
     year:     'numeric',
   })
+}
+
+/** Hoy como `YYYY-MM-DD` en la hora local, para compararlo con una fecha `date`. */
+function hoy(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/**
+ * La misma regla que el backend: una pendiente siempre, una aprobada solo si
+ * todavía no comenzó.
+ */
+function sePuedeAnular(v: Vacacion): boolean {
+  if (v.estado === 'pendiente') return true
+  return v.estado === 'aprobada' && v.fecha_inicio.substring(0, 10) >= hoy()
 }
 
 export function getVacacionesColumns(
@@ -127,6 +143,13 @@ export function getVacacionesColumns(
                   onConfirm: () => actions.onRechazar(v.id),
                 }),
               hidden: !actions.puedeResolver || v.estado !== 'pendiente',
+            },
+            {
+              label: 'Anular',
+              icon: <IconBan size={14} />,
+              color: 'orange',
+              onClick: () => actions.onAnular(v),
+              hidden: !actions.puedeResolver || !sePuedeAnular(v),
             },
           ]}
         />

@@ -31,6 +31,14 @@ interface VacacionServiceInterface
     public function resolver(int $vacacionId, string $nuevoEstado, User $resolutor): Vacacion;
 
     /**
+     * Anula una solicitud pendiente, o una aprobada que todavía no comenzó;
+     * la aprobada devuelve sus días a los períodos de donde salieron.
+     *
+     * @return array{vacacion: Vacacion, dias_devueltos: float}
+     */
+    public function anular(int $vacacionId, string $motivo, User $usuario): array;
+
+    /**
      * Calcula el saldo actual de vacaciones del servidor.
      */
     public function calcularSaldoActual(int $servidorId): float;
