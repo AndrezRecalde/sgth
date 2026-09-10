@@ -235,8 +235,9 @@
      la medicación. Consta en la historia clínica y en la pantalla de la
      consulta, que es donde hace falta y donde el acceso está controlado.
 
-     Las alergias sí se imprimen: protegen al paciente justo en el momento de
-     la entrega, y quien despacha fuera no tiene otra manera de saberlas. --}}
+     Las alergias tampoco se imprimen por defecto, por lo mismo. Se imprimen
+     cuando el médico lo pide, que es lo que conviene si el paciente va a
+     comprar fuera: allí nadie puede saberlas de otro modo. --}}
 
 {{-- ── Alergias ─────────────────────────────────────────────────────────────
      El bloque sale SIEMPRE, en uno de tres estados. Que apareciera solo cuando
