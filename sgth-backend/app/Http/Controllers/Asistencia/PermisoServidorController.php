@@ -241,7 +241,11 @@ class PermisoServidorController extends Controller
         // El PDF lleva el motivo impreso. Quien no puede leerlo en pantalla
         // tampoco puede sacarlo en papel: la vista recibe la decisión ya
         // tomada y no vuelve a razonarla.
+        //
+        // A4 explícito: la vista parte la hoja en dos mitades medidas en
+        // milímetros de A4, y no debe depender del papel por defecto.
         $pdf = app('dompdf.wrapper')
+            ->setPaper('a4', 'portrait')
             ->loadView('permisos.permiso-pdf', [
                 'permiso' => $permiso,
                 'mostrarObservacion' => $request->user()->can('verObservacion', $permiso),

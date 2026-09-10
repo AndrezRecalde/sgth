@@ -6,7 +6,8 @@
 | Cada test es un defecto que se veía en el papel: el corte salía como
 | «? CORTAR AQUÍ ?», la marca de agua asomaba a trozos entre las celdas, la
 | firma sin jefe llevaba dos líneas, «Departamento» salía vacío y las horas
-| iban con segundos.
+| iban con segundos. Después, las fechas en año-mes-día y la hoja: ahora partida
+| en dos mitades, con la primera de altura fija.
 */
 
 use App\Enums\RegimenLaboral;
@@ -82,6 +83,34 @@ test('el corte no usa un símbolo que la fuente no tiene', function () {
     expect(htmlDelPdfDePermiso($this->permiso))
         ->toContain('CORTAR AQUÍ')
         ->not->toContain('✂');
+});
+
+test('las fechas salen día/mes/año, como en la pantalla', function () {
+    $this->permiso->forceFill(['created_at' => '2026-09-08 13:06:06'])->save();
+
+    expect(htmlDelPdfDePermiso($this->permiso))
+        ->toContain('11/09/2026')
+        ->toContain('08/09/2026 13:06')
+        ->not->toContain('2026-09-11')
+        ->not->toContain('13:06:06');
+});
+
+test('las dos copias caben en una sola hoja, aun con la observación más larga que se admite', function () {
+    // 1000 caracteres, el máximo de StorePermisoServidorRequest, y la unidad
+    // de nombre más largo que hay hoy. La primera copia tiene media hoja fija:
+    // si algo crece de más, la segunda se va a una página nueva.
+    $larga = mb_substr(str_repeat('Comisión de servicios en el cantón Quinindé para la entrega de documentación. ', 20), 0, 1000);
+
+    $this->permiso->servidor->unidadAdministrativa
+        ->update(['nombre' => 'Gestión de Tecnologías de la Información y Comunicación']);
+    $this->permiso->update(['observacion' => $larga]);
+
+    $html = htmlDelPdfDePermiso($this->permiso);
+    $pdf  = app('dompdf.wrapper')->setPaper('a4', 'portrait')->loadHTML($html)->output();
+
+    expect(preg_match_all('#/Type\s*/Page(?![a-zA-Z])#', $pdf))->toBe(1)
+        // Entera: se achica la letra, no se recorta el texto.
+        ->and($html)->toContain(e(mb_strtoupper($larga, 'UTF-8')));
 });
 
 test('cada copia lleva una marca de agua que coincide con su pie', function () {
