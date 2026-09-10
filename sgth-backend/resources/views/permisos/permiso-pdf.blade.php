@@ -46,13 +46,10 @@
     'UTF-8'
   );
 
-  $fechaPermiso = $permiso->fecha instanceof \Carbon\Carbon
-    ? $permiso->fecha->format('Y-m-d')
-    : \Carbon\Carbon::parse($permiso->fecha)->format('Y-m-d');
-
-  $fechaCreacion = $permiso->created_at
-    ? \Carbon\Carbon::parse($permiso->created_at)->format('Y-m-d H:i:s')
-    : now()->format('Y-m-d H:i:s');
+  // Día/mes/año, como en la pantalla y en los demás PDF del sistema. La
+  // creación va sin segundos, igual que las horas.
+  $fechaPermiso  = \Carbon\Carbon::parse($permiso->fecha)->format('d/m/Y');
+  $fechaCreacion = \Carbon\Carbon::parse($permiso->created_at ?? now())->format('d/m/Y H:i');
 
   $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i');
   $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i');
@@ -66,6 +63,13 @@
   $observacion = $puedeVerObservacion
     ? mb_strtoupper($permiso->observacion ?: 'SIN OBSERVACIONES', 'UTF-8')
     : 'RESERVADO';
+
+  // La observación admite hasta 1000 caracteres y cada copia tiene media hoja:
+  // si el recuadro creciera, empujaría la segunda copia a otra página. Lo que
+  // se ajusta es la letra. Lo habitual —una o dos líneas— sale al tamaño de
+  // siempre, y los 1000 caracteres caben enteros a 7 px.
+  $largoObs = mb_strlen($observacion, 'UTF-8');
+  $tamObs   = $largoObs <= 220 ? 10 : ($largoObs <= 500 ? 8.5 : 7);
 
   $folio = $permiso->folio ?? 'S/N';
 
@@ -112,29 +116,52 @@
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 10px;
     color: #1e293b;
-    margin: 15px 25px;
+    margin: 0;
     line-height: 1.2;
   }
 
   .text-brand { color: #15803d; }
   
-  .separador {
-    width: 100%;
-    border-top: 1.5px dashed #94a3b8;
-    padding: 10px 0;
-    text-align: center;
-    font-size: 9px;
-    color: #64748b;
-    letter-spacing: 2px;
-    margin: 10px 0;
+  /* La hoja, partida en dos mitades exactas.
+
+     Antes cada copia ocupaba lo que su contenido y la línea de corte caía
+     donde tocaba: las dos juntas llenaban unos tres cuartos del A4 y, al
+     cortar, salían dos trozos de distinto tamaño. Ahora la mitad de arriba
+     mide justo medio A4 y la línea va en su borde: se dobla la hoja por la
+     mitad y se corta por el doblez. La de abajo no lleva altura fija a
+     propósito — dos mitades de 148,5 mm exactos pueden desbordar por redondeo
+     y sacar una segunda página en blanco. */
+  @page { margin: 0; }
+
+  .mitad-superior {
+    position: relative;
+    height: 148.5mm;
   }
 
   .copia {
-    width: 100%;
     position: relative;
-    padding: 5px 0;
-    page-break-inside: avoid;
+    padding: 7mm 9mm 0;
   }
+
+  .corte {
+    position: absolute;
+    top: 148.5mm;
+    left: 0;
+    width: 100%;
+    border-top: 1px dashed #94a3b8;
+  }
+  /* El rótulo, centrado sobre la línea: su fondo blanco la interrumpe. */
+  .corte-texto {
+    position: absolute;
+    top: 147.2mm;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 8px;
+    color: #64748b;
+    letter-spacing: 2px;
+  }
+  .corte-texto span { background: #fff; padding: 0 8px; }
 
   /* Marca de agua: a qué copia pertenece el papel.
 
@@ -146,7 +173,7 @@
      HUMANO. */
   .marca-agua {
     position: absolute;
-    top: 190px;
+    top: 205px;
     left: 0;
     width: 100%;
     text-align: center;
@@ -189,7 +216,7 @@
   .obs-box {
     border: 1px solid #cbd5e1;
     padding: 8px;
-    height: 55px;
+    height: 80px;
     font-size: 10px;
     color: #334155;
     background: #fff;
@@ -207,13 +234,13 @@
   .firmas-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
   .firmas-table td { width: 25%; vertical-align: top; padding: 0 4px; text-align: center; }
   
-  .firma-box { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 8px; text-align: center; height: 125px; }
+  .firma-box { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 8px; text-align: center; height: 135px; }
   .firma-line { border-top: 1px solid #64748b; margin: 0 auto; width: 85%; }
   .f-lbl { font-size: 8px; font-weight: bold; color: #475569; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
   .f-name { font-size: 9px; font-weight: bold; color: #0f172a; text-transform: uppercase; margin-top: 4px; line-height: 1.1; }
   .f-cargo { font-size: 8px; color: #64748b; margin-top: 2px; }
 
-  .qr-box { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; padding: 8px; text-align: center; height: 125px; }
+  .qr-box { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; padding: 8px; text-align: center; height: 135px; }
   .qr-img { border: 1px solid #e2e8f0; padding: 2px; background: #fff; border-radius: 4px; margin: 0 auto; }
   .qr-folio { font-size: 9px; color: #0f172a; margin-top: 6px; font-family: monospace; font-weight: bold; }
 
@@ -224,6 +251,7 @@
 
 @foreach($copies as $i => $copy)
 
+@if($loop->first)<div class="mitad-superior">@endif
 <div class="copia">
 
   {{-- ══ HEADER ══ --}}
@@ -276,7 +304,7 @@
   {{-- ══ OBSERVACIÓN ══ --}}
   <div class="obs-box">
     <div class="obs-lbl">Observaciones</div>
-    <div>{{ $observacion }}</div>
+    <div style="font-size: {{ $tamObs }}px;">{{ $observacion }}</div>
   </div>
 
   {{-- ══ FIRMAS ══ --}}
@@ -285,7 +313,7 @@
       <td>
         <div class="firma-box">
           <div class="f-lbl">Firma: {{ $rotuloJefe }}</div>
-          <div style="height: 55px;"></div>
+          <div style="height: 65px;"></div>
           <div class="firma-line"></div>
           {{-- Sin jefe asignado no se imprimen guiones: debajo de la línea de
                firma quedaba una segunda línea más corta, como un error. El
@@ -298,7 +326,7 @@
       <td>
         <div class="firma-box">
           <div class="f-lbl">Firma: Servidor</div>
-          <div style="height: 55px;"></div>
+          <div style="height: 65px;"></div>
           <div class="firma-line"></div>
           <div class="f-name">{{ $nombreServidor }}</div>
           <div class="f-cargo">SERVIDOR</div>
@@ -307,7 +335,7 @@
       <td>
         <div class="firma-box">
           <div class="f-lbl">Talento Humano</div>
-          <div style="height: 55px;"></div>
+          <div style="height: 65px;"></div>
           <div class="firma-line"></div>
           <div class="f-name">PERSONAL TTHH</div>
           <div class="f-cargo">RECIBIDO POR</div>
@@ -334,15 +362,15 @@
 
 </div>
 
-@if(!$loop->last)
-{{--
-  Sin tijeras: Helvetica no tiene ese símbolo y salía «? CORTAR AQUÍ ?».
-  DejaVu Sans sí lo dibuja, pero dompdf incrusta la fuente entera y el PDF
-  pasaba de ~160 KB a más del doble por dos caracteres. La línea discontinua
-  ya marca el corte.
---}}
-<div class="separador">
-  CORTAR AQUÍ
+@if($loop->first)
+  {{--
+    Sin tijeras: Helvetica no tiene ese símbolo y salía «? CORTAR AQUÍ ?».
+    DejaVu Sans sí lo dibuja, pero dompdf incrusta la fuente entera y el PDF
+    pasaba de ~160 KB a más del doble por dos caracteres. La línea discontinua
+    ya marca el corte.
+  --}}
+  <div class="corte"></div>
+  <div class="corte-texto"><span>CORTAR AQUÍ</span></div>
 </div>
 @endif
 
