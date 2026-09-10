@@ -80,7 +80,9 @@ export function getVacacionesColumns(
     {
       accessor: 'estado',
       title: 'Estado',
-      width: 110,
+      // «RECHAZADA» mide 83 px y la celda lleva 32 de relleno: con 110 se
+      // salía 5, y APROBADA y PENDIENTE quedaban a uno o dos píxeles.
+      width: 140,
       render: ({ estado }) => (
         <StatusBadge tone={TONO_ESTADO[estado] ?? 'neutral'}>
           {ESTADO_LABELS[estado] ?? estado}
