@@ -85,14 +85,6 @@
         table.rp .posologia { font-size: 10px; }
         table.rp .observacion { font-size: 9px; color: #555; font-style: italic; }
 
-        .externo-marca {
-            display: inline-block; border: 1px solid #8a6100;
-            background: #fdf6e3; color: #6d4c00;
-            font-size: 7.5px; font-weight: bold; letter-spacing: 0.4px;
-            padding: 1px 4px; margin-left: 4px;
-        }
-        .externo-nota { font-size: 9px; color: #6d4c00; }
-
         .cierre {
             text-align: center; font-size: 9px; color: #555;
             letter-spacing: 1px; margin-top: 5px;
@@ -109,7 +101,7 @@
 
         /* ── Firma ──────────────────────────────────────────────── */
         table.firmas { width: 100%; margin-top: 34px; border-collapse: collapse; }
-        table.firmas td { width: 50%; text-align: center; vertical-align: bottom; }
+        table.firmas td { text-align: center; vertical-align: bottom; }
         .linea-firma {
             border-top: 1px solid #222; width: 205px; margin: 26px auto 3px;
         }
@@ -178,11 +170,16 @@
                 ? 'por ' . $receta->anulador->nombre_completo
                 : null,
         ])->filter()->implode(' ');
+
+        // El motivo puede venir con su propio punto final —«Otro» deja
+        // escribirlo a mano— y entonces se sumaba al de la frase: «tras
+        // interconsulta.. No debe despacharse».
+        $motivo = rtrim(trim((string) $receta->motivo_anulacion), '.');
     @endphp
     <div class="aviso-anulada">
         <strong>Esta receta fue anulada</strong>{{ $anulacion ? ' ' . $anulacion : '' }}.
-        @if ($receta->motivo_anulacion)
-            Motivo: {{ $receta->motivo_anulacion }}.
+        @if ($motivo !== '')
+            Motivo: {{ $motivo }}.
         @endif
         No debe despacharse ni total ni parcialmente.
     </div>
@@ -212,49 +209,22 @@
         </td>
     </tr>
     <tr>
-        <td colspan="3">
-            <span class="etiqueta">Condición</span>
-            <span class="valor">{{ $paciente['condicion'] }}</span>
-        </td>
-        <td colspan="2">
+        <td colspan="5">
             <span class="etiqueta">Fecha de emisión</span>
             <span class="valor">{{ $receta->fecha_emision->format('d/m/Y') }}</span>
         </td>
     </tr>
 </table>
 
-{{-- ── Diagnóstico ──────────────────────────────────────────── --}}
-@php
-    $consulta   = $receta->consultaMedica;
-    $principal  = $consulta?->diagnosticoCie10Principal;
-    $secundarios = $consulta?->diagnosticosSecundarios ?? collect();
-@endphp
-@if ($principal || $secundarios->isNotEmpty())
-    <div class="seccion">DIAGNÓSTICO (CIE-10)</div>
-    <table class="datos">
-        <tr>
-            <td>
-                @if ($principal)
-                    <span class="etiqueta">Principal</span>
-                    <span class="valor">
-                        <strong>{{ $principal->codigo }}</strong> — {{ $principal->descripcion }}
-                    </span>
-                @endif
-                @foreach ($secundarios as $secundario)
-                    @if ($secundario->diagnostico)
-                        <span class="etiqueta" style="margin-top: 4px;">
-                            {{ $loop->first ? 'Secundarios' : '' }}
-                        </span>
-                        <span class="valor">
-                            <strong>{{ $secundario->diagnostico->codigo }}</strong>
-                            — {{ $secundario->diagnostico->descripcion }}
-                        </span>
-                    @endif
-                @endforeach
-            </td>
-        </tr>
-    </table>
-@endif
+{{-- El diagnóstico NO se imprime, ni el código CIE-10 ni su descripción.
+     Este papel se lo lleva el paciente y pasa por manos ajenas —el mostrador
+     lo atienden compañeros suyos de la institución, y fuera lo ve quien le
+     despache—; el motivo por el que está medicado no tiene por qué viajar con
+     la medicación. Consta en la historia clínica y en la pantalla de la
+     consulta, que es donde hace falta y donde el acceso está controlado.
+
+     Las alergias sí se imprimen, y no es contradictorio: son un dato que
+     protege al paciente justo en el momento de la entrega. --}}
 
 {{-- ── Alergias ─────────────────────────────────────────────── --}}
 @if ($alergias->isNotEmpty())
@@ -308,12 +278,14 @@
         <tr>
             <td class="num">{{ $loop->iteration }}</td>
             <td>
+                {{-- Nada distingue aquí lo que el dispensario maneja de lo que
+                     no: qué hay en este catálogo es un dato interno y del día
+                     de hoy, y la receta vale en cualquier farmacia. Marcarlo
+                     en el papel que el paciente lleva fuera solo confundiría a
+                     quien se lo despache allí. --}}
                 <span class="farmaco">{{ $generico }}</span>
-                @if ($item->esExterno())
-                    <span class="externo-marca">NO DISPONIBLE EN FARMACIA</span>
-                @endif
-                <div class="presentacion">
-                    @if ($ficha)
+                @if ($ficha)
+                    <div class="presentacion">
                         {{ collect([
                             $ficha->concentracion,
                             $presentacion,
@@ -321,13 +293,8 @@
                                 ? 'En farmacia: ' . $nombreEnFarmacia
                                 : null,
                         ])->filter()->implode(' · ') }}
-                    @else
-                        <span class="externo-nota">
-                            El dispensario no maneja este medicamento;
-                            adquiérase en farmacia externa.
-                        </span>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </td>
             <td class="cant">{{ $item->cantidad_prescrita }}</td>
             <td>
@@ -356,7 +323,11 @@
     <div class="indicaciones">{{ $receta->indicaciones_generales }}</div>
 @endif
 
-{{-- ── Firmas ───────────────────────────────────────────────── --}}
+{{-- ── Firma ────────────────────────────────────────────────── --}}
+{{-- Solo la del médico. Un «recibí conforme» firmado por el paciente en el
+     papel que se lleva él no le sirve de constancia a nadie: la institución se
+     queda sin ese ejemplar, y de lo entregado ya responde el despacho, que
+     guarda quién lo hizo y cuándo. --}}
 <table class="firmas">
     <tr>
         <td>
@@ -371,11 +342,6 @@
             <div class="firma-detalle">
                 Código ACESS: {{ $prescriptor['codigo'] ?? '—' }}
             </div>
-        </td>
-        <td>
-            <div class="linea-firma"></div>
-            <div class="firma-nombre">Recibí conforme</div>
-            <div class="firma-detalle">Nombre, cédula y firma del paciente</div>
         </td>
     </tr>
 </table>

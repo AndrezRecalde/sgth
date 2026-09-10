@@ -31,12 +31,13 @@ final class PdfRecetaService
     /** @return array{content: string, filename: string} */
     public function generarContent(int $id): array
     {
+        // Sin los diagnósticos: el impreso no los lleva a propósito —ver la
+        // nota en la plantilla— y traerlos sería cargar de la base un dato
+        // que no se va a usar.
         $receta = RecetaMedica::with([
             'items.inventario',
-            'consultaMedica.diagnosticoCie10Principal',
-            'consultaMedica.diagnosticosSecundarios.diagnostico',
             'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.cargaFamiliar.servidor',
+            'consultaMedica.historiaClinica.cargaFamiliar',
             'consultaMedica.historiaClinica.alergias',
             'consultaMedica.medico.servidor',
             'anulador.servidor',
@@ -69,8 +70,7 @@ final class PdfRecetaService
      * misma cantidad no significa lo mismo en un adulto que en un niño, y quien
      * despacha —aquí o en una farmacia externa— necesita poder detectarlo.
      *
-     * @return array{nombre: string, cedula: ?string, condicion: string,
-     *               edad: ?int, sexo: ?string}
+     * @return array{nombre: string, cedula: ?string, edad: ?int, sexo: ?string}
      */
     private function datosDelPaciente(RecetaMedica $receta): array
     {
@@ -82,22 +82,15 @@ final class PdfRecetaService
             return [
                 'nombre'    => trim("{$servidor->nombre} {$servidor->apellido}"),
                 'cedula'    => $servidor->cedula,
-                'condicion' => 'Servidor de la institución',
                 'edad'      => $this->edad($servidor->fecha_nacimiento),
                 'sexo'      => $servidor->genero,
             ];
         }
 
         if ($familiar) {
-            $titular = $familiar->servidor;
-
             return [
                 'nombre'    => trim("{$familiar->nombres} {$familiar->apellidos}"),
                 'cedula'    => $familiar->cedula,
-                'condicion' => 'Carga familiar'
-                    . ($titular
-                        ? " de {$titular->nombre} {$titular->apellido}"
-                        : ''),
                 'edad'      => $this->edad($familiar->fecha_nacimiento),
                 // La carga familiar no registra sexo: `cargas_familiares` no
                 // tiene esa columna, y el impreso lo deja en blanco antes que
@@ -109,7 +102,6 @@ final class PdfRecetaService
         return [
             'nombre'    => '—',
             'cedula'    => null,
-            'condicion' => '—',
             'edad'      => null,
             'sexo'      => null,
         ];
