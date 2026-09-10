@@ -68,6 +68,13 @@
         .alergias .rotulo {
             font-weight: bold; color: #b71c1c; letter-spacing: 0.5px;
         }
+        /* Sin alergias que advertir, el recuadro no debe alarmar: el rojo se
+           reserva para cuando de verdad hay algo que mirar antes de entregar. */
+        .alergias.neutra { border-color: #bbb; background: #f7f7f7; }
+        .alergias.neutra .rotulo { color: #444; }
+        .alergias .salvedad {
+            font-size: 9px; color: #555; margin-top: 2px;
+        }
 
         /* ── Medicamentos ───────────────────────────────────────── */
         table.rp { width: 100%; border-collapse: collapse; margin-top: 0; }
@@ -223,22 +230,45 @@
      la medicación. Consta en la historia clínica y en la pantalla de la
      consulta, que es donde hace falta y donde el acceso está controlado.
 
-     Las alergias sí se imprimen, y no es contradictorio: son un dato que
-     protege al paciente justo en el momento de la entrega. --}}
+     Las alergias sí se imprimen: protegen al paciente justo en el momento de
+     la entrega, y quien despacha fuera no tiene otra manera de saberlas. --}}
 
-{{-- ── Alergias ─────────────────────────────────────────────── --}}
-@if ($alergias->isNotEmpty())
-    {{-- Sin icono: la fuente del PDF no tiene el glifo de advertencia y lo
-         imprimía como un «7», que en una línea de alergias se lee como un
-         número de alergias. El recuadro rojo ya avisa por sí solo. --}}
+{{-- ── Alergias ─────────────────────────────────────────────────────────────
+     El bloque sale SIEMPRE, en uno de tres estados. Que apareciera solo cuando
+     hay alergias tenía dos problemas: quien recibía una receta sin él no podía
+     distinguir «no tiene ninguna registrada» de «este impreso no trae ese
+     dato», y su ausencia delataría al paciente cuyas alergias se omiten.
+
+     Nunca se afirma «sin alergias» cuando el médico las ha omitido: eso
+     convertiría una medida de privacidad en un peligro clínico.
+
+     Sin icono de advertencia: la fuente del PDF no tiene ese glifo y lo
+     imprimía como un «7», que en una línea de alergias se lee como un número
+     de alergias. --}}
+@if ($omitirAlergias)
+    <div class="alergias neutra">
+        <span class="rotulo">ALERGIAS:</span>
+        Consúltelas en el Dispensario Médico antes de dispensar.
+    </div>
+@elseif ($alergias->isNotEmpty())
     <div class="alergias">
         <span class="rotulo">ALERGIAS A MEDICAMENTOS:</span>
         @foreach ($alergias as $alergia)
             {{ $alergia->descripcion }}<span style="color:#555;">
                 ({{ $alergia->severidad }})</span>{{ $loop->last ? '.' : ';' }}
         @endforeach
-        <div style="font-size: 9px; color: #555; margin-top: 2px;">
-            Verifique antes de dispensar.
+        <div class="salvedad">
+            Según lo registrado en la historia clínica; confirme con el
+            paciente antes de dispensar.
+        </div>
+    </div>
+@else
+    <div class="alergias neutra">
+        <span class="rotulo">ALERGIAS A MEDICAMENTOS:</span>
+        sin alergias registradas.
+        <div class="salvedad">
+            Que no consten no significa que no existan: confirme con el
+            paciente antes de dispensar.
         </div>
     </div>
 @endif

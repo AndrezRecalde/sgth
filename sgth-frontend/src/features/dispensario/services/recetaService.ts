@@ -86,6 +86,12 @@ export interface EmitirRecetaData {
   consulta_medica_id:      number
   fecha_emision:           string
   indicaciones_generales?: string | null
+  /**
+   * Solo afecta al impreso: las alergias siguen en la historia clínica y a la
+   * vista del dispensario. Se marca cuando el alérgeno delataría el
+   * diagnóstico del paciente.
+   */
+  omitir_alergias?:        boolean
   items:                   ItemReceta[]
 }
 

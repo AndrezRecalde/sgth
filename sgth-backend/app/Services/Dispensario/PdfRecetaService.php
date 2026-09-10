@@ -31,6 +31,30 @@ final class PdfRecetaService
     /** @return array{content: string, filename: string} */
     public function generarContent(int $id): array
     {
+        $datos = $this->datosDelImpreso($id);
+
+        $pdf = Pdf::loadView('pdf.dispensario.receta-medica', $datos)
+            ->setPaper('a4', 'portrait');
+
+        $receta = $datos['receta'];
+
+        return [
+            'content'  => $pdf->output(),
+            'filename' => 'receta-' . ($receta->folio ?? $receta->id) . '.pdf',
+        ];
+    }
+
+    /**
+     * Lo que va a la plantilla.
+     *
+     * Separado de generarContent porque decidir qué se imprime y convertirlo en
+     * PDF son dos cosas distintas: esta se puede leer, comprobar y razonar sin
+     * abrir un binario comprimido.
+     *
+     * @return array<string, mixed>
+     */
+    public function datosDelImpreso(int $id): array
+    {
         // Sin los diagnósticos: el impreso no los lleva a propósito —ver la
         // nota en la plantilla— y traerlos sería cargar de la base un dato
         // que no se va a usar.
@@ -43,23 +67,25 @@ final class PdfRecetaService
             'anulador.servidor',
         ])->findOrFail($id);
 
-        $pdf = Pdf::loadView('pdf.dispensario.receta-medica', [
-            'receta'      => $receta,
-            'institucion' => self::INSTITUCION,
-            'paciente'    => $this->datosDelPaciente($receta),
-            'prescriptor' => $this->datosDelPrescriptor($receta),
-            'alergias'    => $this->alergiasAMedicamentos($receta),
-            // Del catálogo primero y lo externo después: lo que el paciente
-            // recoge aquí va junto, y lo que tiene que comprar fuera también.
-            'items'       => $receta->items
-                ->sortBy(fn (ItemReceta $item) => $item->esExterno() ? 1 : 0)
-                ->values(),
-            'logo'        => public_path('images/logo-gadpe.png'),
-        ])->setPaper('a4', 'portrait');
+        // Cuando el médico las omite, las alergias no llegan siquiera a la
+        // plantilla: lo que no se pasa no se puede imprimir por descuido.
+        $omitirAlergias = (bool) $receta->omitir_alergias;
 
         return [
-            'content'  => $pdf->output(),
-            'filename' => 'receta-' . ($receta->folio ?? $receta->id) . '.pdf',
+            'receta'         => $receta,
+            'institucion'    => self::INSTITUCION,
+            'paciente'       => $this->datosDelPaciente($receta),
+            'prescriptor'    => $this->datosDelPrescriptor($receta),
+            'omitirAlergias' => $omitirAlergias,
+            'alergias'       => $omitirAlergias
+                ? collect()
+                : $this->alergiasAMedicamentos($receta),
+            // Del catálogo primero y lo externo después: lo que el paciente
+            // recoge aquí va junto, y lo que tiene que comprar fuera también.
+            'items'          => $receta->items
+                ->sortBy(fn (ItemReceta $item) => $item->esExterno() ? 1 : 0)
+                ->values(),
+            'logo'           => public_path('images/logo-gadpe.png'),
         ];
     }
 

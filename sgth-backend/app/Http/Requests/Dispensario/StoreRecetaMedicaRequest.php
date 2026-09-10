@@ -32,6 +32,9 @@ class StoreRecetaMedicaRequest extends FormRequest
             'consulta_medica_id'             => ['required', 'integer', 'exists:consultas_medicas,id'],
             'fecha_emision'                  => ['required', 'date'],
             'indicaciones_generales'         => ['nullable', 'string', 'max:1000'],
+            // Solo afecta al impreso; lo decide el médico cuando el alérgeno
+            // delataría el diagnóstico del paciente.
+            'omitir_alergias'                => ['sometimes', 'boolean'],
             'items'                          => ['required', 'array', 'min:1'],
             'items.*.inventario_medicina_id' => ['nullable', 'integer', 'exists:inventario_medicinas,id'],
             'items.*.medicamento_externo'    => ['nullable', 'string', 'max:255'],

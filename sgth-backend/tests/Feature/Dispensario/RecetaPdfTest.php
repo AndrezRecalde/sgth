@@ -11,6 +11,7 @@ use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\View;
 use Spatie\Permission\Models\Role;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -85,9 +86,15 @@ beforeEach(function () {
     $this->actingAs($this->medico, 'sanctum');
 });
 
-/** @param array<int, array<string, mixed>> $items */
-function emitirParaPdf(array $items, ConsultaMedica $consulta): int
-{
+/**
+ * @param array<int, array<string, mixed>> $items
+ * @param array<string, mixed> $deLaReceta lo que no es de un ítem concreto
+ */
+function emitirParaPdf(
+    array $items,
+    ConsultaMedica $consulta,
+    array $deLaReceta = []
+): int {
     $respuesta = test()->postJson('/api/v1/dispensario/recetas', [
         'consulta_medica_id' => $consulta->id,
         'fecha_emision'      => now()->toDateString(),
@@ -97,9 +104,25 @@ function emitirParaPdf(array $items, ConsultaMedica $consulta): int
             'frecuencia'         => 'cada 8 horas',
             'duracion'           => '3 dias',
         ], $extra), $items),
+        ...$deLaReceta,
     ])->assertCreated();
 
     return $respuesta->json('datos.receta.id');
+}
+
+/**
+ * El HTML que va al papel.
+ *
+ * Sale de los mismos datos que compone el servicio, no de una reconstrucción a
+ * mano: si el servicio cambiara lo que manda a la plantilla, esta prueba lo
+ * seguiría. El PDF ya sale comprimido y su texto no se puede rastrear ahí.
+ */
+function impresoDe(int $recetaId): string
+{
+    $datos = app(App\Services\Dispensario\PdfRecetaService::class)
+        ->datosDelImpreso($recetaId);
+
+    return view('pdf.dispensario.receta-medica', $datos)->render();
 }
 
 function medicinaPdf(string $codigo, string $nombre): InventarioMedicina
@@ -225,4 +248,77 @@ it('deja fuera del impreso las alergias anuladas', function () {
     // que el paciente cargara con una advertencia que su médico ya retiró.
     expect($alergias->pluck('descripcion')->all())->toBe(['Sulfas'])
         ->and($descartada->fresh()->anulado_en)->not->toBeNull();
+});
+
+it('imprime las alergias con la salvedad de que pueden estar incompletas', function () {
+    $medicina = medicinaPdf('PDF-006', 'Naproxeno');
+
+    $this->historia->alergias()->create([
+        'tipo'        => 'medicamento',
+        'descripcion' => 'Penicilina',
+        'severidad'   => 'grave',
+    ]);
+
+    $html = impresoDe(emitirParaPdf(
+        [['inventario_medicina_id' => $medicina->id]], $this->consulta
+    ));
+
+    expect($html)->toContain('Penicilina')
+        // Un impreso institucional invita a confiar, y el registro de alergias
+        // nunca está completo: la salvedad evita que se lea como una lista
+        // cerrada.
+        ->and($html)->toContain('Según lo registrado en la historia clínica');
+});
+
+it('dice que no hay alergias registradas en vez de callar', function () {
+    $medicina = medicinaPdf('PDF-007', 'Diclofenaco');
+
+    $html = impresoDe(emitirParaPdf(
+        [['inventario_medicina_id' => $medicina->id]], $this->consulta
+    ));
+
+    // Sin el bloque, quien recibía la receta no podía distinguir «no tiene
+    // ninguna registrada» de «este impreso no trae ese dato».
+    expect($html)->toContain('sin alergias registradas')
+        ->and($html)->toContain('no significa que no existan')
+        // Y no debe alarmar: el rojo se reserva para cuando hay algo que mirar.
+        ->and($html)->toContain('alergias neutra');
+});
+
+it('no delata al paciente cuando el medico omite las alergias', function () {
+    $medicina = medicinaPdf('PDF-008', 'Omeprazol');
+
+    $this->historia->alergias()->create([
+        'tipo'        => 'medicamento',
+        'descripcion' => 'Efavirenz',
+        'severidad'   => 'grave',
+    ]);
+
+    $recetaId = emitirParaPdf(
+        [['inventario_medicina_id' => $medicina->id]],
+        $this->consulta,
+        ['omitir_alergias' => true]
+    );
+
+    expect(RecetaMedica::find($recetaId)->omitir_alergias)->toBeTrue();
+
+    $html = impresoDe($recetaId);
+
+    expect($html)->not->toContain('Efavirenz')
+        // Lo que NUNCA puede decir: afirmar que no tiene alergias cuando las
+        // tiene convertiría una medida de privacidad en un peligro clínico.
+        ->and($html)->not->toContain('sin alergias registradas')
+        ->and($html)->toContain('Consúltelas en el Dispensario');
+});
+
+it('imprime las alergias por defecto, sin que nadie lo pida', function () {
+    $medicina = medicinaPdf('PDF-009', 'Ranitidina');
+
+    $recetaId = emitirParaPdf(
+        [['inventario_medicina_id' => $medicina->id]], $this->consulta
+    );
+
+    // Omitir es la excepción y se pide a mano: si el campo no viaja, el
+    // impreso protege por defecto.
+    expect(RecetaMedica::find($recetaId)->omitir_alergias)->toBeFalse();
 });

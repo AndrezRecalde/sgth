@@ -17,7 +17,8 @@ class RecetaMedica extends Model
 
     protected $fillable = [
         'folio', 'consulta_medica_id', 'fecha_emision', 'estado',
-        'indicaciones_generales', 'despachado_por', 'despachado_en',
+        'indicaciones_generales', 'omitir_alergias',
+        'despachado_por', 'despachado_en',
         'anulado_en', 'anulado_por', 'motivo_anulacion',
         'created_by', 'updated_by'
     ];
@@ -25,9 +26,10 @@ class RecetaMedica extends Model
     protected function casts(): array
     {
         return [
-            'fecha_emision' => 'date',
-            'despachado_en' => 'datetime',
-            'anulado_en'    => 'datetime',
+            'fecha_emision'   => 'date',
+            'despachado_en'   => 'datetime',
+            'anulado_en'      => 'datetime',
+            'omitir_alergias' => 'boolean',
         ];
     }
 
