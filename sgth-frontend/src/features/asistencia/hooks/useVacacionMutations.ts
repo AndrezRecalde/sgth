@@ -7,8 +7,13 @@ import { getApiErrorMessage } from '@/types/api'
 
 export function useVacacionMutations() {
   const qc = useQueryClient()
-  const invalidar = () =>
+
+  // Aprobar y anular mueven días entre los períodos: lo que muestre el saldo
+  // tiene que releerlo, no solo el listado.
+  const invalidar = () => {
     qc.invalidateQueries({ queryKey: ['vacaciones'] })
+    qc.invalidateQueries({ queryKey: ['periodos-vacaciones'] })
+  }
 
   const onError = (error: unknown) => notifications.show({
     title: 'Error', message: getApiErrorMessage(error),
@@ -49,5 +54,20 @@ export function useVacacionMutations() {
     onError,
   })
 
-  return { crear, actualizar }
+  const anular = useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      asistenciaService.vacaciones.anular(id, motivo),
+    onSuccess: (respuesta) => {
+      notifications.show({
+        title: 'Solicitud anulada',
+        message: respuesta.mensaje,
+        color: 'orange',
+        icon: React.createElement(IconCheck, { size: 16 }),
+      })
+      invalidar()
+    },
+    onError,
+  })
+
+  return { crear, actualizar, anular }
 }

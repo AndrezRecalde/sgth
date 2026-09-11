@@ -7,7 +7,6 @@ use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Enums\MotivoVacacion;
 use App\Enums\RegimenLaboral;
 use App\Exceptions\ReglaNegocioException;
-use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -135,17 +134,21 @@ class VacacionService implements VacacionServiceInterface
 
             // Solo verificar saldo si el motivo descuenta vacaciones
             if ($motivo?->descuentaVacaciones()) {
+                $periodos = app(PeriodoVacacionService::class);
+
                 // Saldo cero puede ser «gozó todo» o «no tiene de dónde
                 // descontar». Son dos problemas distintos y cada uno se
                 // resuelve en un sitio distinto.
-                if (! app(PeriodoVacacionService::class)->tienePeriodoAbierto($servidorId)) {
+                if (! $periodos->tienePeriodoAbierto($servidorId)) {
                     throw new ReglaNegocioException(
                         'El servidor no tiene un período de vacaciones abierto del que descontar. '
                         .'Genérelo en «Períodos de vacaciones» antes de registrar la solicitud.'
                     );
                 }
 
-                $saldoActual = $this->calcularSaldoActual($servidorId);
+                // El mismo saldo que usará la aprobación: los períodos hasta el
+                // año de la vacación, no los que alguien generó por adelantado.
+                $saldoActual = $periodos->saldoHasta($servidorId, $fechaInicio->year);
                 if ($diasADescontar > $saldoActual) {
                     throw new ReglaNegocioException(
                         "Saldo insuficiente: la solicitud descuenta {$diasADescontar} días ".
@@ -191,7 +194,7 @@ class VacacionService implements VacacionServiceInterface
      * bloqueo, además, un doble clic podía descontar dos veces directamente.
      *
      * Deshacer una aprobada —devolviendo sus días— no es «rechazarla»: es una
-     * anulación, con su propio motivo y su propio registro, y no se hace aquí.
+     * anulación, con su propio motivo y su propio registro. Ver `anular()`.
      */
     public function resolver(int $vacacionId, string $nuevoEstado, User $resolutor): Vacacion
     {
@@ -200,16 +203,7 @@ class VacacionService implements VacacionServiceInterface
             // aquí y, cuando entra, ya la encuentra resuelta.
             $vacacion = Vacacion::lockForUpdate()->findOrFail($vacacionId);
 
-            // Nadie resuelve su propia solicitud. Va en el servicio y no en la
-            // policy: el Gate::before de admin-ti se saltaría la policy entera.
-            if (
-                $resolutor->servidor_id !== null
-                && (int) $resolutor->servidor_id === (int) $vacacion->servidor_id
-            ) {
-                throw new ReglaNegocioException(
-                    'No puede aprobar ni rechazar su propia solicitud de vacaciones.'
-                );
-            }
+            $this->rechazarSiEsPropia($resolutor, $vacacion, 'aprobar ni rechazar');
 
             $estadoActual = (string) $vacacion->estado;
 
@@ -222,7 +216,18 @@ class VacacionService implements VacacionServiceInterface
             }
 
             if ($nuevoEstado === 'aprobada') {
-                $this->descontarAlAprobar($vacacion);
+                if ($this->descuenta($vacacion)) {
+                    // Reparte entre los períodos abiertos, del más antiguo al
+                    // más nuevo, y comprueba el saldo con esos períodos
+                    // bloqueados: una pendiente no reserva días, y dos que
+                    // pasaron el control por separado pueden juntas superarlo.
+                    app(PeriodoVacacionService::class)->consumirParaVacacion(
+                        $vacacion,
+                        (float) $vacacion->dias_solicitados,
+                        Carbon::parse($vacacion->fecha_inicio)->year
+                    );
+                }
+
                 $vacacion->aprobado_por = $resolutor->id;
             }
 
@@ -234,59 +239,94 @@ class VacacionService implements VacacionServiceInterface
     }
 
     /**
-     * Descuenta los días de una solicitud que se está aprobando.
+     * Anula una solicitud pendiente, o una aprobada que todavía no comenzó.
      *
-     * El saldo se vuelve a comprobar aquí aunque ya se miró al registrar: una
-     * pendiente no reserva días, y dos que pasaron el control por separado
-     * pueden juntas superar el saldo. Los períodos abiertos se bloquean antes
-     * de leerlo, para que dos aprobaciones del mismo servidor no lean el mismo
-     * saldo a la vez.
+     * Hasta ahora lo único que había era «rechazar», y solo desde pendiente.
+     * Una aprobación hecha por error —o unas vacaciones que la unidad pide
+     * postergar— no tenía vuelta atrás: los días quedaban descontados.
      *
-     * Sin período abierto del año, `descontarDias()` volvía en silencio: la
-     * vacación quedaba aprobada y los días no salían de ningún lado. Ahora eso
-     * frena la aprobación, igual que ya lo hace la confirmación de permisos.
+     * - Una pendiente no descontó nada: se anula y ya.
+     * - Una aprobada devuelve sus días a los mismos períodos de donde salieron.
+     * - Una que ya comenzó no se anula: devolvería días que se están gozando.
+     *   Interrumpir unas vacaciones en curso es otra cosa, con días a medias.
+     *
+     * Queda quién la anuló, cuándo y por qué, en la propia solicitud.
+     *
+     * @return array{vacacion: Vacacion, dias_devueltos: float}
      */
-    private function descontarAlAprobar(Vacacion $vacacion): void
+    public function anular(int $vacacionId, string $motivo, User $usuario): array
+    {
+        return DB::transaction(function () use ($vacacionId, $motivo, $usuario) {
+            $vacacion = Vacacion::lockForUpdate()->findOrFail($vacacionId);
+
+            $this->rechazarSiEsPropia($usuario, $vacacion, 'anular');
+
+            $estado = (string) $vacacion->estado;
+            $folio  = $vacacion->folio ?? "#{$vacacion->id}";
+
+            if (! in_array($estado, ['pendiente', 'aprobada'], true)) {
+                throw new ReglaNegocioException(
+                    "La solicitud {$folio} está {$estado}: solo se anula una solicitud pendiente o aprobada."
+                );
+            }
+
+            $inicio = Carbon::parse($vacacion->fecha_inicio)->startOfDay();
+
+            if ($estado === 'aprobada' && $inicio->lessThan(Carbon::today())) {
+                throw new ReglaNegocioException(
+                    "La solicitud {$folio} comenzó el {$inicio->format('d/m/Y')}: anularla devolvería días "
+                    .'que ya se están gozando. Una vacación en curso no se interrumpe anulándola.'
+                );
+            }
+
+            $devueltos = 0.0;
+
+            if ($estado === 'aprobada' && $this->descuenta($vacacion)) {
+                $devueltos = app(PeriodoVacacionService::class)->devolverDeVacacion($vacacion);
+            }
+
+            $vacacion->estado           = 'anulada';
+            $vacacion->anulado_por      = $usuario->id;
+            $vacacion->anulado_en       = now();
+            $vacacion->motivo_anulacion = $motivo;
+            $vacacion->save();
+
+            return [
+                'vacacion'       => $vacacion->fresh(['servidor', 'jefe', 'creadoPor']),
+                'dias_devueltos' => $devueltos,
+            ];
+        });
+    }
+
+    /**
+     * Nadie resuelve ni anula su propia solicitud. Va en el servicio y no en la
+     * policy: el Gate::before de admin-ti se saltaría la policy entera.
+     */
+    private function rechazarSiEsPropia(User $usuario, Vacacion $vacacion, string $accion): void
+    {
+        if (
+            $usuario->servidor_id !== null
+            && (int) $usuario->servidor_id === (int) $vacacion->servidor_id
+        ) {
+            throw new ReglaNegocioException(
+                "No puede {$accion} su propia solicitud de vacaciones."
+            );
+        }
+    }
+
+    private function descuenta(Vacacion $vacacion): bool
     {
         $motivo = $vacacion->motivo instanceof MotivoVacacion
             ? $vacacion->motivo
             : MotivoVacacion::tryFrom((string) $vacacion->motivo);
 
-        if (! $motivo?->descuentaVacaciones()) {
-            return;
-        }
-
-        $anio = Carbon::parse($vacacion->fecha_inicio)->year;
-        $dias = (float) $vacacion->dias_solicitados;
-
-        $abiertos = PeriodoVacacion::where('servidor_id', $vacacion->servidor_id)
-            ->where('estado', 'abierto')
-            ->lockForUpdate()
-            ->get();
-
-        if (! $abiertos->contains('anio', $anio)) {
-            throw new ReglaNegocioException(
-                "El servidor no tiene un período de vacaciones abierto en {$anio}: "
-                .'aprobarla no descontaría los días de ningún saldo. Genere el período antes de aprobar.'
-            );
-        }
-
-        $saldo = (float) $abiertos->sum('dias_saldo');
-
-        if ($dias > $saldo) {
-            throw new ReglaNegocioException(
-                "Saldo insuficiente para aprobar: la solicitud descuenta {$dias} días ".
-                'y el saldo disponible es de '.number_format($saldo, 2).' días.'
-            );
-        }
-
-        app(PeriodoVacacionService::class)->descontarDias($vacacion->servidor_id, $dias, $anio);
+        return (bool) $motivo?->descuentaVacaciones();
     }
 
     /**
      * Una persona no puede estar dos veces de vacaciones —o de licencia— el
-     * mismo día. Cuenta todo lo que sigue vigente; lo rechazado no ocupa
-     * fechas.
+     * mismo día. Cuenta todo lo que sigue vigente; lo rechazado y lo anulado no
+     * ocupa fechas.
      */
     private function rechazarSiSeCruza(int $servidorId, Carbon $inicio, Carbon $fin): void
     {

@@ -6,12 +6,14 @@ import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconBeach } from "@tabler/icons-react";
 import { DataState, PAGINACION_ES, SgthTable } from "@/components/ui";
 import { VacacionModal } from "./VacacionModal";
+import { MotivoPermisoModal } from "./MotivoPermisoModal";
 import {
   FILTROS_INICIALES,
   VacacionesFiltros,
   type FiltrosVacacion,
 } from "./VacacionesFiltros";
 import { getVacacionesColumns } from "./vacaciones.columns";
+import { MOTIVOS_QUE_DESCUENTAN } from "./vacaciones.constants";
 import { useVacaciones } from "../hooks/useVacaciones";
 import { useVacacionMutations } from "../hooks/useVacacionMutations";
 import { useExportarVacacion } from "../hooks/useExportarVacacion";
@@ -25,8 +27,31 @@ const RETARDO_BUSQUEDA_MS = 300;
 /** El mismo tamaño de página que el resto de los listados del sistema. */
 const POR_PAGINA = 15;
 
+/** Qué pasará exactamente al anular, con el folio nombrado. */
+function consecuenciaDeAnular(v: Vacacion) {
+  const folio = v.folio ?? `#${v.id}`;
+
+  if (v.estado === "aprobada" && MOTIVOS_QUE_DESCUENTAN.includes(v.motivo)) {
+    return (
+      <>
+        Se anulará la solicitud aprobada <b>{folio}</b> y sus{" "}
+        <b>{v.dias_solicitados} días</b> volverán al saldo del servidor, a los
+        mismos períodos de donde salieron.
+      </>
+    );
+  }
+
+  return (
+    <>
+      Se anulará la solicitud <b>{folio}</b>. No había descontado días, así que
+      el saldo no cambia.
+    </>
+  );
+}
+
 export function VacacionesTab() {
   const [opened, { open, close }] = useDisclosure(false);
+  const [anulando, setAnulando] = useState<Vacacion | null>(null);
 
   const [page, setPage] = useState(1);
   const [filtros, setFiltros] = useState<FiltrosVacacion>(FILTROS_INICIALES);
@@ -66,7 +91,7 @@ export function VacacionesTab() {
 
   const lista = (data?.data ?? []) as Vacacion[];
 
-  const { actualizar } = useVacacionMutations();
+  const { actualizar, anular } = useVacacionMutations();
 
   const columns = getVacacionesColumns({
     exportandoId,
@@ -74,6 +99,7 @@ export function VacacionesTab() {
     onExportar: (id) => exportar(id),
     onAprobar: (id) => actualizar.mutate({ id, data: { estado: "aprobada" } }),
     onRechazar: (id) => actualizar.mutate({ id, data: { estado: "rechazada" } }),
+    onAnular: setAnulando,
   });
 
   return (
@@ -114,6 +140,23 @@ export function VacacionesTab() {
       </DataState>
 
       {puedeRegistrar && <VacacionModal opened={opened} onClose={close} />}
+
+      {/* El modal de motivo es el de permisos: sus props ya son genéricas. */}
+      <MotivoPermisoModal
+        opened={anulando !== null}
+        onClose={() => setAnulando(null)}
+        title="Anular solicitud de vacaciones"
+        descripcion={anulando && consecuenciaDeAnular(anulando)}
+        confirmLabel="Anular"
+        cargando={anular.isPending}
+        onConfirm={(motivo) => {
+          if (!anulando) return;
+          anular.mutate(
+            { id: anulando.id, motivo },
+            { onSuccess: () => setAnulando(null) },
+          );
+        }}
+      />
     </Stack>
   );
 }

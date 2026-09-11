@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Asistencia\AnularVacacionRequest;
 use App\Http\Requests\Asistencia\StoreVacacionRequest;
 use App\Http\Requests\Asistencia\UpdateVacacionRequest;
 use App\Http\Responses\ApiResponse;
@@ -112,6 +113,28 @@ class VacacionController extends Controller
         );
 
         return ApiResponse::ok($vacacion, "Solicitud resuelta como {$nuevoEstado}.");
+    }
+
+    /**
+     * Anula una pendiente, o una aprobada que aún no comienza.
+     *
+     * El mensaje dice cuántos días volvieron al saldo: es lo que quien anula
+     * necesita comprobar, y no se ve en la fila de la solicitud.
+     */
+    public function anular(AnularVacacionRequest $request, int $id)
+    {
+        $this->authorize('anular', Vacacion::findOrFail($id));
+
+        [
+            'vacacion'       => $vacacion,
+            'dias_devueltos' => $dias,
+        ] = $this->vacacionService->anular($id, $request->validated('motivo'), $request->user());
+
+        $mensaje = $dias > 0
+            ? sprintf('Solicitud anulada. Se devolvieron %s días al saldo del servidor.', number_format($dias, 2))
+            : 'Solicitud anulada.';
+
+        return ApiResponse::ok($vacacion, $mensaje);
     }
 
     public function exportar(int $id): mixed

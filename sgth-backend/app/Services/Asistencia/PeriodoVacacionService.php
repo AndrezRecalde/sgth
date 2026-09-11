@@ -4,6 +4,8 @@ namespace App\Services\Asistencia;
 use App\Enums\RegimenLaboral;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PeriodoVacacion;
+use App\Models\Asistencia\Vacacion;
+use App\Models\Asistencia\VacacionDescuento;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -419,6 +421,217 @@ class PeriodoVacacionService
             ->exists();
     }
 
+    // ── Descuento de vacaciones repartido entre períodos ─────────────
+
+    /**
+     * Días disponibles para una vacación que empieza en `$anio`.
+     *
+     * Cuentan los períodos abiertos de ese año y de los anteriores. Los de un
+     * año posterior no: esos días todavía no se han ganado, aunque alguien haya
+     * generado el período por adelantado.
+     */
+    public function saldoHasta(int $servidorId, int $anio): float
+    {
+        return (float) PeriodoVacacion::where('servidor_id', $servidorId)
+            ->where('estado', 'abierto')
+            ->where('anio', '<=', $anio)
+            ->sum('dias_saldo');
+    }
+
+    /**
+     * Descuenta los días de una vacación que se aprueba, del período más
+     * antiguo al más nuevo.
+     *
+     * `descontarDias()` tocaba solo el período del año de la vacación: si ese
+     * período no alcanzaba, el resto se perdía, aunque hubiera saldo de años
+     * anteriores —y era ese saldo el que había dejado pasar la solicitud—.
+     * Gozar 20 días con 10 de un año y 15 del siguiente dejaba 10 en vez de 5.
+     *
+     * Primero se gasta lo más antiguo: es lo que está más cerca de vencer, y
+     * lo que se acumula contra el tope. Cada tramo queda anotado en
+     * `vacacion_descuentos`, para que una anulación devuelva cada día al
+     * período del que salió.
+     *
+     * Debe llamarse dentro de una transacción: bloquea los períodos para que
+     * dos aprobaciones del mismo servidor no lean el mismo saldo a la vez.
+     */
+    public function consumirParaVacacion(Vacacion $vacacion, float $dias, int $anio): void
+    {
+        $periodos = PeriodoVacacion::where('servidor_id', $vacacion->servidor_id)
+            ->where('estado', 'abierto')
+            ->where('anio', '<=', $anio)
+            ->orderBy('anio')
+            ->lockForUpdate()
+            ->get();
+
+        if ($periodos->isEmpty()) {
+            throw new ReglaNegocioException(
+                "El servidor no tiene un período de vacaciones abierto hasta {$anio}: "
+                .'aprobarla no descontaría los días de ningún saldo. Genere el período antes de aprobar.'
+            );
+        }
+
+        $disponible = (float) $periodos->sum('dias_saldo');
+
+        if ($dias > $disponible) {
+            throw new ReglaNegocioException(
+                "Saldo insuficiente para aprobar: la solicitud descuenta {$dias} días ".
+                "y el saldo disponible hasta {$anio} es de ".number_format($disponible, 2).' días.'
+            );
+        }
+
+        $restante = $dias;
+
+        foreach ($periodos as $periodo) {
+            if ($restante <= 0) {
+                break;
+            }
+
+            $toma = round(min((float) $periodo->dias_saldo, $restante), 2);
+
+            if ($toma <= 0) {
+                continue;
+            }
+
+            $periodo->dias_utilizados = (float) $periodo->dias_utilizados + $toma;
+            $periodo->dias_saldo      = max(0, (float) $periodo->dias_generados - (float) $periodo->dias_utilizados);
+            $periodo->save();
+
+            VacacionDescuento::create([
+                'vacacion_id'         => $vacacion->id,
+                'periodo_vacacion_id' => $periodo->id,
+                'dias'                => $toma,
+            ]);
+
+            $restante = round($restante - $toma, 2);
+        }
+
+        $this->recalcularAcumulados($vacacion->servidor_id);
+    }
+
+    /**
+     * Devuelve a cada período lo que una vacación le tomó. Devuelve el total.
+     *
+     * Solo a períodos abiertos. Si uno ya se cerró, su saldo está certificado:
+     * devolverle días sería cambiarlo en silencio, y eso se hace con el
+     * recálculo forzado, que deja constancia. Se aborta todo en vez de
+     * devolver una parte.
+     *
+     * Debe llamarse dentro de una transacción.
+     */
+    public function devolverDeVacacion(Vacacion $vacacion): float
+    {
+        $descuentos = VacacionDescuento::where('vacacion_id', $vacacion->id)
+            ->whereNull('devuelto_en')
+            ->lockForUpdate()
+            ->get();
+
+        if ($descuentos->isEmpty()) {
+            return $this->devolverSinRegistro($vacacion);
+        }
+
+        $periodos = PeriodoVacacion::whereIn('id', $descuentos->pluck('periodo_vacacion_id'))
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        foreach ($periodos as $periodo) {
+            $this->exigirAbierto($periodo);
+        }
+
+        $total = 0.0;
+
+        foreach ($descuentos as $descuento) {
+            $periodo = $periodos[$descuento->periodo_vacacion_id];
+
+            $periodo->dias_utilizados = max(0, (float) $periodo->dias_utilizados - $descuento->dias);
+            $periodo->dias_saldo      = max(0, (float) $periodo->dias_generados - (float) $periodo->dias_utilizados);
+            $periodo->save();
+
+            $descuento->devuelto_en = now();
+            $descuento->save();
+
+            $total += $descuento->dias;
+        }
+
+        $this->recalcularAcumulados($vacacion->servidor_id);
+
+        return round($total, 2);
+    }
+
+    /**
+     * Una vacación aprobada antes de que existiera `vacacion_descuentos`.
+     *
+     * Entonces el descuento iba solo al período de su año, así que ahí se
+     * devuelve. Lo que no se sabe es cuánto se tomó de verdad: si el saldo no
+     * alcanzaba, lo que faltaba se perdía. Por eso se devuelve lo que dice la
+     * solicitud, pero nunca más de lo que ese período tiene utilizado.
+     */
+    private function devolverSinRegistro(Vacacion $vacacion): float
+    {
+        $periodo = PeriodoVacacion::where('servidor_id', $vacacion->servidor_id)
+            ->where('anio', Carbon::parse($vacacion->fecha_inicio)->year)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $periodo) {
+            return 0.0;
+        }
+
+        $this->exigirAbierto($periodo);
+
+        $dias = min((float) $vacacion->dias_solicitados, (float) $periodo->dias_utilizados);
+
+        if ($dias <= 0) {
+            return 0.0;
+        }
+
+        $periodo->dias_utilizados = (float) $periodo->dias_utilizados - $dias;
+        $periodo->dias_saldo      = max(0, (float) $periodo->dias_generados - (float) $periodo->dias_utilizados);
+        $periodo->save();
+
+        $this->recalcularAcumulados($vacacion->servidor_id);
+
+        return round($dias, 2);
+    }
+
+    private function exigirAbierto(PeriodoVacacion $periodo): void
+    {
+        if ($periodo->estado !== 'abierto') {
+            throw new ReglaNegocioException(
+                "El período {$periodo->anio} está {$periodo->estado}: devolverle días cambiaría un saldo "
+                .'ya certificado. Si hay que corregirlo, use el recálculo del período.'
+            );
+        }
+    }
+
+    /**
+     * Pone al día `saldo_acumulado` en los períodos abiertos del servidor.
+     *
+     * Es el mismo cálculo de `calcularCifras()` —lo que arrastran los años
+     * anteriores, con el tope LOSEP de 60, más el saldo propio—, pero para
+     * todos a la vez: un descuento repartido cambia el saldo de varios períodos
+     * y el acumulado de cada uno depende de los anteriores.
+     */
+    private function recalcularAcumulados(int $servidorId): void
+    {
+        $periodos = PeriodoVacacion::where('servidor_id', $servidorId)
+            ->where('estado', 'abierto')
+            ->orderBy('anio')
+            ->get();
+
+        $arrastre = 0.0;
+
+        foreach ($periodos as $periodo) {
+            $tope = $periodo->regimen === 'losep' ? min($arrastre, 60.0) : $arrastre;
+
+            $periodo->saldo_acumulado = $tope + (float) $periodo->dias_saldo;
+            $periodo->save();
+
+            $arrastre += (float) $periodo->dias_saldo;
+        }
+    }
+
     /**
      * Obtiene el resumen de períodos de un servidor.
      */
@@ -437,16 +650,26 @@ class PeriodoVacacionService
                 $periodo->fecha_fin_periodo
             )->endOfDay();
 
-            // Días por vacaciones aprobadas en ese período
-            $diasVacaciones = \App\Models\Asistencia\Vacacion
-                ::where('servidor_id', $servidorId)
+            // Días de vacaciones que salieron de ESTE período. Se leen del
+            // registro de descuentos: desde que el descuento se reparte entre
+            // períodos, la fecha de la vacación ya no dice de cuál salió.
+            $diasRegistrados = (float) VacacionDescuento::where('periodo_vacacion_id', $periodo->id)
+                ->whereNull('devuelto_en')
+                ->sum('dias');
+
+            // Las aprobadas antes de que existiera ese registro se descontaban
+            // del período de su año, así que se siguen atribuyendo por fecha.
+            $diasSinRegistro = (float) Vacacion::where('servidor_id', $servidorId)
                 ->whereIn('estado', ['aprobada', 'gozada'])
                 ->whereBetween('fecha_inicio', [$anioInicio, $anioFin])
                 ->whereIn('motivo', [
                     'vacaciones_anuales',
                     'permiso_cargo_vacaciones',
                 ])
+                ->whereDoesntHave('descuentos')
                 ->sum('dias_solicitados');
+
+            $diasVacaciones = $diasRegistrados + $diasSinRegistro;
 
             // Días por permisos personales en ese período (horas/8)
             $minutosPermisos = \App\Models\Asistencia\PermisoServidor

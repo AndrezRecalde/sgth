@@ -88,6 +88,15 @@ class VacacionPolicy
     }
 
     /**
+     * Anular deshace una aprobación y devuelve días: la misma capacidad que
+     * aprobar, no una menor.
+     */
+    public function anular(User $user, Vacacion $vacacion): bool
+    {
+        return $user->can(Permiso::APROBAR_VACACIONES->value);
+    }
+
+    /**
      * Saldo y resumen de períodos de un servidor: la misma regla que leer sus
      * vacaciones.
      */

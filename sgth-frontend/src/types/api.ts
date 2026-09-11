@@ -1339,7 +1339,7 @@ export type MotivoVacacion =
   | 'licencia_con_goce'
 
 export type EstadoVacacion =
-  'pendiente' | 'aprobada' | 'rechazada' | 'gozada'
+  'pendiente' | 'aprobada' | 'rechazada' | 'gozada' | 'anulada'
 
 export type Vacacion = {
   id:               number
@@ -1365,6 +1365,9 @@ export type Vacacion = {
   periodo_vacacion_id?:  number | null
   persona_reemplaza?:    ServidorConRelaciones | null
   periodo_vacacion?:     PeriodoVacacion | null
+  anulado_por?:          number | null
+  anulado_en?:           string | null
+  motivo_anulacion?:     string | null
 }
 
 // ── Períodos de vacaciones ───────────────────────

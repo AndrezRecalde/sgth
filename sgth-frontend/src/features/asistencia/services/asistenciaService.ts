@@ -225,6 +225,17 @@ export const asistenciaService = {
         `/asistencia/vacaciones/${id}`, data
       ).then(r => r.data.datos),
 
+    /**
+     * Anula una pendiente, o una aprobada que aún no comienza.
+     *
+     * Devuelve la respuesta completa: el mensaje del backend dice cuántos días
+     * volvieron al saldo, y eso es lo que quien anula necesita ver.
+     */
+    anular: (id: number, motivo: string) =>
+      api.post<ApiResponse<Vacacion>>(
+        `/asistencia/vacaciones/${id}/anular`, { motivo }
+      ).then(r => r.data),
+
     exportar: (id: number) =>
       api.get(`/asistencia/vacaciones/${id}/exportar`, {
         responseType: 'blob',
