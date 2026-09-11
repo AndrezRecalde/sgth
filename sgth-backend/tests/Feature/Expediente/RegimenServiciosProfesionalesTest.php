@@ -29,11 +29,12 @@ test('no genera vacaciones, aunque acumule antigüedad', function () {
         ->and($servicio->calcularDiasGenerados('servicios_profesionales', 0))->toBe(0.0);
 });
 
-test('los otros dos regímenes siguen generando lo de siempre', function () {
+test('los otros dos regímenes sí generan vacaciones', function () {
     $servicio = app(PeriodoVacacionService::class);
 
+    // LOSEP, art. 29: treinta días desde el primer año, sin escala.
     expect($servicio->calcularDiasGenerados('losep', 20))->toBe(30.0)
-        ->and($servicio->calcularDiasGenerados('losep', 0))->toBe(15.0)
+        ->and($servicio->calcularDiasGenerados('losep', 0))->toBe(30.0)
         ->and($servicio->calcularDiasGenerados('codigo_trabajo', 1))->toBe(15.0)
         ->and($servicio->calcularDiasGenerados('codigo_trabajo', 20))->toBe(30.0);
 });

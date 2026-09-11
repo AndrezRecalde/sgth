@@ -108,7 +108,6 @@ test('el acumulado descuenta lo gozado en vez de sumar lo generado', function ()
 // ── Los períodos cerrados no se tocan por rutina ────────────────
 
 test('regenerar no recalcula un período cerrado', function () {
-    $this->servidor->update(['fecha_ingreso_sector_publico' => '2009-01-01']);
     $this->servicio->generarPeriodo($this->servidor->fresh(), 2025);
     $this->servicio->descontarDias($this->servidor->id, 20, 2025);
 
@@ -119,8 +118,9 @@ test('regenerar no recalcula un período cerrado', function () {
     $generadosAlCerrar = (float) $periodo->dias_generados;
     $saldoAlCerrar     = (float) $periodo->dias_saldo;
 
-    // Se corrige la antigüedad y cruza de tramo: le corresponderían 15 en vez de 30.
-    $this->servidor->update(['fecha_ingreso_sector_publico' => '2020-01-01']);
+    // Se corrige el régimen: como Código del Trabajo, con 5 años en 2025, le
+    // corresponderían 15 en vez de los 30 de la LOSEP.
+    $this->servidor->update(['regimen_laboral' => 'codigo_trabajo']);
     $this->servicio->generarPeriodo($this->servidor->fresh(), 2025);
 
     $despues = $periodo->fresh();
@@ -142,11 +142,9 @@ test('«generar todos» deja intactos los períodos cerrados', function () {
 });
 
 test('forzar sí recalcula un período cerrado y lo deja en la bitácora', function () {
-    // Las fechas cruzan tramo de la escala LOSEP a propósito: 2009 son 16 años
-    // en 2025 (30 días) y 2020 son 5 (15 días). Dos fechas del mismo tramo
-    // darían el mismo resultado y el test no probaría nada.
-    $this->servidor->update(['fecha_ingreso_sector_publico' => '2009-01-01']);
-
+    // El recálculo tiene que cambiar algo para probar nada: la LOSEP da 30
+    // días a todos, y el mismo servidor bajo el Código del Trabajo, con 5 años
+    // en 2025, da 15.
     $this->servicio->generarPeriodo($this->servidor->fresh(), 2025);
     $periodo = PeriodoVacacion::where('servidor_id', $this->servidor->id)
         ->where('anio', 2025)->firstOrFail();
@@ -155,7 +153,7 @@ test('forzar sí recalcula un período cerrado y lo deja en la bitácora', funct
     $generadosAntes = (float) $periodo->dias_generados;
     expect($generadosAntes)->toBe(30.0);
 
-    $this->servidor->update(['fecha_ingreso_sector_publico' => '2020-01-01']);
+    $this->servidor->update(['regimen_laboral' => 'codigo_trabajo']);
     $this->servicio->generarPeriodo($this->servidor->fresh(), 2025, forzar: true);
 
     $despues = $periodo->fresh();
@@ -178,14 +176,14 @@ test('forzar sí recalcula un período cerrado y lo deja en la bitácora', funct
 test('la previsualización anuncia el mismo saldo que después se guarda', function () {
     // Si el diálogo promete un saldo y forzar deja otro, la confirmación
     // informada deja de serlo. Este test ata las dos cifras.
-    $this->servidor->update(['fecha_ingreso_sector_publico' => '2009-01-01']);
     $this->servicio->generarPeriodo($this->servidor->fresh(), 2025);
     $this->servicio->descontarDias($this->servidor->id, 4, 2025);
 
     PeriodoVacacion::where('servidor_id', $this->servidor->id)
         ->where('anio', 2025)->update(['estado' => 'cerrado']);
 
-    $this->servidor->update(['fecha_ingreso_sector_publico' => '2020-01-01']);
+    // Pasa al Código del Trabajo: con 5 años en 2025 genera 15 en vez de 30.
+    $this->servidor->update(['regimen_laboral' => 'codigo_trabajo']);
     $servidor = $this->servidor->fresh();
 
     $previa = $this->servicio->previsualizarRecalculo($servidor, 2025);

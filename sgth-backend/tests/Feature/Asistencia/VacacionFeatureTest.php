@@ -44,7 +44,7 @@ beforeEach(function () {
     $this->puestoSubordinado = puestoDePrueba($this->unidad);
 });
 
-test('calculo_vacaciones_losep_tramo_1_a_5_anios', function () {
+test('la LOSEP genera 30 días con 3 años de servicio', function () {
     $servidor = Servidor::create([
         'cedula' => '0801234561',
         'nombre' => 'Juan',
@@ -61,10 +61,11 @@ test('calculo_vacaciones_losep_tramo_1_a_5_anios', function () {
     $motor = $service->obtenerMotor($servidor);
     $diasAnuales = $motor->calcularDiasGanadosAnuales($servidor);
 
-    expect($diasAnuales)->toBe(15.0);
+    // Art. 29 LOSEP: treinta días, sin escala por antigüedad.
+    expect($diasAnuales)->toBe(30.0);
 });
 
-test('calculo_vacaciones_losep_tramo_6_a_10_anios', function () {
+test('la LOSEP genera los mismos 30 días con 8 años: no hay tramos', function () {
     $servidor = Servidor::create([
         'cedula' => '0801234562',
         'nombre' => 'Maria',
@@ -81,7 +82,7 @@ test('calculo_vacaciones_losep_tramo_6_a_10_anios', function () {
     $motor = $service->obtenerMotor($servidor);
     $diasAnuales = $motor->calcularDiasGanadosAnuales($servidor);
 
-    expect($diasAnuales)->toBe(20.0);
+    expect($diasAnuales)->toBe(30.0);
 });
 
 test('calculo_saldo_codigo_trabajo_incluye_dias_antiguedad', function () {
@@ -147,10 +148,10 @@ test('solicitud_vacacion_descuenta_dias_correctamente', function () {
 
     $motorLosep = $service->obtenerMotor($servidorLosep);
     $diasLosep = $motorLosep->calcularDiasDescuento($fechaInicio, $fechaFin);
-    // LOSEP Hábiles: Jueves(1), Viernes(Feriado->0), Sabado(0), Domingo(0), Lunes(1) = 2 días
-    // O si no cuenta feriado aún, sería 3 días (Jue, Vie, Lun)
-    // Según requerimiento DEBE descontar excluyendo feriados
-    expect($diasLosep)->toBe(2.0);
+    // LOSEP también en días calendario (art. 29, confirmado con Talento
+    // Humano): Jue, Vie, Sáb, Dom, Lun = 5 días, feriado incluido. Antes
+    // contaba solo los hábiles y sin feriados, y daba 2.
+    expect($diasLosep)->toBe(5.0);
 
     $motorCT = $service->obtenerMotor($servidorCT);
     $diasCT = $motorCT->calcularDiasDescuento($fechaInicio, $fechaFin);

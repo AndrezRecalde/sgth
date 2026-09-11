@@ -168,9 +168,11 @@ class VacacionService implements VacacionServiceInterface
                 }
             }
 
-            // Determinar tipo_dias según régimen
-            $tipoDias = ($servidor->regimen_laboral?->value ?? $servidor->regimen_laboral)
-                === 'codigo_trabajo' ? 'calendario' : 'habiles';
+            // Días calendario en los dos regímenes: la LOSEP (art. 29) y el
+            // Código del Trabajo (art. 69), confirmado con Talento Humano. La
+            // LOSEP se guardaba como «hábiles»; las solicitudes antiguas
+            // conservan su tipo, y su PDF sigue diciendo cómo se contaron.
+            $tipoDias = 'calendario';
 
             $folio = $this->generarFolio();
 

@@ -185,8 +185,13 @@ test('regenerar un período no devuelve los días vencidos', function () {
 
     app(PeriodoVacacionService::class)->generarPeriodo($servidor->fresh(), $this->anio - 3);
 
-    expect((float) $antiguo->fresh()->dias_saldo)->toBe(5.0)
-        ->and((float) $antiguo->fresh()->dias_vencidos)->toBe(15.0);
+    // Regenerar recalcula lo generado —la LOSEP da 30, no los 20 del
+    // fixture—, pero los 15 vencidos no vuelven: el saldo es lo generado
+    // menos lo vencido.
+    $regenerado = $antiguo->fresh();
+
+    expect((float) $regenerado->dias_vencidos)->toBe(15.0)
+        ->and((float) $regenerado->dias_saldo)->toBe((float) $regenerado->dias_generados - 15.0);
 });
 
 test('el asistente de Talento Humano ve la lista pero no vence', function () {

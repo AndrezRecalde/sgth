@@ -22,24 +22,10 @@ class PeriodoVacacionService
         string $regimen,
         int $aniosAntiguedad
     ): float {
-        // Un contrato de servicios profesionales es civil: se pacta un
-        // entregable, no una jornada, así que no genera vacaciones. Sin este
-        // caso caía en la fórmula del Código del Trabajo y le generaba días.
-        if ($regimen === RegimenLaboral::SERVICIOS_PROFESIONALES->value) {
-            return 0.0;
-        }
-
-        if ($regimen === 'losep') {
-            return match(true) {
-                $aniosAntiguedad >= 16 => 30.0,
-                $aniosAntiguedad >= 11 => 25.0,
-                $aniosAntiguedad >= 6  => 20.0,
-                default                => 15.0,
-            };
-        }
-
-        // Código del Trabajo: 15 + 1 por cada año adicional
-        return min(15.0 + max(0, $aniosAntiguedad - 1), 30.0);
+        // La escala vive en un solo sitio, que también consultan los motores.
+        // Aquí se aplicaba 15/20/25/30 en LOSEP y, en el Código del Trabajo,
+        // el día adicional desde el segundo año: ver `EscalaVacaciones`.
+        return EscalaVacaciones::diasGenerados($regimen, $aniosAntiguedad);
     }
 
     /**

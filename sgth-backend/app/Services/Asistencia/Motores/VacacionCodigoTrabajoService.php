@@ -3,7 +3,9 @@
 namespace App\Services\Asistencia\Motores;
 
 use App\Contracts\Asistencia\VacacionMotorInterface;
+use App\Enums\RegimenLaboral;
 use App\Models\Expediente\Servidor;
+use App\Services\Asistencia\EscalaVacaciones;
 use Carbon\Carbon;
 
 class VacacionCodigoTrabajoService implements VacacionMotorInterface
@@ -17,20 +19,8 @@ class VacacionCodigoTrabajoService implements VacacionMotorInterface
 
         $aniosServicio = (int) floor($fechaIngreso->diffInYears(now()));
 
-        // CT: 15 días base + 1 día por cada año adicional a partir del 5to año (hasta 15 adicionales máximo)
-        // La regla general en Ecuador es: cumplidos los 5 años en la misma empresa, al 6to año recibe 1 día adicional.
-        // Adaptaremos a "15 días + 1 por año adicional" según instrucciones, asumiendo base de 5 años.
-        
-        if ($aniosServicio <= 5) {
-            return 15;
-        }
-
-        $diasAdicionales = $aniosServicio - 5;
-        if ($diasAdicionales > 15) {
-            $diasAdicionales = 15; // El límite del Código de Trabajo es 30 días en total (15+15)
-        }
-
-        return 15 + $diasAdicionales;
+        // Art. 69: la misma escala que los períodos, desde un solo sitio.
+        return EscalaVacaciones::diasGenerados(RegimenLaboral::CODIGO_TRABAJO->value, $aniosServicio);
     }
 
     public function validarLimitesAcumulacion(float $diasAcumuladosTotales, float $diasGanadosAnuales): array
