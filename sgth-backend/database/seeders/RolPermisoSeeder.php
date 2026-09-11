@@ -29,7 +29,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_PERMISOS,
             Permiso::ACCESO_AUTOSERVICIO,
             Permiso::CAMBIAR_CONTRASENA,
-            Permiso::SOLICITAR_CITA,
             Permiso::VER_HISTORIA_CLINICA_PROPIA,
             Permiso::CREAR_TICKET,
             Permiso::VER_TICKET_PROPIO,
