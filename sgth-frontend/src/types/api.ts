@@ -246,7 +246,6 @@ export type ActividadLiquidacion = {
 }
 
 // ── Dispensario ──────────────────────────────
-export type Beneficiario       = components['schemas']['BeneficiarioResource']
 export type HistoriaClinica    = components['schemas']['HistoriaClinica']
 export type AgendaMedica       = components['schemas']['AgendaMedica']
 export type ConsultaMedica     = components['schemas']['ConsultaMedica']

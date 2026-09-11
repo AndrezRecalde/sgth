@@ -4,6 +4,9 @@ namespace App\Http\Resources\Estructura;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \App\Models\Estructura\Puesto
+ */
 class PuestoResource extends JsonResource
 {
     public function toArray(Request $request): array
