@@ -70,18 +70,22 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
   const montoCalculado = Math.round(tarifaBase * coef * totalDias * 100) / 100;
 
   const onSubmit = async (values: FormData) => {
-    await aprobar.mutateAsync({
-      id: viatico.id,
-      data: {
-        coeficiente_exterior: values.coeficiente_exterior,
-        pais_destino: values.pais_destino,
-      },
-    });
-    // Invalidar explícitamente el query del viático
-    // por id numérico Y por codigo_viatico string
-    qc.invalidateQueries({ queryKey: ["viatico"] });
-    qc.invalidateQueries({ queryKey: ["viaticos"] });
-    onClose();
+    try {
+      await aprobar.mutateAsync({
+        id: viatico.id,
+        data: {
+          coeficiente_exterior: values.coeficiente_exterior,
+          pais_destino: values.pais_destino,
+        },
+      });
+      // Invalidar explícitamente el query del viático
+      // por id numérico Y por codigo_viatico string
+      qc.invalidateQueries({ queryKey: ["viatico"] });
+      qc.invalidateQueries({ queryKey: ["viaticos"] });
+      onClose();
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   };
 
   return (

@@ -148,10 +148,14 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   };
 
   const onSubmit = async (values: ViaticoFormData) => {
-    const viatico = await solicitar.mutateAsync(values);
-    reset();
-    onClose();
-    if (viatico) onCreated(viatico as Viatico);
+    try {
+      const viatico = await solicitar.mutateAsync(values);
+      reset();
+      onClose();
+      if (viatico) onCreated(viatico as Viatico);
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   };
 
   return (

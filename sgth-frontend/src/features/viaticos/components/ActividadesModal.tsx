@@ -112,12 +112,16 @@ export function ActividadesModal({
   }, [opened, valorInicial, reset])
 
   const onSubmit = async (values: FormData) => {
-    await guardarActividades.mutateAsync({
-      viaticoId:   viatico.id,
-      actividades: values.actividades,
-    })
-    onGuardar?.(values.actividades)
-    onClose()
+    try {
+      await guardarActividades.mutateAsync({
+        viaticoId:   viatico.id,
+        actividades: values.actividades,
+      })
+      onGuardar?.(values.actividades)
+      onClose()
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   }
 
   return (

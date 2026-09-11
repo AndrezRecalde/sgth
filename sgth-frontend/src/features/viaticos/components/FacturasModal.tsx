@@ -177,12 +177,16 @@ export function FacturasModal({
   };
 
   const onSubmit = async (values: FormData) => {
-    await guardarFacturas.mutateAsync({
-      viaticoId: viatico.id,
-      facturas: values.facturas,
-    });
-    onGuardar?.(values.facturas);
-    onClose();
+    try {
+      await guardarFacturas.mutateAsync({
+        viaticoId: viatico.id,
+        facturas: values.facturas,
+      });
+      onGuardar?.(values.facturas);
+      onClose();
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   };
 
   return (
