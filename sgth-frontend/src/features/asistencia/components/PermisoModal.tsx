@@ -8,6 +8,7 @@ import {
   Stack,
   Select,
   Textarea,
+  TextInput,
   Grid,
   Text,
   Stepper,
@@ -25,6 +26,7 @@ import {
 import React from "react";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { useAuth } from "@/hooks/useAuth";
 import { useUnidades } from "@/features/estructura/hooks/useUnidades";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
@@ -61,12 +63,23 @@ export function PermisoModal({ opened, onClose }: Props) {
   const contained = useContainedInput();
   const { crear } = usePermisoMutations();
 
+  // Talento Humano emite permisos a nombre de cualquier servidor; el resto,
+  // solo el propio. Es la misma regla que aplica el backend
+  // (`PermisoServidorPolicy::crear`): ofrecer aquí la lista de toda la
+  // institución solo serviría para que el alta respondiera 403.
+  const { usuario, hasPermiso } = useAuth();
+  const emiteATodos = hasPermiso("registrar-permisos-servidores");
+  const propio = usuario?.servidor ?? null;
+  const unidadPropia = propio?.unidad_administrativa_id ?? null;
+  const puedeRegistrar = emiteATodos || (propio !== null && unidadPropia !== null);
+
   const [paso, setPaso] = useState(0);
   const [permisoCreado, setPermisoCreado] = useState<PermisoServidor | null>(
     null,
   );
   const { exportar, exportandoId } = useExportarPermiso();
-  const [unidadSelId, setUnidadSelId] = useState<number | null>(null);
+  const unidadInicial = emiteATodos ? null : unidadPropia;
+  const [unidadSelId, setUnidadSelId] = useState<number | null>(unidadInicial);
 
   // Datos
   const { data: unidadesRaw } = useUnidades({ nivel: 2 });
@@ -116,8 +129,8 @@ export function PermisoModal({ opened, onClose }: Props) {
   } = useForm<PermisoFormData>({
     resolver: zodResolver(permisoSchema),
     defaultValues: {
-      unidad_administrativa_id: undefined,
-      servidor_id: undefined,
+      unidad_administrativa_id: unidadInicial ?? undefined,
+      servidor_id: emiteATodos ? undefined : propio?.id,
       jefe_id: null,
       dirigido_a_talento_humano: false,
       tipo: "personal",
@@ -135,7 +148,7 @@ export function PermisoModal({ opened, onClose }: Props) {
 
   const handleClose = () => {
     reset();
-    setUnidadSelId(null);
+    setUnidadSelId(unidadInicial);
     setPaso(0);
     setPermisoCreado(null);
     onClose();
@@ -167,6 +180,46 @@ export function PermisoModal({ opened, onClose }: Props) {
     exportar(Number(permisoCreado.id), permisoCreado.folio);
   };
 
+  const nombrePropio = propio
+    ? [
+        [propio.apellido, propio.nombre].filter(Boolean).join(" "),
+        propio.cedula,
+      ]
+        .filter(Boolean)
+        .join(" — ")
+    : "";
+
+  // El mismo selector para los dos casos: el jefe se elige igual registre
+  // Talento Humano o el propio servidor.
+  const selectorJefe = (
+    <Controller
+      name="jefe_id"
+      control={control}
+      render={({ field }) => (
+        <Select
+          label="Jefe inmediato"
+          placeholder={
+            dirigidoATh
+              ? "Firma el jefe de Talento Humano"
+              : !unidadSelId
+                ? "Seleccione primero la unidad"
+                : jefeOptions.length === 0
+                  ? "Sin jefes en esta unidad"
+                  : "Seleccionar jefe"
+          }
+          data={jefeOptions}
+          searchable
+          clearable
+          disabled={!unidadSelId || dirigidoATh}
+          {...contained}
+          value={field.value ? String(field.value) : null}
+          onChange={(v) => field.onChange(v ? Number(v) : null)}
+          error={errors.jefe_id?.message}
+        />
+      )}
+    />
+  );
+
   return (
     <Modal
       closeOnClickOutside={false}
@@ -183,98 +236,101 @@ export function PermisoModal({ opened, onClose }: Props) {
       </Stepper>
 
       {/* ── PASO 0: Formulario ── */}
-      {paso === 0 && (
+      {paso === 0 && !puedeRegistrar && (
+        <Alert icon={<IconInfoCircle size={16} />} color="orange" variant="light">
+          <Text size="sm">
+            Su usuario no está vinculado a un servidor con unidad asignada, así
+            que no hay a nombre de quién registrar el permiso. Pídale a Talento
+            Humano que lo registre o que complete la vinculación.
+          </Text>
+        </Alert>
+      )}
+
+      {paso === 0 && puedeRegistrar && (
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="sm">
-            {/* Unidad administrativa */}
-            <Controller
-              name="unidad_administrativa_id"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Unidad administrativa"
-                  placeholder="Seleccionar unidad"
-                  data={unidadOptions}
-                  searchable
-                  {...contained}
-                  value={field.value ? String(field.value) : null}
-                  onChange={(v) => {
-                    const id = v ? Number(v) : undefined;
-                    field.onChange(id);
-                    setUnidadSelId(id ?? null);
-                    setValue("servidor_id", 0);
-                    setValue("jefe_id", null);
-                    setValue("dirigido_a_talento_humano", false);
-                  }}
-                  error={errors.unidad_administrativa_id?.message}
-                />
-              )}
-            />
-
-            <Grid>
-              {/* Servidor */}
-              <Grid.Col span={{ base: 12, sm: 6 }}>
+            {emiteATodos ? (
+              <>
+                {/* Unidad administrativa */}
                 <Controller
-                  name="servidor_id"
+                  name="unidad_administrativa_id"
                   control={control}
                   render={({ field }) => (
                     <Select
-                      label="Servidor"
-                      placeholder={
-                        !unidadSelId
-                          ? "Seleccione primero la unidad"
-                          : servidorOptions.length === 0
-                            ? "Sin servidores en esta unidad"
-                            : "Seleccionar servidor"
-                      }
-                      data={servidorOptions}
+                      label="Unidad administrativa"
+                      placeholder="Seleccionar unidad"
+                      data={unidadOptions}
                       searchable
-                      disabled={!unidadSelId}
                       {...contained}
                       value={field.value ? String(field.value) : null}
                       onChange={(v) => {
-                        field.onChange(v ? Number(v) : undefined);
-                        // La opción de Talento Humano se confirmó para otro
-                        // servidor: si el nuevo es el propio jefe de TH ya no
-                        // cabe, y en cualquier caso hay que volver a decidirla.
+                        const id = v ? Number(v) : undefined;
+                        field.onChange(id);
+                        setUnidadSelId(id ?? null);
+                        setValue("servidor_id", 0);
+                        setValue("jefe_id", null);
                         setValue("dirigido_a_talento_humano", false);
                       }}
-                      error={errors.servidor_id?.message}
+                      error={errors.unidad_administrativa_id?.message}
                     />
                   )}
                 />
-              </Grid.Col>
 
-              {/* Jefe inmediato */}
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <Controller
-                  name="jefe_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Jefe inmediato"
-                      placeholder={
-                        dirigidoATh
-                          ? "Firma el jefe de Talento Humano"
-                          : !unidadSelId
-                            ? "Seleccione primero la unidad"
-                            : jefeOptions.length === 0
-                              ? "Sin jefes en esta unidad"
-                              : "Seleccionar jefe"
-                      }
-                      data={jefeOptions}
-                      searchable
-                      clearable
-                      disabled={!unidadSelId || dirigidoATh}
-                      {...contained}
-                      value={field.value ? String(field.value) : null}
-                      onChange={(v) => field.onChange(v ? Number(v) : null)}
-                      error={errors.jefe_id?.message}
+                <Grid>
+                  {/* Servidor */}
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <Controller
+                      name="servidor_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          label="Servidor"
+                          placeholder={
+                            !unidadSelId
+                              ? "Seleccione primero la unidad"
+                              : servidorOptions.length === 0
+                                ? "Sin servidores en esta unidad"
+                                : "Seleccionar servidor"
+                          }
+                          data={servidorOptions}
+                          searchable
+                          disabled={!unidadSelId}
+                          {...contained}
+                          value={field.value ? String(field.value) : null}
+                          onChange={(v) => {
+                            field.onChange(v ? Number(v) : undefined);
+                            // La opción de Talento Humano se confirmó para otro
+                            // servidor: si el nuevo es el propio jefe de TH ya no
+                            // cabe, y en cualquier caso hay que volver a decidirla.
+                            setValue("dirigido_a_talento_humano", false);
+                          }}
+                          error={errors.servidor_id?.message}
+                        />
+                      )}
                     />
-                  )}
-                />
-              </Grid.Col>
-            </Grid>
+                  </Grid.Col>
+
+                  {/* Jefe inmediato */}
+                  <Grid.Col span={{ base: 12, sm: 6 }}>{selectorJefe}</Grid.Col>
+                </Grid>
+              </>
+            ) : (
+              <Grid>
+                {/* El solicitante es quien tiene la sesión: no se elige. */}
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <TextInput
+                    label="Servidor"
+                    description="Solo puede registrar sus propios permisos."
+                    value={nombrePropio}
+                    readOnly
+                    {...contained}
+                  />
+                </Grid.Col>
+
+                {/* Jefe inmediato */}
+                <Grid.Col span={{ base: 12, sm: 6 }}>{selectorJefe}</Grid.Col>
+              </Grid>
+            )}
 
             {/*
               Omitir al jefe inmediato. Quien firma entonces no se elige: es el

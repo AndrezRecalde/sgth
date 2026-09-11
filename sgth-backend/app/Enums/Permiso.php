@@ -38,6 +38,9 @@ enum Permiso: string
     case VER_ASISTENCIA_UNIDAD = 'ver-asistencia-unidad';
     case VER_ASISTENCIA_TODOS = 'ver-asistencia-todos';
     case CREAR_PERMISO = 'crear-permiso';
+    // Registrar permisos a nombre de cualquier servidor. `crear-permiso` lo
+    // tiene todo el mundo y solo alcanza para el propio.
+    case REGISTRAR_PERMISOS_SERVIDORES = 'registrar-permisos-servidores';
     case VER_PERMISOS = 'ver-permisos';
     case VER_PERMISOS_TODOS = 'ver-permisos-todos';
     case ANULAR_PERMISO = 'anular-permiso';

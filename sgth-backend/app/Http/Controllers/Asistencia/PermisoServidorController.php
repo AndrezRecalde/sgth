@@ -96,11 +96,17 @@ class PermisoServidorController extends Controller
             );
         }
 
+        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
+
+        // El propio, cualquiera; el de otro servidor, solo Talento Humano. Va
+        // antes que el régimen: a quien no puede registrar para ese servidor no
+        // se le cuenta nada sobre él.
+        $this->authorize('crear', [PermisoServidor::class, $servidor]);
+
         // Solo LOSEP accede al módulo de permisos. Se comprueba en positivo y
         // no descartando el Código del Trabajo: con esa forma, el régimen de
         // servicios profesionales —agregado el 2026-08-29— habría entrado por
         // omisión, y un contrato civil no tiene jornada que permisar.
-        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
         $regimen = $servidor->regimen_laboral instanceof \App\Enums\RegimenLaboral
             ? $servidor->regimen_laboral
             : \App\Enums\RegimenLaboral::tryFrom(
