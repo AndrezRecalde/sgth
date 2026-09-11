@@ -751,22 +751,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/autoservicio/solicitar-cita": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["autoservicio.solicitarCita"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/autoservicio/mi-historia-clinica": {
         parameters: {
             query?: never;
@@ -3999,6 +3983,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/asistencia/periodos-vacaciones/excedentes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Quién está cerca de su tope de acumulación o lo pasa
+         * @description Solo lee: lo ve quien ve las vacaciones de toda la institución. Vencer
+         *     el excedente es otra ruta y otro permiso.
+         */
+        get: operations["periodos.excedentes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/periodos-vacaciones/servidores/{servidorId}/vencer-excedente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vence el excedente de un servidor sobre su tope. Queda en la bitácora */
+        post: operations["periodos.vencer-excedente"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/permisos": {
         parameters: {
             query?: never;
@@ -5880,6 +5902,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/asistencia/vacaciones/{id}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anula una pendiente, o una aprobada que aún no comienza
+         * @description El mensaje dice cuántos días volvieron al saldo: es lo que quien anula
+         *     necesita comprobar, y no se ve en la fila de la solicitud.
+         */
+        post: operations["asistencia.vacaciones.anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos": {
         parameters: {
             query?: never;
@@ -6333,6 +6376,16 @@ export interface components {
         AnularOdontogramaProcedimientoRequest: {
             motivo_anulacion: string;
             consulta_medica_id?: number | null;
+        };
+        /**
+         * AnularVacacionRequest
+         * @description El motivo de anular una solicitud de vacaciones.
+         *
+         *     Anular deshace algo —en una aprobada, devuelve días al saldo—, así que
+         *     queda escrito por qué, igual que al rechazar o revertir un permiso.
+         */
+        AnularVacacionRequest: {
+            motivo: string;
         };
         /**
          * AptitudMedica
@@ -8814,12 +8867,6 @@ export interface components {
             posee_enfermedad_catastrofica: boolean;
             observaciones?: string | null;
         };
-        /** StoreCitaMedicaAutoservicioRequest */
-        StoreCitaMedicaAutoservicioRequest: {
-            /** Format: date-time */
-            fecha_hora: string;
-            sintomas: string;
-        };
         /** StoreConsultaMedicaRequest */
         StoreConsultaMedicaRequest: {
             historia_clinica_id: number;
@@ -10357,6 +10404,42 @@ export interface components {
             activo: boolean;
             servidor_id: number | null;
             nombre_completo: string;
+        };
+        /** UsuarioAutenticadoResource */
+        UsuarioAutenticadoResource: {
+            id: number;
+            nombre_completo: string;
+            email: string;
+            usuario_ti: string | null;
+            activo: boolean;
+            primer_login: boolean;
+            servidor_id: number | null;
+            roles: unknown[];
+            permisos: unknown[];
+            servidor: {
+                id: number;
+                cedula: string;
+                nombre: string;
+                apellido: string;
+                /**
+                 * @description La marcación en línea lo lee de aquí. El perfil no lo traía y
+                 *     solo llegaba con el modelo crudo del login.
+                 */
+                puede_marcar: boolean;
+                regimen_laboral: string;
+                tipo_nombramiento: string;
+                tipo_nombramiento_label: string;
+                unidad_administrativa_id: number | null;
+                puesto: {
+                    id: number;
+                    nombre: string;
+                    es_jefe: boolean;
+                } | null;
+                unidad_administrativa: {
+                    id: number;
+                    nombre: string;
+                } | null;
+            } | null;
         };
         /** UsuarioResource */
         UsuarioResource: {
@@ -12153,7 +12236,7 @@ export interface operations {
                         datos: {
                             token: string;
                             primer_login: boolean;
-                            usuario: components["schemas"]["User"] | null;
+                            usuario: components["schemas"]["UsuarioAutenticadoResource"];
                         };
                         meta: null;
                     };
@@ -12206,35 +12289,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Operación exitosa.";
-                        datos: {
-                            id: number;
-                            nombre_completo: string;
-                            email: string;
-                            usuario_ti: string | null;
-                            activo: boolean;
-                            primer_login: boolean;
-                            servidor_id: number | null;
-                            roles: {
-                                [key: string]: unknown;
-                            };
-                            permisos: {
-                                [key: string]: unknown;
-                            };
-                            servidor: {
-                                id: number;
-                                cedula: string;
-                                nombre: string;
-                                apellido: string;
-                                tipo_nombramiento: string;
-                                tipo_nombramiento_label: string;
-                                puesto: {
-                                    nombre: string;
-                                } | null;
-                                unidad_administrativa: {
-                                    nombre: string;
-                                } | null;
-                            } | null;
-                        };
+                        datos: components["schemas"]["UsuarioAutenticadoResource"];
                         meta: null;
                     };
                 };
@@ -12422,7 +12477,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Mis permisos obtenidos.";
-                        datos: unknown[];
+                        datos: Record<string, never>;
                         meta: null;
                     };
                 };
@@ -12532,37 +12587,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "autoservicio.solicitarCita": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreCitaMedicaAutoservicioRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Cita médica agendada y permiso por enfermedad generado.";
-                        datos: unknown[];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "autoservicio.miHistoriaClinica": {
@@ -21725,8 +21749,10 @@ export interface operations {
                         mensaje: "Resumen de períodos de vacaciones.";
                         datos: {
                             periodos: components["schemas"]["PeriodoVacacion"][];
-                            saldo_total: number;
-                            alerta_limite: boolean;
+                            saldo_total: string;
+                            alerta_limite: string;
+                            tope: string;
+                            excedente: string;
                             total_vacaciones_aprobadas: number;
                             total_permisos_personales: number;
                         };
@@ -21735,6 +21761,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "periodos.generar": {
@@ -21768,6 +21795,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "periodos.recalcular-cerrado.previsualizacion": {
@@ -21801,6 +21829,11 @@ export interface operations {
                                 dias_saldo: number;
                             };
                             propuesto: {
+                                /**
+                                 * @description La escala vive en un solo sitio, que también consultan los motores.
+                                 *     Aquí se aplicaba 15/20/25/30 en LOSEP y, en el Código del Trabajo,
+                                 *     el día adicional desde el segundo año: ver `EscalaVacaciones`.
+                                 */
                                 dias_generados: number;
                                 dias_utilizados: number;
                                 dias_saldo: Record<string, never> | null;
@@ -21811,6 +21844,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -21858,6 +21892,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -21905,6 +21940,82 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "periodos.excedentes": {
+        parameters: {
+            query?: {
+                solo_excedidos?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Servidores cerca o por encima de su tope de acumulación.";
+                        datos: {
+                            servidor_id: number;
+                            nombre: string;
+                            cedula: string;
+                            unidad: string | null;
+                            regimen: string;
+                            saldo: number;
+                            tope: number;
+                            excedente: number;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "periodos.vencer-excedente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            dias_vencidos: number;
+                            saldo_antes: number;
+                            saldo_despues: number;
+                            tope: number;
+                            tramos: {
+                                anio: number;
+                                dias: number;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "admin.permisos.index": {
@@ -22084,6 +22195,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -22177,7 +22289,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -22188,28 +22306,14 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Permiso anulado correctamente.";
-                        datos: string;
+                        datos: components["schemas"]["PermisoServidor"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Solo se pueden anular permisos en estado PENDIENTE.";
-                        datos: null;
-                        /** @constant */
-                        errores: 400;
-                    };
-                };
-            };
+            422: components["responses"]["ValidationException"];
         };
     };
     "permisoServidor.confirmar": {
@@ -22238,6 +22342,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "permisoServidor.validar": {
@@ -22266,6 +22371,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "permisoServidor.rechazar": {
@@ -27491,6 +27597,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "vacacion.store": {
@@ -27521,6 +27628,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -27552,6 +27660,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "asistencia.vacaciones.exportar": {
@@ -27574,6 +27683,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
         };
     };
@@ -27600,13 +27710,46 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         mensaje: string;
+                        datos: components["schemas"]["Vacacion"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.vacaciones.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnularVacacionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
                         datos: string;
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
