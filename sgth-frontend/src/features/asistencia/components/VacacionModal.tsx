@@ -171,7 +171,7 @@ export function VacacionModal({ opened, onClose }: Props) {
       fecha_fin:                '',
       fecha_retorno:            '',
       dias_solicitados:         1,
-      tipo_dias:                'habiles',
+      tipo_dias:                'calendario',
       observacion:              '',
     },
   })
@@ -181,7 +181,6 @@ export function VacacionModal({ opened, onClose }: Props) {
 
   const fechaInicioWatch = useWatch({ control, name: 'fecha_inicio' })
   const fechaFinWatch    = useWatch({ control, name: 'fecha_fin' })
-  const tipoDiasWatch    = useWatch({ control, name: 'tipo_dias' })
 
   // Auto-calcular días solicitados
   useEffect(() => {
@@ -200,28 +199,19 @@ export function VacacionModal({ opened, onClose }: Props) {
       return
     }
 
-    let dias = 0
-
-    if (tipoDiasWatch === 'calendario') {
-      // Incluye ambos extremos: del 1 al 3 = 3 días
-      const diffMs = fin.getTime() - inicio.getTime()
-      dias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1
-    } else {
-      // Hábiles: solo lunes a viernes, incluye ambos extremos
-      const cursor = new Date(inicio.getTime())
-      while (cursor <= fin) {
-        const dow = cursor.getDay() // 0=Dom, 6=Sab
-        if (dow !== 0 && dow !== 6) dias++
-        cursor.setDate(cursor.getDate() + 1)
-      }
-    }
+    // Días calendario, con ambos extremos (del 1 al 3 = 3 días), en los dos
+    // regímenes: la LOSEP (art. 29) y el Código del Trabajo (art. 69),
+    // confirmado con Talento Humano. Antes la LOSEP contaba solo de lunes a
+    // viernes.
+    const diffMs = fin.getTime() - inicio.getTime()
+    const dias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1
 
     setValue(
       'dias_solicitados',
       dias > 0 ? dias : 0,
       { shouldValidate: true }
     )
-  }, [fechaInicioWatch, fechaFinWatch, tipoDiasWatch, setValue])
+  }, [fechaInicioWatch, fechaFinWatch, setValue])
 
   const handleClose = () => {
     reset()
@@ -348,19 +338,6 @@ export function VacacionModal({ opened, onClose }: Props) {
                         const id = v ? Number(v) : undefined
                         field.onChange(id)
                         setServidorSelId(id ?? null)
-
-                        // Auto-asignar tipo_dias según régimen del servidor
-                        const servidorSel = todosServidores.find(
-                          s => Number(s.id) === id
-                        )
-                        const regimen = (servidorSel as {
-                          regimen_laboral?: string
-                        } | null)?.regimen_laboral ?? 'losep'
-
-                        setValue(
-                          'tipo_dias',
-                          regimen === 'codigo_trabajo' ? 'calendario' : 'habiles'
-                        )
                       }}
                       error={errors.servidor_id?.message}
                     />
@@ -554,10 +531,7 @@ export function VacacionModal({ opened, onClose }: Props) {
                         error={errors.dias_solicitados?.message}
                       />
                       <Text size="xs" c="dimmed">
-                        Calculado automáticamente según las fechas
-                        {tipoDiasWatch === 'habiles'
-                          ? ' (días hábiles: lun-vie)'
-                          : ' (días calendario)'}
+                        Calculado automáticamente según las fechas (días calendario)
                       </Text>
                     </Stack>
                   )}
@@ -571,10 +545,7 @@ export function VacacionModal({ opened, onClose }: Props) {
                     <Stack gap={4}>
                       <Select
                         label="Tipo de días"
-                        data={[
-                          { value: 'habiles',    label: 'Hábiles (LOSEP)' },
-                          { value: 'calendario', label: 'Calendario (Código del Trabajo)' },
-                        ]}
+                        data={[{ value: 'calendario', label: 'Calendario' }]}
                         readOnly
                         styles={{
                           input: {
@@ -586,12 +557,12 @@ export function VacacionModal({ opened, onClose }: Props) {
                         value={field.value}
                         onChange={(v) =>
                           field.onChange(
-                            (v ?? 'habiles') as FormData['tipo_dias']
+                            (v ?? 'calendario') as FormData['tipo_dias']
                           )
                         }
                       />
                       <Text size="xs" c="dimmed">
-                        Asignado automáticamente según el régimen del servidor
+                        La LOSEP y el Código del Trabajo cuentan días calendario
                       </Text>
                     </Stack>
                   )}
