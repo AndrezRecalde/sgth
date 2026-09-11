@@ -1,598 +1,63 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import {
-  Modal, Button, Group, Stack, Select,
-  NumberInput, Textarea, Grid, Text,
-  Stepper, Alert, Badge, Divider,
-} from '@mantine/core'
-import { DatePickerInput } from '@mantine/dates'
-import { useForm, Controller, useWatch } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
-import { notifications } from '@mantine/notifications'
-import {
-  IconCheck, IconInfoCircle,
-  IconFileDownload, IconAlertTriangle,
-} from '@tabler/icons-react'
-import React from 'react'
+import { Button, Group, Modal, Stack, Stepper } from '@mantine/core'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '@/features/estructura/hooks/useUnidades'
-import { useServidores } from '@/features/expediente/hooks/useServidores'
-import { generaVacaciones } from '@/lib/regimen'
-import { usePeriodosVacaciones } from '../hooks/usePeriodosVacaciones'
-import { useVacacionMutations } from '../hooks/useVacacionMutations'
-import { asistenciaService } from '../services/asistenciaService'
-import type {
-  UnidadConRelaciones,
-  ServidorConRelaciones,
-  Vacacion,
-} from '@/types/api'
-
-const MOTIVO_OPTIONS = [
-  { value: 'vacaciones_anuales',
-    label: 'Vacaciones Anuales (mayor a 5 días)' },
-  { value: 'permiso_cargo_vacaciones',
-    label: 'Permiso con Cargo a Vacaciones (máx. 5 días)' },
-  { value: 'licencia_sin_goce',
-    label: 'Licencia sin Goce de Haberes' },
-  { value: 'matrimonio',
-    label: 'Matrimonio' },
-  { value: 'capacitacion',
-    label: 'Capacitación y/o Adiestramiento' },
-  { value: 'enfermedad',
-    label: 'Enfermedad' },
-  { value: 'maternidad',
-    label: 'Maternidad' },
-  { value: 'paternidad',
-    label: 'Paternidad' },
-  { value: 'estudios_sin_remuneracion',
-    label: 'Estudios sin Remuneración' },
-  { value: 'calamidad_domestica',
-    label: 'Calamidad Doméstica' },
-  { value: 'licencia_con_goce',
-    label: 'Licencia con Goce de Sueldo' },
-]
-
-// Motivos que descuentan del saldo de vacaciones
-const MOTIVOS_DESCUENTO = ['vacaciones_anuales', 'permiso_cargo_vacaciones']
-
-const schema = z.object({
-  unidad_administrativa_id: z.number({
-    error: 'Seleccione la unidad'
-  }),
-  servidor_id:         z.number({ error: 'Seleccione el servidor' }).min(1, 'Seleccione el servidor'),
-  jefe_id:             z.number().optional().nullable(),
-  persona_reemplaza_id: z.number().optional().nullable(),
-  motivo:              z.string().min(1, 'Seleccione el motivo'),
-  fecha_inicio:        z.string().min(1, 'Requerido'),
-  fecha_fin:           z.string().min(1, 'Requerido'),
-  fecha_retorno:       z.string().min(1, 'La fecha de retorno es requerida'),
-  dias_solicitados:    z.number().min(1, 'Mínimo 1 día'),
-  tipo_dias:           z.enum(['habiles', 'calendario']),
-  observacion:         z.string().optional().nullable(),
-})
-
-type FormData = z.infer<typeof schema>
-
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null
-  if (typeof d === 'string') return d.substring(0, 10)
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-}
+import { useVacacionForm } from '../hooks/useVacacionForm'
+import { RegistroConfirmado } from './RegistroConfirmado'
+import { VacacionFechasCampos } from './VacacionFechasCampos'
+import { VacacionSolicitanteCampos } from './VacacionSolicitanteCampos'
 
 interface Props {
-  opened:    boolean
-  onClose:   () => void
+  opened:  boolean
+  onClose: () => void
 }
 
+/**
+ * Solicitud de vacaciones o de permiso con cargo a ellas, en dos pasos: los
+ * datos y la confirmación con el folio.
+ *
+ * Tenía 639 líneas. El estado, el cálculo de días y el envío viven en
+ * `useVacacionForm`; el esquema, en `vacacion.schema.ts`; los campos, en
+ * `VacacionSolicitanteCampos` y `VacacionFechasCampos`; y la confirmación, en
+ * `RegistroConfirmado`, que comparte con permisos.
+ */
 export function VacacionModal({ opened, onClose }: Props) {
   const { isMobile } = useMobileBreakpoint()
-  const contained    = useContainedInput()
-  const { crear }    = useVacacionMutations()
-
-  const [paso, setPaso]                   = useState(0)
-  const [vacacionCreada, setVacacionCreada] =
-    useState<Vacacion | null>(null)
-  const [exportando, setExportando]       = useState(false)
-  const [servidorSelId, setServidorSelId] = useState<number | null>(null)
-  const [unidadSelId, setUnidadSelId]     = useState<number | null>(null)
-
-  // Datos
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
-  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
-
-  const { data: servidoresData } = useServidores({ per_page: 200 })
-  const todosServidores = (servidoresData?.data ?? []) as ServidorConRelaciones[]
-
-  const servidoresUnidad = unidadSelId
-    ? todosServidores.filter(s =>
-        Number(s.unidad_administrativa?.id) === unidadSelId
-      )
-    : []
-
-  // Saldo del servidor seleccionado
-  const { data: resumenPeriodos } =
-    usePeriodosVacaciones(servidorSelId)
-
-  const saldoDisponible = resumenPeriodos?.saldo_total ?? 0
-  const alertaLimite    = resumenPeriodos?.alerta_limite ?? false
-
-  const unidadOptions = unidades.map(u => ({
-    value: String(u.id),
-    label: u.nombre ?? `Unidad ${u.id}`,
-  }))
-
-  // Quien no genera vacaciones no aparece en el selector. El backend lo
-  // rechaza igual, pero ofrecerlo aquí sería abrir una puerta para cerrarla en
-  // la cara: la persona elige, llena las fechas y recién al enviar se entera.
-  const servidorOptions = servidoresUnidad
-    .filter(s => generaVacaciones(s.regimen_laboral))
-    .map(s => ({
-      value: String(s.id),
-      label: `${[s.apellido, s.nombre].filter(Boolean).join(' ')} — ${s.cedula}`,
-    }))
-
-  const jefeOptions = servidoresUnidad
-    .filter(s => (s.puesto as { es_jefe?: boolean } | null)?.es_jefe)
-    .map(s => ({
-      value: String(s.id),
-      label: [s.apellido, s.nombre].filter(Boolean).join(' '),
-    }))
-
-  // Nadie se reemplaza a sí mismo: el backend lo rechaza, así que tampoco se
-  // ofrece.
-  const reemplazaOptions = servidoresUnidad
-    .filter(s => Number(s.id) !== servidorSelId)
-    .map(s => ({
-      value: String(s.id),
-      label: `${[s.apellido, s.nombre].filter(Boolean).join(' ')} — ${s.cedula}`,
-    }))
-
-  const {
-    control, handleSubmit, reset, register,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      unidad_administrativa_id: undefined,
-      servidor_id:              undefined,
-      jefe_id:                  null,
-      persona_reemplaza_id:     null,
-      motivo:                   '',
-      fecha_inicio:             '',
-      fecha_fin:                '',
-      fecha_retorno:            '',
-      dias_solicitados:         1,
-      tipo_dias:                'calendario',
-      observacion:              '',
-    },
-  })
-
-  const motivoWatch = useWatch({ control, name: 'motivo' })
-  const descuentaVacaciones = MOTIVOS_DESCUENTO.includes(motivoWatch)
-
-  const fechaInicioWatch = useWatch({ control, name: 'fecha_inicio' })
-  const fechaFinWatch    = useWatch({ control, name: 'fecha_fin' })
-
-  // Auto-calcular días solicitados
-  useEffect(() => {
-    if (!fechaInicioWatch || !fechaFinWatch) return
-
-    // Parsear fechas en hora local (evita desfase UTC)
-    const [iy, im, id] = fechaInicioWatch.split('-').map(Number)
-    const [fy, fm, fd] = fechaFinWatch.split('-').map(Number)
-
-    const inicio = new Date(iy, im - 1, id)
-    const fin    = new Date(fy, fm - 1, fd)
-
-    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) return
-    if (fin < inicio) {
-      setValue('dias_solicitados', 0, { shouldValidate: true })
-      return
-    }
-
-    // Días calendario, con ambos extremos (del 1 al 3 = 3 días), en los dos
-    // regímenes: la LOSEP (art. 29) y el Código del Trabajo (art. 69),
-    // confirmado con Talento Humano. Antes la LOSEP contaba solo de lunes a
-    // viernes.
-    const diffMs = fin.getTime() - inicio.getTime()
-    const dias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1
-
-    setValue(
-      'dias_solicitados',
-      dias > 0 ? dias : 0,
-      { shouldValidate: true }
-    )
-  }, [fechaInicioWatch, fechaFinWatch, setValue])
-
-  const handleClose = () => {
-    reset()
-    setUnidadSelId(null)
-    setServidorSelId(null)
-    setPaso(0)
-    setVacacionCreada(null)
-    onClose()
-  }
-
-  const onSubmit = async (values: FormData) => {
-    try {
-      const result = await crear.mutateAsync({
-        unidad_administrativa_id: values.unidad_administrativa_id,
-        servidor_id:              values.servidor_id,
-        jefe_id:                  values.jefe_id ?? null,
-        persona_reemplaza_id:     values.persona_reemplaza_id ?? null,
-        motivo:                   values.motivo,
-        fecha_inicio:             values.fecha_inicio,
-        fecha_fin:                values.fecha_fin,
-        fecha_retorno:            values.fecha_retorno ?? null,
-        dias_solicitados:         values.dias_solicitados,
-        tipo_dias:                values.tipo_dias as 'habiles' | 'calendario',
-        observacion:              values.observacion ?? null,
-      })
-      setVacacionCreada(result ?? null)
-      setPaso(1)
-    } catch {
-      // El hook de mutación ya notifica el error; el formulario sigue abierto
-      // para corregirlo. Sin esto, el rechazo quedaba sin atrapar.
-    }
-  }
-
-  const handleExportar = async () => {
-    if (!vacacionCreada) return
-    setExportando(true)
-    try {
-      const blob = await asistenciaService.vacaciones.exportar(
-        Number(vacacionCreada.id)
-      )
-      const url  = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href  = url
-      link.download = `vacacion_${vacacionCreada.folio ?? vacacionCreada.id}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
-      notifications.show({
-        title:   'PDF descargado',
-        message: 'La solicitud fue exportada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
-    } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo exportar el PDF.',
-        color:   'red',
-      })
-    } finally {
-      setExportando(false)
-    }
-  }
+  const solicitud = useVacacionForm(onClose)
+  const { isSubmitting } = solicitud.form.formState
 
   return (
     <Modal
       opened={opened}
-      onClose={handleClose}
+      onClose={solicitud.cerrar}
       title="Solicitud de vacaciones / permiso"
       size="xl"
       fullScreen={isMobile}
       radius={isMobile ? 0 : 'xl'}
     >
-      <Stepper active={paso} mb="lg" size="sm">
+      <Stepper active={solicitud.paso} mb="lg" size="sm">
         <Stepper.Step label="Datos de la solicitud" />
         <Stepper.Step label="Confirmación" />
       </Stepper>
 
-      {/* ── PASO 0: Formulario ── */}
-      {paso === 0 && (
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {solicitud.paso === 0 && (
+        <form onSubmit={solicitud.enviar} noValidate>
           <Stack gap="sm">
-
-            {/* Unidad */}
-            <Controller
-              name="unidad_administrativa_id"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Unidad administrativa"
-                  placeholder="Seleccionar unidad"
-                  data={unidadOptions}
-                  searchable
-                  {...contained}
-                  value={field.value ? String(field.value) : null}
-                  onChange={(v) => {
-                    const id = v ? Number(v) : undefined
-                    field.onChange(id)
-                    setUnidadSelId(id ?? null)
-                    setValue('servidor_id', 0)
-                    setValue('jefe_id', null)
-                    setValue('persona_reemplaza_id', null)
-                    setServidorSelId(null)
-                  }}
-                  error={errors.unidad_administrativa_id?.message}
-                />
-              )}
+            <VacacionSolicitanteCampos
+              form={solicitud.form}
+              unidadSelId={solicitud.unidadSelId}
+              servidorSelId={solicitud.servidorSelId}
+              onUnidad={solicitud.setUnidadSelId}
+              onServidor={solicitud.setServidorSelId}
             />
 
-            <Grid>
-              {/* Servidor */}
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <Controller
-                  name="servidor_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Servidor"
-                      placeholder={
-                        !unidadSelId
-                          ? 'Seleccione primero la unidad'
-                          : 'Seleccionar servidor'
-                      }
-                      data={servidorOptions}
-                      searchable
-                      disabled={!unidadSelId}
-                      {...contained}
-                      value={field.value ? String(field.value) : null}
-                      onChange={(v) => {
-                        const id = v ? Number(v) : undefined
-                        field.onChange(id)
-                        setServidorSelId(id ?? null)
-                      }}
-                      error={errors.servidor_id?.message}
-                    />
-                  )}
-                />
-              </Grid.Col>
-
-              {/* Jefe */}
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <Controller
-                  name="jefe_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Jefe inmediato"
-                      placeholder={
-                        !unidadSelId
-                          ? 'Seleccione primero la unidad'
-                          : 'Seleccionar jefe'
-                      }
-                      data={jefeOptions}
-                      searchable clearable
-                      disabled={!unidadSelId}
-                      {...contained}
-                      value={field.value ? String(field.value) : null}
-                      onChange={(v) =>
-                        field.onChange(v ? Number(v) : null)
-                      }
-                      error={errors.jefe_id?.message}
-                    />
-                  )}
-                />
-              </Grid.Col>
-
-              {/* Persona que reemplaza */}
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <Controller
-                  name="persona_reemplaza_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Persona que reemplaza"
-                      placeholder="Seleccionar (opcional)"
-                      data={reemplazaOptions}
-                      searchable clearable
-                      disabled={!unidadSelId}
-                      {...contained}
-                      value={field.value ? String(field.value) : null}
-                      onChange={(v) =>
-                        field.onChange(v ? Number(v) : null)
-                      }
-                    />
-                  )}
-                />
-              </Grid.Col>
-
-              {/* Motivo */}
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <Controller
-                  name="motivo"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Motivo"
-                      placeholder="Seleccionar motivo"
-                      data={MOTIVO_OPTIONS}
-                      searchable
-                      {...contained}
-                      value={field.value}
-                      onChange={(v) => field.onChange(v ?? '')}
-                      error={errors.motivo?.message}
-                    />
-                  )}
-                />
-              </Grid.Col>
-            </Grid>
-
-            {/* Saldo disponible */}
-            {servidorSelId && (
-              <Alert
-                icon={alertaLimite
-                  ? <IconAlertTriangle size={16} />
-                  : <IconInfoCircle size={16} />}
-                color={alertaLimite ? 'orange' : 'blue'}
-                variant="light"
-              >
-                <Group gap="sm">
-                  <Text size="sm">
-                    Saldo disponible de vacaciones:
-                  </Text>
-                  <Badge
-                    color={alertaLimite ? 'orange' : 'emerald'}
-                    size="lg"
-                  >
-                    {Number(saldoDisponible).toFixed(1)} días
-                  </Badge>
-                  {alertaLimite && (
-                    <Text size="xs" c="orange">
-                      Se acerca al límite máximo de acumulación
-                    </Text>
-                  )}
-                </Group>
-                {!descuentaVacaciones && motivoWatch && (
-                  <Text size="xs" c="dimmed" mt={4}>
-                    Este motivo no descuenta del saldo de vacaciones.
-                  </Text>
-                )}
-              </Alert>
-            )}
-
-            <Divider label="Fechas" labelPosition="left" />
-
-            <Grid>
-              <Grid.Col span={{ base: 12, sm: 4 }}>
-                <Controller
-                  name="fecha_inicio"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePickerInput
-                      label="Fecha inicio"
-                      placeholder="Seleccionar"
-                      valueFormat="YYYY-MM-DD"
-                      {...contained}
-                      value={toDate(field.value)}
-                      onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')
-                      }
-                      error={errors.fecha_inicio?.message}
-                    />
-                  )}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 4 }}>
-                <Controller
-                  name="fecha_fin"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePickerInput
-                      label="Fecha fin"
-                      placeholder="Seleccionar"
-                      valueFormat="YYYY-MM-DD"
-                      {...contained}
-                      value={toDate(field.value)}
-                      onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')
-                      }
-                      error={errors.fecha_fin?.message}
-                    />
-                  )}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 4 }}>
-                <Controller
-                  name="fecha_retorno"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePickerInput
-                      label="Fecha de retorno"
-                      placeholder="Seleccionar"
-                      valueFormat="YYYY-MM-DD"
-                      {...contained}
-                      value={toDate(field.value)}
-                      onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')
-                      }
-                      error={errors.fecha_retorno?.message}
-                    />
-                  )}
-                />
-              </Grid.Col>
-
-              <Grid.Col span={{ base: 12, sm: 4 }}>
-                <Controller
-                  name="dias_solicitados"
-                  control={control}
-                  render={({ field }) => (
-                    <Stack gap={4}>
-                      <NumberInput
-                        label="Días solicitados"
-                        min={0} max={365}
-                        readOnly
-                        styles={{
-                          input: {
-                            backgroundColor: 'var(--mantine-color-default-hover)',
-                            cursor: 'not-allowed',
-                            fontWeight: 600,
-                          }
-                        }}
-                        {...contained}
-                        value={field.value}
-                        onChange={(v) =>
-                          field.onChange(typeof v === 'number' ? v : 0)
-                        }
-                        error={errors.dias_solicitados?.message}
-                      />
-                      <Text size="xs" c="dimmed">
-                        Calculado automáticamente según las fechas (días calendario)
-                      </Text>
-                    </Stack>
-                  )}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 4 }}>
-                <Controller
-                  name="tipo_dias"
-                  control={control}
-                  render={({ field }) => (
-                    <Stack gap={4}>
-                      <Select
-                        label="Tipo de días"
-                        data={[{ value: 'calendario', label: 'Calendario' }]}
-                        readOnly
-                        styles={{
-                          input: {
-                            backgroundColor: 'var(--mantine-color-default-hover)',
-                            cursor: 'not-allowed',
-                          }
-                        }}
-                        {...contained}
-                        value={field.value}
-                        onChange={(v) =>
-                          field.onChange(
-                            (v ?? 'calendario') as FormData['tipo_dias']
-                          )
-                        }
-                      />
-                      <Text size="xs" c="dimmed">
-                        La LOSEP y el Código del Trabajo cuentan días calendario
-                      </Text>
-                    </Stack>
-                  )}
-                />
-              </Grid.Col>
-            </Grid>
-
-            <Textarea
-              label="Observación"
-              placeholder="Observaciones adicionales (opcional)"
-              rows={2}
-              {...contained}
-              {...register('observacion')}
-            />
+            <VacacionFechasCampos form={solicitud.form} />
 
             <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={handleClose}>
+              <Button variant="default" onClick={solicitud.cerrar}>
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                color="emerald"
-                variant="light"
-                loading={isSubmitting}
-              >
+              <Button type="submit" color="emerald" variant="light" loading={isSubmitting}>
                 Registrar solicitud
               </Button>
             </Group>
@@ -600,40 +65,16 @@ export function VacacionModal({ opened, onClose }: Props) {
         </form>
       )}
 
-      {/* ── PASO 1: Confirmación ── */}
-      {paso === 1 && vacacionCreada && (
-        <Stack gap="md" align="center">
-          <Alert
-            icon={<IconCheck size={20} />}
-            color="emerald"
-            variant="light"
-            w="100%"
-          >
-            <Text fw={600}>Solicitud registrada correctamente</Text>
-            <Text size="sm" mt={4}>
-              Folio: <strong>{vacacionCreada.folio ?? '—'}</strong>
-            </Text>
-          </Alert>
-
-          <Text size="sm" c="dimmed" ta="center">
-            ¿Desea exportar la solicitud en PDF?
-          </Text>
-          <Group justify="center">
-            <Button
-              variant="light" color="blue"
-              leftSection={<IconFileDownload size={16} />}
-              loading={exportando}
-              onClick={handleExportar}
-            >
-              Exportar PDF
-            </Button>
-            <Button variant="default" onClick={handleClose}>
-              Cerrar
-            </Button>
-          </Group>
-        </Stack>
+      {solicitud.paso === 1 && solicitud.vacacionCreada && (
+        <RegistroConfirmado
+          titulo="Solicitud registrada correctamente"
+          folio={solicitud.vacacionCreada.folio}
+          pregunta="¿Desea exportar la solicitud en PDF?"
+          exportando={solicitud.exportando}
+          onExportar={solicitud.exportarCreada}
+          onCerrar={solicitud.cerrar}
+        />
       )}
     </Modal>
   )
 }
-

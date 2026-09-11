@@ -7,7 +7,7 @@ import { Toolbar } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '@/features/estructura/hooks/useUnidades'
-import { fromDate, toDate } from './permiso.schema'
+import { fromDate, toDate } from '../utils/fechas'
 import { ESTADO_LABELS, FILTROS_ESTADO, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
 import type { UnidadConRelaciones } from '@/types/api'
 

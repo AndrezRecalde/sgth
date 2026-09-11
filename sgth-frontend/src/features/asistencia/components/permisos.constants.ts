@@ -33,6 +33,14 @@ export const TIPO_LABELS: Record<string, string> = {
   calamidad:  'Calamidad',
 }
 
+/** Los tipos que se ofrecen al registrar un permiso. */
+export const TIPO_OPCIONES = [
+  { value: 'personal',   label: 'Personal (máx. 4 horas)' },
+  { value: 'oficial',    label: 'Oficial' },
+  { value: 'enfermedad', label: 'Por enfermedad' },
+  { value: 'calamidad',  label: 'Calamidad doméstica' },
+]
+
 /** Los estados por los que se filtra, en el orden del flujo. */
 export const FILTROS_ESTADO = [
   'todos',

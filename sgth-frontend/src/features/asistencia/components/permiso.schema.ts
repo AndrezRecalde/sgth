@@ -17,20 +17,6 @@ export const permisoSchema = z.object({
 
 export type PermisoFormData = z.infer<typeof permisoSchema>
 
-export const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.split('-').map(Number)
-
-  return new Date(y, m - 1, d)
-}
-
-export const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null
-  if (typeof d === 'string') return d.substring(0, 10)
-
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 export const esTipoRetroactivo = (tipo: string): boolean =>
   TIPOS_RETROACTIVOS.includes(tipo)
 

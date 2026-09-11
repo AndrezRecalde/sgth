@@ -5,7 +5,7 @@ import { DatePickerInput } from '@mantine/dates'
 import { IconSearch } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { fromDate, toDate } from './permiso.schema'
+import { fromDate, toDate } from '../utils/fechas'
 
 const TIPO_OPTIONS = [
   { value: 'personal',   label: 'Personal' },

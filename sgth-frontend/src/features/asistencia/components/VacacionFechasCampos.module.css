@@ -1,0 +1,17 @@
+/**
+ * Los campos que calcula el formulario a partir de las fechas: se leen, no se
+ * escriben.
+ *
+ * `.calculado input` le gana a la clase `.input` del patrón contained, que
+ * también pinta el fondo del `<input>`: tiene más especificidad, así que no
+ * depende del orden en que carguen las hojas.
+ */
+
+.calculado input {
+  background-color: var(--mantine-color-default-hover);
+  cursor: not-allowed;
+}
+
+.dias input {
+  font-weight: 600;
+}
