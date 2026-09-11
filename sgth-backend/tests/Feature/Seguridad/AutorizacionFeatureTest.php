@@ -10,6 +10,7 @@ use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\Carbon;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -24,8 +25,17 @@ beforeEach(function () {
     RolPago::unguard();
 
     Role::firstOrCreate(['name' => 'servidor', 'guard_name' => 'sanctum']);
-    Role::firstOrCreate(['name' => 'recepcion', 'guard_name' => 'sanctum']);
-    Role::firstOrCreate(['name' => 'trabajo-social', 'guard_name' => 'sanctum']);
+
+    // Con sus permisos, como los da el seeder: confirmar y validar ya no los
+    // decide el rol de la ruta, sino la policy por permiso.
+    Role::firstOrCreate(['name' => 'recepcion', 'guard_name' => 'sanctum'])
+        ->givePermissionTo(Permission::firstOrCreate([
+            'name' => 'confirmar-recepcion', 'guard_name' => 'sanctum',
+        ]));
+    Role::firstOrCreate(['name' => 'trabajo-social', 'guard_name' => 'sanctum'])
+        ->givePermissionTo(Permission::firstOrCreate([
+            'name' => 'validar-trabajo-social', 'guard_name' => 'sanctum',
+        ]));
 
     $this->unidad = unidadDePrueba(['nombre' => 'Direccion Test']);
     $this->puesto = puestoDePrueba($this->unidad);

@@ -11,11 +11,12 @@ import {
 } from './permisos.constants'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
+import type { AccionesPermiso } from '../hooks/useAccionesPermiso'
 
 interface ColumnActions {
   exportandoId: number | null
-  /** El titular del permiso, o Talento Humano con `anular-permiso-pendiente`. */
-  puedeAnular:  (p: PermisoServidor) => boolean
+  /** Qué acciones le corresponden al usuario: la misma regla que la policy. */
+  puede:        AccionesPermiso
   onExportar:   (id: number) => void
   onConfirmar:  (folio: string) => void
   onValidarTs:  (id: number) => void
@@ -161,14 +162,14 @@ export function getPermisosColumns(
                 icon: <IconCheck size={14} />,
                 color: 'blue',
                 onClick: () => p.folio && actions.onConfirmar(p.folio),
-                hidden: !pendiente,
+                hidden: !pendiente || !actions.puede.confirmar,
               },
               {
                 label: 'Rechazar documento',
                 icon: <IconX size={14} />,
                 color: 'orange',
                 onClick: () => actions.onRechazar(p),
-                hidden: !pendiente,
+                hidden: !pendiente || !actions.puede.rechazar,
               },
               {
                 label: 'Validar Trabajo Social',
@@ -176,6 +177,7 @@ export function getPermisosColumns(
                 color: 'emerald',
                 onClick: () => actions.onValidarTs(p.id),
                 hidden:
+                  !actions.puede.validarTs ||
                   estado !== 'activo' ||
                   !['enfermedad', 'calamidad'].includes(p.tipo as string),
               },
@@ -184,7 +186,7 @@ export function getPermisosColumns(
                 icon: <IconArrowBackUp size={14} />,
                 color: 'orange',
                 onClick: () => actions.onRevertir(p),
-                hidden: !ESTADOS_CONFIRMADOS.includes(estado),
+                hidden: !actions.puede.revertir || !ESTADOS_CONFIRMADOS.includes(estado),
               },
               {
                 // Pide el motivo en el mismo modal que rechazar y revertir: el
@@ -193,7 +195,7 @@ export function getPermisosColumns(
                 icon: <IconX size={14} />,
                 color: 'red',
                 onClick: () => actions.onAnular(p),
-                hidden: !pendiente || !actions.puedeAnular(p),
+                hidden: !pendiente || !actions.puede.anular(p),
               },
             ]}
           />
