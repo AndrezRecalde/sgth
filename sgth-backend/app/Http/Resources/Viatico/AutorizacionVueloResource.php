@@ -4,6 +4,9 @@ namespace App\Http\Resources\Viatico;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \App\Models\Viatico\AutorizacionVuelo
+ */
 class AutorizacionVueloResource extends JsonResource
 {
     public function toArray(Request $request): array
