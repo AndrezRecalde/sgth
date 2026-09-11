@@ -22,7 +22,7 @@ class AutoservicioController extends Controller
     {
         $permisos = $this->autoservicioService->obtenerMisPermisos(
             $this->getServidorId($request), 
-            $request->only(['estado', 'anio'])
+            $request->only(['estado', 'anio', 'per_page'])
         );
         return ApiResponse::ok($permisos, 'Mis permisos obtenidos.');
     }

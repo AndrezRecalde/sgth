@@ -2,9 +2,11 @@
 
 namespace App\Contracts\Autoservicio;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
 interface AutoservicioServiceInterface
 {
-    public function obtenerMisPermisos(int $servidorId, array $filtros): array;
+    public function obtenerMisPermisos(int $servidorId, array $filtros): LengthAwarePaginator;
 
     public function obtenerMisVacaciones(int $servidorId): array;
 
