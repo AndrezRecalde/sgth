@@ -15,6 +15,7 @@ import { getVacacionesColumns } from "./vacaciones.columns";
 import { useVacaciones } from "../hooks/useVacaciones";
 import { useVacacionMutations } from "../hooks/useVacacionMutations";
 import { useExportarVacacion } from "../hooks/useExportarVacacion";
+import { useAuth } from "@/hooks/useAuth";
 import type { Vacacion } from "@/types/api";
 
 // El folio escrito entraba directo en la clave de consulta: cada tecla pediría
@@ -30,6 +31,12 @@ export function VacacionesTab() {
   const [page, setPage] = useState(1);
   const [filtros, setFiltros] = useState<FiltrosVacacion>(FILTROS_INICIALES);
   const { exportar, exportandoId } = useExportarVacacion();
+
+  // Las acciones siguen la misma matriz que la API: ofrecerlas a quien no
+  // tiene el permiso solo serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth();
+  const puedeRegistrar = hasPermiso("gestionar-vacaciones");
+  const puedeResolver = hasPermiso("aprobar-vacaciones");
 
   const [folioConRetardo] = useDebouncedValue(
     filtros.folio,
@@ -63,6 +70,7 @@ export function VacacionesTab() {
 
   const columns = getVacacionesColumns({
     exportandoId,
+    puedeResolver,
     onExportar: (id) => exportar(id),
     onAprobar: (id) => actualizar.mutate({ id, data: { estado: "aprobada" } }),
     onRechazar: (id) => actualizar.mutate({ id, data: { estado: "rechazada" } }),
@@ -73,7 +81,7 @@ export function VacacionesTab() {
       <VacacionesFiltros
         filtros={filtros}
         onCambiar={cambiarFiltros}
-        onNueva={open}
+        onNueva={puedeRegistrar ? open : undefined}
       />
 
       <DataState
@@ -105,7 +113,7 @@ export function VacacionesTab() {
         />
       </DataState>
 
-      <VacacionModal opened={opened} onClose={close} />
+      {puedeRegistrar && <VacacionModal opened={opened} onClose={close} />}
     </Stack>
   );
 }

@@ -4,6 +4,7 @@ use App\Enums\RegimenLaboral;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
+use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Asistencia\FeriadoInstitucional;
 use App\Models\User;
@@ -107,7 +108,7 @@ test('solicitud_vacacion_descuenta_dias_correctamente', function () {
     // Para asegurar el test de feriado, creamos uno si la clase existe
     $fechaInicio = now()->next('Thursday')->startOfDay();
     $fechaFin = $fechaInicio->copy()->addDays(4); // Thursday, Friday, Saturday, Sunday, Monday (5 days total)
-    
+
     if (class_exists(FeriadoInstitucional::class)) {
         $fechaFeriado = $fechaInicio->copy()->addDay();
         FeriadoInstitucional::create([
@@ -165,10 +166,31 @@ test('validacion_acumulacion_losep_falla_si_supera_60_dias', function () {
         'puesto_id' => $this->puestoSubordinado->id,
         'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
-        'fecha_ingreso_institucion' => now()->subYears(4), // Acumuló 4 años = 60 días aprox
+        'fecha_ingreso_institucion' => now()->subYears(4),
         'fecha_ingreso_sector_publico' => now()->subYears(4),
         'estado' => true,
     ]);
+
+    // Tres períodos abiertos sin gozar: 45 días acumulados. El KPI lee el saldo
+    // de los períodos. Antes este test se apoyaba en el cálculo legacy —días
+    // por año de antigüedad, sin mirar lo gozado—, que se retiró porque inflaba
+    // el saldo de quien ya había gozado todo.
+    foreach ([2, 1, 0] as $atras) {
+        $anio = now()->year - $atras;
+        PeriodoVacacion::create([
+            'servidor_id' => $servidor->id,
+            'anio' => $anio,
+            'fecha_inicio_periodo' => Carbon::create($anio, 1, 1),
+            'fecha_fin_periodo' => Carbon::create($anio, 12, 31),
+            'regimen' => 'losep',
+            'anios_antiguedad' => 4 - $atras,
+            'dias_generados' => 15,
+            'dias_utilizados' => 0,
+            'dias_saldo' => 15,
+            'saldo_acumulado' => 15,
+            'estado' => 'abierto',
+        ]);
+    }
 
     // Assign role to bypass middleware
     \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'director', 'guard_name' => 'sanctum']);
@@ -182,13 +204,19 @@ test('validacion_acumulacion_losep_falla_si_supera_60_dias', function () {
 
     // Assert que el servidor está en el KPI de alerta
     $kpis = $response->json('datos');
-    
+
     // Suponiendo que el KPI devuelve una lista de alertas o un contador
     $alertaEncontrada = collect($kpis['asistencia']['vacaciones_proximas_vencer'] ?? [])->contains('servidor_id', $servidor->id);
     expect($alertaEncontrada)->toBeTrue();
 });
 
-test('jefe_puede_aprobar_o_rechazar_vacacion_de_subordinado', function () {
+test('solo_quien_tiene_aprobar_vacaciones_resuelve_la_solicitud', function () {
+    // Antes este test se llamaba «jefe puede aprobar» y lo aprobaba un usuario
+    // sin ningún rol: pasaba porque la ruta no comprobaba nada. En la matriz
+    // de permisos, `aprobar-vacaciones` es de Talento Humano; el jefe de
+    // unidad ve las solicitudes de su unidad pero no las resuelve.
+    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+
     $servidorSubordinado = Servidor::create([
         'cedula' => '0801234567',
         'nombre' => 'Subordinado',
@@ -199,7 +227,7 @@ test('jefe_puede_aprobar_o_rechazar_vacacion_de_subordinado', function () {
         'fecha_ingreso_institucion' => now()->subYears(5),
         'estado' => true,
     ]);
-    
+
     $servidorJefe = Servidor::create([
         'cedula' => '0801234568',
         'nombre' => 'Jefe',
@@ -210,6 +238,17 @@ test('jefe_puede_aprobar_o_rechazar_vacacion_de_subordinado', function () {
         'estado' => true,
     ]);
 
+    $this->userJefe->update(['servidor_id' => $servidorJefe->id]);
+    $this->userJefe->assignRole('jefe-unidad');
+
+    $uath = User::create([
+        'email' => 'uath_vac@example.com',
+        'usuario_ti' => 'uath_v',
+        'password' => bcrypt('123456'),
+        'primer_login' => false,
+    ]);
+    $uath->assignRole('admin-uath');
+
     $vacacion = Vacacion::create([
         'servidor_id' => $servidorSubordinado->id,
         'fecha_inicio' => now()->addDays(5)->format('Y-m-d'),
@@ -219,14 +258,17 @@ test('jefe_puede_aprobar_o_rechazar_vacacion_de_subordinado', function () {
         'estado' => 'pendiente',
     ]);
 
-    // El jefe intenta aprobar
-    $response = $this->actingAs($this->userJefe, 'sanctum')->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", [
-        'estado' => 'aprobada'
-    ]);
+    $this->actingAs($this->userJefe, 'sanctum')
+        ->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'aprobada'])
+        ->assertForbidden();
 
-    $response->assertStatus(200);
+    expect($vacacion->fresh()->estado)->toBe('pendiente');
+
+    $this->actingAs($uath, 'sanctum')
+        ->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'aprobada'])
+        ->assertOk();
 
     $vacacion->refresh();
     expect($vacacion->estado)->toBe('aprobada');
-    expect($vacacion->aprobado_por)->toBe($this->userJefe->id);
+    expect($vacacion->aprobado_por)->toBe($uath->id);
 });

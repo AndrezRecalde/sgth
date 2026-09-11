@@ -4,11 +4,13 @@ namespace App\Services\Asistencia;
 
 use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Contracts\Asistencia\VacacionServiceInterface;
+use App\Enums\MotivoVacacion;
 use App\Enums\RegimenLaboral;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Asistencia\Vacacion;
-use App\Models\Asistencia\PermisoServidor;
 use App\Models\Expediente\Servidor;
+use App\Models\User;
 use App\Services\Asistencia\Motores\VacacionCodigoTrabajoService;
 use App\Services\Asistencia\Motores\VacacionLosepService;
 use Carbon\Carbon;
@@ -41,55 +43,30 @@ class VacacionService implements VacacionServiceInterface
         };
     }
 
+    /**
+     * Días disponibles: la suma de los períodos abiertos, y nada más.
+     *
+     * Había un cálculo legacy de respaldo —días del motor por años de
+     * antigüedad, menos lo gozado— que entraba cuando esa suma daba cero. Pero
+     * cero no significa «no hay períodos»: es también el saldo de quien ya
+     * gozó todo. A esa persona el respaldo le devolvía el saldo de su carrera
+     * entera —160 días para ocho años LOSEP— y le dejaba pedir vacaciones que
+     * no tenía. El mismo número llegaba al KPI del dashboard y al autoservicio.
+     *
+     * Tampoco valía como respaldo para quien no tiene períodos: suponía que
+     * nunca gozó nada antes de que existiera el sistema. El saldo sale de los
+     * períodos; quien no tiene uno abierto no tiene saldo, y `solicitar()` se
+     * lo explica en vez de decirle que le faltan días.
+     */
     public function calcularSaldoActual(int $servidorId): float
     {
         $servidor = Servidor::findOrFail($servidorId);
 
-        // Sin derecho a vacaciones no hay saldo que calcular. La comprobación
-        // va antes del cálculo legacy de más abajo: ese camino multiplica los
-        // días del motor por la antigüedad, así que a un contrato civil le
-        // habría inventado un saldo positivo.
         if (! $this->generaVacaciones($servidor)) {
             return 0.0;
         }
 
-        $periodoService = app(PeriodoVacacionService::class);
-
-        // Si no hay períodos generados aún, usar cálculo legacy
-        $saldoPeriodos = $periodoService->saldoTotal($servidorId);
-
-        if ($saldoPeriodos > 0) {
-            return $saldoPeriodos;
-        }
-
-        // Fallback al cálculo anterior
-        $motor = $this->obtenerMotor($servidor);
-
-        $fechaIngreso = $servidor->fecha_ingreso_institucion
-            ? \Carbon\Carbon::parse($servidor->fecha_ingreso_institucion)
-            : now();
-
-        $aniosCompletos = max(1, $fechaIngreso->diffInYears(now()));
-        $diasGanadosPorAnio = $motor->calcularDiasGanadosAnuales($servidor);
-        $diasAcumulados     = $diasGanadosPorAnio * $aniosCompletos;
-
-        $diasVacaciones = \App\Models\Asistencia\Vacacion::where('servidor_id', $servidorId)
-            ->whereIn('estado', ['aprobada', 'gozada'])
-            ->sum('dias_solicitados');
-
-        $horasPermisoPersonal = \App\Models\Asistencia\PermisoServidor::where('servidor_id', $servidorId)
-            ->where('tipo', 'personal')
-            ->whereNotIn('estado', ['anulado', 'pendiente'])
-            ->get()
-            ->sum(function ($p) {
-                $inicio = \Carbon\Carbon::parse($p->hora_inicio);
-                $fin    = \Carbon\Carbon::parse($p->hora_fin);
-                return $inicio->diffInMinutes($fin) / 60;
-            });
-
-        $diasPermiso = round($horasPermisoPersonal / 8, 2);
-
-        return max(0, $diasAcumulados - $diasVacaciones - $diasPermiso);
+        return app(PeriodoVacacionService::class)->saldoTotal($servidorId);
     }
 
     /**
@@ -107,9 +84,22 @@ class VacacionService implements VacacionServiceInterface
         return $regimen?->generaVacaciones() ?? true;
     }
 
+    /**
+     * Las reglas de negocio se lanzan como `ReglaNegocioException`. Antes eran
+     * `\Exception` genéricas: el manejador las convertía en un 500 «Error
+     * interno del servidor.» y el motivo —saldo insuficiente, fechas al revés—
+     * no le llegaba a nadie.
+     */
     public function solicitar(array $datos, int $servidorId): Vacacion
     {
         return DB::transaction(function () use ($datos, $servidorId) {
+            // Serializa las altas de un mismo servidor: sin esto, dos
+            // solicitudes simultáneas con las mismas fechas pasarían las dos el
+            // control de cruce de más abajo.
+            DB::select('SELECT pg_advisory_xact_lock(?)', [
+                crc32("vacaciones_servidor_{$servidorId}"),
+            ]);
+
             $servidor = Servidor::findOrFail($servidorId);
 
             // Se corta aquí y no en el saldo: el mensaje tiene que explicar el
@@ -126,7 +116,7 @@ class VacacionService implements VacacionServiceInterface
             $fechaFin    = Carbon::parse($datos['fecha_fin']);
 
             if ($fechaFin->lessThan($fechaInicio)) {
-                throw new \Exception(
+                throw new ReglaNegocioException(
                     'La fecha de fin no puede ser menor a la fecha de inicio.'
                 );
             }
@@ -134,20 +124,32 @@ class VacacionService implements VacacionServiceInterface
             $diasADescontar = $motor->calcularDiasDescuento($fechaInicio, $fechaFin);
 
             if ($diasADescontar <= 0) {
-                throw new \Exception(
+                throw new ReglaNegocioException(
                     'Las fechas seleccionadas no representan días laborables descontables.'
                 );
             }
 
-            $motivo = \App\Enums\MotivoVacacion::tryFrom($datos['motivo'] ?? '');
+            $this->rechazarSiSeCruza($servidorId, $fechaInicio, $fechaFin);
+
+            $motivo = MotivoVacacion::tryFrom($datos['motivo'] ?? '');
 
             // Solo verificar saldo si el motivo descuenta vacaciones
             if ($motivo?->descuentaVacaciones()) {
+                // Saldo cero puede ser «gozó todo» o «no tiene de dónde
+                // descontar». Son dos problemas distintos y cada uno se
+                // resuelve en un sitio distinto.
+                if (! app(PeriodoVacacionService::class)->tienePeriodoAbierto($servidorId)) {
+                    throw new ReglaNegocioException(
+                        'El servidor no tiene un período de vacaciones abierto del que descontar. '
+                        .'Genérelo en «Períodos de vacaciones» antes de registrar la solicitud.'
+                    );
+                }
+
                 $saldoActual = $this->calcularSaldoActual($servidorId);
                 if ($diasADescontar > $saldoActual) {
-                    throw new \Exception(
-                        "Saldo insuficiente. Intentas solicitar {$diasADescontar} días, ".
-                        "pero tu saldo es de {$saldoActual} días."
+                    throw new ReglaNegocioException(
+                        "Saldo insuficiente: la solicitud descuenta {$diasADescontar} días ".
+                        'y el saldo disponible es de '.number_format($saldoActual, 2).' días.'
                     );
                 }
             }
@@ -156,7 +158,8 @@ class VacacionService implements VacacionServiceInterface
             $tipoDias = ($servidor->regimen_laboral?->value ?? $servidor->regimen_laboral)
                 === 'codigo_trabajo' ? 'calendario' : 'habiles';
 
-            // Crear solicitud
+            $folio = $this->generarFolio();
+
             $vacacion = Vacacion::create([
                 'servidor_id'              => $servidorId,
                 'unidad_administrativa_id' => $datos['unidad_administrativa_id'] ?? $servidor->unidad_administrativa_id ?? null,
@@ -170,22 +173,173 @@ class VacacionService implements VacacionServiceInterface
                 'tipo_dias'        => $tipoDias,
                 'estado'           => 'pendiente',
                 'creado_por'       => $datos['creado_por'] ?? null,
+                'folio'            => $folio,
+                'codigo_qr'        => url("/api/v1/asistencia/vacaciones/verificar/{$folio}"),
             ]);
 
-            // Generar folio secuencial: VAC-2026-00001
-            $anio        = now()->year;
-            $cantidad    = Vacacion::whereYear('created_at', $anio)->count();
-            $secuencial  = str_pad($cantidad, 5, '0', STR_PAD_LEFT);
-            $folio       = "VAC-{$anio}-{$secuencial}";
+            return $vacacion->fresh(['servidor', 'jefe', 'creadoPor']);
+        });
+    }
 
-            // Generar URL de verificación para QR
-            $urlVerificacion = url("/api/v1/asistencia/vacaciones/verificar/{$folio}");
+    /**
+     * Aprueba o rechaza una solicitud. Solo desde PENDIENTE, y una sola vez.
+     *
+     * Antes esto vivía en el controlador y aceptaba cualquier cambio de estado.
+     * La única defensa contra el doble descuento era «el estado anterior no era
+     * aprobada», que no mira más atrás: aprobar → rechazar → aprobar descontaba
+     * dos veces, y rechazar una ya aprobada no devolvía nada. Sin transacción ni
+     * bloqueo, además, un doble clic podía descontar dos veces directamente.
+     *
+     * Deshacer una aprobada —devolviendo sus días— no es «rechazarla»: es una
+     * anulación, con su propio motivo y su propio registro, y no se hace aquí.
+     */
+    public function resolver(int $vacacionId, string $nuevoEstado, User $resolutor): Vacacion
+    {
+        return DB::transaction(function () use ($vacacionId, $nuevoEstado, $resolutor) {
+            // Bloquea la fila: la segunda de dos peticiones simultáneas espera
+            // aquí y, cuando entra, ya la encuentra resuelta.
+            $vacacion = Vacacion::lockForUpdate()->findOrFail($vacacionId);
 
-            $vacacion->folio    = $folio;
-            $vacacion->codigo_qr = $urlVerificacion;
+            // Nadie resuelve su propia solicitud. Va en el servicio y no en la
+            // policy: el Gate::before de admin-ti se saltaría la policy entera.
+            if (
+                $resolutor->servidor_id !== null
+                && (int) $resolutor->servidor_id === (int) $vacacion->servidor_id
+            ) {
+                throw new ReglaNegocioException(
+                    'No puede aprobar ni rechazar su propia solicitud de vacaciones.'
+                );
+            }
+
+            $estadoActual = (string) $vacacion->estado;
+
+            if ($estadoActual !== 'pendiente') {
+                throw new ReglaNegocioException(sprintf(
+                    'La solicitud %s ya fue resuelta como %s: solo se aprueba o rechaza una solicitud pendiente.',
+                    $vacacion->folio ?? "#{$vacacion->id}",
+                    $estadoActual
+                ));
+            }
+
+            if ($nuevoEstado === 'aprobada') {
+                $this->descontarAlAprobar($vacacion);
+                $vacacion->aprobado_por = $resolutor->id;
+            }
+
+            $vacacion->estado = $nuevoEstado;
             $vacacion->save();
 
             return $vacacion->fresh(['servidor', 'jefe', 'creadoPor']);
         });
+    }
+
+    /**
+     * Descuenta los días de una solicitud que se está aprobando.
+     *
+     * El saldo se vuelve a comprobar aquí aunque ya se miró al registrar: una
+     * pendiente no reserva días, y dos que pasaron el control por separado
+     * pueden juntas superar el saldo. Los períodos abiertos se bloquean antes
+     * de leerlo, para que dos aprobaciones del mismo servidor no lean el mismo
+     * saldo a la vez.
+     *
+     * Sin período abierto del año, `descontarDias()` volvía en silencio: la
+     * vacación quedaba aprobada y los días no salían de ningún lado. Ahora eso
+     * frena la aprobación, igual que ya lo hace la confirmación de permisos.
+     */
+    private function descontarAlAprobar(Vacacion $vacacion): void
+    {
+        $motivo = $vacacion->motivo instanceof MotivoVacacion
+            ? $vacacion->motivo
+            : MotivoVacacion::tryFrom((string) $vacacion->motivo);
+
+        if (! $motivo?->descuentaVacaciones()) {
+            return;
+        }
+
+        $anio = Carbon::parse($vacacion->fecha_inicio)->year;
+        $dias = (float) $vacacion->dias_solicitados;
+
+        $abiertos = PeriodoVacacion::where('servidor_id', $vacacion->servidor_id)
+            ->where('estado', 'abierto')
+            ->lockForUpdate()
+            ->get();
+
+        if (! $abiertos->contains('anio', $anio)) {
+            throw new ReglaNegocioException(
+                "El servidor no tiene un período de vacaciones abierto en {$anio}: "
+                .'aprobarla no descontaría los días de ningún saldo. Genere el período antes de aprobar.'
+            );
+        }
+
+        $saldo = (float) $abiertos->sum('dias_saldo');
+
+        if ($dias > $saldo) {
+            throw new ReglaNegocioException(
+                "Saldo insuficiente para aprobar: la solicitud descuenta {$dias} días ".
+                'y el saldo disponible es de '.number_format($saldo, 2).' días.'
+            );
+        }
+
+        app(PeriodoVacacionService::class)->descontarDias($vacacion->servidor_id, $dias, $anio);
+    }
+
+    /**
+     * Una persona no puede estar dos veces de vacaciones —o de licencia— el
+     * mismo día. Cuenta todo lo que sigue vigente; lo rechazado no ocupa
+     * fechas.
+     */
+    private function rechazarSiSeCruza(int $servidorId, Carbon $inicio, Carbon $fin): void
+    {
+        $cruce = Vacacion::where('servidor_id', $servidorId)
+            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
+            ->whereDate('fecha_inicio', '<=', $fin->toDateString())
+            ->whereDate('fecha_fin', '>=', $inicio->toDateString())
+            ->orderBy('fecha_inicio')
+            ->first();
+
+        if ($cruce) {
+            throw new ReglaNegocioException(sprintf(
+                'Las fechas se cruzan con la solicitud %s (%s), del %s al %s.',
+                $cruce->folio ?? "#{$cruce->id}",
+                $cruce->estado,
+                $cruce->fecha_inicio->format('d/m/Y'),
+                $cruce->fecha_fin->format('d/m/Y')
+            ));
+        }
+    }
+
+    /**
+     * El folio sale del mayor ya emitido, no de contar filas.
+     *
+     * Contar fallaba de dos maneras. `count()` no ve las borradas en blando,
+     * así que tras borrar una solicitud el siguiente folio repetía uno ya
+     * emitido y el índice único lo rechazaba —el borrado en blando no libera el
+     * valor—. Y dos altas simultáneas leían el mismo conteo.
+     *
+     * Mismo arreglo que TUR-, ADQ-, MED- y ENF-. El bloqueo de aviso serializa
+     * leer el máximo y escribir el folio, y lo suelta el cierre de la
+     * transacción de `solicitar()`.
+     */
+    private function generarFolio(): string
+    {
+        $anio = now()->year;
+
+        DB::select('SELECT pg_advisory_xact_lock(?)', [
+            crc32("vacacion_folio_{$anio}"),
+        ]);
+
+        $ultimoFolio = Vacacion::withTrashed()
+            ->where('folio', 'like', "VAC-{$anio}-%")
+            ->max('folio');
+
+        $ultimoSecuencial = $ultimoFolio
+            ? (int) substr($ultimoFolio, strlen("VAC-{$anio}-"))
+            : 0;
+
+        $secuencial = str_pad(
+            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
+        );
+
+        return "VAC-{$anio}-{$secuencial}";
     }
 }

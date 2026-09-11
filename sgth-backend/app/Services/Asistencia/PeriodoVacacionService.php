@@ -407,6 +407,19 @@ class PeriodoVacacionService
     }
 
     /**
+     * ¿Tiene algún período abierto del que descontar?
+     *
+     * `saldoTotal()` devuelve cero tanto a quien agotó sus días como a quien no
+     * tiene períodos, y cada caso necesita su propio mensaje.
+     */
+    public function tienePeriodoAbierto(int $servidorId): bool
+    {
+        return PeriodoVacacion::where('servidor_id', $servidorId)
+            ->where('estado', 'abierto')
+            ->exists();
+    }
+
+    /**
      * Obtiene el resumen de períodos de un servidor.
      */
     public function resumen(int $servidorId): array
