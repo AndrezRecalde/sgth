@@ -68,6 +68,8 @@ class PermisoService implements PermisoServiceInterface
 
             $this->validarFecha($tipo, $fecha);
             $this->validarObservacion($tipo, $observacion);
+            $this->validarDiaLaborable($tipo, $fecha);
+            $this->validarCruceConVacaciones($servidorId, $fecha);
 
             // A partir de aquí se lee la jornada del servidor en esa fecha, así
             // que se bloquean sus permisos de ese día: dos solicitudes a la vez
@@ -333,6 +335,71 @@ class PermisoService implements PermisoServiceInterface
             throw new ReglaNegocioException(
                 'La observación es OBLIGATORIA para los permisos de tipo OFICIAL.'
             );
+        }
+    }
+
+    /**
+     * Un permiso personal no se registra en día no laborable.
+     *
+     * Se aceptaba en sábado, domingo o feriado y, como el personal se paga con
+     * vacaciones, descontaba saldo por un día en que el servidor no tenía
+     * jornada de la que ausentarse.
+     *
+     * Solo el personal, decidido con Talento Humano: oficial, enfermedad y
+     * calamidad se siguen admitiendo, porque hay personal con turnos de fin de
+     * semana y el sistema todavía no sabe quién.
+     */
+    private function validarDiaLaborable(TipoPermiso $tipo, Carbon $fecha): void
+    {
+        if ($tipo !== TipoPermiso::PERSONAL) {
+            return;
+        }
+
+        $motivo = match (true) {
+            $fecha->isSaturday() => 'es sábado',
+            $fecha->isSunday()   => 'es domingo',
+            \App\Models\Asistencia\FeriadoInstitucional::esFeriado($fecha)->exists() => 'es feriado',
+            default              => null,
+        };
+
+        if ($motivo !== null) {
+            throw new ReglaNegocioException(sprintf(
+                'El %s %s: no hay jornada de la que ausentarse, y un permiso personal '.
+                'descontaría vacaciones igual. Elija un día laborable.',
+                $fecha->format('d/m/Y'),
+                $motivo
+            ));
+        }
+    }
+
+    /**
+     * Ningún permiso cae dentro de unas vacaciones o una licencia del mismo
+     * servidor.
+     *
+     * Ese día no tiene jornada: pedir permiso sobre él no ampara nada, y si es
+     * personal descuenta el saldo dos veces, por las vacaciones y por el
+     * permiso. Cuentan las pendientes, aprobadas y gozadas —la misma regla que
+     * usa el cruce entre vacaciones—; una rechazada deja las fechas libres.
+     */
+    private function validarCruceConVacaciones(int $servidorId, Carbon $fecha): void
+    {
+        $vacacion = \App\Models\Asistencia\Vacacion::where('servidor_id', $servidorId)
+            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
+            ->whereDate('fecha_inicio', '<=', $fecha->toDateString())
+            ->whereDate('fecha_fin', '>=', $fecha->toDateString())
+            ->orderBy('fecha_inicio')
+            ->first();
+
+        if ($vacacion) {
+            throw new ReglaNegocioException(sprintf(
+                'El servidor tiene la solicitud de vacaciones %s (%s) del %s al %s, que incluye el %s: '.
+                'ese día no tiene jornada de la que pedir permiso.',
+                $vacacion->folio ?? "#{$vacacion->id}",
+                $vacacion->estado,
+                $vacacion->fecha_inicio->format('d/m/Y'),
+                $vacacion->fecha_fin->format('d/m/Y'),
+                $fecha->format('d/m/Y')
+            ));
         }
     }
 
