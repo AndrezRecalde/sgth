@@ -150,7 +150,7 @@ enum Permiso: string
     // ── MÓDULO 11: Dispensario ───────────────────────────────────
     case VER_AGENDA_DISPENSARIO      = 'ver-agenda-dispensario';
     case GESTIONAR_AGENDA            = 'gestionar-agenda';
-    case SOLICITAR_CITA              = 'solicitar-cita';
+    // `solicitar-cita` se retiró el 2026-09-11 junto con su ruta.
     case VER_HISTORIA_CLINICA_PROPIA = 'ver-historia-clinica-propia';
     case VER_HISTORIA_CLINICA        = 'ver-historia-clinica';       // SOLO médicos
     case CREAR_CONSULTA              = 'crear-consulta';             // SOLO médicos
@@ -452,7 +452,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_PERMISOS,
             Permiso::ACCESO_AUTOSERVICIO,
             Permiso::CAMBIAR_CONTRASENA,
-            Permiso::SOLICITAR_CITA,
             Permiso::VER_HISTORIA_CLINICA_PROPIA,
             Permiso::CREAR_TICKET,
             Permiso::VER_TICKET_PROPIO,

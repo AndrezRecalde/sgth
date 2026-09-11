@@ -1162,7 +1162,7 @@ sin intervención de UATH.
 ```
 GET  /autoservicio/mi-expediente
 GET  /autoservicio/permisos
-POST /autoservicio/permisos/solicitar-cita
+POST /autoservicio/permisos/solicitar-cita   ← retirada el 2026-09-11: nunca funcionó; las citas las agenda el dispensario
 GET  /autoservicio/vacaciones
 GET  /asistencia/marcaciones (propias)
 GET  /actividades/mis-actividades

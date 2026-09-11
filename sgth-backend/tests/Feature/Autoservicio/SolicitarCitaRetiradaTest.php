@@ -72,6 +72,14 @@ test('la ruta ya no existe: responde 404 y no deja ni cita ni permiso', function
         ->and(PermisoServidor::count())->toBe(0);
 });
 
+test('el permiso solicitar-cita tampoco existe ya: nadie lo tiene ni se puede conceder', function () {
+    // Estaba entre los permisos base del seeder: cada rol lo tenía asignado y
+    // la pantalla de Usuarios lo ofrecía, sin que sirviera para nada.
+    expect(\App\Enums\Permiso::tryFrom('solicitar-cita'))->toBeNull()
+        ->and(\Spatie\Permission\Models\Permission::where('name', 'solicitar-cita')->exists())->toBeFalse()
+        ->and($this->usuario->fresh()->getAllPermissions()->pluck('name'))->not->toContain('solicitar-cita');
+});
+
 test('el resto del autoservicio sigue en su sitio', function () {
     $this->actingAs($this->usuario, 'sanctum')
         ->getJson('/api/v1/autoservicio/mis-permisos')
