@@ -33,7 +33,7 @@ import { DirigirATalentoHumano } from "./DirigirATalentoHumano";
 import {
   esTipoRetroactivo,
   fromDate,
-  minimoPlanificable,
+  fechaMasAntiguaAdmitida,
   permisoSchema,
   toDate,
   type PermisoFormData,
@@ -339,8 +339,9 @@ export function PermisoModal({ opened, onClose }: Props) {
                 py={6}
               >
                 <Text size="xs">
-                  Se registra con la fecha en que ocurrió, nunca a futuro. El
-                  respaldo tiene 72 horas laborables para llegar a Recepción.
+                  Se registra con la fecha en que ocurrió, nunca a futuro y
+                  como mucho dos días hábiles atrás: el respaldo tiene 72 horas
+                  laborables desde esa fecha para llegar a Recepción.
                 </Text>
               </Alert>
             )}
@@ -354,13 +355,10 @@ export function PermisoModal({ opened, onClose }: Props) {
                   label="Fecha del permiso"
                   placeholder="Seleccionar fecha"
                   valueFormat="YYYY-MM-DD"
-                  // El calendario impedía elegir días pasados para todos los
-                  // tipos, así que una enfermedad de ayer no podía registrarse
-                  // desde aquí — justo el caso para el que existe el plazo de
-                  // 72 horas. Ahora el rango depende del tipo, igual que en el
-                  // backend: enfermedad y calamidad solo hacia atrás, personal
-                  // y oficial desde tres días hábiles atrás en adelante.
-                  minDate={esRetroactivo ? undefined : minimoPlanificable()}
+                  // Igual que en el backend: ningún tipo admite una fecha cuyo
+                  // plazo de respaldo ya venció (dos días hábiles atrás como
+                  // mucho), y enfermedad y calamidad además nunca a futuro.
+                  minDate={fechaMasAntiguaAdmitida()}
                   maxDate={esRetroactivo ? new Date() : undefined}
                   {...contained}
                   value={toDate(field.value)}
