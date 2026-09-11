@@ -67,9 +67,10 @@ export const asistenciaService = {
         `/asistencia/permisos/confirmar/${folio}`
       ).then(r => r.data.datos),
 
-    anular: (id: number) =>
+    // El motivo es obligatorio, igual que al rechazar o revertir.
+    anular: (id: number, motivo: string) =>
       api.put<ApiResponse<PermisoServidor>>(
-        `/asistencia/permisos/${id}/anular`
+        `/asistencia/permisos/${id}/anular`, { motivo }
       ).then(r => r.data.datos),
 
     validarTs: (id: number) =>

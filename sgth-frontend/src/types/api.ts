@@ -1321,6 +1321,7 @@ export type PermisoServidor = {
   validado_ts_en?:  string | null
   anulado_por?:     number | null
   anulado_en?:      string | null
+  motivo_anulacion?: string | null
   servidor?:        ServidorConRelaciones
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null

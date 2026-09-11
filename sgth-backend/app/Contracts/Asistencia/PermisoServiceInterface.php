@@ -33,6 +33,12 @@ interface PermisoServiceInterface
     public function validarTrabajoSocial(int $permisoId, int $tsUserId): PermisoServidor;
 
     /**
+     * Anula un permiso PENDIENTE, con la fila bloqueada para no cruzarse con
+     * una confirmación simultánea, y deja escrito el motivo.
+     */
+    public function anular(int $permisoId, int $userId, string $motivo): PermisoServidor;
+
+    /**
      * Recepción rechaza el documento físico: PENDIENTE a RECHAZADO.
      */
     public function rechazar(int $permisoId, int $userId, string $motivo): PermisoServidor;

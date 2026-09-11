@@ -207,22 +207,17 @@ class PermisoServidorController extends Controller
 
     public function anular(int $id, Request $request)
     {
-        $permiso = PermisoServidor::findOrFail($id);
+        $this->authorize('anular', PermisoServidor::findOrFail($id));
 
-        $this->authorize('anular', $permiso);
+        // El motivo se valida después de autorizar, con las mismas reglas que
+        // rechazar y revertir: a quien no puede anular se le dice que no
+        // puede, no que le falta un campo del formulario.
+        $motivoRequest = new MotivoPermisoRequest();
+        $datos = $request->validate($motivoRequest->rules(), $motivoRequest->messages());
 
-        $estadoActual = $permiso->estado instanceof EstadoPermiso
-            ? $permiso->estado->value
-            : (string) $permiso->estado;
-
-        if ($estadoActual !== EstadoPermiso::PENDIENTE->value) {
-            return ApiResponse::error('Solo se pueden anular permisos en estado PENDIENTE.', 400);
-        }
-
-        $permiso->estado = EstadoPermiso::ANULADO->value;
-        $permiso->anulado_por = $request->user()->id;
-        $permiso->anulado_en = now();
-        $permiso->save();
+        // En el servicio, con la fila bloqueada: aquí se leía y se guardaba
+        // sin bloqueo y podía pisar una confirmación simultánea.
+        $permiso = $this->permisoService->anular($id, $request->user()->id, $datos['motivo']);
 
         return ApiResponse::ok($permiso, 'Permiso anulado correctamente.');
     }
