@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * arreglo de nada. De ahí venía que `types/api.ts` tuviera que sostener a mano
  * un `ServidorConRelaciones` paralelo y que cada consumidor terminara
  * casteando. Si agregas una columna a `servidores`, agrégala también aquí.
+ *
+ * @mixin \App\Models\Expediente\Servidor
  */
 class ServidorResource extends JsonResource
 {

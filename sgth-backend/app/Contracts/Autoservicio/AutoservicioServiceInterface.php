@@ -2,9 +2,11 @@
 
 namespace App\Contracts\Autoservicio;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
 interface AutoservicioServiceInterface
 {
-    public function obtenerMisPermisos(int $servidorId, array $filtros): array;
+    public function obtenerMisPermisos(int $servidorId, array $filtros): LengthAwarePaginator;
 
     public function obtenerMisVacaciones(int $servidorId): array;
 
@@ -13,8 +15,6 @@ interface AutoservicioServiceInterface
     public function obtenerMiExpediente(int $servidorId): array;
 
     public function obtenerMisActividades(int $servidorId): array;
-
-    public function solicitarCitaMedica(int $servidorId, array $datos): array;
 
     public function obtenerMiHistoriaClinicaBasica(int $servidorId): array;
 }

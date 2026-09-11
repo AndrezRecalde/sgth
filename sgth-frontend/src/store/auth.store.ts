@@ -13,7 +13,6 @@ export interface UsuarioAuth {
     cedula?:            string
     nombre?:            string
     apellido?:          string
-    activo?:            boolean
     puede_marcar?:      boolean
     regimen_laboral?:   string
     tipo_nombramiento?: string | null
@@ -27,10 +26,6 @@ export interface UsuarioAuth {
       id:      number
       nombre?: string
       es_jefe?: boolean
-    } | null
-    contrato_vigente?: {
-      id:      number
-      estado?: string
     } | null
   } | null
   roles:    string[]
@@ -105,8 +100,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      hasRole:    (role)    => get().usuario?.roles.includes(role)      ?? false,
-      hasPermiso: (permiso) => get().usuario?.permisos.includes(permiso) ?? false,
+      // `?.` también sobre la lista: las sesiones guardadas antes de que el
+      // login devolviera roles y permisos los tienen sin definir, y la pantalla
+      // se caía con «Cannot read properties of undefined (reading 'includes')».
+      hasRole:    (role)    => get().usuario?.roles?.includes(role)      ?? false,
+      hasPermiso: (permiso) => get().usuario?.permisos?.includes(permiso) ?? false,
     }),
     {
       name: 'auth-storage',

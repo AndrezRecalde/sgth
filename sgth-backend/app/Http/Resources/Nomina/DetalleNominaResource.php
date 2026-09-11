@@ -5,6 +5,9 @@ namespace App\Http\Resources\Nomina;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \App\Models\Nomina\DetalleNomina
+ */
 class DetalleNominaResource extends JsonResource
 {
     public function toArray(Request $request): array

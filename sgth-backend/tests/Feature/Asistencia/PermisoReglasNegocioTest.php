@@ -163,12 +163,78 @@ test('un permiso anulado deja libre la franja que ocupaba', function () {
 
 // ── Fechas ───────────────────────────────────────────────────────────
 
-test('un permiso personal no se registra con más de 3 días hábiles de atraso', function () {
+/**
+ * Viaja a un jueves a media mañana y devuelve ese día.
+ *
+ * El día límite depende del día de la semana en que se mire: un sábado, tres
+ * días hábiles atrás todavía está en plazo. Con un jueves fijo el lunes es
+ * siempre el primer día vencido y el martes el último admitido.
+ */
+function viajarAUnJuevesDePermisos(): Carbon
+{
+    test()->travelTo(Carbon::today()->next(Carbon::THURSDAY)->setTime(10, 0));
+
+    // Si el jueves cae en el año siguiente, el permiso personal necesita un
+    // período de ese año del que descontar.
+    if (! PeriodoVacacion::where('servidor_id', test()->servidor->id)->where('anio', now()->year)->exists()) {
+        periodoAbiertoDePrueba(test()->servidor, 15.0);
+    }
+
+    return Carbon::today();
+}
+
+test('un permiso personal no se registra con el plazo de respaldo ya vencido', function () {
     $respuesta = crearPermiso(['fecha' => Carbon::today()->subDays(20)->toDateString()]);
 
     $respuesta->assertStatus(422);
-    expect($respuesta->json('mensaje'))->toContain('días hábiles de atraso');
+    expect($respuesta->json('mensaje'))->toContain('nacería como falta injustificada');
 });
+
+test('una enfermedad de hace dos semanas ya no se registra: nacería como falta injustificada', function () {
+    // Antes se aceptaba, con un plazo que había vencido días atrás, y a la
+    // mañana siguiente VencerPermisosJob la convertía en falta injustificada.
+    $respuesta = crearPermiso([
+        'tipo'  => TipoPermiso::ENFERMEDAD->value,
+        'fecha' => Carbon::today()->subWeeks(2)->toDateString(),
+    ]);
+
+    $respuesta->assertStatus(422);
+    expect($respuesta->json('mensaje'))->toContain('nacería como falta injustificada')
+        ->and(PermisoServidor::count())->toBe(0);
+});
+
+test('un jueves ya no se registra un permiso del lunes: su plazo venció a las 00:00', function (string $tipo) {
+    $jueves = viajarAUnJuevesDePermisos();
+
+    $respuesta = crearPermiso([
+        'tipo'        => $tipo,
+        'fecha'       => $jueves->copy()->subDays(3)->toDateString(),
+        'observacion' => 'Comisión de servicio',
+    ]);
+
+    $respuesta->assertStatus(422);
+    // El mensaje dice cuál es la fecha más antigua que sí se admite: el martes.
+    expect($respuesta->json('mensaje'))->toContain($jueves->copy()->subDays(2)->format('d/m/Y'));
+})->with(['personal', 'oficial', 'enfermedad', 'calamidad']);
+
+test('un jueves sí se registra un permiso del martes, y no nace vencido', function (string $tipo) {
+    $jueves = viajarAUnJuevesDePermisos();
+
+    $respuesta = crearPermiso([
+        'tipo'        => $tipo,
+        'fecha'       => $jueves->copy()->subDays(2)->toDateString(),
+        'observacion' => 'Comisión de servicio',
+    ]);
+
+    $respuesta->assertStatus(201);
+
+    $permiso = PermisoServidor::find($respuesta->json('datos.id'));
+    expect(Carbon::parse($permiso->vence_en)->greaterThan(now()))->toBeTrue();
+
+    // El job de la mañana siguiente no tiene nada que hacer con él.
+    (new \App\Jobs\Asistencia\VencerPermisosJob)->handle();
+    expect($permiso->fresh()->estado)->toBe(EstadoPermiso::PENDIENTE);
+})->with(['personal', 'oficial', 'enfermedad', 'calamidad']);
 
 test('un permiso personal sí se registra dentro de la tolerancia', function () {
     // Ayer, saltando fin de semana y feriado hacia atrás.

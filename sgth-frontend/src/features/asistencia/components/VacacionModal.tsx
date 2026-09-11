@@ -233,21 +233,26 @@ export function VacacionModal({ opened, onClose }: Props) {
   }
 
   const onSubmit = async (values: FormData) => {
-    const result = await crear.mutateAsync({
-      unidad_administrativa_id: values.unidad_administrativa_id,
-      servidor_id:              values.servidor_id,
-      jefe_id:                  values.jefe_id ?? null,
-      persona_reemplaza_id:     values.persona_reemplaza_id ?? null,
-      motivo:                   values.motivo,
-      fecha_inicio:             values.fecha_inicio,
-      fecha_fin:                values.fecha_fin,
-      fecha_retorno:            values.fecha_retorno ?? null,
-      dias_solicitados:         values.dias_solicitados,
-      tipo_dias:                values.tipo_dias as 'habiles' | 'calendario',
-      observacion:              values.observacion ?? null,
-    })
-    setVacacionCreada(result ?? null)
-    setPaso(1)
+    try {
+      const result = await crear.mutateAsync({
+        unidad_administrativa_id: values.unidad_administrativa_id,
+        servidor_id:              values.servidor_id,
+        jefe_id:                  values.jefe_id ?? null,
+        persona_reemplaza_id:     values.persona_reemplaza_id ?? null,
+        motivo:                   values.motivo,
+        fecha_inicio:             values.fecha_inicio,
+        fecha_fin:                values.fecha_fin,
+        fecha_retorno:            values.fecha_retorno ?? null,
+        dias_solicitados:         values.dias_solicitados,
+        tipo_dias:                values.tipo_dias as 'habiles' | 'calendario',
+        observacion:              values.observacion ?? null,
+      })
+      setVacacionCreada(result ?? null)
+      setPaso(1)
+    } catch {
+      // El hook de mutación ya notifica el error; el formulario sigue abierto
+      // para corregirlo. Sin esto, el rechazo quedaba sin atrapar.
+    }
   }
 
   const handleExportar = async () => {

@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * campos es la frontera de lo que la institución hace público. Deliberadamente
  * no incluye ocupantes, subrogaciones, conteos de puestos ni los anclajes de
  * firma, que son información de gestión interna.
+ *
+ * @mixin \App\Models\Estructura\UnidadAdministrativa
  */
 class UnidadOrganigramaPublicaResource extends JsonResource
 {

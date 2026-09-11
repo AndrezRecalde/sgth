@@ -5,10 +5,11 @@ namespace App\Policies\Asistencia;
 use App\Enums\Permiso;
 use App\Enums\TipoPermiso;
 use App\Models\Asistencia\PermisoServidor;
+use App\Models\Expediente\Servidor;
 use App\Models\User;
 
 /**
- * Quién puede ver, imprimir y anular un permiso.
+ * Quién puede registrar, ver, imprimir y anular un permiso.
  *
  * Hasta ahora el control de acceso vivía suelto dentro de `index()` y no
  * existía en `show()` ni en `exportar()`: cualquier usuario autenticado podía
@@ -29,6 +30,29 @@ class PermisoServidorPolicy
     public function verAny(User $user): bool
     {
         return $user->can(Permiso::VER_PERMISOS->value);
+    }
+
+    /**
+     * Registrar un permiso a nombre de un servidor.
+     *
+     * El propio, cualquiera con `crear-permiso`, que está entre los permisos
+     * base. El de otro servidor, solo Talento Humano: `registrar-permisos-servidores`.
+     *
+     * El alta no comprobaba nada: el `servidor_id` llegaba en la petición y se
+     * aceptaba tal cual. Un servidor podía registrarle un permiso personal a
+     * otro y, al confirmarlo Recepción, descontarle las horas de su saldo de
+     * vacaciones. Un jefe de unidad tampoco registra el de un subordinado: lo
+     * firma, pero lo emite el propio servidor o Talento Humano.
+     */
+    public function crear(User $user, Servidor $servidor): bool
+    {
+        if ($user->can(Permiso::REGISTRAR_PERMISOS_SERVIDORES->value)) {
+            return true;
+        }
+
+        return $user->servidor_id !== null
+            && (int) $user->servidor_id === (int) $servidor->id
+            && $user->can(Permiso::CREAR_PERMISO->value);
     }
 
     public function ver(User $user, PermisoServidor $permiso): bool
@@ -87,15 +111,43 @@ class PermisoServidorPolicy
     }
 
     /**
-     * Rechazar el documento físico es trabajo de quien lo recibe.
+     * Confirmar la recepción del documento físico: Recepción, y Talento Humano
+     * cuando opera el mostrador.
      *
-     * Talento Humano también puede: opera Recepción cuando no hay nadie, igual
-     * que ya ocurre con la confirmación.
+     * Lo decidía el rol en la ruta (`role:recepcion|admin-uath|asistente-uath`)
+     * mientras la matriz solo le daba `confirmar-recepcion` a Recepción: el
+     * frontend no tenía un permiso que mirar para saber a quién ofrecerle el
+     * botón. Talento Humano recibió el permiso en la misma migración que movió
+     * la regla aquí, así que nadie perdió lo que ya podía hacer.
+     */
+    public function confirmar(User $user): bool
+    {
+        return $user->can(Permiso::CONFIRMAR_RECEPCION->value);
+    }
+
+    /**
+     * Rechazar el documento físico es trabajo de quien lo recibe: el mismo
+     * permiso que confirmar.
+     *
+     * Antes pedía `confirmar-recepcion` o `anular-permiso`, mientras la ruta
+     * dejaba pasar a asistente-uath: el asistente confirmaba, pero al rechazar
+     * recibía un 403. Decidido con el usuario: quien confirma también rechaza.
      */
     public function rechazar(User $user, PermisoServidor $permiso): bool
     {
-        return $user->can(Permiso::CONFIRMAR_RECEPCION->value)
-            || $user->can(Permiso::ANULAR_PERMISO->value);
+        return $user->can(Permiso::CONFIRMAR_RECEPCION->value);
+    }
+
+    /**
+     * Validar por Trabajo Social un permiso por enfermedad o calamidad.
+     *
+     * Lo decidía el rol en la ruta (`role:trabajo-social|admin-uath`). Que el
+     * permiso sea de un tipo validable lo comprueba el servicio y responde 422:
+     * es una regla de negocio sobre el permiso, no una cuestión de acceso.
+     */
+    public function validar(User $user, PermisoServidor $permiso): bool
+    {
+        return $user->can(Permiso::VALIDAR_TRABAJO_SOCIAL->value);
     }
 
     /**

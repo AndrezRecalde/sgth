@@ -13,6 +13,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * inservible al frontend. Si agregas una columna a `movimientos_personal` o
  * cargas una relación nueva en el controlador, agrégala también aquí: al
  * enumerar ya no hay volcado automático que las arrastre.
+ *
+ * @mixin \App\Models\Expediente\MovimientoPersonal
  */
 class MovimientoPersonalResource extends JsonResource
 {
