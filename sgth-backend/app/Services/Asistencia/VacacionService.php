@@ -4,9 +4,11 @@ namespace App\Services\Asistencia;
 
 use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Contracts\Asistencia\VacacionServiceInterface;
+use App\Enums\EstadoPermiso;
 use App\Enums\MotivoVacacion;
 use App\Enums\RegimenLaboral;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -129,6 +131,7 @@ class VacacionService implements VacacionServiceInterface
             }
 
             $this->rechazarSiSeCruza($servidorId, $fechaInicio, $fechaFin);
+            $this->rechazarSiHayPermisos($servidorId, $fechaInicio, $fechaFin);
 
             $reemplazoId = isset($datos['persona_reemplaza_id'])
                 ? (int) $datos['persona_reemplaza_id']
@@ -228,6 +231,14 @@ class VacacionService implements VacacionServiceInterface
             }
 
             if ($nuevoEstado === 'aprobada') {
+                // Entre la solicitud y la aprobación alguien pudo registrar un
+                // permiso en esas fechas: se vuelve a mirar, igual que el saldo.
+                $this->rechazarSiHayPermisos(
+                    (int) $vacacion->servidor_id,
+                    Carbon::parse($vacacion->fecha_inicio),
+                    Carbon::parse($vacacion->fecha_fin)
+                );
+
                 if ($this->descuenta($vacacion)) {
                     // Reparte entre los períodos abiertos, del más antiguo al
                     // más nuevo, y comprueba el saldo con esos períodos
@@ -371,6 +382,46 @@ class VacacionService implements VacacionServiceInterface
                 $cruce->estado,
                 $cruce->fecha_inicio->format('d/m/Y'),
                 $cruce->fecha_fin->format('d/m/Y')
+            ));
+        }
+    }
+
+    /**
+     * Unas vacaciones no pueden caer sobre un día que ya tiene un permiso.
+     *
+     * El permiso ya no se registra sobre unas vacaciones, pero al revés nadie
+     * miraba: un permiso personal confirmado descuenta sus horas del saldo, y
+     * unas vacaciones aprobadas encima volvían a descontar ese mismo día. Con
+     * los otros tipos no hay doble cobro, pero el día queda a la vez como
+     * vacación y como enfermedad o comisión.
+     *
+     * Bloquean los permisos vivos, de cualquier tipo. Los anulados, rechazados
+     * y las faltas injustificadas no ocupan el día.
+     */
+    private function rechazarSiHayPermisos(int $servidorId, Carbon $inicio, Carbon $fin): void
+    {
+        $permiso = PermisoServidor::where('servidor_id', $servidorId)
+            ->whereIn('estado', [
+                EstadoPermiso::PENDIENTE->value,
+                EstadoPermiso::ACTIVO->value,
+                EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value,
+            ])
+            ->whereDate('fecha', '>=', $inicio->toDateString())
+            ->whereDate('fecha', '<=', $fin->toDateString())
+            ->orderBy('fecha')
+            ->orderBy('hora_inicio')
+            ->first();
+
+        if ($permiso) {
+            throw new ReglaNegocioException(sprintf(
+                'Las fechas incluyen el permiso %s (%s, %s) del %s, de %s a %s: '.
+                'ese día ya tiene una ausencia registrada. Anule el permiso o elija otras fechas.',
+                $permiso->folio ?? "#{$permiso->id}",
+                $permiso->tipo?->value ?? $permiso->tipo,
+                $permiso->estado?->value ?? $permiso->estado,
+                $permiso->fecha->format('d/m/Y'),
+                substr((string) $permiso->hora_inicio, 0, 5),
+                substr((string) $permiso->hora_fin, 0, 5)
             ));
         }
     }
