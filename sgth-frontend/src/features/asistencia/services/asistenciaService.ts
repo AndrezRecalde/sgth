@@ -3,7 +3,7 @@ import type {
   ApiResponse, MarcacionBiometrica,
   PermisoServidor, Vacacion,
   PeriodoVacacion, ResumenPeriodos, PrevisualizacionRecalculo, ConsolidadoPermisoResponse,
-  PaginatedResponse
+  PaginatedResponse, ServidorSobreTope, VencimientoExcedente
 } from '@/types/api'
 
 export const asistenciaService = {
@@ -146,6 +146,23 @@ export const asistenciaService = {
         '/asistencia/periodos-vacaciones/generar-todos',
         { anio: anio ?? new Date().getFullYear() }
       ).then(r => r.data.datos),
+
+    /** Quién está cerca de su tope de acumulación o lo pasa. */
+    excedentes: () =>
+      api.get<ApiResponse<ServidorSobreTope[]>>(
+        '/asistencia/periodos-vacaciones/excedentes'
+      ).then(r => r.data.datos),
+
+    /**
+     * Vence el excedente de un servidor sobre su tope.
+     *
+     * Respuesta completa: el mensaje dice cuántos días vencieron y cómo quedó
+     * el saldo.
+     */
+    vencerExcedente: (servidorId: number) =>
+      api.post<ApiResponse<VencimientoExcedente>>(
+        `/asistencia/periodos-vacaciones/servidores/${servidorId}/vencer-excedente`
+      ).then(r => r.data),
   },
 
   consolidado: {

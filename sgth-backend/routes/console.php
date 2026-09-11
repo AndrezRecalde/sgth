@@ -51,6 +51,12 @@ Schedule::command('sgth:subrogaciones:caducar')
     ->dailyAt('05:30')
     ->onOneServer();
 
+// Vacaciones aprobadas que ya terminaron pasan a gozada. Como las
+// subrogaciones, no hay nada que revisar: las fechas venían aprobadas.
+Schedule::command('sgth:vacaciones:marcar-gozadas')
+    ->dailyAt('05:45')
+    ->onOneServer();
+
 // Tarea 8: Backup Automático Diario
 Schedule::command('backup:base-datos')
     ->dailyAt('02:00')

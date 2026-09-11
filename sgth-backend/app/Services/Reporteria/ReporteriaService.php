@@ -89,16 +89,15 @@ class ReporteriaService implements ReporteriaServiceInterface
             'permisos_pendientes' => DB::table('permisos_servidor')
                 ->where('estado', 'pendiente')
                 ->count(),
-            'vacaciones_proximas_vencer' => \App\Models\Expediente\Servidor::where('estado', true)
-                ->get()
-                ->filter(function($serv) {
-                    try {
-                        $service = app(\App\Contracts\Asistencia\VacacionServiceInterface::class);
-                        return $service->calcularSaldoActual($serv->id) >= 45;
-                    } catch (\Exception $e) {
-                        return false;
-                    }
-                })->map(fn($s) => ['servidor_id' => $s->id])->values()->toArray(),
+            // Quienes llegan al 75 % de su tope de acumulación: 45 de 60 en
+            // LOSEP, o de tres años de vacaciones en el Código del Trabajo.
+            // Antes era «45 días» para todos, calculado servidor por servidor
+            // con varias consultas cada uno; ahora es una consulta agregada.
+            'vacaciones_proximas_vencer' => app(\App\Services\Asistencia\TopeAcumulacionService::class)
+                ->enSeguimiento()
+                ->map(fn (array $f) => ['servidor_id' => $f['servidor_id']])
+                ->values()
+                ->toArray(),
             'servidores_en_comision' => DB::table('viaticos')
                 ->where('estado', 'en_comision')
                 ->count()

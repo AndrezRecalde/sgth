@@ -189,16 +189,15 @@ class PeriodoVacacionService
         $antiguedad = $this->calcularAntiguedad($servidor, $regimen, $anio);
         $diasGen    = $this->calcularDiasGenerados($regimen, $antiguedad);
 
-        // Saldo acumulado de períodos anteriores abiertos.
+        // Saldo acumulado de períodos anteriores abiertos, entero. Antes se
+        // recortaba a 60 en LOSEP, pero solo aquí, en lo que se muestra: el
+        // saldo real seguía creciendo y el recorte escondía el excedente. El
+        // tope se aplica venciendo días (TopeAcumulacionService), no
+        // tapándolos.
         $saldoAcumulado = (float) PeriodoVacacion::where('servidor_id', $servidor->id)
             ->where('anio', '<', $anio)
             ->where('estado', 'abierto')
             ->sum('dias_saldo');
-
-        // Límite de acumulación LOSEP (60 días).
-        if ($regimen === 'losep') {
-            $saldoAcumulado = min($saldoAcumulado, 60.0);
-        }
 
         /**
          * Los días ya gozados NO se tocan al regenerar.
@@ -217,9 +216,13 @@ class PeriodoVacacionService
          */
         $diasUtilizados = (float) ($existente->dias_utilizados ?? 0);
 
-        // Se acota a cero igual que en `descontarDias()`: si alguien gozó más
-        // de lo que su régimen corregido genera, el saldo es cero, no negativo.
-        $diasSaldo = max(0.0, $diasGen - $diasUtilizados);
+        // Lo vencido por el tope, igual: una regeneración que lo ignorara
+        // devolvería días que Talento Humano ya dio por perdidos.
+        $diasVencidos = (float) ($existente->dias_vencidos ?? 0);
+
+        // Se acota a cero: si alguien gozó más de lo que su régimen corregido
+        // genera, el saldo es cero, no negativo.
+        $diasSaldo = max(0.0, $diasGen - $diasUtilizados - $diasVencidos);
 
         return [
             'regimen'         => $regimen,
@@ -339,7 +342,7 @@ class PeriodoVacacionService
         if (!$periodo) return;
 
         $periodo->dias_utilizados += $dias;
-        $periodo->dias_saldo       = max(0, $periodo->dias_generados - $periodo->dias_utilizados);
+        $periodo->recalcularSaldo();
         $periodo->saldo_acumulado  = max(0, $periodo->saldo_acumulado - $dias);
 
         // Verificar alerta LOSEP
@@ -391,7 +394,7 @@ class PeriodoVacacionService
         if (!$periodo || $dias <= 0) return;
 
         $periodo->dias_utilizados = max(0, $periodo->dias_utilizados - $dias);
-        $periodo->dias_saldo      = max(0, $periodo->dias_generados - $periodo->dias_utilizados);
+        $periodo->recalcularSaldo();
         $periodo->saldo_acumulado = $periodo->saldo_acumulado + $dias;
 
         $periodo->save();
@@ -494,7 +497,7 @@ class PeriodoVacacionService
             }
 
             $periodo->dias_utilizados = (float) $periodo->dias_utilizados + $toma;
-            $periodo->dias_saldo      = max(0, (float) $periodo->dias_generados - (float) $periodo->dias_utilizados);
+            $periodo->recalcularSaldo();
             $periodo->save();
 
             VacacionDescuento::create([
@@ -545,7 +548,7 @@ class PeriodoVacacionService
             $periodo = $periodos[$descuento->periodo_vacacion_id];
 
             $periodo->dias_utilizados = max(0, (float) $periodo->dias_utilizados - $descuento->dias);
-            $periodo->dias_saldo      = max(0, (float) $periodo->dias_generados - (float) $periodo->dias_utilizados);
+            $periodo->recalcularSaldo();
             $periodo->save();
 
             $descuento->devuelto_en = now();
@@ -587,7 +590,7 @@ class PeriodoVacacionService
         }
 
         $periodo->dias_utilizados = (float) $periodo->dias_utilizados - $dias;
-        $periodo->dias_saldo      = max(0, (float) $periodo->dias_generados - (float) $periodo->dias_utilizados);
+        $periodo->recalcularSaldo();
         $periodo->save();
 
         $this->recalcularAcumulados($vacacion->servidor_id);
@@ -609,11 +612,11 @@ class PeriodoVacacionService
      * Pone al día `saldo_acumulado` en los períodos abiertos del servidor.
      *
      * Es el mismo cálculo de `calcularCifras()` —lo que arrastran los años
-     * anteriores, con el tope LOSEP de 60, más el saldo propio—, pero para
-     * todos a la vez: un descuento repartido cambia el saldo de varios períodos
-     * y el acumulado de cada uno depende de los anteriores.
+     * anteriores más el saldo propio—, pero para todos a la vez: un descuento
+     * repartido o un vencimiento cambian el saldo de varios períodos, y el
+     * acumulado de cada uno depende de los anteriores.
      */
-    private function recalcularAcumulados(int $servidorId): void
+    public function recalcularAcumulados(int $servidorId): void
     {
         $periodos = PeriodoVacacion::where('servidor_id', $servidorId)
             ->where('estado', 'abierto')
@@ -623,9 +626,7 @@ class PeriodoVacacionService
         $arrastre = 0.0;
 
         foreach ($periodos as $periodo) {
-            $tope = $periodo->regimen === 'losep' ? min($arrastre, 60.0) : $arrastre;
-
-            $periodo->saldo_acumulado = $tope + (float) $periodo->dias_saldo;
+            $periodo->saldo_acumulado = $arrastre + (float) $periodo->dias_saldo;
             $periodo->save();
 
             $arrastre += (float) $periodo->dias_saldo;
@@ -693,12 +694,17 @@ class PeriodoVacacionService
             $periodo->dias_permisos_personales  = $diasPermisos;
         });
 
-        $saldoTotal = $this->saldoTotal($servidorId);
+        // La alerta mira el tope del régimen del servidor. Antes era «45 días»
+        // para todos, con el mensaje del tope LOSEP también para el Código del
+        // Trabajo, cuyo tope es otro.
+        $tope = app(TopeAcumulacionService::class)->estado(Servidor::findOrFail($servidorId));
 
         return [
             'periodos'                   => $periodos,
-            'saldo_total'                => $saldoTotal,
-            'alerta_limite'              => $saldoTotal >= 45,
+            'saldo_total'                => $tope['saldo'],
+            'alerta_limite'              => $tope['alerta'],
+            'tope'                       => $tope['tope'],
+            'excedente'                  => $tope['excedente'],
             'total_vacaciones_aprobadas' => round(
                 $periodos->sum('dias_vacaciones_aprobadas'), 2
             ),

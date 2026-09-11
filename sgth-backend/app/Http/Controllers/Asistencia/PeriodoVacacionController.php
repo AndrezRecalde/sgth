@@ -7,6 +7,7 @@ use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Services\Asistencia\PeriodoVacacionService;
+use App\Services\Asistencia\TopeAcumulacionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,8 @@ use Illuminate\Http\Request;
 class PeriodoVacacionController extends Controller
 {
     public function __construct(
-        private PeriodoVacacionService $periodoService
+        private PeriodoVacacionService $periodoService,
+        private TopeAcumulacionService $tope,
     ) {}
 
     /**
@@ -146,5 +148,40 @@ class PeriodoVacacionController extends Controller
             ['generados' => $resultados->count()],
             "Períodos {$anio} generados para {$resultados->count()} servidores."
         );
+    }
+
+    /**
+     * Quién está cerca de su tope de acumulación o lo pasa.
+     *
+     * Solo lee: lo ve quien ve las vacaciones de toda la institución. Vencer
+     * el excedente es otra ruta y otro permiso.
+     */
+    public function excedentes(Request $request): JsonResponse
+    {
+        $this->authorize('verTodas', Vacacion::class);
+
+        $filas = $this->tope->enSeguimiento($request->boolean('solo_excedidos'));
+
+        return ApiResponse::ok($filas, 'Servidores cerca o por encima de su tope de acumulación.');
+    }
+
+    /**
+     * Vence el excedente de un servidor sobre su tope. Queda en la bitácora.
+     */
+    public function vencerExcedente(Request $request, int $servidorId): JsonResponse
+    {
+        $this->authorize('gestionarPeriodos', Vacacion::class);
+
+        $resultado = $this->tope->vencerExcedente(
+            Servidor::findOrFail($servidorId), $request->user()
+        );
+
+        return ApiResponse::ok($resultado, sprintf(
+            'Vencieron %s días. El saldo pasó de %s a %s días (tope: %s).',
+            number_format($resultado['dias_vencidos'], 2),
+            number_format($resultado['saldo_antes'], 2),
+            number_format($resultado['saldo_despues'], 2),
+            number_format($resultado['tope'], 2)
+        ));
     }
 }

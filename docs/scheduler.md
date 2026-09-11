@@ -23,6 +23,7 @@ Todas se declaran en [`sgth-backend/routes/console.php`](../sgth-backend/routes/
 | 03:30 | `sanctum:prune-expired --hours=24` | Borra los tokens del API caducados hace más de un día | La tabla `personal_access_tokens` crece sin fin. No rompe nada: Sanctum ya los rechaza |
 | 05:00 | `sgth:contratos:detectar-vencidos` | Genera en borrador la Cesación de Funciones de los contratos de Servicios Profesionales vencidos | Los contratos vencen y nadie se entera; el servidor sigue figurando como vigente |
 | 05:30 | `sgth:subrogaciones:caducar` | Cierra las subrogaciones y encargos cuyo plazo ya venció | El estado guardado miente. La pantalla queda bien igual —filtra por fecha—, pero cualquier reporte que consulte el estado se equivoca |
+| 05:45 | `sgth:vacaciones:marcar-gozadas` | Pasa a «gozada» las vacaciones aprobadas cuya fecha de fin ya pasó | Las vacaciones de hace meses siguen «aprobadas» y el filtro «Gozada» sale vacío. No cambia saldos: los días se descontaron al aprobar |
 | 06:00 | `VerificarAlertasInventarioJob` | Alertas de stock del dispensario | Se agota medicación sin aviso |
 | 06:15 L-V | `VencerPermisosJob` | Marca como falta injustificada el permiso cuyo respaldo físico no llegó a Recepción dentro de las 72 horas laborables (Art. 33 LOSEP) | Ningún permiso caduca nunca. Todos se quedan «pendientes» y la ausencia sigue amparada por un documento que nadie presentó |
 | 07:00 L-V | `sgth:visto-bueno:control-plazos` | Plazos del Art. 183 del Código del Trabajo en los trámites de visto bueno | Se vencen plazos legales |

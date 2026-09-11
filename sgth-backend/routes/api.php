@@ -578,6 +578,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [PeriodoVacacionController::class,
                     'generarTodos']
             )->name('periodos.generar-todos');
+
+            // Tope de acumulación: quién está cerca o por encima, y vencer el
+            // excedente de un servidor. Nada vence solo.
+            Route::get(
+                'excedentes',
+                [PeriodoVacacionController::class, 'excedentes']
+            )->name('periodos.excedentes');
+
+            Route::post(
+                'servidores/{servidorId}/vencer-excedente',
+                [PeriodoVacacionController::class, 'vencerExcedente']
+            )->name('periodos.vencer-excedente');
         });
 
     // El consolidado es un informe de toda la institución: nombres, cédulas,

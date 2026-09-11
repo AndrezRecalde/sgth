@@ -299,6 +299,26 @@ class VacacionService implements VacacionServiceInterface
     }
 
     /**
+     * Pasa a GOZADA las aprobadas que terminaron antes de la fecha de corte.
+     *
+     * El estado existía desde la primera migración y nada lo asignaba. Una
+     * vacación que termina hoy sigue aprobada hasta mañana: el último día
+     * todavía se está gozando.
+     *
+     * @return array{marcadas: int, fecha: string}
+     */
+    public function marcarGozadas(?string $fecha = null): array
+    {
+        $corte = $fecha ? Carbon::parse($fecha)->startOfDay() : Carbon::today();
+
+        $marcadas = Vacacion::where('estado', 'aprobada')
+            ->whereDate('fecha_fin', '<', $corte->toDateString())
+            ->update(['estado' => 'gozada']);
+
+        return ['marcadas' => $marcadas, 'fecha' => $corte->toDateString()];
+    }
+
+    /**
      * Nadie resuelve ni anula su propia solicitud. Va en el servicio y no en la
      * policy: el Gate::before de admin-ti se saltaría la policy entera.
      */

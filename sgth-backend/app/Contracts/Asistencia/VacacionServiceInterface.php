@@ -39,6 +39,13 @@ interface VacacionServiceInterface
     public function anular(int $vacacionId, string $motivo, User $usuario): array;
 
     /**
+     * Pasa a gozada las aprobadas que terminaron antes de la fecha de corte.
+     *
+     * @return array{marcadas: int, fecha: string}
+     */
+    public function marcarGozadas(?string $fecha = null): array;
+
+    /**
      * Calcula el saldo actual de vacaciones del servidor.
      */
     public function calcularSaldoActual(int $servidorId): float;

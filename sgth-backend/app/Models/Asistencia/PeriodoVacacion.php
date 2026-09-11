@@ -22,6 +22,7 @@ class PeriodoVacacion extends Model
         'anios_antiguedad',
         'dias_generados',
         'dias_utilizados',
+        'dias_vencidos',
         'dias_saldo',
         'saldo_acumulado',
         'estado',
@@ -35,6 +36,7 @@ class PeriodoVacacion extends Model
             'fecha_fin_periodo'    => 'date',
             'dias_generados'       => 'decimal:2',
             'dias_utilizados'      => 'decimal:2',
+            'dias_vencidos'        => 'decimal:2',
             'dias_saldo'           => 'decimal:2',
             'saldo_acumulado'      => 'decimal:2',
             'alerta_enviada'       => 'boolean',
@@ -54,11 +56,22 @@ class PeriodoVacacion extends Model
     // ── Helpers ──────────────────────────────────────
 
     /**
-     * Límite de acumulación según régimen
+     * Saldo = generados − gozados − vencidos, nunca negativo.
+     *
+     * La fórmula estaba repetida en cada sitio que tocaba un período. Con los
+     * días vencidos por el tope había que cambiarla en todos, y uno que se
+     * olvidara devolvía en silencio días ya perdidos.
+     *
+     * Aquí estaba también `limiteAcumulacion()` —60 en LOSEP, 999 en el resto—,
+     * que nadie llamaba y daba un tope falso para el Código del Trabajo. El
+     * tope vive ahora en `TopeAcumulacionService`.
      */
-    public function limiteAcumulacion(): float
+    public function recalcularSaldo(): void
     {
-        return $this->regimen === 'losep' ? 60.0 : 999.0;
+        $this->dias_saldo = max(
+            0,
+            (float) $this->dias_generados - (float) $this->dias_utilizados - (float) $this->dias_vencidos
+        );
     }
 
     /**
