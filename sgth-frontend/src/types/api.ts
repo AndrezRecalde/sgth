@@ -16,6 +16,7 @@ export type { components, paths, operations } from './api.generated'
 
 import type { components } from './api.generated'
 import type { RegimenServidor } from '@/lib/regimen'
+import type { UsuarioAuth } from '@/store/auth.store'
 
 // ── Respuesta estándar del API ───────────────
 export type ApiResponse<T = unknown, M = unknown> = {
@@ -45,16 +46,12 @@ export type LoginRequest = {
   contrasena: string
 }
 
+// El login devuelve el mismo usuario que `auth/perfil`: es lo que se guarda en
+// el store tal cual.
 export type LoginResponse = {
   token: string
   primer_login: boolean
-  usuario: {
-    id: number
-    name: string
-    email: string
-    roles: string[]
-    permisos: string[]
-  }
+  usuario: UsuarioAuth
 }
 export type CambiarContrasenaRequest = components['schemas']['CambiarContrasenaRequest']
 
