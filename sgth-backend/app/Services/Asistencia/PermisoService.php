@@ -177,46 +177,15 @@ class PermisoService implements PermisoServiceInterface
             $dias = $this->diasVacacionalesQueConsume($permiso);
 
             if ($dias > 0) {
-                $anio = Carbon::parse($permiso->fecha)->year;
-
-                // El saldo se comprobó al crear el permiso, pero entre aquello
-                // y esto pudo cerrarse el período. Callarse aquí es lo que
-                // hacía que las horas se concedieran sin salir de ningún lado.
-                //
-                // Se bloquea la fila del período: dos confirmaciones de
-                // permisos distintos del mismo servidor, a la vez, leerían el
-                // mismo saldo y las dos pasarían el control de abajo.
-                $periodo = \App\Models\Asistencia\PeriodoVacacion::where('servidor_id', $permiso->servidor_id)
-                    ->where('anio', $anio)
-                    ->where('estado', 'abierto')
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $periodo) {
-                    throw new ReglaNegocioException(
-                        "No hay un período de vacaciones abierto en {$anio} para este servidor: " .
-                        'el permiso personal no puede descontarse de ningún saldo.'
-                    );
-                }
-
-                // El saldo se miró al crear el permiso, pero un permiso
-                // pendiente no reserva horas: dos que pasaron el control cada
-                // uno por su lado podían, juntos, superarlo. `descontarDias()`
-                // recorta a cero lo que no alcanza, así que el segundo se
-                // concedía con días que el servidor ya no tenía.
-                if ((float) $periodo->dias_saldo < $dias) {
-                    throw new ReglaNegocioException(sprintf(
-                        'Saldo de vacaciones insuficiente para confirmar el permiso %s: descuenta %s días '.
-                        'y al servidor le quedan %s. Otro permiso o unas vacaciones usaron el saldo '.
-                        'desde que este se registró.',
-                        $permiso->folio,
-                        number_format($dias, 2),
-                        number_format((float) $periodo->dias_saldo, 2)
-                    ));
-                }
-
-                $this->periodoService->descontarDias(
-                    $permiso->servidor_id, $dias, $anio
+                // El saldo se comprobó al registrar el permiso, pero entre
+                // aquello y esto pudo cerrarse un período u otro permiso pudo
+                // gastarlo. Se vuelve a mirar con los períodos bloqueados, y se
+                // descuenta del más antiguo al más nuevo, igual que una
+                // vacación: antes salía solo del período del año del permiso.
+                $this->periodoService->consumirParaPermiso(
+                    $permiso,
+                    $dias,
+                    Carbon::parse($permiso->fecha)->year
                 );
             }
 
@@ -336,15 +305,13 @@ class PermisoService implements PermisoServiceInterface
                 'Solo se puede revertir un permiso ya confirmado por Recepción.'
             );
 
-            $dias = $this->diasVacacionalesQueConsume($permiso);
-
-            if ($dias > 0) {
-                $this->periodoService->devolverDias(
-                    $permiso->servidor_id,
-                    $dias,
-                    Carbon::parse($permiso->fecha)->year
-                );
-            }
+            // Cada tramo vuelve al período del que salió, tal como se anotó al
+            // confirmar. Solo un permiso confirmado antes de que se anotaran
+            // los tramos devuelve lo que se recalcula hoy, al período de su año.
+            $this->periodoService->devolverDePermiso(
+                $permiso,
+                $this->diasVacacionalesQueConsume($permiso)
+            );
 
             $permiso->estado          = EstadoPermiso::PENDIENTE->value;
             $permiso->confirmado_por  = null;
@@ -493,21 +460,24 @@ class PermisoService implements PermisoServiceInterface
             return;
         }
 
-        $dias    = $this->aDias($minutos);
-        $periodo = $this->periodoService->periodoAbierto($servidor->id, $fecha->year);
+        $dias = $this->aDias($minutos);
 
-        if (! $periodo) {
+        // El mismo saldo del que se descontará al confirmar: todos los
+        // períodos abiertos hasta el año del permiso, no solo el de ese año.
+        if (! $this->periodoService->tienePeriodoAbiertoHasta($servidor->id, $fecha->year)) {
             throw new ReglaNegocioException(
-                "El servidor no tiene un período de vacaciones abierto en {$fecha->year}, " .
+                "El servidor no tiene un período de vacaciones abierto hasta {$fecha->year}, " .
                 'y un permiso personal se descuenta de ese saldo.'
             );
         }
 
-        if ((float) $periodo->dias_saldo < $dias) {
+        $saldo = $this->periodoService->saldoHasta($servidor->id, $fecha->year);
+
+        if ($saldo < $dias) {
             throw new ReglaNegocioException(
                 'Saldo de vacaciones insuficiente: el permiso descuenta ' .
                 number_format($dias, 2) . ' días y solo quedan ' .
-                number_format((float) $periodo->dias_saldo, 2) . '.'
+                number_format($saldo, 2) . " hasta {$fecha->year}."
             );
         }
     }

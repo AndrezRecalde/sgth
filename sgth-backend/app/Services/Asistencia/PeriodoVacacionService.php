@@ -4,10 +4,13 @@ namespace App\Services\Asistencia;
 use App\Enums\RegimenLaboral;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PeriodoVacacion;
+use App\Models\Asistencia\PermisoDescuento;
+use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Asistencia\VacacionDescuento;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 class PeriodoVacacionService
@@ -424,6 +427,20 @@ class PeriodoVacacionService
             ->exists();
     }
 
+    /**
+     * ¿Tiene algún período abierto de `$anio` o de antes?
+     *
+     * Es de donde puede salir un descuento: un período generado por adelantado
+     * para un año posterior no cuenta, igual que en `saldoHasta()`.
+     */
+    public function tienePeriodoAbiertoHasta(int $servidorId, int $anio): bool
+    {
+        return PeriodoVacacion::where('servidor_id', $servidorId)
+            ->where('estado', 'abierto')
+            ->where('anio', '<=', $anio)
+            ->exists();
+    }
+
     // ── Descuento de vacaciones repartido entre períodos ─────────────
 
     /**
@@ -460,12 +477,7 @@ class PeriodoVacacionService
      */
     public function consumirParaVacacion(Vacacion $vacacion, float $dias, int $anio): void
     {
-        $periodos = PeriodoVacacion::where('servidor_id', $vacacion->servidor_id)
-            ->where('estado', 'abierto')
-            ->where('anio', '<=', $anio)
-            ->orderBy('anio')
-            ->lockForUpdate()
-            ->get();
+        $periodos = $this->periodosAbiertosHasta($vacacion->servidor_id, $anio);
 
         if ($periodos->isEmpty()) {
             throw new ReglaNegocioException(
@@ -483,31 +495,15 @@ class PeriodoVacacionService
             );
         }
 
-        $restante = $dias;
-
-        foreach ($periodos as $periodo) {
-            if ($restante <= 0) {
-                break;
-            }
-
-            $toma = round(min((float) $periodo->dias_saldo, $restante), 2);
-
-            if ($toma <= 0) {
-                continue;
-            }
-
-            $periodo->dias_utilizados = (float) $periodo->dias_utilizados + $toma;
-            $periodo->recalcularSaldo();
-            $periodo->save();
-
-            VacacionDescuento::create([
+        $this->repartirEntrePeriodos(
+            $periodos,
+            $dias,
+            fn (PeriodoVacacion $periodo, float $toma) => VacacionDescuento::create([
                 'vacacion_id'         => $vacacion->id,
                 'periodo_vacacion_id' => $periodo->id,
                 'dias'                => $toma,
-            ]);
-
-            $restante = round($restante - $toma, 2);
-        }
+            ])
+        );
 
         $this->recalcularAcumulados($vacacion->servidor_id);
     }
@@ -533,33 +529,11 @@ class PeriodoVacacionService
             return $this->devolverSinRegistro($vacacion);
         }
 
-        $periodos = PeriodoVacacion::whereIn('id', $descuentos->pluck('periodo_vacacion_id'))
-            ->lockForUpdate()
-            ->get()
-            ->keyBy('id');
-
-        foreach ($periodos as $periodo) {
-            $this->exigirAbierto($periodo);
-        }
-
-        $total = 0.0;
-
-        foreach ($descuentos as $descuento) {
-            $periodo = $periodos[$descuento->periodo_vacacion_id];
-
-            $periodo->dias_utilizados = max(0, (float) $periodo->dias_utilizados - $descuento->dias);
-            $periodo->recalcularSaldo();
-            $periodo->save();
-
-            $descuento->devuelto_en = now();
-            $descuento->save();
-
-            $total += $descuento->dias;
-        }
+        $total = $this->devolverTramos($descuentos);
 
         $this->recalcularAcumulados($vacacion->servidor_id);
 
-        return round($total, 2);
+        return $total;
     }
 
     /**
@@ -596,6 +570,180 @@ class PeriodoVacacionService
         $this->recalcularAcumulados($vacacion->servidor_id);
 
         return round($dias, 2);
+    }
+
+    // ── Descuento de permisos personales repartido entre períodos ────
+
+    /**
+     * Descuenta las horas de un permiso personal que se confirma, del período
+     * más antiguo al más nuevo, igual que una vacación.
+     *
+     * Antes salían solo del período del año del permiso: si ese estaba vacío
+     * el permiso se rechazaba aunque hubiera saldo de años anteriores, y
+     * mientras tanto esos días viejos seguían acercándose al tope. Cada tramo
+     * queda en `permiso_descuentos`, para que revertir la confirmación lo
+     * devuelva a su período sin recalcular nada.
+     *
+     * Debe llamarse dentro de una transacción: bloquea los períodos.
+     */
+    public function consumirParaPermiso(PermisoServidor $permiso, float $dias, int $anio): void
+    {
+        $periodos = $this->periodosAbiertosHasta($permiso->servidor_id, $anio);
+
+        if ($periodos->isEmpty()) {
+            throw new ReglaNegocioException(
+                "No hay un período de vacaciones abierto hasta {$anio} para este servidor: "
+                .'el permiso personal no puede descontarse de ningún saldo.'
+            );
+        }
+
+        $disponible = (float) $periodos->sum('dias_saldo');
+
+        // El saldo se miró al registrar el permiso, pero un pendiente no
+        // reserva horas: dos que pasaron el control cada uno por su lado
+        // podían, juntos, superarlo. Con los períodos bloqueados, el segundo ve
+        // el saldo que dejó el primero.
+        if ($dias > $disponible) {
+            throw new ReglaNegocioException(sprintf(
+                'Saldo de vacaciones insuficiente para confirmar el permiso %s: descuenta %s días '.
+                'y al servidor le quedan %s hasta %d. Otro permiso o unas vacaciones usaron el saldo '.
+                'desde que este se registró.',
+                $permiso->folio,
+                number_format($dias, 2),
+                number_format($disponible, 2),
+                $anio
+            ));
+        }
+
+        $this->repartirEntrePeriodos(
+            $periodos,
+            $dias,
+            fn (PeriodoVacacion $periodo, float $toma) => PermisoDescuento::create([
+                'permiso_servidor_id' => $permiso->id,
+                'periodo_vacacion_id' => $periodo->id,
+                'dias'                => $toma,
+            ])
+        );
+
+        $this->recalcularAcumulados($permiso->servidor_id);
+    }
+
+    /**
+     * Devuelve a cada período lo que un permiso le tomó.
+     *
+     * Un permiso confirmado antes de que existiera `permiso_descuentos` no
+     * tiene tramos: entonces todo salió del período de su año, y ahí se
+     * devuelve `$diasSinRegistro`, como se hacía hasta ahora.
+     *
+     * Debe llamarse dentro de una transacción.
+     */
+    public function devolverDePermiso(PermisoServidor $permiso, float $diasSinRegistro): void
+    {
+        $descuentos = PermisoDescuento::where('permiso_servidor_id', $permiso->id)
+            ->whereNull('devuelto_en')
+            ->lockForUpdate()
+            ->get();
+
+        if ($descuentos->isEmpty()) {
+            $this->devolverDias(
+                $permiso->servidor_id,
+                $diasSinRegistro,
+                Carbon::parse($permiso->fecha)->year
+            );
+
+            return;
+        }
+
+        $this->devolverTramos($descuentos);
+
+        $this->recalcularAcumulados($permiso->servidor_id);
+    }
+
+    // ── Apoyos del reparto ───────────────────────────────────────────
+
+    /**
+     * Los períodos abiertos de un servidor hasta `$anio`, del más antiguo al
+     * más nuevo, bloqueados. Los de un año posterior no cuentan: esos días
+     * todavía no se han ganado, aunque el período se haya generado antes.
+     */
+    private function periodosAbiertosHasta(int $servidorId, int $anio): EloquentCollection
+    {
+        return PeriodoVacacion::where('servidor_id', $servidorId)
+            ->where('estado', 'abierto')
+            ->where('anio', '<=', $anio)
+            ->orderBy('anio')
+            ->lockForUpdate()
+            ->get();
+    }
+
+    /**
+     * Toma `$dias` de los períodos en el orden recibido y anota cada tramo con
+     * `$anotar`. Quien llama ya comprobó que el saldo alcanza.
+     *
+     * Primero se gasta lo más antiguo: es lo que está más cerca de vencer, y lo
+     * que se acumula contra el tope.
+     */
+    private function repartirEntrePeriodos(EloquentCollection $periodos, float $dias, callable $anotar): void
+    {
+        $restante = $dias;
+
+        foreach ($periodos as $periodo) {
+            if ($restante <= 0) {
+                break;
+            }
+
+            $toma = round(min((float) $periodo->dias_saldo, $restante), 2);
+
+            if ($toma <= 0) {
+                continue;
+            }
+
+            $periodo->dias_utilizados = (float) $periodo->dias_utilizados + $toma;
+            $periodo->recalcularSaldo();
+            $periodo->save();
+
+            $anotar($periodo, $toma);
+
+            $restante = round($restante - $toma, 2);
+        }
+    }
+
+    /**
+     * Devuelve cada tramo —de una vacación o de un permiso— a su período y lo
+     * marca devuelto. Devuelve el total.
+     *
+     * Solo a períodos abiertos. Si uno ya se cerró, su saldo está certificado:
+     * devolverle días sería cambiarlo en silencio, y eso se hace con el
+     * recálculo forzado, que deja constancia. Se aborta todo en vez de
+     * devolver una parte.
+     */
+    private function devolverTramos(EloquentCollection $descuentos): float
+    {
+        $periodos = PeriodoVacacion::whereIn('id', $descuentos->pluck('periodo_vacacion_id'))
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        foreach ($periodos as $periodo) {
+            $this->exigirAbierto($periodo);
+        }
+
+        $total = 0.0;
+
+        foreach ($descuentos as $descuento) {
+            $periodo = $periodos[$descuento->periodo_vacacion_id];
+
+            $periodo->dias_utilizados = max(0, (float) $periodo->dias_utilizados - $descuento->dias);
+            $periodo->recalcularSaldo();
+            $periodo->save();
+
+            $descuento->devuelto_en = now();
+            $descuento->save();
+
+            $total += $descuento->dias;
+        }
+
+        return round($total, 2);
     }
 
     private function exigirAbierto(PeriodoVacacion $periodo): void
