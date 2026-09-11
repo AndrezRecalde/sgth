@@ -26,8 +26,9 @@ class PermisoService implements PermisoServiceInterface
     private const MINUTOS_MAX_PERSONAL_DIA = 240;
 
     /**
-     * Plazo para presentar el respaldo, en días hábiles, y también la
-     * tolerancia hacia atrás al registrar un permiso planificable.
+     * Plazo para presentar el respaldo, en días hábiles desde la fecha del
+     * permiso. También fija el atraso máximo al registrar: un permiso cuyo
+     * plazo ya venció no se admite (ver `validarFecha()`).
      */
     private const DIAS_HABILES_PLAZO = 3;
 
@@ -292,38 +293,50 @@ class PermisoService implements PermisoServiceInterface
     /**
      * Cuándo puede haber ocurrido un permiso.
      *
-     * Se parte en dos porque los dos grupos son cosas distintas. Un permiso
-     * PERSONAL u OFICIAL se pide antes de ausentarse: se imprime, se firma y se
-     * lleva a Recepción, así que su fecha es hoy o más adelante. Se admite una
-     * tolerancia de tres días hábiles hacia atrás —el mismo plazo que rige la
-     * confirmación— para digitalizar el que llegó tarde en papel.
+     * Ninguno se registra con el plazo de respaldo ya vencido. El respaldo
+     * tiene 72 horas laborables desde la fecha del permiso para llegar a
+     * Recepción, y `VencerPermisosJob` convierte en falta injustificada al que
+     * se pasa. Registrar uno ya vencido es fabricar esa falta.
      *
-     * ENFERMEDAD y CALAMIDAD son lo contrario: nadie sabe que se va a enfermar,
-     * y las 72 horas del plazo existen precisamente para justificar después. Se
-     * registran hacia atrás sin límite, pero nunca a futuro.
+     * Y eso pasaba de dos maneras:
+     * - ENFERMEDAD y CALAMIDAD se registraban hacia atrás sin límite. Una
+     *   enfermedad de hace dos semanas nacía vencida y a la mañana siguiente
+     *   el job la marcaba falta.
+     * - PERSONAL y OFICIAL admitían tres días hábiles de atraso. El último de
+     *   esos días el plazo ya había vencido a las 00:00: un permiso del lunes
+     *   vence el jueves a primera hora, y el jueves todavía se aceptaba.
+     *
+     * Decidido con Talento Humano: se limita el atraso y el plazo se sigue
+     * contando desde la fecha del permiso. La comprobación usa el mismo cálculo
+     * del vencimiento —con feriados—, así que no pueden discrepar: en la
+     * práctica, dos días hábiles atrás como mucho.
+     *
+     * Además, ENFERMEDAD y CALAMIDAD nunca a futuro: nadie sabe que se va a
+     * enfermar. PERSONAL y OFICIAL sí, porque se piden antes de ausentarse.
      */
     private function validarFecha(TipoPermiso $tipo, Carbon $fecha): void
     {
-        $hoy = Carbon::today();
+        $esRetroactivo = $tipo === TipoPermiso::ENFERMEDAD || $tipo === TipoPermiso::CALAMIDAD;
 
-        if ($tipo === TipoPermiso::ENFERMEDAD || $tipo === TipoPermiso::CALAMIDAD) {
-            if ($fecha->greaterThan($hoy)) {
-                throw new ReglaNegocioException(
-                    'Un permiso por enfermedad o calamidad doméstica no puede registrarse con fecha futura.'
-                );
-            }
-
-            return;
+        if ($esRetroactivo && $fecha->greaterThan(Carbon::today())) {
+            throw new ReglaNegocioException(
+                'Un permiso por enfermedad o calamidad doméstica no puede registrarse con fecha futura.'
+            );
         }
 
-        $limite = $this->restarDiasHabiles($hoy, self::DIAS_HABILES_PLAZO);
+        $vence = $this->calcularVencimiento($fecha);
 
-        if ($fecha->lessThan($limite)) {
-            throw new ReglaNegocioException(
-                'Un permiso ' . mb_strtolower($tipo->name) . ' no puede registrarse con más de ' .
-                self::DIAS_HABILES_PLAZO . ' días hábiles de atraso. ' .
-                'La fecha más antigua admitida es ' . $limite->format('d/m/Y') . '.'
-            );
+        if ($vence->lessThanOrEqualTo(now())) {
+            $masAntigua = $this->restarDiasHabiles(Carbon::today(), self::DIAS_HABILES_PLAZO - 1);
+
+            throw new ReglaNegocioException(sprintf(
+                'El plazo de 72 horas laborables para presentar el respaldo de un permiso del %s '.
+                'venció el %s: registrado ahora nacería como falta injustificada. '.
+                'La fecha más antigua que se admite hoy es el %s.',
+                $fecha->format('d/m/Y'),
+                $vence->format('d/m/Y'),
+                $masAntigua->format('d/m/Y')
+            ));
         }
     }
 
