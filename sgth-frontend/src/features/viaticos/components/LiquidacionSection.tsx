@@ -98,8 +98,12 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const puedeRegistrar = actividades.length > 0 && facturas.length > 0;
 
   const handleRegistrar = async () => {
-    await confirmarLiquidacion.mutateAsync(viatico.id);
-    onSuccess();
+    try {
+      await confirmarLiquidacion.mutateAsync(viatico.id);
+      onSuccess();
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   };
 
   return (
