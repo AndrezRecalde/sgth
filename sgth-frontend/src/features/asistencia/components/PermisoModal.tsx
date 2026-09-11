@@ -387,7 +387,8 @@ export function PermisoModal({ opened, onClose }: Props) {
                   Máximo 4 horas <b>por día</b> — se suman los permisos
                   personales que el servidor ya tenga esa fecha. Se descuentan
                   del saldo de vacaciones, así que hace falta un período abierto
-                  con saldo suficiente.
+                  con saldo suficiente, y solo en días laborables: ni sábados,
+                  ni domingos, ni feriados.
                 </Text>
               </Alert>
             )}
@@ -421,6 +422,15 @@ export function PermisoModal({ opened, onClose }: Props) {
                   // mucho), y enfermedad y calamidad además nunca a futuro.
                   minDate={fechaMasAntiguaAdmitida()}
                   maxDate={esRetroactivo ? new Date() : undefined}
+                  // El personal no se admite en sábado ni domingo: descontaría
+                  // vacaciones por un día sin jornada. Los feriados también
+                  // se rechazan, pero los decide el backend: este calendario
+                  // no los conoce.
+                  excludeDate={
+                    tipoWatch === "personal"
+                      ? (d) => [0, 6].includes(toDate(d)?.getDay() ?? -1)
+                      : undefined
+                  }
                   {...contained}
                   value={toDate(field.value)}
                   onChange={(d) => field.onChange(fromDate(d ?? null) ?? "")}
