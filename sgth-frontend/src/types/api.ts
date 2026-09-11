@@ -1368,6 +1368,7 @@ export type Vacacion = {
   anulado_por?:          number | null
   anulado_en?:           string | null
   motivo_anulacion?:     string | null
+  observacion?:          string | null
 }
 
 // ── Períodos de vacaciones ───────────────────────

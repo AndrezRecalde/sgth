@@ -146,7 +146,10 @@ export function VacacionModal({ opened, onClose }: Props) {
       label: [s.apellido, s.nombre].filter(Boolean).join(' '),
     }))
 
+  // Nadie se reemplaza a sí mismo: el backend lo rechaza, así que tampoco se
+  // ofrece.
   const reemplazaOptions = servidoresUnidad
+    .filter(s => Number(s.id) !== servidorSelId)
     .map(s => ({
       value: String(s.id),
       label: `${[s.apellido, s.nombre].filter(Boolean).join(' ')} — ${s.cedula}`,

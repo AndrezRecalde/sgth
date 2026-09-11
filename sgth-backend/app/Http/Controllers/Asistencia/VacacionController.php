@@ -151,10 +151,15 @@ class VacacionController extends Controller
 
         $this->authorize('exportar', $vacacion);
 
+        // La vista recibe los datos ya calculados y no consulta nada: antes
+        // leía campos que la solicitud no tiene y armaba el QR por su cuenta.
         $pdf = app('dompdf.wrapper')
             ->setPaper('letter', 'portrait')
             ->loadView('vacaciones.vacacion-pdf', [
-                'vacacion' => $vacacion,
+                'vacacion'  => $vacacion,
+                'impresion' => app(\App\Services\Asistencia\PeriodoVacacionService::class)
+                    ->paraImpresion($vacacion),
+                'urlQr'     => Vacacion::urlVerificacion($vacacion->folio ?? (string) $vacacion->id),
             ]);
 
         $folio = $vacacion->folio ?? $vacacion->id;

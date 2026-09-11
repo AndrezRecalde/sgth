@@ -24,10 +24,10 @@
         'licencia_con_goce' => 'LICENCIA CON GOCE DE SUELDO',
     ];
 
-    $motivoVal =
-        $vacacion->motivo instanceof \App\Enums\MotivoVacacion
-            ? $vacacion->motivo->value
-            : (string) ($vacacion->motivo ?? '');
+    $motivoEnum = $vacacion->motivo instanceof \App\Enums\MotivoVacacion
+        ? $vacacion->motivo
+        : \App\Enums\MotivoVacacion::tryFrom((string) ($vacacion->motivo ?? ''));
+    $motivoVal = $motivoEnum?->value ?? '';
 
     $nombreServidor = mb_strtoupper(
         implode(
@@ -57,6 +57,9 @@
         )
         : '';
 
+    // Antes caía a `$vacacion->persona_reemplaza`, una columna de texto que
+    // ninguna migración creó. Y como el servicio no guardaba el reemplazo,
+    // la relación tampoco traía nada: salía siempre «—».
     $nombreReemplaza = $vacacion->personaReemplaza
         ? mb_strtoupper(
             implode(
@@ -68,7 +71,7 @@
             ),
             'UTF-8',
         )
-        : $vacacion->persona_reemplaza ?? '';
+        : '';
 
     $folio = $vacacion->folio ?? 'S/N';
 
@@ -79,21 +82,51 @@
         ? \Carbon\Carbon::parse($vacacion->fecha_emision)->format('d/m/Y')
         : now()->format('d/m/Y');
 
-    $fechaIngreso = null;
-    if ($vacacion->fecha_ingreso_institucion_informe) {
-        $fechaIngreso = \Carbon\Carbon::parse($vacacion->fecha_ingreso_institucion_informe)->format('d/m/Y');
-    } elseif ($vacacion->servidor->fecha_ingreso_institucion ?? null) {
-        $fechaIngreso = \Carbon\Carbon::parse($vacacion->servidor->fecha_ingreso_institucion)->format('d/m/Y');
+    $fechaIngreso = ($vacacion->servidor->fecha_ingreso_institucion ?? null)
+        ? \Carbon\Carbon::parse($vacacion->servidor->fecha_ingreso_institucion)->format('d/m/Y')
+        : null;
+
+    // «Uso exclusivo de Talento Humano». Antes leía `dias_derecho` y
+    // `periodo_vacaciones`, que la solicitud no tiene: los dos salían vacíos.
+    $sinCeros = fn (float $n) => rtrim(rtrim(number_format($n, 2, '.', ''), '0'), '.');
+    $anioVacacion = $vacacion->fecha_inicio ? \Carbon\Carbon::parse($vacacion->fecha_inicio)->year : null;
+
+    $diasDerecho = $impresion['dias_derecho'] !== null
+        ? $sinCeros($impresion['dias_derecho']) . ' DÍAS (PERÍODO ' . $anioVacacion . ')'
+        : '';
+
+    $estadoVal = (string) $vacacion->estado;
+
+    if (! $motivoEnum?->descuentaVacaciones()) {
+        $periodo = 'NO DESCUENTA DEL SALDO DE VACACIONES';
+    } elseif ($impresion['tramos'] !== []) {
+        $periodo = implode('  ·  ', array_map(
+            fn (array $t) => "{$t['anio']}: " . $sinCeros($t['dias']) . ' DÍAS',
+            $impresion['tramos'],
+        ));
+    } elseif ($impresion['sin_registro']) {
+        $periodo = "PERÍODO {$anioVacacion}";
+    } elseif ($estadoVal === 'pendiente') {
+        $periodo = 'SE ASIGNA AL APROBAR LA SOLICITUD';
+    } else {
+        $periodo = '';
     }
 
-    $diasDerecho = $vacacion->dias_derecho ?? '';
-    $periodo = $vacacion->periodo_vacaciones ?? '';
     $observacion = mb_strtoupper($vacacion->observacion ?? '', 'UTF-8');
 
-    // QR en formato SVG para evitar fallos si no hay Imagick
+    // Una solicitud anulada o rechazada no sirve como autorización, pero el
+    // papel era idéntico al de una aprobada.
+    $sinValidez = in_array($estadoVal, ['anulada', 'rechazada'], true);
+    $detalleAnulacion = $estadoVal === 'anulada' && $vacacion->anulado_en
+        ? 'ANULADA EL ' . \Carbon\Carbon::parse($vacacion->anulado_en)->format('d/m/Y')
+            . ($vacacion->motivo_anulacion ? ': ' . mb_strtoupper($vacacion->motivo_anulacion, 'UTF-8') : '')
+        : '';
+
+    // QR en formato SVG para evitar fallos si no hay Imagick. La URL llega del
+    // controlador (`Vacacion::urlVerificacion()`): antes se armaba aquí hacia
+    // una ruta `verificar` del API que nunca existió, y todo QR daba 404.
     $qrSrc = null;
     try {
-        $urlQr = config('app.url') . "/api/v1/asistencia/vacaciones/verificar/{$folio}";
         $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(90)->margin(1)->generate($urlQr);
         if (!empty($qrSvg)) {
             $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
@@ -110,6 +143,13 @@
 <meta charset="UTF-8">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /*
+   * En dompdf el `*` de arriba también deja en cero el margen de la página:
+   * un `@page` no lo recupera, y los márgenes que se ven son los del body.
+   * Por eso el pie fijo lleva `bottom` positivo —ver `.pie`—: con la página
+   * sin margen, cualquier valor negativo lo saca de la hoja.
+   */
   body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 10px;
@@ -120,7 +160,7 @@
 
   /* ── BRANDING ── */
   .text-brand { color: #15803d; }
-  
+
   /* ── HEADER ── */
   .header-table {
     width: 100%;
@@ -133,6 +173,11 @@
   .title-wrap { text-align: right; vertical-align: middle; }
   .inst-name { font-size: 12px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
   .doc-title { font-size: 10px; color: #64748b; text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
+
+  /* ── Anulada o rechazada ── */
+  .sin-validez { border: 1.5px solid #b91c1c; background: #fef2f2; color: #b91c1c; text-align: center; padding: 6px 8px; margin-bottom: 8px; }
+  .sin-validez-titulo { font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+  .sin-validez-detalle { font-size: 9px; margin-top: 2px; }
 
   /* ── SECTIONS ── */
   .section-title {
@@ -154,7 +199,7 @@
   .lbl { font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-bottom: 2px; }
   .val { font-size: 12px; color: #0f172a; font-weight: bold; }
   .val-light { font-size: 10px; color: #475569; }
-  
+
   /* ── GENERAL TABLES ── */
   .t { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
   .t td { padding: 5px 8px; vertical-align: middle; border: 1px solid #cbd5e1; }
@@ -177,7 +222,7 @@
 
   /* ── FIRMAS ── */
   .firma-section { margin-top: 15px; page-break-inside: avoid; }
-  
+
   .firma-single-box { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; text-align: center; margin-bottom: 15px; }
   .firma-line { border-top: 1px solid #64748b; margin: 0 auto; width: 220px; }
   .f-lbl { font-size: 9px; font-weight: bold; color: #475569; text-transform: uppercase; margin-top: 4px; }
@@ -187,12 +232,15 @@
   .firma-grid td { width: 50%; vertical-align: top; padding: 0; text-align: center; }
   .firma-box-left { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; margin-right: 4px; }
   .firma-box-right { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; margin-left: 4px; }
-  
+
   .aceptado-box { text-align: center; font-size: 9px; }
   .badge { display: inline-block; padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 4px; margin: 0 4px; color: #64748b; background: #fff; }
 
   /* ── PIE ── */
-  .pie { position: fixed; bottom: -10px; left: 25px; right: 25px; text-align: right; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 4px; }
+  /* `bottom` positivo: la página no tiene margen (ver el comentario del body),
+     así que el `-10px` que llevaba lo dejaba fuera de la hoja y el pie no se
+     veía nunca. Queda en los 15px de margen inferior del body, bajo las firmas. */
+  .pie { position: fixed; bottom: 4px; left: 25px; right: 25px; text-align: right; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 3px; }
   .qr-img { border: 1px solid #cbd5e1; padding: 2px; background: #fff; border-radius: 4px; }
   .qr-folio { font-size: 9px; color: #0f172a; margin-top: 2px; font-family: monospace; font-weight: bold; }
 </style>
@@ -219,6 +267,16 @@
     </td>
   </tr>
 </table>
+
+{{-- ══ SIN VALIDEZ: anulada o rechazada ══ --}}
+@if($sinValidez)
+<div class="sin-validez">
+  <div class="sin-validez-titulo">SOLICITUD {{ mb_strtoupper($estadoVal, 'UTF-8') }} — SIN VALIDEZ</div>
+  @if($detalleAnulacion)
+    <div class="sin-validez-detalle">{{ $detalleAnulacion }}</div>
+  @endif
+</div>
+@endif
 
 {{-- ══ INFO SOLICITANTE / FOLIO ══ --}}
 <table class="info-header">
@@ -352,7 +410,7 @@
     <td class="t-lbl" width="20%">Fecha Ingreso</td>
     <td width="30%" class="t-val-bold">{{ $fechaIngreso ?: '—' }}</td>
     <td class="t-lbl" width="20%">Días de Derecho</td>
-    <td width="30%" class="t-val-bold">{{ $diasDerecho ? $diasDerecho . ' días' : '—' }}</td>
+    <td width="30%" class="t-val-bold">{{ $diasDerecho ?: '—' }}</td>
   </tr>
   <tr>
     <td class="t-lbl">Período de Vac.</td>

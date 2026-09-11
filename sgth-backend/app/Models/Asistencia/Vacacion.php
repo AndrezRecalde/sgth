@@ -39,6 +39,7 @@ class Vacacion extends Model
         'unidad_administrativa_id',
         'persona_reemplaza_id',
         'periodo_vacacion_id',
+        'observacion',
         'anulado_por',
         'anulado_en',
         'motivo_anulacion',
@@ -55,6 +56,24 @@ class Vacacion extends Model
             'fecha_emision'    => 'date',
             'anulado_en'       => 'datetime',
         ];
+    }
+
+    /**
+     * A dónde lleva el QR impreso en la solicitud.
+     *
+     * Al listado de vacaciones del sistema, filtrado por este folio: lo escanea
+     * Talento Humano con el papel firmado en la mano, igual que el QR del
+     * permiso, y la pantalla va autenticada. Apuntaba a
+     * `/api/v1/asistencia/vacaciones/verificar/{folio}`, una ruta que nunca
+     * existió: todo QR impreso daba 404.
+     *
+     * Un solo sitio para la URL: el servicio la guarda en `codigo_qr` y el PDF
+     * la dibuja, y no pueden discrepar.
+     */
+    public static function urlVerificacion(string $folio): string
+    {
+        return rtrim((string) config('app.frontend_url'), '/')
+            .'/sgth/asistencia/vacaciones?folio='.urlencode($folio);
     }
 
     // Relaciones

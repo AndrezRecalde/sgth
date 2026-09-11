@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Stack } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconBeach } from "@tabler/icons-react";
@@ -53,8 +54,17 @@ export function VacacionesTab() {
   const [opened, { open, close }] = useDisclosure(false);
   const [anulando, setAnulando] = useState<Vacacion | null>(null);
 
+  // El QR impreso en la solicitud trae `?folio=`: quien lo escanea tiene que
+  // encontrar esa solicitud, esté en el estado que esté. Por eso el filtro de
+  // estado pasa a «todos», no se queda en «pendiente».
+  const folioDelQr = useSearchParams().get("folio");
+
   const [page, setPage] = useState(1);
-  const [filtros, setFiltros] = useState<FiltrosVacacion>(FILTROS_INICIALES);
+  const [filtros, setFiltros] = useState<FiltrosVacacion>(() =>
+    folioDelQr
+      ? { ...FILTROS_INICIALES, folio: folioDelQr, estado: "todos" }
+      : FILTROS_INICIALES,
+  );
   const { exportar, exportandoId } = useExportarVacacion();
 
   // Las acciones siguen la misma matriz que la API: ofrecerlas a quien no

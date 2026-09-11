@@ -130,6 +130,14 @@ class VacacionService implements VacacionServiceInterface
 
             $this->rechazarSiSeCruza($servidorId, $fechaInicio, $fechaFin);
 
+            $reemplazoId = isset($datos['persona_reemplaza_id'])
+                ? (int) $datos['persona_reemplaza_id']
+                : null;
+
+            if ($reemplazoId) {
+                $this->validarReemplazo($reemplazoId, $servidorId, $fechaInicio, $fechaFin);
+            }
+
             $motivo = MotivoVacacion::tryFrom($datos['motivo'] ?? '');
 
             // Solo verificar saldo si el motivo descuenta vacaciones
@@ -163,10 +171,13 @@ class VacacionService implements VacacionServiceInterface
 
             $folio = $this->generarFolio();
 
+            // La persona que reemplaza y la observación llegaban validadas y se
+            // descartaban aquí: el PDF salía siempre con «—» en los dos.
             $vacacion = Vacacion::create([
                 'servidor_id'              => $servidorId,
                 'unidad_administrativa_id' => $datos['unidad_administrativa_id'] ?? $servidor->unidad_administrativa_id ?? null,
                 'jefe_id'                  => $datos['jefe_id'] ?? null,
+                'persona_reemplaza_id'     => $reemplazoId,
                 'motivo'                   => $datos['motivo'] ?? null,
                 'fecha_inicio'             => $fechaInicio,
                 'fecha_fin'        => $fechaFin,
@@ -174,13 +185,14 @@ class VacacionService implements VacacionServiceInterface
                 'fecha_emision'    => $datos['fecha_emision'] ?? now()->toDateString(),
                 'dias_solicitados' => $diasADescontar,
                 'tipo_dias'        => $tipoDias,
+                'observacion'      => filled($datos['observacion'] ?? null) ? trim($datos['observacion']) : null,
                 'estado'           => 'pendiente',
                 'creado_por'       => $datos['creado_por'] ?? null,
                 'folio'            => $folio,
-                'codigo_qr'        => url("/api/v1/asistencia/vacaciones/verificar/{$folio}"),
+                'codigo_qr'        => Vacacion::urlVerificacion($folio),
             ]);
 
-            return $vacacion->fresh(['servidor', 'jefe', 'creadoPor']);
+            return $vacacion->fresh(['servidor', 'jefe', 'creadoPor', 'personaReemplaza']);
         });
     }
 
@@ -350,12 +362,7 @@ class VacacionService implements VacacionServiceInterface
      */
     private function rechazarSiSeCruza(int $servidorId, Carbon $inicio, Carbon $fin): void
     {
-        $cruce = Vacacion::where('servidor_id', $servidorId)
-            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
-            ->whereDate('fecha_inicio', '<=', $fin->toDateString())
-            ->whereDate('fecha_fin', '>=', $inicio->toDateString())
-            ->orderBy('fecha_inicio')
-            ->first();
+        $cruce = $this->cruceCon($servidorId, $inicio, $fin);
 
         if ($cruce) {
             throw new ReglaNegocioException(sprintf(
@@ -366,6 +373,58 @@ class VacacionService implements VacacionServiceInterface
                 $cruce->fecha_fin->format('d/m/Y')
             ));
         }
+    }
+
+    /**
+     * Quien reemplaza tiene que poder hacerlo: ser otra persona, estar activa
+     * y no estar ella misma fuera en esas fechas.
+     *
+     * Hasta ahora el campo se validaba contra la tabla —que el servidor
+     * existiera— y después se descartaba sin guardarlo, así que nada de esto
+     * importaba. Guardado, un reemplazo que también está de vacaciones deja la
+     * unidad sin nadie aunque el papel diga lo contrario.
+     */
+    private function validarReemplazo(int $reemplazoId, int $servidorId, Carbon $inicio, Carbon $fin): void
+    {
+        if ($reemplazoId === $servidorId) {
+            throw new ReglaNegocioException(
+                'La persona que reemplaza no puede ser el mismo servidor que sale de vacaciones.'
+            );
+        }
+
+        $reemplazo = Servidor::findOrFail($reemplazoId);
+        $nombre    = trim("{$reemplazo->apellido} {$reemplazo->nombre}");
+
+        if (! $reemplazo->estado) {
+            throw new ReglaNegocioException(
+                "{$nombre} no está activo en la institución: no puede reemplazar a nadie."
+            );
+        }
+
+        $cruce = $this->cruceCon($reemplazoId, $inicio, $fin);
+
+        if ($cruce) {
+            throw new ReglaNegocioException(sprintf(
+                '%s tiene la solicitud %s del %s al %s: no puede reemplazar en esas fechas.',
+                $nombre,
+                $cruce->folio ?? "#{$cruce->id}",
+                $cruce->fecha_inicio->format('d/m/Y'),
+                $cruce->fecha_fin->format('d/m/Y')
+            ));
+        }
+    }
+
+    /**
+     * La primera solicitud vigente de un servidor que se cruza con las fechas.
+     */
+    private function cruceCon(int $servidorId, Carbon $inicio, Carbon $fin): ?Vacacion
+    {
+        return Vacacion::where('servidor_id', $servidorId)
+            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
+            ->whereDate('fecha_inicio', '<=', $fin->toDateString())
+            ->whereDate('fecha_fin', '>=', $inicio->toDateString())
+            ->orderBy('fecha_inicio')
+            ->first();
     }
 
     /**

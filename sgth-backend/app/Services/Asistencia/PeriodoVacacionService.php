@@ -634,6 +634,44 @@ class PeriodoVacacionService
     }
 
     /**
+     * Lo que va en el bloque «Uso exclusivo de Talento Humano» del PDF.
+     *
+     * La vista leía `dias_derecho` y `periodo_vacaciones`, campos que la
+     * solicitud nunca tuvo, así que salían siempre vacíos.
+     *
+     * - Días de derecho: lo que genera el período del año de la vacación.
+     * - Tramos: de qué períodos salieron sus días, si ya se aprobó.
+     * - `sin_registro`: aprobada antes de que se anotaran los tramos; entonces
+     *   el descuento iba entero al período de su año.
+     *
+     * @return array{dias_derecho: float|null, tramos: list<array{anio: int, dias: float}>, sin_registro: bool}
+     */
+    public function paraImpresion(Vacacion $vacacion): array
+    {
+        $anio = Carbon::parse($vacacion->fecha_inicio)->year;
+
+        $diasDerecho = PeriodoVacacion::where('servidor_id', $vacacion->servidor_id)
+            ->where('anio', $anio)
+            ->value('dias_generados');
+
+        $tramos = VacacionDescuento::query()
+            ->join('periodos_vacaciones as p', 'p.id', '=', 'vacacion_descuentos.periodo_vacacion_id')
+            ->where('vacacion_descuentos.vacacion_id', $vacacion->id)
+            ->whereNull('vacacion_descuentos.devuelto_en')
+            ->orderBy('p.anio')
+            ->get(['p.anio', 'vacacion_descuentos.dias'])
+            ->map(fn ($t) => ['anio' => (int) $t->anio, 'dias' => (float) $t->dias])
+            ->all();
+
+        return [
+            'dias_derecho' => $diasDerecho === null ? null : (float) $diasDerecho,
+            'tramos'       => $tramos,
+            'sin_registro' => $tramos === []
+                && in_array((string) $vacacion->estado, ['aprobada', 'gozada'], true),
+        ];
+    }
+
+    /**
      * Obtiene el resumen de períodos de un servidor.
      */
     public function resumen(int $servidorId): array
