@@ -3280,14 +3280,7 @@
                                                     "type": "boolean"
                                                 },
                                                 "usuario": {
-                                                    "anyOf": [
-                                                        {
-                                                            "$ref": "#/components/schemas/User"
-                                                        },
-                                                        {
-                                                            "type": "null"
-                                                        }
-                                                    ]
+                                                    "$ref": "#/components/schemas/UsuarioAutenticadoResource"
                                                 }
                                             },
                                             "required": [
@@ -3382,120 +3375,7 @@
                                             "const": "Operaci\u00f3n exitosa."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "nombre_completo": {
-                                                    "type": "string"
-                                                },
-                                                "email": {
-                                                    "type": "string"
-                                                },
-                                                "usuario_ti": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "activo": {
-                                                    "type": "boolean"
-                                                },
-                                                "primer_login": {
-                                                    "type": "boolean"
-                                                },
-                                                "servidor_id": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "roles": {
-                                                    "type": "object",
-                                                    "additionalProperties": {}
-                                                },
-                                                "permisos": {
-                                                    "type": "object",
-                                                    "additionalProperties": {}
-                                                },
-                                                "servidor": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ],
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer"
-                                                        },
-                                                        "cedula": {
-                                                            "type": "string"
-                                                        },
-                                                        "nombre": {
-                                                            "type": "string"
-                                                        },
-                                                        "apellido": {
-                                                            "type": "string"
-                                                        },
-                                                        "tipo_nombramiento": {
-                                                            "type": "string"
-                                                        },
-                                                        "tipo_nombramiento_label": {
-                                                            "type": "string"
-                                                        },
-                                                        "puesto": {
-                                                            "type": [
-                                                                "object",
-                                                                "null"
-                                                            ],
-                                                            "properties": {
-                                                                "nombre": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "nombre"
-                                                            ]
-                                                        },
-                                                        "unidad_administrativa": {
-                                                            "type": [
-                                                                "object",
-                                                                "null"
-                                                            ],
-                                                            "properties": {
-                                                                "nombre": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": [
-                                                                "nombre"
-                                                            ]
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "id",
-                                                        "cedula",
-                                                        "nombre",
-                                                        "apellido",
-                                                        "tipo_nombramiento",
-                                                        "tipo_nombramiento_label",
-                                                        "puesto",
-                                                        "unidad_administrativa"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "nombre_completo",
-                                                "email",
-                                                "usuario_ti",
-                                                "activo",
-                                                "primer_login",
-                                                "servidor_id",
-                                                "roles",
-                                                "permisos",
-                                                "servidor"
-                                            ]
+                                            "$ref": "#/components/schemas/UsuarioAutenticadoResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -3860,8 +3740,7 @@
                                             "const": "Mis permisos obtenidos."
                                         },
                                         "datos": {
-                                            "type": "array",
-                                            "items": {}
+                                            "type": "object"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -4059,64 +3938,6 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/autoservicio/solicitar-cita": {
-            "post": {
-                "operationId": "autoservicio.solicitarCita",
-                "tags": [
-                    "Autoservicio"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreCitaMedicaAutoservicioRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Cita m\u00e9dica agendada y permiso por enfermedad generado."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {}
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -24319,10 +24140,16 @@
                                                     }
                                                 },
                                                 "saldo_total": {
-                                                    "type": "number"
+                                                    "type": "string"
                                                 },
                                                 "alerta_limite": {
-                                                    "type": "boolean"
+                                                    "type": "string"
+                                                },
+                                                "tope": {
+                                                    "type": "string"
+                                                },
+                                                "excedente": {
+                                                    "type": "string"
                                                 },
                                                 "total_vacaciones_aprobadas": {
                                                     "type": "number"
@@ -24335,6 +24162,8 @@
                                                 "periodos",
                                                 "saldo_total",
                                                 "alerta_limite",
+                                                "tope",
+                                                "excedente",
                                                 "total_vacaciones_aprobadas",
                                                 "total_permisos_personales"
                                             ]
@@ -24352,6 +24181,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -24420,6 +24252,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -24505,7 +24340,8 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "dias_generados": {
-                                                            "type": "number"
+                                                            "type": "number",
+                                                            "description": "La escala vive en un solo sitio, que tambi\u00e9n consultan los motores.\nAqu\u00ed se aplicaba 15/20/25/30 en LOSEP y, en el C\u00f3digo del Trabajo,\nel d\u00eda adicional desde el segundo a\u00f1o: ver `EscalaVacaciones`."
                                                         },
                                                         "dias_utilizados": {
                                                             "type": "number"
@@ -24574,6 +24410,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
@@ -24686,6 +24525,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -24753,6 +24595,206 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/periodos-vacaciones/excedentes": {
+            "get": {
+                "operationId": "periodos.excedentes",
+                "description": "Solo lee: lo ve quien ve las vacaciones de toda la instituci\u00f3n. Vencer\nel excedente es otra ruta y otro permiso.",
+                "summary": "Qui\u00e9n est\u00e1 cerca de su tope de acumulaci\u00f3n o lo pasa",
+                "tags": [
+                    "PeriodoVacacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "solo_excedidos",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Servidores cerca o por encima de su tope de acumulaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "servidor_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "nombre": {
+                                                        "type": "string"
+                                                    },
+                                                    "cedula": {
+                                                        "type": "string"
+                                                    },
+                                                    "unidad": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "regimen": {
+                                                        "type": "string"
+                                                    },
+                                                    "saldo": {
+                                                        "type": "number"
+                                                    },
+                                                    "tope": {
+                                                        "type": "number"
+                                                    },
+                                                    "excedente": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "servidor_id",
+                                                    "nombre",
+                                                    "cedula",
+                                                    "unidad",
+                                                    "regimen",
+                                                    "saldo",
+                                                    "tope",
+                                                    "excedente"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/periodos-vacaciones/servidores/{servidorId}/vencer-excedente": {
+            "post": {
+                "operationId": "periodos.vencer-excedente",
+                "summary": "Vence el excedente de un servidor sobre su tope. Queda en la bit\u00e1cora",
+                "tags": [
+                    "PeriodoVacacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "dias_vencidos": {
+                                                    "type": "number"
+                                                },
+                                                "saldo_antes": {
+                                                    "type": "number"
+                                                },
+                                                "saldo_despues": {
+                                                    "type": "number"
+                                                },
+                                                "tope": {
+                                                    "type": "number"
+                                                },
+                                                "tramos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "anio": {
+                                                                "type": "integer"
+                                                            },
+                                                            "dias": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "anio",
+                                                            "dias"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "dias_vencidos",
+                                                "saldo_antes",
+                                                "saldo_despues",
+                                                "tope",
+                                                "tramos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -25198,6 +25240,9 @@
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -25370,6 +25415,26 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -25386,7 +25451,7 @@
                                             "const": "Permiso anulado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/PermisoServidor"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -25402,40 +25467,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Solo se pueden anular permisos en estado PENDIENTE."
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "errores": {
-                                            "type": "integer",
-                                            "const": 400
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "errores"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -25491,6 +25527,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -25544,6 +25583,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -37644,6 +37686,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -37698,6 +37743,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -37761,6 +37809,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -37791,6 +37842,9 @@
                                 "schema": {}
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -37842,6 +37896,77 @@
                                             "type": "string"
                                         },
                                         "datos": {
+                                            "$ref": "#/components/schemas/Vacacion"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/vacaciones/{id}/anular": {
+            "post": {
+                "operationId": "asistencia.vacaciones.anular",
+                "description": "El mensaje dice cu\u00e1ntos d\u00edas volvieron al saldo: es lo que quien anula\nnecesita comprobar, y no se ve en la fila de la solicitud.",
+                "summary": "Anula una pendiente, o una aprobada que a\u00fan no comienza",
+                "tags": [
+                    "Vacacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnularVacacionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
                                             "type": "string"
                                         },
                                         "meta": {
@@ -37858,8 +37983,8 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -40203,6 +40328,21 @@
                     "motivo_anulacion"
                 ],
                 "title": "AnularOdontogramaProcedimientoRequest"
+            },
+            "AnularVacacionRequest": {
+                "type": "object",
+                "description": "El motivo de anular una solicitud de vacaciones.\n\nAnular deshace algo \u2014en una aprobada, devuelve d\u00edas al saldo\u2014, as\u00ed que\nqueda escrito por qu\u00e9, igual que al rechazar o revertir un permiso.",
+                "properties": {
+                    "motivo": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "motivo"
+                ],
+                "title": "AnularVacacionRequest"
             },
             "AptitudMedica": {
                 "type": "string",
@@ -50164,24 +50304,6 @@
                 ],
                 "title": "StoreCargaFamiliarRequest"
             },
-            "StoreCitaMedicaAutoservicioRequest": {
-                "type": "object",
-                "properties": {
-                    "fecha_hora": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "sintomas": {
-                        "type": "string",
-                        "maxLength": 500
-                    }
-                },
-                "required": [
-                    "fecha_hora",
-                    "sintomas"
-                ],
-                "title": "StoreCitaMedicaAutoservicioRequest"
-            },
             "StoreConsultaMedicaRequest": {
                 "type": "object",
                 "properties": {
@@ -56109,6 +56231,151 @@
                     "nombre_completo"
                 ],
                 "title": "User"
+            },
+            "UsuarioAutenticadoResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nombre_completo": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "usuario_ti": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "primer_login": {
+                        "type": "boolean"
+                    },
+                    "servidor_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {}
+                    },
+                    "permisos": {
+                        "type": "array",
+                        "items": {}
+                    },
+                    "servidor": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "cedula": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "apellido": {
+                                "type": "string"
+                            },
+                            "puede_marcar": {
+                                "type": "boolean",
+                                "description": "La marcaci\u00f3n en l\u00ednea lo lee de aqu\u00ed. El perfil no lo tra\u00eda y\nsolo llegaba con el modelo crudo del login."
+                            },
+                            "regimen_laboral": {
+                                "type": "string"
+                            },
+                            "tipo_nombramiento": {
+                                "type": "string"
+                            },
+                            "tipo_nombramiento_label": {
+                                "type": "string"
+                            },
+                            "unidad_administrativa_id": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "puesto": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    },
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "es_jefe": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "id",
+                                    "nombre",
+                                    "es_jefe"
+                                ]
+                            },
+                            "unidad_administrativa": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    },
+                                    "nombre": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "id",
+                                    "nombre"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cedula",
+                            "nombre",
+                            "apellido",
+                            "puede_marcar",
+                            "regimen_laboral",
+                            "tipo_nombramiento",
+                            "tipo_nombramiento_label",
+                            "unidad_administrativa_id",
+                            "puesto",
+                            "unidad_administrativa"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre_completo",
+                    "email",
+                    "usuario_ti",
+                    "activo",
+                    "primer_login",
+                    "servidor_id",
+                    "roles",
+                    "permisos",
+                    "servidor"
+                ],
+                "title": "UsuarioAutenticadoResource"
             },
             "UsuarioResource": {
                 "type": "object",
