@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Auth;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * hasta que la portada pedía el perfil. Una sola forma para las dos rutas evita
  * que vuelvan a separarse.
  *
- * @mixin User
+ * @mixin \App\Models\User
  */
 final class UsuarioAutenticadoResource extends JsonResource
 {
