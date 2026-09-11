@@ -5,10 +5,11 @@ namespace App\Policies\Asistencia;
 use App\Enums\Permiso;
 use App\Enums\TipoPermiso;
 use App\Models\Asistencia\PermisoServidor;
+use App\Models\Expediente\Servidor;
 use App\Models\User;
 
 /**
- * Quién puede ver, imprimir y anular un permiso.
+ * Quién puede registrar, ver, imprimir y anular un permiso.
  *
  * Hasta ahora el control de acceso vivía suelto dentro de `index()` y no
  * existía en `show()` ni en `exportar()`: cualquier usuario autenticado podía
@@ -29,6 +30,29 @@ class PermisoServidorPolicy
     public function verAny(User $user): bool
     {
         return $user->can(Permiso::VER_PERMISOS->value);
+    }
+
+    /**
+     * Registrar un permiso a nombre de un servidor.
+     *
+     * El propio, cualquiera con `crear-permiso`, que está entre los permisos
+     * base. El de otro servidor, solo Talento Humano: `registrar-permisos-servidores`.
+     *
+     * El alta no comprobaba nada: el `servidor_id` llegaba en la petición y se
+     * aceptaba tal cual. Un servidor podía registrarle un permiso personal a
+     * otro y, al confirmarlo Recepción, descontarle las horas de su saldo de
+     * vacaciones. Un jefe de unidad tampoco registra el de un subordinado: lo
+     * firma, pero lo emite el propio servidor o Talento Humano.
+     */
+    public function crear(User $user, Servidor $servidor): bool
+    {
+        if ($user->can(Permiso::REGISTRAR_PERMISOS_SERVIDORES->value)) {
+            return true;
+        }
+
+        return $user->servidor_id !== null
+            && (int) $user->servidor_id === (int) $servidor->id
+            && $user->can(Permiso::CREAR_PERMISO->value);
     }
 
     public function ver(User $user, PermisoServidor $permiso): bool
