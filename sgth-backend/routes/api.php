@@ -509,9 +509,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('{id}/exportar', [PermisoServidorController::class, 'exportar'])
                 ->whereNumber('id')
                 ->name('asistencia.permisos.exportar');
+            // Sin rol de ruta: el titular también anula el suyo, y lo decide la
+            // policy. El middleware dejaba pasar a asistente-uath para que la
+            // policy lo rechazara, y dejaba fuera al titular.
             Route::put('{id}/anular', [PermisoServidorController::class, 'anular'])
-                ->whereNumber('id')
-                ->middleware('role:admin-uath|asistente-uath');
+                ->whereNumber('id');
 
             Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar'])
                 ->middleware('role:recepcion|admin-uath|asistente-uath');

@@ -4,7 +4,7 @@ import { Badge, Stack, Text } from '@mantine/core'
 import {
   IconArrowBackUp, IconCheck, IconPrinter, IconShieldCheck, IconX,
 } from '@tabler/icons-react'
-import { StatusBadge, TableActions, confirmar } from '@/components/ui'
+import { StatusBadge, TableActions } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import {
   ESTADOS_CONFIRMADOS, ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO,
@@ -14,10 +14,12 @@ import type { PermisoServidor } from '@/types/api'
 
 interface ColumnActions {
   exportandoId: number | null
+  /** El titular del permiso, o Talento Humano con `anular-permiso-pendiente`. */
+  puedeAnular:  (p: PermisoServidor) => boolean
   onExportar:   (id: number) => void
   onConfirmar:  (folio: string) => void
   onValidarTs:  (id: number) => void
-  onAnular:     (id: number) => void
+  onAnular:     (p: PermisoServidor) => void
   onRechazar:   (p: PermisoServidor) => void
   onRevertir:   (p: PermisoServidor) => void
 }
@@ -185,23 +187,13 @@ export function getPermisosColumns(
                 hidden: !ESTADOS_CONFIRMADOS.includes(estado),
               },
               {
+                // Pide el motivo en el mismo modal que rechazar y revertir: el
+                // backend lo exige y lo guarda.
                 label: 'Anular',
                 icon: <IconX size={14} />,
                 color: 'red',
-                onClick: () =>
-                  confirmar({
-                    title: 'Anular permiso',
-                    message: (
-                      <>
-                        Se anulará el permiso <b>{p.folio}</b> y dejará de contar
-                        para el servidor.
-                      </>
-                    ),
-                    destructiva: true,
-                    confirmLabel: 'Anular',
-                    onConfirm: () => actions.onAnular(p.id),
-                  }),
-                hidden: !pendiente,
+                onClick: () => actions.onAnular(p),
+                hidden: !pendiente || !actions.puedeAnular(p),
               },
             ]}
           />

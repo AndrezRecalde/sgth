@@ -154,7 +154,7 @@ test('un permiso anulado deja libre la franja que ocupaba', function () {
         ->assertStatus(201);
 
     $this->actingAs($this->uath, 'sanctum')
-        ->putJson("/api/v1/asistencia/permisos/{$primero->json('datos.id')}/anular")
+        ->putJson("/api/v1/asistencia/permisos/{$primero->json('datos.id')}/anular", ['motivo' => 'Se registró dos veces'])
         ->assertStatus(200);
 
     crearPermiso(['fecha' => $fecha, 'hora_inicio' => '08:00', 'hora_fin' => '12:00'])

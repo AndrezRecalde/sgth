@@ -61,7 +61,8 @@ export function usePermisoMutations() {
   });
 
   const anular = useMutation({
-    mutationFn: (id: number) => asistenciaService.permisos.anular(id),
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      asistenciaService.permisos.anular(id, motivo),
     onSuccess: () => {
       notifications.show({
         title: "Permiso anulado",

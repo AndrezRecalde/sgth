@@ -209,9 +209,15 @@ class PermisoServidorController extends Controller
     {
         $this->authorize('anular', PermisoServidor::findOrFail($id));
 
+        // El motivo se valida después de autorizar, con las mismas reglas que
+        // rechazar y revertir: a quien no puede anular se le dice que no
+        // puede, no que le falta un campo del formulario.
+        $motivoRequest = new MotivoPermisoRequest();
+        $datos = $request->validate($motivoRequest->rules(), $motivoRequest->messages());
+
         // En el servicio, con la fila bloqueada: aquí se leía y se guardaba
         // sin bloqueo y podía pisar una confirmación simultánea.
-        $permiso = $this->permisoService->anular($id, $request->user()->id);
+        $permiso = $this->permisoService->anular($id, $request->user()->id, $datos['motivo']);
 
         return ApiResponse::ok($permiso, 'Permiso anulado correctamente.');
     }

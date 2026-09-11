@@ -274,11 +274,22 @@ test('per_page no puede vaciar la tabla de una sola petición', function () {
 
 // ── Anulación ────────────────────────────────────────────────────────
 
-test('un servidor no puede anular un permiso aunque sea el suyo', function () {
+// Antes aquí se afirmaba lo contrario: que el titular no podía anular ni el
+// suyo. Decidido con el usuario que sí, mientras siga pendiente y con motivo
+// (ver PermisoAnulacionTest). Lo que no puede es anular el de otro.
+test('un servidor anula su propio permiso pendiente, con motivo', function () {
     $permiso = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70016');
 
     $this->actingAs($this->titular, 'sanctum')
-        ->putJson("/api/v1/asistencia/permisos/{$permiso->id}/anular")
+        ->putJson("/api/v1/asistencia/permisos/{$permiso->id}/anular", ['motivo' => 'Ya no lo necesito'])
+        ->assertOk();
+});
+
+test('un servidor no puede anular el permiso de otro', function () {
+    $permiso = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70017');
+
+    $this->actingAs($this->ajeno, 'sanctum')
+        ->putJson("/api/v1/asistencia/permisos/{$permiso->id}/anular", ['motivo' => 'Ya no lo necesita'])
         ->assertStatus(403);
 });
 
