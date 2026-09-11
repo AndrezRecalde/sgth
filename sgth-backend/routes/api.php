@@ -611,8 +611,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mi-expediente', [AutoservicioController::class, 'miExpediente']);
         Route::get('mis-actividades', [AutoservicioController::class, 'misActividades']);
 
-        // Integración con Clínica y Módulo Asistencia
-        Route::post('solicitar-cita', [AutoservicioController::class, 'solicitarCita']);
+        // Aquí estaba también `POST solicitar-cita`, retirada el 2026-09-11.
+        // Nunca funcionó: escribía en `agendas_medicas` columnas que no existen
+        // y respondía 500 siempre; ninguna pantalla la usaba. Las citas las
+        // registra el dispensario al admitir al paciente, y la ausencia la
+        // justifica el certificado médico, que ya crea su permiso con folio.
         Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
 
         // Cargas familiares (autoservicio)

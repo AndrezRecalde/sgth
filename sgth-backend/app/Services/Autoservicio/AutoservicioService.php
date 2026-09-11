@@ -83,43 +83,6 @@ final class AutoservicioService implements AutoservicioServiceInterface
             ->toArray();
     }
 
-    public function solicitarCitaMedica(int $servidorId, array $datos): array
-    {
-        // En un futuro (Sprint 9) interactúa con DispensarioMédico.
-        // Simulamos la creación e integración con Módulo 04.
-        
-        DB::beginTransaction();
-        try {
-            $citaId = DB::table('agendas_medicas')->insertGetId([
-                'servidor_id' => $servidorId,
-                'fecha_hora'  => $datos['fecha_hora'],
-                'sintomas'    => $datos['sintomas'],
-                'estado'      => 'programada',
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
-
-            // Genera permiso por enfermedad pendiente automáticamente si es en jornada laboral (asumimos que sí)
-            $permiso = PermisoServidor::create([
-                'servidor_id' => $servidorId,
-                'tipo'        => TipoPermiso::ENFERMEDAD->value,
-                'fecha'       => date('Y-m-d', strtotime($datos['fecha_hora'])),
-                'hora_inicio' => date('H:i:s', strtotime($datos['fecha_hora'])),
-                'hora_fin'    => date('H:i:s', strtotime($datos['fecha_hora'] . ' + 2 hours')),
-                'observacion' => 'Generado automáticamente por cita médica en dispensario institucional.',
-                'estado'      => 'pendiente',
-                'vence_en'    => now()->addHours(72), // Simplificado para este contexto
-            ]);
-
-            DB::commit();
-
-            return ['cita_id' => $citaId, 'permiso_generado' => $permiso->id];
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
-    }
-
     /**
      * Lo que el servidor puede ver de sus propias consultas.
      *
