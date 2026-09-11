@@ -265,18 +265,22 @@ class PermisoService implements PermisoServiceInterface
      * «anulado»: un permiso anulado con horas descontadas que nada devolvía.
      * Ahora cada una espera a que termine la otra, y la segunda encuentra el
      * estado real.
+     *
+     * Queda quién lo anuló, cuándo y por qué: el motivo es obligatorio, igual
+     * que al rechazar o revertir.
      */
-    public function anular(int $permisoId, int $userId): PermisoServidor
+    public function anular(int $permisoId, int $userId, string $motivo): PermisoServidor
     {
-        return DB::transaction(function () use ($permisoId, $userId) {
+        return DB::transaction(function () use ($permisoId, $userId, $motivo) {
             $permiso = PermisoServidor::lockForUpdate()->findOrFail($permisoId);
 
             $this->exigirEstado($permiso, [EstadoPermiso::PENDIENTE],
                 'Solo se pueden anular permisos en estado PENDIENTE.');
 
-            $permiso->estado      = EstadoPermiso::ANULADO->value;
-            $permiso->anulado_por = $userId;
-            $permiso->anulado_en  = now();
+            $permiso->estado           = EstadoPermiso::ANULADO->value;
+            $permiso->anulado_por      = $userId;
+            $permiso->anulado_en       = now();
+            $permiso->motivo_anulacion = $motivo;
             $permiso->save();
 
             return $permiso;

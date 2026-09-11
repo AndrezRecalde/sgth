@@ -34,9 +34,9 @@ interface PermisoServiceInterface
 
     /**
      * Anula un permiso PENDIENTE, con la fila bloqueada para no cruzarse con
-     * una confirmación simultánea.
+     * una confirmación simultánea, y deja escrito el motivo.
      */
-    public function anular(int $permisoId, int $userId): PermisoServidor;
+    public function anular(int $permisoId, int $userId, string $motivo): PermisoServidor;
 
     /**
      * Recepción rechaza el documento físico: PENDIENTE a RECHAZADO.

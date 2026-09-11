@@ -46,6 +46,9 @@ enum Permiso: string
     case ANULAR_PERMISO = 'anular-permiso';
     case CONFIRMAR_RECEPCION = 'confirmar-recepcion';
     case VALIDAR_TRABAJO_SOCIAL = 'validar-trabajo-social';
+    // Anular el permiso PENDIENTE de cualquier servidor; el propio lo anula
+    // cualquiera. No incluye revertir confirmaciones: eso es `anular-permiso`.
+    case ANULAR_PERMISO_PENDIENTE = 'anular-permiso-pendiente';
     case GESTIONAR_VACACIONES = 'gestionar-vacaciones';
     case APROBAR_VACACIONES = 'aprobar-vacaciones';
     case VER_VACACIONES_UNIDAD = 'ver-vacaciones-unidad';

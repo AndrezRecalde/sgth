@@ -153,7 +153,7 @@ test('anular un pendiente lo anula y deja constancia de quién', function () {
     $permiso = ($this->registrar)(1);
 
     $this->actingAs($this->uath, 'sanctum')
-        ->putJson("/api/v1/asistencia/permisos/{$permiso['id']}/anular")
+        ->putJson("/api/v1/asistencia/permisos/{$permiso['id']}/anular", ['motivo' => 'Ya no lo necesita'])
         ->assertOk();
 
     $anulado = PermisoServidor::find($permiso['id']);
@@ -168,7 +168,7 @@ test('un permiso ya confirmado no se anula, y el saldo descontado se queda donde
     ($this->confirmar)($permiso)->assertOk();
 
     $respuesta = $this->actingAs($this->uath, 'sanctum')
-        ->putJson("/api/v1/asistencia/permisos/{$permiso['id']}/anular");
+        ->putJson("/api/v1/asistencia/permisos/{$permiso['id']}/anular", ['motivo' => 'Ya no lo necesita']);
 
     // 422 como el resto de reglas de negocio; antes respondía 400.
     $respuesta->assertStatus(422);

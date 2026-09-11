@@ -114,6 +114,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::PUEDE_MARCAR_ONLINE,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
+            Permiso::ANULAR_PERMISO_PENDIENTE,
         ]));
 
         // ASISTENTE_UATH
@@ -140,6 +141,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_SSO,
             Permiso::VER_REPORTES_SSO,
             Permiso::REGISTRAR_ACCIDENTE,
+            // Anula pendientes, pero no revierte confirmaciones: eso devuelve
+            // saldo y sigue siendo de admin-uath (`anular-permiso`).
+            Permiso::ANULAR_PERMISO_PENDIENTE,
         ]));
 
         // ANALISTA_UATH

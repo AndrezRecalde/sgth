@@ -92,9 +92,22 @@ class PermisoServidorPolicy
         return $this->ver($user, $permiso);
     }
 
+    /**
+     * Anular un permiso PENDIENTE: el propio servidor, o Talento Humano.
+     *
+     * Antes pedía `anular-permiso`, que solo tiene admin-uath y que también
+     * habilita revertir confirmaciones, mientras la ruta dejaba pasar a
+     * asistente-uath para que después recibiera un 403 aquí. Y el servidor no
+     * podía retirar un permiso suyo que ya no iba a usar.
+     *
+     * Decidido con el usuario: el titular, y quien tenga
+     * `anular-permiso-pendiente` (admin-uath y asistente-uath). El jefe
+     * inmediato no: firma el papel, pero no decide retirarlo.
+     */
     public function anular(User $user, PermisoServidor $permiso): bool
     {
-        return $user->can(Permiso::ANULAR_PERMISO->value);
+        return $this->esPropio($user, $permiso)
+            || $user->can(Permiso::ANULAR_PERMISO_PENDIENTE->value);
     }
 
     /**
