@@ -155,23 +155,28 @@ export function PermisoModal({ opened, onClose }: Props) {
   };
 
   const onSubmit = async (values: PermisoFormData) => {
-    const result = await crear.mutateAsync({
-      unidad_administrativa_id: values.unidad_administrativa_id,
-      servidor_id:              values.servidor_id,
-      // Con la opción activa el jefe lo resuelve el backend: mandar además un
-      // `jefe_id` sería ofrecer un dato que se va a ignorar.
-      jefe_id:                  values.dirigido_a_talento_humano
-        ? null
-        : (values.jefe_id ?? null),
-      dirigido_a_talento_humano: values.dirigido_a_talento_humano,
-      tipo:                     values.tipo,
-      fecha:                    values.fecha,
-      hora_inicio:              values.hora_inicio,
-      hora_fin:                 values.hora_fin,
-      observacion:              values.observacion ?? null,
-    });
-    setPermisoCreado(result ?? null);
-    setPaso(1);
+    try {
+      const result = await crear.mutateAsync({
+        unidad_administrativa_id: values.unidad_administrativa_id,
+        servidor_id:              values.servidor_id,
+        // Con la opción activa el jefe lo resuelve el backend: mandar además un
+        // `jefe_id` sería ofrecer un dato que se va a ignorar.
+        jefe_id:                  values.dirigido_a_talento_humano
+          ? null
+          : (values.jefe_id ?? null),
+        dirigido_a_talento_humano: values.dirigido_a_talento_humano,
+        tipo:                     values.tipo,
+        fecha:                    values.fecha,
+        hora_inicio:              values.hora_inicio,
+        hora_fin:                 values.hora_fin,
+        observacion:              values.observacion ?? null,
+      });
+      setPermisoCreado(result ?? null);
+      setPaso(1);
+    } catch {
+      // El hook de mutación ya notifica el error; el formulario sigue abierto
+      // para corregirlo. Sin esto, el rechazo quedaba sin atrapar.
+    }
   };
 
   const handleExportar = () => {
