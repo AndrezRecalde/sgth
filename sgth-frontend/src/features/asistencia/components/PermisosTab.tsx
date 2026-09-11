@@ -16,7 +16,7 @@ import { getPermisosColumns } from "./permisos.columns";
 import { usePermisos } from "../hooks/usePermisos";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
 import { useExportarPermiso } from "../hooks/useExportarPermiso";
-import { useAuth } from "@/hooks/useAuth";
+import { useAccionesPermiso } from "../hooks/useAccionesPermiso";
 import type { PermisoServidor } from "@/types/api";
 
 // El folio escrito entraba directo en la clave de consulta: cada tecla pediría
@@ -46,14 +46,9 @@ export function PermisosTab() {
     { accion: AccionConMotivo; permiso: PermisoServidor } | null
   >(null);
 
-  // Anular un pendiente: el propio servidor, o Talento Humano con
-  // `anular-permiso-pendiente`. La misma regla que la policy del backend; a
-  // los demás no se les ofrece un botón que acabaría en 403.
-  const { usuario, hasPermiso } = useAuth();
-  const anulaCualquiera = hasPermiso("anular-permiso-pendiente");
-  const puedeAnular = (p: PermisoServidor) =>
-    anulaCualquiera ||
-    (usuario?.servidor_id != null && usuario.servidor_id === p.servidor_id);
+  // Cada acción se ofrece solo a quien el backend se la permite: la misma
+  // regla que la policy, para no mostrar botones que acaban en 403.
+  const puede = useAccionesPermiso();
 
   const [folioConRetardo] = useDebouncedValue(
     filtros.folio,
@@ -106,7 +101,7 @@ export function PermisosTab() {
 
   const columns = getPermisosColumns({
     exportandoId,
-    puedeAnular,
+    puede,
     onExportar: (id) => exportar(id),
     onConfirmar: (folio) => confirmarPermiso.mutate(folio),
     onValidarTs: (id) => validarTs.mutate(id),

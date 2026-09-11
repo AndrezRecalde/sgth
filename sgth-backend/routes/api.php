@@ -515,15 +515,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::put('{id}/anular', [PermisoServidorController::class, 'anular'])
                 ->whereNumber('id');
 
-            Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar'])
-                ->middleware('role:recepcion|admin-uath|asistente-uath');
+            // Confirmar, validar y rechazar tampoco llevan rol de ruta: lo
+            // decide la policy con permisos, que es lo mismo que mira el
+            // frontend para mostrar u ocultar cada botón. Con el rol aquí y el
+            // permiso en la policy, el asistente pasaba la ruta de rechazar y
+            // recibía un 403.
+            Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar']);
             Route::post('{id}/validar-ts', [PermisoServidorController::class, 'validar'])
-                ->middleware('role:trabajo-social|admin-uath');
+                ->whereNumber('id');
 
             // Recepción rechaza el documento físico que llega mal. El estado
             // RECHAZADO estaba en el enum desde el principio y nada lo asignaba.
             Route::post('{id}/rechazar', [PermisoServidorController::class, 'rechazar'])
-                ->middleware('role:recepcion|admin-uath|asistente-uath');
+                ->whereNumber('id');
 
             // Deshace una confirmación hecha por error y devuelve el saldo
             // vacacional descontado. Sin rol de ruta: lo decide la policy,

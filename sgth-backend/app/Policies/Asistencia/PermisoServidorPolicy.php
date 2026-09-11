@@ -111,15 +111,43 @@ class PermisoServidorPolicy
     }
 
     /**
-     * Rechazar el documento físico es trabajo de quien lo recibe.
+     * Confirmar la recepción del documento físico: Recepción, y Talento Humano
+     * cuando opera el mostrador.
      *
-     * Talento Humano también puede: opera Recepción cuando no hay nadie, igual
-     * que ya ocurre con la confirmación.
+     * Lo decidía el rol en la ruta (`role:recepcion|admin-uath|asistente-uath`)
+     * mientras la matriz solo le daba `confirmar-recepcion` a Recepción: el
+     * frontend no tenía un permiso que mirar para saber a quién ofrecerle el
+     * botón. Talento Humano recibió el permiso en la misma migración que movió
+     * la regla aquí, así que nadie perdió lo que ya podía hacer.
+     */
+    public function confirmar(User $user): bool
+    {
+        return $user->can(Permiso::CONFIRMAR_RECEPCION->value);
+    }
+
+    /**
+     * Rechazar el documento físico es trabajo de quien lo recibe: el mismo
+     * permiso que confirmar.
+     *
+     * Antes pedía `confirmar-recepcion` o `anular-permiso`, mientras la ruta
+     * dejaba pasar a asistente-uath: el asistente confirmaba, pero al rechazar
+     * recibía un 403. Decidido con el usuario: quien confirma también rechaza.
      */
     public function rechazar(User $user, PermisoServidor $permiso): bool
     {
-        return $user->can(Permiso::CONFIRMAR_RECEPCION->value)
-            || $user->can(Permiso::ANULAR_PERMISO->value);
+        return $user->can(Permiso::CONFIRMAR_RECEPCION->value);
+    }
+
+    /**
+     * Validar por Trabajo Social un permiso por enfermedad o calamidad.
+     *
+     * Lo decidía el rol en la ruta (`role:trabajo-social|admin-uath`). Que el
+     * permiso sea de un tipo validable lo comprueba el servicio y responde 422:
+     * es una regla de negocio sobre el permiso, no una cuestión de acceso.
+     */
+    public function validar(User $user, PermisoServidor $permiso): bool
+    {
+        return $user->can(Permiso::VALIDAR_TRABAJO_SOCIAL->value);
     }
 
     /**

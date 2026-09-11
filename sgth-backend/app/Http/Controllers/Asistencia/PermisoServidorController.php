@@ -174,6 +174,8 @@ class PermisoServidorController extends Controller
 
     public function confirmar(string $folio, Request $request)
     {
+        $this->authorize('confirmar', PermisoServidor::class);
+
         // Confirmación por Recepción escaneando el código
         $permiso = $this->permisoService->confirmarRecepcion($folio, $request->user()->id);
         return ApiResponse::ok($permiso, 'Permiso confirmado exitosamente por Recepción.');
@@ -181,6 +183,8 @@ class PermisoServidorController extends Controller
 
     public function validar(int $id, Request $request)
     {
+        $this->authorize('validar', PermisoServidor::findOrFail($id));
+
         // Validación de Trabajo Social para Enfermedad y Calamidad
         $permiso = $this->permisoService->validarTrabajoSocial($id, $request->user()->id);
         return ApiResponse::ok($permiso, 'Permiso validado por Trabajo Social.');
