@@ -16,7 +16,5 @@ interface AutoservicioServiceInterface
 
     public function obtenerMisActividades(int $servidorId): array;
 
-    public function solicitarCitaMedica(int $servidorId, array $datos): array;
-
     public function obtenerMiHistoriaClinicaBasica(int $servidorId): array;
 }

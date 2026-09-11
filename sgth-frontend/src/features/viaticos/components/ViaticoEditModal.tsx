@@ -87,18 +87,22 @@ export function ViaticoEditModal({
   });
 
   const onSubmit = async (values: ViaticoFormData) => {
-    await actualizar.mutateAsync({
-      id: viatico.id,
-      data: {
-        zona: values.zona,
-        datetime_salida: values.datetime_salida,
-        datetime_llegada: values.datetime_llegada,
-        justificacion: values.justificacion,
-        modalidad_anticipo: values.modalidad_anticipo,
-      },
-    });
-    onSuccess?.();
-    onClose();
+    try {
+      await actualizar.mutateAsync({
+        id: viatico.id,
+        data: {
+          zona: values.zona,
+          datetime_salida: values.datetime_salida,
+          datetime_llegada: values.datetime_llegada,
+          justificacion: values.justificacion,
+          modalidad_anticipo: values.modalidad_anticipo,
+        },
+      });
+      onSuccess?.();
+      onClose();
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   };
 
   return (

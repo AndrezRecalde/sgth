@@ -29,7 +29,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_PERMISOS,
             Permiso::ACCESO_AUTOSERVICIO,
             Permiso::CAMBIAR_CONTRASENA,
-            Permiso::SOLICITAR_CITA,
             Permiso::VER_HISTORIA_CLINICA_PROPIA,
             Permiso::CREAR_TICKET,
             Permiso::VER_TICKET_PROPIO,
@@ -84,6 +83,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,
             Permiso::VER_PERMISOS_TODOS,
+            Permiso::REGISTRAR_PERMISOS_SERVIDORES,
             Permiso::ANULAR_PERMISO,
             Permiso::GESTIONAR_VACACIONES,
             Permiso::APROBAR_VACACIONES,
@@ -113,6 +113,11 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::PUEDE_MARCAR_ONLINE,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
+            Permiso::ANULAR_PERMISO_PENDIENTE,
+            // Opera Recepción y Trabajo Social cuando no hay nadie: antes lo
+            // hacía por su rol en la ruta, ahora con los permisos.
+            Permiso::CONFIRMAR_RECEPCION,
+            Permiso::VALIDAR_TRABAJO_SOCIAL,
         ]));
 
         // ASISTENTE_UATH
@@ -129,6 +134,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,
             Permiso::VER_PERMISOS_TODOS,
+            Permiso::REGISTRAR_PERMISOS_SERVIDORES,
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::GESTIONAR_VIATICOS,
@@ -138,6 +144,12 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_SSO,
             Permiso::VER_REPORTES_SSO,
             Permiso::REGISTRAR_ACCIDENTE,
+            // Anula pendientes, pero no revierte confirmaciones: eso devuelve
+            // saldo y sigue siendo de admin-uath (`anular-permiso`).
+            Permiso::ANULAR_PERMISO_PENDIENTE,
+            // Confirma y rechaza el documento físico, como hacía por su rol en
+            // la ruta de confirmar.
+            Permiso::CONFIRMAR_RECEPCION,
         ]));
 
         // ANALISTA_UATH

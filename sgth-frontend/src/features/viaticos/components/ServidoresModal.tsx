@@ -62,13 +62,17 @@ export function ServidoresModal({ opened, onClose, viatico }: Props) {
   });
 
   const onSubmit = async (values: { acompanantes: string[] }) => {
-    await actualizar.mutateAsync({
-      id: viatico.id,
-      data: {
-        servidores_acompanantes: values.acompanantes.map(Number),
-      } as Parameters<typeof actualizar.mutateAsync>[0]["data"],
-    });
-    onClose();
+    try {
+      await actualizar.mutateAsync({
+        id: viatico.id,
+        data: {
+          servidores_acompanantes: values.acompanantes.map(Number),
+        } as Parameters<typeof actualizar.mutateAsync>[0]["data"],
+      });
+      onClose();
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   };
 
   return (

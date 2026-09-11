@@ -509,19 +509,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('{id}/exportar', [PermisoServidorController::class, 'exportar'])
                 ->whereNumber('id')
                 ->name('asistencia.permisos.exportar');
+            // Sin rol de ruta: el titular también anula el suyo, y lo decide la
+            // policy. El middleware dejaba pasar a asistente-uath para que la
+            // policy lo rechazara, y dejaba fuera al titular.
             Route::put('{id}/anular', [PermisoServidorController::class, 'anular'])
-                ->whereNumber('id')
-                ->middleware('role:admin-uath|asistente-uath');
+                ->whereNumber('id');
 
-            Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar'])
-                ->middleware('role:recepcion|admin-uath|asistente-uath');
+            // Confirmar, validar y rechazar tampoco llevan rol de ruta: lo
+            // decide la policy con permisos, que es lo mismo que mira el
+            // frontend para mostrar u ocultar cada botón. Con el rol aquí y el
+            // permiso en la policy, el asistente pasaba la ruta de rechazar y
+            // recibía un 403.
+            Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar']);
             Route::post('{id}/validar-ts', [PermisoServidorController::class, 'validar'])
-                ->middleware('role:trabajo-social|admin-uath');
+                ->whereNumber('id');
 
             // Recepción rechaza el documento físico que llega mal. El estado
             // RECHAZADO estaba en el enum desde el principio y nada lo asignaba.
             Route::post('{id}/rechazar', [PermisoServidorController::class, 'rechazar'])
-                ->middleware('role:recepcion|admin-uath|asistente-uath');
+                ->whereNumber('id');
 
             // Deshace una confirmación hecha por error y devuelve el saldo
             // vacacional descontado. Sin rol de ruta: lo decide la policy,
@@ -611,8 +617,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mi-expediente', [AutoservicioController::class, 'miExpediente']);
         Route::get('mis-actividades', [AutoservicioController::class, 'misActividades']);
 
-        // Integración con Clínica y Módulo Asistencia
-        Route::post('solicitar-cita', [AutoservicioController::class, 'solicitarCita']);
+        // Aquí estaba también `POST solicitar-cita`, retirada el 2026-09-11.
+        // Nunca funcionó: escribía en `agendas_medicas` columnas que no existen
+        // y respondía 500 siempre; ninguna pantalla la usaba. Las citas las
+        // registra el dispensario al admitir al paciente, y la ausencia la
+        // justifica el certificado médico, que ya crea su permiso con folio.
         Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
 
         // Cargas familiares (autoservicio)

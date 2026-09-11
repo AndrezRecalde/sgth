@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Autoservicio;
 
 use App\Contracts\Autoservicio\AutoservicioServiceInterface;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Autoservicio\StoreCitaMedicaAutoservicioRequest;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +20,7 @@ class AutoservicioController extends Controller
     public function misPermisos(Request $request): JsonResponse
     {
         $permisos = $this->autoservicioService->obtenerMisPermisos(
-            $this->getServidorId($request), 
+            $this->getServidorId($request),
             $request->only(['estado', 'anio', 'per_page'])
         );
         return ApiResponse::ok($permisos, 'Mis permisos obtenidos.');
@@ -49,15 +48,6 @@ class AutoservicioController extends Controller
     {
         $actividades = $this->autoservicioService->obtenerMisActividades($this->getServidorId($request));
         return ApiResponse::ok($actividades, 'Mis actividades obtenidas.');
-    }
-
-    public function solicitarCita(StoreCitaMedicaAutoservicioRequest $request): JsonResponse
-    {
-        $resultado = $this->autoservicioService->solicitarCitaMedica(
-            $this->getServidorId($request),
-            $request->validated()
-        );
-        return ApiResponse::created($resultado, 'Cita médica agendada y permiso por enfermedad generado.');
     }
 
     public function miHistoriaClinica(Request $request): JsonResponse

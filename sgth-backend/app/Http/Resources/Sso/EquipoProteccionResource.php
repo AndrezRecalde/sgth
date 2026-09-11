@@ -10,6 +10,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * un recurso cuando el arreglo es literal, y si no la infiere el tipo llega al
  * frontend como `unknown[]`. Si agregas una columna a `equipos_proteccion`,
  * agrégala también aquí.
+ *
+ * @mixin \App\Models\Sso\EquipoProteccion
  */
 class EquipoProteccionResource extends JsonResource
 {

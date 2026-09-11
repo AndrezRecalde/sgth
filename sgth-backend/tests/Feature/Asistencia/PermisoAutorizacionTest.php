@@ -274,11 +274,22 @@ test('per_page no puede vaciar la tabla de una sola petición', function () {
 
 // ── Anulación ────────────────────────────────────────────────────────
 
-test('un servidor no puede anular un permiso aunque sea el suyo', function () {
+// Antes aquí se afirmaba lo contrario: que el titular no podía anular ni el
+// suyo. Decidido con el usuario que sí, mientras siga pendiente y con motivo
+// (ver PermisoAnulacionTest). Lo que no puede es anular el de otro.
+test('un servidor anula su propio permiso pendiente, con motivo', function () {
     $permiso = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70016');
 
     $this->actingAs($this->titular, 'sanctum')
-        ->putJson("/api/v1/asistencia/permisos/{$permiso->id}/anular")
+        ->putJson("/api/v1/asistencia/permisos/{$permiso->id}/anular", ['motivo' => 'Ya no lo necesito'])
+        ->assertOk();
+});
+
+test('un servidor no puede anular el permiso de otro', function () {
+    $permiso = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70017');
+
+    $this->actingAs($this->ajeno, 'sanctum')
+        ->putJson("/api/v1/asistencia/permisos/{$permiso->id}/anular", ['motivo' => 'Ya no lo necesita'])
         ->assertStatus(403);
 });
 
@@ -368,4 +379,96 @@ test('el folio no se cuela por la ruta del id', function () {
     $this->actingAs($this->uath, 'sanctum')
         ->getJson('/api/v1/asistencia/permisos/PER-2026-70018')
         ->assertStatus(404);
+});
+
+// ── Quién confirma, rechaza, valida y revierte ───────────────────────
+//
+// Confirmar, validar y rechazar se autorizaban por rol en la ruta, y rechazar
+// además por una policy que asistente-uath no cumplía: pasaba la ruta y recibía
+// un 403. Ahora las cuatro las decide la policy con permisos, y el frontend
+// mira esos mismos permisos para mostrar u ocultar cada botón.
+
+const MOTIVO_VALIDO = 'Llegó sin la firma del jefe inmediato.';
+
+test('recepción confirma y rechaza, pero no valida ni revierte', function () {
+    $pendiente = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70101', TipoPermiso::OFICIAL);
+    $otro      = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70102', TipoPermiso::OFICIAL);
+    $activo    = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70103',
+        TipoPermiso::ENFERMEDAD, estado: EstadoPermiso::ACTIVO);
+
+    $this->actingAs($this->recepcion, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/confirmar/{$pendiente->folio}")->assertOk();
+    $this->actingAs($this->recepcion, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$otro->id}/rechazar", ['motivo' => MOTIVO_VALIDO])
+        ->assertOk();
+    $this->actingAs($this->recepcion, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$activo->id}/validar-ts")->assertForbidden();
+    $this->actingAs($this->recepcion, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$activo->id}/revertir-confirmacion", ['motivo' => MOTIVO_VALIDO])
+        ->assertForbidden();
+});
+
+test('asistente-uath confirma y ahora también rechaza el documento', function () {
+    $asistente = usuarioCon('asist', 'asistente-uath');
+    $uno = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70111', TipoPermiso::OFICIAL);
+    $dos = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70112', TipoPermiso::OFICIAL);
+
+    $this->actingAs($asistente, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/confirmar/{$uno->folio}")->assertOk();
+
+    // Antes: la ruta lo dejaba pasar y la policy le respondía 403.
+    $this->actingAs($asistente, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$dos->id}/rechazar", ['motivo' => MOTIVO_VALIDO])
+        ->assertOk();
+
+    expect($dos->fresh()->estado)->toBe(EstadoPermiso::RECHAZADO);
+});
+
+test('talento humano valida por trabajo social, como ya le dejaba su rol', function () {
+    $activo = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70121',
+        TipoPermiso::ENFERMEDAD, estado: EstadoPermiso::ACTIVO);
+
+    $this->actingAs($this->uath, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$activo->id}/validar-ts")->assertOk();
+});
+
+test('trabajo social valida, pero no confirma ni rechaza', function () {
+    $activo    = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70131',
+        TipoPermiso::ENFERMEDAD, estado: EstadoPermiso::ACTIVO);
+    $pendiente = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70132', TipoPermiso::OFICIAL);
+
+    $this->actingAs($this->trabajoSocial, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$activo->id}/validar-ts")->assertOk();
+    $this->actingAs($this->trabajoSocial, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/confirmar/{$pendiente->folio}")->assertForbidden();
+    $this->actingAs($this->trabajoSocial, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$pendiente->id}/rechazar", ['motivo' => MOTIVO_VALIDO])
+        ->assertForbidden();
+});
+
+test('el titular no confirma, ni rechaza, ni valida su propio permiso', function () {
+    $pendiente = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70141', TipoPermiso::OFICIAL);
+    $activo    = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70142',
+        TipoPermiso::ENFERMEDAD, estado: EstadoPermiso::ACTIVO);
+
+    $this->actingAs($this->titular, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/confirmar/{$pendiente->folio}")->assertForbidden();
+    $this->actingAs($this->titular, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$pendiente->id}/rechazar", ['motivo' => MOTIVO_VALIDO])
+        ->assertForbidden();
+    $this->actingAs($this->titular, 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/{$activo->id}/validar-ts")->assertForbidden();
+});
+
+test('lo decide el permiso, no el nombre del rol', function () {
+    // Una Recepción a la que se le retiró el permiso desde Usuarios ya no
+    // confirma, aunque el rol se siga llamando igual.
+    \Spatie\Permission\Models\Role::findByName('recepcion', 'sanctum')
+        ->revokePermissionTo('confirmar-recepcion');
+    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $pendiente = permisoDe($this->servidorA, $this->unidadA, 'PER-2026-70151', TipoPermiso::OFICIAL);
+
+    $this->actingAs($this->recepcion->fresh(), 'sanctum')
+        ->postJson("/api/v1/asistencia/permisos/confirmar/{$pendiente->folio}")->assertForbidden();
 });

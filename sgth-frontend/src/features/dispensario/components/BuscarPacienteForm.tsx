@@ -47,20 +47,24 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
     const paciente = buscar.data;
     if (!paciente) return;
 
-    const data = await crearHistoria.mutateAsync(
-      paciente.tipo === "servidor"
-        ? { servidor_id: paciente.id }
-        : { carga_familiar_id: paciente.id },
-    );
+    try {
+      const data = await crearHistoria.mutateAsync(
+        paciente.tipo === "servidor"
+          ? { servidor_id: paciente.id }
+          : { carga_familiar_id: paciente.id },
+      );
 
-    onPacienteListo(
-      {
-        ...paciente,
-        tiene_historia_clinica: true,
-        historia_clinica_id: data.id,
-      },
-      data.id,
-    );
+      onPacienteListo(
+        {
+          ...paciente,
+          tiene_historia_clinica: true,
+          historia_clinica_id: data.id,
+        },
+        data.id,
+      );
+    } catch {
+      // El hook de mutación ya notifica el error.
+    }
   };
 
   const handleContinuar = () => {

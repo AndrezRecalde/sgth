@@ -4,20 +4,23 @@ import { Badge, Stack, Text } from '@mantine/core'
 import {
   IconArrowBackUp, IconCheck, IconPrinter, IconShieldCheck, IconX,
 } from '@tabler/icons-react'
-import { StatusBadge, TableActions, confirmar } from '@/components/ui'
+import { StatusBadge, TableActions } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import {
   ESTADOS_CONFIRMADOS, ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO,
 } from './permisos.constants'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
+import type { AccionesPermiso } from '../hooks/useAccionesPermiso'
 
 interface ColumnActions {
   exportandoId: number | null
+  /** Qué acciones le corresponden al usuario: la misma regla que la policy. */
+  puede:        AccionesPermiso
   onExportar:   (id: number) => void
   onConfirmar:  (folio: string) => void
   onValidarTs:  (id: number) => void
-  onAnular:     (id: number) => void
+  onAnular:     (p: PermisoServidor) => void
   onRechazar:   (p: PermisoServidor) => void
   onRevertir:   (p: PermisoServidor) => void
 }
@@ -159,14 +162,14 @@ export function getPermisosColumns(
                 icon: <IconCheck size={14} />,
                 color: 'blue',
                 onClick: () => p.folio && actions.onConfirmar(p.folio),
-                hidden: !pendiente,
+                hidden: !pendiente || !actions.puede.confirmar,
               },
               {
                 label: 'Rechazar documento',
                 icon: <IconX size={14} />,
                 color: 'orange',
                 onClick: () => actions.onRechazar(p),
-                hidden: !pendiente,
+                hidden: !pendiente || !actions.puede.rechazar,
               },
               {
                 label: 'Validar Trabajo Social',
@@ -174,6 +177,7 @@ export function getPermisosColumns(
                 color: 'emerald',
                 onClick: () => actions.onValidarTs(p.id),
                 hidden:
+                  !actions.puede.validarTs ||
                   estado !== 'activo' ||
                   !['enfermedad', 'calamidad'].includes(p.tipo as string),
               },
@@ -182,26 +186,16 @@ export function getPermisosColumns(
                 icon: <IconArrowBackUp size={14} />,
                 color: 'orange',
                 onClick: () => actions.onRevertir(p),
-                hidden: !ESTADOS_CONFIRMADOS.includes(estado),
+                hidden: !actions.puede.revertir || !ESTADOS_CONFIRMADOS.includes(estado),
               },
               {
+                // Pide el motivo en el mismo modal que rechazar y revertir: el
+                // backend lo exige y lo guarda.
                 label: 'Anular',
                 icon: <IconX size={14} />,
                 color: 'red',
-                onClick: () =>
-                  confirmar({
-                    title: 'Anular permiso',
-                    message: (
-                      <>
-                        Se anulará el permiso <b>{p.folio}</b> y dejará de contar
-                        para el servidor.
-                      </>
-                    ),
-                    destructiva: true,
-                    confirmLabel: 'Anular',
-                    onConfirm: () => actions.onAnular(p.id),
-                  }),
-                hidden: !pendiente,
+                onClick: () => actions.onAnular(p),
+                hidden: !pendiente || !actions.puede.anular(p),
               },
             ]}
           />

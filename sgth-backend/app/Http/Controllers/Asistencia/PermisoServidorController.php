@@ -96,11 +96,17 @@ class PermisoServidorController extends Controller
             );
         }
 
+        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
+
+        // El propio, cualquiera; el de otro servidor, solo Talento Humano. Va
+        // antes que el régimen: a quien no puede registrar para ese servidor no
+        // se le cuenta nada sobre él.
+        $this->authorize('crear', [PermisoServidor::class, $servidor]);
+
         // Solo LOSEP accede al módulo de permisos. Se comprueba en positivo y
         // no descartando el Código del Trabajo: con esa forma, el régimen de
         // servicios profesionales —agregado el 2026-08-29— habría entrado por
         // omisión, y un contrato civil no tiene jornada que permisar.
-        $servidor = \App\Models\Expediente\Servidor::findOrFail($servidorId);
         $regimen = $servidor->regimen_laboral instanceof \App\Enums\RegimenLaboral
             ? $servidor->regimen_laboral
             : \App\Enums\RegimenLaboral::tryFrom(
@@ -168,6 +174,8 @@ class PermisoServidorController extends Controller
 
     public function confirmar(string $folio, Request $request)
     {
+        $this->authorize('confirmar', PermisoServidor::class);
+
         // Confirmación por Recepción escaneando el código
         $permiso = $this->permisoService->confirmarRecepcion($folio, $request->user()->id);
         return ApiResponse::ok($permiso, 'Permiso confirmado exitosamente por Recepción.');
@@ -175,6 +183,8 @@ class PermisoServidorController extends Controller
 
     public function validar(int $id, Request $request)
     {
+        $this->authorize('validar', PermisoServidor::findOrFail($id));
+
         // Validación de Trabajo Social para Enfermedad y Calamidad
         $permiso = $this->permisoService->validarTrabajoSocial($id, $request->user()->id);
         return ApiResponse::ok($permiso, 'Permiso validado por Trabajo Social.');
@@ -207,22 +217,17 @@ class PermisoServidorController extends Controller
 
     public function anular(int $id, Request $request)
     {
-        $permiso = PermisoServidor::findOrFail($id);
+        $this->authorize('anular', PermisoServidor::findOrFail($id));
 
-        $this->authorize('anular', $permiso);
+        // El motivo se valida después de autorizar, con las mismas reglas que
+        // rechazar y revertir: a quien no puede anular se le dice que no
+        // puede, no que le falta un campo del formulario.
+        $motivoRequest = new MotivoPermisoRequest();
+        $datos = $request->validate($motivoRequest->rules(), $motivoRequest->messages());
 
-        $estadoActual = $permiso->estado instanceof EstadoPermiso
-            ? $permiso->estado->value
-            : (string) $permiso->estado;
-
-        if ($estadoActual !== EstadoPermiso::PENDIENTE->value) {
-            return ApiResponse::error('Solo se pueden anular permisos en estado PENDIENTE.', 400);
-        }
-
-        $permiso->estado = EstadoPermiso::ANULADO->value;
-        $permiso->anulado_por = $request->user()->id;
-        $permiso->anulado_en = now();
-        $permiso->save();
+        // En el servicio, con la fila bloqueada: aquí se leía y se guardaba
+        // sin bloqueo y podía pisar una confirmación simultánea.
+        $permiso = $this->permisoService->anular($id, $request->user()->id, $datos['motivo']);
 
         return ApiResponse::ok($permiso, 'Permiso anulado correctamente.');
     }

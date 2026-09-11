@@ -38,11 +38,17 @@ enum Permiso: string
     case VER_ASISTENCIA_UNIDAD = 'ver-asistencia-unidad';
     case VER_ASISTENCIA_TODOS = 'ver-asistencia-todos';
     case CREAR_PERMISO = 'crear-permiso';
+    // Registrar permisos a nombre de cualquier servidor. `crear-permiso` lo
+    // tiene todo el mundo y solo alcanza para el propio.
+    case REGISTRAR_PERMISOS_SERVIDORES = 'registrar-permisos-servidores';
     case VER_PERMISOS = 'ver-permisos';
     case VER_PERMISOS_TODOS = 'ver-permisos-todos';
     case ANULAR_PERMISO = 'anular-permiso';
     case CONFIRMAR_RECEPCION = 'confirmar-recepcion';
     case VALIDAR_TRABAJO_SOCIAL = 'validar-trabajo-social';
+    // Anular el permiso PENDIENTE de cualquier servidor; el propio lo anula
+    // cualquiera. No incluye revertir confirmaciones: eso es `anular-permiso`.
+    case ANULAR_PERMISO_PENDIENTE = 'anular-permiso-pendiente';
     case GESTIONAR_VACACIONES = 'gestionar-vacaciones';
     case APROBAR_VACACIONES = 'aprobar-vacaciones';
     case VER_VACACIONES_UNIDAD = 'ver-vacaciones-unidad';
@@ -88,7 +94,7 @@ enum Permiso: string
     // ── MÓDULO 11: Dispensario ───────────────────────────────────
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
     case GESTIONAR_AGENDA = 'gestionar-agenda';
-    case SOLICITAR_CITA = 'solicitar-cita';
+    // `solicitar-cita` se retiró junto con su ruta, que nunca funcionó.
     case VER_HISTORIA_CLINICA_PROPIA = 'ver-historia-clinica-propia';
     case VER_HISTORIA_CLINICA = 'ver-historia-clinica';       // SOLO médicos
     case CREAR_CONSULTA = 'crear-consulta';             // SOLO médicos

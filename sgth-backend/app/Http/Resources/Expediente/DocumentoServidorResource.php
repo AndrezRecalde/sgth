@@ -5,6 +5,9 @@ namespace App\Http\Resources\Expediente;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \App\Models\Expediente\DocumentoServidor
+ */
 class DocumentoServidorResource extends JsonResource
 {
     public function toArray(Request $request): array

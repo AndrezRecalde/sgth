@@ -26,8 +26,9 @@ class PermisoService implements PermisoServiceInterface
     private const MINUTOS_MAX_PERSONAL_DIA = 240;
 
     /**
-     * Plazo para presentar el respaldo, en días hábiles, y también la
-     * tolerancia hacia atrás al registrar un permiso planificable.
+     * Plazo para presentar el respaldo, en días hábiles desde la fecha del
+     * permiso. También fija el atraso máximo al registrar: un permiso cuyo
+     * plazo ya venció no se admite (ver `validarFecha()`).
      */
     private const DIAS_HABILES_PLAZO = 3;
 
@@ -68,6 +69,8 @@ class PermisoService implements PermisoServiceInterface
 
             $this->validarFecha($tipo, $fecha);
             $this->validarObservacion($tipo, $observacion);
+            $this->validarDiaLaborable($tipo, $fecha);
+            $this->validarCruceConVacaciones($servidorId, $fecha);
 
             // A partir de aquí se lee la jornada del servidor en esa fecha, así
             // que se bloquean sus permisos de ese día: dos solicitudes a la vez
@@ -159,6 +162,19 @@ class PermisoService implements PermisoServiceInterface
             $this->exigirEstado($permiso, [EstadoPermiso::PENDIENTE],
                 'Solo se pueden confirmar permisos en estado PENDIENTE.');
 
+            // Vencido, aunque VencerPermisosJob todavía no lo haya marcado. El
+            // job corre a las 06:15, y entre las 00:00 y esa hora un permiso
+            // fuera de plazo seguía pudiéndose confirmar. Es la misma condición
+            // que aplica el job, así que confirmar y vencer no se contradicen.
+            if ($permiso->vence_en !== null && $permiso->vence_en->lessThan(now())) {
+                throw new ReglaNegocioException(sprintf(
+                    'El plazo para presentar el respaldo del permiso %s venció el %s: '.
+                    'ya no se confirma y pasa a falta injustificada.',
+                    $permiso->folio,
+                    $permiso->vence_en->format('d/m/Y H:i')
+                ));
+            }
+
             $permiso->loadMissing('servidor');
 
             $dias = $this->diasVacacionalesQueConsume($permiso);
@@ -169,15 +185,37 @@ class PermisoService implements PermisoServiceInterface
                 // El saldo se comprobó al crear el permiso, pero entre aquello
                 // y esto pudo cerrarse el período. Callarse aquí es lo que
                 // hacía que las horas se concedieran sin salir de ningún lado.
-                $periodo = $this->periodoService->periodoAbierto(
-                    $permiso->servidor_id, $anio
-                );
+                //
+                // Se bloquea la fila del período: dos confirmaciones de
+                // permisos distintos del mismo servidor, a la vez, leerían el
+                // mismo saldo y las dos pasarían el control de abajo.
+                $periodo = \App\Models\Asistencia\PeriodoVacacion::where('servidor_id', $permiso->servidor_id)
+                    ->where('anio', $anio)
+                    ->where('estado', 'abierto')
+                    ->lockForUpdate()
+                    ->first();
 
                 if (! $periodo) {
                     throw new ReglaNegocioException(
                         "No hay un período de vacaciones abierto en {$anio} para este servidor: " .
                         'el permiso personal no puede descontarse de ningún saldo.'
                     );
+                }
+
+                // El saldo se miró al crear el permiso, pero un permiso
+                // pendiente no reserva horas: dos que pasaron el control cada
+                // uno por su lado podían, juntos, superarlo. `descontarDias()`
+                // recorta a cero lo que no alcanza, así que el segundo se
+                // concedía con días que el servidor ya no tenía.
+                if ((float) $periodo->dias_saldo < $dias) {
+                    throw new ReglaNegocioException(sprintf(
+                        'Saldo de vacaciones insuficiente para confirmar el permiso %s: descuenta %s días '.
+                        'y al servidor le quedan %s. Otro permiso o unas vacaciones usaron el saldo '.
+                        'desde que este se registró.',
+                        $permiso->folio,
+                        number_format($dias, 2),
+                        number_format((float) $periodo->dias_saldo, 2)
+                    ));
                 }
 
                 $this->periodoService->descontarDias(
@@ -196,23 +234,59 @@ class PermisoService implements PermisoServiceInterface
 
     public function validarTrabajoSocial(int $permisoId, int $tsUserId): PermisoServidor
     {
-        $permiso = PermisoServidor::findOrFail($permisoId);
+        // Con la fila bloqueada, igual que confirmar y revertir: validar lee
+        // «activo» y escribe encima, y una reversión simultánea lo devolvería a
+        // pendiente para que esto lo marcara validado igualmente.
+        return DB::transaction(function () use ($permisoId, $tsUserId) {
+            $permiso = PermisoServidor::lockForUpdate()->findOrFail($permisoId);
 
-        if (! $this->esDeTrabajoSocial($permiso)) {
-            throw new ReglaNegocioException(
-                'La validación de Trabajo Social solo aplica para permisos por Enfermedad o Calamidad Doméstica.'
-            );
-        }
+            if (! $this->esDeTrabajoSocial($permiso)) {
+                throw new ReglaNegocioException(
+                    'La validación de Trabajo Social solo aplica para permisos por Enfermedad o Calamidad Doméstica.'
+                );
+            }
 
-        $this->exigirEstado($permiso, [EstadoPermiso::ACTIVO],
-            'El permiso debe estar ACTIVO para ser validado por Trabajo Social.');
+            $this->exigirEstado($permiso, [EstadoPermiso::ACTIVO],
+                'El permiso debe estar ACTIVO para ser validado por Trabajo Social.');
 
-        $permiso->estado          = EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value;
-        $permiso->validado_ts_por = $tsUserId;
-        $permiso->validado_ts_en  = now();
-        $permiso->save();
+            $permiso->estado          = EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value;
+            $permiso->validado_ts_por = $tsUserId;
+            $permiso->validado_ts_en  = now();
+            $permiso->save();
 
-        return $permiso;
+            return $permiso;
+        });
+    }
+
+    /**
+     * Anula un permiso PENDIENTE.
+     *
+     * Vivía en el controlador, sin transacción ni bloqueo, mientras confirmar
+     * sí bloqueaba la fila. Si coincidían, anular leía «pendiente», la
+     * confirmación lo activaba y descontaba el saldo, y anular guardaba encima
+     * «anulado»: un permiso anulado con horas descontadas que nada devolvía.
+     * Ahora cada una espera a que termine la otra, y la segunda encuentra el
+     * estado real.
+     *
+     * Queda quién lo anuló, cuándo y por qué: el motivo es obligatorio, igual
+     * que al rechazar o revertir.
+     */
+    public function anular(int $permisoId, int $userId, string $motivo): PermisoServidor
+    {
+        return DB::transaction(function () use ($permisoId, $userId, $motivo) {
+            $permiso = PermisoServidor::lockForUpdate()->findOrFail($permisoId);
+
+            $this->exigirEstado($permiso, [EstadoPermiso::PENDIENTE],
+                'Solo se pueden anular permisos en estado PENDIENTE.');
+
+            $permiso->estado           = EstadoPermiso::ANULADO->value;
+            $permiso->anulado_por      = $userId;
+            $permiso->anulado_en       = now();
+            $permiso->motivo_anulacion = $motivo;
+            $permiso->save();
+
+            return $permiso;
+        });
     }
 
     /**
@@ -292,38 +366,50 @@ class PermisoService implements PermisoServiceInterface
     /**
      * Cuándo puede haber ocurrido un permiso.
      *
-     * Se parte en dos porque los dos grupos son cosas distintas. Un permiso
-     * PERSONAL u OFICIAL se pide antes de ausentarse: se imprime, se firma y se
-     * lleva a Recepción, así que su fecha es hoy o más adelante. Se admite una
-     * tolerancia de tres días hábiles hacia atrás —el mismo plazo que rige la
-     * confirmación— para digitalizar el que llegó tarde en papel.
+     * Ninguno se registra con el plazo de respaldo ya vencido. El respaldo
+     * tiene 72 horas laborables desde la fecha del permiso para llegar a
+     * Recepción, y `VencerPermisosJob` convierte en falta injustificada al que
+     * se pasa. Registrar uno ya vencido es fabricar esa falta.
      *
-     * ENFERMEDAD y CALAMIDAD son lo contrario: nadie sabe que se va a enfermar,
-     * y las 72 horas del plazo existen precisamente para justificar después. Se
-     * registran hacia atrás sin límite, pero nunca a futuro.
+     * Y eso pasaba de dos maneras:
+     * - ENFERMEDAD y CALAMIDAD se registraban hacia atrás sin límite. Una
+     *   enfermedad de hace dos semanas nacía vencida y a la mañana siguiente
+     *   el job la marcaba falta.
+     * - PERSONAL y OFICIAL admitían tres días hábiles de atraso. El último de
+     *   esos días el plazo ya había vencido a las 00:00: un permiso del lunes
+     *   vence el jueves a primera hora, y el jueves todavía se aceptaba.
+     *
+     * Decidido con Talento Humano: se limita el atraso y el plazo se sigue
+     * contando desde la fecha del permiso. La comprobación usa el mismo cálculo
+     * del vencimiento —con feriados—, así que no pueden discrepar: en la
+     * práctica, dos días hábiles atrás como mucho.
+     *
+     * Además, ENFERMEDAD y CALAMIDAD nunca a futuro: nadie sabe que se va a
+     * enfermar. PERSONAL y OFICIAL sí, porque se piden antes de ausentarse.
      */
     private function validarFecha(TipoPermiso $tipo, Carbon $fecha): void
     {
-        $hoy = Carbon::today();
+        $esRetroactivo = $tipo === TipoPermiso::ENFERMEDAD || $tipo === TipoPermiso::CALAMIDAD;
 
-        if ($tipo === TipoPermiso::ENFERMEDAD || $tipo === TipoPermiso::CALAMIDAD) {
-            if ($fecha->greaterThan($hoy)) {
-                throw new ReglaNegocioException(
-                    'Un permiso por enfermedad o calamidad doméstica no puede registrarse con fecha futura.'
-                );
-            }
-
-            return;
+        if ($esRetroactivo && $fecha->greaterThan(Carbon::today())) {
+            throw new ReglaNegocioException(
+                'Un permiso por enfermedad o calamidad doméstica no puede registrarse con fecha futura.'
+            );
         }
 
-        $limite = $this->restarDiasHabiles($hoy, self::DIAS_HABILES_PLAZO);
+        $vence = $this->calcularVencimiento($fecha);
 
-        if ($fecha->lessThan($limite)) {
-            throw new ReglaNegocioException(
-                'Un permiso ' . mb_strtolower($tipo->name) . ' no puede registrarse con más de ' .
-                self::DIAS_HABILES_PLAZO . ' días hábiles de atraso. ' .
-                'La fecha más antigua admitida es ' . $limite->format('d/m/Y') . '.'
-            );
+        if ($vence->lessThanOrEqualTo(now())) {
+            $masAntigua = $this->restarDiasHabiles(Carbon::today(), self::DIAS_HABILES_PLAZO - 1);
+
+            throw new ReglaNegocioException(sprintf(
+                'El plazo de 72 horas laborables para presentar el respaldo de un permiso del %s '.
+                'venció el %s: registrado ahora nacería como falta injustificada. '.
+                'La fecha más antigua que se admite hoy es el %s.',
+                $fecha->format('d/m/Y'),
+                $vence->format('d/m/Y'),
+                $masAntigua->format('d/m/Y')
+            ));
         }
     }
 
@@ -333,6 +419,71 @@ class PermisoService implements PermisoServiceInterface
             throw new ReglaNegocioException(
                 'La observación es OBLIGATORIA para los permisos de tipo OFICIAL.'
             );
+        }
+    }
+
+    /**
+     * Un permiso personal no se registra en día no laborable.
+     *
+     * Se aceptaba en sábado, domingo o feriado y, como el personal se paga con
+     * vacaciones, descontaba saldo por un día en que el servidor no tenía
+     * jornada de la que ausentarse.
+     *
+     * Solo el personal, decidido con Talento Humano: oficial, enfermedad y
+     * calamidad se siguen admitiendo, porque hay personal con turnos de fin de
+     * semana y el sistema todavía no sabe quién.
+     */
+    private function validarDiaLaborable(TipoPermiso $tipo, Carbon $fecha): void
+    {
+        if ($tipo !== TipoPermiso::PERSONAL) {
+            return;
+        }
+
+        $motivo = match (true) {
+            $fecha->isSaturday() => 'es sábado',
+            $fecha->isSunday()   => 'es domingo',
+            \App\Models\Asistencia\FeriadoInstitucional::esFeriado($fecha)->exists() => 'es feriado',
+            default              => null,
+        };
+
+        if ($motivo !== null) {
+            throw new ReglaNegocioException(sprintf(
+                'El %s %s: no hay jornada de la que ausentarse, y un permiso personal '.
+                'descontaría vacaciones igual. Elija un día laborable.',
+                $fecha->format('d/m/Y'),
+                $motivo
+            ));
+        }
+    }
+
+    /**
+     * Ningún permiso cae dentro de unas vacaciones o una licencia del mismo
+     * servidor.
+     *
+     * Ese día no tiene jornada: pedir permiso sobre él no ampara nada, y si es
+     * personal descuenta el saldo dos veces, por las vacaciones y por el
+     * permiso. Cuentan las pendientes, aprobadas y gozadas —la misma regla que
+     * usa el cruce entre vacaciones—; una rechazada deja las fechas libres.
+     */
+    private function validarCruceConVacaciones(int $servidorId, Carbon $fecha): void
+    {
+        $vacacion = \App\Models\Asistencia\Vacacion::where('servidor_id', $servidorId)
+            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
+            ->whereDate('fecha_inicio', '<=', $fecha->toDateString())
+            ->whereDate('fecha_fin', '>=', $fecha->toDateString())
+            ->orderBy('fecha_inicio')
+            ->first();
+
+        if ($vacacion) {
+            throw new ReglaNegocioException(sprintf(
+                'El servidor tiene la solicitud de vacaciones %s (%s) del %s al %s, que incluye el %s: '.
+                'ese día no tiene jornada de la que pedir permiso.',
+                $vacacion->folio ?? "#{$vacacion->id}",
+                $vacacion->estado,
+                $vacacion->fecha_inicio->format('d/m/Y'),
+                $vacacion->fecha_fin->format('d/m/Y'),
+                $fecha->format('d/m/Y')
+            ));
         }
     }
 

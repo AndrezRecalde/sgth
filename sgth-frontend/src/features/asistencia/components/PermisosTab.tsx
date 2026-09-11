@@ -16,6 +16,7 @@ import { getPermisosColumns } from "./permisos.columns";
 import { usePermisos } from "../hooks/usePermisos";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
 import { useExportarPermiso } from "../hooks/useExportarPermiso";
+import { useAccionesPermiso } from "../hooks/useAccionesPermiso";
 import type { PermisoServidor } from "@/types/api";
 
 // El folio escrito entraba directo en la clave de consulta: cada tecla pediría
@@ -26,7 +27,14 @@ const RETARDO_BUSQUEDA_MS = 300;
 const POR_PAGINA = 15;
 
 /** Qué acción abrió el modal de motivo. */
-type AccionConMotivo = "rechazar" | "revertir";
+type AccionConMotivo = "rechazar" | "revertir" | "anular";
+
+/** Título, botón y consecuencia de cada acción que pide motivo. */
+const TEXTOS: Record<AccionConMotivo, { titulo: string; boton: string }> = {
+  rechazar: { titulo: "Rechazar documento", boton: "Rechazar" },
+  revertir: { titulo: "Revertir confirmación", boton: "Revertir" },
+  anular:   { titulo: "Anular permiso", boton: "Anular" },
+};
 
 export function PermisosTab() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -37,6 +45,10 @@ export function PermisosTab() {
   const [conMotivo, setConMotivo] = useState<
     { accion: AccionConMotivo; permiso: PermisoServidor } | null
   >(null);
+
+  // Cada acción se ofrece solo a quien el backend se la permite: la misma
+  // regla que la policy, para no mostrar botones que acaban en 403.
+  const puede = useAccionesPermiso();
 
   const [folioConRetardo] = useDebouncedValue(
     filtros.folio,
@@ -74,13 +86,14 @@ export function PermisosTab() {
     revertirConfirmacion,
   } = usePermisoMutations();
 
+  const mutaciones = { rechazar, revertir: revertirConfirmacion, anular };
+
   const enviarMotivo = (motivo: string) => {
     if (!conMotivo) return;
 
     const { accion, permiso } = conMotivo;
-    const mutacion = accion === "rechazar" ? rechazar : revertirConfirmacion;
 
-    mutacion.mutate(
+    mutaciones[accion].mutate(
       { id: permiso.id, motivo },
       { onSuccess: () => setConMotivo(null) },
     );
@@ -88,15 +101,37 @@ export function PermisosTab() {
 
   const columns = getPermisosColumns({
     exportandoId,
+    puede,
     onExportar: (id) => exportar(id),
     onConfirmar: (folio) => confirmarPermiso.mutate(folio),
     onValidarTs: (id) => validarTs.mutate(id),
-    onAnular: (id) => anular.mutate(id),
+    onAnular: (permiso) => setConMotivo({ accion: "anular", permiso }),
     onRechazar: (permiso) => setConMotivo({ accion: "rechazar", permiso }),
     onRevertir: (permiso) => setConMotivo({ accion: "revertir", permiso }),
   });
 
-  const esRechazo = conMotivo?.accion === "rechazar";
+  const accion = conMotivo?.accion ?? "rechazar";
+  const folio = conMotivo?.permiso.folio;
+
+  const consecuencia: Record<AccionConMotivo, React.ReactNode> = {
+    rechazar: (
+      <>
+        El permiso <b>{folio}</b> quedará rechazado y no amparará la ausencia.
+      </>
+    ),
+    revertir: (
+      <>
+        El permiso <b>{folio}</b> volverá a pendiente y se devolverá al
+        servidor el saldo de vacaciones descontado.
+      </>
+    ),
+    anular: (
+      <>
+        El permiso <b>{folio}</b> quedará anulado y dejará de contar para el
+        servidor. Queda registrado quién lo anuló y por qué.
+      </>
+    ),
+  };
 
   return (
     <Stack gap="md">
@@ -139,23 +174,11 @@ export function PermisosTab() {
       <MotivoPermisoModal
         opened={conMotivo !== null}
         onClose={() => setConMotivo(null)}
-        title={esRechazo ? "Rechazar documento" : "Revertir confirmación"}
-        confirmLabel={esRechazo ? "Rechazar" : "Revertir"}
-        cargando={esRechazo ? rechazar.isPending : revertirConfirmacion.isPending}
+        title={TEXTOS[accion].titulo}
+        confirmLabel={TEXTOS[accion].boton}
+        cargando={mutaciones[accion].isPending}
         onConfirm={enviarMotivo}
-        descripcion={
-          esRechazo ? (
-            <>
-              El permiso <b>{conMotivo?.permiso.folio}</b> quedará rechazado y no
-              amparará la ausencia.
-            </>
-          ) : (
-            <>
-              El permiso <b>{conMotivo?.permiso.folio}</b> volverá a pendiente y
-              se devolverá al servidor el saldo de vacaciones descontado.
-            </>
-          )
-        }
+        descripcion={consecuencia[accion]}
       />
     </Stack>
   );

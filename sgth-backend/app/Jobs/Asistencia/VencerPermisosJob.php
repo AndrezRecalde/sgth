@@ -13,23 +13,23 @@ class VencerPermisosJob implements ShouldQueue
     use Queueable;
 
     /**
-     * Execute the job.
-     * Busca todos los permisos pendientes cuya fecha límite (vence_en) haya expirado
-     * y los marca como falta injustificada.
+     * Marca como falta injustificada los permisos PENDIENTES cuyo plazo venció.
+     *
+     * Un solo UPDATE condicionado al estado. Antes cargaba los permisos y los
+     * guardaba uno a uno: si Recepción confirmaba uno entre la lectura y el
+     * guardado, el job escribía «falta injustificada» encima de un permiso ya
+     * activo y con el saldo de vacaciones descontado.
+     *
+     * Postgres bloquea cada fila que actualiza. Si otra transacción la tiene
+     * tomada —una confirmación en curso—, espera a que termine y vuelve a
+     * evaluar el WHERE: un permiso que se confirmó mientras tanto ya no está
+     * pendiente y queda fuera.
      */
     public function handle(): void
     {
-        $permisosVencidos = PermisoServidor::where('estado', EstadoPermiso::PENDIENTE->value)
+        $contador = PermisoServidor::where('estado', EstadoPermiso::PENDIENTE->value)
             ->where('vence_en', '<', now())
-            ->get();
-
-        $contador = 0;
-
-        foreach ($permisosVencidos as $permiso) {
-            $permiso->estado = EstadoPermiso::FALTA_INJUSTIFICADA->value;
-            $permiso->save();
-            $contador++;
-        }
+            ->update(['estado' => EstadoPermiso::FALTA_INJUSTIFICADA->value]);
 
         if ($contador > 0) {
             Log::info("VencerPermisosJob ejecutado: {$contador} permisos han sido marcados como falta injustificada tras superar las 72h laborables.");

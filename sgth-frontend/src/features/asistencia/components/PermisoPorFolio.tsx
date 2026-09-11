@@ -19,6 +19,7 @@ import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { getApiErrorMessage } from '@/types/api'
 import { asistenciaService } from '../services/asistenciaService'
 import { usePermisoMutations } from '../hooks/usePermisoMutations'
+import { useAccionesPermiso } from '../hooks/useAccionesPermiso'
 import { MotivoPermisoModal } from './MotivoPermisoModal'
 import { PermisoResumen } from './PermisoResumen'
 import { ESTADOS_CONFIRMADOS } from './permisos.constants'
@@ -39,6 +40,10 @@ export function PermisoPorFolio({ folio }: Props) {
   })
 
   const { confirmar, rechazar, revertirConfirmacion } = usePermisoMutations()
+
+  // El QR lo escanea Talento Humano, pero también puede abrirlo el titular o su
+  // jefe: cada botón solo aparece a quien el backend se lo permite.
+  const puede = useAccionesPermiso()
 
   if (isLoading) {
     return (
@@ -102,33 +107,34 @@ export function PermisoPorFolio({ folio }: Props) {
       )}
 
       <Stack gap="sm">
-        {pendiente && (
-          <>
-            <Button
-              size="md"
-              color="emerald"
-              variant="light"
-              leftSection={<IconCheck size={18} />}
-              loading={confirmar.isPending}
-              onClick={() => permiso.folio && confirmar.mutate(permiso.folio, {
-                onSuccess: () => refetch(),
-              })}
-            >
-              Confirmar recepción
-            </Button>
-            <Button
-              size="md"
-              color="orange"
-              variant="light"
-              leftSection={<IconX size={18} />}
-              onClick={() => setConMotivo('rechazar')}
-            >
-              Rechazar documento
-            </Button>
-          </>
+        {pendiente && puede.confirmar && (
+          <Button
+            size="md"
+            color="emerald"
+            variant="light"
+            leftSection={<IconCheck size={18} />}
+            loading={confirmar.isPending}
+            onClick={() => permiso.folio && confirmar.mutate(permiso.folio, {
+              onSuccess: () => refetch(),
+            })}
+          >
+            Confirmar recepción
+          </Button>
         )}
 
-        {confirmado && (
+        {pendiente && puede.rechazar && (
+          <Button
+            size="md"
+            color="orange"
+            variant="light"
+            leftSection={<IconX size={18} />}
+            onClick={() => setConMotivo('rechazar')}
+          >
+            Rechazar documento
+          </Button>
+        )}
+
+        {confirmado && puede.revertir && (
           <Button
             size="md"
             color="orange"
