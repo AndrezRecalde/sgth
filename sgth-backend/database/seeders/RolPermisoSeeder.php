@@ -96,9 +96,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_EVALUACIONES_UNIDAD,
             Permiso::VER_EVALUACIONES_TODAS,
             Permiso::GESTIONAR_EVALUACIONES,
+            // Consulta los viáticos; los opera Financiero.
             Permiso::VER_VIATICOS_TODOS,
-            Permiso::GESTIONAR_VIATICOS,
-            Permiso::GESTIONAR_TARIFAS_VIATICO,
             Permiso::GESTIONAR_SSO,
             Permiso::VER_SUMARIOS,
             Permiso::GESTIONAR_SUMARIOS,
@@ -137,7 +136,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::REGISTRAR_PERMISOS_SERVIDORES,
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::VER_ACTIVIDADES_UNIDAD,
-            Permiso::GESTIONAR_VIATICOS,
             Permiso::GENERAR_REPORTES,
             Permiso::PUEDE_MARCAR_ONLINE,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
@@ -220,6 +218,17 @@ class RolPermisoSeeder extends Seeder
         // TRABAJO_SOCIAL
         $this->crearRol(Rol::TRABAJO_SOCIAL, array_merge($permisosBase, [
             Permiso::VALIDAR_TRABAJO_SOCIAL,
+        ]));
+
+        // FINANCIERO
+        // Gestión Financiera: aprueba las solicitudes y los vuelos, entrega el
+        // anticipo, revisa la liquidación y la contabiliza.
+        $this->crearRol(Rol::FINANCIERO, array_merge($permisosBase, [
+            Permiso::VER_VIATICOS_TODOS,
+            Permiso::APROBAR_VIATICO,
+            Permiso::GESTIONAR_VIATICOS,
+            Permiso::LIQUIDAR_VIATICO,
+            Permiso::GESTIONAR_TARIFAS_VIATICO,
         ]));
 
         // MEDICO

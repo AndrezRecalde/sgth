@@ -21,8 +21,9 @@ import type { ActividadData } from "./ActividadesModal";
 
 interface Props {
   actividades: ActividadData[];
-  onRegistrar: () => void;
-  onEditar: () => void;
+  /** Sin estas dos, la tarjeta es de solo lectura. */
+  onRegistrar?: () => void;
+  onEditar?: () => void;
 }
 
 export function LiquidacionActividadesCard({
@@ -62,16 +63,18 @@ export function LiquidacionActividadesCard({
               Debe registrar las actividades realizadas durante la comisión.
             </Text>
           </Alert>
-          <Button
-            color="blue"
-            variant="light"
-            size="sm"
-            leftSection={<IconClipboardList size={14} />}
-            onClick={onRegistrar}
-            fullWidth
-          >
-            Registrar actividades
-          </Button>
+          {onRegistrar && (
+            <Button
+              color="blue"
+              variant="light"
+              size="sm"
+              leftSection={<IconClipboardList size={14} />}
+              onClick={onRegistrar}
+              fullWidth
+            >
+              Registrar actividades
+            </Button>
+          )}
         </Stack>
       ) : (
         <Stack gap="xs">
@@ -101,15 +104,17 @@ export function LiquidacionActividadesCard({
               )}
             </Stack>
           ))}
-          <Button
-            size="xs"
-            variant="subtle"
-            color="blue"
-            leftSection={<IconPencil size={12} />}
-            onClick={onEditar}
-          >
-            Editar actividades
-          </Button>
+          {onEditar && (
+            <Button
+              size="xs"
+              variant="subtle"
+              color="blue"
+              leftSection={<IconPencil size={12} />}
+              onClick={onEditar}
+            >
+              Editar actividades
+            </Button>
+          )}
         </Stack>
       )}
     </Card>

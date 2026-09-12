@@ -3498,6 +3498,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -3566,6 +3569,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -3633,6 +3639,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -3708,6 +3717,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
@@ -17218,190 +17230,6 @@
                 }
             }
         },
-        "/v1/liquidaciones/{liquidacionId}/facturas": {
-            "get": {
-                "operationId": "facturaViatico.index",
-                "tags": [
-                    "FacturaViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "liquidacionId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Facturas listadas exitosamente."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/FacturaViatico"
-                                            }
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "facturaViatico.store",
-                "tags": [
-                    "FacturaViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "liquidacionId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreFacturaViaticoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Factura agregada exitosamente."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/FacturaViatico"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/liquidaciones/{liquidacionId}/facturas/{facturaId}": {
-            "delete": {
-                "operationId": "facturaViatico.destroy",
-                "tags": [
-                    "FacturaViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "liquidacionId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "facturaId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Factura eliminada exitosamente."
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/v1/dispensario/fichas-sso/{id}/pdf": {
             "get": {
                 "operationId": "femoPdf.generar",
@@ -21089,7 +20917,14 @@
                                             "const": "Liquidaci\u00f3n obtenida."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/LiquidacionViatico"
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/LiquidacionViatico"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
@@ -21525,7 +21360,14 @@
                                             "const": "Liquidaci\u00f3n registrada correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/Viatico"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
@@ -35673,6 +35515,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -35838,6 +35683,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -36010,6 +35858,9 @@
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -36073,6 +35924,9 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -38169,6 +38023,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -38226,6 +38083,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -38284,6 +38144,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -38415,6 +38278,9 @@
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
@@ -38427,6 +38293,7 @@
         "/v1/viaticos/servidor/{servidorId}/solicitar": {
             "post": {
                 "operationId": "viatico.solicitar.por.servidor",
+                "summary": "Registrar un vi\u00e1tico a nombre de un servidor. Lo hace quien opera los\nvi\u00e1ticos (lo comprueba la request); antes lo pod\u00eda hacer cualquier\nusuario con cualquier id",
                 "tags": [
                     "Viatico"
                 ],
@@ -38487,73 +38354,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/viaticos/{servidorId}/solicitar": {
-            "post": {
-                "operationId": "viatico.solicitar.propio",
-                "tags": [
-                    "Viatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "servidorId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SolicitarViaticoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Solicitud de vi\u00e1tico creada con \u00e9xito. El monto ha sido calculado autom\u00e1ticamente basado en la normativa del MRL."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/Viatico"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -38737,8 +38540,7 @@
                                             "type": "null"
                                         },
                                         "errores": {
-                                            "type": "integer",
-                                            "const": 422
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
@@ -38807,6 +38609,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -38919,6 +38724,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -38990,8 +38798,7 @@
                                             "type": "null"
                                         },
                                         "errores": {
-                                            "type": "integer",
-                                            "const": 422
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
@@ -39144,6 +38951,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -41823,20 +41633,6 @@
                     "deleted_at"
                 ],
                 "title": "ComentarioTicket"
-            },
-            "ConceptoFactura": {
-                "type": "string",
-                "enum": [
-                    "alimentacion",
-                    "hospedaje",
-                    "transporte_terrestre",
-                    "pasaje_aereo",
-                    "combustible",
-                    "peaje",
-                    "materiales",
-                    "otro"
-                ],
-                "title": "ConceptoFactura"
             },
             "ConceptoNomina": {
                 "type": "object",
@@ -46929,6 +46725,9 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "dias_vencidos": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -46946,7 +46745,8 @@
                     "estado",
                     "alerta_enviada",
                     "created_at",
-                    "updated_at"
+                    "updated_at",
+                    "dias_vencidos"
                 ],
                 "title": "PeriodoVacacion"
             },
@@ -47090,6 +46890,12 @@
                     },
                     "dirigido_a_talento_humano": {
                         "type": "boolean"
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -47118,7 +46924,8 @@
                     "rechazado_por",
                     "rechazado_en",
                     "motivo_rechazo",
-                    "dirigido_a_talento_humano"
+                    "dirigido_a_talento_humano",
+                    "motivo_anulacion"
                 ],
                 "title": "PermisoServidor"
             },
@@ -50814,43 +50621,6 @@
                     "responsable"
                 ],
                 "title": "StoreExtensionTelefonicaRequest"
-            },
-            "StoreFacturaViaticoRequest": {
-                "type": "object",
-                "properties": {
-                    "concepto": {
-                        "$ref": "#/components/schemas/ConceptoFactura"
-                    },
-                    "numero_factura": {
-                        "type": "string",
-                        "maxLength": 50
-                    },
-                    "ruc_proveedor": {
-                        "type": "string"
-                    },
-                    "nombre_proveedor": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "monto": {
-                        "type": "number",
-                        "minimum": 0.01
-                    },
-                    "archivo_ruta": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "concepto",
-                    "numero_factura",
-                    "ruc_proveedor",
-                    "nombre_proveedor",
-                    "monto"
-                ],
-                "title": "StoreFacturaViaticoRequest"
             },
             "StoreFichaSaludOcupacionalRequest": {
                 "type": "object",
@@ -56565,6 +56335,31 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "anulado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "anulado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -56588,7 +56383,11 @@
                     "creado_por",
                     "unidad_administrativa_id",
                     "persona_reemplaza_id",
-                    "periodo_vacacion_id"
+                    "periodo_vacacion_id",
+                    "anulado_por",
+                    "anulado_en",
+                    "motivo_anulacion",
+                    "observacion"
                 ],
                 "title": "Vacacion"
             },

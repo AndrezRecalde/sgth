@@ -1,13 +1,18 @@
 <?php
 namespace App\Http\Requests\Viatico;
 
+use App\Models\Viatico\Viatico;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LiquidarViaticoRequest extends FormRequest
 {
+    /** La liquidación la presenta el titular o quien opera los viáticos. */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can(
+            'editar',
+            Viatico::findOrFail((int) $this->route('viaticoId'))
+        );
     }
 
     public function rules(): array

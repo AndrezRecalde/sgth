@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useViatico, useTramos } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { usePdfViatico } from "../hooks/usePdfViatico";
+import { useAccionesViatico } from "../hooks/useAccionesViatico";
 
 import { ViaticoInfoCard } from "./ViaticoInfoCard";
 import { ViaticoAnticipoCard } from "./ViaticoAnticipoCard";
@@ -80,6 +81,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const d = detalle;
 
   const { data: tramosData = [] } = useTramos(detalle?.id ?? null);
+  const puede = useAccionesViatico();
 
   const [editModalAbierto, { open: abrirEdit, close: cerrarEdit }] =
     useDisclosure(false);
@@ -129,12 +131,9 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
   const estadoActual = d.estado ?? "";
   const pasoActivo = PASO_STEPPER[estadoActual] ?? 0;
-  const puedeEditarDatos = !["liquidado", "contabilizado"].includes(
-    estadoActual,
-  );
-  const puedeEditarTramos = !["liquidado", "contabilizado"].includes(
-    estadoActual,
-  );
+  const puedeEditarDatos =
+    puede.editar(d) && !["liquidado", "contabilizado"].includes(estadoActual);
+  const puedeEditarTramos = puedeEditarDatos;
 
   const handleAprobar = () => {
     if (d.zona === "exterior") {
@@ -228,6 +227,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
         <ViaticoAcciones
           viatico={d}
           estadoActual={estadoActual}
+          puede={puede}
           onAprobar={handleAprobar}
           onEntregar={() => entregarAnticipo.mutate(d.id)}
           onComision={() => marcarEnComision.mutate(d.id)}

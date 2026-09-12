@@ -15,13 +15,19 @@ import { ViaticoModal } from "./ViaticoModal";
 import { VuelosTab } from "./VuelosTab";
 import { ViaticoFiltros } from "./ViaticoFiltros";
 import { getViaticoColumns } from "./ViaticoColumns";
+import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import type { Viatico, EstadoViatico, ViaticoConRelaciones } from "@/types/api";
 
 export function ViaticoView() {
   const router = useRouter();
   const [modalAbierto, { open, close }] = useDisclosure(false);
+  const puede = useAccionesViatico();
 
-  const [filtroEstado, setFiltroEstado] = useState("solicitado");
+  // Quien revisa entra a la bandeja de solicitudes; el servidor, a todos los
+  // suyos, que son pocos y le interesan en cualquier estado.
+  const [filtroEstado, setFiltroEstado] = useState(
+    puede.veTodos ? "solicitado" : "todos",
+  );
   const [page, setPage] = useState(1);
   const [busquedaCodigo, setBusquedaCodigo] = useState("");
   const [codigoQuery, setCodigoQuery] = useState("");
@@ -64,19 +70,26 @@ export function ViaticoView() {
     onVer: handleVer,
     onAprobar: (v) => aprobar.mutate({ id: v.id }),
     onLiquidar: handleVer,
+    puede,
   });
 
   return (
     <PageShell>
       <PageHeader
         title="Viáticos"
-        description="Gestión de comisiones de servicio y viáticos"
+        description={
+          puede.veTodos
+            ? "Gestión de comisiones de servicio y viáticos"
+            : "Tus comisiones de servicio y viáticos"
+        }
       />
 
       <Tabs defaultValue="viaticos">
         <Tabs.List>
           <Tabs.Tab value="viaticos">Solicitudes</Tabs.Tab>
-          <Tabs.Tab value="vuelos">Autorizaciones de vuelo</Tabs.Tab>
+          {puede.autorizarVuelos && (
+            <Tabs.Tab value="vuelos">Autorizaciones de vuelo</Tabs.Tab>
+          )}
         </Tabs.List>
 
         <Tabs.Panel value="viaticos" pt="md">
@@ -90,17 +103,19 @@ export function ViaticoView() {
               onLimpiar={handleLimpiar}
             />
 
-            <Group justify="flex-end">
-              <Button
-                size="xs"
-                color="emerald"
-                variant="light"
-                leftSection={<IconPlus size={14} />}
-                onClick={open}
-              >
-                Nueva solicitud
-              </Button>
-            </Group>
+            {puede.solicitar && (
+              <Group justify="flex-end">
+                <Button
+                  size="xs"
+                  color="emerald"
+                  variant="light"
+                  leftSection={<IconPlus size={14} />}
+                  onClick={open}
+                >
+                  Nueva solicitud
+                </Button>
+              </Group>
+            )}
 
             {lista.length === 0 && !isLoading ? (
               <EmptyState
@@ -123,9 +138,11 @@ export function ViaticoView() {
           </Stack>
         </Tabs.Panel>
 
-        <Tabs.Panel value="vuelos" pt="md">
-          <VuelosTab />
-        </Tabs.Panel>
+        {puede.autorizarVuelos && (
+          <Tabs.Panel value="vuelos" pt="md">
+            <VuelosTab />
+          </Tabs.Panel>
+        )}
       </Tabs>
 
       <ViaticoModal

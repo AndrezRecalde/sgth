@@ -1,13 +1,30 @@
 <?php
 namespace App\Http\Requests\Viatico;
 
+use App\Models\Expediente\Servidor;
+use App\Models\Viatico\Viatico;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SolicitarViaticoRequest extends FormRequest
 {
+    /**
+     * A nombre de quién se registra: el servidor de la ruta, o el del propio
+     * usuario. Se decide antes de validar, para que a quien no puede registrar
+     * se le responda 403 y no una lista de campos por corregir.
+     *
+     * Sin expediente vinculado no hay a quién autorizar: lo rechaza el
+     * controlador con su propio mensaje.
+     */
     public function authorize(): bool
     {
-        return true;
+        $servidorId = $this->route('servidorId');
+
+        $servidor = $servidorId !== null
+            ? Servidor::findOrFail((int) $servidorId)
+            : $this->user()->servidor;
+
+        return $servidor === null
+            || $this->user()->can('crear', [Viatico::class, $servidor]);
     }
 
     public function rules(): array

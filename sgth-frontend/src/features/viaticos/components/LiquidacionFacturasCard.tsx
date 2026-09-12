@@ -23,8 +23,9 @@ import type { CategoriaFactura } from "@/types/api";
 interface Props {
   facturas: FacturaData[];
   categorias: CategoriaFactura[];
-  onRegistrar: () => void;
-  onEditar: () => void;
+  /** Sin estas dos, la tarjeta es de solo lectura. */
+  onRegistrar?: () => void;
+  onEditar?: () => void;
 }
 
 export function LiquidacionFacturasCard({
@@ -70,16 +71,18 @@ export function LiquidacionFacturasCard({
               Debe adjuntar los comprobantes de los gastos realizados.
             </Text>
           </Alert>
-          <Button
-            color="orange"
-            variant="light"
-            size="sm"
-            leftSection={<IconFileInvoice size={14} />}
-            onClick={onRegistrar}
-            fullWidth
-          >
-            Registrar comprobantes
-          </Button>
+          {onRegistrar && (
+            <Button
+              color="orange"
+              variant="light"
+              size="sm"
+              leftSection={<IconFileInvoice size={14} />}
+              onClick={onRegistrar}
+              fullWidth
+            >
+              Registrar comprobantes
+            </Button>
+          )}
         </Stack>
       ) : (
         <Stack gap="xs">
@@ -116,15 +119,17 @@ export function LiquidacionFacturasCard({
               )}
             </Stack>
           ))}
-          <Button
-            size="xs"
-            variant="subtle"
-            color="orange"
-            leftSection={<IconPencil size={12} />}
-            onClick={onEditar}
-          >
-            Editar comprobantes
-          </Button>
+          {onEditar && (
+            <Button
+              size="xs"
+              variant="subtle"
+              color="orange"
+              leftSection={<IconPencil size={12} />}
+              onClick={onEditar}
+            >
+              Editar comprobantes
+            </Button>
+          )}
         </Stack>
       )}
     </Card>
