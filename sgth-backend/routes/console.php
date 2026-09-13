@@ -70,6 +70,16 @@ Schedule::command('sanctum:prune-expired --hours=24')
     ->dailyAt('03:30')
     ->onOneServer();
 
+// Viáticos: llegada la salida pasan a «en comisión»; llegado el regreso, a
+// «pendiente de liquidación», que es cuando empieza el plazo de 5 días hábiles
+// para liquidar. Dependía de un botón que nadie estaba obligado a pulsar. Cada
+// hora, porque el viaje empieza y termina a una hora concreta y el servidor
+// debe ver su liquidación abierta el mismo día que vuelve.
+Schedule::command('sgth:viaticos:avanzar-estados')
+    ->hourly()
+    ->onOneServer()
+    ->withoutOverlapping();
+
 use App\Jobs\Asistencia\VencerPermisosJob;
 
 // Las 72 horas laborables del Art. 33 de la LOSEP: el permiso cuyo respaldo

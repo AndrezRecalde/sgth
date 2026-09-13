@@ -12,6 +12,8 @@ use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoHistorialEstado;
 use App\Models\Viatico\ViaticoServidor;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -237,6 +239,102 @@ final class ViaticoEstadoService
         });
     }
 
+    // ── Tarea programada ─────────────────────────────────────────────
+
+    /**
+     * Pone el estado al día con las fechas del viaje.
+     *
+     * «En comisión» y «pendiente de liquidación» dependían de que Financiero
+     * pulsara un botón. Si no lo hacía, el viático seguía «aprobado» después de
+     * volver, y el plazo de 5 días hábiles para liquidar —que solo cuenta con
+     * el viático pendiente de liquidación— nunca empezaba: el bloqueo por
+     * liquidaciones vencidas no se aplicaba a nadie.
+     *
+     * Decidido con el usuario:
+     * - Llegada la salida, lo aprobado y lo que tiene anticipo pasa a «en
+     *   comisión». Si el anticipo no se entregó, el viaje igual empezó: queda
+     *   como un viático sin anticipo y lo que corresponda se paga al liquidar.
+     * - Una solicitud sin aprobar no se toca: Financiero todavía puede
+     *   aprobarla con retraso o rechazarla.
+     * - Llegado el regreso, lo que está en comisión pasa a pendiente de
+     *   liquidación.
+     *
+     * Un viaje que empezó y terminó desde la última corrida da los dos pasos.
+     * Los botones manuales siguen: sirven para adelantarse a la tarea.
+     *
+     * @return array{en_comision: int, pendiente_liquidacion: int}
+     */
+    public function avanzarPorFechas(?CarbonInterface $ahora = null): array
+    {
+        $ahora ??= Carbon::now();
+
+        $salieron = Viatico::whereIn('estado', [EstadoViatico::APROBADO, EstadoViatico::CON_ANTICIPO])
+            ->where('datetime_salida', '<=', $ahora)
+            ->orderBy('id')
+            ->pluck('id');
+
+        $enComision = $salieron->filter(fn (int $id) => $this->avanzar(
+            $id, EstadoViatico::EN_COMISION,
+            function (Viatico $viatico) use ($ahora) {
+                if ($viatico->datetime_salida->gt($ahora)) {
+                    return false;
+                }
+
+                if ($viatico->estado === EstadoViatico::APROBADO
+                    && $this->valor($viatico->modalidad_anticipo) !== 'sin_anticipo'
+                ) {
+                    $viatico->modalidad_anticipo = 'sin_anticipo';
+
+                    return 'Comenzó la comisión sin que se entregara el anticipo; '
+                        . 'se liquida como un viático sin anticipo.';
+                }
+
+                return 'Comenzó la comisión.';
+            },
+        ))->count();
+
+        $volvieron = Viatico::where('estado', EstadoViatico::EN_COMISION)
+            ->where('datetime_llegada', '<=', $ahora)
+            ->orderBy('id')
+            ->pluck('id');
+
+        $pendientes = $volvieron->filter(fn (int $id) => $this->avanzar(
+            $id, EstadoViatico::PENDIENTE_LIQUIDACION,
+            fn (Viatico $viatico) => $viatico->datetime_llegada->gt($ahora)
+                ? false
+                : 'Terminó la comisión; corre el plazo para liquidar.',
+        ))->count();
+
+        return ['en_comision' => $enComision, 'pendiente_liquidacion' => $pendientes];
+    }
+
+    /**
+     * Un paso de la tarea programada. La condición se vuelve a mirar con la
+     * fila bloqueada: entre la consulta y el paso, alguien pudo cambiar las
+     * fechas o el estado. Si ya no aplica, se deja como está.
+     *
+     * @param callable(Viatico): (string|false) $condicion Devuelve el motivo
+     *        del paso, o `false` si ya no corresponde darlo.
+     */
+    private function avanzar(int $viaticoId, EstadoViatico $destino, callable $condicion): bool
+    {
+        try {
+            $this->transicionar($viaticoId, null, $destino, null, function (Viatico $viatico) use ($condicion) {
+                $motivo = $condicion($viatico);
+
+                if ($motivo === false) {
+                    throw new ReglaNegocioException('Ya no corresponde.');
+                }
+
+                return $motivo;
+            });
+
+            return true;
+        } catch (ReglaNegocioException) {
+            return false;
+        }
+    }
+
     // ── Reglas para lo que no es una transición ──────────────────────
 
     /**
@@ -299,12 +397,14 @@ final class ViaticoEstadoService
      * Bloquea el viático, comprueba que el paso esté en el grafo, aplica lo
      * propio de la acción, cambia el estado y lo anota en el historial.
      *
+     * Sin usuario, el paso lo dio la tarea programada: queda sin autor.
+     *
      * @param list<EstadoViatico>|null $desde Restringe aún más el origen,
      *        cuando el destino se alcanza desde varios estados.
      */
     private function transicionar(
         int $viaticoId,
-        User $user,
+        ?User $user,
         EstadoViatico $destino,
         ?string $motivo,
         ?callable $aplicar,
@@ -324,12 +424,16 @@ final class ViaticoEstadoService
                 );
             }
 
+            // Lo propio de la acción. Si devuelve texto, ese es el motivo del
+            // paso: lo usa la tarea programada, que lo decide con la fila ya
+            // bloqueada.
             if ($aplicar) {
-                $aplicar($viatico);
+                $resultado = $aplicar($viatico);
+                $motivo = is_string($resultado) ? $resultado : $motivo;
             }
 
             $viatico->estado     = $destino;
-            $viatico->updated_by = $user->id;
+            $viatico->updated_by = $user?->id;
             $viatico->save();
 
             ViaticoHistorialEstado::create([
@@ -337,7 +441,7 @@ final class ViaticoEstadoService
                 'estado_anterior' => $origen->value,
                 'estado_nuevo'    => $destino->value,
                 'motivo'          => $motivo,
-                'usuario_id'      => $user->id,
+                'usuario_id'      => $user?->id,
             ]);
 
             return $viatico->fresh();
