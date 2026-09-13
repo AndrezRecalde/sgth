@@ -124,6 +124,7 @@ use App\Http\Controllers\Sso\RespuestaAssistController;
 use App\Http\Controllers\Sso\RespuestaPsicosocialController;
 use App\Http\Controllers\Sso\RiesgoLaboralController;
 use App\Http\Controllers\Viatico\AutorizacionVueloController;
+use App\Http\Controllers\Viatico\BandejaViaticoController;
 use App\Http\Controllers\Viatico\CatalogoViaticoController;
 use App\Http\Controllers\Viatico\InformeViaticoController;
 use App\Http\Controllers\Viatico\LiquidacionViaticoController;
@@ -843,6 +844,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [CatalogoViaticoController::class, 'empresasPorTipo']);
         Route::get('catalogos/categorias-factura',
             [CatalogoViaticoController::class, 'categoriasFactura']);
+
+        // Bandeja de Financiero. Antes del comodín `{id}`.
+        Route::get('bandeja', [BandejaViaticoController::class, 'index']);
+        Route::get('bandeja/resumen', [BandejaViaticoController::class, 'resumen']);
 
         Route::prefix('vuelos')->group(function () {
             Route::get('/', [AutorizacionVueloController::class, 'index']);

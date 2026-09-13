@@ -84,6 +84,7 @@ export const ROUTES = {
     REPORTES:        '/portal/reportes',
     MI_CV:           '/portal/mi-cv',
     VIATICOS:        '/portal/viaticos',
+    VIATICOS_BANDEJA: '/portal/viaticos/bandeja',
     VIATICO_DETALLE: (codigo: string | number) =>
       `/portal/viaticos/${codigo}`,
   },

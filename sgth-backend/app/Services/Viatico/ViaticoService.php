@@ -226,20 +226,28 @@ final class ViaticoService implements ViaticoServiceInterface
         foreach ($viaticosPendientes as $v) {
             if (!$v->datetime_llegada) continue;
 
-            // Cinco, no cuatro: calcularDiasHabiles() cuenta a partir del día
-            // siguiente al retorno, así que pedirle 4 dejaba el plazo en
-            // cuatro días hábiles y bloqueaba al servidor un día antes de lo
-            // que permite la norma — la misma que cita el mensaje de error.
-            $fechaLimite = $this->calcularDiasHabiles(
-                Carbon::parse($v->datetime_llegada)->copy(), 5
-            );
-
-            if (now()->gt($fechaLimite)) {
+            if (now()->gt($this->fechaLimiteLiquidacion($v))) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Hasta cuándo puede liquidarse: 5 días hábiles después del regreso, a la
+     * misma hora. La usan el bloqueo y la bandeja de Financiero, que tienen que
+     * decir lo mismo.
+     */
+    public function fechaLimiteLiquidacion(Viatico $viatico): Carbon
+    {
+        // Cinco, no cuatro: calcularDiasHabiles() cuenta a partir del día
+        // siguiente al retorno, así que pedirle 4 dejaba el plazo en
+        // cuatro días hábiles y bloqueaba al servidor un día antes de lo
+        // que permite la norma — la misma que cita el mensaje de error.
+        return $this->calcularDiasHabiles(
+            Carbon::parse($viatico->datetime_llegada)->copy(), 5
+        );
     }
 
     /**

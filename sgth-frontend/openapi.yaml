@@ -4119,6 +4119,226 @@
                 }
             }
         },
+        "/v1/viaticos/bandeja": {
+            "get": {
+                "operationId": "bandejaViatico.index",
+                "tags": [
+                    "BandejaViatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "etapa",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "por_aprobar",
+                                "por_anticipo",
+                                "por_iniciar",
+                                "en_comision",
+                                "por_liquidar",
+                                "por_revisar",
+                                "cerrados"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "vencidas",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vi\u00e1ticos de la bandeja."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "integer"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "desde": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "hasta": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina",
+                                                "desde",
+                                                "hasta"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/bandeja/resumen": {
+            "get": {
+                "operationId": "bandejaViatico.resumen",
+                "tags": [
+                    "BandejaViatico"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resumen de la bandeja de vi\u00e1ticos."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "conteos": {
+                                                    "type": "string"
+                                                },
+                                                "vencidas": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "montos": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "comprometido": {
+                                                            "type": "number",
+                                                            "description": "Lo que la instituci\u00f3n se comprometi\u00f3 a pagar y a\u00fan no cerr\u00f3."
+                                                        },
+                                                        "anticipos_entregados": {
+                                                            "type": "number",
+                                                            "description": "Dinero que ya sali\u00f3 como anticipo en vi\u00e1ticos sin cerrar."
+                                                        },
+                                                        "por_contabilizar": {
+                                                            "type": "number",
+                                                            "description": "Liquidado por el servidor, esperando la revisi\u00f3n de Financiero."
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "comprometido",
+                                                        "anticipos_entregados",
+                                                        "por_contabilizar"
+                                                    ]
+                                                },
+                                                "unidades": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/UnidadAdministrativa"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "conteos",
+                                                "vencidas",
+                                                "montos",
+                                                "unidades"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/helpdesk/base-conocimiento": {
             "get": {
                 "operationId": "base-conocimiento.index",

@@ -247,6 +247,60 @@ export type ViaticoParams = {
   per_page?:    number
   estado?:      EstadoViatico
   servidor_id?: number
+  search?:      string
+  /** «Mis viáticos»: solo los propios, aunque quien pide vea los de todos. */
+  propios?:     1
+}
+
+// ── Bandeja de Financiero (BandejaViaticoController) ──
+export type EtapaBandeja =
+  | 'por_aprobar' | 'por_anticipo' | 'por_iniciar' | 'en_comision'
+  | 'por_liquidar' | 'por_revisar' | 'cerrados'
+
+export type FiltrosBandeja = {
+  unidad_id?: number | null
+  desde?:     string | null
+  hasta?:     string | null
+  search?:    string | null
+}
+
+export type BandejaResumen = {
+  conteos:  Record<EtapaBandeja | 'vuelos', number>
+  vencidas: number
+  montos: {
+    comprometido:         number
+    anticipos_entregados: number
+    por_contabilizar:     number
+  }
+  unidades: { id: number; nombre: string }[]
+}
+
+/** Una fila de la bandeja (`ViaticoBandejaResource`). */
+export type ViaticoBandeja = {
+  id:                 number
+  codigo_viatico:     string | null
+  estado:             EstadoViatico
+  zona:               string
+  modalidad_anticipo: string
+  datetime_salida:    string
+  datetime_llegada:   string
+  total_dias:         number | string
+  monto_calculado:    number | string
+  monto_anticipo:     number | string
+  servidor_id:        number
+  servidor?: {
+    id:       number
+    nombre:   string
+    apellido: string
+    cedula:   string
+    unidad:   string | null
+  }
+  /** Solo en «por liquidar». */
+  plazo: {
+    fecha_limite:           string
+    dias_habiles_restantes: number
+    vencida:                boolean
+  } | null
 }
 
 export type ActividadLiquidacion = {

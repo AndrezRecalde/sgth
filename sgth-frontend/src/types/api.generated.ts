@@ -783,6 +783,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/viaticos/bandeja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bandejaViatico.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/viaticos/bandeja/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bandejaViatico.resumen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/helpdesk/base-conocimiento": {
         parameters: {
             query?: never;
@@ -12616,6 +12648,87 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "bandejaViatico.index": {
+        parameters: {
+            query: {
+                etapa: "por_aprobar" | "por_anticipo" | "por_iniciar" | "en_comision" | "por_liquidar" | "por_revisar" | "cerrados";
+                vencidas?: boolean;
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Viáticos de la bandeja.";
+                        datos: {
+                            [key: string]: string;
+                        };
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bandejaViatico.resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resumen de la bandeja de viáticos.";
+                        datos: {
+                            conteos: string;
+                            vencidas: number;
+                            montos: {
+                                /** @description Lo que la institución se comprometió a pagar y aún no cerró. */
+                                comprometido: number;
+                                /** @description Dinero que ya salió como anticipo en viáticos sin cerrar. */
+                                anticipos_entregados: number;
+                                /** @description Liquidado por el servidor, esperando la revisión de Financiero. */
+                                por_contabilizar: number;
+                            };
+                            unidades: components["schemas"]["UnidadAdministrativa"][];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "base-conocimiento.index": {

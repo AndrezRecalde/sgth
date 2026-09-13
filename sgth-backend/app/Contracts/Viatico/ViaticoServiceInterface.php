@@ -21,4 +21,9 @@ interface ViaticoServiceInterface
      * Verifica si el servidor tiene bloqueadas nuevas solicitudes por tener liquidaciones pendientes y vencidas.
      */
     public function verificarBloqueo(int $servidorId): bool;
+
+    /**
+     * Fecha y hora límite para liquidar: 5 días hábiles después del regreso.
+     */
+    public function fechaLimiteLiquidacion(Viatico $viatico): \Carbon\Carbon;
 }

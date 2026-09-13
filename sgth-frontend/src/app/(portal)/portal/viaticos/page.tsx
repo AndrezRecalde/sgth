@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import { ViaticoView } from "@/features/viaticos/components/ViaticoView";
 
 export const metadata: Metadata = {
-  title: "Viaticos",
-  description: "Gestión del control de viaticos institucional",
+  title: "Mis viáticos",
+  description: "Tus comisiones de servicio y viáticos",
 };
 
 export default function ViaticoPage() {
