@@ -42,6 +42,11 @@ const IMPORTS_SOLO_CATALOGO = [
     message: "Use StatusBadge (estados, señales y categorías), CountBadge (una cifra) o LegendBadge (leyenda de un gráfico) de '@/components/ui': el color sale del significado, no se escribe a mano (regla 06).",
   },
   {
+    name: "@mantine/core",
+    importNames: ["Table"],
+    message: "Use SgthTable de '@/components/ui', con las columnas en su .columns.tsx. Para pares etiqueta/valor, DetailList (regla 06).",
+  },
+  {
     name: "mantine-datatable",
     importNames: ["DataTable"],
     message: "Use SgthTable de '@/components/ui' (regla 06).",
@@ -69,6 +74,10 @@ const SINTAXIS_TS = [
 ];
 
 const SINTAXIS_TSX = [
+  {
+    selector: 'JSXOpeningElement[name.name="table"]',
+    message: "Nunca una tabla HTML: use SgthTable de '@/components/ui' (regla 06).",
+  },
   // La validación de formularios la hace Zod vía zodResolver. El prop
   // `required` de Mantine llega al DOM como atributo `required` real, y
   // sin `noValidate` el navegador cancela el evento `submit` antes de que
