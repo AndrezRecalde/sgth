@@ -21,6 +21,9 @@ enum Rol: string
     case RECEPCION = 'recepcion';
     case TRABAJO_SOCIAL = 'trabajo-social';
 
+    // Gestión Financiera: aprueba, opera y contabiliza los viáticos
+    case FINANCIERO = 'financiero';
+
     // Personal médico del dispensario
     case MEDICO = 'medico';
     case ODONTOLOGO = 'odontologo';
@@ -46,6 +49,7 @@ enum Rol: string
             self::SERVIDOR => 'Servidor Público',
             self::RECEPCION => 'Recepción',
             self::TRABAJO_SOCIAL => 'Trabajo Social',
+            self::FINANCIERO => 'Financiero',
             self::MEDICO => 'Médico',
             self::ODONTOLOGO => 'Odontólogo',
             self::ENFERMERA => 'Enfermera',

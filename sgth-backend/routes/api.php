@@ -125,7 +125,6 @@ use App\Http\Controllers\Sso\RespuestaPsicosocialController;
 use App\Http\Controllers\Sso\RiesgoLaboralController;
 use App\Http\Controllers\Viatico\AutorizacionVueloController;
 use App\Http\Controllers\Viatico\CatalogoViaticoController;
-use App\Http\Controllers\Viatico\FacturaViaticoController;
 use App\Http\Controllers\Viatico\InformeViaticoController;
 use App\Http\Controllers\Viatico\LiquidacionViaticoController;
 use App\Http\Controllers\Viatico\TramoViaticoController;
@@ -859,10 +858,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('{id}', [ViaticoController::class, 'show']);
         Route::patch('{id}', [ViaticoController::class, 'update']);
 
+        // A nombre de otro servidor: solo quien opera los viáticos. El propio
+        // va por `POST /viaticos`. Había además un `{id}/solicitar` que pasaba
+        // el id del viático como si fuera el del servidor: se retiró.
         Route::post('servidor/{servidorId}/solicitar', [ViaticoController::class, 'solicitar'])
             ->name('viatico.solicitar.por.servidor');
-        Route::post('{id}/solicitar', [ViaticoController::class, 'solicitar'])
-            ->name('viatico.solicitar.propio');
         Route::post('{id}/aprobar', [ViaticoController::class, 'aprobar']);
 
         Route::post('{id}/entregar-anticipo',
@@ -946,13 +946,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [TramoViaticoController::class, 'update']);
         Route::delete('{viaticoId}/tramos/{tramo}',
             [TramoViaticoController::class, 'destroy']);
-    });
-
-    // Liquidaciones y Facturas
-    Route::prefix('liquidaciones')->group(function () {
-        Route::get('{id}/facturas', [FacturaViaticoController::class, 'index']);
-        Route::post('{id}/facturas', [FacturaViaticoController::class, 'store']);
-        Route::delete('{id}/facturas/{factura}', [FacturaViaticoController::class, 'destroy']);
     });
 
     // Módulo 14: Disciplinario — sumario administrativo (LOSEP) y visto bueno

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Viatico;
 
 use App\Http\Controllers\Controller;
+use App\Models\Viatico\Viatico;
 use App\Services\Viatico\PdfInformeViaticoService;
 use Illuminate\Http\Response;
 
@@ -18,7 +19,7 @@ class InformeViaticoController extends Controller
         string $identificador
     ): Response {
         $result = $this->service->generarSolicitudContent(
-            $identificador
+            $this->autorizar($identificador)
         );
 
         return response($result['content'], 200, [
@@ -35,7 +36,7 @@ class InformeViaticoController extends Controller
         string $identificador
     ): Response {
         $result = $this->service->generarInformeContent(
-            $identificador
+            $this->autorizar($identificador)
         );
 
         return response($result['content'], 200, [
@@ -49,7 +50,7 @@ class InformeViaticoController extends Controller
         string $identificador
     ): Response {
         $result = $this->service->generarComprobanteContabilidad(
-            $identificador
+            $this->autorizar($identificador)
         );
 
         return response($result['content'], 200, [
@@ -65,5 +66,23 @@ class InformeViaticoController extends Controller
     public function descargar(string $archivo): Response
     {
         return response('Endpoint deprecado.', 410);
+    }
+
+    /**
+     * El id del viático, si el usuario puede verlo.
+     *
+     * Los PDF no comprobaban nada y el código es predecible (unidad, año y
+     * secuencial): cualquiera descargaba la solicitud de otro, con su cuenta
+     * bancaria. Se imprime bajo la misma regla con la que se lee.
+     */
+    private function autorizar(string $identificador): int
+    {
+        $viatico = is_numeric($identificador)
+            ? Viatico::findOrFail((int) $identificador)
+            : Viatico::where('codigo_viatico', $identificador)->firstOrFail();
+
+        $this->authorize('ver', $viatico);
+
+        return $viatico->id;
     }
 }

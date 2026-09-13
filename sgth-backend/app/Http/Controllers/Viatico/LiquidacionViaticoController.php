@@ -21,19 +21,15 @@ class LiquidacionViaticoController extends Controller
     public function obtenerOCrear(
         int $viaticoId
     ): JsonResponse {
-        $viatico = Viatico::findOrFail($viaticoId);
+        $viatico = $this->autorizar($viaticoId, 'ver');
 
-        $liquidacion = LiquidacionViatico::firstOrCreate(
-            ['viatico_id' => $viaticoId],
-            [
-                'total_facturas'      => 0,
-                'diferencia_devolver' => 0,
-                'fecha_liquidacion'   => now()->toDateString(),
-                'created_by'          => request()->user()->id,
-            ]
-        );
+        // Abrirla solo la crea quien la va a llenar. Quien solo consulta —
+        // Talento Humano, un acompañante— ve la que haya, o ninguna.
+        $liquidacion = request()->user()->can('editar', $viatico)
+            ? $this->getLiquidacion($viaticoId)
+            : LiquidacionViatico::where('viatico_id', $viaticoId)->first();
 
-        $liquidacion->load([
+        $liquidacion?->load([
             'actividades',
             'detallesFactura.categoria',
         ]);
@@ -49,6 +45,7 @@ class LiquidacionViaticoController extends Controller
     public function listarActividades(
         int $viaticoId
     ): JsonResponse {
+        $this->autorizar($viaticoId, 'ver');
         $liquidacion = $this->liquidacionExistente($viaticoId);
 
         return ApiResponse::ok(
@@ -61,6 +58,8 @@ class LiquidacionViaticoController extends Controller
         Request $request,
         int $viaticoId
     ): JsonResponse {
+        $this->autorizar($viaticoId, 'editar');
+
         $data = $request->validate([
             'actividades'               => ['required', 'array', 'min:1'],
             'actividades.*.fecha'       => ['required', 'date'],
@@ -104,6 +103,7 @@ class LiquidacionViaticoController extends Controller
     public function listarFacturas(
         int $viaticoId
     ): JsonResponse {
+        $this->autorizar($viaticoId, 'ver');
         $liquidacion = $this->liquidacionExistente($viaticoId);
 
         return ApiResponse::ok(
@@ -116,6 +116,8 @@ class LiquidacionViaticoController extends Controller
         Request $request,
         int $viaticoId
     ): JsonResponse {
+        $this->autorizar($viaticoId, 'editar');
+
         $data = $request->validate([
             'facturas'                        => ['required', 'array', 'min:1'],
             'facturas.*.categoria_factura_id' => ['required', 'integer'],
@@ -213,7 +215,7 @@ class LiquidacionViaticoController extends Controller
         int $viaticoId,
         Request $request
     ): JsonResponse {
-        $viatico = Viatico::findOrFail($viaticoId);
+        $viatico = $this->autorizar($viaticoId, 'editar');
 
         // Sin crearla: confirmar una liquidación que no existe se rechaza igual
         // que una vacía, y abría una fila para acto seguido negarse a cerrarla.
@@ -293,5 +295,21 @@ class LiquidacionViaticoController extends Controller
         Viatico::findOrFail($viaticoId);
 
         return LiquidacionViatico::where('viatico_id', $viaticoId)->first();
+    }
+
+    /**
+     * El viático, si el usuario puede hacer con él lo que pide.
+     *
+     * La liquidación no comprobaba de quién era el viático: cualquiera leía,
+     * reemplazaba y confirmaba la de otro. La presenta el titular o quien opera
+     * los viáticos (`editar`); la lee además quien puede ver el viático.
+     */
+    private function autorizar(int $viaticoId, string $accion): Viatico
+    {
+        $viatico = Viatico::findOrFail($viaticoId);
+
+        $this->authorize($accion, $viatico);
+
+        return $viatico;
     }
 }

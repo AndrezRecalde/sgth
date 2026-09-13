@@ -7,10 +7,12 @@ import {
   IconFileText, IconReceipt, IconArrowBack,
 } from '@tabler/icons-react'
 import type { ViaticoConRelaciones } from '@/types/api'
+import type { AccionesViatico } from '../hooks/useAccionesViatico'
 
 interface Props {
   viatico:        ViaticoConRelaciones
   estadoActual:   string
+  puede:          AccionesViatico
   onAprobar:      () => void
   onEntregar:     () => void
   onComision:     () => void
@@ -37,9 +39,14 @@ interface Props {
   }
 }
 
+/**
+ * Los PDF y las acciones que tocan en el estado del viático, cada una solo
+ * para quien la puede usar (ver `useAccionesViatico`).
+ */
 export function ViaticoAcciones({
   viatico: d,
   estadoActual,
+  puede,
   onAprobar,
   onEntregar,
   onComision,
@@ -54,10 +61,37 @@ export function ViaticoAcciones({
   loadings,
 }: Props) {
   const sinAnticipo = (d.modalidad_anticipo as string) === 'sin_anticipo'
+  const cancela = puede.cancelar(d)
+
+  const botonRechazar = puede.rechazar && (
+    <Button
+      size="xs"
+      variant="subtle"
+      color="red"
+      leftSection={<IconBan size={12} />}
+      loading={loadings.rechazar}
+      onClick={onRechazar}
+    >
+      Rechazar
+    </Button>
+  )
+
+  const botonComision = (principal: boolean) => puede.operar && (
+    <Button
+      size="sm"
+      variant={principal ? 'filled' : 'light'}
+      color="violet"
+      leftSection={principal ? <IconRoute size={14} /> : <IconPlane size={14} />}
+      loading={loadings.comision}
+      onClick={onComision}
+    >
+      Marcar en comisión
+    </Button>
+  )
 
   return (
     <Stack gap="sm">
-      {/* PDFs — siempre visibles */}
+      {/* PDFs — los ve quien puede ver el viático */}
       <Group>
         <Button
           size="xs"
@@ -101,33 +135,37 @@ export function ViaticoAcciones({
       <Divider />
 
       {/* Acciones por estado */}
-      {estadoActual === 'solicitado' && (
+      {estadoActual === 'solicitado' && (puede.aprobar || cancela) && (
         <Group>
-          <Button
-            size="sm"
-            color="blue"
-            leftSection={<IconCheck size={14} />}
-            loading={loadings.aprobar}
-            onClick={onAprobar}
-          >
-            Aprobar viático
-          </Button>
-          <Button
-            size="sm"
-            variant="light"
-            color="red"
-            leftSection={<IconX size={14} />}
-            loading={loadings.cancelar}
-            onClick={onCancelar}
-          >
-            Cancelar solicitud
-          </Button>
+          {puede.aprobar && (
+            <Button
+              size="sm"
+              color="blue"
+              leftSection={<IconCheck size={14} />}
+              loading={loadings.aprobar}
+              onClick={onAprobar}
+            >
+              Aprobar viático
+            </Button>
+          )}
+          {cancela && (
+            <Button
+              size="sm"
+              variant="light"
+              color="red"
+              leftSection={<IconX size={14} />}
+              loading={loadings.cancelar}
+              onClick={onCancelar}
+            >
+              Cancelar solicitud
+            </Button>
+          )}
         </Group>
       )}
 
       {estadoActual === 'aprobado' && (
         <Group>
-          {!sinAnticipo && (
+          {puede.operar && !sinAnticipo && (
             <Button
               size="sm"
               color="cyan"
@@ -138,108 +176,61 @@ export function ViaticoAcciones({
               Entregar anticipo
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="light"
-            color="violet"
-            leftSection={<IconPlane size={14} />}
-            loading={loadings.comision}
-            onClick={onComision}
-          >
-            Marcar en comisión
-          </Button>
-          <Button
-            size="xs"
-            variant="subtle"
-            color="red"
-            leftSection={<IconBan size={12} />}
-            loading={loadings.rechazar}
-            onClick={onRechazar}
-          >
-            Rechazar
-          </Button>
+          {botonComision(false)}
+          {botonRechazar}
         </Group>
       )}
 
       {estadoActual === 'con_anticipo' && (
         <Group>
-          <Button
-            size="sm"
-            color="violet"
-            leftSection={<IconRoute size={14} />}
-            loading={loadings.comision}
-            onClick={onComision}
-          >
-            Marcar en comisión
-          </Button>
-          <Button
-            size="xs"
-            variant="subtle"
-            color="red"
-            leftSection={<IconBan size={12} />}
-            loading={loadings.rechazar}
-            onClick={onRechazar}
-          >
-            Rechazar
-          </Button>
+          {botonComision(true)}
+          {botonRechazar}
         </Group>
       )}
 
       {estadoActual === 'en_comision' && (
         <Group>
-          <Button
-            size="sm"
-            color="yellow"
-            leftSection={<IconFileInvoice size={14} />}
-            loading={loadings.pendiente}
-            onClick={onPendiente}
-          >
-            Marcar pendiente liquidación
-          </Button>
-          <Button
-            size="xs"
-            variant="subtle"
-            color="red"
-            leftSection={<IconBan size={12} />}
-            loading={loadings.rechazar}
-            onClick={onRechazar}
-          >
-            Rechazar
-          </Button>
+          {puede.operar && (
+            <Button
+              size="sm"
+              color="yellow"
+              leftSection={<IconFileInvoice size={14} />}
+              loading={loadings.pendiente}
+              onClick={onPendiente}
+            >
+              Marcar pendiente liquidación
+            </Button>
+          )}
+          {botonRechazar}
         </Group>
       )}
 
       {estadoActual === 'liquidado' && (
         <Group>
-          <Button
-            size="sm"
-            color="emerald"
-            leftSection={<IconCheck size={14} />}
-            loading={loadings.contabilizar}
-            onClick={onContabilizar}
-          >
-            Contabilizar
-          </Button>
-          <Button
-            size="sm"
-            variant="light"
-            color="orange"
-            leftSection={<IconArrowBack size={14} />}
-            loading={loadings.devolverCorreccion}
-            onClick={onDevolverCorreccion}
-          >
-            Devolver a corrección
-          </Button>
-          <Button
-            size="xs"
-            variant="subtle"
-            color="red"
-            leftSection={<IconBan size={12} />}
-            loading={loadings.rechazar}
-            onClick={onRechazar}
-          >
-            Rechazar
-          </Button>
+          {puede.revisarLiquidacion && (
+            <>
+              <Button
+                size="sm"
+                color="emerald"
+                leftSection={<IconCheck size={14} />}
+                loading={loadings.contabilizar}
+                onClick={onContabilizar}
+              >
+                Contabilizar
+              </Button>
+              <Button
+                size="sm"
+                variant="light"
+                color="orange"
+                leftSection={<IconArrowBack size={14} />}
+                loading={loadings.devolverCorreccion}
+                onClick={onDevolverCorreccion}
+              >
+                Devolver a corrección
+              </Button>
+            </>
+          )}
+          {botonRechazar}
         </Group>
       )}
 

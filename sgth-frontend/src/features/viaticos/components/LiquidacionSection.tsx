@@ -6,6 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconAlertCircle } from "@tabler/icons-react";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { useCategoriasFactura, useLiquidacion } from "../hooks/useViaticos";
+import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import { ActividadesModal } from "./ActividadesModal";
 import { FacturasModal } from "./FacturasModal";
 import { LiquidacionActividadesCard } from "./LiquidacionActividadesCard";
@@ -29,6 +30,9 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const { data: categoriasData = [] } = useCategoriasFactura();
   const { data: liquidacionData } = useLiquidacion(viatico.id);
   const { confirmarLiquidacion } = useViaticoMutations();
+  // La presenta el titular o quien opera; Talento Humano y los acompañantes
+  // la ven sin poder tocarla.
+  const presenta = useAccionesViatico().editar(viatico);
 
   const [actModalAbierto, { open: abrirAct, close: cerrarAct }] =
     useDisclosure(false);
@@ -125,21 +129,21 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <LiquidacionActividadesCard
             actividades={actividades}
-            onRegistrar={abrirAct}
-            onEditar={abrirAct}
+            onRegistrar={presenta ? abrirAct : undefined}
+            onEditar={presenta ? abrirAct : undefined}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <LiquidacionFacturasCard
             facturas={facturas}
             categorias={categoriasData as CategoriaFactura[]}
-            onRegistrar={abrirFact}
-            onEditar={abrirFact}
+            onRegistrar={presenta ? abrirFact : undefined}
+            onEditar={presenta ? abrirFact : undefined}
           />
         </Grid.Col>
       </Grid>
 
-      {!puedeRegistrar && (
+      {presenta && !puedeRegistrar && (
         <Alert
           icon={<IconAlertCircle size={14} />}
           color="gray"
@@ -153,17 +157,19 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         </Alert>
       )}
 
-      <Button
-        color="emerald"
-        size="md"
-        disabled={!puedeRegistrar}
-        loading={confirmarLiquidacion.isPending}
-        leftSection={<IconCheck size={16} />}
-        onClick={handleRegistrar}
-        fullWidth
-      >
-        Registrar liquidación
-      </Button>
+      {presenta && (
+        <Button
+          color="emerald"
+          size="md"
+          disabled={!puedeRegistrar}
+          loading={confirmarLiquidacion.isPending}
+          leftSection={<IconCheck size={16} />}
+          onClick={handleRegistrar}
+          fullWidth
+        >
+          Registrar liquidación
+        </Button>
+      )}
 
       <ActividadesModal
         opened={actModalAbierto}

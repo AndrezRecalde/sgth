@@ -8,6 +8,7 @@ import { TableActions } from '@/components/ui/TableActions'
 import { ESTADO_COLORS, ESTADO_LABELS } from '../constants/viatico.constants'
 import type { EstadoViatico, ViaticoConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
+import type { AccionesViatico } from '../hooks/useAccionesViatico'
 
 const ZONA_ABREV: Record<string, string> = {
   dentro_provincia: 'Dentro prov.',
@@ -19,6 +20,7 @@ interface ColumnActions {
   onVer:    (v: ViaticoConRelaciones) => void
   onAprobar: (v: ViaticoConRelaciones) => void
   onLiquidar: (v: ViaticoConRelaciones) => void
+  puede:     AccionesViatico
 }
 
 export function getViaticoColumns(
@@ -129,14 +131,15 @@ export function getViaticoColumns(
               icon:    <IconCheck size={14} />,
               color:   'emerald',
               onClick: () => actions.onAprobar(v),
-              hidden:  (v.estado as string) !== 'solicitado',
+              hidden:  !actions.puede.aprobar || (v.estado as string) !== 'solicitado',
             },
             {
               label:   'Liquidar',
               icon:    <IconCurrencyDollar size={14} />,
               color:   'orange',
               onClick: () => actions.onLiquidar(v),
-              hidden:  (v.estado as string) !== 'pendiente_liquidacion',
+              hidden:  !actions.puede.editar(v) ||
+                (v.estado as string) !== 'pendiente_liquidacion',
             },
           ]}
         />

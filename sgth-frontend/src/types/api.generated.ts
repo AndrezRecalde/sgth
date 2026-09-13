@@ -2808,38 +2808,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/liquidaciones/{liquidacionId}/facturas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["facturaViatico.index"];
-        put?: never;
-        post: operations["facturaViatico.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/liquidaciones/{liquidacionId}/facturas/{facturaId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["facturaViatico.destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/dispensario/fichas-sso/{id}/pdf": {
         parameters: {
             query?: never;
@@ -5980,23 +5948,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Registrar un viático a nombre de un servidor. Lo hace quien opera los
+         *     viáticos (lo comprueba la request); antes lo podía hacer cualquier
+         *     usuario con cualquier id
+         */
         post: operations["viatico.solicitar.por.servidor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/viaticos/{servidorId}/solicitar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["viatico.solicitar.propio"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6767,11 +6724,6 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
-        /**
-         * ConceptoFactura
-         * @enum {string}
-         */
-        ConceptoFactura: "alimentacion" | "hospedaje" | "transporte_terrestre" | "pasaje_aereo" | "combustible" | "peaje" | "materiales" | "otro";
         /** ConceptoNomina */
         ConceptoNomina: {
             id: number;
@@ -8070,6 +8022,7 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            dias_vencidos: string;
         };
         /** PermisoServidor */
         PermisoServidor: {
@@ -8108,6 +8061,7 @@ export interface components {
             rechazado_en: string | null;
             motivo_rechazo: string | null;
             dirigido_a_talento_humano: boolean;
+            motivo_anulacion: string | null;
         };
         /** PlanBienestar */
         PlanBienestar: {
@@ -8999,15 +8953,6 @@ export interface components {
             numero_extension: string;
             responsable: string;
             estado?: boolean;
-        };
-        /** StoreFacturaViaticoRequest */
-        StoreFacturaViaticoRequest: {
-            concepto: components["schemas"]["ConceptoFactura"];
-            numero_factura: string;
-            ruc_proveedor: string;
-            nombre_proveedor: string;
-            monto: number;
-            archivo_ruta?: string | null;
         };
         /** StoreFichaSaludOcupacionalRequest */
         StoreFichaSaludOcupacionalRequest: {
@@ -10488,6 +10433,11 @@ export interface components {
             unidad_administrativa_id: number | null;
             persona_reemplaza_id: number | null;
             periodo_vacacion_id: number | null;
+            anulado_por: number | null;
+            /** Format: date-time */
+            anulado_en: string | null;
+            motivo_anulacion: string | null;
+            observacion: string | null;
         };
         /** Viatico */
         Viatico: {
@@ -12353,6 +12303,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "autorizacionVuelo.aprobar": {
@@ -12387,6 +12338,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "autorizacionVuelo.rechazar": {
@@ -12421,6 +12373,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "autorizacionVuelo.subirDocumento": {
@@ -12456,6 +12409,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -18658,96 +18612,6 @@ export interface operations {
             };
         };
     };
-    "facturaViatico.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                liquidacionId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Facturas listadas exitosamente.";
-                        datos: components["schemas"]["FacturaViatico"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "facturaViatico.store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                liquidacionId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreFacturaViaticoRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Factura agregada exitosamente.";
-                        datos: components["schemas"]["FacturaViatico"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "facturaViatico.destroy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                liquidacionId: number;
-                facturaId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Factura eliminada exitosamente.";
-                        datos: null;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
     "femoPdf.generar": {
         parameters: {
             query?: never;
@@ -20399,7 +20263,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Liquidación obtenida.";
-                        datos: components["schemas"]["LiquidacionViatico"];
+                        datos: components["schemas"]["LiquidacionViatico"] | null;
                         meta: null;
                     };
                 };
@@ -20572,7 +20436,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Liquidación registrada correctamente.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"] | null;
                         meta: null;
                     };
                 };
@@ -26698,6 +26562,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "tramoViatico.store": {
@@ -26751,6 +26616,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -26807,6 +26673,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
@@ -26839,6 +26706,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
         };
     };
@@ -27804,6 +27672,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "viatico.store": {
@@ -27834,6 +27703,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -27863,6 +27733,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
         };
     };
@@ -27910,6 +27781,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
@@ -27944,39 +27816,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "viatico.solicitar.propio": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                servidorId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SolicitarViaticoRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Solicitud de viático creada con éxito. El monto ha sido calculado automáticamente basado en la normativa del MRL.";
-                        datos: components["schemas"]["Viatico"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -28074,8 +27914,7 @@ export interface operations {
                         exito: boolean;
                         mensaje: string;
                         datos: null;
-                        /** @constant */
-                        errores: 422;
+                        errores: null;
                     };
                 };
             };
@@ -28107,6 +27946,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "viaticos.rechazar": {
@@ -28164,6 +28004,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "viatico.marcarPendienteLiquidacion": {
@@ -28202,8 +28043,7 @@ export interface operations {
                         exito: boolean;
                         mensaje: string;
                         datos: null;
-                        /** @constant */
-                        errores: 422;
+                        errores: null;
                     };
                 };
             };
@@ -28271,6 +28111,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };

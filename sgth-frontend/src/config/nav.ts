@@ -462,7 +462,7 @@ export const ROLES_PORTAL = [
   'medico', 'odontologo', 'enfermera',
   'admin-uath', 'asistente-uath',
   'admin-ti', 'maxima-autoridad', 'auditor',
-  'recepcion', 'trabajo-social',
+  'recepcion', 'trabajo-social', 'financiero',
   'admin-dispensario', 'tecnico-dtic',
 ]
 

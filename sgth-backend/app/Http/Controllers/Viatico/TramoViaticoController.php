@@ -13,6 +13,8 @@ class TramoViaticoController extends Controller
 {
     public function index(int $viaticoId): JsonResponse
     {
+        $this->authorize('ver', Viatico::findOrFail($viaticoId));
+
         $tramos = TramoViatico::with([
             'empresa.catalogo',
             'origenProvincia', 'origenCanton',
@@ -32,6 +34,10 @@ class TramoViaticoController extends Controller
         int $viaticoId
     ): JsonResponse {
         $viatico = Viatico::findOrFail($viaticoId);
+
+        // El itinerario lo arma el titular o quien opera: antes cualquiera
+        // agregaba, cambiaba o borraba tramos de un viático ajeno.
+        $this->authorize('editar', $viatico);
 
         $data = $request->validate([
             'origen_tipo'           => 'required|in:nacional,internacional',
@@ -166,6 +172,8 @@ class TramoViaticoController extends Controller
             abort(404);
         }
 
+        $this->authorize('editar', Viatico::findOrFail($viaticoId));
+
         $data = $request->validate([
             'origen_tipo'           => 'sometimes|in:nacional,internacional',
             'origen_provincia_id'   => 'nullable|exists:provincias,id',
@@ -257,6 +265,9 @@ class TramoViaticoController extends Controller
         if ($tramo->viatico_id !== $viaticoId) {
             abort(404);
         }
+
+        $this->authorize('editar', Viatico::findOrFail($viaticoId));
+
         $tramo->delete();
 
         return ApiResponse::ok(

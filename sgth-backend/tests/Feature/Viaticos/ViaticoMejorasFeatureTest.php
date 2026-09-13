@@ -203,12 +203,3 @@ it('solo_una_cuenta_principal_por_proposito', function () {
     $this->assertDatabaseHas('cuentas_bancarias_servidor', ['id' => $cuenta1->id, 'es_principal_viatico' => false]);
     $this->assertDatabaseHas('cuentas_bancarias_servidor', ['id' => $cuenta2->id, 'es_principal_viatico' => true]);
 });
-
-// GRUPO 6 — Validar para solicitar
-it('no_puede_solicitar_sin_destinos', function () {
-    // El viatico base no tiene destinos
-    $response = $this->postJson("/api/v1/viaticos/{$this->viatico->id}/solicitar");
-
-    $response->assertStatus(422);
-    $response->assertJson(['exito' => false]);
-});
