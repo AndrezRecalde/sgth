@@ -60,7 +60,7 @@ en `node_modules/next/dist/docs/`. Es la fuente correcta, no la web.
 npm run dev            # servidor de desarrollo (turbopack)
 npm run build          # compilación de producción
 npx tsc --noEmit       # verificación de tipos
-npx eslint src --ext .ts,.tsx
+npm run lint           # eslint src --max-warnings=0
 ```
 
 El servidor de desarrollo se levanta **siempre** con `npm run dev`, nunca con

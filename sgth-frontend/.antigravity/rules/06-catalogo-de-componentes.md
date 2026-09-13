@@ -25,7 +25,10 @@ del módulo.
 | `EmptyState` | Estado vacío | Dice qué falta **y** qué hacer |
 | `SgthTable` | La única tabla del sistema | `PAGINACION_ES` si hay paginación |
 | `TableActions` | Menú de acciones de una fila | Última columna, `width: 50` |
-| `FormModal` | Modal de formulario | Pantalla completa en móvil |
+| `SgthModal` | Base de todo modal | Nunca el `Modal` de Mantine directo |
+| `ModalFooter` | Pie de un modal de acción | Pegajoso; principal relleno |
+| `FormModal` | Modal de formulario | `SgthModal` + `<form>` + `ModalFooter` |
+| `MotivoModal` | Confirmación que pide un motivo | `destructiva` al anular o rechazar |
 | `confirmar` | Confirmación de acción irreversible | Nunca el diálogo del navegador |
 
 ## Tablas
@@ -118,12 +121,62 @@ dentro, y el mismo concepto acababa en tonos distintos según la pantalla.
 
 ## Modales
 
-`FormModal` para captura; `confirmar()` para acciones irreversibles.
+**Ninguna pantalla importa `Modal` de Mantine.** ESLint lo rechaza fuera de
+`src/components/`. Hay cuatro piezas, de la más común a la más libre:
 
-`FormModal` resuelve de una vez lo que cada modal repetía: pantalla completa en
-móvil, el formulario envolviendo el contenido para que Enter envíe, el pie con
-Cancelar y Guardar siempre igual, y el cuerpo con scroll propio para que el pie
-no se pierda.
+| Pieza | Cuándo |
+|---|---|
+| `confirmar()` | Sí o no ante una acción irreversible |
+| `MotivoModal` | Sí o no, pero con un motivo escrito: rechazar, anular, devolver |
+| `FormModal` | Capturar y guardar: un formulario con Cancelar y Guardar |
+| `SgthModal` + `ModalFooter` | Todo lo demás: asistentes por pasos, formulario en un componente hijo, acción sin `<form>`, consulta |
+
+`SgthModal` es la base de todas: pone la pantalla completa sin radio por debajo
+de 768 px. Una cuarta parte de los modales se olvidaba de hacerlo a mano.
+
+`ModalFooter` es el pie de todo modal de acción. Cancelar va antes del botón
+principal, que es `filled` —es el envío de un formulario— y toma el color del
+tema. Solo cambia a rojo con `destructiva`. El pie es pegajoso: con un error de
+validación en una laptop de 768 px, los botones quedaban debajo del borde.
+Antes cada modal escribía el suyo, y guardar salía en verde, azul, naranja o
+turquesa, relleno o tenue, con o sin icono.
+
+```tsx
+// Captura
+<FormModal
+  opened={opened}
+  onClose={cerrar}
+  title="Nueva extensión"
+  onSubmit={handleSubmit(guardar)}
+  submitLabel="Registrar extensión"
+  submitting={crear.isPending}
+>
+  …campos…
+</FormModal>
+
+// El formulario vive en un hijo: el botón lo envía por su id
+<SgthModal opened={opened} onClose={cerrar} title="Nuevo puesto">
+  <PuestoForm onSubmit={guardar} />
+  <ModalFooter onCancel={cerrar} form="puesto-form" submitLabel="Crear puesto" />
+</SgthModal>
+
+// Asistente: «Atrás» a la izquierda; sin onSubmit, el último paso envía el form
+<ModalFooter
+  onCancel={cerrar}
+  leftSection={paso > 0 && <Button variant="default" onClick={atras}>Atrás</Button>}
+  onSubmit={esUltimo ? undefined : siguiente}
+  submitLabel={esUltimo ? 'Registrar' : 'Siguiente'}
+/>
+
+// Consulta: solo cerrar
+<ModalFooter onCancel={cerrar} cancelLabel="Cerrar" sinPrincipal />
+```
+
+El título de un modal es texto, sin icono decorativo, por la misma razón que el
+de `PageHeader`.
+
+Los modales de catálogo que agregan filas en línea sobre una tabla —factores de
+riesgo, normativa legal— no tienen pie: se cierran con la X.
 
 ```tsx
 confirmar({
