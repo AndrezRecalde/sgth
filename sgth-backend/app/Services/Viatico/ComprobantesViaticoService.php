@@ -35,6 +35,9 @@ final class ComprobantesViaticoService
     public const ACEPTADA  = 'aceptada';
     public const OBSERVADA = 'observada';
 
+    /** Días calendario tras el regreso en que un comprobante sigue siendo válido. */
+    public const DIAS_TRAS_EL_REGRESO = 5;
+
     /** Lo que identifica a un comprobante al compararlo con su versión anterior. */
     private const CAMPOS_IDENTIDAD = [
         'categoria_factura_id', 'tipo_comprobante', 'numero_factura', 'numero_ticket',
@@ -169,15 +172,22 @@ final class ComprobantesViaticoService
 
         if (! $f->fecha_factura) {
             $alertas[] = ['codigo' => 'fecha', 'mensaje' => 'El comprobante no tiene fecha.'];
-        } elseif ($viatico->datetime_salida && $viatico->datetime_llegada && (
-            $f->fecha_factura->lt($viatico->datetime_salida->copy()->startOfDay())
-            || $f->fecha_factura->gt($viatico->datetime_llegada->copy()->startOfDay())
-        )) {
-            $alertas[] = [
-                'codigo'  => 'fecha',
-                'mensaje' => "La fecha {$f->fecha_factura->format('d/m/Y')} está fuera de la comisión "
-                    . "({$viatico->datetime_salida->format('d/m/Y')} – {$viatico->datetime_llegada->format('d/m/Y')}).",
-            ];
+        } elseif ($viatico->datetime_salida && $viatico->datetime_llegada) {
+            // Desde la salida hasta 5 días calendario después del regreso: el
+            // mismo período que admite el formulario de comprobantes, porque
+            // hay facturas —el hotel, un peaje de vuelta— que se emiten al
+            // regresar o en los días siguientes. Decidido con el usuario.
+            $desde = $viatico->datetime_salida->copy()->startOfDay();
+            $hasta = $viatico->datetime_llegada->copy()->startOfDay()->addDays(self::DIAS_TRAS_EL_REGRESO);
+
+            if ($f->fecha_factura->lt($desde) || $f->fecha_factura->gt($hasta)) {
+                $alertas[] = [
+                    'codigo'  => 'fecha',
+                    'mensaje' => "La fecha {$f->fecha_factura->format('d/m/Y')} está fuera del período válido "
+                        . "({$desde->format('d/m/Y')} – {$hasta->format('d/m/Y')}, hasta "
+                        . self::DIAS_TRAS_EL_REGRESO . ' días después del regreso).',
+                ];
+            }
         }
 
         $clave = $this->claveDuplicado($f);

@@ -196,7 +196,10 @@ it('cada comprobante trae sus alertas, sin impedir guardarlo', function () {
     ($this->comprobante)($otro, ['numero_factura' => '001-001-000000777']);
     ($this->comprobante)($viatico);                                                    // limpio
     ($this->comprobante)($viatico, ['numero_factura' => 'A', 'ruc_proveedor' => '1234567890123']);
-    ($this->comprobante)($viatico, ['numero_factura' => 'B', 'fecha_factura' => '2026-10-09']);
+    // Regresó el 7: hasta el 12 vale (5 días después); el 13 ya no, ni el día antes de salir.
+    ($this->comprobante)($viatico, ['numero_factura' => 'B', 'fecha_factura' => '2026-10-13']);
+    ($this->comprobante)($viatico, ['numero_factura' => 'C', 'fecha_factura' => '2026-10-12']);
+    ($this->comprobante)($viatico, ['numero_factura' => 'D', 'fecha_factura' => '2026-10-04']);
     ($this->comprobante)($viatico, ['numero_factura' => '001-001-000000777']);         // ya presentada
     ($this->comprobante)($viatico, ['numero_factura' => null, 'tipo_comprobante' => 'ticket', 'ruc_proveedor' => null, 'numero_ticket' => 'T-1']);
 
@@ -209,6 +212,9 @@ it('cada comprobante trae sus alertas, sin impedir guardarlo', function () {
     expect($codigos('001-001-000000123'))->toBe([])
         ->and($codigos('A'))->toBe(['ruc'])
         ->and($codigos('B'))->toBe(['fecha'])
+        ->and($facturas['B']['alertas'][0]['mensaje'])->toContain('05/10/2026 – 12/10/2026')
+        ->and($codigos('C'))->toBe([])
+        ->and($codigos('D'))->toBe(['fecha'])
         ->and($codigos('001-001-000000777'))->toBe(['duplicado'])
         ->and($facturas['001-001-000000777']['alertas'][0]['mensaje'])->toContain($otro->codigo_viatico)
         ->and($codigos('T-1'))->toBe([]);
