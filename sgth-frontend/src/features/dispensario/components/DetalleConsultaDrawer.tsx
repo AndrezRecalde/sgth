@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Drawer, Stack, Group, Text, ThemeIcon, Divider, Table, Skeleton,
+  Drawer, Stack, Group, Text, ThemeIcon, Divider, Skeleton,
   ScrollArea,
 } from '@mantine/core'
 import {
@@ -10,7 +10,8 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { consultaMedicaService } from '../services/consultaMedicaService'
-import { StatusBadge } from '@/components/ui'
+import { SgthTable, StatusBadge } from '@/components/ui'
+import { columnasItemsReceta } from './itemsReceta.columns'
 
 interface Props {
   opened:     boolean
@@ -172,44 +173,12 @@ export function DetalleConsultaDrawer({
                       </Text>
                     )}
 
-                    <Table withTableBorder withColumnBorders>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>Medicina</Table.Th>
-                          <Table.Th w={70}>Cant.</Table.Th>
-                          <Table.Th w={100}>Dosis</Table.Th>
-                          <Table.Th w={110}>Frecuencia</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {receta.items.map((item) => (
-                          <Table.Tr key={item.id}>
-                            <Table.Td>
-                              <Text size="xs" fw={500}>
-                                {item.inventario?.nombre
-                                  ?? item.medicamento_externo ?? '—'}
-                              </Text>
-                              <Text size="xs" c="dimmed">
-                                {item.inventario
-                                  ? item.inventario.concentracion ?? ''
-                                  : 'Fuera de farmacia'}
-                              </Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="xs" ta="center">
-                                {item.cantidad_prescrita}
-                              </Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="xs">{item.dosis}</Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="xs">{item.frecuencia}</Text>
-                            </Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
+                    <SgthTable
+                      records={receta.items}
+                      columns={columnasItemsReceta}
+                      minHeight={80}
+                      noRecordsText="La receta no tiene medicamentos"
+                    />
                   </Stack>
                 ))}
               </>

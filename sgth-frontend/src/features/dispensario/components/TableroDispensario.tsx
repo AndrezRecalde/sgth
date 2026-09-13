@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  SimpleGrid, Stack, Group, Text, Table, Progress, Alert,
+  SimpleGrid, Stack, Group, Text, Progress, Alert,
 } from '@mantine/core'
 import {
   IconStethoscope, IconDental, IconUsers, IconAlertTriangle,
@@ -129,23 +129,17 @@ export function TableroDispensario() {
                 Todavía no hay consultas registradas este mes.
               </Text>
             ) : (
-              <Table striped withRowBorders={false}>
-                <Table.Tbody>
-                  {kpis?.consultas_por_medico.map((fila, i) => (
-                    <Table.Tr key={`${fila.medico}-${fila.especialidad}-${i}`}>
-                      <Table.Td>
-                        <Text size="sm">{fila.medico}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <InsigniaEspecialidad valor={fila.especialidad} />
-                      </Table.Td>
-                      <Table.Td ta="right">
-                        <Text size="sm" fw={600}>{fila.total_consultas}</Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
+              <Stack gap="xs">
+                {kpis?.consultas_por_medico.map((fila, i) => (
+                  <Group key={`${fila.medico}-${fila.especialidad}-${i}`} gap="xs" wrap="nowrap">
+                    <Text size="sm" style={{ flex: 1 }} lineClamp={1}>
+                      {fila.medico}
+                    </Text>
+                    <InsigniaEspecialidad valor={fila.especialidad} />
+                    <Text size="sm" fw={600}>{fila.total_consultas}</Text>
+                  </Group>
+                ))}
+              </Stack>
             )}
           </SectionCard>
 

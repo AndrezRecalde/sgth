@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Drawer, Stack, Group, Text, ThemeIcon, Table, Divider, Alert, Button,
+  Drawer, Stack, Group, Text, ThemeIcon, Divider, Alert, Button,
 } from '@mantine/core'
 import {
   IconShoppingCart, IconFileText, IconBan, IconFileSearch,
@@ -9,7 +9,8 @@ import {
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useDescargarDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
-import { StatusBadge } from '@/components/ui'
+import { DetailList, SgthTable, StatusBadge } from '@/components/ui'
+import { columnasItemsAdquisicion } from './itemsAdquisicion.columns'
 
 interface Props {
   opened:      boolean
@@ -82,88 +83,42 @@ export function DetalleAdquisicionDrawer({
             </Alert>
           )}
 
-          <Table variant="vertical" layout="fixed" verticalSpacing="sm">
-            <Table.Tbody>
-              <Table.Tr>
-                <Table.Th w={180}>Tipo</Table.Th>
-                <Table.Td>
-                  <Group justify="flex-end">
-                    <StatusBadge>
-                      {adquisicion.tipo === 'donacion' ? 'DONACIÓN' : 'COMPRA'}
-                    </StatusBadge>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-              <Table.Tr>
-                <Table.Th>N° documento</Table.Th>
-                <Table.Td>
-                  <Text size="sm" ff="monospace" ta="right">
-                    {adquisicion.numero_documento}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-              <Table.Tr>
-                <Table.Th>Proveedor / Donante</Table.Th>
-                <Table.Td>
-                  <Text size="sm" ta="right">{adquisicion.proveedor_o_donante}</Text>
-                </Table.Td>
-              </Table.Tr>
-              <Table.Tr>
-                <Table.Th>Fecha</Table.Th>
-                <Table.Td>
-                  <Text size="sm" ta="right">
-                    {formatFecha(adquisicion.fecha_adquisicion)}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-              <Table.Tr>
-                <Table.Th>Registrado por</Table.Th>
-                <Table.Td>
-                  <Text size="sm" ta="right">
-                    {adquisicion.registrador?.nombre_completo
-                      ?? adquisicion.registrador?.usuario_ti ?? '—'}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-              {adquisicion.observaciones && (
-                <Table.Tr>
-                  <Table.Th>Observaciones</Table.Th>
-                  <Table.Td>
-                    <Text size="sm" ta="right">{adquisicion.observaciones}</Text>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-              <Table.Tr>
-                <Table.Th>Documento de respaldo</Table.Th>
-                <Table.Td>
-                  <Group justify="flex-end">
-                    {adquisicion.documento_respaldo ? (
-                      <Button
-                        size="compact-xs"
-                        variant="light"
-                        color="blue"
-                        leftSection={<IconFileSearch size={12} />}
-                        loading={descargarDocumento.isPending}
-                        onClick={() => descargarDocumento.mutate({
-                          id: adquisicion.id, folio: adquisicion.folio,
-                        })}
-                      >
-                        Descargar
-                      </Button>
-                    ) : (
-                      <StatusBadge
-                        tone="warning"
-                        variant="outline"
-                        rightSection={<IconFileText size={12} />}
-                      >
-                        PENDIENTE
-                      </StatusBadge>
-                    )}
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            </Table.Tbody>
-          </Table>
+          <DetailList
+            columnas={2}
+            items={[
+              { label: 'Tipo', value: <StatusBadge>{adquisicion.tipo === 'donacion' ? 'Donación' : 'Compra'}</StatusBadge> },
+              { label: 'N.° de documento', value: <Text size="sm" ff="monospace">{adquisicion.numero_documento}</Text> },
+              { label: 'Proveedor / donante', value: adquisicion.proveedor_o_donante },
+              { label: 'Fecha', value: formatFecha(adquisicion.fecha_adquisicion) },
+              {
+                label: 'Registrado por',
+                value: adquisicion.registrador?.nombre_completo ?? adquisicion.registrador?.usuario_ti,
+              },
+              {
+                label: 'Documento de respaldo',
+                value: adquisicion.documento_respaldo ? (
+                  <Button
+                    size="compact-xs"
+                    variant="light"
+                    leftSection={<IconFileSearch size={12} />}
+                    loading={descargarDocumento.isPending}
+                    onClick={() => descargarDocumento.mutate({
+                      id: adquisicion.id, folio: adquisicion.folio,
+                    })}
+                  >
+                    Descargar
+                  </Button>
+                ) : (
+                  <StatusBadge tone="warning" variant="outline" rightSection={<IconFileText size={12} />}>
+                    Pendiente
+                  </StatusBadge>
+                ),
+              },
+              ...(adquisicion.observaciones
+                ? [{ label: 'Observaciones', value: adquisicion.observaciones, ancho: true }]
+                : []),
+            ]}
+          />
 
           <Divider
             label={
@@ -174,53 +129,12 @@ export function DetalleAdquisicionDrawer({
             labelPosition="left"
           />
 
-          <Table withTableBorder withColumnBorders>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Medicina</Table.Th>
-                <Table.Th w={80}>Cantidad</Table.Th>
-                <Table.Th w={100}>Lote</Table.Th>
-                <Table.Th w={110}>Caduca</Table.Th>
-                <Table.Th w={90}>P. Unit.</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {(adquisicion.items ?? []).map((item) => (
-                <Table.Tr key={item.id}>
-                  <Table.Td>
-                    <Text size="sm" fw={500}>
-                      {item.medicina?.nombre ?? '—'}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      {item.medicina?.concentracion ?? ''}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" ta="center">
-                      {item.cantidad}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="xs" ff="monospace">
-                      {item.lote ?? '—'}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="xs">
-                      {formatFecha(item.fecha_caducidad)}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">
-                      {item.precio_unitario
-                        ? `$${Number(item.precio_unitario).toFixed(2)}`
-                        : '—'}
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+          <SgthTable
+            records={adquisicion.items ?? []}
+            columns={columnasItemsAdquisicion}
+            minHeight={100}
+            noRecordsText="La adquisición no tiene medicamentos"
+          />
         </Stack>
       )}
     </Drawer>

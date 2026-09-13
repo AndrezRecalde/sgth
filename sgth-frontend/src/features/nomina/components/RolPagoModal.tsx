@@ -1,9 +1,10 @@
 'use client'
 
 import {
-  Stack, Text, Group, Table, Divider, Skeleton,
+  Stack, Text, Group, Divider, Skeleton,
 } from '@mantine/core'
-import { SgthModal, StatusBadge } from '@/components/ui'
+import { SgthModal, SgthTable, StatusBadge } from '@/components/ui'
+import { formatMonto, getConceptosColumns } from './rolesPago.columns'
 import { useQuery } from '@tanstack/react-query'
 import { nominaService } from '../services/nominaService'
 import type { Nomina, ServidorConRelaciones } from '@/types/api'
@@ -15,12 +16,6 @@ interface Props {
   servidor:  ServidorConRelaciones | null
 }
 
-function formatMonto(v?: number | string | null): string {
-  if (v === null || v === undefined) return '—'
-  return `$${Number(v).toLocaleString('es-EC', {
-    minimumFractionDigits: 2, maximumFractionDigits: 2,
-  })}`
-}
 
 export function RolPagoModal({ opened, onClose, nomina, servidor }: Props) {
   const { data: rol, isLoading } = useQuery({
@@ -67,52 +62,20 @@ export function RolPagoModal({ opened, onClose, nomina, servidor }: Props) {
           </Group>
 
           <Divider label="Ingresos" labelPosition="left" />
-          <Table striped highlightOnHover withTableBorder>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Concepto</Table.Th>
-                <Table.Th ta="right">Valor</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {ingresos.map(d => (
-                <Table.Tr key={d.id}>
-                  <Table.Td>
-                    <Text size="sm">{d.concepto?.nombre ?? '—'}</Text>
-                  </Table.Td>
-                  <Table.Td ta="right">
-                    <Text size="sm" ff="monospace" c="emerald">
-                      {formatMonto(d.valor)}
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+          <SgthTable
+            records={ingresos}
+            columns={getConceptosColumns('ingreso')}
+            minHeight={100}
+            noRecordsText="Sin ingresos en este rol"
+          />
 
           <Divider label="Descuentos" labelPosition="left" />
-          <Table striped highlightOnHover withTableBorder>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Concepto</Table.Th>
-                <Table.Th ta="right">Valor</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {descuentos.map(d => (
-                <Table.Tr key={d.id}>
-                  <Table.Td>
-                    <Text size="sm">{d.concepto?.nombre ?? '—'}</Text>
-                  </Table.Td>
-                  <Table.Td ta="right">
-                    <Text size="sm" ff="monospace" c="red">
-                      {formatMonto(d.valor)}
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+          <SgthTable
+            records={descuentos}
+            columns={getConceptosColumns('descuento')}
+            minHeight={100}
+            noRecordsText="Sin descuentos en este rol"
+          />
 
           <Divider />
           <Group justify="space-between">

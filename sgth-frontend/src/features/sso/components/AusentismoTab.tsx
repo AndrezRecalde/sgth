@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import {
-  Stack, Group, Button, Text, Grid, Card, Skeleton, Alert, Table,
+  Stack, Group, Button, Text, Grid, Card, Skeleton, Alert,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
@@ -13,8 +13,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { asistenciaService } from '@/features/asistencia/services/asistenciaService'
 import { fromDateValue } from '@/lib/fecha'
-import type { ConsolidadoPermiso } from '@/types/api'
-import { CountBadge } from '@/components/ui'
+import { SgthTable } from '@/components/ui'
+import { getConsolidadoColumns } from '@/features/asistencia/components/consolidado.columns'
 
 const TIPO_ENFERMEDAD = 'enfermedad'
 
@@ -183,51 +183,11 @@ export function AusentismoTab() {
           <Text size="sm">Sin permisos por enfermedad registrados en el período seleccionado.</Text>
         </Alert>
       ) : (
-        <Card withBorder radius="md" p={0}>
-          <Table striped highlightOnHover withTableBorder>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Cédula</Table.Th>
-                <Table.Th>Servidor</Table.Th>
-                <Table.Th>Unidad</Table.Th>
-                <Table.Th ta="center">Permisos</Table.Th>
-                <Table.Th ta="right">Minutos</Table.Th>
-                <Table.Th ta="right">Tiempo</Table.Th>
-                <Table.Th ta="right">Días</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {(consolidado as ConsolidadoPermiso[]).map((fila) => (
-                <Table.Tr key={fila.servidor_id}>
-                  <Table.Td><Text size="sm" ff="monospace">{fila.cedula}</Text></Table.Td>
-                  <Table.Td><Text size="sm" fw={500}>{fila.servidor_nombre}</Text></Table.Td>
-                  <Table.Td><Text size="sm" c="dimmed">{fila.unidad}</Text></Table.Td>
-                  <Table.Td ta="center">
-                    <CountBadge>{fila.total_permisos}</CountBadge>
-                  </Table.Td>
-                  <Table.Td ta="right"><Text size="sm" ff="monospace">{fila.total_minutos}</Text></Table.Td>
-                  <Table.Td ta="right"><Text size="sm" ff="monospace" fw={500}>{fila.tiempo_total}</Text></Table.Td>
-                  <Table.Td ta="right">
-                    <Text size="sm" ff="monospace" fw={600} c={fila.total_dias >= 1 ? 'orange' : 'inherit'}>
-                      {fila.total_dias.toFixed(2)}
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-            {totales && (
-              <Table.Tfoot>
-                <Table.Tr style={{ backgroundColor: 'var(--mantine-color-green-0)' }}>
-                  <Table.Td colSpan={3}><Text size="sm" fw={700}>TOTALES</Text></Table.Td>
-                  <Table.Td ta="center"><Text size="sm" fw={700}>{totales.total_permisos}</Text></Table.Td>
-                  <Table.Td ta="right"><Text size="sm" fw={700} ff="monospace">{totales.total_minutos}</Text></Table.Td>
-                  <Table.Td ta="right"><Text size="sm" fw={700}>—</Text></Table.Td>
-                  <Table.Td ta="right"><Text size="sm" fw={700} ff="monospace">{totales.total_dias.toFixed(2)}</Text></Table.Td>
-                </Table.Tr>
-              </Table.Tfoot>
-            )}
-          </Table>
-        </Card>
+        <SgthTable
+          idAccessor="servidor_id"
+          records={consolidado}
+          columns={getConsolidadoColumns(totales)}
+        />
       )}
     </Stack>
   )
