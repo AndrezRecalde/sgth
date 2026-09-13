@@ -26,6 +26,17 @@ class AutorizacionVueloResource extends JsonResource
             'viatico' => $this->whenLoaded('viatico', fn() => [
                 'id'              => $this->viatico->id,
                 'codigo_viatico'  => $this->viatico->codigo_viatico,
+                // Quiénes viajan: la pantalla no ofrece decidir sobre el vuelo
+                // de un viático en el que va quien la mira.
+                'servidores_ids'  => $this->viatico->relationLoaded('todosServidores')
+                    ? $this->viatico->todosServidores
+                        ->pluck('servidor_id')
+                        ->push($this->viatico->servidor_id)
+                        ->map(fn ($id) => (int) $id)
+                        ->unique()
+                        ->values()
+                        ->all()
+                    : [],
                 'servidor' => $this->viatico->relationLoaded('servidor')
                     ? [
                         'nombre'   => $this->viatico->servidor?->nombre,

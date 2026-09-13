@@ -6,6 +6,7 @@ import { SgthTable } from "@/components/ui/SgthTable";
 import { TableActions } from "@/components/ui/TableActions";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useVuelosAutorizacion } from "../hooks/useViaticos";
+import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { viaticoService } from "../services/viaticoService";
 import { notifications } from "@mantine/notifications";
@@ -17,6 +18,7 @@ import type { DataTableColumn } from "mantine-datatable";
 type AutorizacionVueloConRelaciones = AutorizacionVuelo & {
   viatico?: {
     codigo_viatico?: string
+    servidores_ids?: number[]
     servidor?: {
       nombre?: string
       apellido?: string
@@ -42,6 +44,14 @@ type AutorizacionVueloConRelaciones = AutorizacionVuelo & {
 export function VuelosTab() {
   const { data: vuelos = [], isLoading } = useVuelosAutorizacion();
   const qc = useQueryClient();
+  const puede = useAccionesViatico();
+
+  // Pendiente y de un viático en el que no viaja quien mira la pantalla.
+  const decide = (v: AutorizacionVuelo) =>
+    v.estado === 'pendiente' &&
+    puede.decidirVuelo(
+      (v as AutorizacionVueloConRelaciones).viatico?.servidores_ids ?? [],
+    );
 
   const aprobar = useMutation({
     mutationFn: (id: number) => viaticoService.vuelos.aprobar(id),
@@ -217,18 +227,14 @@ export function VuelosTab() {
               icon: <IconCheck size={14} />,
               color: 'emerald',
               onClick: () => aprobar.mutate(Number(v.id)),
-              hidden: !['pendiente'].includes(
-                v.estado as string
-              ),
+              hidden: !decide(v),
             },
             {
               label: 'Rechazar',
               icon: <IconX size={14} />,
               color: 'red',
               onClick: () => rechazar.mutate(Number(v.id)),
-              hidden: !['pendiente'].includes(
-                v.estado as string
-              ),
+              hidden: !decide(v),
             },
           ]}
         />

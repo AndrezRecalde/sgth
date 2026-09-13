@@ -5,6 +5,8 @@ import React                           from 'react'
 import { viaticoService }              from '../services/viaticoService'
 import { getApiErrorMessage }          from '@/types/api'
 
+type ConMotivo = { id: number; motivo: string }
+
 export function useViaticoEstados() {
   const qc = useQueryClient()
 
@@ -24,19 +26,20 @@ export function useViaticoEstados() {
     }
   }
 
-  const crearMutacionEstado = (
-    fn:      (id: number) => Promise<unknown>,
+  // `invalidarViatico()` sin id ya invalida todos los detalles abiertos.
+  const crearMutacionEstado = <V>(
+    fn:      (variables: V) => Promise<unknown>,
     title:   string,
     message: string,
   ) => ({
     mutationFn: fn,
-    onSuccess:  (_data: unknown, id: number) => {
+    onSuccess:  () => {
       notifications.show({
         title, message,
         color: 'emerald',
         icon:  React.createElement(IconCheck, { size: 16 }),
       })
-      invalidarViatico(id)
+      invalidarViatico()
     },
     onError,
   })
@@ -76,24 +79,14 @@ export function useViaticoEstados() {
     onError,
   })
 
-  const aprobar = useMutation({
-    mutationFn: ({
-      id, data,
-    }: {
+  const aprobar = useMutation(crearMutacionEstado(
+    ({ id, data }: {
       id:    number
       data?: { coeficiente_exterior?: number; pais_destino?: string }
     }) => viaticoService.aprobar(id, data),
-    onSuccess: (_data, { id }) => {
-      notifications.show({
-        title:   'Viático aprobado',
-        message: 'El viático fue aprobado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
-      invalidarViatico(id)
-    },
-    onError,
-  })
+    'Viático aprobado',
+    'El viático fue aprobado correctamente.',
+  ))
 
   const cancelar = useMutation(crearMutacionEstado(
     viaticoService.cancelar,
@@ -102,7 +95,7 @@ export function useViaticoEstados() {
   ))
 
   const rechazar = useMutation(crearMutacionEstado(
-    viaticoService.rechazar,
+    ({ id, motivo }: ConMotivo) => viaticoService.rechazar(id, motivo),
     'Viático rechazado',
     'El viático fue rechazado correctamente.',
   ))
@@ -132,7 +125,7 @@ export function useViaticoEstados() {
   ))
 
   const devolverCorreccion = useMutation(crearMutacionEstado(
-    viaticoService.devolverCorreccion,
+    ({ id, motivo }: ConMotivo) => viaticoService.devolverCorreccion(id, motivo),
     'Devuelto a corrección',
     'La liquidación fue devuelta para correcciones.',
   ))

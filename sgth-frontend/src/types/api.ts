@@ -176,6 +176,19 @@ export type CategoriaFactura = {
   grupo?: 'viatico' | 'movilizacion' | null
 }
 
+/**
+ * Un cambio de estado del viático. `ViaticoController::show` carga
+ * `historial.usuario` con su `servidor`, de donde sale `nombre_completo`.
+ */
+export type ViaticoHistorialEstado = {
+  id:              number
+  estado_anterior: string | null
+  estado_nuevo:    string
+  motivo:          string | null
+  created_at:      string
+  usuario?: { id: number; nombre_completo?: string } | null
+}
+
 export type ViaticoConRelaciones = Viatico & {
   coeficiente_exterior?: number | string | null;
   servidor?: {
@@ -213,6 +226,8 @@ export type ViaticoConRelaciones = Viatico & {
     }
   }[]
   autorizaciones_vuelo?: AutorizacionVuelo[]
+  motivo_rechazo?: string | null
+  historial?: ViaticoHistorialEstado[]
 }
 
 // Actualiza EstadoViatico

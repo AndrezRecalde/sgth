@@ -7,6 +7,7 @@ use App\Models\Viatico\AutorizacionVuelo;
 use App\Http\Resources\Viatico\AutorizacionVueloResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\Viatico;
+use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,12 +21,15 @@ use Illuminate\Http\Request;
  */
 class AutorizacionVueloController extends Controller
 {
+    public function __construct(private ViaticoEstadoService $estados) {}
+
     public function index(): JsonResponse
     {
         $this->authorize('autorizarVuelos', Viatico::class);
 
         $autorizaciones = AutorizacionVuelo::with([
             'viatico.servidor.puesto.cargo',
+            'viatico.todosServidores:id,viatico_id,servidor_id',
             'tramo.empresa',
             'tramo.origenProvincia',
             'tramo.origenCanton',
@@ -38,18 +42,20 @@ class AutorizacionVueloController extends Controller
         );
     }
 
+    /*
+    | Solo una autorización pendiente, y nunca la de un viático en el que viaja
+    | quien decide: lo comprueba el servicio de estados. La autorización y la
+    | lectura de `observacion` se quedan en cada método público para que el
+    | contrato OpenAPI siga documentando el 403 y el cuerpo.
+    */
+
     public function aprobar(Request $request, string $id): JsonResponse
     {
         $this->authorize('autorizarVuelos', Viatico::class);
 
-        $autorizacion = AutorizacionVuelo::findOrFail($id);
-
-        $autorizacion->update([
-            'estado'                => 'aprobada',
-            'aprobado_por'          => $request->user()->id,
-            'observacion_aprobador' => $request->input('observacion'),
-            'aprobado_en'           => now(),
-        ]);
+        $autorizacion = $this->estados->decidirVuelo(
+            (int) $id, $request->user(), 'aprobada', $request->input('observacion'),
+        );
 
         return ApiResponse::ok(new AutorizacionVueloResource($autorizacion));
     }
@@ -58,14 +64,9 @@ class AutorizacionVueloController extends Controller
     {
         $this->authorize('autorizarVuelos', Viatico::class);
 
-        $autorizacion = AutorizacionVuelo::findOrFail($id);
-
-        $autorizacion->update([
-            'estado'                => 'rechazada',
-            'aprobado_por'          => $request->user()->id,
-            'observacion_aprobador' => $request->input('observacion'),
-            'aprobado_en'           => now(),
-        ]);
+        $autorizacion = $this->estados->decidirVuelo(
+            (int) $id, $request->user(), 'rechazada', $request->input('observacion'),
+        );
 
         return ApiResponse::ok(new AutorizacionVueloResource($autorizacion));
     }
@@ -74,7 +75,9 @@ class AutorizacionVueloController extends Controller
     {
         $autorizacion = AutorizacionVuelo::findOrFail($id);
 
-        $this->authorize('editar', $autorizacion->viatico()->firstOrFail());
+        $viatico = $autorizacion->viatico()->firstOrFail();
+        $this->authorize('editar', $viatico);
+        $this->estados->asegurarEditable($viatico, $request->user());
 
         $request->validate([
             'documento' => 'required|file|mimes:pdf|max:5120',

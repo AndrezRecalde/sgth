@@ -131,15 +131,14 @@ export function getViaticoColumns(
               icon:    <IconCheck size={14} />,
               color:   'emerald',
               onClick: () => actions.onAprobar(v),
-              hidden:  !actions.puede.aprobar || (v.estado as string) !== 'solicitado',
+              hidden:  !actions.puede.aprobar(v),
             },
             {
               label:   'Liquidar',
               icon:    <IconCurrencyDollar size={14} />,
               color:   'orange',
               onClick: () => actions.onLiquidar(v),
-              hidden:  !actions.puede.editar(v) ||
-                (v.estado as string) !== 'pendiente_liquidacion',
+              hidden:  !actions.puede.liquidar(v),
             },
           ]}
         />

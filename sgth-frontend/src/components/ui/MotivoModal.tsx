@@ -9,10 +9,11 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
 /*
-| Rechazar un documento y deshacer una confirmación son las dos acciones del
-| módulo que borran algo ya hecho —la segunda incluso devuelve saldo de
-| vacaciones—, así que el backend exige motivo. `confirmar()` no sirve aquí:
-| pregunta sí o no, no recoge texto.
+| Confirmar una acción que exige motivo: rechazar o anular un permiso, una
+| vacación o un viático, devolver una liquidación a corrección. `confirmar()`
+| no sirve aquí: pregunta sí o no, no recoge texto.
+|
+| Nació en Permisos; se movió aquí cuando Viáticos empezó a pedir motivo.
 */
 
 const schema = z.object({
@@ -36,7 +37,7 @@ interface Props {
   onConfirm: (motivo: string) => void
 }
 
-export function MotivoPermisoModal({
+export function MotivoModal({
   opened,
   onClose,
   title,

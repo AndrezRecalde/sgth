@@ -4,9 +4,13 @@ import { useState } from "react";
 import { Stack } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconClipboardList } from "@tabler/icons-react";
-import { DataState, PAGINACION_ES, SgthTable } from "@/components/ui";
+import {
+  DataState,
+  MotivoModal,
+  PAGINACION_ES,
+  SgthTable,
+} from "@/components/ui";
 import { PermisoModal } from "./PermisoModal";
-import { MotivoPermisoModal } from "./MotivoPermisoModal";
 import {
   FILTROS_INICIALES,
   PermisosFiltros,
@@ -171,7 +175,7 @@ export function PermisosTab() {
 
       <PermisoModal opened={opened} onClose={close} />
 
-      <MotivoPermisoModal
+      <MotivoModal
         opened={conMotivo !== null}
         onClose={() => setConMotivo(null)}
         title={TEXTOS[accion].titulo}

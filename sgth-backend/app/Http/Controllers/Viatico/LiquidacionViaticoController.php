@@ -7,12 +7,15 @@ use App\Models\Viatico\ActividadLiquidacion;
 use App\Models\Viatico\FacturaViatico;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
+use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LiquidacionViaticoController extends Controller
 {
+    public function __construct(private ViaticoEstadoService $estados) {}
+
     /**
      * Obtener o crear la liquidación del viático
      * Se crea vacía cuando el viático entra en
@@ -23,9 +26,11 @@ class LiquidacionViaticoController extends Controller
     ): JsonResponse {
         $viatico = $this->autorizar($viaticoId, 'ver');
 
-        // Abrirla solo la crea quien la va a llenar. Quien solo consulta —
-        // Talento Humano, un acompañante— ve la que haya, o ninguna.
+        // Abrirla solo la crea quien la va a llenar, y con el viático pendiente
+        // de liquidación. Quien solo consulta —Talento Humano, un acompañante—
+        // ve la que haya, o ninguna.
         $liquidacion = request()->user()->can('editar', $viatico)
+            && $viatico->estado === \App\Enums\EstadoViatico::PENDIENTE_LIQUIDACION
             ? $this->getLiquidacion($viaticoId)
             : LiquidacionViatico::where('viatico_id', $viaticoId)->first();
 
@@ -58,7 +63,7 @@ class LiquidacionViaticoController extends Controller
         Request $request,
         int $viaticoId
     ): JsonResponse {
-        $this->autorizar($viaticoId, 'editar');
+        $this->estados->asegurarLiquidacionAbierta($this->autorizar($viaticoId, 'editar'));
 
         $data = $request->validate([
             'actividades'               => ['required', 'array', 'min:1'],
@@ -116,7 +121,7 @@ class LiquidacionViaticoController extends Controller
         Request $request,
         int $viaticoId
     ): JsonResponse {
-        $this->autorizar($viaticoId, 'editar');
+        $this->estados->asegurarLiquidacionAbierta($this->autorizar($viaticoId, 'editar'));
 
         $data = $request->validate([
             'facturas'                        => ['required', 'array', 'min:1'],
@@ -215,41 +220,16 @@ class LiquidacionViaticoController extends Controller
         int $viaticoId,
         Request $request
     ): JsonResponse {
-        $viatico = $this->autorizar($viaticoId, 'editar');
+        $this->autorizar($viaticoId, 'editar');
 
         // Sin crearla: confirmar una liquidación que no existe se rechaza igual
-        // que una vacía, y abría una fila para acto seguido negarse a cerrarla.
-        $liquidacion = $this->liquidacionExistente($viaticoId);
-
-        $liquidacion?->load(['actividades', 'detallesFactura']);
-
-        if (! $liquidacion || $liquidacion->actividades->isEmpty()) {
-            return ApiResponse::error(
-                'Debe registrar al menos una actividad.',
-                null,
-                422
-            );
-        }
-
-        if ($liquidacion->detallesFactura->isEmpty()) {
-            return ApiResponse::error(
-                'Debe registrar al menos un comprobante.',
-                null,
-                422
-            );
-        }
-
-        $liquidacion->update([
-            'fecha_liquidacion' => now()->toDateString(),
-            'updated_by'        => $request->user()->id,
-        ]);
-
-        $viatico->update([
-            'estado' => \App\Enums\EstadoViatico::LIQUIDADO,
-        ]);
+        // que una vacía. Lo resuelve el servicio de estados, que además exige
+        // que el viático esté pendiente de liquidación: antes se confirmaba
+        // desde cualquier estado, incluso recién solicitado.
+        $viatico = $this->estados->confirmarLiquidacion($viaticoId, $request->user());
 
         return ApiResponse::ok(
-            $viatico->fresh(),
+            $viatico,
             'Liquidación registrada correctamente.'
         );
     }

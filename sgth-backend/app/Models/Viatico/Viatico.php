@@ -105,4 +105,10 @@ class Viatico extends Model
     {
         return $this->hasMany(ViaticoServidor::class);
     }
+
+    /** Los cambios de estado, del más antiguo al más reciente. */
+    public function historial(): HasMany
+    {
+        return $this->hasMany(ViaticoHistorialEstado::class)->orderBy('id');
+    }
 }

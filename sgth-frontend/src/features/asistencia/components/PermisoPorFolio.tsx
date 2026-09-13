@@ -20,7 +20,7 @@ import { getApiErrorMessage } from '@/types/api'
 import { asistenciaService } from '../services/asistenciaService'
 import { usePermisoMutations } from '../hooks/usePermisoMutations'
 import { useAccionesPermiso } from '../hooks/useAccionesPermiso'
-import { MotivoPermisoModal } from './MotivoPermisoModal'
+import { MotivoModal } from '@/components/ui'
 import { PermisoResumen } from './PermisoResumen'
 import { ESTADOS_CONFIRMADOS } from './permisos.constants'
 
@@ -147,7 +147,7 @@ export function PermisoPorFolio({ folio }: Props) {
         )}
       </Stack>
 
-      <MotivoPermisoModal
+      <MotivoModal
         opened={conMotivo !== null}
         onClose={() => setConMotivo(null)}
         title={esRechazo ? 'Rechazar documento' : 'Revertir confirmación'}

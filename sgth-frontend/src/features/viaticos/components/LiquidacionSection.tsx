@@ -32,7 +32,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const { confirmarLiquidacion } = useViaticoMutations();
   // La presenta el titular o quien opera; Talento Humano y los acompañantes
   // la ven sin poder tocarla.
-  const presenta = useAccionesViatico().editar(viatico);
+  const presenta = useAccionesViatico().liquidar(viatico);
 
   const [actModalAbierto, { open: abrirAct, close: cerrarAct }] =
     useDisclosure(false);
