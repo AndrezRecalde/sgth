@@ -113,7 +113,7 @@ export function AtencionMedicaPanel({
         <Grid>
           <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
             <ScrollArea
-              h={{ base: 'auto', md: 'calc(100vh - 200px)' }}
+              h={{ base: 'auto', md: 'calc(100vh - 240px)' }}
               type="auto"
             >
               <PanelContextoPaciente

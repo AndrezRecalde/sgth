@@ -8,7 +8,7 @@ import { agendaService } from '../services/agendaService'
 import { useTurnosDelDia } from '../hooks/useAgenda'
 import { AtencionMedicaPanel } from './AtencionMedicaPanel'
 import { AtencionOdontologicaPanel } from './AtencionOdontologicaPanel'
-import { DataState } from '@/components/ui'
+import { DataState, PageHeader, PageShell } from '@/components/ui'
 
 type Especialidad = 'medica' | 'odontologica'
 
@@ -20,6 +20,11 @@ interface Props {
 const PANEL = {
   medica: AtencionMedicaPanel,
   odontologica: AtencionOdontologicaPanel,
+}
+
+const TITULO: Record<Especialidad, string> = {
+  medica: 'Atención médica',
+  odontologica: 'Atención odontológica',
 }
 
 const RUTA_VUELTA: Record<Especialidad, string> = {
@@ -55,26 +60,35 @@ export function AtencionTurnoView({ folio, especialidad }: Props) {
 
   const Panel = PANEL[especialidad]
 
+  // Lienzo completo: el panel reparte el ancho entre el contexto del paciente
+  // y las pestañas de la atención, y con el ancho de lectura no caben.
   return (
-    <DataState
-      loading={isLoading}
-      error={noEncontrado ? undefined : error}
-      empty={noEncontrado || !turno}
-      emptyProps={{
-        icon: IconCalendarOff,
-        title: 'Turno no encontrado',
-        description: `El turno ${folio} no existe o no está asignado a tu cuenta.`,
-      }}
-      skeletonRows={4}
-    >
-      {turno && (
-        <Panel
-          turno={turno}
-          historiaClinicaId={turno.historia_clinica_id ?? 0}
-          totalEnEspera={totalEnEspera}
-          onFinalizar={() => router.push(RUTA_VUELTA[especialidad])}
-        />
-      )}
-    </DataState>
+    <PageShell fluid>
+      <PageHeader
+        title={TITULO[especialidad]}
+        backHref={RUTA_VUELTA[especialidad]}
+        backLabel="Volver a la cola"
+      />
+      <DataState
+        loading={isLoading}
+        error={noEncontrado ? undefined : error}
+        empty={noEncontrado || !turno}
+        emptyProps={{
+          icon: IconCalendarOff,
+          title: 'Turno no encontrado',
+          description: `El turno ${folio} no existe o no está asignado a tu cuenta.`,
+        }}
+        skeletonRows={4}
+      >
+        {turno && (
+          <Panel
+            turno={turno}
+            historiaClinicaId={turno.historia_clinica_id ?? 0}
+            totalEnEspera={totalEnEspera}
+            onFinalizar={() => router.push(RUTA_VUELTA[especialidad])}
+          />
+        )}
+      </DataState>
+    </PageShell>
   )
 }
