@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Modal, Button, Group, Stack, Select, Textarea, Text, Divider,
+  Button, Group, Stack, Select, Textarea, Text, Divider,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useProgramaDrogasMutations } from '../hooks/useProgramaDrogas'
 import { DocumentosSsoPanel } from './DocumentosSsoPanel'
@@ -25,7 +25,6 @@ interface Props {
 }
 
 export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, periodo }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { registrarSeguimiento } = useProgramaDrogasMutations()
   const [seguimientoId, setSeguimientoId] =
@@ -80,13 +79,11 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title="Registrar seguimiento de actividad"
       size="md"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="sm">
@@ -141,13 +138,9 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
           <Divider label="Evidencia" labelPosition="center" />
           <DocumentosSsoPanel tipo="programa_drogas_seguimiento" documentableId={seguimientoId} />
 
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>
-              Cerrar
-            </Button>
-          </Group>
+          <ModalFooter onCancel={handleClose} cancelLabel="Cerrar" sinPrincipal />
         </Stack>
       </form>
-    </Modal>
+    </SgthModal>
   )
 }

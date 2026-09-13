@@ -1,24 +1,20 @@
 "use client";
 
 import {
-  Modal,
   Stack,
   Text,
   Group,
-  Button,
   NumberInput,
   TextInput,
   Card,
-  ThemeIcon,
   Divider,
 } from "@mantine/core";
-import { IconCheck, IconWorld } from "@tabler/icons-react";
+import { FormModal } from "@/components/ui";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { useContainedInput } from "@/hooks/useContainedInput";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import type { ViaticoConRelaciones } from "@/types/api";
 
@@ -41,7 +37,6 @@ const TARIFA_SERVIDOR = 185.0;
 
 export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
   const qc = useQueryClient();
-  const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { aprobar } = useViaticoMutations();
 
@@ -89,96 +84,74 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
   };
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon color="blue" variant="light" size="sm">
-            <IconWorld size={14} />
-          </ThemeIcon>
-          <Text fw={600}>Aprobar viático internacional</Text>
-        </Group>
-      }
+      title="Aprobar viático internacional"
       size="md"
-      radius="xl"
-      fullScreen={isMobile}
       closeOnClickOutside={false}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Aprobar viático"
+      submitting={isSubmitting || aprobar.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Card withBorder radius="md" p="sm" bg="blue.0">
-            <Text size="xs" c="dimmed">
-              Tarifa base aplicable
+      <Stack gap="sm">
+        <Card withBorder radius="md" p="sm" bg="blue.0">
+          <Text size="xs" c="dimmed">
+            Tarifa base aplicable
+          </Text>
+          <Text size="sm" fw={700} c="blue">
+            {esDignatario ? "Dignatario" : "Servidor"}: $
+            {tarifaBase.toFixed(2)}/día
+          </Text>
+          <Text size="xs" c="dimmed" mt={4}>
+            {totalDias} día(s) de comisión
+          </Text>
+        </Card>
+
+        <TextInput
+          label="País de destino"
+          placeholder="Ej: Colombia"
+          {...contained}
+          {...register("pais_destino")}
+          error={errors.pais_destino?.message}
+        />
+
+        <Controller
+          name="coeficiente_exterior"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Coeficiente"
+              description="Factor multiplicador según el país (Ej: 1.5)"
+              placeholder="1.0"
+              decimalScale={4}
+              min={0.1}
+              max={5}
+              step={0.1}
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(typeof v === "number" ? v : 1)}
+              error={errors.coeficiente_exterior?.message}
+            />
+          )}
+        />
+
+        <Divider />
+
+        <Card withBorder radius="md" p="sm">
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">
+              Monto calculado:
             </Text>
-            <Text size="sm" fw={700} c="blue">
-              {esDignatario ? "Dignatario" : "Servidor"}: $
-              {tarifaBase.toFixed(2)}/día
+            <Text size="lg" fw={700} c="emerald">
+              ${montoCalculado.toFixed(2)}
             </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {totalDias} día(s) de comisión
-            </Text>
-          </Card>
-
-          <TextInput
-            label="País de destino"
-            placeholder="Ej: Colombia"
-            {...contained}
-            {...register("pais_destino")}
-            error={errors.pais_destino?.message}
-          />
-
-          <Controller
-            name="coeficiente_exterior"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label="Coeficiente"
-                description="Factor multiplicador según el país (Ej: 1.5)"
-                placeholder="1.0"
-                decimalScale={4}
-                min={0.1}
-                max={5}
-                step={0.1}
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(typeof v === "number" ? v : 1)}
-                error={errors.coeficiente_exterior?.message}
-              />
-            )}
-          />
-
-          <Divider />
-
-          <Card withBorder radius="md" p="sm">
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Monto calculado:
-              </Text>
-              <Text size="lg" fw={700} c="emerald">
-                ${montoCalculado.toFixed(2)}
-              </Text>
-            </Group>
-            <Text size="xs" c="dimmed" mt={4}>
-              ${tarifaBase.toFixed(2)} ×{coef.toFixed(4)} ×{totalDias} días
-            </Text>
-          </Card>
-
-          <Group justify="flex-end">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              loading={isSubmitting || aprobar.isPending}
-              leftSection={<IconCheck size={14} />}
-            >
-              Aprobar viático
-            </Button>
           </Group>
-        </Stack>
-      </form>
-    </Modal>
+          <Text size="xs" c="dimmed" mt={4}>
+            ${tarifaBase.toFixed(2)} ×{coef.toFixed(4)} ×{totalDias} días
+          </Text>
+        </Card>
+      </Stack>
+    </FormModal>
   );
 }

@@ -1,10 +1,10 @@
 'use client'
 
-import { Stack, TextInput, Select, Textarea, Group, Button, Modal } from '@mantine/core'
+import { Stack, TextInput, Select, Textarea } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { examenSchema, type ExamenForm } from '../../schemas/femo.schema'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
@@ -46,58 +46,55 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
   }
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Agregar examen complementario" size="md" radius="xl">
-      <form onSubmit={examenForm.handleSubmit(handleSubmit)} noValidate>
-        <Stack gap="sm">
-          <Controller
-            name="tipo"
-            control={examenForm.control}
-            render={({ field }) => (
-              <Select
-                label="Tipo de examen"
-                data={TIPO_EXAMEN_OPTIONS}
-                required
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? 'laboratorio')}
-              />
-            )}
-          />
-          <TextInput
-            label="Nombre del examen"
-            required
-            placeholder="Ej: Hemograma completo"
-            {...contained}
-            {...examenForm.register('nombre_examen')}
-            error={examenForm.formState.errors.nombre_examen?.message}
-          />
-          <Textarea
-            label="Resultado"
-            autosize
-            minRows={2}
-            {...contained}
-            {...examenForm.register('resultado')}
-          />
-          <DatePickerInput
-            label="Fecha del examen"
-            valueFormat="DD/MM/YYYY"
-            clearable
-            {...contained}
-            value={toDateValue(fechaExamen)}
-            onChange={(d) =>
-              examenForm.setValue('fecha_examen', fromDateValueOrNull(d as Date | null))
-            }
-          />
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" color="emerald" leftSection={<IconCheck size={14} />}>
-              Agregar
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+    <FormModal
+      opened={opened}
+      onClose={onClose}
+      title="Agregar examen complementario"
+      size="md"
+      onSubmit={examenForm.handleSubmit(handleSubmit)}
+      submitLabel="Agregar"
+    >
+      <Stack gap="sm">
+        <Controller
+          name="tipo"
+          control={examenForm.control}
+          render={({ field }) => (
+            <Select
+              label="Tipo de examen"
+              data={TIPO_EXAMEN_OPTIONS}
+              required
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? 'laboratorio')}
+            />
+          )}
+        />
+        <TextInput
+          label="Nombre del examen"
+          required
+          placeholder="Ej: Hemograma completo"
+          {...contained}
+          {...examenForm.register('nombre_examen')}
+          error={examenForm.formState.errors.nombre_examen?.message}
+        />
+        <Textarea
+          label="Resultado"
+          autosize
+          minRows={2}
+          {...contained}
+          {...examenForm.register('resultado')}
+        />
+        <DatePickerInput
+          label="Fecha del examen"
+          valueFormat="DD/MM/YYYY"
+          clearable
+          {...contained}
+          value={toDateValue(fechaExamen)}
+          onChange={(d) =>
+            examenForm.setValue('fecha_examen', fromDateValueOrNull(d as Date | null))
+          }
+        />
+      </Stack>
+    </FormModal>
   )
 }

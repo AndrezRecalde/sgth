@@ -2,15 +2,15 @@
 
 import { useState } from 'react'
 import {
-  Modal, Button, Group, Stack,
+  Button, Group, Stack,
   Select, Textarea, NumberInput, SegmentedControl,
   Checkbox, Text, Divider, Alert,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useEppEntregaMutations, useKitEppServidor } from '../hooks/useEppEntregas'
@@ -35,7 +35,6 @@ interface SeleccionKit {
 }
 
 export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { registrar, registrarKit } = useEppEntregaMutations()
   const { data: equiposData } = useEquiposProteccion({ estado: true })
@@ -132,13 +131,11 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title="Registrar movimiento de EPP"
       size="md"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="sm">
         <SegmentedControl
@@ -237,14 +234,11 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
                 {...register('observaciones')}
                 error={errors.observaciones?.message}
               />
-              <Group justify="flex-end" mt="md">
-                <Button variant="default" onClick={handleClose}>
-                  Cancelar
-                </Button>
-                <Button type="submit" loading={registrar.isPending} color="emerald">
-                  Registrar
-                </Button>
-              </Group>
+              <ModalFooter
+                onCancel={handleClose}
+                submitLabel="Registrar"
+                submitting={registrar.isPending}
+              />
             </Stack>
           </form>
         )}
@@ -342,22 +336,16 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
               onChange={(e) => setKitObservaciones(e.currentTarget.value)}
             />
 
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={handleClose}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={onSubmitKit}
-                loading={registrarKit.isPending}
-                disabled={!kitValido}
-                color="emerald"
-              >
-                Entregar kit ({equiposSeleccionados.length})
-              </Button>
-            </Group>
+            <ModalFooter
+              onCancel={handleClose}
+              submitLabel={`Entregar kit (${equiposSeleccionados.length})`}
+              submitting={registrarKit.isPending}
+              submitDisabled={!kitValido}
+              onSubmit={onSubmitKit}
+            />
           </Stack>
         )}
       </Stack>
-    </Modal>
+    </SgthModal>
   )
 }

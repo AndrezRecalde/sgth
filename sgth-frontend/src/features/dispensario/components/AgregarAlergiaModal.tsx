@@ -1,11 +1,11 @@
 'use client'
 
 import {
-  Modal, Stack, Select, TextInput,
-  Textarea, Button, Group,
+  Stack, Select, TextInput,
+  Textarea, 
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
-import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAgregarAlergia } from '../hooks/useHistoriaClinica'
 
@@ -65,85 +65,69 @@ export function AgregarAlergiaModal({
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={() => { reset(); onClose() }}
       title="Agregar alergia"
       size="sm"
-      radius="xl"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Agregar alergia"
+      submitting={agregar.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Controller
-            name="tipo"
-            control={control}
-            rules={{ required: 'Seleccione el tipo de alergia' }}
-            render={({ field }) => (
-              <Select
-                label="Tipo de alergia"
-                required
-                data={TIPO_OPTIONS}
-                placeholder="Seleccione"
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? '')}
-                error={errors.tipo?.message}
-              />
-            )}
-          />
-          <TextInput
-            label="Descripción"
-            placeholder="Ej: Penicilina, Mariscos, Polen..."
-            {...contained}
-            required
-            {...register('descripcion', {
-              required: 'Describa la alergia',
-            })}
-            error={errors.descripcion?.message}
-          />
-          <Controller
-            name="severidad"
-            control={control}
-            rules={{ required: 'Seleccione la severidad' }}
-            render={({ field }) => (
-              <Select
-                label="Severidad"
-                required
-                data={SEVERIDAD_OPTIONS}
-                placeholder="Seleccione"
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? '')}
-                error={errors.severidad?.message}
-              />
-            )}
-          />
-          <Textarea
-            label="Observación (opcional)"
-            placeholder="Detalles adicionales de la alergia"
-            autosize
-            minRows={2}
-            {...contained}
-            {...register('observacion')}
-          />
-          <Group justify="flex-end" mt="sm">
-            <Button
-              variant="default"
-              onClick={() => { reset(); onClose() }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              leftSection={<IconCheck size={14} />}
-              loading={agregar.isPending}
-            >
-              Agregar alergia
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+      <Stack gap="sm">
+        <Controller
+          name="tipo"
+          control={control}
+          rules={{ required: 'Seleccione el tipo de alergia' }}
+          render={({ field }) => (
+            <Select
+              label="Tipo de alergia"
+              required
+              data={TIPO_OPTIONS}
+              placeholder="Seleccione"
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? '')}
+              error={errors.tipo?.message}
+            />
+          )}
+        />
+        <TextInput
+          label="Descripción"
+          placeholder="Ej: Penicilina, Mariscos, Polen..."
+          {...contained}
+          required
+          {...register('descripcion', {
+            required: 'Describa la alergia',
+          })}
+          error={errors.descripcion?.message}
+        />
+        <Controller
+          name="severidad"
+          control={control}
+          rules={{ required: 'Seleccione la severidad' }}
+          render={({ field }) => (
+            <Select
+              label="Severidad"
+              required
+              data={SEVERIDAD_OPTIONS}
+              placeholder="Seleccione"
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? '')}
+              error={errors.severidad?.message}
+            />
+          )}
+        />
+        <Textarea
+          label="Observación (opcional)"
+          placeholder="Detalles adicionales de la alergia"
+          autosize
+          minRows={2}
+          {...contained}
+          {...register('observacion')}
+        />
+      </Stack>
+    </FormModal>
   )
 }

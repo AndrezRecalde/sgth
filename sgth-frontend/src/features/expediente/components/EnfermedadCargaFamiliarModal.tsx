@@ -1,11 +1,11 @@
 'use client'
 
-import { Modal, Button, Group, Stack, TextInput } from '@mantine/core'
+import { Stack, TextInput } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
@@ -40,7 +40,6 @@ interface Props {
 export function EnfermedadCargaFamiliarModal({
   opened, onClose, cargaId, servidorId,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained    = useContainedInput()
   const qc           = useQueryClient()
 
@@ -89,63 +88,49 @@ export function EnfermedadCargaFamiliarModal({
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={handleClose}
       title="Registrar enfermedad catastrófica"
       size="sm"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Registrar enfermedad"
+      submitting={isSubmitting}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <TextInput
-            label="Nombre de la enfermedad"
-            placeholder="Ej: Cáncer pulmonar, Diabetes tipo 1"
-            {...contained}
-            {...register('tipo_enfermedad')}
-            error={errors.tipo_enfermedad?.message}
-          />
-          <TextInput
-            label="Código CIE-10"
-            placeholder="Ej: C34.1 (opcional)"
-            {...contained}
-            {...register('codigo_cie10')}
-            error={errors.codigo_cie10?.message}
-          />
-          <Controller
-            name="fecha_diagnostico"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                label="Fecha de diagnóstico"
-                placeholder="Seleccionar fecha (opcional)"
-                valueFormat="YYYY-MM-DD"
-                clearable
-                maxDate={new Date()}
-                {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d))}
-                error={errors.fecha_diagnostico?.message}
-              />
-            )}
-          />
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="red"
-              variant="light"
-              loading={isSubmitting}
-            >
-              Registrar enfermedad
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+      <Stack gap="sm">
+        <TextInput
+          label="Nombre de la enfermedad"
+          placeholder="Ej: Cáncer pulmonar, Diabetes tipo 1"
+          {...contained}
+          {...register('tipo_enfermedad')}
+          error={errors.tipo_enfermedad?.message}
+        />
+        <TextInput
+          label="Código CIE-10"
+          placeholder="Ej: C34.1 (opcional)"
+          {...contained}
+          {...register('codigo_cie10')}
+          error={errors.codigo_cie10?.message}
+        />
+        <Controller
+          name="fecha_diagnostico"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Fecha de diagnóstico"
+              placeholder="Seleccionar fecha (opcional)"
+              valueFormat="YYYY-MM-DD"
+              clearable
+              maxDate={new Date()}
+              {...contained}
+              value={toDate(field.value)}
+              onChange={(d) => field.onChange(fromDate(d))}
+              error={errors.fecha_diagnostico?.message}
+            />
+          )}
+        />
+      </Stack>
+    </FormModal>
   )
 }
 

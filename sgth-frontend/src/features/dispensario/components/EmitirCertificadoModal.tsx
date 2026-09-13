@@ -1,13 +1,14 @@
 'use client'
 
 import {
-  Modal, Stack, Textarea,
-  Button, Group, Text, Alert,
+  Stack, Textarea,
+  Group, Text, Alert,
   Badge, 
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useState } from 'react'
-import { IconCheck, IconAlertCircle } from '@tabler/icons-react'
+import { IconAlertCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useEmitirCertificado } from '../hooks/useCertificado'
 import { BuscarCie10Input } from './BuscarCie10Input'
@@ -113,12 +114,11 @@ export function EmitirCertificadoModal({
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Emitir certificado médico"
       size="md"
-      radius="xl"
     >
       <Stack gap="sm">
         <Alert
@@ -181,31 +181,20 @@ export function EmitirCertificadoModal({
           value={observaciones}
           onChange={(e) => setObservaciones(e.currentTarget.value)}
         />
-
-        <Group justify="flex-end" mt="sm">
-          <Button
-            variant="default"
-            onClick={() => {
-              setRango([null, null])
-              setCie10Sel(null)
-              setObservaciones('')
-              setErrorRango(null)
-              onClose()
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="emerald"
-            leftSection={<IconCheck size={14} />}
-            loading={emitir.isPending}
-            disabled={!fechaInicio || !fechaFin || rangoExcede}
-            onClick={handleSubmit}
-          >
-            Emitir certificado
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={() => {
+          setRango([null, null])
+          setCie10Sel(null)
+          setObservaciones('')
+          setErrorRango(null)
+          onClose()
+        }}
+        submitLabel="Emitir certificado"
+        submitting={emitir.isPending}
+        submitDisabled={!fechaInicio || !fechaFin || rangoExcede}
+        onSubmit={handleSubmit}
+      />
+    </SgthModal>
   )
 }

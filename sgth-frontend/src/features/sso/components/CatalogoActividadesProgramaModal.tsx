@@ -1,15 +1,14 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, SgthModal } from '@/components/ui'
 import {
-  Modal, Stack, Group, TextInput, Select, Textarea, Button,
+  Stack, Group, TextInput, Select, Textarea, Button,
   ActionIcon, Badge,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useActividadesPrograma, useProgramaDrogasMutations } from '../hooks/useProgramaDrogas'
 import {
@@ -24,7 +23,6 @@ interface Props {
 }
 
 export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { data: actividades = [], isLoading } = useActividadesPrograma()
   const { crearActividad, eliminarActividad } = useProgramaDrogasMutations()
@@ -74,13 +72,11 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
   ]
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Catálogo de actividades del programa de drogas"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -138,6 +134,6 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
           minHeight={120}
         />
       </Stack>
-    </Modal>
+    </SgthModal>
   )
 }

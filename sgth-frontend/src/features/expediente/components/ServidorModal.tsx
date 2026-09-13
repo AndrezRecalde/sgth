@@ -1,11 +1,11 @@
 'use client'
 
-import { Modal, Stepper, Button, Group } from '@mantine/core'
+import { Stepper, Button } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconUser, IconPhone, IconBriefcase } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useServidorMutations } from '../hooks/useServidorMutations'
 import { ServidorFormPersonal } from './ServidorFormPersonal'
 import { ServidorFormContacto } from './ServidorFormContacto'
@@ -116,7 +116,6 @@ function mapServidorToLaboralValues(servidor: ServidorConRelaciones): ServidorLa
 }
 
 export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
-  const { isMobile }      = useMobileBreakpoint()
   const { crear, editar } = useServidorMutations()
   const isEditing         = !!servidor
   const totalSteps        = isEditing ? 3 : 2
@@ -187,15 +186,14 @@ export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
   }
 
   const isPending = crear.isPending || editar.isPending
+  const esUltimoPaso = step === totalSteps - 1
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title={isEditing ? 'Editar datos del servidor' : 'Registrar ficha del servidor'}
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stepper active={step} size="sm" color="emerald" mb="lg" allowNextStepsSelect={false}>
         <Stepper.Step label="Datos personales" icon={<IconUser size={16} />} />
@@ -216,33 +214,21 @@ export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
           </FormProvider>
         )}
 
-        <Group justify="space-between" mt="xl">
-          <Button variant="default" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Group>
-            {step > 0 && (
-              <Button variant="default" onClick={handleBack}>
-                Atrás
-              </Button>
-            )}
-            {step < totalSteps - 1 ? (
-              <Button type="button" color="emerald" variant="light" onClick={handleNext}>
-                Siguiente
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                loading={isPending}
-                color="emerald"
-                variant="light"
-              >
-                {isEditing ? 'Actualizar' : 'Guardar ficha y continuar'}
-              </Button>
-            )}
-          </Group>
-        </Group>
+        <ModalFooter
+          onCancel={handleClose}
+          leftSection={step > 0 && (
+            <Button variant="default" onClick={handleBack}>
+              Atrás
+            </Button>
+          )}
+          // Sin `onSubmit` el botón pasa a enviar el formulario: solo en el último paso.
+          onSubmit={esUltimoPaso ? undefined : handleNext}
+          submitLabel={esUltimoPaso
+            ? (isEditing ? 'Actualizar' : 'Guardar ficha y continuar')
+            : 'Siguiente'}
+          submitting={isPending}
+        />
       </form>
-    </Modal>
+    </SgthModal>
   )
 }

@@ -1,12 +1,13 @@
 'use client'
 
 import {
-  Modal, Stack, NumberInput, Textarea,
-  Button, Group, Text, Badge, Alert,
+  Stack, NumberInput, Textarea,
+  Group, Text, Badge, Alert,
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useEffect } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
-import { IconCheck, IconAlertTriangle } from '@tabler/icons-react'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useInventarioMutations } from '../hooks/useInventarioMedicina'
 import type { InventarioMedicina } from '../services/inventarioMedicinaService'
@@ -63,95 +64,81 @@ export function AjustarInventarioModal({
   const diferencia = nuevoStock - medicina.stock_actual
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={() => { reset(); onClose() }}
       title="Ajustar inventario"
       size="sm"
-      radius="xl"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Confirmar ajuste"
+      submitting={ajustarInventario.isPending}
+      submitDisabled={diferencia === 0}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Group justify="space-between">
-            <Text size="sm" fw={600}>{medicina.nombre}</Text>
-            <Badge variant="light" color="blue">
-              Stock en sistema: {medicina.stock_actual}
-            </Badge>
-          </Group>
+      <Stack gap="sm">
+        <Group justify="space-between">
+          <Text size="sm" fw={600}>{medicina.nombre}</Text>
+          <Badge variant="light" color="blue">
+            Stock en sistema: {medicina.stock_actual}
+          </Badge>
+        </Group>
 
-          <Alert
-            icon={<IconAlertTriangle size={14} />}
-            color="orange"
-            variant="light"
-          >
-            <Text size="xs">
-              Use esta opción solo para corregir el inventario tras un conteo
-              físico, una merma o una caducidad. Las compras y donaciones
-              entran por Adquisiciones, con su documento de respaldo.
-            </Text>
-          </Alert>
+        <Alert
+          icon={<IconAlertTriangle size={14} />}
+          color="orange"
+          variant="light"
+        >
+          <Text size="xs">
+            Use esta opción solo para corregir el inventario tras un conteo
+            físico, una merma o una caducidad. Las compras y donaciones
+            entran por Adquisiciones, con su documento de respaldo.
+          </Text>
+        </Alert>
 
-          <Controller
-            name="nuevo_stock"
-            control={control}
-            rules={{
-              required: 'Indique el stock contado',
-              min: { value: 0, message: 'No puede ser negativo' },
-            }}
-            render={({ field }) => (
-              <NumberInput
-                label="Stock real (conteo físico)"
-                min={0}
-                required
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(Number(v) || 0)}
-                error={errors.nuevo_stock?.message}
-              />
-            )}
-          />
-
-          {diferencia !== 0 && (
-            <Text
-              size="xs"
-              c={diferencia > 0 ? 'emerald' : 'red'}
-              fw={500}
-            >
-              {diferencia > 0
-                ? `Se sumarán ${diferencia} unidades`
-                : `Se restarán ${Math.abs(diferencia)} unidades`}
-            </Text>
+        <Controller
+          name="nuevo_stock"
+          control={control}
+          rules={{
+            required: 'Indique el stock contado',
+            min: { value: 0, message: 'No puede ser negativo' },
+          }}
+          render={({ field }) => (
+            <NumberInput
+              label="Stock real (conteo físico)"
+              min={0}
+              required
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(Number(v) || 0)}
+              error={errors.nuevo_stock?.message}
+            />
           )}
+        />
 
-          <Textarea
-            label="Motivo del ajuste"
-            placeholder="Ej: Conteo físico mensual, rotura de envase, etc."
-            autosize
-            minRows={2}
-            {...contained}
-            required
-            {...register('motivo', {
-              required: 'Indique el motivo del ajuste',
-            })}
-            error={errors.motivo?.message}
-          />
+        {diferencia !== 0 && (
+          <Text
+            size="xs"
+            c={diferencia > 0 ? 'emerald' : 'red'}
+            fw={500}
+          >
+            {diferencia > 0
+              ? `Se sumarán ${diferencia} unidades`
+              : `Se restarán ${Math.abs(diferencia)} unidades`}
+          </Text>
+        )}
 
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="blue"
-              leftSection={<IconCheck size={14} />}
-              disabled={diferencia === 0}
-              loading={ajustarInventario.isPending}
-            >
-              Confirmar ajuste
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Textarea
+          label="Motivo del ajuste"
+          placeholder="Ej: Conteo físico mensual, rotura de envase, etc."
+          autosize
+          minRows={2}
+          {...contained}
+          required
+          {...register('motivo', {
+            required: 'Indique el motivo del ajuste',
+          })}
+          error={errors.motivo?.message}
+        />
+      </Stack>
+    </FormModal>
   )
 }

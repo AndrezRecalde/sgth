@@ -1,11 +1,11 @@
 'use client'
 
 import {
-  Modal, Stack, Select, Textarea,
-  NumberInput, Button, Group,
+  Stack, Select, Textarea,
+  NumberInput, 
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
-import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAgregarAntecedente } from '../hooks/useHistoriaClinica'
 
@@ -61,90 +61,73 @@ export function AgregarAntecedenteModal({
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={() => { reset(); onClose() }}
       title={esFamiliar
         ? 'Agregar antecedente familiar'
         : 'Agregar antecedente personal'}
       size="sm"
-      radius="xl"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Agregar antecedente"
+      submitting={agregar.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          {!esFamiliar && (
-            <Controller
-              name="tipo"
-              control={control}
-              rules={{ required: 'Seleccione el tipo de antecedente' }}
-              render={({ field }) => (
-                <Select
-                  label="Tipo de antecedente"
-                  required
-                  data={TIPO_PERSONAL_OPTIONS}
-                  placeholder="Seleccione"
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v ?? '')}
-                  error={errors.tipo?.message}
-                />
-              )}
-            />
-          )}
-
-          <Textarea
-            label="Descripción"
-            placeholder={esFamiliar
-              ? "Ej: Padre con diabetes tipo 2, madre hipertensa..."
-              : "Ej: Apendicectomía 2018, fractura de fémur..."}
-            autosize
-            minRows={3}
-            {...contained}
-            required
-            {...register('descripcion', {
-              required: 'Describa el antecedente',
-              minLength: {
-                value: 5,
-                message: 'Mínimo 5 caracteres',
-              },
-            })}
-            error={errors.descripcion?.message}
-          />
-
+      <Stack gap="sm">
+        {!esFamiliar && (
           <Controller
-            name="fecha_aproximada"
+            name="tipo"
             control={control}
+            rules={{ required: 'Seleccione el tipo de antecedente' }}
             render={({ field }) => (
-              <NumberInput
-                label="Año aproximado (opcional)"
-                placeholder="Ej: 2018"
-                min={1900}
-                max={new Date().getFullYear()}
+              <Select
+                label="Tipo de antecedente"
+                required
+                data={TIPO_PERSONAL_OPTIONS}
+                placeholder="Seleccione"
                 {...contained}
-                value={field.value ?? undefined}
-                onChange={(v) => field.onChange(v ? Number(v) : null)}
+                value={field.value}
+                onChange={(v) => field.onChange(v ?? '')}
+                error={errors.tipo?.message}
               />
             )}
           />
+        )}
 
-          <Group justify="flex-end" mt="sm">
-            <Button
-              variant="default"
-              onClick={() => { reset(); onClose() }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              leftSection={<IconCheck size={14} />}
-              loading={agregar.isPending}
-            >
-              Agregar antecedente
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Textarea
+          label="Descripción"
+          placeholder={esFamiliar
+            ? "Ej: Padre con diabetes tipo 2, madre hipertensa..."
+            : "Ej: Apendicectomía 2018, fractura de fémur..."}
+          autosize
+          minRows={3}
+          {...contained}
+          required
+          {...register('descripcion', {
+            required: 'Describa el antecedente',
+            minLength: {
+              value: 5,
+              message: 'Mínimo 5 caracteres',
+            },
+          })}
+          error={errors.descripcion?.message}
+        />
+
+        <Controller
+          name="fecha_aproximada"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Año aproximado (opcional)"
+              placeholder="Ej: 2018"
+              min={1900}
+              max={new Date().getFullYear()}
+              {...contained}
+              value={field.value ?? undefined}
+              onChange={(v) => field.onChange(v ? Number(v) : null)}
+            />
+          )}
+        />
+      </Stack>
+    </FormModal>
   )
 }

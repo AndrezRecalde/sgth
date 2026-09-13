@@ -2,14 +2,14 @@
 
 import React from 'react'
 import {
-  Modal, Button, Group, Stack, Select, Textarea, TextInput, Alert,
+  Button, Group, Stack, Select, Textarea, TextInput, Alert,
   Switch, Divider, Stepper, Grid, NumberInput, Paper, Text,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck, IconX, IconInfoCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
@@ -105,8 +105,6 @@ export function MovimientoModal({
   opened, onClose, servidorId, tipoNombramiento, movimiento = null,
   tipoFijo, titulo,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
-
   const encabezado = titulo
     ?? (movimiento
       ? 'Editar acción de personal en borrador'
@@ -115,13 +113,11 @@ export function MovimientoModal({
         : 'Registrar acción de personal')
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title={encabezado}
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       {/* Se monta al abrir, así el formulario arranca limpio sin resetear
           estado desde un efecto. */}
@@ -135,7 +131,7 @@ export function MovimientoModal({
           onClose={onClose}
         />
       )}
-    </Modal>
+    </SgthModal>
   )
 }
 
@@ -416,12 +412,12 @@ function FormularioAccion({
                   </Alert>
                 )}
 
-                <Group justify="flex-end" mt="md">
-                  <Button variant="default" onClick={handleClose}>Cancelar</Button>
-                  <Button color="emerald" disabled={!puedeAvanzar} onClick={() => setPaso(1)}>
-                    Continuar
-                  </Button>
-                </Group>
+                <ModalFooter
+                  onCancel={handleClose}
+                  submitLabel="Continuar"
+                  submitDisabled={!puedeAvanzar}
+                  onSubmit={() => setPaso(1)}
+                />
               </Stack>
             </Stepper.Step>
 
@@ -789,17 +785,14 @@ function FormularioAccion({
                   {...register('observacion')}
                 />
 
-                <Group justify="space-between" mt="md">
-                  {sinPasoDeTipo
-                    ? <span />
-                    : <Button variant="default" onClick={() => setPaso(0)}>Atrás</Button>}
-                  <Group>
-                    <Button variant="default" onClick={handleClose}>Cancelar</Button>
-                    <Button type="submit" color="emerald" loading={guardar.isPending}>
-                      {edicion ? 'Guardar cambios' : 'Registrar en borrador'}
-                    </Button>
-                  </Group>
-                </Group>
+                <ModalFooter
+                  onCancel={handleClose}
+                  leftSection={!sinPasoDeTipo && (
+                    <Button variant="default" onClick={() => setPaso(0)}>Atrás</Button>
+                  )}
+                  submitLabel={edicion ? 'Guardar cambios' : 'Registrar en borrador'}
+                  submitting={guardar.isPending}
+                />
               </Stack>
             </Stepper.Step>
           </Stepper>

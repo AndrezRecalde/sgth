@@ -2,24 +2,19 @@
 
 import { useEffect } from "react";
 import {
-  Modal,
   Stack,
   Text,
-  Group,
   Button,
   Alert,
-  ThemeIcon,
 } from "@mantine/core";
+import { FormModal } from "@/components/ui";
 import {
   IconPlus,
-  IconFileInvoice,
   IconInfoCircle,
-  IconCheck,
 } from "@tabler/icons-react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useCategoriasFactura } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { FacturaItemForm } from "./FacturaItemForm";
@@ -99,7 +94,6 @@ export function FacturasModal({
   onGuardar,
   valorInicial = [],
 }: Props) {
-  const { isMobile } = useMobileBreakpoint();
   const { data: categorias = [] } = useCategoriasFactura();
   const { guardarFacturas } = useViaticoMutations();
 
@@ -193,87 +187,65 @@ export function FacturasModal({
   };
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon color="orange" variant="light" size="sm">
-            <IconFileInvoice size={14} />
-          </ThemeIcon>
-          <Text fw={600}>Facturas de respaldo</Text>
-        </Group>
-      }
+      title="Facturas de respaldo"
       size="xl"
-      radius="xl"
-      fullScreen={isMobile}
       closeOnClickOutside={false}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Guardar comprobantes"
+      submitting={guardarFacturas.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="md">
-          <FacturasResumen viatico={viatico} totalFacturas={totalFacturas} />
+      <Stack gap="md">
+        <FacturasResumen viatico={viatico} totalFacturas={totalFacturas} />
 
-          <Alert
-            icon={<IconInfoCircle size={14} />}
-            color="orange"
-            variant="light"
-          >
-            <Text size="xs" fw={500}>
-              Período válido para comprobantes
-            </Text>
-            <Text size="xs" mt={2}>
-              Desde el{" "}
-              <strong>{formatFecha(viatico.datetime_salida as string)}</strong>{" "}
-              hasta 5 días después del regreso:{" "}
-              <strong>
-                {maxFecha?.toLocaleDateString("es-EC", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                }) ?? "—"}
-              </strong>
-            </Text>
-          </Alert>
+        <Alert
+          icon={<IconInfoCircle size={14} />}
+          color="orange"
+          variant="light"
+        >
+          <Text size="xs" fw={500}>
+            Período válido para comprobantes
+          </Text>
+          <Text size="xs" mt={2}>
+            Desde el{" "}
+            <strong>{formatFecha(viatico.datetime_salida as string)}</strong>{" "}
+            hasta 5 días después del regreso:{" "}
+            <strong>
+              {maxFecha?.toLocaleDateString("es-EC", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              }) ?? "—"}
+            </strong>
+          </Text>
+        </Alert>
 
-          {fields.map((field, i) => (
-            <FacturaItemForm
-              key={field.id}
-              index={i}
-              control={control}
-              register={register}
-              errors={errors}
-              categoriaOptions={categoriaOptions}
-              minFecha={minFecha}
-              maxFecha={maxFecha}
-              onEliminar={() => remove(i)}
-              puedeEliminar={fields.length > 1}
-            />
-          ))}
+        {fields.map((field, i) => (
+          <FacturaItemForm
+            key={field.id}
+            index={i}
+            control={control}
+            register={register}
+            errors={errors}
+            categoriaOptions={categoriaOptions}
+            minFecha={minFecha}
+            maxFecha={maxFecha}
+            onEliminar={() => remove(i)}
+            puedeEliminar={fields.length > 1}
+          />
+        ))}
 
-          <Button
-            variant="light"
-            color="orange"
-            leftSection={<IconPlus size={14} />}
-            onClick={() => append({ ...FACTURA_VACIA })}
-          >
-            Agregar comprobante
-          </Button>
-
-          <Group justify="flex-end">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="orange"
-              loading={guardarFacturas.isPending}
-              leftSection={<IconCheck size={14} />}
-            >
-              Guardar comprobantes
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Button
+          variant="light"
+          color="orange"
+          leftSection={<IconPlus size={14} />}
+          onClick={() => append({ ...FACTURA_VACIA })}
+        >
+          Agregar comprobante
+        </Button>
+      </Stack>
+    </FormModal>
   );
 }

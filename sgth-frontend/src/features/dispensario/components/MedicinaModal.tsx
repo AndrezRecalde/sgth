@@ -2,21 +2,18 @@
 
 import { useEffect } from "react";
 import {
-  Modal,
   Stack,
-  Group,
   TextInput,
   NumberInput,
-  Button,
   Select,
   Alert,
   Text,
 } from "@mantine/core";
+import { FormModal } from "@/components/ui";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useInventarioMutations } from "../hooks/useInventarioMedicina";
 import {
   medicinaSchema,
@@ -38,7 +35,6 @@ export function MedicinaModal({
   initialValues,
   onCreated,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { crear, actualizar } = useInventarioMutations();
   const isEditing = !!initialValues;
@@ -112,111 +108,97 @@ export function MedicinaModal({
   };
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={onClose}
       title={isEditing ? "Editar medicina" : "Registrar medicina"}
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : "xl"}
       closeOnClickOutside={false}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel={isEditing ? "Guardar cambios" : "Registrar medicina"}
+      submitting={crear.isPending || actualizar.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          {!isEditing && (
-            <Alert
-              icon={<IconInfoCircle size={14} />}
-              color="blue"
-              variant="light"
-            >
-              <Text size="xs">
-                Aquí se define el medicamento, no sus existencias: nace con
-                stock en cero. Las unidades entran desde Adquisiciones, con su
-                documento de respaldo.
-              </Text>
-            </Alert>
-          )}
+      <Stack gap="sm">
+        {!isEditing && (
+          <Alert
+            icon={<IconInfoCircle size={14} />}
+            color="blue"
+            variant="light"
+          >
+            <Text size="xs">
+              Aquí se define el medicamento, no sus existencias: nace con
+              stock en cero. Las unidades entran desde Adquisiciones, con su
+              documento de respaldo.
+            </Text>
+          </Alert>
+        )}
 
-          {isEditing && initialValues && (
-            <TextInput
-              label="Código"
-              value={initialValues.codigo}
-              disabled
-              description="Generado automáticamente"
+        {isEditing && initialValues && (
+          <TextInput
+            label="Código"
+            value={initialValues.codigo}
+            disabled
+            description="Generado automáticamente"
+            {...contained}
+          />
+        )}
+
+        <TextInput
+          label="Nombre comercial"
+          {...contained}
+          {...register("nombre")}
+          error={errors.nombre?.message}
+        />
+        <TextInput
+          label="Principio activo"
+          {...contained}
+          {...register("principio_activo")}
+          error={errors.principio_activo?.message}
+        />
+
+        <Controller
+          name="presentacion"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Presentación"
+              placeholder="Seleccione"
+              data={PRESENTACION_OPTIONS}
               {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? "")}
+              error={errors.presentacion?.message}
             />
           )}
+        />
+        <TextInput
+          label="Concentración (opcional)"
+          placeholder="Ej: 500mg"
+          {...contained}
+          {...register("concentracion")}
+        />
 
-          <TextInput
-            label="Nombre comercial"
-            {...contained}
-            {...register("nombre")}
-            error={errors.nombre?.message}
-          />
-          <TextInput
-            label="Principio activo"
-            {...contained}
-            {...register("principio_activo")}
-            error={errors.principio_activo?.message}
-          />
+        {/* Aquí había un lote y una fecha de caducidad. Se fueron: esta
+            pantalla da de alta el CATÁLOGO —qué maneja la farmacia— y el
+            lote y la caducidad son de las existencias, que entran por
+            adquisición y cada una abre su lote. Pedirlos aquí prometía
+            guardar algo que ya no se guardaba. */}
 
-          <Controller
-            name="presentacion"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Presentación"
-                placeholder="Seleccione"
-                data={PRESENTACION_OPTIONS}
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? "")}
-                error={errors.presentacion?.message}
-              />
-            )}
-          />
-          <TextInput
-            label="Concentración (opcional)"
-            placeholder="Ej: 500mg"
-            {...contained}
-            {...register("concentracion")}
-          />
-
-          {/* Aquí había un lote y una fecha de caducidad. Se fueron: esta
-              pantalla da de alta el CATÁLOGO —qué maneja la farmacia— y el
-              lote y la caducidad son de las existencias, que entran por
-              adquisición y cada una abre su lote. Pedirlos aquí prometía
-              guardar algo que ya no se guardaba. */}
-
-          <Controller
-            name="stock_minimo"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label="Stock mínimo"
-                description="Alerta cuando baje de este nivel"
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(Number(v) || 0)}
-                error={errors.stock_minimo?.message}
-              />
-            )}
-          />
-
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              loading={crear.isPending || actualizar.isPending}
-            >
-              {isEditing ? "Guardar cambios" : "Registrar medicina"}
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Controller
+          name="stock_minimo"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Stock mínimo"
+              description="Alerta cuando baje de este nivel"
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(Number(v) || 0)}
+              error={errors.stock_minimo?.message}
+            />
+          )}
+        />
+      </Stack>
+    </FormModal>
   );
 }

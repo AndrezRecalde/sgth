@@ -1,10 +1,11 @@
 'use client'
 
 import {
-  Modal, Stack, Text, Select, Textarea,
-  Button, Group, Card, Badge, Alert,
+  Stack, Text, Select, Textarea,
+  Card, Badge, Alert,
 } from '@mantine/core'
-import { IconCheck, IconInfoCircle } from '@tabler/icons-react'
+import { ModalFooter, SgthModal } from '@/components/ui'
+import { IconInfoCircle } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCompletarSolicitud } from '../hooks/useSolicitudCertificacion'
@@ -63,12 +64,11 @@ export function DictamenMedicoModal({
   if (!solicitud) return null
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title="Emitir dictamen médico"
       size="md"
-      radius="xl"
     >
       <Stack gap="md">
         <Card withBorder radius="md" p="sm">
@@ -131,22 +131,14 @@ export function DictamenMedicoModal({
           value={observacion}
           onChange={(e) => setObservacion(e.currentTarget.value)}
         />
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            color={dictamen ? DICTAMEN_COLORS[dictamen] : 'gray'}
-            leftSection={<IconCheck size={14} />}
-            disabled={!dictamen}
-            loading={completar.isPending}
-            onClick={handleGuardar}
-          >
-            Emitir dictamen
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={handleClose}
+        submitLabel="Emitir dictamen"
+        submitting={completar.isPending}
+        submitDisabled={!dictamen}
+        onSubmit={handleGuardar}
+      />
+    </SgthModal>
   )
 }

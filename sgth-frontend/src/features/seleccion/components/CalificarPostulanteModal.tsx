@@ -1,14 +1,15 @@
 'use client'
 
 import {
-  Modal, Stack, Text, NumberInput,
-  Button, Group, Card,
+  Stack, Text, NumberInput,
+  Group, Card,
   Badge, Progress, Divider, Alert,
   Radio, Checkbox, ScrollArea,
   Skeleton, ThemeIcon,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import {
-  IconCheck, IconInfoCircle,
+  IconInfoCircle,
   IconList, IconHash, IconCheckbox,
 } from '@tabler/icons-react'
 import { useState } from 'react'
@@ -303,12 +304,11 @@ export function CalificarPostulanteModal({
   const isLoading = cargandoCriterios || cargandoCal
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Calificar candidato"
       size="xl"
-      radius="xl"
     >
       <Stack gap="md">
         <Card withBorder radius="md" p="sm">
@@ -474,31 +474,14 @@ export function CalificarPostulanteModal({
             </Stack>
           </ScrollArea>
         )}
-
-        <Group justify="space-between" mt="sm">
-          <Text size="xs" c="dimmed">
-            Méritos: {totalMeritos.toFixed(2)} +
-            Oposición: {totalOposicion.toFixed(2)} =
-            <Text span fw={700} c={aprueba ? 'emerald' : 'red'}>
-              {' '}{total.toFixed(2)} pts
-            </Text>
-          </Text>
-          <Group gap="xs">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              color="emerald"
-              leftSection={<IconCheck size={14} />}
-              loading={guardar.isPending}
-              disabled={criterios.length === 0}
-              onClick={handleGuardar}
-            >
-              Guardar calificación
-            </Button>
-          </Group>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={onClose}
+        submitLabel="Guardar calificación"
+        submitting={guardar.isPending}
+        submitDisabled={criterios.length === 0}
+        onSubmit={handleGuardar}
+      />
+    </SgthModal>
   )
 }

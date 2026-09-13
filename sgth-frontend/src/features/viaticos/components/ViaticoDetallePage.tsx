@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar, MotivoModal } from '@/components/ui'
+import { confirmar, MotivoModal, SgthModal } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -12,7 +12,6 @@ import {
   Stepper,
   Skeleton,
   Badge,
-  Modal,
   ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -282,6 +281,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
         onClose={() => setConMotivo(null)}
         title={conMotivo === "devolver" ? "Devolver para correcciones" : "Rechazar viático"}
         confirmLabel={conMotivo === "devolver" ? "Devolver" : "Rechazar"}
+        destructiva={conMotivo !== "devolver"}
         cargando={rechazar.isPending || devolverCorreccion.isPending}
         valorInicial={
           conMotivo === "devolver"
@@ -330,7 +330,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
       {/* Modal Tramos */}
       {tramosAbierto && (
-        <Modal
+        <SgthModal
           opened={tramosAbierto}
           onClose={() => {
             setMostrarTramoForm(false)
@@ -338,7 +338,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
           }}
           title="Gestionar itinerario"
           size="xl"
-          radius="xl"
         >
           <Stack gap="md">
             <TramosList viaticoId={d.id} puedeEditar={true} />
@@ -367,7 +366,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
               </Card>
             )}
           </Stack>
-        </Modal>
+        </SgthModal>
       )}
     </Stack>
   );

@@ -2,20 +2,18 @@
 
 import { useState } from "react";
 import {
-  Modal,
-  Button,
   Group,
   Stack,
   Select,
   Text,
   Textarea,
 } from "@mantine/core";
+import { FormModal } from "@/components/ui";
 import { Dropzone } from "@mantine/dropzone";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { IconUpload, IconX, IconFile } from "@tabler/icons-react";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useDocumentoMutations } from "../hooks/useDocumentoMutations";
 import { DatePickerInput } from "@mantine/dates";
@@ -90,7 +88,6 @@ const fromDate = (d: Date | string | null): string | null => {
 };
 
 export function DocumentoModal({ opened, onClose, servidorId }: Props) {
-  const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { subir } = useDocumentoMutations(servidorId);
   const [archivo, setArchivo] = useState<File | null>(null);
@@ -137,124 +134,108 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
   };
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={handleClose}
       title="Subir documento al expediente"
       size="md"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : "xl"}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Subir documento"
+      submitting={subir.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Controller
-            name="tipo_documento"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Tipo de documento"
-                placeholder="Seleccionar tipo"
-                data={TIPO_OPTIONS}
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? "")}
-                error={errors.tipo_documento?.message}
-              />
-            )}
-          />
-
-          <Dropzone
-            onDrop={(files) => {
-              setArchivo(files[0]);
-              setArchivoError("");
-            }}
-            onReject={() => setArchivoError("Archivo no válido")}
-            maxSize={5 * 1024 * 1024}
-            accept={[
-              "application/pdf",
-              "image/jpeg",
-              "image/png",
-              "application/msword",
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            ]}
-          >
-            <Group justify="center" gap="xl" mih={80}>
-              <Dropzone.Accept>
-                <IconUpload size={28} color="var(--mantine-color-emerald-6)" />
-              </Dropzone.Accept>
-              <Dropzone.Reject>
-                <IconX size={28} color="var(--mantine-color-red-6)" />
-              </Dropzone.Reject>
-              <Dropzone.Idle>
-                <IconFile size={28} color="var(--mantine-color-dimmed)" />
-              </Dropzone.Idle>
-              <div>
-                {archivo ? (
-                  <Text size="sm" fw={500} c="emerald">
-                    {archivo.name}
-                  </Text>
-                ) : (
-                  <>
-                    <Text size="sm" fw={500}>
-                      Arrastra el archivo aquí o haz clic para seleccionar
-                    </Text>
-                    <Text size="xs" c="dimmed" mt={4}>
-                      PDF, JPG, PNG — máx. 5MB
-                    </Text>
-                  </>
-                )}
-              </div>
-            </Group>
-          </Dropzone>
-          {archivoError && (
-            <Text size="xs" c="red">
-              {archivoError}
-            </Text>
+      <Stack gap="sm">
+        <Controller
+          name="tipo_documento"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Tipo de documento"
+              placeholder="Seleccionar tipo"
+              data={TIPO_OPTIONS}
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? "")}
+              error={errors.tipo_documento?.message}
+            />
           )}
+        />
 
-          <Textarea
-            label="Descripción"
-            placeholder="Descripción opcional del documento"
-            rows={2}
-            {...contained}
-            {...register("descripcion")}
-            error={errors.descripcion?.message}
-          />
-
-          <Controller
-            name="fecha_vencimiento"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                label="Fecha de vencimiento"
-                placeholder="Seleccionar fecha"
-                valueFormat="YYYY-MM-DD"
-                clearable
-                {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d))}
-                description="Útil para pasaportes y documentos con caducidad"
-                error={errors.fecha_vencimiento?.message}
-              />
-            )}
-          />
-
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              variant="light"
-              loading={subir.isPending}
-              leftSection={<IconUpload size={14} />}
-            >
-              Subir documento
-            </Button>
+        <Dropzone
+          onDrop={(files) => {
+            setArchivo(files[0]);
+            setArchivoError("");
+          }}
+          onReject={() => setArchivoError("Archivo no válido")}
+          maxSize={5 * 1024 * 1024}
+          accept={[
+            "application/pdf",
+            "image/jpeg",
+            "image/png",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          ]}
+        >
+          <Group justify="center" gap="xl" mih={80}>
+            <Dropzone.Accept>
+              <IconUpload size={28} color="var(--mantine-color-emerald-6)" />
+            </Dropzone.Accept>
+            <Dropzone.Reject>
+              <IconX size={28} color="var(--mantine-color-red-6)" />
+            </Dropzone.Reject>
+            <Dropzone.Idle>
+              <IconFile size={28} color="var(--mantine-color-dimmed)" />
+            </Dropzone.Idle>
+            <div>
+              {archivo ? (
+                <Text size="sm" fw={500} c="emerald">
+                  {archivo.name}
+                </Text>
+              ) : (
+                <>
+                  <Text size="sm" fw={500}>
+                    Arrastra el archivo aquí o haz clic para seleccionar
+                  </Text>
+                  <Text size="xs" c="dimmed" mt={4}>
+                    PDF, JPG, PNG — máx. 5MB
+                  </Text>
+                </>
+              )}
+            </div>
           </Group>
-        </Stack>
-      </form>
-    </Modal>
+        </Dropzone>
+        {archivoError && (
+          <Text size="xs" c="red">
+            {archivoError}
+          </Text>
+        )}
+
+        <Textarea
+          label="Descripción"
+          placeholder="Descripción opcional del documento"
+          rows={2}
+          {...contained}
+          {...register("descripcion")}
+          error={errors.descripcion?.message}
+        />
+
+        <Controller
+          name="fecha_vencimiento"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Fecha de vencimiento"
+              placeholder="Seleccionar fecha"
+              valueFormat="YYYY-MM-DD"
+              clearable
+              {...contained}
+              value={toDate(field.value)}
+              onChange={(d) => field.onChange(fromDate(d))}
+              description="Útil para pasaportes y documentos con caducidad"
+              error={errors.fecha_vencimiento?.message}
+            />
+          )}
+        />
+      </Stack>
+    </FormModal>
   );
 }

@@ -1,11 +1,11 @@
 'use client'
 
 import {
-  Modal, Stack, Text, Group, Badge,
+  Stack, Text, Group, Badge,
   Table, Divider, Skeleton,
 } from '@mantine/core'
+import { SgthModal } from '@/components/ui'
 import { useQuery } from '@tanstack/react-query'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { nominaService } from '../services/nominaService'
 import type { Nomina, ServidorConRelaciones } from '@/types/api'
 
@@ -24,8 +24,6 @@ function formatMonto(v?: number | string | null): string {
 }
 
 export function RolPagoModal({ opened, onClose, nomina, servidor }: Props) {
-  const { isMobile } = useMobileBreakpoint()
-
   const { data: rol, isLoading } = useQuery({
     queryKey: ['rol-pago', nomina?.id, servidor?.id],
     queryFn:  () => nominaService.rolPago(nomina!.id, Number(servidor!.id)),
@@ -44,13 +42,11 @@ export function RolPagoModal({ opened, onClose, nomina, servidor }: Props) {
     : '—'
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title={`Rol de pago — ${nomina?.periodo ?? ''}`}
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       {isLoading ? (
         <Stack gap="sm">
@@ -141,6 +137,6 @@ export function RolPagoModal({ opened, onClose, nomina, servidor }: Props) {
           </Group>
         </Stack>
       )}
-    </Modal>
+    </SgthModal>
   )
 }

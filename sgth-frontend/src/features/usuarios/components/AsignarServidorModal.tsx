@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal, Stack, Text, Group, ThemeIcon, Button, Alert } from '@mantine/core'
-import { IconUserCheck, IconInfoCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { Stack, Text, Alert } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
+import { IconInfoCircle } from '@tabler/icons-react'
 import { useUsuarioMutations } from '../hooks/useUsuarioMutations'
 import { BuscadorServidor, type ServidorItem } from './BuscadorServidor'
 import type { Usuario } from '@/types/api'
@@ -14,7 +14,6 @@ interface Props {
 }
 
 export function AsignarServidorModal({ opened, onClose, usuario }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { asignarServidor } = useUsuarioMutations()
 
   const handleSeleccionar = (s: ServidorItem) => {
@@ -28,23 +27,16 @@ export function AsignarServidorModal({ opened, onClose, usuario }: Props) {
   const nombreUsuario = usuario?.nombre_completo || usuario?.email || '—'
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title={
-        <Group gap="xs">
-          <ThemeIcon color="emerald" variant="light" size="sm">
-            <IconUserCheck size={14} />
-          </ThemeIcon>
-          <Stack gap={0}>
-            <Text fw={700} size="sm">Asignar servidor</Text>
-            <Text size="xs" c="dimmed">{nombreUsuario}</Text>
-          </Stack>
-        </Group>
+        <Text fw={600}>
+          Asignar servidor
+          <Text span c="dimmed" ml={4}>— {nombreUsuario}</Text>
+        </Text>
       }
       size="md"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
@@ -64,10 +56,8 @@ export function AsignarServidorModal({ opened, onClose, usuario }: Props) {
           }
         />
 
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>Cerrar</Button>
-        </Group>
+        <ModalFooter onCancel={onClose} cancelLabel="Cerrar" sinPrincipal />
       </Stack>
-    </Modal>
+    </SgthModal>
   )
 }

@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo } from 'react'
 import {
-  Modal, Button, Group, Stack,
+  Group, Stack,
   Select, Textarea, Switch, Alert, Text,
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useForm, useWatch, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconGauge } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useRiesgoLaboralMutations } from '../hooks/useRiesgosLaborales'
@@ -27,7 +27,6 @@ interface Props {
 }
 
 export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
-  const { isMobile }      = useMobileBreakpoint()
   const contained         = useContainedInput()
   const { crear, editar } = useRiesgoLaboralMutations()
   const { data: factores = [] } = useFactoresRiesgo()
@@ -92,145 +91,136 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
   const factorOptions = factores.map(f => ({ value: String(f.id), label: f.nombre }))
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={handleClose}
       title={isEditing ? 'Editar riesgo laboral' : 'Nuevo riesgo laboral'}
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel={isEditing ? 'Actualizar' : 'Registrar riesgo'}
+      submitting={isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
+      <Stack gap="sm">
+        <Controller
+          name="puesto_id"
+          control={control}
+          render={({ field }) => (
+            <BuscarPuestoSelect
+              label="Puesto"
+              required
+              value={field.value || null}
+              onChange={(id) => field.onChange(id ?? 0)}
+              error={errors.puesto_id?.message}
+            />
+          )}
+        />
+        <Controller
+          name="factor_riesgo_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Factor de riesgo"
+              placeholder="Seleccione el factor identificado"
+              data={factorOptions}
+              searchable
+              required
+              {...contained}
+              value={field.value ? String(field.value) : null}
+              onChange={(v) => field.onChange(v ? Number(v) : 0)}
+              error={errors.factor_riesgo_id?.message}
+            />
+          )}
+        />
+        <Textarea
+          label="Descripción"
+          placeholder="Describa el riesgo identificado"
+          rows={3}
+          required
+          {...contained}
+          {...register('descripcion')}
+          error={errors.descripcion?.message}
+        />
+
+        <Text size="sm" fw={500} mt="xs">Evaluación NTP 330 (INSHT)</Text>
+        <Group grow>
           <Controller
-            name="puesto_id"
-            control={control}
-            render={({ field }) => (
-              <BuscarPuestoSelect
-                label="Puesto"
-                required
-                value={field.value || null}
-                onChange={(id) => field.onChange(id ?? 0)}
-                error={errors.puesto_id?.message}
-              />
-            )}
-          />
-          <Controller
-            name="factor_riesgo_id"
+            name="nivel_deficiencia"
             control={control}
             render={({ field }) => (
               <Select
-                label="Factor de riesgo"
-                placeholder="Seleccione el factor identificado"
-                data={factorOptions}
-                searchable
-                required
+                label="Nivel de deficiencia"
+                data={NIVEL_DEFICIENCIA_OPTIONS}
                 {...contained}
-                value={field.value ? String(field.value) : null}
-                onChange={(v) => field.onChange(v ? Number(v) : 0)}
-                error={errors.factor_riesgo_id?.message}
+                value={field.value}
+                onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_deficiencia'])}
+                error={errors.nivel_deficiencia?.message}
               />
             )}
-          />
-          <Textarea
-            label="Descripción"
-            placeholder="Describa el riesgo identificado"
-            rows={3}
-            required
-            {...contained}
-            {...register('descripcion')}
-            error={errors.descripcion?.message}
-          />
-
-          <Text size="sm" fw={500} mt="xs">Evaluación NTP 330 (INSHT)</Text>
-          <Group grow>
-            <Controller
-              name="nivel_deficiencia"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Nivel de deficiencia"
-                  data={NIVEL_DEFICIENCIA_OPTIONS}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_deficiencia'])}
-                  error={errors.nivel_deficiencia?.message}
-                />
-              )}
-            />
-            <Controller
-              name="nivel_exposicion"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Nivel de exposición"
-                  data={NIVEL_EXPOSICION_OPTIONS}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_exposicion'])}
-                  error={errors.nivel_exposicion?.message}
-                />
-              )}
-            />
-            <Controller
-              name="nivel_consecuencias"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Nivel de consecuencias"
-                  data={NIVEL_CONSECUENCIAS_OPTIONS}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_consecuencias'])}
-                  error={errors.nivel_consecuencias?.message}
-                />
-              )}
-            />
-          </Group>
-
-          <Alert
-            icon={<IconGauge size={18} />}
-            color={NIVEL_INTERVENCION_COLORS[resultado.nivelIntervencion]}
-            variant="light"
-          >
-            <Text size="sm">
-              NP (probabilidad) = <b>{resultado.nivelProbabilidad}</b>{' '}
-              &nbsp;·&nbsp; NR (riesgo) = <b>{resultado.nivelRiesgo}</b>
-            </Text>
-            <Text size="sm" fw={600}>
-              {NIVEL_INTERVENCION_LABELS[resultado.nivelIntervencion]}
-            </Text>
-          </Alert>
-
-          <Textarea
-            label="Medidas preventivas"
-            placeholder="Medidas recomendadas (opcional)"
-            rows={2}
-            {...contained}
-            {...register('medidas_preventivas')}
-            error={errors.medidas_preventivas?.message}
           />
           <Controller
-            name="estado"
+            name="nivel_exposicion"
             control={control}
             render={({ field }) => (
-              <Switch
-                label="Activo"
-                checked={field.value}
-                onChange={(e) => field.onChange(e.currentTarget.checked)}
+              <Select
+                label="Nivel de exposición"
+                data={NIVEL_EXPOSICION_OPTIONS}
+                {...contained}
+                value={field.value}
+                onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_exposicion'])}
+                error={errors.nivel_exposicion?.message}
               />
             )}
           />
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" loading={isPending} color="emerald">
-              {isEditing ? 'Actualizar' : 'Registrar riesgo'}
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+          <Controller
+            name="nivel_consecuencias"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Nivel de consecuencias"
+                data={NIVEL_CONSECUENCIAS_OPTIONS}
+                {...contained}
+                value={field.value}
+                onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_consecuencias'])}
+                error={errors.nivel_consecuencias?.message}
+              />
+            )}
+          />
+        </Group>
+
+        <Alert
+          icon={<IconGauge size={18} />}
+          color={NIVEL_INTERVENCION_COLORS[resultado.nivelIntervencion]}
+          variant="light"
+        >
+          <Text size="sm">
+            NP (probabilidad) = <b>{resultado.nivelProbabilidad}</b>{' '}
+            &nbsp;·&nbsp; NR (riesgo) = <b>{resultado.nivelRiesgo}</b>
+          </Text>
+          <Text size="sm" fw={600}>
+            {NIVEL_INTERVENCION_LABELS[resultado.nivelIntervencion]}
+          </Text>
+        </Alert>
+
+        <Textarea
+          label="Medidas preventivas"
+          placeholder="Medidas recomendadas (opcional)"
+          rows={2}
+          {...contained}
+          {...register('medidas_preventivas')}
+          error={errors.medidas_preventivas?.message}
+        />
+        <Controller
+          name="estado"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              label="Activo"
+              checked={field.value}
+              onChange={(e) => field.onChange(e.currentTarget.checked)}
+            />
+          )}
+        />
+      </Stack>
+    </FormModal>
   )
 }

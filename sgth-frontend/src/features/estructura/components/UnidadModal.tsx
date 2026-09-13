@@ -1,7 +1,7 @@
 'use client'
 
-import { Modal, Button, Group, Stack } from '@mantine/core'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { Stack } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { useUnidadMutations } from '../hooks/useUnidadMutations'
 import { etiquetaNivel, tituloNuevo } from '../utils/jerarquia'
 import { UnidadForm } from './UnidadForm'
@@ -21,7 +21,6 @@ interface Props {
 }
 
 export function UnidadModal({ opened, onClose, unidad, padre }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { crear, editar } = useUnidadMutations()
   const isEditing = !!unidad
 
@@ -49,13 +48,11 @@ export function UnidadModal({ opened, onClose, unidad, padre }: Props) {
       : 'Nueva unidad'
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title={titulo}
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack>
         <UnidadForm
@@ -78,20 +75,13 @@ export function UnidadModal({ opened, onClose, unidad, padre }: Props) {
           onSubmit={handleSubmit}
           isPending={isPending}
         />
-        <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="unidad-form"
-            loading={isPending}
-            color="emerald"
-          >
-            {isEditing ? 'Actualizar' : 'Crear'}
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={onClose}
+        form="unidad-form"
+        submitLabel={isEditing ? 'Actualizar' : 'Crear'}
+        submitting={isPending}
+      />
+    </SgthModal>
   )
 }
