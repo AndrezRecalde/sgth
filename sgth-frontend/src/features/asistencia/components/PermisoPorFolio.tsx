@@ -152,6 +152,7 @@ export function PermisoPorFolio({ folio }: Props) {
         onClose={() => setConMotivo(null)}
         title={esRechazo ? 'Rechazar documento' : 'Revertir confirmación'}
         confirmLabel={esRechazo ? 'Rechazar' : 'Revertir'}
+        destructiva={esRechazo}
         cargando={esRechazo ? rechazar.isPending : revertirConfirmacion.isPending}
         onConfirm={enviarMotivo}
         descripcion={
