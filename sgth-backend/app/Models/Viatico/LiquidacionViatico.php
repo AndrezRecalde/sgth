@@ -3,15 +3,12 @@
 namespace App\Models\Viatico;
 
 use App\Models\User;
-use App\Observers\Viatico\LiquidacionViaticoObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[ObservedBy(LiquidacionViaticoObserver::class)]
 class LiquidacionViatico extends Model
 {
     use HasFactory, SoftDeletes;
@@ -20,7 +17,6 @@ class LiquidacionViatico extends Model
 
     protected $fillable = [
         'viatico_id',
-        'facturas',
         'total_facturas',
         'diferencia_devolver',
         'fecha_retorno',
@@ -37,7 +33,6 @@ class LiquidacionViatico extends Model
     protected function casts(): array
     {
         return [
-            'facturas'            => 'array',
             'total_facturas'      => 'decimal:2',
             'diferencia_devolver' => 'decimal:2',
             'fecha_retorno'       => 'date',

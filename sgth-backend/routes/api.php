@@ -851,10 +851,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('{id}/documento', [AutorizacionVueloController::class, 'subirDocumento']);
         });
 
-        Route::get('informe/descargar/{archivo}', [InformeViaticoController::class, 'descargar'])
-            ->name('viaticos.informe.descargar')
-            ->middleware('signed');
-
         Route::get('{id}', [ViaticoController::class, 'show']);
         Route::patch('{id}', [ViaticoController::class, 'update']);
 

@@ -13,14 +13,4 @@ interface HandoffErpServiceInterface
      * @param  int  $nominaId  ID de la nómina
      */
     public function generarHandoffNomina(int $nominaId): HandoffErp;
-
-    /**
-     * Genera el Handoff XML para el compromiso presupuestario del viático
-     */
-    public function generarHandoffCompromisoViatico(int $viaticoId): HandoffErp;
-
-    /**
-     * Genera el Handoff XML para el devengado de la liquidación del viático
-     */
-    public function generarHandoffDevengadoViatico(int $liquidacionId): HandoffErp;
 }

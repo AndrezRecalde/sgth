@@ -9,6 +9,7 @@ import { ESTADO_COLORS, ESTADO_LABELS } from '../constants/viatico.constants'
 import type { EstadoViatico, ViaticoConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { AccionesViatico } from '../hooks/useAccionesViatico'
+import { formatFechaHora } from '@/lib/fecha'
 
 const ZONA_ABREV: Record<string, string> = {
   dentro_provincia: 'Dentro prov.',
@@ -72,10 +73,7 @@ export function getViaticoColumns(
             </Badge>
           )
         }
-        const fmt = (f: string) =>
-          new Date(f.replace(/-/g, '/')).toLocaleDateString('es-EC', {
-            day: '2-digit', month: '2-digit', year: '2-digit',
-          })
+        const fmt = (f: string) => formatFechaHora(f, { conHora: false })
         return (
           <Stack gap={0}>
             <Text size="xs" ff="monospace">

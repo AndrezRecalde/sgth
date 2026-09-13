@@ -29,7 +29,7 @@ export const viaticoService = {
     tipo_viaje?:             string | null
     pais_destino?:           string | null
     justificacion:           string
-    modalidad_anticipo:      'sin_anticipo' | 'total' | 'parcial'
+    modalidad_anticipo:      'sin_anticipo' | 'total'
     monto_calculado?:        number | null
     servidores_acompanantes?: number[]
   }) =>
@@ -95,16 +95,6 @@ export const viaticoService = {
       `/viaticos/${id}/devolver-correccion`, { motivo }
     ).then(r => r.data.datos),
 
-  generarSolicitudPdf: (identificador: string | number) =>
-    api.get<{ url: string }>(
-      `/viaticos/${identificador}/solicitud/generar-enlace`
-    ).then(r => r.data.url),
-
-  generarInformePdf: (identificador: string | number) =>
-    api.get<{ url: string }>(
-      `/viaticos/${identificador}/informe/generar-enlace`
-    ).then(r => r.data.url),
-
   generarComprobantePdf: (identificador: string | number) =>
     api.get(
       `/viaticos/${identificador}/comprobante/generar`,
@@ -116,5 +106,4 @@ export const viaticoService = {
   catalogos: catalogoViaticoService,
   vuelos:    vueloService,
   liquidacion: liquidacionService,
-  liquidar:  liquidacionService.liquidar,
 }

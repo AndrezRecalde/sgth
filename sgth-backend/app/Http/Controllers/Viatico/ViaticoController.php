@@ -83,44 +83,28 @@ class ViaticoController extends Controller
     public function show(string $identificador): JsonResponse
     {
         // Acepta tanto id numérico como codigo_viatico
+        $query = Viatico::with([
+            'servidor.puesto.cargo',
+            'servidor.puesto.unidadAdministrativa',
+            'tramos.empresa.catalogo',
+            'tramos.origenProvincia',
+            'tramos.origenCanton',
+            'tramos.destinoProvincia',
+            'tramos.destinoCanton',
+            'tramos.autorizacionVuelo',
+            'liquidacion.actividades',
+            'liquidacion.detallesFactura.categoria',
+            'liquidacion.jefeFinanciero',
+            'liquidacion.contabilizadoPor',
+            'todosServidores.servidor.puesto.cargo',
+            'autorizacionesVuelo',
+            'historial.usuario:id,usuario_ti,email,servidor_id',
+            'historial.usuario.servidor:id,nombre,apellido',
+        ]);
+
         $viatico = is_numeric($identificador)
-            ? \App\Models\Viatico\Viatico::with([
-                'servidor.puesto.cargo',
-                'servidor.puesto.unidadAdministrativa',
-                'tramos.empresa.catalogo',
-                'tramos.origenProvincia',
-                'tramos.origenCanton',
-                'tramos.destinoProvincia',
-                'tramos.destinoCanton',
-                'tramos.autorizacionVuelo',
-                'liquidacion.actividades',
-                'liquidacion.detallesFactura.categoria',
-                'liquidacion.jefeFinanciero',
-                'liquidacion.contabilizadoPor',
-                'todosServidores.servidor.puesto.cargo',
-                'autorizacionesVuelo',
-                'historial.usuario:id,usuario_ti,email,servidor_id',
-                'historial.usuario.servidor:id,nombre,apellido',
-            ])->findOrFail((int) $identificador)
-            : \App\Models\Viatico\Viatico::with([
-                'servidor.puesto.cargo',
-                'servidor.puesto.unidadAdministrativa',
-                'tramos.empresa.catalogo',
-                'tramos.origenProvincia',
-                'tramos.origenCanton',
-                'tramos.destinoProvincia',
-                'tramos.destinoCanton',
-                'tramos.autorizacionVuelo',
-                'liquidacion.actividades',
-                'liquidacion.detallesFactura.categoria',
-                'liquidacion.jefeFinanciero',
-                'liquidacion.contabilizadoPor',
-                'todosServidores.servidor.puesto.cargo',
-                'autorizacionesVuelo',
-                'historial.usuario:id,usuario_ti,email,servidor_id',
-                'historial.usuario.servidor:id,nombre,apellido',
-            ])->where('codigo_viatico', $identificador)
-              ->firstOrFail();
+            ? $query->findOrFail((int) $identificador)
+            : $query->where('codigo_viatico', $identificador)->firstOrFail();
 
         $this->authorize('ver', $viatico);
 
@@ -155,7 +139,7 @@ class ViaticoController extends Controller
             'datetime_salida'  => 'sometimes|date',
             'datetime_llegada' => 'sometimes|date|after:datetime_salida',
             'justificacion'    => 'sometimes|string|min:10|max:2000',
-            'modalidad_anticipo' => 'sometimes|in:sin_anticipo,total,parcial',
+            'modalidad_anticipo' => 'sometimes|in:sin_anticipo,total',
             'monto_calculado'  => 'sometimes|nullable|numeric|min:0',
             'tipo_viaje'       => 'sometimes|nullable|string|max:100',
             'pais_destino'     => 'sometimes|nullable|string|max:100',
@@ -246,11 +230,6 @@ class ViaticoController extends Controller
 
     public function store(SolicitarViaticoRequest $request): JsonResponse
     {
-        \Illuminate\Support\Facades\Log::info(
-            'ViaticoController@store - datos recibidos',
-            $request->validated()
-        );
-
         // El servidor es el usuario autenticado
         $servidor = $request->user()->servidor;
 

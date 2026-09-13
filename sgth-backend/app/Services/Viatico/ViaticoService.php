@@ -131,7 +131,6 @@ final class ViaticoService implements ViaticoServiceInterface
             $totalFacturas    = collect($facturasPayload)->sum('monto');
             $montoAsignado    = (float) ($viatico->monto_calculado ?? 0.00);
             $montoAnticipo    = (float) ($viatico->monto_anticipo ?? 0.00);
-            $monto70          = round($montoAsignado * 0.70, 2);
 
             // Solo H&A cuenta para justificar el 70%
             $idsViatico = \App\Models\Viatico\CategoriaFactura
@@ -201,24 +200,6 @@ final class ViaticoService implements ViaticoServiceInterface
                     'lugar'                  => $actividadData['lugar'],
                     'orden'                  => $i + 1,
                 ]);
-            }
-
-            // Actualizar servidores acompañantes si vienen en liquidación
-            if (!empty($datos['servidores_acompanantes'])) {
-                // Eliminar acompañantes anteriores (no el titular)
-                ViaticoServidor::where('viatico_id', $viaticoId)
-                    ->where('es_titular', false)
-                    ->delete();
-
-                foreach ($datos['servidores_acompanantes'] as $sid) {
-                    $servidorTitularId = $viatico->servidor_id;
-                    if ((int) $sid === $servidorTitularId) continue;
-                    ViaticoServidor::create([
-                        'viatico_id'  => $viaticoId,
-                        'servidor_id' => (int) $sid,
-                        'es_titular'  => false,
-                    ]);
-                }
             }
 
             $viatico->estado     = EstadoViatico::LIQUIDADO;

@@ -5,8 +5,6 @@ namespace App\Services\Handoff;
 use App\Contracts\Handoff\HandoffErpServiceInterface;
 use App\Models\Handoff\HandoffErp;
 use App\Models\Nomina\Nomina;
-use App\Models\Viatico\LiquidacionViatico;
-use App\Models\Viatico\Viatico;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -75,122 +73,6 @@ class HandoffErpService implements HandoffErpServiceInterface
             ]);
 
             return $handoff;
-        });
-    }
-
-    public function generarHandoffCompromisoViatico(int $viaticoId): HandoffErp
-    {
-        return DB::transaction(function () use ($viaticoId) {
-            // El itinerario dejó de ser una lista de destinos sueltos: hoy son
-            // tramos, cada uno con su origen, su destino y su empresa. La
-            // relación `destinos` desapareció con esa refactorización y este
-            // método seguía pidiéndola, así que reventaba con sortBy() sobre
-            // null en cuanto se lo llamaba.
-            $viatico = Viatico::with([
-                'servidor',
-                'tramos.destinoCanton',
-                'tramos.destinoProvincia',
-            ])->findOrFail($viaticoId);
-
-            $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><HandoffViatico tipo="compromiso"></HandoffViatico>');
-            $xml->addChild('NumeroResolucion', htmlspecialchars($viatico->numero_resolucion ?? ''));
-
-            $servidor = $xml->addChild('Servidor');
-            $servidor->addChild('Cedula', $viatico->servidor->cedula);
-            $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombre_completo));
-
-            $destinosTexto = $viatico->tramos
-                ->map(function ($tramo) {
-                    if ($tramo->destino_tipo === 'nacional') {
-                        return trim(implode(' - ', array_filter([
-                            $tramo->destinoCanton?->nombre ?? $tramo->destino_ciudad,
-                            $tramo->destinoProvincia?->nombre,
-                        ])));
-                    }
-
-                    return trim(implode(' - ', array_filter([
-                        $tramo->destino_ciudad,
-                        $tramo->destino_pais,
-                    ])));
-                })
-                ->filter()
-                ->join(', ');
-
-            $xml->addChild('Destino', htmlspecialchars($destinosTexto));
-            $xml->addChild('FechaInicio', $viatico->datetime_salida?->format('Y-m-d') ?? '');
-            $xml->addChild('FechaFin', $viatico->datetime_llegada?->format('Y-m-d') ?? '');
-            $xml->addChild('MontoAprobado', $viatico->monto_anticipo);
-            $xml->addChild('PartidaPresupuestaria', htmlspecialchars($viatico->partida_presupuestaria ?? ''));
-
-            $xmlContent = $xml->asXML();
-            $hash = hash('sha256', $xmlContent);
-
-            $nombreArchivo = "viatico_compromiso_{$viaticoId}_" . Str::random(8) . ".xml";
-            $rutaArchivo = "handoff/{$nombreArchivo}";
-            
-            Storage::put($rutaArchivo, $xmlContent);
-
-            return HandoffErp::create([
-                'tipo'            => 'viatico_compromiso',
-                'referencia_id'   => $viatico->id,
-                'archivo_nombre'  => $nombreArchivo,
-                'archivo_ruta'    => $rutaArchivo,
-                'hash_integridad' => $hash,
-                'generado_por'    => $viatico->updated_by ?? 1,
-                'generado_en'     => now(),
-            ]);
-        });
-    }
-
-    public function generarHandoffDevengadoViatico(int $liquidacionId): HandoffErp
-    {
-        return DB::transaction(function () use ($liquidacionId) {
-            $liquidacion = LiquidacionViatico::with([
-                'viatico.servidor',
-                'detallesFactura',
-            ])->findOrFail($liquidacionId);
-            $viatico = $liquidacion->viatico;
-
-            $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><HandoffViatico tipo="devengado"></HandoffViatico>');
-            $xml->addChild('NumeroResolucion', htmlspecialchars($viatico->numero_resolucion ?? ''));
-            
-            $servidor = $xml->addChild('Servidor');
-            $servidor->addChild('Cedula', $viatico->servidor->cedula);
-            $servidor->addChild('Nombres', htmlspecialchars($viatico->servidor->nombre_completo));
-            
-            // Las facturas salieron de un JSON dentro de la liquidación y
-            // pasaron a su propia tabla, con categoría y tipo de comprobante.
-            // Este método seguía leyendo la columna vieja.
-            $facturasXml = $xml->addChild('Facturas');
-            foreach ($liquidacion->detallesFactura as $factura) {
-                $f = $facturasXml->addChild('Factura');
-                $f->addChild('Numero', htmlspecialchars(
-                    $factura->numero_factura ?? $factura->numero_ticket ?? ''
-                ));
-                $f->addChild('Proveedor', htmlspecialchars($factura->nombre_proveedor ?? ''));
-                $f->addChild('Monto', number_format((float) $factura->monto, 2, '.', ''));
-            }
-
-            $xml->addChild('TotalFacturas', $liquidacion->total_facturas);
-            $xml->addChild('DiferenciaDevolver', $liquidacion->diferencia_devolver);
-
-            $xmlContent = $xml->asXML();
-            $hash = hash('sha256', $xmlContent);
-
-            $nombreArchivo = "viatico_devengado_{$liquidacionId}_" . Str::random(8) . ".xml";
-            $rutaArchivo = "handoff/{$nombreArchivo}";
-            
-            Storage::put($rutaArchivo, $xmlContent);
-
-            return HandoffErp::create([
-                'tipo'            => 'viatico_devengado',
-                'referencia_id'   => $liquidacion->id,
-                'archivo_nombre'  => $nombreArchivo,
-                'archivo_ruta'    => $rutaArchivo,
-                'hash_integridad' => $hash,
-                'generado_por'    => $liquidacion->created_by ?? 1,
-                'generado_en'     => now(),
-            ]);
         });
     }
 }
