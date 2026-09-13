@@ -1297,6 +1297,18 @@ export type EstadoPermiso =
 
 export type TipoPermiso = 'personal' | 'oficial' | 'enfermedad' | 'calamidad'
 
+/**
+ * Un servidor de la propia unidad, como lo devuelve
+ * `autoservicio/companeros-de-unidad`: solo lo necesario para elegir al jefe
+ * inmediato de un permiso, sin cédula ni otros datos personales.
+ */
+export type CompaneroDeUnidad = {
+  id:      number
+  nombre:  string
+  cargo:   string | null
+  es_jefe: boolean
+}
+
 export type PermisoServidor = {
   id:               number
   servidor_id:      number

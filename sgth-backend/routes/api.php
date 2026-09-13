@@ -628,6 +628,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // Módulo 06: Autoservicio
     Route::prefix('autoservicio')->group(function () {
         Route::get('mis-permisos', [AutoservicioController::class, 'misPermisos']);
+        // De dónde elige el servidor a su jefe inmediato al registrar un permiso
+        // desde el portal: el listado de expedientes está cerrado a Talento Humano.
+        Route::get('companeros-de-unidad', [AutoservicioController::class, 'companerosDeUnidad']);
         Route::get('mis-vacaciones', [AutoservicioController::class, 'misVacaciones']);
         Route::get('mis-roles-pago', [AutoservicioController::class, 'misRolesPago']);
         Route::get('mi-expediente', [AutoservicioController::class, 'miExpediente']);
