@@ -28,6 +28,14 @@ class DatabaseSeeder extends Seeder
             ContenedorExpressSeeder::class,
             AnclajeFirmantesSeeder::class,
 
+            // Viáticos. Sin estos catálogos no se puede solicitar un viático
+            // (sin tarifas no hay monto), armar el itinerario ni registrar
+            // comprobantes. Los tres se pueden volver a correr sin pisar lo
+            // que ya existe.
+            TarifaViaticoSeeder::class,
+            CatalogoTransporteSeeder::class,
+            CategoriaFacturaSeeder::class,
+
             // Catálogo CIE-10 (ejecutar manualmente: php artisan db:seed --class=Cie10Seeder)
             // Cie10Seeder::class,
         ]);

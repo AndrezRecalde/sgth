@@ -38,6 +38,6 @@ class CategoriaFacturaSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Categorías de factura sembradas: ' . count($categorias));
+        $this->command?->info('Categorías de factura sembradas: ' . count($categorias));
     }
 }
