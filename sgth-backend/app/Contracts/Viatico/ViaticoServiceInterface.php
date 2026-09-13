@@ -21,9 +21,4 @@ interface ViaticoServiceInterface
      * Verifica si el servidor tiene bloqueadas nuevas solicitudes por tener liquidaciones pendientes y vencidas.
      */
     public function verificarBloqueo(int $servidorId): bool;
-
-    public function contabilizar(
-        int $viaticoId,
-        int $userId
-    ): LiquidacionViatico;
 }

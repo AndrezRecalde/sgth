@@ -21360,14 +21360,7 @@
                                             "const": "Liquidaci\u00f3n registrada correctamente."
                                         },
                                         "datos": {
-                                            "anyOf": [
-                                                {
-                                                    "$ref": "#/components/schemas/Viatico"
-                                                },
-                                                {
-                                                    "type": "null"
-                                                }
-                                            ]
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -21378,65 +21371,6 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Debe registrar al menos un comprobante."
-                                                },
-                                                "datos": {
-                                                    "type": "null"
-                                                },
-                                                "errores": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "errores"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Debe registrar al menos una actividad."
-                                                },
-                                                "datos": {
-                                                    "type": "null"
-                                                },
-                                                "errores": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "errores"
-                                            ]
-                                        }
                                     ]
                                 }
                             }
@@ -38275,11 +38209,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -38393,7 +38327,7 @@
                                             "const": "Vi\u00e1tico aprobado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38450,7 +38384,7 @@
                                             "const": "Anticipo entregado. El vi\u00e1tico queda listo para la comisi\u00f3n."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38507,7 +38441,7 @@
                                             "const": "Vi\u00e1tico marcado en comisi\u00f3n."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38518,36 +38452,6 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string"
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "errores": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "errores"
                                     ]
                                 }
                             }
@@ -38594,7 +38498,7 @@
                                             "const": "Vi\u00e1tico cancelado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38651,7 +38555,7 @@
                                             "const": "Vi\u00e1tico rechazado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38708,7 +38612,7 @@
                                             "const": "Vi\u00e1tico devuelto a correcci\u00f3n correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38765,7 +38669,7 @@
                                             "const": "Vi\u00e1tico marcado como pendiente de liquidaci\u00f3n."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38776,36 +38680,6 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string"
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "errores": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "errores"
                                     ]
                                 }
                             }
@@ -40466,6 +40340,13 @@
                                     "null"
                                 ]
                             },
+                            "servidores_ids": {
+                                "type": "array",
+                                "description": "Qui\u00e9nes viajan: la pantalla no ofrece decidir sobre el vuelo\nde un vi\u00e1tico en el que va quien la mira.",
+                                "items": {
+                                    "type": "integer"
+                                }
+                            },
                             "servidor": {
                                 "type": [
                                     "object",
@@ -40511,6 +40392,7 @@
                         "required": [
                             "id",
                             "codigo_viatico",
+                            "servidores_ids",
                             "servidor"
                         ]
                     },

@@ -5,12 +5,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\TramoViatico;
 use App\Models\Viatico\Viatico;
+use App\Services\Viatico\ViaticoEstadoService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TramoViaticoController extends Controller
 {
+    public function __construct(private ViaticoEstadoService $estados) {}
+
     public function index(int $viaticoId): JsonResponse
     {
         $this->authorize('ver', Viatico::findOrFail($viaticoId));
@@ -38,6 +41,7 @@ class TramoViaticoController extends Controller
         // El itinerario lo arma el titular o quien opera: antes cualquiera
         // agregaba, cambiaba o borraba tramos de un viático ajeno.
         $this->authorize('editar', $viatico);
+        $this->estados->asegurarEditable($viatico, $request->user());
 
         $data = $request->validate([
             'origen_tipo'           => 'required|in:nacional,internacional',
@@ -172,7 +176,9 @@ class TramoViaticoController extends Controller
             abort(404);
         }
 
-        $this->authorize('editar', Viatico::findOrFail($viaticoId));
+        $viatico = Viatico::findOrFail($viaticoId);
+        $this->authorize('editar', $viatico);
+        $this->estados->asegurarEditable($viatico, request()->user());
 
         $data = $request->validate([
             'origen_tipo'           => 'sometimes|in:nacional,internacional',
@@ -192,7 +198,6 @@ class TramoViaticoController extends Controller
             'tipo_tramo'            => 'sometimes|in:ida,destino,escala,regreso',
         ]);
 
-        $viatico = Viatico::findOrFail($viaticoId);
         $tramosExistentes = TramoViatico::where(
             'viatico_id', $viaticoId
         )->orderBy('orden')->get();
@@ -266,7 +271,9 @@ class TramoViaticoController extends Controller
             abort(404);
         }
 
-        $this->authorize('editar', Viatico::findOrFail($viaticoId));
+        $viatico = Viatico::findOrFail($viaticoId);
+        $this->authorize('editar', $viatico);
+        $this->estados->asegurarEditable($viatico, request()->user());
 
         $tramo->delete();
 

@@ -6423,6 +6423,11 @@ export interface components {
             viatico?: {
                 id: number;
                 codigo_viatico: string | null;
+                /**
+                 * @description Quiénes viajan: la pantalla no ofrece decidir sobre el vuelo
+                 *     de un viático en el que va quien la mira.
+                 */
+                servidores_ids: number[];
                 servidor: {
                     nombre: string;
                     apellido: string;
@@ -20436,32 +20441,12 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Liquidación registrada correctamente.";
-                        datos: components["schemas"]["Viatico"] | null;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Debe registrar al menos un comprobante.";
-                        datos: null;
-                        errores: null;
-                    } | {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Debe registrar al menos una actividad.";
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
         };
     };
     "mantenimientos.index": {
@@ -27840,7 +27825,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Viático aprobado correctamente.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
@@ -27869,7 +27854,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Anticipo entregado. El viático queda listo para la comisión.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
@@ -27898,26 +27883,13 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Viático marcado en comisión.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        mensaje: string;
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
         };
     };
     "viaticos.cancelar": {
@@ -27940,7 +27912,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Viático cancelado correctamente.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
@@ -27969,7 +27941,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Viático rechazado correctamente.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
@@ -27998,7 +27970,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Viático devuelto a corrección correctamente.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
@@ -28027,26 +27999,13 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Viático marcado como pendiente de liquidación.";
-                        datos: string;
+                        datos: components["schemas"]["Viatico"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        mensaje: string;
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
         };
     };
     "viatico.contabilizar": {

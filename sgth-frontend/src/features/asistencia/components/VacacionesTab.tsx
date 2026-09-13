@@ -5,9 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { Stack } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconBeach } from "@tabler/icons-react";
-import { DataState, PAGINACION_ES, SgthTable } from "@/components/ui";
+import {
+  DataState,
+  MotivoModal,
+  PAGINACION_ES,
+  SgthTable,
+} from "@/components/ui";
 import { VacacionModal } from "./VacacionModal";
-import { MotivoPermisoModal } from "./MotivoPermisoModal";
 import {
   FILTROS_INICIALES,
   VacacionesFiltros,
@@ -152,7 +156,7 @@ export function VacacionesTab() {
       {puedeRegistrar && <VacacionModal opened={opened} onClose={close} />}
 
       {/* El modal de motivo es el de permisos: sus props ya son genéricas. */}
-      <MotivoPermisoModal
+      <MotivoModal
         opened={anulando !== null}
         onClose={() => setAnulando(null)}
         title="Anular solicitud de vacaciones"

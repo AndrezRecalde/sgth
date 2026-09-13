@@ -14,9 +14,12 @@ class TramoViaticoObserver
 
     public function updated(TramoViatico $tramo): void
     {
-        // Si cambió la empresa y ya no requiere autorización,
-        // eliminar la autorización pendiente
+        // Si cambió la empresa: sin autorización requerida se retira la
+        // pendiente; con ella, se crea. Antes solo se retiraba, así que pasar
+        // un tramo de bus a avión dejaba el vuelo sin autorizar.
         if ($tramo->wasChanged('empresa_transporte_id')) {
+            $tramo->unsetRelation('empresa');
+
             $requiere = $tramo->empresa
                 ?->catalogo
                 ?->requiere_autorizacion ?? false;
@@ -26,7 +29,11 @@ class TramoViaticoObserver
                     'tramo_viatico_id', $tramo->id
                 )->where('estado', 'pendiente')
                  ->delete();
+
+                return;
             }
+
+            $this->generarAutorizacionSiAplica($tramo);
         }
     }
 

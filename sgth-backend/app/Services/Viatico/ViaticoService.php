@@ -11,6 +11,7 @@ use App\Models\Viatico\FacturaViatico;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\TarifaViatico;
 use App\Models\Viatico\Viatico;
+use App\Models\Viatico\ViaticoHistorialEstado;
 use App\Models\Viatico\ViaticoServidor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -79,6 +80,12 @@ final class ViaticoService implements ViaticoServiceInterface
                 'created_by'         => $userId,
             ]);
 
+            ViaticoHistorialEstado::create([
+                'viatico_id'   => $viatico->id,
+                'estado_nuevo' => EstadoViatico::SOLICITADO->value,
+                'usuario_id'   => $userId,
+            ]);
+
             // Registrar servidor titular
             ViaticoServidor::create([
                 'viatico_id'  => $viatico->id,
@@ -100,46 +107,25 @@ final class ViaticoService implements ViaticoServiceInterface
         });
     }
 
-    public function validarParaSolicitar(int $viaticoId): void
-    {
-        $viatico = Viatico::with('destinos')->findOrFail($viaticoId);
-
-        if ($viatico->destinos->isEmpty()) {
-            throw new ReglaNegocioException(
-                'El viático debe tener al menos un destino registrado ' .
-                'antes de ser solicitado.'
-            );
-        }
-
-        if ($viatico->tieneAutorizacionesPendientes()) {
-            throw new ReglaNegocioException(
-                'El viático no puede avanzar porque tiene ' .
-                'autorizaciones de vuelo en estado pendiente.'
-            );
-        }
-    }
-
     public function liquidar(
         int $viaticoId,
         array $datos,
         int $userId
     ): LiquidacionViatico {
-        $viatico = Viatico::findOrFail($viaticoId);
+        return DB::transaction(function () use ($viaticoId, $datos, $userId) {
+            $viatico = Viatico::lockForUpdate()->findOrFail($viaticoId);
 
-        if ($viatico->estado !== EstadoViatico::PENDIENTE_LIQUIDACION) {
-            throw new ReglaNegocioException(
-                'El viático no se encuentra en estado ' .
-                'pendiente de liquidación.'
-            );
-        }
+            if ($viatico->estado !== EstadoViatico::PENDIENTE_LIQUIDACION) {
+                throw new ReglaNegocioException(
+                    'El viático no se encuentra en estado ' .
+                    'pendiente de liquidación.'
+                );
+            }
 
-        $fechaRetorno = isset($datos['fecha_retorno'])
-            ? Carbon::parse($datos['fecha_retorno'])
-            : Carbon::parse($viatico->datetime_llegada);
+            $fechaRetorno = isset($datos['fecha_retorno'])
+                ? Carbon::parse($datos['fecha_retorno'])
+                : Carbon::parse($viatico->datetime_llegada);
 
-        return DB::transaction(function () use (
-            $viatico, $viaticoId, $datos, $fechaRetorno, $userId
-        ) {
             $facturasPayload  = $datos['facturas']    ?? [];
             $actividadesPayload = $datos['actividades'] ?? [];
             $totalFacturas    = collect($facturasPayload)->sum('monto');
@@ -239,195 +225,15 @@ final class ViaticoService implements ViaticoServiceInterface
             $viatico->updated_by = $userId;
             $viatico->save();
 
+            ViaticoHistorialEstado::create([
+                'viatico_id'      => $viaticoId,
+                'estado_anterior' => EstadoViatico::PENDIENTE_LIQUIDACION->value,
+                'estado_nuevo'    => EstadoViatico::LIQUIDADO->value,
+                'usuario_id'      => $userId,
+            ]);
+
             return $liquidacion->load('actividades', 'detallesFactura');
         });
-    }
-
-    public function contabilizar(
-        int $viaticoId,
-        int $userId
-    ): LiquidacionViatico {
-        $viatico = Viatico::with('liquidacion')->findOrFail($viaticoId);
-
-        if ($viatico->estado !== EstadoViatico::LIQUIDADO) {
-            throw new ReglaNegocioException(
-                'Solo se pueden contabilizar viáticos ' .
-                'en estado liquidado.'
-            );
-        }
-
-        if (!$viatico->liquidacion) {
-            throw new ReglaNegocioException(
-                'El viático no tiene liquidación registrada.'
-            );
-        }
-
-        $jefeService = app(
-            \App\Services\Viatico\JefeFinancieroService::class
-        );
-        $jefe = $jefeService->obtenerJefeFinanciero();
-
-        return DB::transaction(function () use (
-            $viatico, $userId, $jefe
-        ) {
-            $viatico->liquidacion->update([
-                'jefe_financiero_id'    => $jefe['user_id'],
-                'cargo_jefe_financiero' => $jefe['cargo'],
-                'contabilizado_por'     => $userId,
-                'fecha_contabilizacion' => now()->toDateString(),
-            ]);
-
-            $viatico->update([
-                'estado'     => EstadoViatico::CONTABILIZADO,
-                'updated_by' => $userId,
-            ]);
-
-            return $viatico->liquidacion->fresh();
-        });
-    }
-
-    public function aprobar(
-        int $viaticoId,
-        array $datos = []
-    ): Viatico {
-        $viatico = Viatico::with('servidor.puesto')
-            ->findOrFail($viaticoId);
-
-        if ($viatico->estado !== EstadoViatico::SOLICITADO) {
-            throw new ReglaNegocioException(
-                'Solo se pueden aprobar viáticos en estado solicitado.'
-            );
-        }
-
-        $zonaValue = $viatico->zona instanceof \BackedEnum
-            ? $viatico->zona->value
-            : (string) $viatico->zona;
-
-        if ($zonaValue === 'exterior'
-            && isset($datos['coeficiente_exterior'])
-            && (float) $datos['coeficiente_exterior'] > 0
-        ) {
-            $coeficiente = (float) $datos['coeficiente_exterior'];
-            $paisDestino = $datos['pais_destino'] ?? $viatico->pais_destino;
-
-            // Determinar tarifa base por rol_puesto
-            $rolPuesto = $viatico->servidor?->puesto?->rol_puesto ?? '';
-            $tarifaBase = $rolPuesto === 'dignatario'
-                ? 220.00
-                : 185.00;
-
-            $montoCalculado = round(
-                $tarifaBase * $coeficiente * (float) $viatico->total_dias,
-                2
-            );
-
-            $viatico->update([
-                'estado'               => EstadoViatico::APROBADO,
-                'monto_calculado'      => $montoCalculado,
-                'coeficiente_exterior' => $coeficiente,
-                'pais_destino'         => $paisDestino,
-            ]);
-        } else {
-            $viatico->update([
-                'estado' => EstadoViatico::APROBADO,
-            ]);
-        }
-
-        return $viatico->fresh();
-    }
-
-    public function entregarAnticipo(int $viaticoId): Viatico
-    {
-        $viatico = Viatico::findOrFail($viaticoId);
-
-        if ($viatico->estado !== EstadoViatico::APROBADO) {
-            throw new ReglaNegocioException(
-                'Solo se puede entregar anticipo a viáticos aprobados.'
-            );
-        }
-
-        // Anticipo = 70% del monto calculado
-        $montoAnticipo = round(
-            (float) $viatico->monto_calculado * 0.70, 2
-        );
-
-        $viatico->update([
-            'estado'         => EstadoViatico::CON_ANTICIPO,
-            'monto_anticipo' => $montoAnticipo,
-        ]);
-
-        return $viatico->fresh();
-    }
-
-    public function cancelar(
-        int $viaticoId,
-        int $userId
-    ): Viatico {
-        $viatico = Viatico::findOrFail($viaticoId);
-
-        $estadosPermitidos = [
-            EstadoViatico::SOLICITADO,
-        ];
-
-        if (!in_array($viatico->estado, $estadosPermitidos)) {
-            throw new ReglaNegocioException(
-                'Solo se puede cancelar una solicitud en estado solicitado.'
-            );
-        }
-
-        $viatico->update([
-            'estado'     => EstadoViatico::CANCELADO,
-            'updated_by' => $userId,
-        ]);
-
-        return $viatico->fresh();
-    }
-
-    public function rechazar(
-        int $viaticoId,
-        int $userId
-    ): Viatico {
-        $viatico = Viatico::findOrFail($viaticoId);
-
-        $estadosNoPermitidos = [
-            EstadoViatico::CONTABILIZADO,
-            EstadoViatico::CANCELADO,
-            EstadoViatico::RECHAZADO,
-        ];
-
-        if (in_array($viatico->estado, $estadosNoPermitidos)) {
-            throw new ReglaNegocioException(
-                'No se puede rechazar un viático en este estado.'
-            );
-        }
-
-        $viatico->update([
-            'estado'     => EstadoViatico::RECHAZADO,
-            'updated_by' => $userId,
-        ]);
-
-        return $viatico->fresh();
-    }
-
-    public function devolverCorreccion(
-        int $viaticoId,
-        int $userId
-    ): Viatico {
-        $viatico = Viatico::findOrFail($viaticoId);
-
-        if ($viatico->estado !== EstadoViatico::LIQUIDADO) {
-            throw new ReglaNegocioException(
-                'Solo se puede devolver a corrección
-                 un viático en estado liquidado.'
-            );
-        }
-
-        $viatico->update([
-            'estado'     => EstadoViatico::PENDIENTE_LIQUIDACION,
-            'updated_by' => $userId,
-        ]);
-
-        return $viatico->fresh();
     }
 
     public function verificarBloqueo(int $servidorId): bool

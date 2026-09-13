@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
+import { confirmar, MotivoModal } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -36,6 +36,7 @@ import { ViaticoEditModal } from "./ViaticoEditModal";
 import { ServidoresModal } from "./ServidoresModal";
 import { TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
+import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
 
 interface Props {
   identificador: string | number;
@@ -95,6 +96,9 @@ export function ViaticoDetallePage({ identificador }: Props) {
     useDisclosure(false);
 
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
+  const [conMotivo, setConMotivo] = useState<"rechazar" | "devolver" | null>(
+    null,
+  );
 
   const {
     descargarSolicitud,
@@ -131,8 +135,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
   const estadoActual = d.estado ?? "";
   const pasoActivo = PASO_STEPPER[estadoActual] ?? 0;
-  const puedeEditarDatos =
-    puede.editar(d) && !["liquidado", "contabilizado"].includes(estadoActual);
+  const puedeEditarDatos = puede.editar(d);
   const puedeEditarTramos = puedeEditarDatos;
 
   const handleAprobar = () => {
@@ -222,6 +225,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
         )}
       </Grid>
 
+      <ViaticoHistorialCard historial={d.historial ?? []} />
+
       {/* Acciones — al final de la página */}
       <Card withBorder radius="md" p="md">
         <ViaticoAcciones
@@ -235,12 +240,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             marcarPendienteLiquidacion.mutate(d.id)
           }
           onContabilizar={() => contabilizar.mutate(d.id)}
-          onDevolverCorreccion={() => confirmar({
-            title:   'Devolver para correcciones',
-            message: 'La liquidación volverá al servidor para que la corrija.',
-            confirmLabel: 'Devolver',
-            onConfirm: () => devolverCorreccion.mutate(d.id),
-          })}
+          onDevolverCorreccion={() => setConMotivo('devolver')}
           onCancelar={() => confirmar({
             title:   'Cancelar solicitud',
             message: 'Se cancelará esta solicitud de viático. No se puede deshacer.',
@@ -249,13 +249,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             cancelLabel:  'Volver',
             onConfirm: () => cancelar.mutate(d.id),
           })}
-          onRechazar={() => confirmar({
-            title:   'Rechazar viático',
-            message: 'Se rechazará este viático y el servidor será notificado.',
-            destructiva: true,
-            confirmLabel: 'Rechazar',
-            onConfirm: () => rechazar.mutate(d.id),
-          })}
+          onRechazar={() => setConMotivo('rechazar')}
           onSolicitud={() =>
             descargarSolicitud(d.codigo_viatico ?? d.id)
           }
@@ -282,6 +276,27 @@ export function ViaticoDetallePage({ identificador }: Props) {
       </Card>
 
       {/* Modales */}
+      <MotivoModal
+        opened={conMotivo !== null}
+        onClose={() => setConMotivo(null)}
+        title={conMotivo === "devolver" ? "Devolver para correcciones" : "Rechazar viático"}
+        confirmLabel={conMotivo === "devolver" ? "Devolver" : "Rechazar"}
+        cargando={rechazar.isPending || devolverCorreccion.isPending}
+        descripcion={
+          conMotivo === "devolver"
+            ? `La liquidación de ${d.codigo_viatico} vuelve al servidor. El motivo le dice qué corregir.`
+            : `El viático ${d.codigo_viatico} queda rechazado y no se puede reabrir.`
+        }
+        onConfirm={(motivo) => {
+          const cerrar = { onSuccess: () => setConMotivo(null) };
+          if (conMotivo === "devolver") {
+            devolverCorreccion.mutate({ id: d.id, motivo }, cerrar);
+          } else {
+            rechazar.mutate({ id: d.id, motivo }, cerrar);
+          }
+        }}
+      />
+
       {editModalAbierto && (
         <ViaticoEditModal
           opened={editModalAbierto}

@@ -8,11 +8,18 @@ use App\Http\Requests\Viatico\LiquidarViaticoRequest;
 use App\Http\Requests\Viatico\SolicitarViaticoRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\Viatico;
+use App\Models\Viatico\ViaticoServidor;
+use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ViaticoController extends Controller
 {
-    public function __construct(private ViaticoServiceInterface $viaticoService) {}
+    public function __construct(
+        private ViaticoServiceInterface $viaticoService,
+        private ViaticoEstadoService $estados,
+    ) {}
 
     public function index(
         \Illuminate\Http\Request $request
@@ -92,6 +99,8 @@ class ViaticoController extends Controller
                 'liquidacion.contabilizadoPor',
                 'todosServidores.servidor.puesto.cargo',
                 'autorizacionesVuelo',
+                'historial.usuario:id,usuario_ti,email,servidor_id',
+                'historial.usuario.servidor:id,nombre,apellido',
             ])->findOrFail((int) $identificador)
             : \App\Models\Viatico\Viatico::with([
                 'servidor.puesto.cargo',
@@ -108,6 +117,8 @@ class ViaticoController extends Controller
                 'liquidacion.contabilizadoPor',
                 'todosServidores.servidor.puesto.cargo',
                 'autorizacionesVuelo',
+                'historial.usuario:id,usuario_ti,email,servidor_id',
+                'historial.usuario.servidor:id,nombre,apellido',
             ])->where('codigo_viatico', $identificador)
               ->firstOrFail();
 
@@ -134,15 +145,10 @@ class ViaticoController extends Controller
             $request->offsetUnset('monto_calculado');
         } else {
             $this->authorize('cambiarMonto', $viatico);
+            $this->estados->asegurarMontoAjeno($viatico, $request->user());
         }
 
-        // Solo editable si no está contabilizado
-        if ($viatico->estado->value === 'contabilizado') {
-            return ApiResponse::error(
-                'No se puede editar un viático contabilizado.',
-                422
-            );
-        }
+        $this->estados->asegurarEditable($viatico, $request->user());
 
         $data = $request->validate([
             'zona'             => 'sometimes|in:dentro_provincia,fuera_provincia,exterior',
@@ -205,27 +211,32 @@ class ViaticoController extends Controller
         }
 
         $data['updated_by'] = $request->user()->id;
-        $viatico->update($data);
+        unset($data['servidores_acompanantes']);
 
-        // Actualizar acompañantes si vienen en el request
-        if ($request->has('servidores_acompanantes')) {
-            // Eliminar acompañantes anteriores
-            \App\Models\Viatico\ViaticoServidor::where(
-                'viatico_id', $viatico->id
-            )->where('es_titular', false)->delete();
+        // Todo o nada. Antes, un acompañante repetido —o el propio titular en
+        // la lista— rompía el índice único después de borrar a los anteriores:
+        // la petición fallaba y el viático se quedaba sin acompañantes.
+        DB::transaction(function () use ($request, $viatico, $data) {
+            $viatico->update($data);
 
-            // Agregar los nuevos
-            foreach (
-                $request->input('servidores_acompanantes', [])
-                as $servidorId
-            ) {
-                \App\Models\Viatico\ViaticoServidor::create([
-                    'viatico_id'  => $viatico->id,
-                    'servidor_id' => $servidorId,
-                    'es_titular'  => false,
-                ]);
+            if (! $request->has('servidores_acompanantes')) {
+                return;
             }
-        }
+
+            ViaticoServidor::where('viatico_id', $viatico->id)
+                ->where('es_titular', false)
+                ->delete();
+
+            collect($request->input('servidores_acompanantes', []))
+                ->map(fn ($id) => (int) $id)
+                ->reject(fn (int $id) => $id === (int) $viatico->servidor_id)
+                ->unique()
+                ->each(fn (int $id) => ViaticoServidor::create([
+                    'viatico_id'  => $viatico->id,
+                    'servidor_id' => $id,
+                    'es_titular'  => false,
+                ]));
+        });
 
         return ApiResponse::ok(
             $viatico->fresh(),
@@ -296,31 +307,24 @@ class ViaticoController extends Controller
         ], 'Viático liquidado correctamente. Facturas procesadas considerando el 70/30 de la normativa del MRL.');
     }
 
-    public function aprobar(
-        int $id,
-        \Illuminate\Http\Request $request
-    ): JsonResponse
+    public function aprobar(int $id, Request $request): JsonResponse
     {
         $this->authorize('aprobar', Viatico::findOrFail($id));
 
-        $viatico = $this->viaticoService->aprobar(
+        $viatico = $this->estados->aprobar(
             $id,
-            $request->only([
-                'coeficiente_exterior',
-                'pais_destino',
-            ])
+            $request->user(),
+            $request->only(['coeficiente_exterior', 'pais_destino'])
         );
-        return ApiResponse::ok(
-            $viatico,
-            'Viático aprobado correctamente.'
-        );
+
+        return ApiResponse::ok($viatico, 'Viático aprobado correctamente.');
     }
 
-    public function entregarAnticipo(int $id): JsonResponse
+    public function entregarAnticipo(int $id, Request $request): JsonResponse
     {
         $this->authorize('operar', Viatico::findOrFail($id));
 
-        $viatico = $this->viaticoService->entregarAnticipo($id);
+        $viatico = $this->estados->entregarAnticipo($id, $request->user());
 
         return ApiResponse::ok(
             $viatico,
@@ -328,124 +332,58 @@ class ViaticoController extends Controller
         );
     }
 
-    public function cancelar(
-        int $id,
-        \Illuminate\Http\Request $request
-    ): JsonResponse
+    public function cancelar(int $id, Request $request): JsonResponse
     {
         $this->authorize('cancelar', Viatico::findOrFail($id));
 
-        $viatico = $this->viaticoService->cancelar(
-            $id,
-            $request->user()->id
-        );
-        return ApiResponse::ok(
-            $viatico,
-            'Viático cancelado correctamente.'
-        );
+        $viatico = $this->estados->cancelar($id, $request->user());
+
+        return ApiResponse::ok($viatico, 'Viático cancelado correctamente.');
     }
 
-    public function rechazar(
-        int $id,
-        \Illuminate\Http\Request $request
-    ): JsonResponse
+    public function rechazar(int $id, Request $request): JsonResponse
     {
         $this->authorize('rechazar', Viatico::findOrFail($id));
 
-        $viatico = $this->viaticoService->rechazar(
-            $id,
-            $request->user()->id
-        );
-        return ApiResponse::ok(
-            $viatico,
-            'Viático rechazado correctamente.'
-        );
+        $viatico = $this->estados->rechazar($id, $request->user(), $this->motivo($request));
+
+        return ApiResponse::ok($viatico, 'Viático rechazado correctamente.');
     }
 
-    public function devolverCorreccion(
-        int $id,
-        \Illuminate\Http\Request $request
-    ): JsonResponse {
-        $this->authorize('revisarLiquidacion', Viatico::findOrFail($id));
-
-        $viatico = $this->viaticoService->devolverCorreccion(
-            $id,
-            $request->user()->id
-        );
-        return ApiResponse::ok(
-            $viatico,
-            'Viático devuelto a corrección correctamente.'
-        );
-    }
-
-    public function marcarEnComision(int $id): JsonResponse
-    {
-        $viatico = Viatico::findOrFail($id);
-        $this->authorize('operar', $viatico);
-
-        $estadosValidos = [
-            \App\Enums\EstadoViatico::CON_ANTICIPO->value,
-            \App\Enums\EstadoViatico::APROBADO->value,
-        ];
-
-        if (!in_array($viatico->estado->value, $estadosValidos)) {
-            return ApiResponse::error(
-                'El viático debe estar aprobado o con anticipo ' .
-                'para marcarse en comisión.',
-                null,
-                422
-            );
-        }
-
-        $viatico->update([
-            'estado'     => \App\Enums\EstadoViatico::EN_COMISION,
-            'updated_by' => request()->user()->id,
-        ]);
-
-        return ApiResponse::ok(
-            $viatico->fresh(),
-            'Viático marcado en comisión.'
-        );
-    }
-
-    public function marcarPendienteLiquidacion(int $id): JsonResponse
-    {
-        $viatico = Viatico::findOrFail($id);
-        $this->authorize('operar', $viatico);
-
-        if ($viatico->estado->value !== 'en_comision') {
-            return ApiResponse::error(
-                'El viático debe estar en comisión para ' .
-                'marcarse pendiente de liquidación.',
-                null,
-                422
-            );
-        }
-
-        $viatico->update([
-            'estado'     => \App\Enums\EstadoViatico::PENDIENTE_LIQUIDACION,
-            'updated_by' => request()->user()->id,
-        ]);
-
-        return ApiResponse::ok(
-            $viatico->fresh(),
-            'Viático marcado como pendiente de liquidación.'
-        );
-    }
-
-    public function contabilizar(int $id): JsonResponse
+    public function devolverCorreccion(int $id, Request $request): JsonResponse
     {
         $this->authorize('revisarLiquidacion', Viatico::findOrFail($id));
 
-        $liquidacion = $this->viaticoService->contabilizar(
-            $id,
-            request()->user()->id
-        );
+        $viatico = $this->estados->devolverCorreccion($id, $request->user(), $this->motivo($request));
 
-        return ApiResponse::ok(
-            $liquidacion,
-            'Viático contabilizado correctamente.'
-        );
+        return ApiResponse::ok($viatico, 'Viático devuelto a corrección correctamente.');
+    }
+
+    public function marcarEnComision(int $id, Request $request): JsonResponse
+    {
+        $this->authorize('operar', Viatico::findOrFail($id));
+
+        $viatico = $this->estados->marcarEnComision($id, $request->user());
+
+        return ApiResponse::ok($viatico, 'Viático marcado en comisión.');
+    }
+
+    public function marcarPendienteLiquidacion(int $id, Request $request): JsonResponse
+    {
+        $this->authorize('operar', Viatico::findOrFail($id));
+
+        $viatico = $this->estados->marcarPendienteLiquidacion($id, $request->user());
+
+        return ApiResponse::ok($viatico, 'Viático marcado como pendiente de liquidación.');
+    }
+
+    public function contabilizar(int $id, Request $request): JsonResponse
+    {
+        $this->authorize('revisarLiquidacion', Viatico::findOrFail($id));
+
+        $liquidacion = $this->estados->contabilizar($id, $request->user());
+
+        return ApiResponse::ok($liquidacion, 'Viático contabilizado correctamente.');
     }
 
     /**
@@ -461,5 +399,20 @@ class ViaticoController extends Controller
         }
 
         return $datos;
+    }
+
+    /**
+     * Rechazar y devolver a corrección le dicen al servidor que algo está mal:
+     * sin el porqué no sabe qué corregir. La columna `motivo_rechazo` existía
+     * y nunca se llenaba.
+     */
+    private function motivo(Request $request): string
+    {
+        return $request->validate([
+            'motivo' => ['required', 'string', 'min:5', 'max:500'],
+        ], [
+            'motivo.required' => 'Indique el motivo.',
+            'motivo.min'      => 'Explique el motivo: al menos 5 caracteres.',
+        ])['motivo'];
     }
 }

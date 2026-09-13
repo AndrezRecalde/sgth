@@ -57,9 +57,9 @@ export const viaticoService = {
       `/viaticos/${id}/cancelar`
     ).then(r => r.data.datos),
 
-  rechazar: (id: number) =>
+  rechazar: (id: number, motivo: string) =>
     api.post<ApiResponse<Viatico>>(
-      `/viaticos/${id}/rechazar`
+      `/viaticos/${id}/rechazar`, { motivo }
     ).then(r => r.data.datos),
 
   aprobar: (id: number, data?: {
@@ -90,9 +90,9 @@ export const viaticoService = {
       `/viaticos/${id}/contabilizar`
     ).then(r => r.data.datos),
 
-  devolverCorreccion: (id: number) =>
+  devolverCorreccion: (id: number, motivo: string) =>
     api.post<ApiResponse<Viatico>>(
-      `/viaticos/${id}/devolver-correccion`
+      `/viaticos/${id}/devolver-correccion`, { motivo }
     ).then(r => r.data.datos),
 
   generarSolicitudPdf: (identificador: string | number) =>

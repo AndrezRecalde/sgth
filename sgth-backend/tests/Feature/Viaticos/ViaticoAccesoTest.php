@@ -98,6 +98,20 @@ beforeEach(function () {
     $this->en = function (EstadoViatico $estado) {
         $this->viatico->update(['estado' => $estado]);
     };
+
+    // Aprobar exige al menos un tramo.
+    $this->conItinerario = function () {
+        $catalogo = CatalogoTransporte::firstOrCreate(['codigo' => 'BUS'], ['nombre' => 'Bus', 'tipo_vehiculo' => 'terrestre']);
+        $empresa = EmpresaTransporte::firstOrCreate(['codigo' => 'TE'], ['catalogo_transporte_id' => $catalogo->id, 'nombre' => 'Trans Esmeraldas']);
+
+        return TramoViatico::create([
+            'viatico_id' => $this->viatico->id,
+            'origen_tipo' => 'nacional', 'origen_ciudad' => 'Esmeraldas',
+            'destino_tipo' => 'nacional', 'destino_ciudad' => 'Quinindé',
+            'empresa_transporte_id' => $empresa->id,
+            'datetime_salida' => '2026-10-05 08:00:00', 'datetime_llegada' => '2026-10-05 11:00:00',
+        ]);
+    };
 });
 
 // ── Ver ──────────────────────────────────────────────────────────────
@@ -267,13 +281,15 @@ it('quien solo consulta abre la liquidación sin crearla', function () {
 // ── Acciones de Financiero ───────────────────────────────────────────
 
 it('aprobar y rechazar es de quien aprueba viáticos', function (string $accion) {
+    ($this->conItinerario)();
     $url = "/api/v1/viaticos/{$this->viatico->id}/{$accion}";
+    $motivo = ['motivo' => 'La comisión no corresponde a la unidad'];
 
     foreach (['deTitular', 'ajeno', 'adminUath', 'asistenteUath'] as $quien) {
-        $this->actingAs($this->{$quien}, 'sanctum')->postJson($url)->assertForbidden();
+        $this->actingAs($this->{$quien}, 'sanctum')->postJson($url, $motivo)->assertForbidden();
     }
 
-    $this->actingAs($this->financiero, 'sanctum')->postJson($url)->assertOk();
+    $this->actingAs($this->financiero, 'sanctum')->postJson($url, $motivo)->assertOk();
 })->with(['aprobar', 'rechazar']);
 
 it('el anticipo, la comisión y la liquidación pendiente los marca quien opera', function () {
@@ -301,9 +317,11 @@ it('devolver a corrección y contabilizar es de quien revisa la liquidación', f
     ]);
     $url = "/api/v1/viaticos/{$this->viatico->id}/{$accion}";
 
-    $this->actingAs($this->deTitular, 'sanctum')->postJson($url)->assertForbidden();
-    $this->actingAs($this->adminUath, 'sanctum')->postJson($url)->assertForbidden();
-    $this->actingAs($this->financiero, 'sanctum')->postJson($url)->assertOk();
+    $motivo = ['motivo' => 'Falta la factura del hotel'];
+
+    $this->actingAs($this->deTitular, 'sanctum')->postJson($url, $motivo)->assertForbidden();
+    $this->actingAs($this->adminUath, 'sanctum')->postJson($url, $motivo)->assertForbidden();
+    $this->actingAs($this->financiero, 'sanctum')->postJson($url, $motivo)->assertOk();
 })->with(['devolver-correccion', 'contabilizar']);
 
 it('las autorizaciones de vuelo las decide quien aprueba viáticos', function () {
