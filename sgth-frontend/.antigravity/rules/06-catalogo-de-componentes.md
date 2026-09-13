@@ -19,7 +19,9 @@ del módulo.
 | `Toolbar` | Filtros sobre un listado | Campos con `useContainedInput('sm')` |
 | `SectionCard` | Bloque con título dentro de una página | Sustituye al `Divider` con etiqueta |
 | `StatCard` | Indicador numérico de un tablero | `tone` solo si el número es bueno o malo |
-| `StatusBadge` | Etiqueta de estado | Recibe un tono semántico, no un color |
+| `StatusBadge` | Toda etiqueta: estado, señal o categoría | Recibe un tono, no un color; sin tono es neutra |
+| `CountBadge` | Una cifra suelta en una pastilla | `destacado` si pide acción |
+| `LegendBadge` | Leyenda de un gráfico | Único que recibe color: el color es el dato |
 | `DetailList` | Pares etiqueta/valor de un detalle | Valor ausente se dibuja como guion |
 | `DataState` | Los cuatro estados de una consulta | Envuelve la tabla o la lista |
 | `EmptyState` | Estado vacío | Dice qué falta **y** qué hacer |
@@ -95,7 +97,38 @@ compitiendo con los datos.
 lista pequeña dentro de una tarjeta no hace falta montarlo: basta un
 `<Text size="sm" c="dimmed">`.
 
-## Estados de un registro
+## Etiquetas
+
+**Ninguna pantalla importa `Badge` de Mantine.** ESLint lo rechaza fuera de
+`src/components/`. El color de una etiqueta sale de lo que significa:
+
+| Qué muestra | Cómo | Ejemplo |
+|---|---|---|
+| Un estado | `StatusBadge` con el tono de su mapa | Pendiente, Aprobado, Anulado |
+| Una señal buena o mala | `StatusBadge` con tono directo | «Vence hoy» `warning`, «GPS inactivo» `danger` |
+| Una categoría | `StatusBadge` **sin tono** | Tipo de permiso, régimen, especialidad, parentesco, rol |
+| Una cifra sola | `CountBadge` | Permisos del mes, ítems de una compra |
+| La leyenda de un dibujo | `LegendBadge` | Condiciones del odontograma |
+
+**Las categorías van neutras.** LOSEP no es mejor ni peor que Código del
+Trabajo, ni Odontología que Medicina general. Antes cada una tenía su color
+—azul, violeta, turquesa, uva, cian— y el ámbar de Código del Trabajo se leía
+como advertencia. Se distinguen por el texto.
+
+Los tonos, por lo que significan en un flujo:
+
+```
+success   terminó bien                  aprobado, liquidado, apto, vigente
+warning   espera algo de alguien        pendiente, solicitado, en espera, por vencer
+danger    terminó mal o se anuló        rechazado, anulado, cancelado, vencido
+info      en curso, sin nada que hacer  en proceso, en comisión, en evaluación
+neutral   ni empezó ni cuenta           borrador, cerrado, contabilizado, categorías
+```
+
+`variant="dot"` para una marca discreta, `outline` para un código (CIE-10,
+lote). `filled` solo para una alerta; nunca en una categoría.
+
+### Estados de un registro
 
 El significado y el color se deciden en un solo sitio. Cada módulo declara el
 mapa **de estado a tono semántico**, no a color:
@@ -117,7 +150,13 @@ export const TONO_SOLICITUD: Record<EstadoSolicitud, SemanticTone> = {
 ```
 
 Antes cada módulo declaraba su propio mapa con nombres de color de Mantine
-dentro, y el mismo concepto acababa en tonos distintos según la pantalla.
+dentro, y el mismo concepto acababa en tonos distintos según la pantalla:
+«Anulado» salía rojo en el odontograma y naranja en los certificados, y «En
+espera» gris en la atención médica y naranja en la tabla de turnos.
+
+Si el color de un estado se necesita fuera de una etiqueta —la viñeta de un
+`Timeline`, un `Alert`—, se toma del mismo mapa:
+`color={SEMANTIC_COLOR[TONO_VIATICO[estado]]}`.
 
 ## Modales
 
