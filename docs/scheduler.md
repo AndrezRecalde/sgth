@@ -1,6 +1,6 @@
 # SGTH — Tareas programadas (scheduler)
 
-Nueve tareas corren solas, y una décima está apagada a propósito. Ninguna avisa
+Diez tareas corren solas, y una undécima está apagada a propósito. Ninguna avisa
 cuando **no** corre: si el scheduler está caído, nada falla — las cosas
 simplemente no ocurren, y eso se descubre semanas después. Por eso este
 documento existe.
@@ -27,6 +27,7 @@ Todas se declaran en [`sgth-backend/routes/console.php`](../sgth-backend/routes/
 | 06:00 | `VerificarAlertasInventarioJob` | Alertas de stock del dispensario | Se agota medicación sin aviso |
 | 06:15 L-V | `VencerPermisosJob` | Marca como falta injustificada el permiso cuyo respaldo físico no llegó a Recepción dentro de las 72 horas laborables (Art. 33 LOSEP) | Ningún permiso caduca nunca. Todos se quedan «pendientes» y la ausencia sigue amparada por un documento que nadie presentó |
 | 07:00 L-V | `sgth:visto-bueno:control-plazos` | Plazos del Art. 183 del Código del Trabajo en los trámites de visto bueno | Se vencen plazos legales |
+| cada hora | `sgth:viaticos:avanzar-estados` | Pasa los viáticos a «en comisión» al llegar la salida y a «pendiente de liquidación» al llegar el regreso. Lo aprobado sin anticipo entregado sale como viático sin anticipo; lo que no se aprobó no se toca | Los viáticos dependen de que Financiero marque cada paso a mano. Si no lo hace, el plazo de 5 días hábiles para liquidar nunca empieza y nadie queda bloqueado por liquidaciones vencidas |
 | cada 15 min | `EnviarAlertaSlaJob` | Alertas de SLA del helpdesk | Los tickets se pasan del SLA sin escalar |
 | 1 de enero | `generar-periodos-vacaciones` | Crea los períodos anuales de vacaciones | Nadie puede solicitar vacaciones del año nuevo **ni confirmar un permiso personal**, que se descuenta de ese saldo |
 
@@ -75,6 +76,7 @@ día anterior. Si el respaldo de las 02:00 está, el scheduler corrió.
   sobre los datos sembrados. Aparecen en la bandeja como si alguien las hubiera
   registrado.
 - `EnviarAlertaSlaJob` corre cada 15 minutos y envía correos desde tu máquina.
+- `sgth:viaticos:avanzar-estados` mueve los viáticos sembrados con fechas pasadas a «en comisión» o a «pendiente de liquidación», y deja en el historial un paso sin autor.
 - `VencerPermisosJob` convierte en faltas injustificadas los permisos
   pendientes que sembraste. Si el dato de prueba tiene una fecha vieja —y suele
   tenerla—, nace vencido y desaparece del estado en el que lo dejaste.

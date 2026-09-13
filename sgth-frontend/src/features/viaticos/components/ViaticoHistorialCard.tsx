@@ -3,23 +3,16 @@
 import { Card, Divider, Group, Stack, Text, ThemeIcon, Timeline } from '@mantine/core'
 import { IconHistory } from '@tabler/icons-react'
 import { ESTADO_COLORS, ESTADO_LABELS } from '../constants/viatico.constants'
+import { formatFechaHora } from '@/lib/fecha'
 import type { ViaticoHistorialEstado } from '@/types/api'
 
 interface Props {
   historial: ViaticoHistorialEstado[]
 }
 
-function fecha(valor: string): string {
-  const dt = new Date(valor)
-  if (isNaN(dt.getTime())) return '—'
-  return dt.toLocaleString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
-
 /**
- * Quién movió el viático, cuándo y por qué. El motivo importa sobre todo al
+ * Quién movió el viático, cuándo y por qué. Un paso sin autor lo dio la tarea
+ * programada que sigue las fechas del viaje. El motivo importa sobre todo al
  * servidor: una liquidación devuelta a corrección no dice qué corregir en
  * ningún otro lugar.
  */
@@ -51,8 +44,8 @@ export function ViaticoHistorialCard({ historial }: Props) {
           >
             <Stack gap={2}>
               <Text size="xs" c="dimmed">
-                {fecha(paso.created_at)}
-                {paso.usuario?.nombre_completo ? ` · ${paso.usuario.nombre_completo}` : ''}
+                {formatFechaHora(paso.created_at)}
+                {` · ${paso.usuario?.nombre_completo ?? 'Automático'}`}
               </Text>
               {paso.motivo && (
                 <Text size="xs">
