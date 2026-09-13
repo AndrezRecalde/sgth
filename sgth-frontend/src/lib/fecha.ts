@@ -53,3 +53,27 @@ export function fromDateValue(d: Date | string | null): string {
 export function fromDateValueOrNull(d: Date | string | null): string | null {
   return fromDateValue(d) || null
 }
+
+/**
+ * Fecha y hora del backend a `DD/MM/AAAA HH:MM`, en la hora local.
+ *
+ * Para columnas `datetime`: el backend las serializa en ISO con zona
+ * (`2026-10-20T13:00:00.000000Z`) y `new Date` las lleva a la hora de
+ * Ecuador. Viáticos las pasaba antes por `replace(/-/g, '/')`, un truco para
+ * el formato `2026-10-20 08:00:00` que con ISO da una fecha inválida: el
+ * listado mostraba «Invalid Date» en el período de todos los viáticos.
+ */
+export function formatFechaHora(
+  value?: string | null,
+  { conHora = true }: { conHora?: boolean } = {},
+): string {
+  if (!value) return '—'
+  const dt = new Date(value)
+  if (isNaN(dt.getTime())) return '—'
+  return dt.toLocaleString('es-EC', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    ...(conHora ? { hour: '2-digit', minute: '2-digit' } : {}),
+  })
+}

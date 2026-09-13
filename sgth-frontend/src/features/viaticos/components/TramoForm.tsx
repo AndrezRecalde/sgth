@@ -31,6 +31,7 @@ import type {
   Viatico,
 } from "@/types/api";
 import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
+import { formatFechaHora } from "@/lib/fecha";
 
 const PAISES_COMUNES = [
   "Colombia",
@@ -372,15 +373,7 @@ export function TramoForm({
                 <Text size="xs" fw={500}>
                   El primer tramo debe salir exactamente el{" "}
                   <strong>
-                    {new Date(
-                      (viatico.datetime_salida as string).replace(/-/g, "/"),
-                    ).toLocaleString("es-EC", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatFechaHora(viatico.datetime_salida as string)}
                   </strong>
                 </Text>
               </Alert>
@@ -390,15 +383,7 @@ export function TramoForm({
                 <Text size="xs" fw={500}>
                   La llegada no puede superar la fecha de regreso del viático:{" "}
                   <strong>
-                    {new Date(
-                      (viatico.datetime_llegada as string).replace(/-/g, "/"),
-                    ).toLocaleString("es-EC", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatFechaHora(viatico.datetime_llegada as string)}
                   </strong>
                 </Text>
               </Alert>

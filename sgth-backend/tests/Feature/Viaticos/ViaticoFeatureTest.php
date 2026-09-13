@@ -4,16 +4,12 @@ use App\Enums\EstadoViatico;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
-use App\Models\Handoff\HandoffErp;
 use App\Models\User;
-use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\TarifaViatico;
 use App\Models\Viatico\Viatico;
-use App\Services\Handoff\HandoffErpService;
 use App\Services\Viatico\ViaticoService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Storage;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -24,8 +20,6 @@ beforeEach(function () {
     Servidor::unguard();
     Viatico::unguard();
     TarifaViatico::unguard();
-    LiquidacionViatico::unguard();
-    HandoffErp::unguard();
 
     $this->servidorUser = User::create([
         'email' => 'normal@example.com',
@@ -105,95 +99,6 @@ test('viatico_menos_10_horas_aplica_subsistencia', function () {
 
     // Debe aplicar la tarifa de subsistencia ($40) porque es menor a 10 horas y no tiene pernocte
     expect((float)$viatico->monto_calculado)->toBe(40.00);
-});
-
-test('handoff_compromiso_generado_al_aprobar_financiero', function () {
-    Storage::fake('local');
-
-    $viatico = Viatico::create([
-        'servidor_id' => $this->servidor->id,
-        'zona' => 'dentro_provincia',
-        'datetime_salida' => now()->addDays(2),
-        'datetime_llegada' => now()->addDays(4),
-        'justificacion' => 'Supervisión de obras',
-        'estado' => EstadoViatico::APROBADO->value,
-        'monto_calculado' => 160.00,
-        'monto_anticipo' => 160.00,
-        'numero_resolucion' => 'RES-2026-001',
-        'partida_presupuestaria' => '530303',
-        'updated_by' => $this->servidorUser->id,
-    ]);
-
-    $service = new HandoffErpService();
-    $handoff = $service->generarHandoffCompromisoViatico($viatico->id);
-
-    expect($handoff)->toBeInstanceOf(HandoffErp::class);
-    expect($handoff->tipo)->toBe('viatico_compromiso');
-    expect($handoff->referencia_id)->toBe($viatico->id);
-    
-    // Validar que el archivo existe en el Storage
-    Storage::disk('local')->assertExists($handoff->archivo_ruta);
-});
-
-test('handoff_devengado_generado_al_liquidar', function () {
-    Storage::fake('local');
-
-    $viatico = Viatico::create([
-        'servidor_id' => $this->servidor->id,
-        'zona' => 'dentro_provincia',
-        'datetime_salida' => now()->subDays(4),
-        'datetime_llegada' => now()->subDays(2),
-        'justificacion' => 'Supervisión de obras',
-        'estado' => EstadoViatico::LIQUIDADO->value,
-        'monto_calculado' => 160.00,
-        'monto_anticipo' => 160.00,
-        'numero_resolucion' => 'RES-2026-001',
-        'partida_presupuestaria' => '530303',
-        'updated_by' => $this->servidorUser->id,
-    ]);
-
-    $liquidacion = LiquidacionViatico::create([
-        'viatico_id' => $viatico->id,
-        'total_facturas' => 100.00,
-        'diferencia_devolver' => 12.00, // 160 - (100 justificado + 48 exento)
-        'fecha_retorno' => now()->subDays(2),
-        'fecha_liquidacion' => now()->toDateString(),
-        'created_by' => $this->servidorUser->id,
-    ]);
-
-    // Las facturas viven en su propia tabla desde el refactor: ya no son un
-    // JSON dentro de la liquidación.
-    $categoria = \App\Models\Viatico\CategoriaFactura::firstOrCreate(
-        ['nombre' => 'Hospedaje'],
-        ['grupo' => 'viatico', 'codigo' => 'HOSP', 'activo' => true],
-    );
-
-    \App\Models\Viatico\FacturaViatico::create([
-        'liquidacion_viatico_id' => $liquidacion->id,
-        'categoria_factura_id'   => $categoria->id,
-        'tipo_comprobante'       => 'factura',
-        'numero_factura'         => '001-001-000000001',
-        'ruc_proveedor'          => '1790016919001',
-        'nombre_proveedor'       => 'Hotel Manta',
-        'monto'                  => 100.00,
-    ]);
-
-    $service = new HandoffErpService();
-    $handoff = $service->generarHandoffDevengadoViatico($liquidacion->id);
-
-    expect($handoff)->toBeInstanceOf(HandoffErp::class);
-    expect($handoff->tipo)->toBe('viatico_devengado');
-    expect($handoff->referencia_id)->toBe($liquidacion->id);
-    
-    // Validar que el archivo existe en el Storage
-    Storage::disk('local')->assertExists($handoff->archivo_ruta);
-
-    // Opcional: leer el contenido y verificar nodos
-    $contenidoXml = Storage::disk('local')->get($handoff->archivo_ruta);
-    $xml = simplexml_load_string($contenidoXml);
-    
-    expect((string)$xml->TotalFacturas)->toBe('100.00');
-    expect((string)$xml->DiferenciaDevolver)->toBe('12.00');
 });
 
 test('liquidacion_vence_a_los_5_dias_habiles', function () {

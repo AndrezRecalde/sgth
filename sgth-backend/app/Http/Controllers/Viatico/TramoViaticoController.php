@@ -75,8 +75,6 @@ class TramoViaticoController extends Controller
         $esPrimerTramo = $tramosExistentes->isEmpty();
 
         // ── Tipo de tramo automático ──────────────────
-        $totalTramos = $tramosExistentes->count();
-
         if ($esPrimerTramo) {
             // Primer tramo siempre es IDA
             $data['tipo_tramo'] = 'ida';
@@ -97,6 +95,7 @@ class TramoViaticoController extends Controller
                     'El tramo de REGRESO debe llegar exactamente el ' .
                     $llegadaViatico->format('d/m/Y H:i') .
                     ' (fecha de llegada del viático).',
+                    null,
                     422
                 );
             }
@@ -123,14 +122,14 @@ class TramoViaticoController extends Controller
                     '(' . $salidaViatico->format('d/m/Y H:i') . '). ' .
                     'Ajusta las fechas del tramo o edita la ' .
                     'solicitud.',
+                    null,
                     422
                 );
             }
         }
 
         // ── Validar último tramo ──────────────────────
-        // Si la llegada de este tramo = llegada del viático,
-        // validamos que coincida exactamente
+        // La llegada de un tramo no puede pasar la del viático.
         $llegadaViatico = Carbon::parse(
             $viatico->datetime_llegada
         );
@@ -138,11 +137,6 @@ class TramoViaticoController extends Controller
             $data['datetime_llegada']
         );
 
-        // Si no hay tramos (es el único) o si la llegada
-        // de este tramo coincide con la del viático,
-        // validar que sean exactas
-        $esUltimoTramo = $llegadaTramo->eq($llegadaViatico)
-            || $llegadaTramo->gt($llegadaViatico);
 
         if ($llegadaTramo->gt($llegadaViatico)) {
             return ApiResponse::error(
@@ -150,6 +144,7 @@ class TramoViaticoController extends Controller
                 '(' . $llegadaTramo->format('d/m/Y H:i') . ') ' .
                 'no puede ser posterior a la llegada del viático ' .
                 '(' . $llegadaViatico->format('d/m/Y H:i') . ').',
+                null,
                 422
             );
         }
@@ -219,6 +214,7 @@ class TramoViaticoController extends Controller
                     '(' . $salidaTramo->format('d/m/Y H:i') . ') ' .
                     'debe coincidir con la salida del viático ' .
                     '(' . $salidaViatico->format('d/m/Y H:i') . ').',
+                    null,
                     422
                 );
             }
@@ -238,6 +234,7 @@ class TramoViaticoController extends Controller
                     'La llegada del tramo no puede ser posterior ' .
                     'a la llegada del viático ' .
                     '(' . $llegadaViatico->format('d/m/Y H:i') . ').',
+                    null,
                     422
                 );
             }

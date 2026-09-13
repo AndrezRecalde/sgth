@@ -19540,41 +19540,6 @@
                 }
             }
         },
-        "/v1/viaticos/informe/descargar/{archivo}": {
-            "get": {
-                "operationId": "viaticos.informe.descargar",
-                "summary": "Endpoint legacy \u2014 redirige al nuevo",
-                "tags": [
-                    "InformeViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "archivo",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "410": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string",
-                                    "const": "Endpoint deprecado."
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/v1/viaticos/{identificador}/solicitud/generar-enlace": {
             "get": {
                 "operationId": "viaticos.solicitud.generar-enlace",
@@ -38138,8 +38103,7 @@
                                         "type": "string",
                                         "enum": [
                                             "sin_anticipo",
-                                            "total",
-                                            "parcial"
+                                            "total"
                                         ]
                                     },
                                     "monto_calculado": {

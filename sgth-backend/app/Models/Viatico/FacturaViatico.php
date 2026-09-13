@@ -2,7 +2,6 @@
 
 namespace App\Models\Viatico;
 
-use App\Enums\ConceptoFactura;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

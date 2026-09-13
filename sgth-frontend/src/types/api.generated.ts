@@ -3110,23 +3110,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/viaticos/informe/descargar/{archivo}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Endpoint legacy — redirige al nuevo */
-        get: operations["viaticos.informe.descargar"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/viaticos/{identificador}/solicitud/generar-enlace": {
         parameters: {
             query?: never;
@@ -19587,28 +19570,6 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "viaticos.informe.descargar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                archivo: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            401: components["responses"]["AuthenticationException"];
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": "Endpoint deprecado.";
-                };
-            };
-        };
-    };
     "viaticos.solicitud.generar-enlace": {
         parameters: {
             query?: never;
@@ -27742,7 +27703,7 @@ export interface operations {
                     datetime_llegada?: string;
                     justificacion?: string;
                     /** @enum {string} */
-                    modalidad_anticipo?: "sin_anticipo" | "total" | "parcial";
+                    modalidad_anticipo?: "sin_anticipo" | "total";
                     monto_calculado?: number | null;
                     tipo_viaje?: string | null;
                     pais_destino?: string | null;

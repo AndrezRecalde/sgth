@@ -61,14 +61,6 @@ class InformeViaticoController extends Controller
     }
 
     /**
-     * Endpoint legacy — redirige al nuevo
-     */
-    public function descargar(string $archivo): Response
-    {
-        return response('Endpoint deprecado.', 410);
-    }
-
-    /**
      * El id del viático, si el usuario puede verlo.
      *
      * Los PDF no comprobaban nada y el código es predecible (unidad, año y

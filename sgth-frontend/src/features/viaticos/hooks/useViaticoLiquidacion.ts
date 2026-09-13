@@ -16,27 +16,6 @@ export function useViaticoLiquidacion() {
       icon:    React.createElement(IconX, { size: 16 }),
     })
 
-  const liquidar = useMutation({
-    mutationFn: ({
-      viaticoId, data,
-    }: {
-      viaticoId: number
-      data:      Parameters<typeof viaticoService.liquidar>[1]
-    }) => viaticoService.liquidar(viaticoId, data),
-    onSuccess: (_data, { viaticoId }) => {
-      notifications.show({
-        title:   'Viático liquidado',
-        message: 'La liquidación fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
-      qc.invalidateQueries({ queryKey: ['viaticos'] })
-      qc.invalidateQueries({ queryKey: ['viatico', viaticoId] })
-      qc.invalidateQueries({ queryKey: ['viatico'] })
-    },
-    onError,
-  })
-
   const guardarActividades = useMutation({
     mutationFn: ({
       viaticoId, actividades,
@@ -103,7 +82,6 @@ export function useViaticoLiquidacion() {
   })
 
   return {
-    liquidar,
     guardarActividades,
     guardarFacturas,
     confirmarLiquidacion,

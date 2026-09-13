@@ -4,14 +4,11 @@ namespace App\Models\Viatico;
 
 use App\Enums\ZonaViatico;
 use App\Models\User;
-use App\Observers\Viatico\TarifaViaticoObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[ObservedBy(TarifaViaticoObserver::class)]
 class TarifaViatico extends Model
 {
     use HasFactory, SoftDeletes;
@@ -21,6 +18,7 @@ class TarifaViatico extends Model
     protected $fillable = [
         'zona',
         'nivel',
+        'tipo_tarifa',
         'valor_diario',
         'pais_destino',
         'created_by',

@@ -20,17 +20,7 @@ import { useContainedInput } from "@/hooks/useContainedInput";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { viaticoSchema, type ViaticoFormData } from "../schemas/viatico.schema";
 import type { Viatico } from "@/types/api";
-
-const ZONA_OPTIONS = [
-  { value: "dentro_provincia", label: "Dentro de la provincia" },
-  { value: "fuera_provincia", label: "Fuera de la provincia" },
-  { value: "exterior", label: "Exterior (internacional)" },
-];
-
-const MODALIDAD_OPTIONS = [
-  { value: "total", label: "Anticipo (70% del monto calculado)" },
-  { value: "sin_anticipo", label: "Sin anticipo" },
-];
+import { MODALIDAD_OPTIONS, ZONA_OPTIONS } from "../constants/viatico.constants";
 
 const fromDateTime = (d: Date | null | string): string => {
   if (!d) return "";
@@ -77,7 +67,7 @@ export function ViaticoEditModal({
       datetime_llegada: (viatico.datetime_llegada as string) ?? "",
       justificacion: (viatico.justificacion as string) ?? "",
       modalidad_anticipo:
-        (viatico.modalidad_anticipo as "total" | "parcial" | "sin_anticipo") ??
+        (viatico.modalidad_anticipo as "total" | "sin_anticipo") ??
         "total",
       monto_calculado: null,
       tipo_viaje: null,

@@ -12,24 +12,12 @@ import {
 } from "@mantine/core";
 import { IconClipboardList, IconPencil } from "@tabler/icons-react";
 import type { ViaticoConRelaciones } from "@/types/api";
+import { formatFechaHora as fmt } from "@/lib/fecha";
 
 interface Props {
   viatico: ViaticoConRelaciones;
   puedeEditar: boolean;
   onEditar: () => void;
-}
-
-function fmt(f?: string | null): string {
-  if (!f) return "—";
-  const dt = new Date(f.replace(/-/g, "/"));
-  if (isNaN(dt.getTime())) return "—";
-  return dt.toLocaleString("es-EC", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 import { ZONA_LABELS } from "../constants/viatico.constants";
