@@ -42,9 +42,12 @@ export function PermisoSolicitantePropio({ form, nombrePropio }: Props) {
     <Grid>
       {/* El solicitante es quien tiene la sesión: no se elige. */}
       <Grid.Col span={{ base: 12, sm: 6 }}>
+        {/*
+          Sin descripción: el patrón contained la pone encima del campo, y
+          empujaba este 19 px más abajo que el jefe inmediato de al lado.
+        */}
         <TextInput
           label="Servidor"
-          description="Solo puede registrar sus propios permisos."
           value={nombrePropio}
           readOnly
           {...contained}

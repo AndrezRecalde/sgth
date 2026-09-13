@@ -36,7 +36,14 @@ class StorePermisoServidorRequest extends FormRequest
             'observacion' => ['nullable', 'string', 'max:1000'],
             'unidad_administrativa_id' => 'nullable|exists:unidades_administrativas,id',
             'servidor_id' => 'nullable|exists:servidores,id',
-            'jefe_id'     => 'nullable|exists:servidores,id',
+            // Alguien tiene que firmar: el jefe inmediato elegido o, con la
+            // opción activa, el jefe de Talento Humano que resuelve el servicio.
+            // Sin ninguno de los dos, el permiso quedaba sin firmante.
+            'jefe_id'     => [
+                Rule::requiredIf(fn () => ! $this->boolean('dirigido_a_talento_humano')),
+                'nullable',
+                'exists:servidores,id',
+            ],
             // En true, el jefe lo resuelve el servicio y `jefe_id` se ignora:
             // ver PermisoService::jefeDeTalentoHumano().
             'dirigido_a_talento_humano' => ['sometimes', 'boolean'],
@@ -56,6 +63,7 @@ class StorePermisoServidorRequest extends FormRequest
             'hora_fin.required'    => 'La hora de fin es obligatoria.',
             'hora_fin.date_format' => 'El formato de la hora de fin debe ser HH:MM.',
             'hora_fin.after'       => 'La hora de fin debe ser posterior a la hora de inicio.',
+            'jefe_id.required'     => 'Elija al jefe inmediato o dirija el permiso a Talento Humano.',
         ];
     }
 }

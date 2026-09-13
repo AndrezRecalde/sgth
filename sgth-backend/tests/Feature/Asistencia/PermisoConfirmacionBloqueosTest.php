@@ -53,6 +53,17 @@ beforeEach(function () {
         'estado'                   => true,
     ]);
 
+    // Quien firma: un permiso sin jefe ni dirigido a Talento Humano no se admite.
+    $this->jefe = Servidor::create([
+        'cedula'                   => '0800004099',
+        'nombre'                   => 'Julia',
+        'apellido'                 => 'Firma',
+        'puesto_id'                => puestoDePrueba($unidad)->id,
+        'unidad_administrativa_id' => $unidad->id,
+        'regimen_laboral'          => RegimenLaboral::LOSEP,
+        'estado'                   => true,
+    ]);
+
     $this->usuario = function (string $rol) {
         $usuario = User::create([
             'email'        => uniqid('conf').'@example.com',
@@ -100,6 +111,7 @@ beforeEach(function () {
     $this->registrar = fn (int $diaHabil, array $extra = []) => $this->actingAs($this->uath, 'sanctum')
         ->postJson('/api/v1/asistencia/permisos', array_merge([
             'servidor_id' => $this->servidor->id,
+            'jefe_id'     => $this->jefe->id,
             'tipo'        => 'personal',
             'fecha'       => ($this->diaHabil)($diaHabil)->toDateString(),
             'hora_inicio' => '08:00',
