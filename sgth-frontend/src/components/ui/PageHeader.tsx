@@ -9,8 +9,16 @@ interface Props {
   description?: string
   /** Acciones principales de la pantalla, alineadas a la derecha. */
   actions?: React.ReactNode
+  /** El estado del registro, junto al título. Solo en pantallas de detalle. */
+  estado?: React.ReactNode
   /** Muestra una flecha de retorno. Solo en pantallas de detalle. */
   backHref?: string
+  /**
+   * Retorno sin destino fijo, para un detalle al que se llega desde varias
+   * pantallas (el viático se abre desde «Mis viáticos» y desde la bandeja de
+   * Financiero). Si hay destino conocido, `backHref`.
+   */
+  onBack?: () => void
   backLabel?: string
 }
 
@@ -32,9 +40,13 @@ export function PageHeader({
   title,
   description,
   actions,
+  estado,
   backHref,
+  onBack,
   backLabel = 'Volver',
 }: Props) {
+  const flecha = <IconArrowLeft size={19} stroke={1.6} />
+
   return (
     <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
       <Group
@@ -43,22 +55,25 @@ export function PageHeader({
         align="center"
         className={classes.identidad}
       >
-        {backHref && (
+        {backHref ? (
           <Tooltip label={backLabel}>
-            <ActionIcon
-              component={Link}
-              href={backHref}
-              size="lg"
-              radius="md"
-              aria-label={backLabel}
-            >
-              <IconArrowLeft size={19} stroke={1.6} />
+            <ActionIcon component={Link} href={backHref} size="lg" radius="md" aria-label={backLabel}>
+              {flecha}
+            </ActionIcon>
+          </Tooltip>
+        ) : onBack && (
+          <Tooltip label={backLabel}>
+            <ActionIcon onClick={onBack} size="lg" radius="md" aria-label={backLabel}>
+              {flecha}
             </ActionIcon>
           </Tooltip>
         )}
 
         <Stack gap={2} style={{ minWidth: 0 }}>
-          <Title order={1}>{title}</Title>
+          <Group gap="sm" wrap="wrap" align="center">
+            <Title order={1}>{title}</Title>
+            {estado}
+          </Group>
           {description && (
             <Text size="sm" c="dimmed">
               {description}

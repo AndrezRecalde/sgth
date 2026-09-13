@@ -38,7 +38,10 @@ export function DetailList({ items, columnas = 2 }: Props) {
             <Text size="xs" c="dimmed" fw={600}>
               {item.label}
             </Text>
-            <Text size="sm">
+            {/* `div` y no el `p` por defecto: el valor puede ser una etiqueta, un
+                botón u otro Text, y un bloque dentro de un párrafo es HTML
+                inválido que React marca como error de hidratación. */}
+            <Text size="sm" component="div">
               {item.value === null || item.value === undefined || item.value === ''
                 ? '—'
                 : item.value}
