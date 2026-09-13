@@ -18,7 +18,7 @@ import type {
   Viatico,
   CategoriaFactura,
   ActividadLiquidacion,
-  FacturaViatico,
+  ComprobanteRevisado,
 } from "@/types/api";
 
 interface Props {
@@ -52,7 +52,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
 
   const facturas: FacturaData[] = useMemo(() => {
     if (!liquidacionData?.detalles_factura) return [];
-    return liquidacionData.detalles_factura.map((f: FacturaViatico) => ({
+    return liquidacionData.detalles_factura.map((f: ComprobanteRevisado) => ({
       categoria_factura_id: Number(f.categoria_factura_id),
       fecha_factura: (f.fecha_factura as string) ?? "",
       tipo_comprobante:
@@ -64,6 +64,8 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
       nombre_proveedor: f.nombre_proveedor as string,
       detalle: (f.detalle as string) ?? "",
       monto: Number(f.monto),
+      estado_revision: f.estado_revision,
+      observacion_revision: f.observacion_revision,
     }));
   }, [liquidacionData]);
 

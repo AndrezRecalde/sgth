@@ -129,10 +129,11 @@ it('cada acción solo sale del estado que le corresponde', function (string $acc
 
 it('el recorrido completo deja cada paso en el historial', function () {
     $viatico = ($this->viaticoDe)($this->titular);
-    LiquidacionViatico::create([
+    // Contabilizar pide todos los comprobantes aceptados.
+    comprobanteAceptado(LiquidacionViatico::create([
         'viatico_id' => $viatico->id, 'total_facturas' => 0,
         'diferencia_devolver' => 0, 'fecha_liquidacion' => now()->toDateString(),
-    ]);
+    ]));
 
     foreach (['aprobar', 'entregar-anticipo', 'marcar-en-comision', 'marcar-pendiente-liquidacion'] as $accion) {
         ($this->post)($this->financiero, $viatico, $accion)->assertOk();
@@ -266,10 +267,11 @@ it('los acompañantes se reemplazan sin repetir ni incluir al titular', function
 
 it('Financiero no decide sobre un viático en el que viaja', function (string $accion, EstadoViatico $estado) {
     $viatico = ($this->viaticoDe)($this->financiero, $estado);
-    LiquidacionViatico::create([
+    // Contabilizar pide todos los comprobantes aceptados.
+    comprobanteAceptado(LiquidacionViatico::create([
         'viatico_id' => $viatico->id, 'total_facturas' => 0,
         'diferencia_devolver' => 0, 'fecha_liquidacion' => now()->toDateString(),
-    ]);
+    ]));
 
     ($this->post)($this->financiero, $viatico, $accion)
         ->assertStatus(422)

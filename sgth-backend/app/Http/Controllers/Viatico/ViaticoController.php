@@ -9,6 +9,7 @@ use App\Http\Requests\Viatico\SolicitarViaticoRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoServidor;
+use App\Services\Viatico\ComprobantesViaticoService;
 use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -109,6 +110,10 @@ class ViaticoController extends Controller
             : $query->where('codigo_viatico', $identificador)->firstOrFail();
 
         $this->authorize('ver', $viatico);
+
+        if ($viatico->liquidacion) {
+            app(ComprobantesViaticoService::class)->conAlertas($viatico->liquidacion->detallesFactura, $viatico);
+        }
 
         return ApiResponse::ok(
             $viatico,

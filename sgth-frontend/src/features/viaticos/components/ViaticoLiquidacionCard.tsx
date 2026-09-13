@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { IconFileInvoice, IconChecks } from "@tabler/icons-react";
 import { LiquidacionSection } from "./LiquidacionSection";
+import { RevisionComprobantes } from "./RevisionComprobantes";
 import type { ViaticoConRelaciones, CategoriaFactura } from "@/types/api";
 import { useCategoriasFactura } from "../hooks/useViaticos";
 
@@ -217,23 +218,8 @@ export function ViaticoLiquidacionCard({
               ))}
             </Stack>
           )}
-          {(d.liquidacion.detalles_factura?.length ?? 0) > 0 && (
-            <Stack gap={4}>
-              <Text size="xs" fw={600} c="dimmed">
-                COMPROBANTES
-              </Text>
-              {d.liquidacion.detalles_factura!.map((f, i) => (
-                <Group key={i} justify="space-between">
-                  <Text size="xs" style={{ flex: 1 }}>
-                    {f.nombre_proveedor ?? "—"}
-                  </Text>
-                  <Text size="xs" fw={600} c="orange">
-                    ${Number(f.monto ?? 0).toFixed(2)}
-                  </Text>
-                </Group>
-              ))}
-            </Stack>
-          )}
+          <RevisionComprobantes viatico={d} />
+
         </Stack>
       ) : (
         <Text size="sm" c="dimmed">

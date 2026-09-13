@@ -2,6 +2,7 @@
 
 import { Alert, Button, Group, Modal, Stack, Textarea } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
@@ -34,6 +35,8 @@ interface Props {
   descripcion: React.ReactNode
   confirmLabel: string
   cargando?: boolean
+  /** Texto con el que abre el campo, para editarlo en vez de escribirlo. */
+  valorInicial?: string
   onConfirm: (motivo: string) => void
 }
 
@@ -44,6 +47,7 @@ export function MotivoModal({
   descripcion,
   confirmLabel,
   cargando = false,
+  valorInicial = '',
   onConfirm,
 }: Props) {
   const contained = useContainedInput()
@@ -56,8 +60,14 @@ export function MotivoModal({
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { motivo: '' },
+    defaultValues: { motivo: valorInicial },
   })
+
+  // Cada vez que se abre, parte del texto propuesto: los valores por defecto
+  // de React Hook Form solo se leen al montar, y el modal vive montado.
+  useEffect(() => {
+    if (opened) reset({ motivo: valorInicial })
+  }, [opened, valorInicial, reset])
 
   const cerrar = () => {
     reset()

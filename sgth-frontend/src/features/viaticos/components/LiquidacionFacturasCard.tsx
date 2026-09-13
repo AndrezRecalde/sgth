@@ -18,6 +18,7 @@ import {
   IconCircleCheck,
 } from "@tabler/icons-react";
 import type { FacturaData } from "./FacturasModal";
+import { REVISION_COLORS, REVISION_LABELS } from "../utils/revisionComprobantes";
 import type { CategoriaFactura } from "@/types/api";
 
 interface Props {
@@ -98,10 +99,23 @@ export function LiquidacionFacturasCard({
                     {f.nombre_proveedor}
                   </Text>
                 </Group>
-                <Text size="xs" fw={600} c="orange">
-                  ${Number(f.monto).toFixed(2)}
-                </Text>
+                <Group gap={6}>
+                  {/* Tras una devolución, qué aceptó Financiero y qué observó. */}
+                  {f.estado_revision && f.estado_revision !== "pendiente" && (
+                    <Badge size="xs" variant="light" color={REVISION_COLORS[f.estado_revision]}>
+                      {REVISION_LABELS[f.estado_revision]}
+                    </Badge>
+                  )}
+                  <Text size="xs" fw={600} c="orange">
+                    ${Number(f.monto).toFixed(2)}
+                  </Text>
+                </Group>
               </Group>
+              {f.estado_revision === "observada" && f.observacion_revision && (
+                <Text size="xs" c="red" ml={22}>
+                  Observación: {f.observacion_revision}
+                </Text>
+              )}
               {f.categoria_factura_id > 0 && (
                 <Group gap={4} ml={22}>
                   <Badge size="xs" color="orange" variant="dot">

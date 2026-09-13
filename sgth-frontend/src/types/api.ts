@@ -189,6 +189,26 @@ export type ViaticoHistorialEstado = {
   usuario?: { id: number; nombre_completo?: string } | null
 }
 
+/** Un aviso automático sobre un comprobante (`ComprobantesViaticoService`). */
+export type AlertaComprobante = {
+  codigo:  'ruc' | 'fecha' | 'duplicado'
+  mensaje: string
+}
+
+export type EstadoRevisionComprobante = 'pendiente' | 'aceptada' | 'observada'
+
+/**
+ * Un comprobante con la revisión de Financiero. Scramble no incluye estas
+ * columnas en el esquema de `FacturaViatico`; `alertas` se calcula al leer.
+ */
+export type ComprobanteRevisado = FacturaViatico & {
+  estado_revision?:      EstadoRevisionComprobante
+  observacion_revision?: string | null
+  revisado_en?:          string | null
+  alertas?:              AlertaComprobante[]
+  categoria?:            { id?: number; nombre?: string } | null
+}
+
 export type ViaticoConRelaciones = Viatico & {
   coeficiente_exterior?: number | string | null;
   servidor?: {
@@ -211,7 +231,7 @@ export type ViaticoConRelaciones = Viatico & {
   tramos?:   TramoViatico[]
   liquidacion?: LiquidacionViatico & {
     actividades?:     ActividadLiquidacion[]
-    detalles_factura?: FacturaViatico[]
+    detalles_factura?: ComprobanteRevisado[]
   }
   todos_servidores?: {
     id:          number

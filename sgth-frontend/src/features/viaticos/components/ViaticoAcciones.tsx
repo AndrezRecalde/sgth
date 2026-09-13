@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react'
 import type { ViaticoConRelaciones } from '@/types/api'
 import type { AccionesViatico } from '../hooks/useAccionesViatico'
+import { resumenRevision } from '../utils/revisionComprobantes'
 
 interface Props {
   viatico:        ViaticoConRelaciones
@@ -68,6 +69,7 @@ export function ViaticoAcciones({
   const apruebaOtro =
     estadoActual === 'solicitado' && puede.rechazar(d) && !puede.aprobar(d)
   const contabilizaOtro = puede.revisarLiquidacion(d) && !puede.contabilizar(d)
+  const revision = resumenRevision(d.liquidacion?.detalles_factura)
 
   return (
     <Stack gap="sm">
@@ -131,7 +133,7 @@ export function ViaticoAcciones({
         )}
         {puede.contabilizar(d) && (
           <Button size="sm" color="emerald" leftSection={<IconCheck size={14} />}
-            loading={loadings.contabilizar} onClick={onContabilizar}>
+            loading={loadings.contabilizar} onClick={onContabilizar} disabled={!revision.completa}>
             Contabilizar
           </Button>
         )}
@@ -154,6 +156,13 @@ export function ViaticoAcciones({
           </Button>
         )}
       </Group>
+
+      {puede.contabilizar(d) && !revision.completa && (
+        <Text size="xs" c="dimmed">
+          Para contabilizar, acepte todos los comprobantes
+          {revision.pendientes > 0 ? ` (faltan ${revision.pendientes} por revisar)` : ''}.
+        </Text>
+      )}
 
       {(apruebaOtro || contabilizaOtro) && (
         <Alert color="gray" variant="light">

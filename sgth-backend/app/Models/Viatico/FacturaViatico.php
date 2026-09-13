@@ -25,13 +25,24 @@ class FacturaViatico extends Model
         'monto',
         'archivo_ruta',
         'archivo_nombre',
+        'estado_revision',
+        'observacion_revision',
+        'revisado_por',
+        'revisado_en',
     ];
 
     protected function casts(): array
     {
         return [
-            'monto'    => 'decimal:2',
+            'monto'       => 'decimal:2',
+            'fecha_factura' => 'date:Y-m-d',
+            'revisado_en' => 'datetime',
         ];
+    }
+
+    public function liquidacion(): BelongsTo
+    {
+        return $this->belongsTo(LiquidacionViatico::class, 'liquidacion_viatico_id');
     }
 
     public function categoria(): BelongsTo
