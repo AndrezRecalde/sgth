@@ -1,7 +1,7 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
-import { Stack, Group, Text, Badge, Button,
+import { confirmar, StatusBadge } from '@/components/ui'
+import { Stack, Group, Text, Button,
          ActionIcon, Tooltip, Divider } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconDownload, IconTrash,
@@ -136,9 +136,9 @@ export function DocumentosTab({ servidorId }: Props) {
                 </Stack>
                 <Group gap="xs">
                   {doc.fecha_vencimiento && (
-                    <Badge size="xs" color="orange" variant="light">
+                    <StatusBadge tone="warning" size="xs">
                       Vence: {doc.fecha_vencimiento}
-                    </Badge>
+                    </StatusBadge>
                   )}
                   <Tooltip label="Descargar" withArrow>
                     <ActionIcon variant="subtle" color="blue"

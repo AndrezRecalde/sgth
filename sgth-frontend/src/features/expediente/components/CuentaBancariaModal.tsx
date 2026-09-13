@@ -9,9 +9,8 @@ import {
   Switch,
   Stack,
   Text,
-  Badge,
-} from "@mantine/core";
-import { FormModal } from "@/components/ui";
+  } from "@mantine/core";
+import { FormModal, StatusBadge } from "@/components/ui";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -269,19 +268,9 @@ export function CuentaBancariaModal({
                 <Text size="xs" c="dimmed">
                   Propósito asignado:
                 </Text>
-                <Badge
-                  color={
-                    propositoActual === "ambos"
-                      ? "violet"
-                      : propositoActual === "sueldo"
-                        ? "emerald"
-                        : "blue"
-                  }
-                  variant="light"
-                  size="sm"
-                >
+                <StatusBadge>
                   {PROPOSITO_LABEL[propositoActual ?? "sueldo"]}
-                </Badge>
+                </StatusBadge>
               </Group>
             </Grid.Col>
           )}

@@ -5,6 +5,7 @@ import type {
   ServidorResumen,
   TipoSancion,
 } from '@/types/api'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export const ESTADO_SUMARIO_LABELS: Record<EstadoSumario, string> = {
   abierto: 'Abierto',
@@ -16,14 +17,14 @@ export const ESTADO_SUMARIO_LABELS: Record<EstadoSumario, string> = {
   cerrado: 'Cerrado',
 }
 
-export const ESTADO_SUMARIO_COLORS: Record<EstadoSumario, string> = {
-  abierto: 'blue',
-  en_instruccion: 'cyan',
-  en_prueba: 'indigo',
-  con_informe: 'violet',
-  resuelto: 'emerald',
-  apelado: 'orange',
-  cerrado: 'gray',
+export const TONO_SUMARIO: Record<EstadoSumario, SemanticTone> = {
+  abierto: 'info',
+  en_instruccion: 'info',
+  en_prueba: 'info',
+  con_informe: 'info',
+  resuelto: 'success',
+  apelado: 'warning',
+  cerrado: 'neutral',
 }
 
 /**
@@ -55,14 +56,14 @@ export const ESTADO_VISTO_BUENO_LABELS: Record<EstadoVistoBueno, string> = {
   impugnado: 'Impugnado',
 }
 
-export const ESTADO_VISTO_BUENO_COLORS: Record<EstadoVistoBueno, string> = {
-  solicitado: 'blue',
-  notificado: 'cyan',
-  en_investigacion: 'indigo',
-  concedido: 'emerald',
-  negado: 'red',
-  desistido: 'gray',
-  impugnado: 'orange',
+export const TONO_VISTO_BUENO: Record<EstadoVistoBueno, SemanticTone> = {
+  solicitado: 'info',
+  notificado: 'info',
+  en_investigacion: 'info',
+  concedido: 'success',
+  negado: 'danger',
+  desistido: 'neutral',
+  impugnado: 'warning',
 }
 
 /** Espeja VistoBuenoService::TRANSICIONES. */

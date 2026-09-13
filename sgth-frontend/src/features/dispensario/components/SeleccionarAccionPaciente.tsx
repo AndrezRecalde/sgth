@@ -2,13 +2,14 @@
 
 import {
   Stack, Card, Group, Text, Avatar,
-  Badge, SimpleGrid, ThemeIcon, Button,
+  SimpleGrid, ThemeIcon, Button,
 } from '@mantine/core'
 import {
   IconUser, IconUsers, IconStethoscope,
   IconVaccine, IconArrowLeft,
 } from '@tabler/icons-react'
 import type { PacienteEncontrado } from '../services/pacienteService'
+import { StatusBadge } from '@/components/ui'
 
 export type AccionPaciente = 'turno' | 'servicio_enfermeria'
 
@@ -43,9 +44,9 @@ export function SeleccionarAccionPaciente({
               <Text size="sm" fw={600}>
                 {paciente.nombre_completo}
               </Text>
-              <Badge size="xs" variant="light">
+              <StatusBadge size="xs">
                 {esServidor ? 'Servidor' : 'Familiar'}
-              </Badge>
+              </StatusBadge>
             </Stack>
           </Group>
           <Button

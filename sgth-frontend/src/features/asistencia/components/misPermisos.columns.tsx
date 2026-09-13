@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Stack, Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import { IconPrinter } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
@@ -50,9 +50,9 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
       title: 'Tipo',
       width: 130,
       render: ({ tipo }) => (
-        <Badge size="sm" variant="light" color={SEMANTIC_COLOR.info}>
+        <StatusBadge>
           {TIPO_LABELS[tipo] ?? tipo}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -70,9 +70,9 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
           <Text size="sm" ff="monospace">
             {hora_inicio.substring(0, 5)} — {hora_fin.substring(0, 5)}
           </Text>
-          <Badge size="xs" color={SEMANTIC_COLOR.info} variant="light">
+          <StatusBadge size="xs">
             {duracion(hora_inicio, hora_fin)}
-          </Badge>
+          </StatusBadge>
         </Stack>
       ),
     },

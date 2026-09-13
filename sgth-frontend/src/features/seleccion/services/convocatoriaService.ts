@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export interface Postulante {
   id:                      number
@@ -90,14 +91,27 @@ export const ESTADO_CONVOCATORIA_OPTIONS = [
   { value: 'desierta',              label: 'Desierta'              },
 ]
 
-export const ESTADO_CONVOCATORIA_COLORS: Record<string, string> = {
-  borrador:             'gray',
-  publicada:            'blue',
-  en_proceso:           'orange',
-  en_evaluacion_medica: 'violet',
-  finalizada:           'emerald',
-  cerrada:              'emerald',
-  desierta:             'red',
+export const TONO_CONVOCATORIA: Record<string, SemanticTone> = {
+  borrador:             'neutral',
+  publicada:            'info',
+  en_proceso:           'info',
+  en_evaluacion_medica: 'info',
+  finalizada:           'success',
+  cerrada:              'success',
+  desierta:             'danger',
+}
+
+/** El mismo estado se ve en el detalle de la convocatoria y en el ranking. */
+export const TONO_POSTULANTE: Record<string, SemanticTone> = {
+  inscrito:           'neutral',
+  en_evaluacion:      'info',
+  aprobado:           'success',
+  reprobado:          'danger',
+  seleccionado:       'success',
+  ganador_potencial:  'info',
+  no_seleccionado:    'neutral',
+  lista_espera:       'warning',
+  incorporado:        'success',
 }
 
 export const TIPO_CONVOCATORIA_OPTIONS = [

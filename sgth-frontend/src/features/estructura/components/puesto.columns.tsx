@@ -3,7 +3,7 @@ import { IconEdit, IconTrash, IconList } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PuestoConRelaciones } from '@/types/api'
-import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
+import { REGIMEN_LABELS } from '@/lib/regimen'
 
 type Handlers = {
   onEdit:        (puesto: PuestoConRelaciones) => void
@@ -40,7 +40,7 @@ export const getPuestoColumns = (
     title: 'Régimen',
     width: 170,
     render: ({ regimen_laboral }) => regimen_laboral ? (
-      <StatusBadge tone={REGIMEN_TONOS[regimen_laboral] ?? 'neutral'}>
+      <StatusBadge>
         {REGIMEN_LABELS[regimen_laboral] ?? regimen_laboral}
       </StatusBadge>
     ) : <Text size="sm" c="dimmed">-</Text>,

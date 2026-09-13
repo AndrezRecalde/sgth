@@ -2,7 +2,7 @@
 
 import {
   Card, Grid, Textarea, ActionIcon,
-  Group, Text, Badge, TextInput,
+  Group, Text, TextInput,
 } from '@mantine/core'
 import { DatePickerInput, TimeInput } from '@mantine/dates'
 import { IconTrash } from '@tabler/icons-react'
@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { CountBadge } from '@/components/ui'
 
 type ActividadFormData = {
   actividades: {
@@ -66,9 +67,9 @@ export function ActividadItemForm({
     <Card withBorder radius="md" p="sm">
       <Group justify="space-between" mb="xs">
         <Group gap="xs">
-          <Badge size="sm" color="blue" variant="light" circle>
+          <CountBadge>
             {index + 1}
-          </Badge>
+          </CountBadge>
           <Text size="sm" fw={600}>
             Actividad {index + 1}
           </Text>

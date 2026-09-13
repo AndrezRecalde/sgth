@@ -1,10 +1,9 @@
 'use client'
 
 import {
-  Stack, Text, Group, Badge,
-  Table, Divider, Skeleton,
+  Stack, Text, Group, Table, Divider, Skeleton,
 } from '@mantine/core'
-import { SgthModal } from '@/components/ui'
+import { SgthModal, StatusBadge } from '@/components/ui'
 import { useQuery } from '@tanstack/react-query'
 import { nominaService } from '../services/nominaService'
 import type { Nomina, ServidorConRelaciones } from '@/types/api'
@@ -62,9 +61,9 @@ export function RolPagoModal({ opened, onClose, nomina, servidor }: Props) {
                 {servidor?.cedula ?? '—'}
               </Text>
             </div>
-            <Badge color="emerald" variant="light">
+            <StatusBadge>
               {nomina?.periodo}
-            </Badge>
+            </StatusBadge>
           </Group>
 
           <Divider label="Ingresos" labelPosition="left" />

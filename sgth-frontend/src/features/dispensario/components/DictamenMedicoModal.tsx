@@ -1,10 +1,11 @@
 'use client'
 
+import { TONO_DICTAMEN } from '../services/solicitudCertificacionService'
 import {
   Stack, Text, Select, Textarea,
-  Card, Badge, Alert,
+  Card, Alert,
 } from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -24,12 +25,6 @@ const DICTAMEN_OPTIONS = [
   { value: 'apto_con_restricciones',  label: 'Apto con restricciones'     },
   { value: 'no_apto',                 label: 'No apto'                     },
 ]
-
-const DICTAMEN_COLORS: Record<string, string> = {
-  apto:                   'emerald',
-  apto_con_restricciones: 'orange',
-  no_apto:                'red',
-}
 
 export function DictamenMedicoModal({
   opened, onClose, solicitud, fichaFemoId,
@@ -111,14 +106,13 @@ export function DictamenMedicoModal({
         />
 
         {dictamen && (
-          <Badge
+          <StatusBadge
+            tone={TONO_DICTAMEN[dictamen]}
             size="lg"
-            variant="light"
-            color={DICTAMEN_COLORS[dictamen]}
             style={{ width: '100%', textAlign: 'center' }}
           >
             {DICTAMEN_OPTIONS.find(o => o.value === dictamen)?.label}
-          </Badge>
+          </StatusBadge>
         )}
 
         <Textarea

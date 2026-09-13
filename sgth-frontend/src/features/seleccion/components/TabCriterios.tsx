@@ -1,9 +1,9 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Text, Group, Badge, Button,
+  Stack, Text, Group, Button,
   Card, ActionIcon, ThemeIcon, Divider,
   Skeleton, Alert,
 } from '@mantine/core'
@@ -57,9 +57,9 @@ function SeccionCriterios({
       <Group justify="space-between">
         <Group gap="xs">
           <Text size="sm" fw={700}>{titulo}</Text>
-          <Badge size="sm" variant="light" color={color}>
+          <StatusBadge>
             {total.toFixed(0)} pts totales
-          </Badge>
+          </StatusBadge>
         </Group>
         {editable && (
           <Button
@@ -96,9 +96,9 @@ function SeccionCriterios({
                   <Stack gap={2}>
                     <Group gap="xs">
                       <Text size="sm" fw={500}>{i + 1}. {c.nombre}</Text>
-                      <Badge size="xs" variant="dot" color="gray">
+                      <StatusBadge size="xs" variant="dot">
                         {TIPO_LABELS[c.tipo_input]}
-                      </Badge>
+                      </StatusBadge>
                     </Group>
                     {c.descripcion && (
                       <Text size="xs" c="dimmed">{c.descripcion}</Text>
@@ -106,23 +106,18 @@ function SeccionCriterios({
                     {c.opciones.length > 0 && (
                       <Group gap="xs" mt={2}>
                         {c.opciones.map(op => (
-                          <Badge
-                            key={op.id}
-                            size="xs"
-                            variant="light"
-                            color={color}
-                          >
+                          <StatusBadge key={op.id} size="xs">
                             {op.etiqueta}: {op.puntaje} pts
-                          </Badge>
+                          </StatusBadge>
                         ))}
                       </Group>
                     )}
                   </Stack>
                 </Group>
                 <Group gap="xs" wrap="nowrap">
-                  <Badge size="md" variant="light" color={color}>
+                  <StatusBadge size="md">
                     {c.puntaje_maximo} pts
-                  </Badge>
+                  </StatusBadge>
                   {editable && (
                     <ActionIcon
                       size="sm"
@@ -197,13 +192,9 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
           Criterios configurados
         </Text>
         <Group gap="xs">
-          <Badge
-            size="md"
-            variant="light"
-            color={totalPts === 100 ? 'emerald' : 'orange'}
-          >
+          <StatusBadge tone={totalPts === 100 ? 'success' : 'warning'} size="md">
             Total: {totalPts.toFixed(0)} / 100 pts
-          </Badge>
+          </StatusBadge>
           {editable && (
             <Button
               size="compact-xs"

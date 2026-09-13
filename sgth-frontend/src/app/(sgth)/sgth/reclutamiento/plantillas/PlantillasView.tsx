@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Group, Badge, Text, Button, Card, ActionIcon, TextInput, Textarea, Select } from '@mantine/core'
+import { Stack, Group, Text, Button, Card, ActionIcon, TextInput, Textarea, Select } from '@mantine/core'
 import {
   IconTemplate,
   IconPlus,
@@ -19,7 +19,7 @@ import {
 import {
   TIPO_CONTRATO_PLANTILLA_OPTIONS,
 } from '@/features/seleccion/services/plantillaService'
-import { EmptyState, PageHeader, PageShell, confirmar, FormModal } from '@/components/ui'
+import { confirmar, EmptyState, FormModal, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 
 export function PlantillasView() {
   const router   = useRouter()
@@ -100,9 +100,9 @@ export function PlantillasView() {
                   <Group gap="xs">
                     <Text fw={600}>{p.nombre}</Text>
                     {!p.activa && (
-                      <Badge size="xs" color="gray" variant="light">
+                      <StatusBadge size="xs">
                         Inactiva
-                      </Badge>
+                      </StatusBadge>
                     )}
                   </Group>
                   {p.descripcion && (
@@ -111,12 +111,12 @@ export function PlantillasView() {
                     </Text>
                   )}
                   <Group gap="xs" mt={2}>
-                    <Badge size="xs" variant="light" color="blue">
+                    <StatusBadge size="xs">
                       {getLabelTipo(p.tipo_contrato)}
-                    </Badge>
-                    <Badge size="xs" variant="light" color="gray">
+                    </StatusBadge>
+                    <StatusBadge size="xs">
                       {p.criterios_count ?? 0} criterios
-                    </Badge>
+                    </StatusBadge>
                   </Group>
                 </Stack>
                 <Group gap="xs" wrap="nowrap">

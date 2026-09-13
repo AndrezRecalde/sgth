@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Group, TextInput, Button, Badge, Text, Skeleton, Alert, Accordion, Stack } from '@mantine/core'
+import { Group, TextInput, Button, Text, Skeleton, Alert, Accordion, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconSearch, IconList, IconAlertCircle, IconEdit } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -122,7 +122,7 @@ export function ProgramaDrogasTab() {
                   <Accordion.Control>
                     <Group justify="space-between" pr="md">
                       <Text fw={600} size="sm">{fase.etiqueta}</Text>
-                      <Badge variant="light" size="sm">{fase.filas.length} actividades</Badge>
+                      <StatusBadge>{fase.filas.length} actividades</StatusBadge>
                     </Group>
                   </Accordion.Control>
                   <Accordion.Panel>

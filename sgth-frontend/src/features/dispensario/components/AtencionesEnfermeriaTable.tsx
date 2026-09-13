@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Stack, Group, Text, Badge, Avatar, Skeleton,
+  Stack, Group, Text, Avatar, Skeleton,
   ActionIcon, Tooltip,
 } from '@mantine/core'
 import {
@@ -16,6 +16,7 @@ import {
   AnularRegistroModal, MOTIVOS_ANULAR_ATENCION,
 } from './AnularRegistroModal'
 import type { AtencionEnfermeria } from '../services/atencionEnfermeriaService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   fecha: string
@@ -101,9 +102,9 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
                       {nombrePaciente.trim() || '—'}
                     </Text>
                     {anulada && (
-                      <Badge size="xs" variant="light" color="orange">
+                      <StatusBadge tone="danger" size="xs">
                         Anulada
-                      </Badge>
+                      </StatusBadge>
                     )}
                   </Group>
                   <Group gap={6}>
@@ -128,13 +129,9 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
 
               <Group gap="xs" wrap="nowrap" align="flex-start">
                 <Stack gap={2} align="flex-end">
-                  <Badge
-                    size="sm"
-                    variant="light"
-                    color={anulada ? 'gray' : 'violet'}
-                  >
+                  <StatusBadge>
                     {atencion.catalogo_servicio?.nombre ?? '—'}
-                  </Badge>
+                  </StatusBadge>
                   <Text size="xs" c="dimmed">
                     Por: {atencion.enfermera?.nombre_completo
                       ?? atencion.enfermera?.usuario_ti ?? '—'}

@@ -1,9 +1,9 @@
-import { Card, Group, Stack, Text, ActionIcon, Badge, Box, Tooltip } from '@mantine/core'
+import { Card, Group, Stack, Text, ActionIcon, Box, Tooltip } from '@mantine/core'
 import {
   IconArrowsExchange, IconBuilding, IconChevronRight, IconChevronDown,
   IconPencil, IconSitemap, IconTrash,
 } from '@tabler/icons-react'
-import { TableActions } from '@/components/ui'
+import { StatusBadge, TableActions } from '@/components/ui'
 import { admiteSubunidades, etiquetaNivel } from '../utils/jerarquia'
 import type { UnidadConRelaciones } from '@/types/api'
 
@@ -79,14 +79,9 @@ export function OrganigramaNode({
                       + (s.fecha_fin ? ` · hasta ${formatFecha(s.fecha_fin)}` : '')
                     }
                   >
-                    <Badge
-                      size="xs"
-                      variant="light"
-                      color={s.tipo === 'encargo' ? 'blue' : 'grape'}
-                      leftSection={<IconArrowsExchange size={11} />}
-                    >
+                    <StatusBadge size="xs" leftSection={<IconArrowsExchange size={11} />}>
                       {s.tipo === 'encargo' ? 'Encargo' : 'Subrogación'}
-                    </Badge>
+                    </StatusBadge>
                   </Tooltip>
                 ))}
               </Group>

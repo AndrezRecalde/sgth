@@ -4,7 +4,6 @@ import {
   Card,
   Group,
   Text,
-  Badge,
   Button,
   Divider,
   Stack,
@@ -18,8 +17,9 @@ import {
   IconCircleCheck,
 } from "@tabler/icons-react";
 import type { FacturaData } from "./FacturasModal";
-import { REVISION_COLORS, REVISION_LABELS } from "../utils/revisionComprobantes";
+import { REVISION_LABELS, TONO_REVISION } from "../utils/revisionComprobantes";
 import type { CategoriaFactura } from "@/types/api";
+import { StatusBadge } from "@/components/ui";
 
 interface Props {
   facturas: FacturaData[];
@@ -52,10 +52,10 @@ export function LiquidacionFacturasCard({
           </Text>
         </Group>
         {facturas.length > 0 && (
-          <Badge color="orange" variant="light" size="sm">
+          <StatusBadge>
             {facturas.length}{" "}
             {facturas.length === 1 ? "comprobante" : "comprobantes"}
-          </Badge>
+          </StatusBadge>
         )}
       </Group>
       <Divider mb="sm" />
@@ -102,9 +102,9 @@ export function LiquidacionFacturasCard({
                 <Group gap={6}>
                   {/* Tras una devolución, qué aceptó Financiero y qué observó. */}
                   {f.estado_revision && f.estado_revision !== "pendiente" && (
-                    <Badge size="xs" variant="light" color={REVISION_COLORS[f.estado_revision]}>
+                    <StatusBadge tone={TONO_REVISION[f.estado_revision]} size="xs">
                       {REVISION_LABELS[f.estado_revision]}
-                    </Badge>
+                    </StatusBadge>
                   )}
                   <Text size="xs" fw={600} c="orange">
                     ${Number(f.monto).toFixed(2)}
@@ -118,11 +118,11 @@ export function LiquidacionFacturasCard({
               )}
               {f.categoria_factura_id > 0 && (
                 <Group gap={4} ml={22}>
-                  <Badge size="xs" color="orange" variant="dot">
+                  <StatusBadge size="xs" variant="dot">
                     {categoriaOptions.find(
                       (c) => Number(c.value) === f.categoria_factura_id,
                     )?.label ?? `Categoría ${f.categoria_factura_id}`}
-                  </Badge>
+                  </StatusBadge>
                   <Text size="xs" c="dimmed">
                     {f.tipo_comprobante
                       ? f.tipo_comprobante.charAt(0).toUpperCase() +

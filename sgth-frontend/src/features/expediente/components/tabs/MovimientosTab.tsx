@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Group, Text, Badge, Button, Skeleton } from '@mantine/core'
+import { Stack, Group, Text, Button, Skeleton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconHistory, IconFileDownload, IconEye } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
@@ -14,13 +14,14 @@ import { AccionPersonalDetalleDrawer } from '../AccionPersonalDetalleDrawer'
 import { expedienteService } from '../../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
 import {
-  ESTADO_COLORS, ESTADO_LABELS, puedeDescargarPdf,
+  TONO_ACCION, ESTADO_LABELS, puedeDescargarPdf,
 } from '../../utils/estadoAccionPersonal'
 import {
   SUBTIPO_LABELS, etiquetaTipoMovimiento,
 } from '../../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
+import { StatusBadge } from '@/components/ui'
 
 function formatFecha(fecha?: string | null): string {
   if (!fecha) return '—'
@@ -116,9 +117,9 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
       width: 150,
       render: ({ estado }) =>
         estado ? (
-          <Badge color={ESTADO_COLORS[estado]} variant="light" size="sm">
+          <StatusBadge tone={TONO_ACCION[estado]}>
             {ESTADO_LABELS[estado]}
-          </Badge>
+          </StatusBadge>
         ) : (
           <Text size="sm" c="dimmed">—</Text>
         ),
@@ -174,9 +175,9 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
       </Group>
 
       {!tipoNombramiento && (
-        <Badge color="yellow" variant="light" size="sm">
+        <StatusBadge tone="warning">
           Sin contrato vigente — no se pueden registrar acciones de personal
-        </Badge>
+        </StatusBadge>
       )}
 
       {isLoading ? (

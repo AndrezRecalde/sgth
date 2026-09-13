@@ -2,13 +2,14 @@
 
 import {
   Card, Group, Stack, Text,
-  Avatar, Badge, Button, Alert,
+  Avatar, Button, Alert,
 } from '@mantine/core'
 import {
   IconUser, IconUsers,
   IconAlertCircle, IconPlus,
 } from '@tabler/icons-react'
 import type { PacienteEncontrado } from '../services/pacienteService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   paciente:        PacienteEncontrado
@@ -51,10 +52,7 @@ export function PacienteCard({
                 CI: {paciente.cedula}
               </Text>
               <Group gap={6} mt={4}>
-                <Badge
-                  size="sm"
-                  variant="light"
-                  color={esServidor ? 'emerald' : 'blue'}
+                <StatusBadge
                   leftSection={
                     esServidor
                       ? <IconUser size={12} />
@@ -62,11 +60,11 @@ export function PacienteCard({
                   }
                 >
                   {esServidor ? 'Servidor' : 'Familiar'}
-                </Badge>
+                </StatusBadge>
                 {!esServidor && paciente.tipo_familiar && (
-                  <Badge size="sm" variant="light" color="gray">
+                  <StatusBadge>
                     {paciente.tipo_familiar}
-                  </Badge>
+                  </StatusBadge>
                 )}
               </Group>
             </Stack>

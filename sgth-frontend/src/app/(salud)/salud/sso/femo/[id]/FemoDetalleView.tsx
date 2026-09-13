@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stack, Skeleton, Alert, Text, Button, Group, Card, Badge, SimpleGrid, Stepper } from '@mantine/core'
+import { Stack, Skeleton, Alert, Text, Button, Group, Card, SimpleGrid, Stepper } from '@mantine/core'
 import {
   IconAlertCircle, IconStethoscope, IconDownload,
   IconEdit, IconUser, IconStretching, IconBriefcase,
@@ -23,9 +23,9 @@ import { FemoPaso2 } from
 import { FemoPaso3 } from
   '@/features/dispensario/components/femo/FemoPaso3'
 import {
-  TIPO_FICHA_OPTIONS, APTITUD_OPTIONS, APTITUD_COLORS,
+  TIPO_FICHA_OPTIONS, APTITUD_OPTIONS, TONO_APTITUD,
 } from '@/features/dispensario/services/femoOptions'
-import { PageHeader, PageShell } from '@/components/ui'
+import { PageHeader, PageShell, StatusBadge } from '@/components/ui'
 
 interface Props {
   id: string
@@ -218,13 +218,13 @@ export function FemoDetalleView({ id }: Props) {
       <SimpleGrid cols={{ base: 1, md: 3 }}>
         <Card withBorder radius="md" p="md">
           <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Tipo de evaluación</Text>
-          <Badge size="lg" variant="light" color="blue" mt={4}>{tipoLabel}</Badge>
+          <StatusBadge size="lg" mt={4}>{tipoLabel}</StatusBadge>
         </Card>
         <Card withBorder radius="md" p="md">
           <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Aptitud médica</Text>
-          <Badge size="lg" variant="light" color={APTITUD_COLORS[ficha.aptitud] ?? 'gray'} mt={4}>
+          <StatusBadge tone={TONO_APTITUD[ficha.aptitud] ?? 'neutral'} size="lg" mt={4}>
             {aptitudLabel}
-          </Badge>
+          </StatusBadge>
         </Card>
         <Card withBorder radius="md" p="md">
           <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Fecha de evaluación</Text>

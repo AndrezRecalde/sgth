@@ -1,6 +1,6 @@
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
-import { Stack, Group, Text, Badge, Button } from '@mantine/core'
+import { Stack, Group, Text, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash, IconSchool, IconEdit } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -54,13 +54,9 @@ export function AcademicoTab({ servidorId }: Props) {
       title: 'Tipo',
       width: 120,
       render: ({ tipo_estudio }) => (
-        <Badge
-          color={tipo_estudio === 'estudio' ? 'emerald' : 'blue'}
-          variant="light"
-          size="xs"
-        >
+        <StatusBadge size="xs">
           {tipo_estudio === 'estudio' ? 'Título Académico' : 'Capacitación'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

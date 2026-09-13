@@ -2,9 +2,9 @@
 
 import {
   Stack, NumberInput, Textarea,
-  Group, Text, Badge, Alert,
+  Group, Text, Alert,
 } from '@mantine/core'
-import { FormModal } from '@/components/ui'
+import { FormModal, StatusBadge } from '@/components/ui'
 import { useEffect } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { IconAlertTriangle } from '@tabler/icons-react'
@@ -77,9 +77,9 @@ export function AjustarInventarioModal({
       <Stack gap="sm">
         <Group justify="space-between">
           <Text size="sm" fw={600}>{medicina.nombre}</Text>
-          <Badge variant="light" color="blue">
+          <StatusBadge>
             Stock en sistema: {medicina.stock_actual}
-          </Badge>
+          </StatusBadge>
         </Group>
 
         <Alert

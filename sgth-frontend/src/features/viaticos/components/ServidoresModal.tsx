@@ -6,10 +6,9 @@ import {
   Text,
   Group,
   MultiSelect,
-  Badge,
   Divider,
 } from "@mantine/core";
-import { FormModal } from "@/components/ui";
+import { FormModal, StatusBadge } from "@/components/ui";
 import { useForm, Controller } from "react-hook-form";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
@@ -84,9 +83,9 @@ export function ServidoresModal({ opened, onClose, viatico }: Props) {
         {/* Titular — no editable */}
         <Card withBorder radius="md" p="xs" bg="blue.0">
           <Group gap="xs">
-            <Badge size="xs" color="blue" variant="filled">
+            <StatusBadge size="xs">
               Titular
-            </Badge>
+            </StatusBadge>
             <Text size="sm" fw={500}>
               {[titular?.servidor?.apellido, titular?.servidor?.nombre]
                 .filter(Boolean)

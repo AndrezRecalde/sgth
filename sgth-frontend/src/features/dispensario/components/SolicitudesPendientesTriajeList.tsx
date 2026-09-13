@@ -1,6 +1,6 @@
 'use client'
 
-import { Text, Badge, Button } from '@mantine/core'
+import { Text, Button } from '@mantine/core'
 import { IconHeartbeat } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -8,6 +8,7 @@ import { useSolicitudesPendientesTriaje } from '../hooks/useSolicitudSignosVital
 import { TIPO_EVENTO_OPTIONS } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   onSeleccionar: (solicitud: SolicitudCertificacion) => void
@@ -35,9 +36,9 @@ export function SolicitudesPendientesTriajeList({ onSeleccionar }: Props) {
       title:    'Tipo de evaluación',
       width:    170,
       render: (s) => (
-        <Badge size="sm" variant="light" color="blue">
+        <StatusBadge>
           {getLabelTipo(s.tipo_evento)}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

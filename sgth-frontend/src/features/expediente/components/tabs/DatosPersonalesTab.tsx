@@ -1,7 +1,8 @@
 "use client";
 
-import { Stack, Group, Text, Badge, Divider } from "@mantine/core";
+import { Stack, Group, Text, Divider } from "@mantine/core";
 import type { ServidorConRelaciones } from "@/types/api";
+import { StatusBadge } from "@/components/ui";
 
 const GENERO_LABELS: Record<string, string> = {
   masculino: "Masculino",
@@ -114,14 +115,14 @@ export function DatosPersonalesTab({ servidor }: Props) {
       <Divider label="Condición" labelPosition="left" my="xs" />
       <Group>
         {servidor.tiene_discapacidad && (
-          <Badge color="orange" variant="light" size="sm">
+          <StatusBadge tone="info">
             Tiene discapacidad
-          </Badge>
+          </StatusBadge>
         )}
         {servidor.tiene_enfermedad_catastrofica && (
-          <Badge color="red" variant="light" size="sm">
+          <StatusBadge tone="info">
             Enfermedad catastrófica
-          </Badge>
+          </StatusBadge>
         )}
         {!servidor.tiene_discapacidad &&
           !servidor.tiene_enfermedad_catastrofica && (

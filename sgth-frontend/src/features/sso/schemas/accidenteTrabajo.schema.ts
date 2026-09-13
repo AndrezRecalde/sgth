@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export const accidenteTrabajoSchema = z.object({
   servidor_id: z.number({ error: 'Seleccione el servidor' }).min(1, 'Seleccione el servidor'),
@@ -22,9 +23,9 @@ export const TIPO_EVENTO_ACCIDENTE_OPTIONS = [
   { value: 'incidente', label: 'Incidente (casi accidente, sin lesión)' },
 ]
 
-export const TIPO_EVENTO_ACCIDENTE_COLORS: Record<string, string> = {
-  accidente: 'red',
-  incidente: 'yellow',
+export const TONO_TIPO_EVENTO_ACCIDENTE: Record<string, SemanticTone> = {
+  accidente: 'danger',
+  incidente: 'warning',
 }
 
 export const GRAVEDAD_OPTIONS = [
@@ -34,9 +35,9 @@ export const GRAVEDAD_OPTIONS = [
   { value: 'mortal', label: 'Mortal' },
 ]
 
-export const GRAVEDAD_COLORS: Record<string, string> = {
-  leve: 'emerald',
-  moderada: 'yellow',
-  grave: 'orange',
-  mortal: 'red',
+export const TONO_GRAVEDAD: Record<string, SemanticTone> = {
+  leve: 'info',
+  moderada: 'warning',
+  grave: 'danger',
+  mortal: 'danger',
 }

@@ -1,9 +1,9 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Alert, Badge, Box, Button, Divider, Drawer, Grid, Group, Paper,
+  Alert, Box, Button, Divider, Drawer, Grid, Group, Paper,
   Skeleton, Stack, Text,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -20,7 +20,7 @@ import { MovimientoModal } from './MovimientoModal'
 import { CompletarVinculoModal } from './CompletarVinculoModal'
 import { DictamenPresupuestarioModal } from './DictamenPresupuestarioModal'
 import {
-  ESTADO_COLORS, ESTADO_LABELS, TRANSICIONES, puedeDescargarPdf,
+  TONO_ACCION, ESTADO_LABELS, TRANSICIONES, puedeDescargarPdf,
   requiereCompletarVinculo,
 } from '../utils/estadoAccionPersonal'
 import {
@@ -167,9 +167,9 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             )}
           </div>
           {estado && (
-            <Badge color={ESTADO_COLORS[estado]} variant="light">
+            <StatusBadge tone={TONO_ACCION[estado]}>
               {ESTADO_LABELS[estado]}
-            </Badge>
+            </StatusBadge>
           )}
         </Group>
 

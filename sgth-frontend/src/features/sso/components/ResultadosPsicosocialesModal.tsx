@@ -1,11 +1,11 @@
 'use client'
 
-import { Stack, Text, Badge, Group, Skeleton, Alert } from '@mantine/core'
-import { SgthModal } from '@/components/ui'
+import { Stack, Text, Group, Skeleton, Alert } from '@mantine/core'
+import { SgthModal, StatusBadge } from '@/components/ui'
 import { IconAlertCircle } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useResultadosPsicosociales } from '../hooks/usePsicosocial'
-import { NIVEL_RIESGO_PSICOSOCIAL_COLORS, NIVEL_RIESGO_PSICOSOCIAL_LABELS } from '../schemas/psicosocial.schema'
+import { NIVEL_RIESGO_PSICOSOCIAL_LABELS, TONO_RIESGO_PSICOSOCIAL } from '../schemas/psicosocial.schema'
 import type { ResultadoDimensionAgregado } from '../services/psicosocialService'
 import type { DataTableColumn } from 'mantine-datatable'
 
@@ -52,9 +52,9 @@ export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Pr
             <Text size="sm" fw={600}>Resultado global</Text>
             <Group gap="xs">
               {(['bajo', 'medio', 'alto'] as const).map((nivel) => (
-                <Badge key={nivel} color={NIVEL_RIESGO_PSICOSOCIAL_COLORS[nivel]} variant="light">
+                <StatusBadge tone={TONO_RIESGO_PSICOSOCIAL[nivel]} key={nivel}>
                   {NIVEL_RIESGO_PSICOSOCIAL_LABELS[nivel]}: {resultados.global[nivel]}
-                </Badge>
+                </StatusBadge>
               ))}
             </Group>
           </Stack>

@@ -1,10 +1,10 @@
 "use client";
 
+import { StatusBadge } from "@/components/ui";
 import {
   Card,
   Group,
   Text,
-  Badge,
   Button,
   Divider,
   Stack,
@@ -99,9 +99,9 @@ export function ViaticoInfoCard({ viatico: d, puedeEditar, onEditar }: Props) {
           <Text size="xs" c="dimmed">
             Total días
           </Text>
-          <Badge color="blue" variant="light" size="sm">
+          <StatusBadge>
             {Number(d.total_dias ?? 0).toFixed(1)} días
-          </Badge>
+          </StatusBadge>
         </Group>
         <Stack gap={2}>
           <Text size="xs" c="dimmed">

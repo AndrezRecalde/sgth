@@ -1,11 +1,11 @@
 'use client'
 
+import type { SemanticTone } from '@/config/design.tokens'
 import {
-  Stack, Text, Group, Badge,
-  NumberInput, Alert, Card,
+  Stack, Text, Group, NumberInput, Alert, Card,
   ThemeIcon, Grid,
 } from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
 import {
   IconPill, IconAlertTriangle,
 } from '@tabler/icons-react'
@@ -47,10 +47,10 @@ function entregable(item: ItemReceta): number {
     ?? 0
 }
 
-const ESTADO_ITEM: Record<string, { label: string; color: string }> = {
-  pendiente:         { label: 'Pendiente',  color: 'gray'   },
-  despachado_parcial:{ label: 'Parcial',    color: 'orange' },
-  despachado_completo:{label: 'Completo',   color: 'emerald'},
+const ESTADO_ITEM: Record<string, { label: string; tone: SemanticTone }> = {
+  pendiente:           { label: 'Pendiente', tone: 'neutral' },
+  despachado_parcial:  { label: 'Parcial',   tone: 'warning' },
+  despachado_completo: { label: 'Completo',  tone: 'success' },
 }
 
 export function DespacharRecetaModal({
@@ -139,12 +139,9 @@ export function DespacharRecetaModal({
                 })}
               </Text>
             </Stack>
-            <Badge
-              variant="light"
-              color={receta.estado === 'pendiente' ? 'orange' : 'blue'}
-            >
+            <StatusBadge tone={receta.estado === 'pendiente' ? 'warning' : 'info'}>
               {receta.estado.replace(/_/g, ' ')}
-            </Badge>
+            </StatusBadge>
           </Group>
           {receta.indicaciones_generales && (
             <Text size="xs" c="dimmed" mt="xs">
@@ -261,13 +258,9 @@ export function DespacharRecetaModal({
                           </Text>
                         </Stack>
                       </Group>
-                      <Badge
-                        size="xs"
-                        variant="light"
-                        color={estadoItem.color}
-                      >
+                      <StatusBadge tone={estadoItem.tone} size="xs">
                         {estadoItem.label}
-                      </Badge>
+                      </StatusBadge>
                     </Group>
 
                     {/* Los tres números caben en una fila hasta en el teléfono;

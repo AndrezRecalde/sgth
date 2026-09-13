@@ -1,11 +1,12 @@
-import { Text, Badge, Switch, Tooltip, Group, Stack } from '@mantine/core'
+import { Text, Switch, Tooltip, Group, Stack } from '@mantine/core'
 import {
   IconEdit, IconKey, IconShieldCheck, IconUserOff, IconUserCheck,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Usuario } from '@/types/api'
-import { colorRol, etiquetaRol } from '../constants/roles'
+import { etiquetaRol } from '../constants/roles'
+import { StatusBadge } from '@/components/ui'
 
 type Handlers = {
   onEdit:                (u: Usuario) => void
@@ -30,9 +31,9 @@ export const getUsuarioColumns = ({
     render: ({ nombre_completo, servidor, servidor_id }) => {
       if (!servidor_id) {
         return (
-          <Badge color="red" variant="light" size="sm" leftSection={<IconUserOff size={12} />}>
+          <StatusBadge tone="danger" leftSection={<IconUserOff size={12} />}>
             SIN SERVIDOR
-          </Badge>
+          </StatusBadge>
         )
       }
 
@@ -60,9 +61,9 @@ export const getUsuarioColumns = ({
               label="Aún no ha cambiado la contraseña inicial (su cédula)"
               withArrow
             >
-              <Badge size="xs" color="orange" variant="light">
+              <StatusBadge tone="warning" size="xs">
                 clave inicial
-              </Badge>
+              </StatusBadge>
             </Tooltip>
           )}
         </Group>
@@ -76,9 +77,9 @@ export const getUsuarioColumns = ({
     render: ({ roles }) => (
       <Group gap={4} wrap="wrap">
         {(roles ?? []).map(r => (
-          <Badge key={r} size="xs" variant="light" color={colorRol(r)}>
+          <StatusBadge key={r} size="xs">
             {etiquetaRol(r)}
-          </Badge>
+          </StatusBadge>
         ))}
       </Group>
     ),

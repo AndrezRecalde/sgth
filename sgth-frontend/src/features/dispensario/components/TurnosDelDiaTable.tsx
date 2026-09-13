@@ -1,8 +1,9 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { TONO_TURNO } from '../constants/turnos'
+import { confirmar, StatusBadge } from '@/components/ui'
 import {
-  Stack, Group, Text, Badge, Button,
+  Stack, Group, Text, Button,
   ActionIcon, 
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
@@ -23,15 +24,13 @@ interface Props {
   onVerConsulta: (turno: AgendaMedica) => void
 }
 
-const ESTADO_CONFIG: Record<EstadoAgenda, {
-  label: string; color: string
-}> = {
-  en_espera:     { label: 'En espera',      color: 'gray'   },
-  en_sala:       { label: 'En sala',        color: 'blue'   },
-  en_consulta:   { label: 'En consulta',    color: 'blue'   },
-  atendido:      { label: 'Atendido',       color: 'emerald'},
-  no_presentado: { label: 'No se presentó', color: 'orange' },
-  cancelado:     { label: 'Cancelado',      color: 'red'    },
+const ETIQUETA_ESTADO: Record<EstadoAgenda, string> = {
+  en_espera:     'En espera',
+  en_sala:       'En sala',
+  en_consulta:   'En consulta',
+  atendido:      'Atendido',
+  no_presentado: 'No se presentó',
+  cancelado:     'Cancelado',
 }
 
 function getNombrePaciente(turno: AgendaMedica): string {
@@ -126,10 +125,10 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
       title:    'Tipo',
       width:    130,
       render: (t) => (
-        <Badge size="sm" variant="light" color="blue">
+        <StatusBadge>
           {t.tipo_atencion === 'medicina_general'
             ? 'General' : 'Odontología'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -150,12 +149,10 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
       title:    'Estado',
       width:    130,
       render: (t) => {
-        const cfg = ESTADO_CONFIG[t.estado]
-          ?? { label: t.estado, color: 'gray' }
         return (
-          <Badge size="sm" variant="light" color={cfg.color}>
-            {cfg.label}
-          </Badge>
+          <StatusBadge tone={TONO_TURNO[t.estado] ?? 'neutral'}>
+            {ETIQUETA_ESTADO[t.estado] ?? t.estado}
+          </StatusBadge>
         )
       },
     },
@@ -246,12 +243,12 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
         </Group>
 
         <Group gap="xs">
-          <Badge size="sm" variant="light" color="emerald">
+          <StatusBadge tone="success">
             {atendidos} atendido{atendidos !== 1 ? 's' : ''}
-          </Badge>
-          <Badge size="sm" variant="light" color="blue">
+          </StatusBadge>
+          <StatusBadge tone="warning">
             {enEspera} en espera
-          </Badge>
+          </StatusBadge>
         </Group>
       </Group>
 

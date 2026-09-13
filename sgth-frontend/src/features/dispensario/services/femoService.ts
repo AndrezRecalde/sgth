@@ -230,5 +230,5 @@ export const femoService = {
 export {
   TIPO_FICHA_OPTIONS,
   APTITUD_OPTIONS,
-  APTITUD_COLORS,
+  TONO_APTITUD,
 } from './femoOptions'

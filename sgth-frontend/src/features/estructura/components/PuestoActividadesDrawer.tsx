@@ -1,9 +1,8 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import {
-  Drawer, Stack, Text, Group, Badge,
-  TextInput, ActionIcon, Card,
+  Drawer, Stack, Text, Group, TextInput, ActionIcon, Card,
   Skeleton, Divider, Switch, ThemeIcon,
 } from '@mantine/core'
 import {
@@ -224,26 +223,26 @@ export function PuestoActividadesDrawer({
           <Card withBorder radius="md" p="sm">
             <Group gap="xs" wrap="wrap">
               {puesto?.cargo?.nombre && (
-                <Badge size="sm" variant="light" color="blue">
+                <StatusBadge>
                   {puesto.cargo.nombre}
-                </Badge>
+                </StatusBadge>
               )}
               {puesto?.unidad_administrativa?.nombre && (
-                <Badge size="sm" variant="light" color="gray">
+                <StatusBadge>
                   {puesto.unidad_administrativa.nombre}
-                </Badge>
+                </StatusBadge>
               )}
               {(puesto as PuestoConRelaciones & { grupo_ocupacional?: { grupo?: string } })
                 ?.grupo_ocupacional?.grupo && (
-                <Badge size="sm" variant="light" color="emerald">
+                <StatusBadge>
                   {(puesto as PuestoConRelaciones & { grupo_ocupacional?: { grupo?: string } })
                     .grupo_ocupacional?.grupo}
-                </Badge>
+                </StatusBadge>
               )}
               {puesto?.regimen_laboral && (
-                <Badge size="sm" variant="outline" color="orange">
+                <StatusBadge variant="outline">
                   {puesto.regimen_laboral.toUpperCase()}
-                </Badge>
+                </StatusBadge>
               )}
             </Group>
           </Card>
@@ -257,9 +256,9 @@ export function PuestoActividadesDrawer({
               style={{ letterSpacing: '0.05em' }}>
               Actividades principales
             </Text>
-            <Badge size="sm" variant="light" color="blue">
+            <StatusBadge>
               {actividades.length} actividad{actividades.length !== 1 ? 'es' : ''}
-            </Badge>
+            </StatusBadge>
           </Group>
 
           <Text size="xs" c="dimmed">

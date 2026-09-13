@@ -4,7 +4,7 @@ import { StatusBadge, TableActions } from '@/components/ui'
 import { esExterno } from '../utils/nombramiento'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ServidorConRelaciones } from '@/types/api'
-import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
+import { REGIMEN_LABELS } from '@/lib/regimen'
 
 type Handlers = {
   onView: (servidor: ServidorConRelaciones) => void
@@ -65,7 +65,7 @@ export const getServidorColumns = (
     render:   ({ regimen_laboral }) => {
       if (!regimen_laboral) return <Text size="sm" c="dimmed">-</Text>
       return (
-        <StatusBadge tone={REGIMEN_TONOS[regimen_laboral] ?? 'neutral'}>
+        <StatusBadge>
           {REGIMEN_LABELS[regimen_laboral] ?? regimen_laboral}
         </StatusBadge>
       )

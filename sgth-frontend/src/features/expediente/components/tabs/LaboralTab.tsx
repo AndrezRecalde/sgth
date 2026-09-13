@@ -1,8 +1,9 @@
 'use client'
 
+import type { SemanticTone } from '@/config/design.tokens'
 import { useState } from 'react'
 import {
-  Accordion, ActionIcon, Alert, Badge, Box, Grid, Group, Paper, Skeleton,
+  Accordion, ActionIcon, Alert, Box, Grid, Group, Paper, Skeleton,
   Stack, Text, Tooltip,
 } from '@mantine/core'
 import { IconBriefcase, IconCalendarCog, IconInfoCircle } from '@tabler/icons-react'
@@ -13,11 +14,12 @@ import type {
   AccionSobreVinculo, VinculoConActividad,
 } from '../../services/actividadLaboralService'
 import type { ContratoConRelaciones, EstadoContrato } from '@/types/api'
+import { StatusBadge } from '@/components/ui'
 
-const ESTADO_COLORS: Record<EstadoContrato, string> = {
-  vigente: 'green',
-  terminado: 'gray',
-  cancelado: 'red',
+const TONO_CONTRATO: Record<EstadoContrato, SemanticTone> = {
+  vigente: 'success',
+  terminado: 'neutral',
+  cancelado: 'danger',
 }
 
 const ESTADO_LABELS: Record<EstadoContrato, string> = {
@@ -129,20 +131,20 @@ function Vinculo({
             </Text>
           </div>
           <Group gap="xs" wrap="nowrap">
-            <Badge color={ESTADO_COLORS[estado]} variant="light" size="sm">
+            <StatusBadge tone={TONO_CONTRATO[estado]}>
               {ESTADO_LABELS[estado]}
-            </Badge>
+            </StatusBadge>
             {/* Situación derivada de las acciones vigentes hoy, no un estado
                 almacenado: el vínculo sigue vigente aunque la persona esté
                 temporalmente ausente. */}
             {vinculo.situacion && (
-              <Badge color="violet" variant="light" size="sm">
+              <StatusBadge tone="info">
                 {vinculo.situacion.etiqueta}
                 {vinculo.situacion.hasta ? ` hasta ${fecha(vinculo.situacion.hasta)}` : ''}
-              </Badge>
+              </StatusBadge>
             )}
             {vinculo.reemplaza_a && (
-              <Badge color="grape" variant="light" size="sm">Reemplazo</Badge>
+              <StatusBadge>Reemplazo</StatusBadge>
             )}
           </Group>
         </Group>

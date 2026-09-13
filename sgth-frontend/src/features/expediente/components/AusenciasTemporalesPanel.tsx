@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Badge, Box, Group, Select, Text, Tooltip } from '@mantine/core'
+import { Alert, Box, Group, Select, Text, Tooltip } from '@mantine/core'
 import { IconInfoCircle, IconUserOff } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAusenciasTemporales } from '../hooks/useAusenciasTemporales'
 import type { AusenciaTemporal } from '../services/ausenciaTemporalService'
+import { StatusBadge } from '@/components/ui'
 
 const COBERTURA_OPTIONS = [
   { value: 'pendientes', label: 'Sin cubrir' },
@@ -25,15 +26,13 @@ function fecha(f?: string | null): string {
 /** El plazo que resta, con el matiz de que una ausencia puede no tener fin. */
 function Restante({ dias }: { dias: number | null }) {
   if (dias === null) {
-    return <Badge color="gray" variant="light" size="sm">Sin fecha de fin</Badge>
+    return <StatusBadge>Sin fecha de fin</StatusBadge>
   }
 
-  const color = dias <= 30 ? 'orange' : 'gray'
-
   return (
-    <Badge color={color} variant="light" size="sm">
+    <StatusBadge tone={dias <= 30 ? 'warning' : 'neutral'}>
       {dias} día{dias === 1 ? '' : 's'}
-    </Badge>
+    </StatusBadge>
   )
 }
 
@@ -104,7 +103,7 @@ export function AusenciasTemporalesPanel() {
         if (!a.reemplazo) {
           return (
             <Tooltip label="Registre un Ingreso y Vinculación enlazado a esta ausencia" withArrow>
-              <Badge color="orange" variant="light" size="sm">Sin cubrir</Badge>
+              <StatusBadge tone="warning">Sin cubrir</StatusBadge>
             </Tooltip>
           )
         }

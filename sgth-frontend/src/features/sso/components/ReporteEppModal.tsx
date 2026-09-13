@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import {
   Stack, Group, Button,
-  Text, Badge, Skeleton,
+  Text, Skeleton,
 } from '@mantine/core'
-import { SgthModal } from '@/components/ui'
+import { CountBadge, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconSearch } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -42,17 +42,17 @@ export function ReporteEppModal({ opened, onClose }: Props) {
     {
       accessor: 'total_entregas',
       title: 'Entregas',
-      render: (f) => <Badge color="emerald" variant="light" size="sm">{f.total_entregas}</Badge>,
+      render: (f) => <CountBadge>{f.total_entregas}</CountBadge>,
     },
     {
       accessor: 'total_devoluciones',
       title: 'Devoluciones',
-      render: (f) => <Badge color="blue" variant="light" size="sm">{f.total_devoluciones}</Badge>,
+      render: (f) => <CountBadge>{f.total_devoluciones}</CountBadge>,
     },
     {
       accessor: 'total_reposiciones',
       title: 'Reposiciones',
-      render: (f) => <Badge color="orange" variant="light" size="sm">{f.total_reposiciones}</Badge>,
+      render: (f) => <CountBadge>{f.total_reposiciones}</CountBadge>,
     },
   ]
 

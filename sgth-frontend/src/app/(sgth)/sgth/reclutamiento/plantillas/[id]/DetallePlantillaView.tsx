@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Group, Text, Button, Card, Badge, ActionIcon, ThemeIcon, Divider, Skeleton, Alert } from '@mantine/core'
+import { Stack, Group, Text, Button, Card, ActionIcon, ThemeIcon, Divider, Skeleton, Alert } from '@mantine/core'
 import {
   IconArrowLeft,
   IconPlus,
@@ -23,7 +23,7 @@ import { TIPO_CONTRATO_PLANTILLA_OPTIONS } from
 import type { SeccionCriterio } from
   '@/features/seleccion/services/criterioService'
 import { useState } from 'react'
-import { PageHeader, PageShell , confirmar } from '@/components/ui'
+import { confirmar, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 
 interface Props {
   id: string
@@ -109,23 +109,18 @@ export function DetallePlantillaView({ id }: Props) {
                   {c.opciones.length > 0 && (
                     <Group gap="xs" mt={2}>
                       {c.opciones.map(op => (
-                        <Badge
-                          key={op.id}
-                          size="xs"
-                          variant="light"
-                          color={color}
-                        >
+                        <StatusBadge key={op.id} size="xs">
                           {op.etiqueta}: {op.puntaje} pts
-                        </Badge>
+                        </StatusBadge>
                       ))}
                     </Group>
                   )}
                 </Stack>
               </Group>
               <Group gap="xs" wrap="nowrap">
-                <Badge size="sm" variant="light" color={color}>
+                <StatusBadge>
                   {c.puntaje_maximo} pts
-                </Badge>
+                </StatusBadge>
                 <ActionIcon
                   size="sm"
                   color="red"
@@ -168,13 +163,9 @@ export function DetallePlantillaView({ id }: Props) {
       <Card withBorder radius="lg" p="md">
         <Group justify="space-between">
           <Text size="xs" c="dimmed">{plantilla.descripcion}</Text>
-          <Badge
-            size="md"
-            variant="light"
-            color={totalPts === 100 ? 'emerald' : 'orange'}
-          >
+          <StatusBadge tone={totalPts === 100 ? 'success' : 'warning'} size="md">
             Total: {totalPts.toFixed(0)} / 100 pts
-          </Badge>
+          </StatusBadge>
         </Group>
       </Card>
 
@@ -193,11 +184,11 @@ export function DetallePlantillaView({ id }: Props) {
           <Group justify="space-between">
             <Group gap="xs">
               <Text size="sm" fw={700}>Méritos</Text>
-              <Badge size="sm" variant="light" color="blue">
+              <StatusBadge>
                 {meritos.reduce(
                   (a, c) => a + Number(c.puntaje_maximo), 0
                 ).toFixed(0)} pts
-              </Badge>
+              </StatusBadge>
             </Group>
             <Button
               size="compact-xs"
@@ -218,11 +209,11 @@ export function DetallePlantillaView({ id }: Props) {
           <Group justify="space-between">
             <Group gap="xs">
               <Text size="sm" fw={700}>Oposición</Text>
-              <Badge size="sm" variant="light" color="orange">
+              <StatusBadge>
                 {oposicion.reduce(
                   (a, c) => a + Number(c.puntaje_maximo), 0
                 ).toFixed(0)} pts
-              </Badge>
+              </StatusBadge>
             </Group>
             <Button
               size="compact-xs"

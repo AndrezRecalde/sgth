@@ -17,7 +17,7 @@ import {
   SgthTable,
 } from '@/components/ui'
 import { usePlantilla } from '@/features/estructura/hooks/usePlantilla'
-import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
+import { REGIMEN_LABELS } from '@/lib/regimen'
 import type { ResumenPlantilla } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 
@@ -49,7 +49,7 @@ const COLUMNAS_REGIMEN: DataTableColumn<FilaRegimen>[] = [
     accessor: 'regimen',
     title: 'Régimen del puesto',
     render: ({ regimen }) => (
-      <StatusBadge tone={REGIMEN_TONOS[regimen] ?? 'neutral'}>
+      <StatusBadge>
         {REGIMEN_LABELS[regimen] ?? regimen}
       </StatusBadge>
     ),

@@ -1,3 +1,5 @@
+import type { SemanticTone } from "@/config/design.tokens";
+
 export const ZONA_OPTIONS = [
   { value: "dentro_provincia", label: "Dentro de la provincia" },
   { value: "fuera_provincia", label: "Fuera de la provincia" },
@@ -47,16 +49,16 @@ export const ZONA_LABELS: Record<string, string> = {
   exterior: "Exterior",
 };
 
-export const ESTADO_COLORS: Record<string, string> = {
-  solicitado: "orange",
-  aprobado: "blue",
-  con_anticipo: "cyan",
-  en_comision: "violet",
-  pendiente_liquidacion: "yellow",
-  liquidado: "emerald",
-  contabilizado: "gray",
-  cancelado: "red",
-  rechazado: "orange",
+export const TONO_VIATICO: Record<string, SemanticTone> = {
+  solicitado: "warning",
+  aprobado: "info",
+  con_anticipo: "info",
+  en_comision: "info",
+  pendiente_liquidacion: "warning",
+  liquidado: "success",
+  contabilizado: "neutral",
+  cancelado: "danger",
+  rechazado: "danger",
 };
 
 export const ESTADO_LABELS: Record<string, string> = {

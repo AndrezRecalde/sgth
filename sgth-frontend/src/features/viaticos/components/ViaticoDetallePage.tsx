@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar, MotivoModal, SgthModal } from '@/components/ui'
+import { confirmar, MotivoModal, SgthModal, StatusBadge } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -11,7 +11,6 @@ import {
   Button,
   Stepper,
   Skeleton,
-  Badge,
   ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -43,7 +42,7 @@ interface Props {
 }
 
 import {
-  ESTADO_COLORS,
+  TONO_VIATICO,
   ESTADO_LABELS,
   PASO_STEPPER,
 } from "../constants/viatico.constants";
@@ -158,13 +157,9 @@ export function ViaticoDetallePage({ identificador }: Props) {
             <Text fw={700} size="lg">
               {d.codigo_viatico ?? "—"}
             </Text>
-            <Badge
-              color={ESTADO_COLORS[estadoActual] ?? "gray"}
-              variant="light"
-              size="sm"
-            >
+            <StatusBadge tone={TONO_VIATICO[estadoActual] ?? 'neutral'}>
               {ESTADO_LABELS[estadoActual] ?? estadoActual}
-            </Badge>
+            </StatusBadge>
           </Group>
         </Group>
       </Group>

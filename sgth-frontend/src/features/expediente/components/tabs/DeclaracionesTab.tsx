@@ -1,8 +1,8 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from "react";
-import { Stack, Group, Text, Badge, Button } from "@mantine/core";
+import { Stack, Group, Text, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconPlus,
@@ -19,12 +19,6 @@ import { useDeclaracionMutations } from "../../hooks/useDeclaracionMutations";
 import { DeclaracionModal } from "@/features/expediente/components/DeclaracionModal";
 import type { DeclaracionJuramentada } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
-
-const TIPO_COLORS: Record<string, string> = {
-  inicio_gestion: "blue",
-  periodica: "orange",
-  fin_gestion: "red",
-};
 
 const TIPO_LABELS: Record<string, string> = {
   inicio_gestion: "Inicio de gestión",
@@ -48,13 +42,9 @@ export function DeclaracionesTab({ servidorId }: Props) {
       title: "Tipo",
       width: 110,
       render: ({ tipo_declaracion }) => (
-        <Badge
-          color={TIPO_COLORS[tipo_declaracion ?? ""] ?? "gray"}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge>
           {TIPO_LABELS[tipo_declaracion ?? ""] ?? tipo_declaracion ?? "-"}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

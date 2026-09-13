@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Collapse, Divider, Group, Stack, Text, UnstyledButton } from '@mantine/core'
+import { Collapse, Divider, Group, Stack, Text, UnstyledButton } from '@mantine/core'
 import { IconChevronDown } from '@tabler/icons-react'
 import { etiquetaRol } from '../constants/roles'
 import { etiquetaPermiso } from '../constants/permisos'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   roles: string[]
@@ -47,16 +48,16 @@ export function PermisosPorRol({ roles, permisosCubiertos }: Props) {
         <Stack gap="xs">
           <Group gap={4} wrap="wrap">
             {roles.map(r => (
-              <Badge key={r} size="xs" variant="filled" color="teal">
+              <StatusBadge key={r} size="xs">
                 {etiquetaRol(r)}
-              </Badge>
+              </StatusBadge>
             ))}
           </Group>
           <Group gap={4} wrap="wrap">
             {Array.from(permisosCubiertos).sort().map(p => (
-              <Badge key={p} size="xs" variant="light" color="teal">
+              <StatusBadge key={p} size="xs">
                 {etiquetaPermiso(p)}
-              </Badge>
+              </StatusBadge>
             ))}
           </Group>
         </Stack>

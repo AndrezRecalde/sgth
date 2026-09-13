@@ -4,7 +4,6 @@ import {
   Card,
   Group,
   Text,
-  Badge,
   Button,
   Divider,
   Stack,
@@ -12,6 +11,7 @@ import {
 } from "@mantine/core";
 import { IconUsers, IconPencil } from "@tabler/icons-react";
 import type { ViaticoConRelaciones } from "@/types/api";
+import { StatusBadge } from "@/components/ui";
 
 interface Props {
   viatico: ViaticoConRelaciones;
@@ -55,13 +55,9 @@ export function ViaticoServidoresCard({
         ) : (
           (d.todos_servidores ?? []).map((vs) => (
             <Group key={vs.id} gap="xs">
-              <Badge
-                size="xs"
-                color={vs.es_titular ? "blue" : "gray"}
-                variant="light"
-              >
+              <StatusBadge size="xs">
                 {vs.es_titular ? "Titular" : "Acompañante"}
-              </Badge>
+              </StatusBadge>
               <Text size="sm">
                 {[vs.servidor?.nombre, vs.servidor?.apellido]
                   .filter(Boolean)

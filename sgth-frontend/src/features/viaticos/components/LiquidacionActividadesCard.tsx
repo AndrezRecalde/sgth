@@ -4,7 +4,6 @@ import {
   Card,
   Group,
   Text,
-  Badge,
   Button,
   Divider,
   Stack,
@@ -18,6 +17,7 @@ import {
   IconCircleCheck,
 } from "@tabler/icons-react";
 import type { ActividadData } from "./ActividadesModal";
+import { StatusBadge } from "@/components/ui";
 
 interface Props {
   actividades: ActividadData[];
@@ -43,10 +43,10 @@ export function LiquidacionActividadesCard({
           </Text>
         </Group>
         {actividades.length > 0 && (
-          <Badge color="blue" variant="light" size="sm">
+          <StatusBadge>
             {actividades.length}{" "}
             {actividades.length === 1 ? "actividad" : "actividades"}
-          </Badge>
+          </StatusBadge>
         )}
       </Group>
       <Divider mb="sm" />

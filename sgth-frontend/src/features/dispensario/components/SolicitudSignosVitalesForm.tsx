@@ -3,8 +3,7 @@
 import { useMemo } from 'react'
 import {
   Stack, Group, NumberInput, Button,
-  Textarea, Text, Card, Avatar, Badge,
-  Divider, Alert,
+  Textarea, Text, Card, Avatar, Divider, Alert,
 } from '@mantine/core'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,6 +18,7 @@ import {
 } from '../schemas/solicitudSignosVitales.schema'
 import { TIPO_EVENTO_OPTIONS } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   solicitud:  SolicitudCertificacion
@@ -105,9 +105,9 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
                 </Text>
               </Stack>
             </Group>
-            <Badge size="sm" variant="light" color="blue">
+            <StatusBadge>
               {tipoLabel}
-            </Badge>
+            </StatusBadge>
           </Group>
 
           <Divider

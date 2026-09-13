@@ -1,10 +1,9 @@
 "use client";
 
-import { Badge, Select, Stack, Text } from "@mantine/core";
+import { Select, Stack, Text } from "@mantine/core";
 import { IconLayersIntersect } from "@tabler/icons-react";
 import { DataState, SgthTable, StatusBadge, Toolbar } from "@/components/ui";
-import { REGIMEN_LABELS, REGIMEN_TONOS } from "@/lib/regimen";
-import type { SemanticTone } from "@/config/design.tokens";
+import { REGIMEN_LABELS } from "@/lib/regimen";
 import { useGruposOcupacionales } from "../hooks/useGruposOcupacionales";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useState } from "react";
@@ -29,12 +28,6 @@ const REGIMEN_OPTIONS = [
   { value: "codigo_trabajo", label: "Código del Trabajo" },
 ];
 
-const TONO_COMPLEJIDAD: Record<string, SemanticTone> = {
-  bajo: "neutral",
-  medio: "warning",
-  alto: "success",
-};
-
 export function GruposOcupacionalesTab() {
   const [regimen, setRegimen] = useState<string>("");
   const contained = useContainedInput();
@@ -51,9 +44,9 @@ export function GruposOcupacionalesTab() {
       title: "Grado",
       width: 100,
       render: ({ grado_codigo }) => (
-        <Badge color="emerald" variant="light" size="sm">
+        <StatusBadge>
           {grado_codigo}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -87,7 +80,7 @@ export function GruposOcupacionalesTab() {
       title: "Régimen",
       width: 130,
       render: ({ regimen }) => (
-        <StatusBadge tone={REGIMEN_TONOS[regimen] ?? "neutral"}>
+        <StatusBadge>
           {REGIMEN_LABELS[regimen] ?? regimen}
         </StatusBadge>
       ),
@@ -98,7 +91,7 @@ export function GruposOcupacionalesTab() {
       width: 110,
       render: ({ nivel_complejidad }) =>
         nivel_complejidad ? (
-          <StatusBadge tone={TONO_COMPLEJIDAD[nivel_complejidad] ?? "neutral"}>
+          <StatusBadge>
             {nivel_complejidad.charAt(0).toUpperCase() +
               nivel_complejidad.slice(1)}
           </StatusBadge>

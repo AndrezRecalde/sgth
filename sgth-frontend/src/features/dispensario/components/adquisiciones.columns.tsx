@@ -1,12 +1,13 @@
 'use client'
 
-import { Text, Badge, Group, Stack } from '@mantine/core'
+import { Text, Group, Stack } from '@mantine/core'
 import {
   IconFileText, IconEye, IconBan, IconFileSearch,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Adquisicion } from '../services/adquisicionService'
+import { CountBadge, StatusBadge } from '@/components/ui'
 
 interface ColumnActions {
   onVerDetalle:     (a: Adquisicion) => void
@@ -41,9 +42,9 @@ export function getAdquisicionesColumns(
             {a.folio}
           </Text>
           {a.anulado_en && (
-            <Badge size="xs" variant="light" color="orange">
+            <StatusBadge tone="danger" size="xs">
               Anulada
-            </Badge>
+            </StatusBadge>
           )}
         </Stack>
       ),
@@ -53,13 +54,9 @@ export function getAdquisicionesColumns(
       title:    'Tipo',
       width:    110,
       render: (a) => (
-        <Badge
-          size="sm"
-          variant="light"
-          color={a.tipo === 'donacion' ? 'violet' : 'blue'}
-        >
+        <StatusBadge>
           {a.tipo === 'donacion' ? 'Donación' : 'Compra'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -87,9 +84,9 @@ export function getAdquisicionesColumns(
       title:    'Ítems',
       width:    80,
       render: (a) => (
-        <Badge size="sm" variant="light" color="gray">
+        <CountBadge>
           {a.items?.length ?? 0}
-        </Badge>
+        </CountBadge>
       ),
     },
     {
@@ -98,13 +95,12 @@ export function getAdquisicionesColumns(
       width:    90,
       render: (a) => (
         <Group gap={4} justify="center">
-          <Badge
-            size="sm"
+          <StatusBadge
+            tone={a.documento_respaldo ? 'success' : 'neutral'}
             variant="dot"
-            color={a.documento_respaldo ? 'emerald' : 'gray'}
           >
             {a.documento_respaldo ? 'Adjunto' : 'Pendiente'}
-          </Badge>
+          </StatusBadge>
         </Group>
       ),
     },

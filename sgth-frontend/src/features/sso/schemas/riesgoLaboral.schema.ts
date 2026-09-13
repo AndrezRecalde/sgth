@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export const riesgoLaboralSchema = z.object({
   puesto_id: z.number({ error: 'Seleccione el puesto' }).min(1, 'Seleccione el puesto'),
@@ -59,11 +60,11 @@ export const NIVEL_INTERVENCION_LABELS: Record<string, string> = {
   iv: 'IV — No intervenir, salvo análisis más preciso',
 }
 
-export const NIVEL_INTERVENCION_COLORS: Record<string, string> = {
-  i: 'red',
-  ii: 'orange',
-  iii: 'yellow',
-  iv: 'emerald',
+export const TONO_NIVEL_INTERVENCION: Record<string, SemanticTone> = {
+  i: 'danger',
+  ii: 'warning',
+  iii: 'info',
+  iv: 'success',
 }
 
 /** Réplica en cliente del cálculo NTP 330 del backend, solo para previsualización antes de guardar. */

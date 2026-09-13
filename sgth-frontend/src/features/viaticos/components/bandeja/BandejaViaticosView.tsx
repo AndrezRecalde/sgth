@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Stack, Tabs } from '@mantine/core'
+import { Stack, Tabs } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { PageHeader, PageShell } from '@/components/ui'
+import { CountBadge, PageHeader, PageShell } from '@/components/ui'
 import { useAccionesViatico } from '../../hooks/useAccionesViatico'
 import { useBandejaResumen } from '../../hooks/useBandejaViaticos'
 import { VuelosTab } from '../VuelosTab'
@@ -53,9 +53,9 @@ export function BandejaViaticosView() {
     if (n === 0) return null
 
     return (
-      <Badge size="sm" variant={PIDEN_ACCION.has(clave) ? 'filled' : 'light'} color={PIDEN_ACCION.has(clave) ? 'orange' : 'gray'}>
+      <CountBadge tone={PIDEN_ACCION.has(clave) ? 'warning' : 'neutral'} destacado={PIDEN_ACCION.has(clave)}>
         {n}
-      </Badge>
+      </CountBadge>
     )
   }
 

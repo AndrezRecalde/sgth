@@ -3,11 +3,11 @@
 import {
   Stack, Text, NumberInput,
   Group, Card,
-  Badge, Progress, Divider, Alert,
+  Progress, Divider, Alert,
   Radio, Checkbox, ScrollArea,
   Skeleton, ThemeIcon,
 } from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
 import {
   IconInfoCircle,
   IconList, IconHash, IconCheckbox,
@@ -106,9 +106,9 @@ function CriterioInput({
               label={
                 <Group gap="xs">
                   <Text size="sm">{op.etiqueta}</Text>
-                  <Badge size="xs" variant="light" color="blue">
+                  <StatusBadge size="xs">
                     {op.puntaje} pts
-                  </Badge>
+                  </StatusBadge>
                 </Group>
               }
               size="sm"
@@ -130,9 +130,9 @@ function CriterioInput({
             label={
               <Group gap="xs">
                 <Text size="sm">{op.etiqueta}</Text>
-                <Badge size="xs" variant="light" color="orange">
+                <StatusBadge size="xs">
                   +{op.puntaje} pts
-                </Badge>
+                </StatusBadge>
               </Group>
             }
             size="sm"
@@ -319,13 +319,9 @@ export function CalificarPostulanteModal({
                 {postulante.cedula} · {postulante.correo}
               </Text>
             </Stack>
-            <Badge
-              size="lg"
-              color={aprueba ? 'emerald' : 'red'}
-              variant="light"
-            >
+            <StatusBadge tone={aprueba ? 'success' : 'danger'} size="lg">
               {total.toFixed(2)} / 100 pts
-            </Badge>
+            </StatusBadge>
           </Group>
           <Progress
             value={total}
@@ -367,9 +363,9 @@ export function CalificarPostulanteModal({
                     <Text size="sm" fw={700}>
                       Méritos
                     </Text>
-                    <Badge size="sm" variant="light" color="blue">
+                    <StatusBadge>
                       {totalMeritos.toFixed(2)} pts
-                    </Badge>
+                    </StatusBadge>
                   </Group>
                   {meritos.map((c, i) => (
                     <Card key={c.id} withBorder radius="md" p="sm">
@@ -385,9 +381,9 @@ export function CalificarPostulanteModal({
                               {i + 1}. {c.nombre}
                             </Text>
                           </Group>
-                          <Badge size="xs" variant="light" color="blue">
+                          <StatusBadge size="xs">
                             Máx: {c.puntaje_maximo} pts
-                          </Badge>
+                          </StatusBadge>
                         </Group>
                         {c.descripcion && (
                           <Text size="xs" c="dimmed">
@@ -423,9 +419,9 @@ export function CalificarPostulanteModal({
                       <Text size="sm" fw={700}>
                         Oposición
                       </Text>
-                      <Badge size="sm" variant="light" color="orange">
+                      <StatusBadge>
                         {totalOposicion.toFixed(2)} pts
-                      </Badge>
+                      </StatusBadge>
                     </Group>
                     {oposicion.map((c, i) => (
                       <Card key={c.id} withBorder radius="md" p="sm">
@@ -441,9 +437,9 @@ export function CalificarPostulanteModal({
                                 {i + 1}. {c.nombre}
                               </Text>
                             </Group>
-                            <Badge size="xs" variant="light" color="orange">
+                            <StatusBadge size="xs">
                               Máx: {c.puntaje_maximo} pts
-                            </Badge>
+                            </StatusBadge>
                           </Group>
                           {c.descripcion && (
                             <Text size="xs" c="dimmed">

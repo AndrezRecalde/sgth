@@ -1,12 +1,11 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
   Group,
   Text,
-  Badge,
   Button,
   Collapse,
   Skeleton,
@@ -180,20 +179,20 @@ function CargaRow({
               CI: {carga.cedula}
             </Text>
             <Group gap="xs" mt={2}>
-              <Badge size="xs" variant="light" color="blue">
+              <StatusBadge size="xs">
                 {PARENTESCO_LABELS[carga.parentesco ?? ""] ??
                   carga.parentesco ??
                   "-"}
-              </Badge>
+              </StatusBadge>
               {carga.persona_con_discapacidad && (
-                <Badge size="xs" variant="dot" color="orange">
+                <StatusBadge tone="info" size="xs" variant="dot">
                   Discapacidad
-                </Badge>
+                </StatusBadge>
               )}
               {carga.posee_enfermedad_catastrofica && (
-                <Badge size="xs" variant="dot" color="red">
+                <StatusBadge tone="info" size="xs" variant="dot">
                   Enf. catastrófica
-                </Badge>
+                </StatusBadge>
               )}
             </Group>
           </div>

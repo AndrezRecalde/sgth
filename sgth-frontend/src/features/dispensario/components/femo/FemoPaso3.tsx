@@ -8,8 +8,7 @@ import {
   Button,
   Card,
   ActionIcon,
-  Badge,
-} from '@mantine/core'
+  } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -22,6 +21,7 @@ import { FemoDiagnosticosCie10 } from './FemoDiagnosticosCie10'
 import { FemoAptitudSelector } from './FemoAptitudSelector'
 import { FemoRetiroSection } from './FemoRetiroSection'
 import { FemoSeccion } from './FemoSeccion'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   fichaData:        Partial<FichaBaseForm>
@@ -78,9 +78,9 @@ export function FemoPaso3({
                 <Group justify="space-between" wrap="nowrap">
                   <Stack gap={0}>
                     <Group gap="xs">
-                      <Badge size="xs" variant="light" color="blue">
+                      <StatusBadge size="xs">
                         {TIPO_EXAMEN_LABELS[ex.tipo]}
-                      </Badge>
+                      </StatusBadge>
                       <Text size="sm" fw={500}>
                         {ex.nombre_examen}
                       </Text>

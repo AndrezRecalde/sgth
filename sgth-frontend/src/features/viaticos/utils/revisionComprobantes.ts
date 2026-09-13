@@ -1,4 +1,5 @@
 import type { ComprobanteRevisado, EstadoRevisionComprobante } from '@/types/api'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export const REVISION_LABELS: Record<EstadoRevisionComprobante, string> = {
   pendiente: 'Por revisar',
@@ -6,10 +7,10 @@ export const REVISION_LABELS: Record<EstadoRevisionComprobante, string> = {
   observada: 'Observado',
 }
 
-export const REVISION_COLORS: Record<EstadoRevisionComprobante, string> = {
-  pendiente: 'gray',
-  aceptada:  'emerald',
-  observada: 'red',
+export const TONO_REVISION: Record<EstadoRevisionComprobante, SemanticTone> = {
+  pendiente: 'neutral',
+  aceptada:  'success',
+  observada: 'danger',
 }
 
 export const estadoRevision = (f: { estado_revision?: EstadoRevisionComprobante }) =>

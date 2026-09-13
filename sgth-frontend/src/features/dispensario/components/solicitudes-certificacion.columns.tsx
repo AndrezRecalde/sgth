@@ -1,10 +1,10 @@
 'use client'
 
-import { Badge, Stack, Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import {
   IconDownload, IconFileText, IconPlayerPlay, IconUserCheck,
 } from '@tabler/icons-react'
-import { StatusBadge, TableActions, confirmar } from '@/components/ui'
+import { confirmar, StatusBadge, TableActions } from '@/components/ui'
 import {
   DICTAMEN_LABELS,
   ESTADO_SOLICITUD_LABELS,
@@ -54,7 +54,7 @@ const tipoEvento: Columna = {
   title: 'Tipo de evaluación',
   width: 180,
   render: (s) => (
-    <Badge size="sm" variant="light" color="blue">{etiquetaTipo(s.tipo_evento)}</Badge>
+    <StatusBadge>{etiquetaTipo(s.tipo_evento)}</StatusBadge>
   ),
 }
 

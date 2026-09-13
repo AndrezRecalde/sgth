@@ -1,7 +1,7 @@
 'use client'
 
-import { Stack, Select, Textarea, Group, Text, Badge } from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { Stack, Select, Textarea, Group, Text } from '@mantine/core'
+import { LegendBadge, ModalFooter, SgthModal } from '@/components/ui'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarProcedimiento } from '@/features/dispensario/hooks/useOdontograma'
@@ -66,9 +66,9 @@ export function RegistrarProcedimientoModal({
         {pieza && (
           <Group gap="xs">
             <Text size="xs" c="dimmed">Condición actual:</Text>
-            <Badge size="xs" variant="light" color={CONDICION_COLORS[pieza.condicion]}>
+            <LegendBadge color={CONDICION_COLORS[pieza.condicion]}>
               {CONDICION_LABELS[pieza.condicion]}
-            </Badge>
+            </LegendBadge>
           </Group>
         )}
 

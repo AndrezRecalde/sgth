@@ -1,8 +1,7 @@
 'use client'
 
 import {
-  Stack, Text, Button, Group, Badge,
-  Card, ThemeIcon, Skeleton,
+  Stack, Text, Button, Group, Card, ThemeIcon, Skeleton,
 } from '@mantine/core'
 import {
   IconCertificate, IconPlus,
@@ -22,6 +21,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { CertificadoMedico } from '../services/certificadoService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   turno:    AgendaMedica
@@ -107,19 +107,15 @@ export function TabCertificado({ turno, consulta }: Props) {
                       {cert.folio}
                     </Text>
                     {anulado && (
-                      <Badge size="xs" variant="light" color="orange">
+                      <StatusBadge tone="danger" size="xs">
                         Anulado
-                      </Badge>
+                      </StatusBadge>
                     )}
                   </Group>
-                  <Badge
-                    size="sm"
-                    variant="light"
-                    color={anulado ? 'gray' : 'blue'}
-                  >
+                  <StatusBadge>
                     {cert.dias_reposo} día{cert.dias_reposo !== 1
                       ? 's' : ''} de reposo
-                  </Badge>
+                  </StatusBadge>
                 </Group>
 
                 <Group gap="xs">
@@ -132,14 +128,9 @@ export function TabCertificado({ turno, consulta }: Props) {
 
                 {cert.diagnostico_cie10 && (
                   <Group gap="xs">
-                    <Badge
-                      size="xs"
-                      variant="outline"
-                      color="blue"
-                      ff="monospace"
-                    >
+                    <StatusBadge size="xs" variant="outline" ff="monospace">
                       {cert.diagnostico_cie10.codigo}
-                    </Badge>
+                    </StatusBadge>
                     <Text size="xs" c="dimmed">
                       {cert.diagnostico_cie10.descripcion}
                     </Text>

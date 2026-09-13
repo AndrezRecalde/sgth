@@ -1,8 +1,7 @@
 'use client'
 
 import {
-  Drawer, Stack, Group, Text, Badge,
-  ThemeIcon, Table, Divider, Alert, Button,
+  Drawer, Stack, Group, Text, ThemeIcon, Table, Divider, Alert, Button,
 } from '@mantine/core'
 import {
   IconShoppingCart, IconFileText, IconBan, IconFileSearch,
@@ -10,6 +9,7 @@ import {
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useDescargarDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   opened:      boolean
@@ -88,13 +88,9 @@ export function DetalleAdquisicionDrawer({
                 <Table.Th w={180}>Tipo</Table.Th>
                 <Table.Td>
                   <Group justify="flex-end">
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color={adquisicion.tipo === 'donacion' ? 'violet' : 'blue'}
-                    >
+                    <StatusBadge>
                       {adquisicion.tipo === 'donacion' ? 'DONACIÓN' : 'COMPRA'}
-                    </Badge>
+                    </StatusBadge>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -155,14 +151,13 @@ export function DetalleAdquisicionDrawer({
                         Descargar
                       </Button>
                     ) : (
-                      <Badge
-                        size="sm"
+                      <StatusBadge
+                        tone="warning"
                         variant="outline"
-                        color="gray"
                         rightSection={<IconFileText size={12} />}
                       >
                         PENDIENTE
-                      </Badge>
+                      </StatusBadge>
                     )}
                   </Group>
                 </Table.Td>

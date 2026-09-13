@@ -1,7 +1,8 @@
 'use client'
 
+import { TONO_POSTULANTE } from '@/features/seleccion/services/convocatoriaService'
 import { useState } from 'react'
-import { Stack, Group, Badge, Text, Button, Card, Grid, Tabs, Divider, ThemeIcon, Skeleton } from '@mantine/core'
+import { Stack, Group, Text, Button, Card, Grid, Tabs, Divider, ThemeIcon, Skeleton } from '@mantine/core'
 import {
   IconArrowLeft,
   IconUsers,
@@ -20,7 +21,7 @@ import {
 } from '@/features/seleccion/hooks/useConvocatoria'
 import { IconCircleCheck } from '@tabler/icons-react'
 import {
-  ESTADO_CONVOCATORIA_COLORS,
+  TONO_CONVOCATORIA,
   ESTADO_CONVOCATORIA_OPTIONS,
   TIPO_CONVOCATORIA_OPTIONS,
   ESTADO_POSTULANTE_OPTIONS,
@@ -108,9 +109,9 @@ export function DetalleConvocatoriaView({ id }: Props) {
       title:    'Estado',
       width:    140,
       render: (p) => (
-        <Badge size="sm" variant="light" color="blue">
+        <StatusBadge tone={TONO_POSTULANTE[p.estado] ?? 'neutral'}>
           {getLabelEstadoPostulante(p.estado)}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -242,13 +243,9 @@ export function DetalleConvocatoriaView({ id }: Props) {
                 <Grid.Col span={6}>
                   <Stack gap={2}>
                     <Text size="xs" c="dimmed">Modalidad</Text>
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color="blue"
-                    >
+                    <StatusBadge>
                       {getLabelTipo(convocatoria.tipo)}
-                    </Badge>
+                    </StatusBadge>
                   </Stack>
                 </Grid.Col>
                 <Grid.Col span={6}>
@@ -301,15 +298,12 @@ export function DetalleConvocatoriaView({ id }: Props) {
                 style={{ letterSpacing: '0.05em' }}>
                 Estado del proceso
               </Text>
-              <Badge
+              <StatusBadge
+                tone={TONO_CONVOCATORIA[convocatoria.estado] ?? 'neutral'}
                 size="lg"
-                variant="light"
-                color={ESTADO_CONVOCATORIA_COLORS[
-                  convocatoria.estado
-                ] ?? 'gray'}
               >
                 {getLabelEstado(convocatoria.estado)}
-              </Badge>
+              </StatusBadge>
               <Divider />
               <Stack gap={4}>
                 <Text size="xs" c="dimmed">Candidatos inscritos</Text>
@@ -437,4 +431,4 @@ export function DetalleConvocatoriaView({ id }: Props) {
   )
 }
 
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'
+import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'

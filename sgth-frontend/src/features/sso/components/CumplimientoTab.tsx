@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Group, TextInput, Button, Badge, Text, Stack,
+  Group, TextInput, Button, Text, Stack,
   Skeleton, Alert,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -47,7 +47,7 @@ export function CumplimientoTab() {
       accessor: 'normativa.tipo',
       title: 'Tipo',
       render: (fila) => (
-        <Badge variant="light" size="sm">{getTipoLabel(fila.normativa.tipo)}</Badge>
+        <StatusBadge>{getTipoLabel(fila.normativa.tipo)}</StatusBadge>
       ),
     },
     {

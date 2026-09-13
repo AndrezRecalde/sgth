@@ -4,18 +4,12 @@ import {
   Stack,
   Group,
   Text,
-  Badge,
   Button,
   Skeleton,
 } from "@mantine/core";
 import { useState } from "react";
 import { IconDownload, IconStethoscope } from "@tabler/icons-react";
-import {
-  EmptyState,
-  PAGINACION_ES,
-  SgthTable,
-  StatusBadge,
-} from "@/components/ui";
+import { EmptyState, PAGINACION_ES, SgthTable, StatusBadge } from "@/components/ui";
 import { useSolicitudesCertificacion } from "@/features/dispensario/hooks/useSolicitudCertificacion";
 import { usePdfFemo } from "@/features/dispensario/hooks/usePdfFemo";
 import {
@@ -54,9 +48,9 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
       accessor: "tipo_evento",
       title: "Tipo de evaluación",
       render: (s) => (
-        <Badge size="sm" variant="light" color="blue">
+        <StatusBadge>
           {getLabelTipo(s.tipo_evento)}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
