@@ -26,6 +26,18 @@ class AutoservicioController extends Controller
         return ApiResponse::ok($permisos, 'Mis permisos obtenidos.');
     }
 
+    /**
+     * Los compañeros de unidad, para elegir al jefe inmediato de un permiso
+     * propio. Ver `AutoservicioService::obtenerCompanerosDeUnidad()`.
+     */
+    public function companerosDeUnidad(Request $request): JsonResponse
+    {
+        return ApiResponse::ok(
+            $this->autoservicioService->obtenerCompanerosDeUnidad($this->getServidorId($request)),
+            'Compañeros de unidad obtenidos.'
+        );
+    }
+
     public function misVacaciones(Request $request): JsonResponse
     {
         $vacaciones = $this->autoservicioService->obtenerMisVacaciones($this->getServidorId($request));

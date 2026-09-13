@@ -28,6 +28,9 @@ export function usePermisoMutations() {
         icon: React.createElement(IconCheck, { size: 16 }),
       });
       invalidar();
+      // «Mis permisos» del portal lee otra consulta: sin esto, el permiso
+      // recién registrado no aparecía en la lista hasta recargar.
+      qc.invalidateQueries({ queryKey: ["mis-permisos"] });
     },
     onError: (error: unknown) => {
       notifications.show({

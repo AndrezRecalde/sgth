@@ -8,11 +8,22 @@ use App\Models\Expediente\Servidor;
 class ServidorPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Listar los servidores de la institución.
+     *
+     * asistente-uath registra permisos a nombre de cualquier servidor
+     * (`registrar-permisos-servidores`), y para eso el formulario lista los
+     * servidores de la unidad elegida. Sin él aquí, ese selector le respondía
+     * 403 y no podía elegir a nadie.
+     *
+     * Se agrega el rol y no `ver-expediente-todos`, que también tienen
+     * analista-uath, maxima-autoridad y auditor: abrirlo por ese permiso
+     * habría ampliado el listado a más roles de los que lo necesitan.
      */
     public function verAny(User $user): bool
     {
-        return $user->hasRole('admin-uath') || $user->hasRole('super-admin');
+        return $user->hasRole('admin-uath')
+            || $user->hasRole('asistente-uath')
+            || $user->hasRole('super-admin');
     }
 
     /**

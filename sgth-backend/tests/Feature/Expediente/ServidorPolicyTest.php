@@ -68,3 +68,22 @@ test('un servidor vinculado a otro expediente no puede verlo ni actualizarlo', f
 
     expect($this->servidorAjeno->fresh()->telefono_celular)->toBeNull();
 });
+
+test('asistente-uath puede listar servidores, para registrar permisos a nombre de otros', function () {
+    // Tiene `registrar-permisos-servidores`, pero la policy solo dejaba listar
+    // a admin-uath: el selector de servidores de Asistencia › Permisos le
+    // respondía 403 y no podía elegir a nadie.
+    Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
+    $asistente = User::factory()->create();
+    $asistente->assignRole('asistente-uath');
+
+    $this->actingAs($asistente, 'sanctum')
+        ->getJson("/api/v1/expediente/servidores?unidad_administrativa_id={$this->unidad->id}")
+        ->assertOk();
+});
+
+test('un servidor no puede listar los servidores de la institución', function () {
+    $this->actingAs($this->usuario, 'sanctum')
+        ->getJson('/api/v1/expediente/servidores')
+        ->assertStatus(403);
+});

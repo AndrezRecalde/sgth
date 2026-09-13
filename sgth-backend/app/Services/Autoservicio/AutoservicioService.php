@@ -17,6 +17,41 @@ final class AutoservicioService implements AutoservicioServiceInterface
     public function __construct(private VacacionServiceInterface $vacacionService) {}
 
     /**
+     * Los servidores activos de la unidad del servidor, sin él, para elegir a
+     * su jefe inmediato al registrar un permiso desde el portal.
+     *
+     * El listado de expedientes está cerrado a Talento Humano, así que el
+     * servidor no tenía de dónde sacar ese nombre: el selector le salía vacío.
+     * Aquí va solo lo necesario para elegir, sin cédulas ni otros datos
+     * personales de los compañeros. Los jefes van primero, que es a quien se
+     * busca.
+     */
+    public function obtenerCompanerosDeUnidad(int $servidorId): array
+    {
+        $unidadId = Servidor::whereKey($servidorId)->value('unidad_administrativa_id');
+
+        if ($unidadId === null) {
+            return [];
+        }
+
+        return Servidor::query()
+            ->with('puesto.cargo')
+            ->where('unidad_administrativa_id', $unidadId)
+            ->where('estado', true)
+            ->whereKeyNot($servidorId)
+            ->get()
+            ->map(fn (Servidor $servidor) => [
+                'id'      => $servidor->id,
+                'nombre'  => trim("{$servidor->apellido} {$servidor->nombre}"),
+                'cargo'   => $servidor->puesto?->cargo?->nombre,
+                'es_jefe' => (bool) $servidor->puesto?->es_jefe,
+            ])
+            ->sortBy([['es_jefe', 'desc'], ['nombre', 'asc']])
+            ->values()
+            ->all();
+    }
+
+    /**
      * Los permisos del servidor, del más reciente al más antiguo y paginados.
      *
      * El motivo va completo: es el del propio servidor. Antes se tapaba en los

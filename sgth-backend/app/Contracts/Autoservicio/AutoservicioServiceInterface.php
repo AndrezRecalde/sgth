@@ -8,6 +8,8 @@ interface AutoservicioServiceInterface
 {
     public function obtenerMisPermisos(int $servidorId, array $filtros): LengthAwarePaginator;
 
+    public function obtenerCompanerosDeUnidad(int $servidorId): array;
+
     public function obtenerMisVacaciones(int $servidorId): array;
 
     public function obtenerMisRolesPago(int $servidorId): array;

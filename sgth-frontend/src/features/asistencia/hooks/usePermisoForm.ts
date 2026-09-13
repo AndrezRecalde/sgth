@@ -10,14 +10,18 @@ import type { PermisoServidor } from '@/types/api'
 /**
  * El registro de un permiso: a nombre de quién se puede registrar, el
  * formulario, el envío y los dos pasos del modal (datos y confirmación).
+ *
+ * `soloPropio` limita el registro al permiso de quien tiene la sesión aunque
+ * sea de Talento Humano. Lo usa «Mis permisos» del portal, donde un permiso
+ * registrado a nombre de otro no aparecería en la lista.
  */
-export function usePermisoForm(onClose: () => void) {
+export function usePermisoForm(onClose: () => void, soloPropio = false) {
   // Talento Humano emite permisos a nombre de cualquier servidor; el resto,
   // solo el propio. Es la misma regla que aplica el backend
   // (`PermisoServidorPolicy::crear`): ofrecer aquí la lista de toda la
   // institución solo serviría para que el alta respondiera 403.
   const { usuario, hasPermiso } = useAuth()
-  const emiteATodos = hasPermiso('registrar-permisos-servidores')
+  const emiteATodos = !soloPropio && hasPermiso('registrar-permisos-servidores')
   const propio = usuario?.servidor ?? null
   const unidadPropia = propio?.unidad_administrativa_id ?? null
   const puedeRegistrar = emiteATodos || (propio !== null && unidadPropia !== null)

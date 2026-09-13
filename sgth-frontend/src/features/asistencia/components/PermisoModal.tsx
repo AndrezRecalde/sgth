@@ -11,6 +11,12 @@ import { RegistroConfirmado } from "./RegistroConfirmado";
 interface Props {
   opened: boolean;
   onClose: () => void;
+  /**
+   * Solo el permiso propio, aunque quien lo abra sea de Talento Humano. Lo usa
+   * «Mis permisos» del portal; a cualquier servidor se le registra desde
+   * Asistencia › Permisos.
+   */
+  soloPropio?: boolean;
 }
 
 /**
@@ -21,9 +27,9 @@ interface Props {
  * campos, en `PermisoSolicitanteCampos` y `PermisoDatosCampos`; y la
  * confirmación, en `RegistroConfirmado`, que comparte con vacaciones.
  */
-export function PermisoModal({ opened, onClose }: Props) {
+export function PermisoModal({ opened, onClose, soloPropio = false }: Props) {
   const { isMobile } = useMobileBreakpoint();
-  const registro = usePermisoForm(onClose);
+  const registro = usePermisoForm(onClose, soloPropio);
   const { isSubmitting } = registro.form.formState;
 
   return (
