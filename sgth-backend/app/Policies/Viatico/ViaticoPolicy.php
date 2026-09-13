@@ -108,6 +108,12 @@ class ViaticoPolicy
         return $user->can(Permiso::APROBAR_VIATICO->value);
     }
 
+    /** La bandeja de Financiero: la ve quien ve los viáticos de todos. */
+    public function verBandeja(User $user): bool
+    {
+        return $this->veTodos($user);
+    }
+
     /**
      * Ve los viáticos de todos quien consulta y quien opera: para aprobar o
      * contabilizar uno hay que poder encontrarlo.

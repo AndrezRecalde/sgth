@@ -1,46 +1,46 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/config/routes";
-import { Stack, Group, Button, Tabs } from "@mantine/core";
+import { Stack, Group, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlane, IconPlus } from "@tabler/icons-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { SgthTable } from "@/components/ui/SgthTable";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { IconInbox, IconPlane, IconPlus } from "@tabler/icons-react";
+import { EmptyState, PageHeader, PageShell, SgthTable } from "@/components/ui";
 import { useViaticos } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { ViaticoModal } from "./ViaticoModal";
-import { VuelosTab } from "./VuelosTab";
 import { ViaticoFiltros } from "./ViaticoFiltros";
 import { getViaticoColumns } from "./ViaticoColumns";
 import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import type { Viatico, EstadoViatico, ViaticoConRelaciones } from "@/types/api";
+
+/*
+| «Mis viáticos»: los propios de cada uno, como titular o acompañante, también
+| para Financiero. Los de todos se trabajan en la bandeja, que tiene sus
+| propias etapas, montos y plazos; a quien la puede abrir se le ofrece el
+| enlace desde aquí.
+*/
 
 export function ViaticoView() {
   const router = useRouter();
   const [modalAbierto, { open, close }] = useDisclosure(false);
   const puede = useAccionesViatico();
 
-  // Quien revisa entra a la bandeja de solicitudes; el servidor, a todos los
-  // suyos, que son pocos y le interesan en cualquier estado.
-  const [filtroEstado, setFiltroEstado] = useState(
-    puede.veTodos ? "solicitado" : "todos",
-  );
+  const [filtroEstado, setFiltroEstado] = useState("todos");
   const [page, setPage] = useState(1);
   const [busquedaCodigo, setBusquedaCodigo] = useState("");
   const [codigoQuery, setCodigoQuery] = useState("");
 
-  const filtros = {
+  const { data, isLoading } = useViaticos({
     estado:
       filtroEstado === "todos" ? undefined : (filtroEstado as EstadoViatico),
     per_page: 15,
     page,
     search: codigoQuery || undefined,
-  };
-
-  const { data, isLoading } = useViaticos(filtros);
+    propios: 1,
+  });
   const lista = (data?.data ?? []) as ViaticoConRelaciones[];
   const { aprobar } = useViaticoMutations();
 
@@ -49,22 +49,6 @@ export function ViaticoView() {
 
   const handleCreado = (v: Viatico) =>
     router.push(ROUTES.PORTAL.VIATICO_DETALLE(v.codigo_viatico ?? v.id));
-
-  const handleBuscar = () => {
-    setCodigoQuery(busquedaCodigo.trim());
-    setPage(1);
-  };
-
-  const handleLimpiar = () => {
-    setBusquedaCodigo("");
-    setCodigoQuery("");
-    setPage(1);
-  };
-
-  const handleEstado = (v: string) => {
-    setFiltroEstado(v);
-    setPage(1);
-  };
 
   const columns = getViaticoColumns({
     onVer: handleVer,
@@ -76,74 +60,75 @@ export function ViaticoView() {
   return (
     <PageShell>
       <PageHeader
-        title="Viáticos"
-        description={
-          puede.veTodos
-            ? "Gestión de comisiones de servicio y viáticos"
-            : "Tus comisiones de servicio y viáticos"
+        title="Mis viáticos"
+        description="Tus comisiones de servicio, como titular o acompañante"
+        actions={
+          puede.veTodos && (
+            <Button
+              component={Link}
+              href={ROUTES.PORTAL.VIATICOS_BANDEJA}
+              variant="light"
+              leftSection={<IconInbox size={16} />}
+            >
+              Bandeja de viáticos
+            </Button>
+          )
         }
       />
 
-      <Tabs defaultValue="viaticos">
-        <Tabs.List>
-          <Tabs.Tab value="viaticos">Solicitudes</Tabs.Tab>
-          {puede.autorizarVuelos && (
-            <Tabs.Tab value="vuelos">Autorizaciones de vuelo</Tabs.Tab>
-          )}
-        </Tabs.List>
+      <Stack gap="sm">
+        <ViaticoFiltros
+          filtroEstado={filtroEstado}
+          busquedaCodigo={busquedaCodigo}
+          onEstadoChange={(v) => {
+            setFiltroEstado(v);
+            setPage(1);
+          }}
+          onBusquedaChange={setBusquedaCodigo}
+          onBuscar={() => {
+            setCodigoQuery(busquedaCodigo.trim());
+            setPage(1);
+          }}
+          onLimpiar={() => {
+            setBusquedaCodigo("");
+            setCodigoQuery("");
+            setPage(1);
+          }}
+        />
 
-        <Tabs.Panel value="viaticos" pt="md">
-          <Stack gap="sm">
-            <ViaticoFiltros
-              filtroEstado={filtroEstado}
-              busquedaCodigo={busquedaCodigo}
-              onEstadoChange={handleEstado}
-              onBusquedaChange={setBusquedaCodigo}
-              onBuscar={handleBuscar}
-              onLimpiar={handleLimpiar}
-            />
-
-            {puede.solicitar && (
-              <Group justify="flex-end">
-                <Button
-                  size="xs"
-                  color="emerald"
-                  variant="light"
-                  leftSection={<IconPlus size={14} />}
-                  onClick={open}
-                >
-                  Nueva solicitud
-                </Button>
-              </Group>
-            )}
-
-            {lista.length === 0 && !isLoading ? (
-              <EmptyState
-                icon={IconPlane}
-                title="Sin solicitudes de viáticos"
-                description="No hay viáticos en este estado."
-              />
-            ) : (
-              <SgthTable
-                records={lista}
-                columns={columns}
-                fetching={isLoading}
-                minHeight={200}
-                totalRecords={data?.total ?? lista.length}
-                recordsPerPage={15}
-                page={page}
-                onPageChange={setPage}
-              />
-            )}
-          </Stack>
-        </Tabs.Panel>
-
-        {puede.autorizarVuelos && (
-          <Tabs.Panel value="vuelos" pt="md">
-            <VuelosTab />
-          </Tabs.Panel>
+        {puede.solicitar && (
+          <Group justify="flex-end">
+            <Button
+              size="xs"
+              color="emerald"
+              variant="light"
+              leftSection={<IconPlus size={14} />}
+              onClick={open}
+            >
+              Nueva solicitud
+            </Button>
+          </Group>
         )}
-      </Tabs>
+
+        {lista.length === 0 && !isLoading ? (
+          <EmptyState
+            icon={IconPlane}
+            title="Sin solicitudes de viáticos"
+            description="No tienes viáticos en este estado."
+          />
+        ) : (
+          <SgthTable
+            records={lista}
+            columns={columns}
+            fetching={isLoading}
+            minHeight={200}
+            totalRecords={data?.total ?? lista.length}
+            recordsPerPage={15}
+            page={page}
+            onPageChange={setPage}
+          />
+        )}
+      </Stack>
 
       <ViaticoModal
         opened={modalAbierto}
@@ -153,5 +138,3 @@ export function ViaticoView() {
     </PageShell>
   );
 }
-
-import { PageShell } from '@/components/ui'

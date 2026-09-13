@@ -388,9 +388,17 @@ export const NAV_PORTAL: NavGroup[] = [
         icon:  'IconBeach',
       },
       {
-        label: 'Viáticos',
+        label: 'Mis viáticos',
         href:  ROUTES.PORTAL.VIATICOS,
         icon:  'IconPlane',
+      },
+      {
+        // Financiero y quien consulta los viáticos de todos. El permiso es el
+        // de consulta: el rol financiero lo tiene junto con los de operar.
+        label:   'Bandeja de viáticos',
+        href:    ROUTES.PORTAL.VIATICOS_BANDEJA,
+        icon:    'IconInbox',
+        permiso: 'ver-viaticos-todos',
       },
       {
         label: 'Certificados',

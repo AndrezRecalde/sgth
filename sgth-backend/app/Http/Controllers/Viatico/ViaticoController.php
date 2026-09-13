@@ -35,7 +35,9 @@ class ViaticoController extends Controller
         // Sin alcance sobre todos, solo los viáticos en los que viaja: como
         // titular o como acompañante. Antes el filtro `servidor_id` lo mandaba
         // el cliente y, sin él, cualquiera veía los de todos.
-        if (! $request->user()->can('veTodos', Viatico::class)) {
+        // `propios` es «Mis viáticos»: quien opera también tiene los suyos, y
+        // los de todos los ve en la bandeja.
+        if ($request->boolean('propios') || ! $request->user()->can('veTodos', Viatico::class)) {
             $servidorId = $request->user()->servidor_id;
 
             $query->where(function ($q) use ($servidorId) {
