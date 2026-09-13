@@ -56,7 +56,12 @@ export function PermisoSolicitanteCampos({
             servidorId={servidorId || undefined}
             onCambiar={(activo) => {
               field.onChange(activo)
-              if (activo) setValue('jefe_id', null)
+              if (activo) {
+                setValue('jefe_id', null)
+                // Con la opción activa ya hay quien firma: el error de «elija
+                // al jefe» deja de aplicar.
+                form.clearErrors('jefe_id')
+              }
             }}
           />
         )}

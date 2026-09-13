@@ -79,6 +79,9 @@ beforeEach(function () {
 
 test('permiso_personal_no_puede_exceder_4_horas', function () {
     $response = $this->actingAs($this->userSubordinado, 'sanctum')->postJson('/api/v1/asistencia/permisos', [
+        // Con jefe: sin él, el 422 llegaría por la falta de firmante y no por
+        // las horas.
+        'jefe_id' => $this->servidorJefe->id,
         'tipo' => TipoPermiso::PERSONAL->value,
         'fecha' => now()->addDay()->format('Y-m-d'),
         'hora_inicio' => '08:00',
@@ -90,6 +93,7 @@ test('permiso_personal_no_puede_exceder_4_horas', function () {
 
 test('permiso_oficial_requiere_observacion', function () {
     $response = $this->actingAs($this->userSubordinado, 'sanctum')->postJson('/api/v1/asistencia/permisos', [
+        'jefe_id' => $this->servidorJefe->id,
         'tipo' => TipoPermiso::OFICIAL->value,
         'fecha' => now()->addDay()->format('Y-m-d'),
         'hora_inicio' => '08:00',
@@ -98,6 +102,23 @@ test('permiso_oficial_requiere_observacion', function () {
     ]);
 
     $response->assertStatus(422);
+});
+
+test('permiso_sin_jefe_ni_dirigido_a_talento_humano_se_rechaza', function () {
+    // Alguien tiene que firmar. Antes se aceptaba sin jefe y sin la opción de
+    // Talento Humano, y el permiso quedaba sin firmante. El error va al campo
+    // del jefe, que es donde el formulario lo muestra.
+    $this->actingAs($this->userSubordinado, 'sanctum')->postJson('/api/v1/asistencia/permisos', [
+        'tipo' => TipoPermiso::OFICIAL->value,
+        'fecha' => now()->addDay()->format('Y-m-d'),
+        'hora_inicio' => '08:00',
+        'hora_fin' => '10:00',
+        'observacion' => 'Diligencia en el SRI',
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('errores.jefe_id.0', 'Elija al jefe inmediato o dirija el permiso a Talento Humano.');
+
+    expect(\App\Models\Asistencia\PermisoServidor::count())->toBe(0);
 });
 
 test('permiso_pasa_a_activo_al_confirmar_recepcion', function () {

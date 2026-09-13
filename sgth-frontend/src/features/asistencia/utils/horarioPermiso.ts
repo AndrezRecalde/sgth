@@ -1,16 +1,23 @@
 /*
 | Cómo se lee la fecha, el horario y el plazo de un permiso.
 |
-| Lo usa la pantalla «Mis permisos» del Portal del Servidor. El listado de
-| Talento Humano (`permisos.columns.tsx`) tiene su propia copia de `duracion`;
+| Lo usan «Mis permisos» del Portal del Servidor y el formulario del permiso,
+| que muestra la duración mientras se eligen las horas. El listado de Talento
+| Humano (`permisos.columns.tsx`) tiene su propia copia de `duracion`;
 | unificarla ahí queda para cuando se fusionen los PR que tocan ese archivo.
 */
 
-/** «08:00» y «12:30» → «4h 30m». */
-export function duracion(horaInicio: string, horaFin: string): string {
+/** Minutos entre «08:00» y «12:30»; negativos si el fin es anterior al inicio. */
+export function minutosEntre(horaInicio: string, horaFin: string): number {
   const [hI, mI] = horaInicio.substring(0, 5).split(':').map(Number)
   const [hF, mF] = horaFin.substring(0, 5).split(':').map(Number)
-  const minutos = hF * 60 + mF - (hI * 60 + mI)
+
+  return hF * 60 + mF - (hI * 60 + mI)
+}
+
+/** «08:00» y «12:30» → «4h 30m». */
+export function duracion(horaInicio: string, horaFin: string): string {
+  const minutos = minutosEntre(horaInicio, horaFin)
   const horas = Math.floor(minutos / 60)
   const mins = minutos % 60
 

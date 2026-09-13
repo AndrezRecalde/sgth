@@ -67,9 +67,13 @@ beforeEach(function () {
 
     $this->otro = ($this->servidor)();
 
+    // Quien firma: un permiso sin jefe ni dirigido a Talento Humano no se admite.
+    $this->firmante = ($this->servidor)();
+
     // Oficial: no descuenta vacaciones, así que no hacen falta períodos.
     $this->pedir = fn (User $quien, array $extra = []) => $this->actingAs($quien, 'sanctum')
         ->postJson('/api/v1/asistencia/permisos', array_merge([
+            'jefe_id'     => $this->firmante->id,
             'tipo'        => 'oficial',
             'observacion' => 'Diligencia en la Contraloría',
             'fecha'       => now()->next(Carbon::MONDAY)->toDateString(),

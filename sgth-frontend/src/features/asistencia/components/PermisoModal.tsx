@@ -7,6 +7,7 @@ import { usePermisoForm } from "../hooks/usePermisoForm";
 import { PermisoDatosCampos } from "./PermisoDatosCampos";
 import { PermisoSolicitanteCampos } from "./PermisoSolicitanteCampos";
 import { RegistroConfirmado } from "./RegistroConfirmado";
+import classes from "./PermisoModal.module.css";
 
 interface Props {
   opened: boolean;
@@ -70,11 +71,13 @@ export function PermisoModal({ opened, onClose, soloPropio = false }: Props) {
 
             <PermisoDatosCampos form={registro.form} />
 
-            <Group justify="flex-end" mt="md">
+            {/* Pie fijo, y la acción principal con relleno: en verde claro
+                apenas se distinguía de «Cancelar». */}
+            <Group justify="flex-end" className={classes.pie}>
               <Button variant="default" onClick={registro.cerrar}>
                 Cancelar
               </Button>
-              <Button type="submit" color="emerald" variant="light" loading={isSubmitting}>
+              <Button type="submit" color="emerald" variant="filled" loading={isSubmitting}>
                 Crear permiso
               </Button>
             </Group>
