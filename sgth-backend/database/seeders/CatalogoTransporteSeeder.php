@@ -103,6 +103,6 @@ class CatalogoTransporteSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Catálogo de transportes y empresas sembrado.');
+        $this->command?->info('Catálogo de transportes y empresas sembrado.');
     }
 }
