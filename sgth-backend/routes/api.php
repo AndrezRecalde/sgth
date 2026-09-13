@@ -916,6 +916,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('facturas',
                     [LiquidacionViaticoController::class,
                         'guardarFacturas']);
+                Route::post('facturas/{factura}/revision',
+                    [LiquidacionViaticoController::class,
+                        'revisarFactura'])->whereNumber('factura');
 
                 Route::post('confirmar',
                     [LiquidacionViaticoController::class,

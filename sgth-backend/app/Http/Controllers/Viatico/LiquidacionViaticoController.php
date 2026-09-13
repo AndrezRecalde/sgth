@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Viatico;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\ActividadLiquidacion;
-use App\Models\Viatico\FacturaViatico;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
+use App\Services\Viatico\ComprobantesViaticoService;
 use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 class LiquidacionViaticoController extends Controller
 {
-    public function __construct(private ViaticoEstadoService $estados) {}
+    public function __construct(
+        private ViaticoEstadoService $estados,
+        private ComprobantesViaticoService $comprobantes,
+    ) {}
 
     /**
      * Obtener o crear la liquidación del viático
@@ -38,6 +41,10 @@ class LiquidacionViaticoController extends Controller
             'actividades',
             'detallesFactura.categoria',
         ]);
+
+        if ($liquidacion) {
+            $this->comprobantes->conAlertas($liquidacion->detallesFactura, $viatico);
+        }
 
         return ApiResponse::ok(
             $liquidacion,
@@ -108,11 +115,13 @@ class LiquidacionViaticoController extends Controller
     public function listarFacturas(
         int $viaticoId
     ): JsonResponse {
-        $this->autorizar($viaticoId, 'ver');
+        $viatico = $this->autorizar($viaticoId, 'ver');
         $liquidacion = $this->liquidacionExistente($viaticoId);
 
         return ApiResponse::ok(
-            $liquidacion?->detallesFactura()->with('categoria')->get() ?? [],
+            $liquidacion
+                ? $this->comprobantes->conAlertas($liquidacion->detallesFactura()->with('categoria')->get(), $viatico)
+                : [],
             'Facturas listadas.'
         );
     }
@@ -158,23 +167,20 @@ class LiquidacionViaticoController extends Controller
         DB::transaction(function () use (
             $liquidacion, $data
         ) {
-            // Eliminar facturas anteriores y reemplazar
-            $liquidacion->detallesFactura()->delete();
-
-            foreach ($data['facturas'] as $f) {
-                FacturaViatico::create([
-                    'liquidacion_viatico_id' => $liquidacion->id,
-                    'categoria_factura_id'   => $f['categoria_factura_id'],
-                    'tipo_comprobante'       => $f['tipo_comprobante'],
-                    'numero_factura'         => $f['numero_factura']  ?? null,
-                    'numero_ticket'          => $f['numero_ticket']   ?? null,
-                    'fecha_factura'          => $f['fecha_factura']   ?? null,
-                    'ruc_proveedor'          => $f['ruc_proveedor']   ?? null,
-                    'nombre_proveedor'       => $f['nombre_proveedor'],
-                    'detalle'                => $f['detalle']         ?? null,
-                    'monto'                  => $f['monto'],
-                ]);
-            }
+            // Se reemplazan todos, pero los que no cambiaron conservan la
+            // revisión de Financiero: corregir un comprobante observado no
+            // obliga a revisar de nuevo los que ya estaban aceptados.
+            $this->comprobantes->reemplazar($liquidacion, array_map(fn (array $f) => [
+                'categoria_factura_id' => $f['categoria_factura_id'],
+                'tipo_comprobante'     => $f['tipo_comprobante'],
+                'numero_factura'       => $f['numero_factura']  ?? null,
+                'numero_ticket'        => $f['numero_ticket']   ?? null,
+                'fecha_factura'        => $f['fecha_factura']   ?? null,
+                'ruc_proveedor'        => $f['ruc_proveedor']   ?? null,
+                'nombre_proveedor'     => $f['nombre_proveedor'],
+                'detalle'              => $f['detalle']         ?? null,
+                'monto'                => $f['monto'],
+            ], $data['facturas']));
 
             // Recalcular totales
             $liquidacion->load('detallesFactura.categoria');
@@ -211,6 +217,34 @@ class LiquidacionViaticoController extends Controller
         return ApiResponse::ok(
             $liquidacion->detallesFactura,
             'Facturas guardadas correctamente.'
+        );
+    }
+
+    /**
+     * Financiero acepta u observa un comprobante. Observar pide motivo: es lo
+     * que el servidor leerá para corregirlo.
+     */
+    public function revisarFactura(
+        Request $request,
+        int $viaticoId,
+        int $factura
+    ): JsonResponse {
+        $viatico = $this->autorizar($viaticoId, 'revisarLiquidacion');
+
+        $datos = $request->validate([
+            'decision'    => ['required', 'in:aceptada,observada'],
+            'observacion' => ['required_if:decision,observada', 'nullable', 'string', 'min:5', 'max:500'],
+        ], [
+            'observacion.required_if' => 'Indique qué está mal en el comprobante.',
+        ]);
+
+        $revisada = $this->comprobantes->revisar(
+            $viatico, $factura, $request->user(), $datos['decision'], $datos['observacion'] ?? null
+        );
+
+        return ApiResponse::ok(
+            $this->comprobantes->conAlertas(collect([$revisada->load('categoria')]), $viatico)->first(),
+            $datos['decision'] === 'aceptada' ? 'Comprobante aceptado.' : 'Comprobante observado.'
         );
     }
 

@@ -21342,7 +21342,7 @@
                                         "datos": {
                                             "anyOf": [
                                                 {
-                                                    "type": "string"
+                                                    "type": "object"
                                                 },
                                                 {
                                                     "type": "array",
@@ -21489,6 +21489,108 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/FacturaViatico"
                                             }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/{viaticoId}/liquidacion/facturas/{factura}/revision": {
+            "post": {
+                "operationId": "liquidacionViatico.revisarFactura",
+                "summary": "Financiero acepta u observa un comprobante. Observar pide motivo: es lo\nque el servidor leer\u00e1 para corregirlo",
+                "tags": [
+                    "LiquidacionViatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "viaticoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "factura",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "aceptada",
+                                            "observada"
+                                        ]
+                                    },
+                                    "observacion": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "decision"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Comprobante aceptado.",
+                                                "Comprobante observado."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
@@ -44107,7 +44209,8 @@
                         "type": [
                             "string",
                             "null"
-                        ]
+                        ],
+                        "format": "date"
                     },
                     "tipo_comprobante": {
                         "type": "string"

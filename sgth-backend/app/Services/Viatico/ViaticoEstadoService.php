@@ -197,6 +197,11 @@ final class ViaticoEstadoService
                 throw new ReglaNegocioException('El viático no tiene liquidación registrada.');
             }
 
+            // Todos los comprobantes aceptados (decidido con el usuario). Se
+            // resuelve aquí y no en el constructor: el servicio de comprobantes
+            // ya depende de este.
+            app(ComprobantesViaticoService::class)->asegurarTodoAceptado($liquidacion);
+
             $jefe = $this->jefeFinanciero->obtenerJefeFinanciero();
 
             $liquidacion->update([

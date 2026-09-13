@@ -3421,6 +3421,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/viaticos/{viaticoId}/liquidacion/facturas/{factura}/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Financiero acepta u observa un comprobante. Observar pide motivo: es lo
+         *     que el servidor leerá para corregirlo
+         */
+        post: operations["liquidacionViatico.revisarFactura"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/{viaticoId}/liquidacion/confirmar": {
         parameters: {
             query?: never;
@@ -7378,6 +7398,7 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
             categoria_factura_id: number;
+            /** Format: date */
             fecha_factura: string | null;
             tipo_comprobante: string;
             numero_ticket: string | null;
@@ -20440,7 +20461,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Facturas listadas.";
-                        datos: string | string[];
+                        datos: Record<string, never> | string[];
                         meta: null;
                     };
                 };
@@ -20487,6 +20508,44 @@ export interface operations {
                         /** @constant */
                         mensaje: "Facturas guardadas correctamente.";
                         datos: components["schemas"]["FacturaViatico"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "liquidacionViatico.revisarFactura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                viaticoId: number;
+                factura: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "aceptada" | "observada";
+                    observacion?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Comprobante aceptado." | "Comprobante observado.";
+                        datos: string | null;
                         meta: null;
                     };
                 };

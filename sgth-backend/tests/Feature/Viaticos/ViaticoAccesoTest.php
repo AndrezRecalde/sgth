@@ -311,10 +311,11 @@ it('el anticipo, la comisión y la liquidación pendiente los marca quien opera'
 
 it('devolver a corrección y contabilizar es de quien revisa la liquidación', function (string $accion) {
     ($this->en)(EstadoViatico::LIQUIDADO);
-    LiquidacionViatico::create([
+    // Contabilizar pide todos los comprobantes aceptados.
+    comprobanteAceptado(LiquidacionViatico::create([
         'viatico_id' => $this->viatico->id, 'total_facturas' => 0,
         'diferencia_devolver' => 0, 'fecha_liquidacion' => now()->toDateString(),
-    ]);
+    ]));
     $url = "/api/v1/viaticos/{$this->viatico->id}/{$accion}";
 
     $motivo = ['motivo' => 'Falta la factura del hotel'];

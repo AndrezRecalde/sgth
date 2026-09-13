@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 | sin depender de un `composer dump-autoload` tras clonar la rama.
 */
 require_once __DIR__.'/Support/EstructuraFixtures.php';
+require_once __DIR__.'/Support/ViaticoFixtures.php';
 
 /*
 |--------------------------------------------------------------------------

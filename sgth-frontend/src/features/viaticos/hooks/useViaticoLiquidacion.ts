@@ -64,6 +64,28 @@ export function useViaticoLiquidacion() {
     onError,
   })
 
+  const revisarFactura = useMutation({
+    mutationFn: ({ viaticoId, facturaId, decision, observacion }: {
+      viaticoId:    number
+      facturaId:    number
+      decision:     'aceptada' | 'observada'
+      observacion?: string
+    }) => viaticoService.liquidacion.revisarFactura(viaticoId, facturaId, { decision, observacion }),
+    onSuccess: (_data, { decision }) => {
+      notifications.show({
+        title:   decision === 'aceptada' ? 'Comprobante aceptado' : 'Comprobante observado',
+        message: decision === 'aceptada'
+          ? 'El comprobante cuenta para contabilizar.'
+          : 'El servidor verá la observación al corregir la liquidación.',
+        color: decision === 'aceptada' ? 'emerald' : 'orange',
+        icon:  React.createElement(IconCheck, { size: 16 }),
+      })
+      qc.invalidateQueries({ queryKey: ['viatico'] })
+      qc.invalidateQueries({ queryKey: ['liquidacion'] })
+    },
+    onError,
+  })
+
   const confirmarLiquidacion = useMutation({
     mutationFn: (viaticoId: number) =>
       viaticoService.liquidacion.confirmar(viaticoId),
@@ -85,5 +107,6 @@ export function useViaticoLiquidacion() {
     guardarActividades,
     guardarFacturas,
     confirmarLiquidacion,
+    revisarFactura,
   }
 }

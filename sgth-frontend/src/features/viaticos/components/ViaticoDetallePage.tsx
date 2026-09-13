@@ -37,6 +37,7 @@ import { ServidoresModal } from "./ServidoresModal";
 import { TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
 import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
+import { resumenRevision } from "../utils/revisionComprobantes";
 
 interface Props {
   identificador: string | number;
@@ -282,6 +283,11 @@ export function ViaticoDetallePage({ identificador }: Props) {
         title={conMotivo === "devolver" ? "Devolver para correcciones" : "Rechazar viático"}
         confirmLabel={conMotivo === "devolver" ? "Devolver" : "Rechazar"}
         cargando={rechazar.isPending || devolverCorreccion.isPending}
+        valorInicial={
+          conMotivo === "devolver"
+            ? resumenRevision(d.liquidacion?.detalles_factura).motivoDevolucion
+            : ""
+        }
         descripcion={
           conMotivo === "devolver"
             ? `La liquidación de ${d.codigo_viatico} vuelve al servidor. El motivo le dice qué corregir.`

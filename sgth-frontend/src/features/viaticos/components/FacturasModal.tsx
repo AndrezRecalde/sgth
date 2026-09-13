@@ -24,7 +24,7 @@ import { useCategoriasFactura } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { FacturaItemForm } from "./FacturaItemForm";
 import { FacturasResumen } from "./FacturasResumen";
-import type { Viatico, CategoriaFactura } from "@/types/api";
+import type { Viatico, CategoriaFactura, EstadoRevisionComprobante } from "@/types/api";
 
 export interface FacturaData {
   categoria_factura_id: number;
@@ -36,6 +36,9 @@ export interface FacturaData {
   nombre_proveedor: string;
   detalle?: string | null;
   monto: number;
+  /** Solo para mostrar la revisión de Financiero; no se envía a guardar. */
+  estado_revision?: EstadoRevisionComprobante;
+  observacion_revision?: string | null;
 }
 
 const facturaItemSchema = z
