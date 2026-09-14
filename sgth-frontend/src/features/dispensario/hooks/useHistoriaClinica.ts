@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { historiaClinicaService } from '../services/historiaClinicaService'
-import { getApiErrorMessage } from '@/types/api'
 import type {
   CrearAlergiaData, CrearAntecedenteData,
 } from '../services/historiaClinicaService'
@@ -18,8 +17,7 @@ export function useCrearHistoriaClinica() {
       )
       qc.invalidateQueries({ queryKey: ['historias-clinicas'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo crear la historia clínica'),
   })
 }
 
@@ -38,8 +36,7 @@ export function useAgregarAlergia(
         queryKey: ['contexto-consulta', historiaId, agendaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar la alergia'),
   })
 }
 
@@ -58,8 +55,7 @@ export function useAgregarAntecedente(
         queryKey: ['contexto-consulta', historiaId, agendaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar el antecedente'),
   })
 }
 
@@ -78,8 +74,7 @@ export function useAnularAlergia(
         queryKey: ['contexto-consulta', historiaId, agendaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo anular la alergia'),
   })
 }
 
@@ -98,7 +93,6 @@ export function useAnularAntecedente(
         queryKey: ['contexto-consulta', historiaId, agendaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo anular el antecedente'),
   })
 }

@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { triajeService } from '../services/triajeService'
-import { getApiErrorMessage } from '@/types/api'
 import type { CrearTriajeData } from '../services/triajeService'
 import { notificar } from '@/components/ui'
 
@@ -46,7 +45,6 @@ export function useRegistrarTriaje() {
       qc.invalidateQueries({ queryKey: ['triaje'] })
       qc.invalidateQueries({ queryKey: ['agenda'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar el triaje'),
   })
 }

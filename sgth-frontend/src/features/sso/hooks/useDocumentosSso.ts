@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { documentoSsoService, type TipoDocumentableSso } from '../services/documentoSsoService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useDocumentosSso(tipo: TipoDocumentableSso, documentableId: number | null) {
@@ -15,9 +14,6 @@ export function useDocumentosSso(tipo: TipoDocumentableSso, documentableId: numb
 export function useDocumentoSsoMutations(tipo: TipoDocumentableSso, documentableId: number | null) {
   const qc = useQueryClient()
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-documentos', tipo, documentableId] })
 
   const subir = useMutation({
@@ -27,7 +23,7 @@ export function useDocumentoSsoMutations(tipo: TipoDocumentableSso, documentable
       notificar.exito('Documento subido', 'El archivo fue adjuntado exitosamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo subir el documento'),
   })
 
   const eliminar = useMutation({
@@ -36,7 +32,7 @@ export function useDocumentoSsoMutations(tipo: TipoDocumentableSso, documentable
       notificar.exito('Documento eliminado', 'El adjunto fue eliminado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el documento'),
   })
 
   const descargar = useMutation({
@@ -44,7 +40,7 @@ export function useDocumentoSsoMutations(tipo: TipoDocumentableSso, documentable
     onSuccess: (url) => {
       window.open(url, '_blank', 'noopener,noreferrer')
     },
-    onError,
+    onError: notificar.alFallar('No se pudo descargar el documento'),
   })
 
   return { subir, eliminar, descargar }

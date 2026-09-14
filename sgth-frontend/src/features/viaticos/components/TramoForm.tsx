@@ -20,7 +20,6 @@ import { useTiposTransporte, useEmpresasPorTipo } from "../hooks/useViaticos";
 import { useProvincias } from "@/features/expediente/hooks/useProvincias";
 import { useCantones } from "@/features/expediente/hooks/useCantones";
 import { viaticoService } from "../services/viaticoService";
-import { getApiErrorMessage } from "@/types/api";
 import { TramoLugarSelect } from "./TramoLugarSelect";
 import { TramoTipoSelector } from "./TramoTipoSelector";
 import type {
@@ -207,8 +206,7 @@ export function TramoForm({
       qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
       onSuccess();
     },
-    onError: (error: unknown) =>
-      notificar.error("Error", getApiErrorMessage(error)),
+    onError: notificar.alFallar("No se pudo agregar el tramo"),
   });
 
   const onSubmit = (values: TramoFormData) => {

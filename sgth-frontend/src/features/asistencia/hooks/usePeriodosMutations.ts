@@ -1,13 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { asistenciaService } from "../services/asistenciaService";
-import { getApiErrorMessage } from "@/types/api";
 import { notificar } from "@/components/ui";
 
 export function usePeriodosMutations() {
   const qc = useQueryClient();
-
-  const onError = () =>
-    notificar.error("Error", "No se pudo completar la operación.");
 
   const generar = useMutation({
     mutationFn: ({ servidorId, anio }: { servidorId: number; anio: number }) =>
@@ -16,7 +12,7 @@ export function usePeriodosMutations() {
       notificar.exito("Período generado", `Período ${vars.anio} generado correctamente.`);
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
-    onError,
+    onError: notificar.alFallar("No se pudo generar el período"),
   });
 
   const generarTodos = useMutation({
@@ -29,7 +25,7 @@ export function usePeriodosMutations() {
       );
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
-    onError,
+    onError: notificar.alFallar("No se pudieron generar los períodos"),
   });
 
   /**
@@ -42,7 +38,7 @@ export function usePeriodosMutations() {
   const previsualizarRecalculo = useMutation({
     mutationFn: ({ servidorId, anio }: { servidorId: number; anio: number }) =>
       asistenciaService.periodos.previsualizarRecalculo(servidorId, anio),
-    onError,
+    onError: notificar.alFallar("No se pudo previsualizar el recálculo"),
   });
 
   /**
@@ -63,7 +59,7 @@ export function usePeriodosMutations() {
       );
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
-    onError,
+    onError: notificar.alFallar("No se pudo recalcular el período"),
   });
 
   /**
@@ -78,8 +74,7 @@ export function usePeriodosMutations() {
       notificar.exito("Excedente vencido", respuesta.mensaje, { autoClose: 8000 });
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
-    onError: (error: unknown) =>
-      notificar.error("Error", getApiErrorMessage(error)),
+    onError: notificar.alFallar("No se pudo vencer el excedente"),
   });
 
   return {

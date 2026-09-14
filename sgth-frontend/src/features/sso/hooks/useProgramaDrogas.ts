@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { programaDrogasService } from '../services/programaDrogasService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useActividadesPrograma(params?: { fase?: string; solo_activas?: boolean }) {
@@ -23,9 +22,6 @@ export function useListaSeguimientoPrograma(periodo: string | null) {
 export function useProgramaDrogasMutations() {
   const qc = useQueryClient()
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crearActividad = useMutation({
     mutationFn: (data: { fase: string; nombre: string; descripcion?: string }) =>
       programaDrogasService.crearActividad(data),
@@ -37,7 +33,7 @@ export function useProgramaDrogasMutations() {
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-actividades'] })
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-seguimiento'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la actividad'),
   })
 
   const eliminarActividad = useMutation({
@@ -47,7 +43,7 @@ export function useProgramaDrogasMutations() {
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-actividades'] })
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-seguimiento'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la actividad'),
   })
 
   const registrarSeguimiento = useMutation({
@@ -62,7 +58,7 @@ export function useProgramaDrogasMutations() {
       notificar.exito('Seguimiento registrado', 'El estado de la actividad fue actualizado.')
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-seguimiento'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el seguimiento'),
   })
 
   return { crearActividad, eliminarActividad, registrarSeguimiento }

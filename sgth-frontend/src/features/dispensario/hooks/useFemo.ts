@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { femoService } from '../services/femoService'
-import { getApiErrorMessage } from '@/types/api'
 import type { CrearFemoData } from '../services/femoService'
 import { notificar } from '@/components/ui'
 
@@ -30,8 +29,7 @@ export function useCrearFemo() {
       notificar.exito('FEMO registrada', 'La ficha fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['femos'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar la FEMO'),
   })
 }
 
@@ -48,7 +46,6 @@ export function useActualizarFemo() {
       qc.invalidateQueries({ queryKey: ['femos'] })
       qc.invalidateQueries({ queryKey: ['femo', id] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo actualizar la FEMO'),
   })
 }

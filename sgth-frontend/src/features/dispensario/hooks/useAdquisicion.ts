@@ -53,8 +53,7 @@ export function useRegistrarAdquisicion() {
       qc.invalidateQueries({ queryKey: ['adquisiciones'] })
       qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar la adquisición'),
   })
 }
 
@@ -74,8 +73,7 @@ export function useAnularAdquisicion() {
       qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('No se pudo anular', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo anular la adquisición'),
   })
 }
 
@@ -92,7 +90,6 @@ export function useSubirDocumentoAdquisicion() {
       )
       qc.invalidateQueries({ queryKey: ['adquisiciones'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo subir el documento'),
   })
 }

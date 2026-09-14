@@ -16,6 +16,8 @@ recordarlas:
   `useEChartsColors.ts` y `app/layout.tsx`
 - colores fuera de la paleta (`blue`, `orange`, `gray`, `var(--mantine-color-gray-2)`…) y
   `notifications` de Mantine fuera de `src/components/`
+- títulos de notificación genéricos: «Error», «Éxito», «Eliminado», «Error al …»,
+  «No se pudo <verbo>» sin decir qué (ver [08](08-datos-y-estado.md))
 - `<form>` sin `noValidate` y `'use client'` en un `page.tsx`
 
 El resto sigue dependiendo de quien revisa: iconos sueltos en una fila, colores

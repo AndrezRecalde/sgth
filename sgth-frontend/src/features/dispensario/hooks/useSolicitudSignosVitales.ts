@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { solicitudCertificacionService } from '../services/solicitudCertificacionService'
-import { getApiErrorMessage } from '@/types/api'
 import type { CrearSolicitudSignosVitalesData } from '../services/solicitudCertificacionService'
 import { notificar } from '@/components/ui'
 
@@ -28,7 +27,6 @@ export function useRegistrarSignosVitalesSolicitud() {
       )
       qc.invalidateQueries({ queryKey: ['solicitudes-certificacion'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudieron registrar los signos vitales'),
   })
 }

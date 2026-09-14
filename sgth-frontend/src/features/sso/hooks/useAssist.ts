@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { assistService, type RespuestaAssistPayload } from '../services/assistService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useCampaniasAssist(params?: { periodo?: string }) {
@@ -23,9 +22,6 @@ export function useResultadosAssist(campaniaId: number | null) {
 export function useAssistMutations() {
   const qc = useQueryClient()
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crearCampania = useMutation({
     mutationFn: (data: { periodo: string; unidad_administrativa_id?: number | null; fecha_apertura: string; fecha_cierre?: string | null }) =>
       assistService.crearCampania(data),
@@ -36,7 +32,7 @@ export function useAssistMutations() {
       )
       qc.invalidateQueries({ queryKey: ['sso-assist-campanias'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo crear la campaña ASSIST'),
   })
 
   const cerrarCampania = useMutation({
@@ -45,7 +41,7 @@ export function useAssistMutations() {
       notificar.exito('Campaña cerrada', 'La campaña fue cerrada exitosamente.')
       qc.invalidateQueries({ queryKey: ['sso-assist-campanias'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo cerrar la campaña ASSIST'),
   })
 
   return { crearCampania, cerrarCampania }

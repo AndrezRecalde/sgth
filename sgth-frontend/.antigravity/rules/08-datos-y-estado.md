@@ -81,6 +81,7 @@ export function useServidorMutations() {
       qc.invalidateQueries({ queryKey: ['servidores'] })
       notificar.exito('Servidor creado', `${servidor.nombre_completo} quedó registrado.`)
     },
+    onError: notificar.alFallar('No se pudo crear el servidor'),
   })
 
   return { crear }
@@ -101,6 +102,9 @@ notificar.exito('Permiso anulado', 'PER-2026-00012 dejó de contar')   // la acc
 notificar.error('No se pudo anular', getApiErrorMessage(error))       // la acción falló
 notificar.aviso('Solicitudes generadas', '0 creadas, 3 omitidas')     // se completó con reparos
 
+// El onError de una mutación: título propio, mensaje del API (getApiErrorMessage)
+useMutation({ …, onError: notificar.alFallar('No se pudo anular el permiso') })
+
 // Una espera que termina en uno de los tres (exportar un PDF)
 const progreso = notificar.proceso('Exportando PDF', 'Generando el archivo…')
 progreso.exito('PDF descargado', '…')   // o progreso.error(…)
@@ -113,9 +117,17 @@ eso y ocurrió. Antes esas notificaciones salían en naranja o azul, y el mismo
 `autoClose` como tercer argumento solo para mensajes largos, o `false` para lo
 que no se puede perder: la alerta de alergia al emitir una receta.
 
-El mensaje dice qué pasó con qué registro: "Servidor creado" es mejor que
-"Operación exitosa", y "No se pudo anular el viático V-2026-041" es mucho mejor
-que "Error".
+**El título dice qué pasó y con qué**: "Servidor creado" es mejor que
+"Operación exitosa", y "No se pudo anular el viático" es mucho mejor que
+"Error". Había 105 notificaciones tituladas «Error»: la misma caja roja para un
+cargo, un turno o una nómina, y el usuario no sabía cuál de sus acciones no se
+había guardado. El detalle (qué validación falló, qué estado lo impide) va en
+el mensaje, que en `alFallar` lo pone el API.
+
+Un `onError` compartido por todas las mutaciones de un hook obliga a un título
+genérico; cada mutación declara el suyo. ESLint rechaza los títulos «Error»,
+«Éxito», «Eliminado», «Registrado», «Error al …» y «No se pudo <verbo>» sin
+decir qué.
 
 Un error que el usuario puede corregir en un campo va **al campo**, no a una
 notificación (ver [07](07-formularios.md)).

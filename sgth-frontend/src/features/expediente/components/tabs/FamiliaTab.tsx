@@ -37,6 +37,7 @@ import type {
 } from "@/types/api";
 import React from "react";
 
+import { getApiErrorMessage } from "@/types/api";
 const PARENTESCO_LABELS: Record<string, string> = {
   conyuge: "Cónyuge",
   conyugue: "Cónyuge",
@@ -95,10 +96,10 @@ function CargaRow({
             Number(carga.id),
             id,
           );
-          notificar.exito("Eliminado", "Discapacidad eliminada.");
+          notificar.exito("Discapacidad eliminada", "La discapacidad dejó de constar en la carga familiar.");
           qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
-        } catch {
-          notificar.error("Error", "No se pudo eliminar.");
+        } catch (error) {
+          notificar.error("No se pudo eliminar la discapacidad", getApiErrorMessage(error));
         }
       },
     });
@@ -112,10 +113,10 @@ function CargaRow({
       onConfirm: async () => {
         try {
           await expedienteService.eliminarEnfermedadCarga(Number(carga.id), id);
-          notificar.exito("Eliminado", "Enfermedad eliminada.");
+          notificar.exito("Enfermedad eliminada", "La enfermedad dejó de constar en la carga familiar.");
           qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
-        } catch {
-          notificar.error("Error", "No se pudo eliminar.");
+        } catch (error) {
+          notificar.error("No se pudo eliminar la enfermedad", getApiErrorMessage(error));
         }
       },
     });

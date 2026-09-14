@@ -2,6 +2,7 @@
 
 import { Stack, TextInput } from '@mantine/core'
 import { FormModal, notificar } from '@/components/ui'
+import { getApiErrorMessage } from '@/types/api'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -73,8 +74,8 @@ export function EnfermedadCargaFamiliarModal({
       )
       qc.invalidateQueries({ queryKey: ['cargas-familiares', servidorId] })
       handleClose()
-    } catch {
-      notificar.error('Error', 'No se pudo registrar la enfermedad.')
+    } catch (error) {
+      notificar.error('No se pudo registrar la enfermedad', getApiErrorMessage(error))
     }
   }
 

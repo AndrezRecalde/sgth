@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useNormativas(params?: { tipo?: string; solo_activas?: boolean }) {
@@ -19,9 +18,6 @@ export function useNormativaMutations() {
     qc.invalidateQueries({ queryKey: ['sso-lista-verificacion'] })
   }
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crear = useMutation({
     mutationFn: (data: { nombre: string; tipo: string; fecha_vigencia?: string; descripcion?: string }) =>
       ssoService.crearNormativa(data),
@@ -29,7 +25,7 @@ export function useNormativaMutations() {
       notificar.exito('Normativa registrada', 'La normativa fue agregada al catálogo.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la normativa'),
   })
 
   const eliminar = useMutation({
@@ -38,7 +34,7 @@ export function useNormativaMutations() {
       notificar.exito('Normativa eliminada', 'La normativa fue eliminada del catálogo.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la normativa'),
   })
 
   return { crear, eliminar }

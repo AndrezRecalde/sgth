@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { consultaMedicaService } from '../services/consultaMedicaService'
-import { getApiErrorMessage } from '@/types/api'
 import type { CrearConsultaData } from '../services/consultaMedicaService'
 import { notificar } from '@/components/ui'
 
@@ -18,8 +17,7 @@ export function useRegistrarConsulta() {
       qc.invalidateQueries({ queryKey: ['consultas'] })
       qc.invalidateQueries({ queryKey: ['agenda'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar la consulta'),
   })
 }
 
@@ -62,7 +60,6 @@ export function useActualizarConsulta() {
       // Corregir archiva la versión anterior: el historial cambió.
       qc.invalidateQueries({ queryKey: ['consulta-versiones'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo actualizar la consulta'),
   })
 }

@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { partidaPresupuestariaService } from '../services/partidaPresupuestariaService'
-import type { ApiResponse, PartidaPresupuestariaFormData } from '@/types/api'
+import type { PartidaPresupuestariaFormData } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function usePartidaPresupuestariaMutations() {
@@ -11,10 +10,6 @@ export function usePartidaPresupuestariaMutations() {
     qc.invalidateQueries({ queryKey: ['partidas-presupuestarias'] })
     // Los puestos embeben la partida en sus respuestas.
     qc.invalidateQueries({ queryKey: ['puestos'] })
-  }
-
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const crear = useMutation({
@@ -27,7 +22,7 @@ export function usePartidaPresupuestariaMutations() {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo crear la partida'),
   })
 
   const editar = useMutation({
@@ -37,7 +32,7 @@ export function usePartidaPresupuestariaMutations() {
       notificar.exito('Partida actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar la partida'),
   })
 
   const eliminar = useMutation({
@@ -46,7 +41,7 @@ export function usePartidaPresupuestariaMutations() {
       notificar.exito('Partida eliminada', 'La partida presupuestaria fue eliminada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la partida'),
   })
 
   return { crear, editar, eliminar }

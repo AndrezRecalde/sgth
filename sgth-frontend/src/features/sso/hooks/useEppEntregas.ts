@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import type { EppEntrega } from '../services/ssoService'
 import { notificar } from '@/components/ui'
 
@@ -43,9 +42,6 @@ export function useEppEntregaMutations() {
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-epp-entregas'] })
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const registrar = useMutation({
     mutationFn: (data: Partial<EppEntrega>) => ssoService.registrarEntregaEpp(data),
     onSuccess: () => {
@@ -55,7 +51,7 @@ export function useEppEntregaMutations() {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la entrega'),
   })
 
   const registrarKit = useMutation({
@@ -72,7 +68,7 @@ export function useEppEntregaMutations() {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo entregar el kit'),
   })
 
   return { registrar, registrarKit }

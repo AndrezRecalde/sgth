@@ -31,6 +31,7 @@ import { asistenciaService } from "../services/asistenciaService";
 import { useAuthStore } from "@/store/auth.store";
 import { StatusBadge, notificar } from "@/components/ui";
 
+import { getApiErrorMessage } from "@/types/api";
 export function MarcacionOnlineTab() {
   const { usuario } = useAuthStore();
   const [ubicacion, setUbicacion] = useState<{
@@ -119,8 +120,11 @@ export function MarcacionOnlineTab() {
         `Tu ${label.toLowerCase()} fue registrada correctamente.`,
       );
       refetch();
-    } catch {
-      notificar.error("Error", "No se pudo registrar la marcación.");
+    } catch (error) {
+      notificar.error(
+        `No se pudo registrar la ${label.toLowerCase()}`,
+        getApiErrorMessage(error, "Inténtalo de nuevo en unos segundos."),
+      );
     } finally {
       setRegistrando(false);
     }

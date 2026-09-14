@@ -21,7 +21,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useTramos } from "../hooks/useViaticos";
 import { viaticoService } from "../services/viaticoService";
-import { getApiErrorMessage } from "@/types/api";
 import type { TramoViatico } from "@/types/api";
 
 interface Props {
@@ -91,8 +90,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
       qc.invalidateQueries({ queryKey: ["tramos", viaticoId] });
       qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
     },
-    onError: (error: unknown) =>
-      notificar.error("Error", getApiErrorMessage(error)),
+    onError: notificar.alFallar("No se pudo eliminar el tramo"),
   });
 
   if (isLoading) {

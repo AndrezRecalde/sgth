@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { criterioService } from '../services/criterioService'
-import { getApiErrorMessage } from '@/types/api'
 import type {
   CrearCriterioData, CalificacionItem,
 } from '../services/criterioService'
@@ -24,8 +23,7 @@ export function useCrearCriterio(convocatoriaId: number) {
       notificar.exito('Criterio agregado', 'El criterio fue registrado correctamente.')
       qc.invalidateQueries({ queryKey: ['criterios', convocatoriaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo agregar el criterio'),
   })
 }
 
@@ -38,8 +36,7 @@ export function useEliminarCriterio(convocatoriaId: number) {
       notificar.exito('Criterio eliminado', 'El criterio fue removido.')
       qc.invalidateQueries({ queryKey: ['criterios', convocatoriaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo eliminar el criterio'),
   })
 }
 
@@ -83,7 +80,6 @@ export function useGuardarCalificaciones(
       qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo guardar la calificación'),
   })
 }

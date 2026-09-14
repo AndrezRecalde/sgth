@@ -31,8 +31,7 @@ export function useAnularCertificado(consultaId: number) {
         queryKey: ['certificados', 'consulta', consultaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo anular el certificado'),
   })
 }
 
@@ -84,7 +83,6 @@ export function useEmitirCertificado(consultaId: number) {
         queryKey: ['certificados', 'consulta', consultaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo emitir el certificado'),
   })
 }

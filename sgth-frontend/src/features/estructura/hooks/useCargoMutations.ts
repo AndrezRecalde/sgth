@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { cargoService } from '../services/cargoService'
-import type { ApiResponse, CargoFormData } from '@/types/api'
+import type { CargoFormData } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useCargoMutations() {
@@ -12,17 +11,13 @@ export function useCargoMutations() {
     qc.invalidateQueries({ queryKey: ['puestos'] })
   }
 
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
-
   const crear = useMutation({
     mutationFn: (data: CargoFormData) => cargoService.crear(data),
     onSuccess: () => {
       notificar.exito('Cargo creado', 'El cargo fue registrado correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo crear el cargo'),
   })
 
   const editar = useMutation({
@@ -32,7 +27,7 @@ export function useCargoMutations() {
       notificar.exito('Cargo actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el cargo'),
   })
 
   const eliminar = useMutation({
@@ -41,7 +36,7 @@ export function useCargoMutations() {
       notificar.exito('Cargo eliminado', 'El cargo fue eliminado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el cargo'),
   })
 
   return { crear, editar, eliminar }

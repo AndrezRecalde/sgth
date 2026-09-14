@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useListaVerificacion(periodo: string | null) {
@@ -15,9 +14,6 @@ export function useListaVerificacion(periodo: string | null) {
 export function useCumplimientoMutations() {
   const qc = useQueryClient()
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const registrar = useMutation({
     mutationFn: (data: { normativa_legal_sso_id: number; periodo: string; estado: string; observaciones?: string }) =>
       ssoService.registrarCumplimiento(data),
@@ -28,7 +24,7 @@ export function useCumplimientoMutations() {
       )
       qc.invalidateQueries({ queryKey: ['sso-lista-verificacion'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el cumplimiento'),
   })
 
   return { registrar }

@@ -1,15 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { expedienteService } from '../services/expedienteService'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useDocumentoMutations(servidorId: number) {
   const qc = useQueryClient()
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['documentos-servidor', servidorId] })
-  const onError = (e: AxiosError<ApiResponse>) =>
-    notificar.error('Error', e.response?.data?.mensaje ?? 'Error inesperado')
 
   const subir = useMutation({
     mutationFn: (formData: FormData) =>
@@ -18,7 +14,7 @@ export function useDocumentoMutations(servidorId: number) {
       notificar.exito('Documento subido', 'El documento fue anexado al expediente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo subir el documento'),
   })
 
   const eliminar = useMutation({
@@ -28,7 +24,7 @@ export function useDocumentoMutations(servidorId: number) {
       notificar.exito('Documento eliminado', 'El documento fue eliminado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el documento'),
   })
 
   return { subir, eliminar }

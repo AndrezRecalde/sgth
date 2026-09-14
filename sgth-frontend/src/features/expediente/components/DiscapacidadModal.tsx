@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { discapacidadSchema, type DiscapacidadFormData }
   from '../schemas/discapacidad.schema'
 
+import { getApiErrorMessage } from '@/types/api'
 const TIPO_OPTIONS = [
   { value: 'fisica',       label: 'Física' },
   { value: 'sensorial',    label: 'Sensorial (Visual / Auditiva)' },
@@ -90,8 +91,11 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
           : 'La discapacidad fue registrada correctamente.',
       )
       handleClose()
-    } catch {
-      notificar.error('Error', 'No se pudo procesar el registro.')
+    } catch (error) {
+      notificar.error(
+        isEditing ? 'No se pudo actualizar la discapacidad' : 'No se pudo registrar la discapacidad',
+        getApiErrorMessage(error),
+      )
     }
   }
 

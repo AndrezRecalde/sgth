@@ -43,7 +43,7 @@ export function usePdfViatico() {
       )
       progreso.exito('PDF generado', 'La solicitud se abrió correctamente.')
     } catch {
-      progreso.error('Error al generar PDF', 'No se pudo generar la solicitud.')
+      progreso.error('No se pudo generar el PDF de la solicitud', 'Inténtalo de nuevo en unos segundos.')
     } finally {
       setLoadingSolicitud(false)
     }
@@ -61,7 +61,7 @@ export function usePdfViatico() {
       )
       progreso.exito('PDF generado', 'El informe se abrió correctamente.')
     } catch {
-      progreso.error('Error al generar PDF', 'El viático debe estar en estado ' +
+      progreso.error('No se pudo generar el PDF del informe', 'El viático debe estar en estado ' +
                   'pendiente de liquidación o superior.')
     } finally {
       setLoadingInforme(false)
@@ -89,7 +89,7 @@ export function usePdfViatico() {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
       progreso.exito('Comprobante generado', 'El comprobante se abrió correctamente.')
     } catch {
-      progreso.error('Error al generar comprobante', 'El viático debe estar contabilizado.')
+      progreso.error('No se pudo generar el comprobante', 'El viático debe estar contabilizado.')
     } finally {
       setLoadingComprobante(false)
     }

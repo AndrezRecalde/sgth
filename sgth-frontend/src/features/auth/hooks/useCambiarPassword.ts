@@ -28,7 +28,7 @@ export function useCambiarPassword() {
     },
     onError: (error: AxiosError<ApiResponse>) => {
       notificar.error(
-        'Error al cambiar contraseña',
+        'No se pudo cambiar la contraseña',
         error.response?.data?.mensaje ?? 'Error inesperado.',
       )
     },

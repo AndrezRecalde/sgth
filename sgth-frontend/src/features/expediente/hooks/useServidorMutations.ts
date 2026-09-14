@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { expedienteService } from '../services/expedienteService'
 import type {} from '../schemas/servidor.schema'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useServidorMutations() {
@@ -14,10 +12,6 @@ export function useServidorMutations() {
     qc.refetchQueries({ queryKey: ['servidores'] })
   }
 
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
-
   const crear = useMutation({
     mutationFn: (data: ServidorBasicoFormData) =>
       expedienteService.crear(data),
@@ -25,7 +19,7 @@ export function useServidorMutations() {
       notificar.exito('Servidor registrado', 'El expediente fue creado correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el servidor'),
   })
 
   const editar = useMutation({
@@ -39,7 +33,7 @@ export function useServidorMutations() {
       invalidar()
       qc.invalidateQueries({ queryKey: ['servidor', id] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el expediente'),
   })
 
   return { crear, editar }

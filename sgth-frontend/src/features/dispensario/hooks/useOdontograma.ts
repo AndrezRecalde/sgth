@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { odontogramaService } from '../services/odontogramaService'
-import { getApiErrorMessage } from '@/types/api'
 import type {
   RegistrarProcedimientoData, AnularProcedimientoData,
 } from '../services/odontogramaService'
@@ -28,8 +27,7 @@ export function useRegistrarProcedimiento(historiaClinicaId: number | null) {
       )
       qc.invalidateQueries({ queryKey: ['odontograma', historiaClinicaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar el procedimiento'),
   })
 }
 
@@ -46,8 +44,7 @@ export function useAnularProcedimiento(historiaClinicaId: number | null) {
       )
       qc.invalidateQueries({ queryKey: ['odontograma', historiaClinicaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo anular el procedimiento'),
   })
 }
 

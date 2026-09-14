@@ -2,7 +2,6 @@ import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { convocatoriaService } from '../services/convocatoriaService'
-import { getApiErrorMessage } from '@/types/api'
 import type { CrearConvocatoriaData } from '../services/convocatoriaService'
 import { notificar } from '@/components/ui'
 
@@ -32,8 +31,7 @@ export function useCrearConvocatoria() {
       notificar.exito('Convocatoria creada', 'La convocatoria fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo crear la convocatoria'),
   })
 }
 
@@ -49,8 +47,7 @@ export function useActualizarConvocatoria() {
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
       qc.invalidateQueries({ queryKey: ['convocatoria', id] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo actualizar la convocatoria'),
   })
 }
 
@@ -66,8 +63,7 @@ export function usePublicarConvocatoria() {
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
       qc.invalidateQueries({ queryKey: ['convocatoria', id] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo publicar la convocatoria'),
   })
 }
 
@@ -79,8 +75,7 @@ export function useEliminarConvocatoria() {
       notificar.exito('Convocatoria eliminada', 'La convocatoria fue eliminada.')
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo eliminar la convocatoria'),
   })
 }
 
@@ -108,8 +103,7 @@ export function useInscribirPostulante(convocatoriaId: number) {
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
       qc.invalidateQueries({ queryKey: ['express-anios'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo inscribir al postulante'),
   })
 }
 
@@ -132,8 +126,7 @@ export function useCalificarPostulante(convocatoriaId: number) {
       notificar.exito('Calificación registrada', 'El puntaje del candidato fue guardado.')
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar la calificación'),
   })
 }
 
@@ -171,8 +164,7 @@ export function useEnviarAlDispensario(convocatoriaId: number) {
       qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo enviar al Dispensario'),
   })
 }
 
@@ -190,7 +182,6 @@ export function useConfirmarGanador(convocatoriaId: number) {
       qc.invalidateQueries({ queryKey: ['convocatoria', convocatoriaId] })
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo confirmar al ganador'),
   })
 }

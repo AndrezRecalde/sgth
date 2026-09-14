@@ -1,14 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { asistenciaService } from "../services/asistenciaService";
-import { getApiErrorMessage } from "@/types/api";
 import { notificar } from "@/components/ui";
 
 export function usePermisoMutations() {
   const qc = useQueryClient();
   const invalidar = () => qc.invalidateQueries({ queryKey: ["permisos"] });
-
-  const onError = (error: unknown) =>
-    notificar.error("Error", getApiErrorMessage(error));
 
   const crear = useMutation({
     mutationFn: (data: Parameters<typeof asistenciaService.permisos.crear>[0]) =>
@@ -20,9 +16,7 @@ export function usePermisoMutations() {
       // recién registrado no aparecía en la lista hasta recargar.
       qc.invalidateQueries({ queryKey: ["mis-permisos"] });
     },
-    onError: (error: unknown) => {
-      notificar.error("Error", getApiErrorMessage(error));
-    },
+    onError: notificar.alFallar("No se pudo registrar el permiso"),
   });
 
   const confirmar = useMutation({
@@ -31,9 +25,7 @@ export function usePermisoMutations() {
       notificar.exito("Permiso confirmado", "El permiso fue confirmado por Recepción.");
       invalidar();
     },
-    onError: (error: unknown) => {
-      notificar.error("Error", getApiErrorMessage(error));
-    },
+    onError: notificar.alFallar("No se pudo confirmar el permiso"),
   });
 
   const anular = useMutation({
@@ -43,7 +35,7 @@ export function usePermisoMutations() {
       notificar.exito("Permiso anulado", "El permiso fue anulado correctamente.");
       invalidar();
     },
-    onError,
+    onError: notificar.alFallar("No se pudo anular el permiso"),
   });
 
   const rechazar = useMutation({
@@ -56,7 +48,7 @@ export function usePermisoMutations() {
       );
       invalidar();
     },
-    onError,
+    onError: notificar.alFallar("No se pudo rechazar el permiso"),
   });
 
   const revertirConfirmacion = useMutation({
@@ -71,7 +63,7 @@ export function usePermisoMutations() {
       // El saldo vacacional cambió: lo que lo muestre tiene que releerlo.
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
-    onError,
+    onError: notificar.alFallar("No se pudo revertir la confirmación"),
   });
 
   const validarTs = useMutation({
@@ -83,7 +75,7 @@ export function usePermisoMutations() {
       );
       invalidar();
     },
-    onError,
+    onError: notificar.alFallar("No se pudo validar el permiso"),
   });
 
   return { crear, confirmar, anular, validarTs, rechazar, revertirConfirmacion };

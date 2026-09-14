@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useFactoresRiesgo(params?: { categoria?: string; search?: string }) {
@@ -16,16 +15,13 @@ export function useFactorRiesgoMutations() {
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-factores-riesgo'] })
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crear = useMutation({
     mutationFn: (data: { nombre: string; categoria: string }) => ssoService.crearFactorRiesgo(data),
     onSuccess: () => {
       notificar.exito('Factor de riesgo registrado', 'El factor fue agregado al catálogo.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el factor de riesgo'),
   })
 
   const eliminar = useMutation({
@@ -34,7 +30,7 @@ export function useFactorRiesgoMutations() {
       notificar.exito('Factor eliminado', 'El factor fue eliminado del catálogo.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el factor de riesgo'),
   })
 
   return { crear, eliminar }
