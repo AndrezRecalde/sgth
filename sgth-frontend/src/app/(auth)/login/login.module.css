@@ -46,7 +46,8 @@
   font-size: 2.5rem;
   line-height: 1.1;
   font-weight: 700;
-  color: white;
+  /* El panel es siempre verde institucional, en claro y en oscuro. */
+  color: var(--mantine-color-white);
   margin-bottom: 1rem;
 }
 

@@ -8,7 +8,7 @@
  */
 
 .calculado input {
-  background-color: var(--mantine-color-default-hover);
+  background-color: var(--sgth-surface-sunken);
   cursor: not-allowed;
 }
 

@@ -5,7 +5,12 @@
 ```bash
 npx tsc --noEmit
 npx eslint src
+node scripts/lint-css.mjs
 ```
+
+La tercera línea revisa las hojas CSS, que ESLint no lee: hexadecimales,
+`rgb()`, colores con nombre y escalas fuera de la paleta. `npm run lint` corre
+las dos últimas.
 
 `--ext` se cayó del comando: con la configuración plana de ESLint 9 no hace
 nada —las extensiones salen de `eslint.config.mjs`— y dejarlo escrito sugería
