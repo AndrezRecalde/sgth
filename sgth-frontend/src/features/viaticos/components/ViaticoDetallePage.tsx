@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar, MotivoModal, SgthModal, StatusBadge } from '@/components/ui'
+import { confirmar, EmptyState, MotivoModal, PageHeader, PageShell, SgthModal, StatusBadge } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -11,10 +11,9 @@ import {
   Button,
   Stepper,
   Skeleton,
-  ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconPlaneOff } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -49,7 +48,7 @@ import {
 
 function ViaticoDetalleSkeleton() {
   return (
-    <Stack gap="md" p="md">
+    <PageShell>
       <Group justify="space-between">
         <Stack gap="xs">
           <Skeleton height={28} width={200} radius="sm" />
@@ -69,7 +68,7 @@ function ViaticoDetalleSkeleton() {
         ))}
       </Grid>
       <Skeleton height={44} radius="md" />
-    </Stack>
+    </PageShell>
   );
 }
 
@@ -127,9 +126,14 @@ export function ViaticoDetallePage({ identificador }: Props) {
   if (isLoading) return <ViaticoDetalleSkeleton />;
   if (!d)
     return (
-      <Stack p="md">
-        <Text c="dimmed">Viático no encontrado.</Text>
-      </Stack>
+      <PageShell>
+        <PageHeader title="Viático" onBack={() => router.back()} />
+        <EmptyState
+          icon={IconPlaneOff}
+          title="Viático no encontrado"
+          description="El código no existe o no tiene permiso para verlo. Vuelva a la lista y ábralo desde allí."
+        />
+      </PageShell>
     );
 
   const estadoActual = d.estado ?? "";
@@ -146,23 +150,16 @@ export function ViaticoDetallePage({ identificador }: Props) {
   };
 
   return (
-    <Stack gap="md" p="md">
-      {/* Header */}
-      <Group justify="space-between">
-        <Group gap="xs">
-          <ActionIcon size="md" variant="subtle" onClick={() => router.back()}>
-            <IconArrowLeft size={14} />
-          </ActionIcon>
-          <Group>
-            <Text fw={700} size="lg">
-              {d.codigo_viatico ?? "—"}
-            </Text>
-            <StatusBadge tone={TONO_VIATICO[estadoActual] ?? 'neutral'}>
-              {ESTADO_LABELS[estadoActual] ?? estadoActual}
-            </StatusBadge>
-          </Group>
-        </Group>
-      </Group>
+    <PageShell>
+      <PageHeader
+        title={d.codigo_viatico ?? "Viático"}
+        estado={
+          <StatusBadge tone={TONO_VIATICO[estadoActual] ?? 'neutral'}>
+            {ESTADO_LABELS[estadoActual] ?? estadoActual}
+          </StatusBadge>
+        }
+        onBack={() => router.back()}
+      />
 
       {/* Stepper */}
       <Card withBorder radius="md" p="sm">
@@ -363,6 +360,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
           </Stack>
         </SgthModal>
       )}
-    </Stack>
+    </PageShell>
   );
 }

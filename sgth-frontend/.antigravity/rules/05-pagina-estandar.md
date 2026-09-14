@@ -131,3 +131,22 @@ menú lateral y las migas de pan; un icono grande junto al título repite esa
 información y consume espacio vertical.
 
 En pantallas de detalle sí se usa `backHref`, que dibuja la flecha de retorno.
+Si al detalle se llega desde varias pantallas —el viático se abre desde «Mis
+viáticos» y desde la bandeja de Financiero— va `onBack` con `router.back()`,
+para no mandar a nadie a una lista que no era la suya.
+
+El estado del registro va junto al título con `estado`, no en una línea
+aparte:
+
+```tsx
+<PageHeader
+  title={viatico.codigo}
+  estado={<StatusBadge tone={TONO_VIATICO[viatico.estado]}>{ESTADO_LABELS[viatico.estado]}</StatusBadge>}
+  onBack={() => router.back()}
+/>
+```
+
+Las pantallas de trabajo que ocupan la ventana entera —la ficha de atención
+médica y odontológica— también llevan `PageShell fluid` y `PageHeader`: sin
+`PageShell` el contenido quedaba pegado al borde, porque el padding lo pone él
+y no el shell.

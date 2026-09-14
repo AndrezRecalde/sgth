@@ -3,7 +3,7 @@ import { Box, Center, Card, Title, Text } from '@mantine/core'
 import { CambiarPasswordForm } from '@/features/auth/components/CambiarPasswordForm'
 
 export const metadata: Metadata = {
-  title: 'Cambiar contraseña | SGTH',
+  title: 'Cambiar contraseña',
 }
 
 export default function CambiarPasswordPage() {

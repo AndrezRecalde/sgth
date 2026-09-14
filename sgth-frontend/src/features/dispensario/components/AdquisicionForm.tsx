@@ -2,7 +2,7 @@
 
 import {
   Card, Stack, Group, Select, TextInput,
-  Textarea, Button, Table, Text, Alert, SimpleGrid,
+  Textarea, Button, Text, Alert, SimpleGrid,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
@@ -14,7 +14,8 @@ import {
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarAdquisicion } from '../hooks/useAdquisicion'
 import { BuscarMedicinaSelect } from './BuscarMedicinaSelect'
-import { ItemAdquisicionRow } from './ItemAdquisicionRow'
+import { getColumnasCapturaItems } from './itemsAdquisicion.columns'
+import { SgthTable } from '@/components/ui'
 import { MedicinaModal } from './MedicinaModal'
 import {
   adquisicionSchema, type AdquisicionFormData,
@@ -72,6 +73,8 @@ export function AdquisicionForm({ onCreada }: Props) {
   const { fields, append, remove } = useFieldArray({
     control, name: 'items',
   })
+
+  const columnasItems = getColumnasCapturaItems({ control, contained, onQuitar: remove })
 
   const onSubmit = (values: AdquisicionFormData) => {
     registrar.mutate(
@@ -191,31 +194,12 @@ export function AdquisicionForm({ onCreada }: Props) {
                 // La tabla de ítems no cabe en 375px y no debe intentarlo: se
                 // desplaza dentro de su propio contenedor en vez de empujar la
                 // página entera de lado.
-                <Table.ScrollContainer minWidth={620} type="native">
-                <Table withTableBorder withColumnBorders>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Medicina</Table.Th>
-                      <Table.Th w={90}>Cantidad</Table.Th>
-                      <Table.Th w={120}>Lote</Table.Th>
-                      <Table.Th w={140}>Caducidad</Table.Th>
-                      <Table.Th w={110}>Precio unit.</Table.Th>
-                      <Table.Th w={40}></Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {fields.map((field, i) => (
-                      <ItemAdquisicionRow
-                        key={field.id}
-                        index={i}
-                        control={control}
-                        nombre={field.nombre_medicina}
-                        onEliminar={() => remove(i)}
-                      />
-                    ))}
-                  </Table.Tbody>
-                </Table>
-                </Table.ScrollContainer>
+                <SgthTable
+                  records={fields}
+                  columns={columnasItems}
+                  minHeight={0}
+                  noRecordsText=""
+                />
               )}
 
               {errors.items?.message && (

@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { ViaticoDetallePage } from '@/features/viaticos/components/ViaticoDetallePage'
 
 export const metadata: Metadata = {
-  title: 'Detalle de viático — SGTH GADPE',
+  title: 'Detalle de viático',
 }
 
 interface Props {

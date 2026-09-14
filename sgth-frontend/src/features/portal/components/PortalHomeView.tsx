@@ -1,7 +1,8 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { Center, Loader, Grid } from '@mantine/core'
+import { Grid, Skeleton } from '@mantine/core'
+import { PageHeader } from '@/components/ui'
 import api from '@/lib/axios'
 import { useAuth } from '@/hooks/useAuth'
 import type { UsuarioAuth } from '@/store/auth.store'
@@ -31,20 +32,27 @@ export function PortalHomeView() {
 
   if (isLoading || !usuarioActual) {
     return (
-      <Center h="60vh">
-        <Loader color="emerald" size="lg" type="dots" />
-      </Center>
+      <>
+        <PageHeader title="Mi portal" description="Tu ficha y las novedades de la institución" />
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}><Skeleton height={320} radius="lg" /></Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}><Skeleton height={320} radius="lg" /></Grid.Col>
+        </Grid>
+      </>
     )
   }
 
   return (
-    <Grid>
-      <Grid.Col span={{ base: 12, md: 6, lg: 6 }}>
-        <PerfilServidorCard usuario={usuarioActual} />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, md: 6, lg: 6 }}>
-        <NoticiasCard />
-      </Grid.Col>
-    </Grid>
+    <>
+      <PageHeader title="Mi portal" description="Tu ficha y las novedades de la institución" />
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <PerfilServidorCard usuario={usuarioActual} />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <NoticiasCard />
+        </Grid.Col>
+      </Grid>
+    </>
   )
 }

@@ -4,14 +4,13 @@ import { TONO_NOMINA } from "../constants/estadoNomina";
 import {
   Stack,
   Text,
-  Table,
   Divider,
   Skeleton,
-  ScrollArea,
   Card,
   Grid,
 } from "@mantine/core";
-import { SgthModal, StatusBadge } from "@/components/ui";
+import { SgthModal, SgthTable, StatusBadge } from "@/components/ui";
+import { columnasRolesPago, formatMonto } from "./rolesPago.columns";
 import { useQuery } from "@tanstack/react-query";
 import { nominaService } from "../services/nominaService";
 import type { Nomina } from "@/types/api";
@@ -22,13 +21,6 @@ interface Props {
   nomina: Nomina | null;
 }
 
-function formatMonto(v?: number | string | null): string {
-  if (v === null || v === undefined) return "—";
-  return `$${Number(v).toLocaleString("es-EC", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
   const { data: detalle, isLoading } = useQuery({
@@ -106,52 +98,7 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
               Sin roles de pago generados.
             </Text>
           ) : (
-            <ScrollArea>
-              <Table striped highlightOnHover withTableBorder>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Cédula</Table.Th>
-                    <Table.Th>Servidor</Table.Th>
-                    <Table.Th ta="right">Ingresos</Table.Th>
-                    <Table.Th ta="right">Descuentos</Table.Th>
-                    <Table.Th ta="right">Neto</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {roles.map((r) => (
-                    <Table.Tr key={r.id}>
-                      <Table.Td>
-                        <Text size="sm" ff="monospace">
-                          {r.servidor?.cedula ?? "—"}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">
-                          {[r.servidor?.apellido, r.servidor?.nombre]
-                            .filter(Boolean)
-                            .join(" ") || "—"}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td ta="right">
-                        <Text size="sm" ff="monospace" c="emerald">
-                          {formatMonto(r.total_ingresos)}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td ta="right">
-                        <Text size="sm" ff="monospace" c="red">
-                          {formatMonto(r.total_descuentos)}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td ta="right">
-                        <Text size="sm" ff="monospace" fw={600}>
-                          {formatMonto(r.total_neto)}
-                        </Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </ScrollArea>
+            <SgthTable records={roles} columns={columnasRolesPago} />
           )}
         </Stack>
       )}

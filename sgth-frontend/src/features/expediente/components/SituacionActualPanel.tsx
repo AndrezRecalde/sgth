@@ -50,7 +50,7 @@ export function SituacionActualPanel({
   const rmuFmt = rmu != null ? `$ ${Number(rmu).toFixed(2)}` : null
 
   return (
-    <Paper withBorder p="sm" radius="md" bg="var(--mantine-color-gray-0)">
+    <Paper withBorder p="sm" radius="md" bg="var(--sgth-surface-sunken)">
       <Text size="sm" fw={700} mb="xs">{titulo}</Text>
       <Grid>
         {!soloVinculo && (

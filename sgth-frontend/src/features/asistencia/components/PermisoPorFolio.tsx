@@ -12,7 +12,7 @@
 */
 
 import { useState } from 'react'
-import { Alert, Button, Skeleton, Stack, Text, Title } from '@mantine/core'
+import { Alert, Button, Skeleton, Stack, Text } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { IconAlertCircle, IconArrowBackUp, IconCheck, IconX } from '@tabler/icons-react'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
@@ -20,7 +20,7 @@ import { getApiErrorMessage } from '@/types/api'
 import { asistenciaService } from '../services/asistenciaService'
 import { usePermisoMutations } from '../hooks/usePermisoMutations'
 import { useAccionesPermiso } from '../hooks/useAccionesPermiso'
-import { MotivoModal } from '@/components/ui'
+import { MotivoModal, PageHeader } from '@/components/ui'
 import { PermisoResumen } from './PermisoResumen'
 import { ESTADOS_CONFIRMADOS } from './permisos.constants'
 
@@ -57,7 +57,7 @@ export function PermisoPorFolio({ folio }: Props) {
   if (isError || !permiso) {
     return (
       <Stack gap="md">
-        <Title order={3}>Permiso</Title>
+        <PageHeader title="Permiso de ausencia" />
         <Alert
           icon={<IconAlertCircle size={18} />}
           color={SEMANTIC_COLOR.danger}
@@ -90,10 +90,10 @@ export function PermisoPorFolio({ folio }: Props) {
 
   return (
     <Stack gap="md">
-      <Stack gap={4}>
-        <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Permiso de ausencia</Text>
-        <Text ff="monospace" fw={700} size="xl">{permiso.folio}</Text>
-      </Stack>
+      <PageHeader
+        title={permiso.folio ?? 'Permiso'}
+        description="Permiso de ausencia"
+      />
 
       <PermisoResumen permiso={permiso} />
 

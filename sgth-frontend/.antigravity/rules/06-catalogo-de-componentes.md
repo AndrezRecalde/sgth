@@ -15,7 +15,7 @@ del módulo.
 | Componente | Para qué | Nota |
 |---|---|---|
 | `PageShell` | Contenedor de toda página | `fluid` solo para lienzos |
-| `PageHeader` | Título, descripción, acciones | Sin icono. `backHref` en detalles |
+| `PageHeader` | Título, descripción, acciones | Sin icono. `backHref` u `onBack` y `estado` en detalles |
 | `Toolbar` | Filtros sobre un listado | Campos con `useContainedInput('sm')` |
 | `SectionCard` | Bloque con título dentro de una página | Sustituye al `Divider` con etiqueta |
 | `StatCard` | Indicador numérico de un tablero | `tone` solo si el número es bueno o malo |
@@ -38,6 +38,16 @@ del módulo.
 **Ninguna pantalla usa `DataTable` directo ni una tabla HTML.** `SgthTable`
 fija bordes, densidad, textos en español y comportamiento; cualquier prop de
 `mantine-datatable` sigue disponible y sobrescribe los valores por defecto.
+
+Tampoco el `Table` de Mantine: ESLint rechaza los dos fuera de
+`src/components/`. Lo que parecía tabla se resuelve así:
+
+| Qué es | Cómo |
+|---|---|
+| Filas de datos, aunque sean tres dentro de un modal | `SgthTable` con `minHeight` bajo y `noRecordsText` propio |
+| Pares etiqueta/valor de un registro | `DetailList` (antes, una tabla vertical) |
+| Filas que se capturan (ítems de una compra) | `SgthTable` con `records={fields}` y un `Controller` por celda |
+| Un ranking corto en un tablero | Filas de `Group`, como «Diagnósticos más frecuentes» |
 
 Las columnas van **siempre** en un archivo aparte, tipadas:
 
