@@ -6,14 +6,17 @@ import {
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
-  IconSearch, IconFileDownload, IconFileTypeCsv, IconClipboardList, IconInfoCircle, IconCheck,
+  IconSearch,
+  IconFileDownload,
+  IconFileTypeCsv,
+  IconClipboardList,
+  IconInfoCircle,
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
 import { useQuery } from '@tanstack/react-query'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { asistenciaService } from '@/features/asistencia/services/asistenciaService'
 import { fromDateValue } from '@/lib/fecha'
-import { SgthTable } from '@/components/ui'
+import { notificar, SgthTable } from '@/components/ui'
 import { getConsolidadoColumns } from '@/features/asistencia/components/consolidado.columns'
 
 const TIPO_ENFERMEDAD = 'enfermedad'
@@ -51,16 +54,7 @@ export function AusentismoTab() {
     if (!canSearch) return
     setExportando(formato)
 
-    const notifId = `export-ausentismo-${formato}-${Date.now()}`
-    notifications.show({
-      id: notifId,
-      title: `Exportando ${formato.toUpperCase()}...`,
-      message: 'Generando el archivo, espere un momento.',
-      color: 'blue',
-      loading: true,
-      autoClose: false,
-      withCloseButton: false,
-    })
+    const progreso = notificar.proceso(`Exportando ${formato.toUpperCase()}...`, 'Generando el archivo, espere un momento.')
 
     try {
       const blob = formato === 'excel'
@@ -76,26 +70,9 @@ export function AusentismoTab() {
       link.click()
       URL.revokeObjectURL(url)
 
-      notifications.update({
-        id: notifId,
-        title: 'Archivo descargado',
-        message: `Consolidado exportado como ${ext.toUpperCase()}.`,
-        color: 'emerald',
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      progreso.exito('Archivo descargado', `Consolidado exportado como ${ext.toUpperCase()}.`)
     } catch {
-      notifications.update({
-        id: notifId,
-        title: 'Error',
-        message: 'No se pudo exportar el consolidado.',
-        color: 'red',
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-      })
+      progreso.error('Error', 'No se pudo exportar el consolidado.')
     } finally {
       setExportando(null)
     }

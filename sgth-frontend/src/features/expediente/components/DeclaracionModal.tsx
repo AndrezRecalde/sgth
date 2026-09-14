@@ -6,7 +6,7 @@ import {
   Select,
   Textarea,
 } from "@mantine/core";
-import { FormModal } from "@/components/ui";
+import { FormModal, notificar } from "@/components/ui";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -17,8 +17,6 @@ import {
 } from "../schemas/declaracion.schema";
 import { DatePickerInput } from "@mantine/dates";
 import { useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
-import { IconCheck } from "@tabler/icons-react";
 import React, { useEffect } from "react";
 import { expedienteService } from "../services/expedienteService";
 
@@ -113,12 +111,10 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
           qc.invalidateQueries({
             queryKey: ["declaraciones", servidorId]
           });
-          notifications.show({
-            title:   "Declaración actualizada",
-            message: "La declaración fue actualizada correctamente.",
-            color:   "emerald",
-            icon:    React.createElement(IconCheck, { size: 16 }),
-          });
+          notificar.exito(
+            "Declaración actualizada",
+            "La declaración fue actualizada correctamente.",
+          );
           handleClose();
         })
       : crear.mutateAsync(values)

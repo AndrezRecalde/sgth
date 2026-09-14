@@ -1,10 +1,9 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, notificar } from '@/components/ui'
 import { useState } from 'react'
 import { Group, Button, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { notifications } from '@mantine/notifications'
 import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
@@ -25,11 +24,10 @@ export function AssistCampaniasTab() {
   const copiarLink = (codigo: string) => {
     const url = `${window.location.origin}/assist/${codigo}`
     navigator.clipboard.writeText(url).then(() => {
-      notifications.show({
-        title: 'Enlace copiado',
-        message: 'Comparta este enlace con el personal para que responda el tamizaje.',
-        color: 'emerald',
-      })
+      notificar.exito(
+        'Enlace copiado',
+        'Comparta este enlace con el personal para que responda el tamizaje.',
+      )
     })
   }
 

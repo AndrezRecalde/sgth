@@ -1,10 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { femoService } from '../services/femoService'
 import { getApiErrorMessage } from '@/types/api'
 import type { CrearFemoData } from '../services/femoService'
+import { notificar } from '@/components/ui'
 
 export function useFemos(params?: Record<string, unknown>) {
   return useQuery({
@@ -29,21 +27,11 @@ export function useCrearFemo() {
   return useMutation({
     mutationFn: (data: CrearFemoData) => femoService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'FEMO registrada',
-        message: 'La ficha fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('FEMO registrada', 'La ficha fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['femos'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -56,21 +44,11 @@ export function useActualizarFemo() {
       data: Partial<CrearFemoData>
     }) => femoService.actualizar(id, data),
     onSuccess: (_, { id }) => {
-      notifications.show({
-        title:   'FEMO actualizada',
-        message: 'Los cambios fueron guardados.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('FEMO actualizada', 'Los cambios fueron guardados.')
       qc.invalidateQueries({ queryKey: ['femos'] })
       qc.invalidateQueries({ queryKey: ['femo', id] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

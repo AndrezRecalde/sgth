@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { notificar } from '@/components/ui'
 import { useQuery } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck } from '@tabler/icons-react'
 import { asistenciaService } from '../services/asistenciaService'
 
 export interface ParamsConsolidado {
@@ -35,16 +34,7 @@ export function useExportarConsolidado() {
   const exportar = async (formato: Formato, params: ParamsConsolidado) => {
     setExportando(formato)
 
-    const notifId = `export-consolidado-${formato}-${Date.now()}`
-    notifications.show({
-      id: notifId,
-      title: `Exportando ${formato.toUpperCase()}...`,
-      message: 'Generando el archivo, espere un momento.',
-      color: 'blue',
-      loading: true,
-      autoClose: false,
-      withCloseButton: false,
-    })
+    const progreso = notificar.proceso(`Exportando ${formato.toUpperCase()}...`, 'Generando el archivo, espere un momento.')
 
     try {
       const blob = formato === 'excel'
@@ -59,26 +49,9 @@ export function useExportarConsolidado() {
       link.click()
       URL.revokeObjectURL(url)
 
-      notifications.update({
-        id: notifId,
-        title: 'Archivo descargado',
-        message: `Consolidado exportado como ${ext.toUpperCase()}.`,
-        color: 'emerald',
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      progreso.exito('Archivo descargado', `Consolidado exportado como ${ext.toUpperCase()}.`)
     } catch {
-      notifications.update({
-        id: notifId,
-        title: 'Error',
-        message: 'No se pudo exportar el consolidado.',
-        color: 'red',
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-      })
+      progreso.error('Error', 'No se pudo exportar el consolidado.')
     } finally {
       setExportando(null)
     }

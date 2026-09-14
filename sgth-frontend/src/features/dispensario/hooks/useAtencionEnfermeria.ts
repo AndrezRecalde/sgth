@@ -1,10 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { atencionEnfermeriaService } from '../services/atencionEnfermeriaService'
 import { getApiErrorMessage } from '@/types/api'
 import type { CrearAtencionEnfermeriaData } from '../services/atencionEnfermeriaService'
+import { notificar } from '@/components/ui'
 
 export function useCatalogoServicios() {
   return useQuery({
@@ -34,21 +32,11 @@ export function useAnularAtencionEnfermeria() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       atencionEnfermeriaService.anular(id, motivo),
     onSuccess: (data) => {
-      notifications.show({
-        title:   'Atención anulada',
-        message: `${data.folio} quedó anulada con su motivo.`,
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Atención anulada', `${data.folio} quedó anulada con su motivo.`)
       qc.invalidateQueries({ queryKey: ['atenciones-enfermeria'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -59,20 +47,10 @@ export function useRegistrarAtencionEnfermeria() {
     mutationFn: (data: CrearAtencionEnfermeriaData) =>
       atencionEnfermeriaService.crear(data),
     onSuccess: (data) => {
-      notifications.show({
-        title:   'Atención registrada',
-        message: `Folio ${data.folio} registrado correctamente.`,
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Atención registrada', `Folio ${data.folio} registrado correctamente.`)
       qc.invalidateQueries({ queryKey: ['atenciones-enfermeria'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

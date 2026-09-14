@@ -2,14 +2,12 @@
 
 import React, { useEffect } from 'react'
 import { Stack, TextInput } from '@mantine/core'
-import { FormModal } from '@/components/ui'
+import { FormModal, notificar } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { expedienteService } from '../services/expedienteService'
 import { useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
 import { enfermedadSchema, type EnfermedadFormData }
   from '../schemas/enfermedad.schema'
 import { DatePickerInput } from '@mantine/dates'
@@ -98,20 +96,13 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
         )
       }
       qc.invalidateQueries({ queryKey: ['enfermedades', servidorId] })
-      notifications.show({
-        title:   isEditing ? 'Enfermedad actualizada' : 'Enfermedad registrada',
-        message: 'El registro fue procesado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        isEditing ? 'Enfermedad actualizada' : 'Enfermedad registrada',
+        'El registro fue procesado correctamente.',
+      )
       handleClose()
     } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo procesar el registro.',
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error('Error', 'No se pudo procesar el registro.')
     }
   }
 

@@ -1,7 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { usuarioService } from '../services/usuarioService'
 import type {
@@ -9,6 +6,7 @@ import type {
   UsuarioFormData,
   UsuarioUpdateData,
 } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useUsuarioMutations() {
   const qc = useQueryClient()
@@ -17,24 +15,14 @@ export function useUsuarioMutations() {
     qc.invalidateQueries({ queryKey: ['usuarios'] })
 
   const onError = (error: AxiosError<ApiResponse>) => {
-    notifications.show({
-      title: 'Error',
-      message: error.response?.data?.mensaje ?? 'Error inesperado',
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const crear = useMutation({
     mutationFn: (data: UsuarioFormData) =>
       usuarioService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Usuario creado',
-        message: 'El usuario fue creado correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Usuario creado', 'El usuario fue creado correctamente.')
       invalidar()
       // Ese servidor ya no está disponible para vincular a otro usuario.
       qc.invalidateQueries({ queryKey: ['servidores-sin-usuario'] })
@@ -46,12 +34,7 @@ export function useUsuarioMutations() {
     mutationFn: ({ id, data }: { id: number; data: UsuarioUpdateData }) =>
       usuarioService.actualizar(id, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Usuario actualizado',
-        message: 'Los datos fueron actualizados.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Usuario actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
     onError,
@@ -90,12 +73,7 @@ export function useUsuarioMutations() {
     },
     onSuccess: (data) => {
       const estado = data?.activo ? 'activado' : 'desactivado'
-      notifications.show({
-        title:   `Usuario ${estado}`,
-        message: `El usuario fue ${estado} correctamente.`,
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(`Usuario ${estado}`, `El usuario fue ${estado} correctamente.`)
     },
     onError: (error, _id, context) => {
       // Revertir si falla
@@ -116,12 +94,10 @@ export function useUsuarioMutations() {
     mutationFn: (id: number) =>
       usuarioService.restablecerContrasena(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Contraseña restablecida',
-        message: 'La contraseña volvió a ser la cédula del servidor y sus sesiones se cerraron.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Contraseña restablecida',
+        'La contraseña volvió a ser la cédula del servidor y sus sesiones se cerraron.',
+      )
       // primer_login vuelve a true y la tabla lo muestra.
       invalidar()
     },
@@ -137,12 +113,10 @@ export function useUsuarioMutations() {
       permisos: string[]
     }) => usuarioService.sincronizarPermisos(id, permisos),
     onSuccess: (_data, { id }) => {
-      notifications.show({
-        title:   'Permisos actualizados',
-        message: 'Los permisos fueron sincronizados correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Permisos actualizados',
+        'Los permisos fueron sincronizados correctamente.',
+      )
       invalidar()
       // Sin esto el drawer volvía a abrirse con los permisos previos: la query
       // tiene staleTime de 5 min y solo se invalidaba la lista de usuarios.
@@ -155,12 +129,10 @@ export function useUsuarioMutations() {
     mutationFn: (id: number) =>
       usuarioService.desvincularServidor(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Servidor desvinculado',
-        message: 'El usuario quedó inactivo y sin expediente asociado.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Servidor desvinculado',
+        'El usuario quedó inactivo y sin expediente asociado.',
+      )
       invalidar()
     },
     onError,
@@ -170,12 +142,10 @@ export function useUsuarioMutations() {
     mutationFn: ({ id, servidorId }: { id: number; servidorId: number }) =>
       usuarioService.asignarServidor(id, servidorId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Servidor asignado',
-        message: 'La ficha fue vinculada y el usuario quedó activo.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Servidor asignado',
+        'La ficha fue vinculada y el usuario quedó activo.',
+      )
       invalidar()
       qc.invalidateQueries({ queryKey: ['servidores-sin-usuario'] })
     },

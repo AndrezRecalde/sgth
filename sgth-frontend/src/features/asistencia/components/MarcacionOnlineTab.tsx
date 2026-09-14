@@ -25,12 +25,11 @@ import {
   IconCheck,
   IconClock,
 } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
 import { useQuery } from "@tanstack/react-query";
 import { modals } from "@mantine/modals";
 import { asistenciaService } from "../services/asistenciaService";
 import { useAuthStore } from "@/store/auth.store";
-import { StatusBadge } from "@/components/ui";
+import { StatusBadge, notificar } from "@/components/ui";
 
 export function MarcacionOnlineTab() {
   const { usuario } = useAuthStore();
@@ -115,19 +114,13 @@ export function MarcacionOnlineTab() {
         latitud: ubicacion?.lat,
         longitud: ubicacion?.lon,
       });
-      notifications.show({
-        title: `${label} registrada`,
-        message: `Tu ${label.toLowerCase()} fue registrada correctamente.`,
-        color: "emerald",
-        icon: <IconCheck size={16} />,
-      });
+      notificar.exito(
+        `${label} registrada`,
+        `Tu ${label.toLowerCase()} fue registrada correctamente.`,
+      );
       refetch();
     } catch {
-      notifications.show({
-        title: "Error",
-        message: "No se pudo registrar la marcación.",
-        color: "red",
-      });
+      notificar.error("Error", "No se pudo registrar la marcación.");
     } finally {
       setRegistrando(false);
     }

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Stack, Group, Text, Button, Skeleton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconHistory, IconFileDownload, IconEye } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -21,7 +20,7 @@ import {
 } from '../../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
-import { StatusBadge } from '@/components/ui'
+import { StatusBadge, notificar } from '@/components/ui'
 
 function formatFecha(fecha?: string | null): string {
   if (!fecha) return '—'
@@ -55,11 +54,10 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
       link.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: getApiErrorMessage(error, 'No se pudo generar el PDF de Acción de Personal.'),
-        color: 'red',
-      })
+      notificar.error(
+        'Error',
+        getApiErrorMessage(error, 'No se pudo generar el PDF de Acción de Personal.'),
+      )
     } finally {
       setDescargandoId(null)
     }

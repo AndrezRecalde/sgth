@@ -47,6 +47,11 @@ const IMPORTS_SOLO_CATALOGO = [
     message: "Use SgthTable de '@/components/ui', con las columnas en su .columns.tsx. Para pares etiqueta/valor, DetailList (regla 06).",
   },
   {
+    name: "@mantine/notifications",
+    importNames: ["notifications"],
+    message: "Use notificar.exito/error/aviso de '@/components/ui': el color y el icono salen del resultado, no se escriben en cada llamada (regla 08).",
+  },
+  {
     name: "mantine-datatable",
     importNames: ["DataTable"],
     message: "Use SgthTable de '@/components/ui' (regla 06).",

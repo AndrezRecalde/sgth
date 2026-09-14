@@ -1,15 +1,13 @@
 'use client'
 
 import { Stack, TextInput } from '@mantine/core'
-import { FormModal } from '@/components/ui'
+import { FormModal, notificar } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
 import { expedienteService } from '../services/expedienteService'
 import React from 'react'
 
@@ -69,21 +67,14 @@ export function EnfermedadCargaFamiliarModal({
         cargaId,
         values
       )
-      notifications.show({
-        title:   'Enfermedad registrada',
-        message: 'La enfermedad catastrófica fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Enfermedad registrada',
+        'La enfermedad catastrófica fue registrada correctamente.',
+      )
       qc.invalidateQueries({ queryKey: ['cargas-familiares', servidorId] })
       handleClose()
     } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo registrar la enfermedad.',
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error('Error', 'No se pudo registrar la enfermedad.')
     }
   }
 

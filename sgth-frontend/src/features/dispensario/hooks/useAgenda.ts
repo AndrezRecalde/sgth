@@ -1,11 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { agendaService } from '../services/agendaService'
 import { personalMedicoService } from '../services/personalMedicoService'
 import { getApiErrorMessage } from '@/types/api'
 import type { CrearAgendaData } from '../services/agendaService'
+import { notificar } from '@/components/ui'
 
 export function usePersonalMedico(
   rol?: 'medico' | 'odontologo' | 'enfermera'
@@ -56,21 +54,11 @@ export function useCrearTurno() {
     mutationFn: (data: CrearAgendaData) =>
       agendaService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Turno creado',
-        message: 'El turno fue registrado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Turno creado', 'El turno fue registrado correctamente.')
       qc.invalidateQueries({ queryKey: ['agenda'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -80,21 +68,11 @@ export function useCancelarTurno() {
   return useMutation({
     mutationFn: (id: number) => agendaService.cancelar(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Turno cancelado',
-        message: 'El turno fue cancelado correctamente.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Turno cancelado', 'El turno fue cancelado correctamente.')
       qc.invalidateQueries({ queryKey: ['agenda'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -130,42 +108,22 @@ export function useAccionesTurno() {
     mutationFn: (id: number) =>
       agendaService.marcarNoPresentado(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Turno marcado',
-        message: 'Paciente marcado como no presentado.',
-        color:   'gray',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Turno marcado', 'Paciente marcado como no presentado.')
       invalidar()
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 
   const reactivar = useMutation({
     mutationFn: (id: number) =>
       agendaService.reactivar(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Turno reactivado',
-        message: 'El paciente fue reactivado en la cola.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Turno reactivado', 'El paciente fue reactivado en la cola.')
       invalidar()
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 
   const enConsulta = useMutation({
@@ -173,12 +131,7 @@ export function useAccionesTurno() {
       agendaService.marcarEnConsulta(id),
     onSuccess: () => invalidar(),
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 
   return { noPresentado, reactivar, enConsulta }

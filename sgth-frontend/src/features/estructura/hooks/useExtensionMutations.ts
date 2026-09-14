@@ -1,11 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { puestosExtensionesService } from '../services/puestosExtensionesService'
 import type { ExtensionFormData } from '../schemas/extension.schema'
 import type { ApiResponse } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useExtensionMutations() {
   const qc = useQueryClient()
@@ -14,24 +12,14 @@ export function useExtensionMutations() {
     qc.invalidateQueries({ queryKey: ['directorio'] })
 
   const onError = (error: AxiosError<ApiResponse>) => {
-    notifications.show({
-      title: 'Error',
-      message: error.response?.data?.mensaje ?? 'Error inesperado',
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const crear = useMutation({
     mutationFn: (data: ExtensionFormData) =>
       puestosExtensionesService.crearExtension(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Extensión registrada',
-        message: 'La extensión fue creada correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Extensión registrada', 'La extensión fue creada correctamente.')
       invalidar()
     },
     onError,
@@ -41,12 +29,7 @@ export function useExtensionMutations() {
     mutationFn: ({ id, data }: { id: number; data: ExtensionFormData }) =>
       puestosExtensionesService.editarExtension(id, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Extensión actualizada',
-        message: 'Los datos fueron actualizados.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Extensión actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
     onError,
@@ -56,12 +39,7 @@ export function useExtensionMutations() {
     mutationFn: (id: number) =>
       puestosExtensionesService.eliminarExtension(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Extensión eliminada',
-        message: 'La extensión fue eliminada.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Extensión eliminada', 'La extensión fue eliminada.')
       invalidar()
     },
     onError,

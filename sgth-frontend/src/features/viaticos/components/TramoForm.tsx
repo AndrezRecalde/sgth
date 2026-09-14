@@ -14,9 +14,7 @@ import { DateTimePicker } from "@mantine/dates";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import React from "react";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useTiposTransporte, useEmpresasPorTipo } from "../hooks/useViaticos";
 import { useProvincias } from "@/features/expediente/hooks/useProvincias";
@@ -32,6 +30,7 @@ import type {
 } from "@/types/api";
 import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 import { formatFechaHora } from "@/lib/fecha";
+import { notificar } from "@/components/ui";
 
 const PAISES_COMUNES = [
   "Colombia",
@@ -203,23 +202,13 @@ export function TramoForm({
     mutationFn: (data: Parameters<typeof viaticoService.tramos.crear>[1]) =>
       viaticoService.tramos.crear(viaticoId, data),
     onSuccess: () => {
-      notifications.show({
-        title: "Tramo agregado",
-        message: "El tramo fue registrado al itinerario.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito("Tramo agregado", "El tramo fue registrado al itinerario.");
       qc.invalidateQueries({ queryKey: ["tramos", viaticoId] });
       qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
       onSuccess();
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title: "Error",
-        message: getApiErrorMessage(error),
-        color: "red",
-        icon: React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error("Error", getApiErrorMessage(error)),
   });
 
   const onSubmit = (values: TramoFormData) => {

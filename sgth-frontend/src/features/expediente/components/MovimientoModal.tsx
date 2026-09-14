@@ -5,14 +5,13 @@ import {
   Button, Group, Stack, Select, Textarea, TextInput, Alert,
   Switch, Divider, Stepper, Grid, NumberInput, Paper, Text,
 } from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { ModalFooter, SgthModal, notificar } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconCheck, IconX, IconInfoCircle } from '@tabler/icons-react'
+import { IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { usePuestos } from '@/features/estructura/hooks/usePuestos'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
@@ -307,31 +306,27 @@ function FormularioAccion({
       return expedienteService.crearMovimiento(servidorId, limpio)
     },
     onSuccess: () => {
-      notifications.show({
-        title: edicion ? 'Borrador actualizado' : 'Acción de personal registrada',
-        message: edicion
+      notificar.exito(
+        edicion ? 'Borrador actualizado' : 'Acción de personal registrada',
+        edicion
           ? 'Los cambios quedaron guardados en la acción de personal.'
           : 'Quedó en borrador, pendiente de revisión y aprobación.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      )
       qc.invalidateQueries({ queryKey: ['movimientos'] })
       qc.invalidateQueries({ queryKey: ['movimiento'] })
       qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })
       handleClose()
     },
     onError: (error) => {
-      notifications.show({
-        title: edicion ? 'No se pudo guardar' : 'No se pudo registrar',
-        message: getApiErrorMessage(
+      notificar.error(
+        edicion ? 'No se pudo guardar' : 'No se pudo registrar',
+        getApiErrorMessage(
           error,
           edicion
             ? 'No se pudo actualizar el borrador.'
             : 'No se pudo registrar la acción de personal.',
         ),
-        color: 'red',
-        icon: React.createElement(IconX, { size: 16 }),
-      })
+      )
     },
   })
 

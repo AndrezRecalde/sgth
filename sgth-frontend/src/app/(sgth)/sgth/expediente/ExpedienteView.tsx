@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Alert, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { notifications } from '@mantine/notifications'
 import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle, IconAlertTriangle } from '@tabler/icons-react'
 import { ServidorToolbar } from '@/features/expediente/components/ServidorToolbar'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
@@ -20,7 +19,7 @@ import { expedienteService } from '@/features/expediente/services/expedienteServ
 import { getApiErrorMessage } from '@/types/api'
 import { useAuth } from '@/hooks/useAuth'
 import type { ServidorConRelaciones, EstadoContrato, TipoNombramiento } from '@/types/api'
-import { EmptyState, PageHeader, PageShell } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, notificar } from '@/components/ui'
 
 export function ExpedienteView() {
   const { hasPermiso } = useAuth()
@@ -88,11 +87,10 @@ export function ExpedienteView() {
       link.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: getApiErrorMessage(error, 'No se pudo generar la exportación.'),
-        color: 'red',
-      })
+      notificar.error(
+        'Error',
+        getApiErrorMessage(error, 'No se pudo generar la exportación.'),
+      )
     } finally {
       setExportando(null)
     }

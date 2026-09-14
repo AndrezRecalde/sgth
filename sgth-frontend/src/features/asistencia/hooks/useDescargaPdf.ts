@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
-import { notifications } from '@mantine/notifications'
-import { IconCheck } from '@tabler/icons-react'
+import { useState } from 'react'
+import { notificar } from '@/components/ui'
 
 interface Config {
   /** Prefijo del id de notificación y del archivo: `permiso`, `vacacion`. */
@@ -24,19 +23,9 @@ export function useDescargaPdf({ recurso, articulo, descargar }: Config) {
   const [exportandoId, setExportandoId] = useState<number | null>(null)
 
   const exportar = async (id: number, nombre?: string | null) => {
-    const notifId = `export-${recurso}-${id}`
-
     setExportandoId(id)
 
-    notifications.show({
-      id: notifId,
-      title: 'Exportando...',
-      message: 'Generando el documento PDF, espere.',
-      color: 'blue',
-      loading: true,
-      autoClose: false,
-      withCloseButton: false,
-    })
+    const progreso = notificar.proceso('Exportando...', 'Generando el documento PDF, espere.')
 
     try {
       const blob = await descargar(id)
@@ -48,26 +37,9 @@ export function useDescargaPdf({ recurso, articulo, descargar }: Config) {
       link.click()
       URL.revokeObjectURL(url)
 
-      notifications.update({
-        id: notifId,
-        title: 'PDF descargado',
-        message: `Se exportó ${articulo} correctamente.`,
-        color: 'emerald',
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      progreso.exito('PDF descargado', `Se exportó ${articulo} correctamente.`)
     } catch {
-      notifications.update({
-        id: notifId,
-        title: 'Error',
-        message: `No se pudo exportar ${articulo}.`,
-        color: 'red',
-        loading: false,
-        autoClose: 3000,
-        withCloseButton: true,
-      })
+      progreso.error('Error', `No se pudo exportar ${articulo}.`)
     } finally {
       setExportandoId(null)
     }

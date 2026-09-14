@@ -1,11 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { subrogacionService } from '../services/subrogacionService'
 import type { SubrogacionFormData } from '../schemas/subrogacion.schema'
 import type { ApiResponse } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useSubrogacionMutations() {
   const qc = useQueryClient()
@@ -16,23 +14,13 @@ export function useSubrogacionMutations() {
   }
 
   const onError = (error: AxiosError<ApiResponse>) => {
-    notifications.show({
-      title: 'Error',
-      message: error.response?.data?.mensaje ?? 'Error inesperado',
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const registrar = useMutation({
     mutationFn: (data: SubrogacionFormData) => subrogacionService.registrar(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Registrado',
-        message: 'La subrogación/encargo fue registrado correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Registrado', 'La subrogación/encargo fue registrado correctamente.')
       invalidar()
     },
     onError,
@@ -41,12 +29,7 @@ export function useSubrogacionMutations() {
   const finalizar = useMutation({
     mutationFn: (id: number) => subrogacionService.finalizar(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Finalizado',
-        message: 'La subrogación/encargo fue finalizado correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Finalizado', 'La subrogación/encargo fue finalizado correctamente.')
       invalidar()
     },
     onError,
@@ -56,12 +39,7 @@ export function useSubrogacionMutations() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       subrogacionService.cancelar(id, motivo),
     onSuccess: () => {
-      notifications.show({
-        title: 'Cancelado',
-        message: 'La subrogación/encargo fue cancelado.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Cancelado', 'La subrogación/encargo fue cancelado.')
       invalidar()
     },
     onError,

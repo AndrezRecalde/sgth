@@ -1,10 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
 import React from 'react'
 import { certificadoService } from '../services/certificadoService'
 import { getApiErrorMessage } from '@/types/api'
 import type { EmitirCertificadoData } from '../services/certificadoService'
+import { notificar } from '@/components/ui'
 
 export function useCertificadosPorConsulta(consultaId: number) {
   return useQuery({
@@ -22,25 +21,18 @@ export function useAnularCertificado(consultaId: number) {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       certificadoService.anular(id, motivo),
     onSuccess: (certificado) => {
-      notifications.show({
-        title:   'Certificado anulado',
-        message: certificado.permiso_servidor
+      notificar.exito(
+        'Certificado anulado',
+        certificado.permiso_servidor
           ? 'El permiso de asistencia asociado también quedó anulado.'
           : 'El certificado ya no es válido para justificar ausencia.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      )
       qc.invalidateQueries({
         queryKey: ['certificados', 'consulta', consultaId],
       })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -68,12 +60,7 @@ export function useDescargarCertificado() {
       document.body.removeChild(link)
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
     } catch (error: unknown) {
-      notifications.show({
-        title:   'No se pudo generar el PDF',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error('No se pudo generar el PDF', getApiErrorMessage(error))
     } finally {
       setDescargando(null)
     }
@@ -89,22 +76,15 @@ export function useEmitirCertificado(consultaId: number) {
     mutationFn: (data: EmitirCertificadoData) =>
       certificadoService.emitir(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Certificado emitido',
-        message: 'El certificado médico fue registrado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Certificado emitido',
+        'El certificado médico fue registrado correctamente.',
+      )
       qc.invalidateQueries({
         queryKey: ['certificados', 'consulta', consultaId],
       })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

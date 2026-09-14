@@ -79,11 +79,7 @@ export function useServidorMutations() {
     mutationFn: servidorService.crear,
     onSuccess: (servidor) => {
       qc.invalidateQueries({ queryKey: ['servidores'] })
-      notifications.show({
-        color: 'emerald',
-        title: 'Servidor creado',
-        message: `${servidor.nombre_completo} quedó registrado.`,
-      })
+      notificar.exito('Servidor creado', `${servidor.nombre_completo} quedó registrado.`)
     },
   })
 
@@ -96,11 +92,26 @@ export function useServidorMutations() {
 Se usan para el **resultado de una acción del usuario**, no para informar de
 una carga.
 
+Van **siempre** por `notificar`, de `@/components/ui`. ESLint rechaza el
+`notifications` de Mantine fuera del catálogo: el color y el icono los decide
+el desenlace, no quien escribe la llamada.
+
+```ts
+notificar.exito('Permiso anulado', 'PER-2026-00012 dejó de contar')   // la acción se completó
+notificar.error('No se pudo anular', getApiErrorMessage(error))       // la acción falló
+notificar.aviso('Solicitudes generadas', '0 creadas, 3 omitidas')     // se completó con reparos
+
+// Una espera que termina en uno de los tres (exportar un PDF)
+const progreso = notificar.proceso('Exportando PDF', 'Generando el archivo…')
+progreso.exito('PDF descargado', '…')   // o progreso.error(…)
 ```
-color="emerald"   la acción se completó
-color="red"       la acción falló
-color="amber"     se completó con reparos
-```
+
+**Anular, rechazar o dar de baja es un éxito** si se hizo: el usuario pidió
+eso y ocurrió. Antes esas notificaciones salían en naranja o azul, y el mismo
+«se guardó» tenía cuatro colores según el módulo.
+
+`autoClose` como tercer argumento solo para mensajes largos, o `false` para lo
+que no se puede perder: la alerta de alergia al emitir una receta.
 
 El mensaje dice qué pasó con qué registro: "Servidor creado" es mejor que
 "Operación exitosa", y "No se pudo anular el viático V-2026-041" es mucho mejor

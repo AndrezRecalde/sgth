@@ -1,12 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { inventarioMedicinaService } from '../services/inventarioMedicinaService'
 import { getApiErrorMessage } from '@/types/api'
 import type {
   CrearMedicinaData, ActualizarMedicinaData,
 } from '../services/inventarioMedicinaService'
+import { notificar } from '@/components/ui'
 
 export function useInventarioMedicinas(
   params?: Record<string, unknown>
@@ -65,23 +63,13 @@ export function useInventarioMutations() {
     qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title:   'Error',
-      message: getApiErrorMessage(error),
-      color:   'red',
-      icon:    React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const crear = useMutation({
     mutationFn: (data: CrearMedicinaData) =>
       inventarioMedicinaService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Medicina registrada',
-        message: 'La medicina fue agregada al inventario.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Medicina registrada', 'La medicina fue agregada al inventario.')
       invalidar()
     },
     onError,
@@ -92,12 +80,7 @@ export function useInventarioMutations() {
       id: number; data: ActualizarMedicinaData
     }) => inventarioMedicinaService.actualizar(id, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Medicina actualizada',
-        message: 'Los datos fueron actualizados.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Medicina actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
     onError,
@@ -108,12 +91,10 @@ export function useInventarioMutations() {
       id: number; cantidad: number; motivo: string; loteId?: number | null
     }) => inventarioMedicinaService.registrarBaja(id, cantidad, motivo, loteId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Existencias dadas de baja',
-        message: 'Las unidades salieron del inventario y quedó constancia en el kardex.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Existencias dadas de baja',
+        'Las unidades salieron del inventario y quedó constancia en el kardex.',
+      )
       invalidar()
       // Lo que se retiró ya no debe ofrecerse al recetar.
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
@@ -128,12 +109,7 @@ export function useInventarioMutations() {
       id, nuevoStock, motivo
     ),
     onSuccess: () => {
-      notifications.show({
-        title:   'Inventario ajustado',
-        message: 'El stock fue corregido correctamente.',
-        color:   'blue',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Inventario ajustado', 'El stock fue corregido correctamente.')
       invalidar()
     },
     onError,
@@ -145,16 +121,12 @@ export function useInventarioMutations() {
       inventarioMedicinaService.toggleEstado(id),
     onSuccess: (data) => {
       const reactivada = !!data?.estado
-      notifications.show({
-        title:   reactivada
-          ? 'Medicina reactivada'
-          : 'Medicina retirada del catálogo',
-        message: reactivada
+      notificar.exito(
+        reactivada ? 'Medicina reactivada' : 'Medicina retirada del catálogo',
+        reactivada
           ? 'Vuelve a estar disponible para recetar y despachar.'
           : 'Deja de aparecer en recetas y despachos. Sus existencias no se movieron.',
-        color:   reactivada ? 'emerald' : 'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      )
       invalidar()
       // Deja de estar disponible —o vuelve a estarlo— para recetar.
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })

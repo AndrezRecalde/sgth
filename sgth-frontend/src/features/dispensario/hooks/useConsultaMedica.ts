@@ -1,10 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { consultaMedicaService } from '../services/consultaMedicaService'
 import { getApiErrorMessage } from '@/types/api'
 import type { CrearConsultaData } from '../services/consultaMedicaService'
+import { notificar } from '@/components/ui'
 
 export function useRegistrarConsulta() {
   const qc = useQueryClient()
@@ -13,22 +11,15 @@ export function useRegistrarConsulta() {
     mutationFn: (data: CrearConsultaData) =>
       consultaMedicaService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Consulta registrada',
-        message: 'La consulta médica fue guardada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Consulta registrada',
+        'La consulta médica fue guardada correctamente.',
+      )
       qc.invalidateQueries({ queryKey: ['consultas'] })
       qc.invalidateQueries({ queryKey: ['agenda'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -63,12 +54,7 @@ export function useActualizarConsulta() {
       data: Partial<CrearConsultaData>
     }) => consultaMedicaService.actualizar(id, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Consulta actualizada',
-        message: 'Los cambios fueron guardados correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Consulta actualizada', 'Los cambios fueron guardados correctamente.')
       qc.invalidateQueries({ queryKey: ['consultas'] })
       // El panel lee la consulta por su propia clave: sin invalidarla, tras
       // corregir seguía enseñando el texto anterior como si fuera el vigente.
@@ -77,11 +63,6 @@ export function useActualizarConsulta() {
       qc.invalidateQueries({ queryKey: ['consulta-versiones'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

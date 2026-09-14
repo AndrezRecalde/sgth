@@ -10,7 +10,7 @@ import {
   Stack,
   Text,
   } from "@mantine/core";
-import { FormModal, StatusBadge } from "@/components/ui";
+import { FormModal, StatusBadge, notificar } from "@/components/ui";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -22,7 +22,6 @@ import {
 } from "../schemas/cuentaBancaria.schema";
 import type { CuentaBancariaConRelaciones } from "@/types/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import { cuentaBancariaService } from "../services/cuentaBancariaService";
 
 const TIPO_CUENTA_OPTIONS = [
@@ -144,11 +143,7 @@ export function CuentaBancariaModal({
             qc.invalidateQueries({
               queryKey: ["cuentas-bancarias", servidorId],
             });
-            notifications.show({
-              title: "Cuenta actualizada",
-              message: "La cuenta bancaria fue actualizada.",
-              color: "emerald",
-            });
+            notificar.exito("Cuenta actualizada", "La cuenta bancaria fue actualizada.");
             handleClose();
           })
       : crear.mutateAsync(values).then(handleClose);

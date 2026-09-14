@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge, notificar } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -30,14 +30,12 @@ import { DiscapacidadCargaFamiliarModal } from "../DiscapacidadCargaFamiliarModa
 import { EnfermedadCargaFamiliarModal } from "../EnfermedadCargaFamiliarModal";
 import { expedienteService } from "../../services/expedienteService";
 import { useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import type {
   CargaFamiliar,
   DiscapacidadCargaFamiliar,
   EnfermedadCatastroficaCargaFamiliar,
 } from "@/types/api";
 import React from "react";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 const PARENTESCO_LABELS: Record<string, string> = {
   conyuge: "Cónyuge",
@@ -97,20 +95,10 @@ function CargaRow({
             Number(carga.id),
             id,
           );
-          notifications.show({
-            title: "Eliminado",
-            color: "emerald",
-            message: "Discapacidad eliminada.",
-            icon: React.createElement(IconCheck, { size: 16 }),
-          });
+          notificar.exito("Eliminado", "Discapacidad eliminada.");
           qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
         } catch {
-          notifications.show({
-            title: "Error",
-            color: "red",
-            message: "No se pudo eliminar.",
-            icon: React.createElement(IconX, { size: 16 }),
-          });
+          notificar.error("Error", "No se pudo eliminar.");
         }
       },
     });
@@ -124,20 +112,10 @@ function CargaRow({
       onConfirm: async () => {
         try {
           await expedienteService.eliminarEnfermedadCarga(Number(carga.id), id);
-          notifications.show({
-            title: "Eliminado",
-            color: "emerald",
-            message: "Enfermedad eliminada.",
-            icon: React.createElement(IconCheck, { size: 16 }),
-          });
+          notificar.exito("Eliminado", "Enfermedad eliminada.");
           qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
         } catch {
-          notifications.show({
-            title: "Error",
-            color: "red",
-            message: "No se pudo eliminar.",
-            icon: React.createElement(IconX, { size: 16 }),
-          });
+          notificar.error("Error", "No se pudo eliminar.");
         }
       },
     });

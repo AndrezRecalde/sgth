@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications }               from '@mantine/notifications'
-import { IconCheck, IconX }            from '@tabler/icons-react'
-import React                           from 'react'
 import { viaticoService }              from '../services/viaticoService'
 import { getApiErrorMessage }          from '@/types/api'
+import { notificar } from '@/components/ui'
 
 type ConMotivo = { id: number; motivo: string }
 
@@ -11,12 +9,7 @@ export function useViaticoEstados() {
   const qc = useQueryClient()
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title:   'Error',
-      message: getApiErrorMessage(error),
-      color:   'red',
-      icon:    React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const invalidarViatico = (id?: number) => {
     qc.invalidateQueries({ queryKey: ['viaticos'] })
@@ -34,11 +27,7 @@ export function useViaticoEstados() {
   ) => ({
     mutationFn: fn,
     onSuccess:  () => {
-      notifications.show({
-        title, message,
-        color: 'emerald',
-        icon:  React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(title, message)
       invalidarViatico()
     },
     onError,
@@ -49,12 +38,7 @@ export function useViaticoEstados() {
       data: Parameters<typeof viaticoService.solicitar>[0]
     ) => viaticoService.solicitar(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Viático solicitado',
-        message: 'La solicitud fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Viático solicitado', 'La solicitud fue registrada correctamente.')
       invalidarViatico()
     },
     onError,
@@ -68,12 +52,7 @@ export function useViaticoEstados() {
       data: Parameters<typeof viaticoService.actualizar>[1]
     }) => viaticoService.actualizar(id, data),
     onSuccess: (_data, { id }) => {
-      notifications.show({
-        title:   'Cambios guardados',
-        message: 'El viático fue actualizado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Cambios guardados', 'El viático fue actualizado correctamente.')
       invalidarViatico(id)
     },
     onError,

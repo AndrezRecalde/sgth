@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge, notificar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Alert, Box, Button, Divider, Drawer, Grid, Group, Paper,
@@ -11,7 +11,6 @@ import {
   IconAlertTriangle, IconBan, IconCheck, IconFileDownload,
   IconPencil, IconUserOff,
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { expedienteService } from '../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
@@ -92,11 +91,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
       link.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: getApiErrorMessage(error, 'No se pudo generar el PDF.'),
-        color: 'red',
-      })
+      notificar.error('Error', getApiErrorMessage(error, 'No se pudo generar el PDF.'))
     } finally {
       setDescargando(false)
     }

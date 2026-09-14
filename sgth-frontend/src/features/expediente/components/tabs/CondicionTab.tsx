@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge, notificar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack,
@@ -15,12 +15,9 @@ import {
   IconPlus,
   IconTrash,
   IconHeart,
-  IconCheck,
-  IconX,
   IconEdit,
 } from "@tabler/icons-react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import { SgthTable } from "@/components/ui/SgthTable";
 import { TableActions } from "@/components/ui/TableActions";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -59,21 +56,11 @@ export function CondicionTab({ servidorId }: Props) {
     mutationFn: (id: number) =>
       expedienteService.eliminarDiscapacidad(servidorId, id),
     onSuccess: () => {
-      notifications.show({
-        title: "Registro eliminado",
-        color: "emerald",
-        message: "La discapacidad fue eliminada del expediente.",
-        icon: <IconCheck size={16} />,
-      });
+      notificar.exito("Registro eliminado", "La discapacidad fue eliminada del expediente.");
       qc.invalidateQueries({ queryKey: ["discapacidades", servidorId] });
     },
     onError: () => {
-      notifications.show({
-        title: "Error",
-        color: "red",
-        message: "No se pudo eliminar la discapacidad.",
-        icon: <IconX size={16} />,
-      });
+      notificar.error("Error", "No se pudo eliminar la discapacidad.");
     },
   });
 
@@ -81,21 +68,14 @@ export function CondicionTab({ servidorId }: Props) {
     mutationFn: (id: number) =>
       expedienteService.eliminarEnfermedad(servidorId, id),
     onSuccess: () => {
-      notifications.show({
-        title: "Registro eliminado",
-        color: "emerald",
-        message: "La enfermedad catastrófica fue eliminada del expediente.",
-        icon: <IconCheck size={16} />,
-      });
+      notificar.exito(
+        "Registro eliminado",
+        "La enfermedad catastrófica fue eliminada del expediente.",
+      );
       qc.invalidateQueries({ queryKey: ["enfermedades", servidorId] });
     },
     onError: () => {
-      notifications.show({
-        title: "Error",
-        color: "red",
-        message: "No se pudo eliminar la enfermedad.",
-        icon: <IconX size={16} />,
-      });
+      notificar.error("Error", "No se pudo eliminar la enfermedad.");
     },
   });
 

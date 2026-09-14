@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { programaDrogasService } from '../services/programaDrogasService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useActividadesPrograma(params?: { fase?: string; solo_activas?: boolean }) {
   return useQuery({
@@ -26,23 +24,16 @@ export function useProgramaDrogasMutations() {
   const qc = useQueryClient()
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title: 'Error',
-      message: getApiErrorMessage(error),
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const crearActividad = useMutation({
     mutationFn: (data: { fase: string; nombre: string; descripcion?: string }) =>
       programaDrogasService.crearActividad(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Actividad registrada',
-        message: 'La actividad fue agregada al catálogo del programa.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Actividad registrada',
+        'La actividad fue agregada al catálogo del programa.',
+      )
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-actividades'] })
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-seguimiento'] })
     },
@@ -52,12 +43,7 @@ export function useProgramaDrogasMutations() {
   const eliminarActividad = useMutation({
     mutationFn: (id: number) => programaDrogasService.eliminarActividad(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Actividad eliminada',
-        message: 'La actividad fue eliminada del catálogo.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Actividad eliminada', 'La actividad fue eliminada del catálogo.')
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-actividades'] })
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-seguimiento'] })
     },
@@ -73,12 +59,7 @@ export function useProgramaDrogasMutations() {
       observaciones?: string
     }) => programaDrogasService.registrarSeguimiento(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Seguimiento registrado',
-        message: 'El estado de la actividad fue actualizado.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Seguimiento registrado', 'El estado de la actividad fue actualizado.')
       qc.invalidateQueries({ queryKey: ['sso-programa-drogas-seguimiento'] })
     },
     onError,

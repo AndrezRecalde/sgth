@@ -1,10 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { adquisicionService } from '../services/adquisicionService'
 import { getApiErrorMessage } from '@/types/api'
 import type { CrearAdquisicionData } from '../services/adquisicionService'
+import { notificar } from '@/components/ui'
 
 export function useAdquisiciones(params?: Record<string, unknown>) {
   return useQuery({
@@ -37,12 +35,7 @@ export function useDescargarDocumentoAdquisicion() {
       setTimeout(() => URL.revokeObjectURL(url), 60000)
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'No se pudo descargar el documento',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('No se pudo descargar el documento', getApiErrorMessage(error)),
   })
 }
 
@@ -53,22 +46,15 @@ export function useRegistrarAdquisicion() {
     mutationFn: (data: CrearAdquisicionData) =>
       adquisicionService.crear(data),
     onSuccess: (data) => {
-      notifications.show({
-        title:   'Adquisición registrada',
-        message: `Folio ${data.folio} registrado correctamente.`,
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Adquisición registrada',
+        `Folio ${data.folio} registrado correctamente.`,
+      )
       qc.invalidateQueries({ queryKey: ['adquisiciones'] })
       qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -79,24 +65,17 @@ export function useAnularAdquisicion() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       adquisicionService.anular(id, motivo),
     onSuccess: (data) => {
-      notifications.show({
-        title:   'Adquisición anulada',
-        message: `El folio ${data.folio} fue anulado y el stock devuelto.`,
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Adquisición anulada',
+        `El folio ${data.folio} fue anulado y el stock devuelto.`,
+      )
       qc.invalidateQueries({ queryKey: ['adquisiciones'] })
       // Anular descuenta lo que la adquisición había sumado.
       qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'No se pudo anular',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('No se pudo anular', getApiErrorMessage(error)),
   })
 }
 
@@ -107,20 +86,13 @@ export function useSubirDocumentoAdquisicion() {
     mutationFn: ({ id, archivo }: { id: number; archivo: File }) =>
       adquisicionService.subirDocumento(id, archivo),
     onSuccess: () => {
-      notifications.show({
-        title:   'Documento subido',
-        message: 'El respaldo documental fue adjuntado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Documento subido',
+        'El respaldo documental fue adjuntado correctamente.',
+      )
       qc.invalidateQueries({ queryKey: ['adquisiciones'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

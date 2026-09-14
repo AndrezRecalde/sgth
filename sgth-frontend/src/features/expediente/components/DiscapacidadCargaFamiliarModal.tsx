@@ -2,14 +2,12 @@
 
 import { Stack,
          Select, NumberInput, TextInput } from '@mantine/core'
-import { FormModal } from '@/components/ui'
+import { FormModal, notificar } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
 import { expedienteService } from '../services/expedienteService'
 import React from 'react'
 
@@ -72,21 +70,14 @@ export function DiscapacidadCargaFamiliarModal({
         cargaId,
         values
       )
-      notifications.show({
-        title:   'Discapacidad registrada',
-        message: 'La discapacidad fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Discapacidad registrada',
+        'La discapacidad fue registrada correctamente.',
+      )
       qc.invalidateQueries({ queryKey: ['cargas-familiares', servidorId] })
       handleClose()
     } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo registrar la discapacidad.',
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error('Error', 'No se pudo registrar la discapacidad.')
     }
   }
 
