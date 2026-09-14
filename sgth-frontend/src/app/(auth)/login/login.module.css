@@ -14,7 +14,8 @@
 
 .rightColumn {
   flex: 1;
-  background-color: #00674F;
+  /* El verde institucional es la escala emerald de design.tokens.ts. */
+  background-color: var(--mantine-color-emerald-8);
   position: relative;
   overflow: hidden;
   display: flex;

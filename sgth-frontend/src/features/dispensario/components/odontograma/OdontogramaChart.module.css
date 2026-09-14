@@ -1,7 +1,24 @@
+/* Las filas de dientes miden unos 780px y no se encogen: cada pieza es un
+   dibujo con su número. Cuando la columna es más estrecha —cualquier pantalla
+   por debajo de ~1500px, con el panel del paciente al lado— se desplazan
+   dentro de este contenedor en vez de recortarse.
+
+   Antes la fila estaba centrada con `justify-content: center` dentro de una
+   Card con `overflow: hidden`: lo que sobraba se cortaba por los DOS lados y
+   las primeras piezas (18, 48) quedaban fuera de alcance, sin scroll posible. */
+.lienzo {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/* Centrada con márgenes automáticos y no con `justify-content`: si la fila
+   cabe, queda al medio; si no cabe, los márgenes se anulan, empieza en el
+   borde izquierdo y el scroll llega a todas las piezas. */
 .fila {
   display: flex;
-  justify-content: center;
   gap: 6px;
+  width: max-content;
+  margin-inline: auto;
 }
 
 .cuadrante {
@@ -12,6 +29,6 @@
 .separador {
   width: 1px;
   align-self: stretch;
-  background: var(--mantine-color-gray-3);
+  background: var(--sgth-border);
   margin: 0 10px;
 }
