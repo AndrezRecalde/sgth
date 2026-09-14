@@ -189,7 +189,6 @@ export function FarmaciaView() {
             setFiltroEstado(filtroEstado === "activos" ? "todos" : "activos");
             setPage(1);
           }}
-          color="emerald"
           size="sm"
         >
           Solo activas

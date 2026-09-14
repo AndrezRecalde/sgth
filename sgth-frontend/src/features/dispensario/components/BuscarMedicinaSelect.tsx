@@ -140,7 +140,7 @@ export function BuscarMedicinaSelect({
 
           {onCrearNueva && (
             <Combobox.Option value="__nueva__">
-              <Group gap={6} c="emerald">
+              <Group gap={6} c="primario">
                 <IconCubePlus size={13} />
                 <Text size="sm" fw={500}>
                   Crear medicina nueva
@@ -154,7 +154,7 @@ export function BuscarMedicinaSelect({
               va a guardar. */}
           {onMedicamentoExterno && termino.trim().length >= 2 && (
             <Combobox.Option value="__externa__">
-              <Group gap={6} c="emerald" wrap="nowrap">
+              <Group gap={6} c="primario" wrap="nowrap">
                 <IconPencilPlus size={13} />
                 <Text size="sm" fw={500}>
                   Recetar «{termino.trim()}» como medicamento externo

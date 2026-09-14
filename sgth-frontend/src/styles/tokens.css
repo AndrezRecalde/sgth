@@ -65,50 +65,118 @@
 }
 
 /**
- * ── Acento por subsistema ────────────────────────────────
- * El AppShell escribe `data-subsistema` en su nodo raíz. Todo lo que sea "el
- * color de este subsistema" (ítem activo del menú, foco, indicadores) usa
- * estos tokens y nunca un nombre de color literal. Las variables de Mantine
- * que se alían aquí (`-filled`, `-light`, `-outline`) ya son sensibles al
- * esquema de color, así que este bloque no se duplica para modo oscuro.
+ * ── Color principal por subsistema ───────────────────────
+ * El tema declara `primaryColor: 'primario'`, una escala con los valores de
+ * emerald. Mantine pinta todo control sin `color` (Button, Switch, Checkbox,
+ * Tabs, Stepper, Loader, Anchor, ThemeIcon, Avatar…) con
+ * `--mantine-color-primario-*`, así que basta con reapuntar esas variables
+ * a la escala del subsistema: verde en SGTH, azul en el Dispensario, violeta
+ * en el Portal.
+ *
+ * El AppShell escribe `data-subsistema` en su raíz y en `<html>`; en
+ * `<html>` compite con los bloques `:root[data-mantine-color-scheme]` que
+ * genera Mantine, de ahí el selector con un atributo más. Las variables
+ * dinámicas (`-filled`, `-light`…) de las escalas ya distinguen claro y
+ * oscuro, así que estos bloques no se duplican para modo oscuro.
+ *
+ * Solo cambian los controles. Los significados no: éxito sigue en emerald,
+ * advertencia en amber y error en red en los tres subsistemas.
  *
  * Agregar un subsistema = un bloque aquí + una entrada en
  * `config/subsistemas.ts`.
  */
 
-/* Fuera del shell (login, páginas públicas) manda el acento institucional. */
-:root {
-  --sgth-accent: var(--mantine-color-emerald-filled);
-  --sgth-accent-hover: var(--mantine-color-emerald-filled-hover);
-  --sgth-accent-light: var(--mantine-color-emerald-light);
-  --sgth-accent-light-hover: var(--mantine-color-emerald-light-hover);
-  --sgth-accent-text: var(--mantine-color-emerald-light-color);
-  --sgth-accent-border: var(--mantine-color-emerald-outline);
+[data-subsistema='sgth'],
+:root[data-subsistema='sgth'][data-mantine-color-scheme] {
+  --mantine-color-primario-0: var(--mantine-color-emerald-0);
+  --mantine-color-primario-1: var(--mantine-color-emerald-1);
+  --mantine-color-primario-2: var(--mantine-color-emerald-2);
+  --mantine-color-primario-3: var(--mantine-color-emerald-3);
+  --mantine-color-primario-4: var(--mantine-color-emerald-4);
+  --mantine-color-primario-5: var(--mantine-color-emerald-5);
+  --mantine-color-primario-6: var(--mantine-color-emerald-6);
+  --mantine-color-primario-7: var(--mantine-color-emerald-7);
+  --mantine-color-primario-8: var(--mantine-color-emerald-8);
+  --mantine-color-primario-9: var(--mantine-color-emerald-9);
+  --mantine-color-primario-filled: var(--mantine-color-emerald-filled);
+  --mantine-color-primario-filled-hover: var(--mantine-color-emerald-filled-hover);
+  --mantine-color-primario-light: var(--mantine-color-emerald-light);
+  --mantine-color-primario-light-hover: var(--mantine-color-emerald-light-hover);
+  --mantine-color-primario-light-color: var(--mantine-color-emerald-light-color);
+  --mantine-color-primario-outline: var(--mantine-color-emerald-outline);
+  --mantine-color-primario-outline-hover: var(--mantine-color-emerald-outline-hover);
+  --mantine-color-primario-text: var(--mantine-color-emerald-text);
 }
 
-[data-subsistema='sgth'] {
-  --sgth-accent: var(--mantine-color-emerald-filled);
-  --sgth-accent-hover: var(--mantine-color-emerald-filled-hover);
-  --sgth-accent-light: var(--mantine-color-emerald-light);
-  --sgth-accent-light-hover: var(--mantine-color-emerald-light-hover);
-  --sgth-accent-text: var(--mantine-color-emerald-light-color);
-  --sgth-accent-border: var(--mantine-color-emerald-outline);
+[data-subsistema='salud'],
+:root[data-subsistema='salud'][data-mantine-color-scheme] {
+  --mantine-color-primario-0: var(--mantine-color-ocean-0);
+  --mantine-color-primario-1: var(--mantine-color-ocean-1);
+  --mantine-color-primario-2: var(--mantine-color-ocean-2);
+  --mantine-color-primario-3: var(--mantine-color-ocean-3);
+  --mantine-color-primario-4: var(--mantine-color-ocean-4);
+  --mantine-color-primario-5: var(--mantine-color-ocean-5);
+  --mantine-color-primario-6: var(--mantine-color-ocean-6);
+  --mantine-color-primario-7: var(--mantine-color-ocean-7);
+  --mantine-color-primario-8: var(--mantine-color-ocean-8);
+  --mantine-color-primario-9: var(--mantine-color-ocean-9);
+  --mantine-color-primario-filled: var(--mantine-color-ocean-filled);
+  --mantine-color-primario-filled-hover: var(--mantine-color-ocean-filled-hover);
+  --mantine-color-primario-light: var(--mantine-color-ocean-light);
+  --mantine-color-primario-light-hover: var(--mantine-color-ocean-light-hover);
+  --mantine-color-primario-light-color: var(--mantine-color-ocean-light-color);
+  --mantine-color-primario-outline: var(--mantine-color-ocean-outline);
+  --mantine-color-primario-outline-hover: var(--mantine-color-ocean-outline-hover);
+  --mantine-color-primario-text: var(--mantine-color-ocean-text);
 }
 
-[data-subsistema='salud'] {
-  --sgth-accent: var(--mantine-color-ocean-filled);
-  --sgth-accent-hover: var(--mantine-color-ocean-filled-hover);
-  --sgth-accent-light: var(--mantine-color-ocean-light);
-  --sgth-accent-light-hover: var(--mantine-color-ocean-light-hover);
-  --sgth-accent-text: var(--mantine-color-ocean-light-color);
-  --sgth-accent-border: var(--mantine-color-ocean-outline);
+[data-subsistema='portal'],
+:root[data-subsistema='portal'][data-mantine-color-scheme] {
+  --mantine-color-primario-0: var(--mantine-color-amethyst-0);
+  --mantine-color-primario-1: var(--mantine-color-amethyst-1);
+  --mantine-color-primario-2: var(--mantine-color-amethyst-2);
+  --mantine-color-primario-3: var(--mantine-color-amethyst-3);
+  --mantine-color-primario-4: var(--mantine-color-amethyst-4);
+  --mantine-color-primario-5: var(--mantine-color-amethyst-5);
+  --mantine-color-primario-6: var(--mantine-color-amethyst-6);
+  --mantine-color-primario-7: var(--mantine-color-amethyst-7);
+  --mantine-color-primario-8: var(--mantine-color-amethyst-8);
+  --mantine-color-primario-9: var(--mantine-color-amethyst-9);
+  --mantine-color-primario-filled: var(--mantine-color-amethyst-filled);
+  --mantine-color-primario-filled-hover: var(--mantine-color-amethyst-filled-hover);
+  --mantine-color-primario-light: var(--mantine-color-amethyst-light);
+  --mantine-color-primario-light-hover: var(--mantine-color-amethyst-light-hover);
+  --mantine-color-primario-light-color: var(--mantine-color-amethyst-light-color);
+  --mantine-color-primario-outline: var(--mantine-color-amethyst-outline);
+  --mantine-color-primario-outline-hover: var(--mantine-color-amethyst-outline-hover);
+  --mantine-color-primario-text: var(--mantine-color-amethyst-text);
 }
 
-[data-subsistema='portal'] {
-  --sgth-accent: var(--mantine-color-amethyst-filled);
-  --sgth-accent-hover: var(--mantine-color-amethyst-filled-hover);
-  --sgth-accent-light: var(--mantine-color-amethyst-light);
-  --sgth-accent-light-hover: var(--mantine-color-amethyst-light-hover);
-  --sgth-accent-text: var(--mantine-color-amethyst-light-color);
-  --sgth-accent-border: var(--mantine-color-amethyst-outline);
+/* El verde institucional (login, páginas públicas y SGTH) va un tono más
+   oscuro en claro: el blanco sobre emerald-6 da 3.77:1 y no llega al AA
+   (4.5:1). Sobre emerald-7, 5.48:1. Azul (5.17) y violeta (5.70) ya llegan. */
+:root[data-mantine-color-scheme='light']:not([data-subsistema]),
+:root[data-mantine-color-scheme='light'][data-subsistema='sgth'],
+:root[data-mantine-color-scheme='light'] [data-subsistema='sgth'] {
+  --mantine-color-primario-filled: var(--mantine-color-emerald-7);
+  --mantine-color-primario-filled-hover: var(--mantine-color-emerald-8);
+  --mantine-color-primario-outline: var(--mantine-color-emerald-7);
+  --mantine-color-primario-text: var(--mantine-color-emerald-7);
+}
+
+/**
+ * ── Acento ───────────────────────────────────────────────
+ * "El color de este subsistema" en CSS propio (ítem activo del menú, fila
+ * resaltada, borde de una selección). Es el principal con otro nombre: se
+ * declara también en cada `[data-subsistema]` para que se resuelva con la
+ * escala de ese nodo y no con la heredada de `<html>`.
+ */
+:root,
+[data-subsistema] {
+  --sgth-accent: var(--mantine-color-primario-filled);
+  --sgth-accent-hover: var(--mantine-color-primario-filled-hover);
+  --sgth-accent-light: var(--mantine-color-primario-light);
+  --sgth-accent-light-hover: var(--mantine-color-primario-light-hover);
+  --sgth-accent-text: var(--mantine-color-primario-light-color);
+  --sgth-accent-border: var(--mantine-color-primario-outline);
 }

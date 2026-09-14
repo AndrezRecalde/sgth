@@ -133,10 +133,10 @@ function CargaRow({
           borderRadius: expanded ? "8px 8px 0 0" : 8,
           border: "1px solid var(--mantine-color-default-border)",
           borderBottom: expanded
-            ? "1px solid var(--mantine-color-emerald-3)"
+            ? "1px solid var(--mantine-color-primario-3)"
             : undefined,
           background: expanded
-            ? "var(--mantine-color-emerald-light)"
+            ? "var(--sgth-accent-light)"
             : undefined,
           cursor: hasCondiciones ? "pointer" : "default",
         }}

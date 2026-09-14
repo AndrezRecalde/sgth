@@ -147,11 +147,11 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
                   withBorder
                   radius="md"
                   p="md"
-                  style={{ borderLeft: '4px solid var(--mantine-color-emerald-6)' }}
+                  style={{ borderLeft: '4px solid var(--sgth-accent)' }}
                 >
                   <Group justify="space-between">
                     <Group gap="sm">
-                      <ThemeIcon color="emerald" variant="light" size="lg" radius="xl">
+                      <ThemeIcon variant="light" size="lg" radius="xl">
                         <IconCheck size={18} />
                       </ThemeIcon>
                       <Stack gap={0}>

@@ -1,25 +1,10 @@
-import { createTheme, rem, type MantineTheme } from '@mantine/core'
+import { createTheme, rem } from '@mantine/core'
 import { Poppins, Inter } from 'next/font/google'
 import {
   EMERALD, OCEAN, AMETHYST, AMBER, SLATE, NIGHT,
   FONT_SIZES, LINE_HEIGHTS, HEADING_SIZES,
   SPACING, RADIUS, SHADOWS,
 } from './design.tokens'
-
-/**
- * Las variables de color de un ThemeIcon o Avatar decorativo, tomadas del
- * acento del subsistema (`--sgth-accent-*` en tokens.css). Solo las variantes
- * `light` y `filled`; las demás siguen el tema.
- */
-function acentoDecorativo(prefijo: '--ti' | '--avatar', variant?: string): Record<string, string> {
-  if (variant === 'filled') {
-    return { [`${prefijo}-bg`]: 'var(--sgth-accent)', [`${prefijo}-color`]: 'var(--mantine-color-white)' }
-  }
-  if (variant === undefined || variant === 'light') {
-    return { [`${prefijo}-bg`]: 'var(--sgth-accent-light)', [`${prefijo}-color`]: 'var(--sgth-accent-text)' }
-  }
-  return {}
-}
 
 /**
  * Tipografía dual:
@@ -46,7 +31,11 @@ const inter = Inter({
 export const fontVariables = `${inter.variable} ${poppins.variable}`
 
 export const theme = createTheme({
-  primaryColor: 'emerald',
+  // `primario` lleva los valores de emerald, pero `styles/tokens.css` reapunta
+  // sus variables a la escala del subsistema: los controles sin `color` salen
+  // verdes en SGTH, azules en el Dispensario y violetas en el Portal. El verde
+  // institucional usa el tono 7 en claro (contraste AA con texto blanco).
+  primaryColor: 'primario',
   // Shade 6 en claro; 8 en oscuro, donde el 6 vibra demasiado sobre fondo negro.
   primaryShade: { light: 6, dark: 8 },
 
@@ -66,6 +55,7 @@ export const theme = createTheme({
   defaultRadius: 'md',
 
   colors: {
+    primario: [...EMERALD],
     emerald: [...EMERALD],
     ocean: [...OCEAN],
     amethyst: [...AMETHYST],
@@ -120,19 +110,11 @@ export const theme = createTheme({
 
     // ── Señalización ─────────────────────────────────────────
     Badge:      { defaultProps: { radius: 'sm', variant: 'light' } },
-    // Sin `color`, un ThemeIcon o un Avatar es decorativo y toma el acento del
-    // subsistema (verde en SGTH, azul en Dispensario, violeta en Portal). Con
-    // `color`, el color es un dato —ingreso o egreso, oro o plata— y manda.
-    ThemeIcon: {
-      defaultProps: { variant: 'light', radius: 'md' },
-      vars: (_theme: MantineTheme, props: { color?: string; variant?: string }) =>
-        props.color ? { root: {} } : { root: acentoDecorativo('--ti', props.variant) },
-    },
-    Avatar: {
-      defaultProps: { variant: 'light' },
-      vars: (_theme: MantineTheme, props: { color?: string; variant?: string }) =>
-        props.color ? { root: {} } : { root: acentoDecorativo('--avatar', props.variant) },
-    },
+    // Sin `color`, un ThemeIcon o un Avatar es decorativo y toma el principal,
+    // que sigue al subsistema. Con `color`, el color es un dato —ingreso o
+    // egreso, oro o plata— y manda.
+    ThemeIcon:  { defaultProps: { variant: 'light', radius: 'md' } },
+    Avatar:     { defaultProps: { variant: 'light' } },
     Divider:    { defaultProps: { color: 'var(--sgth-border)' } },
 
     Tabs:       { defaultProps: { keepMounted: false } },
