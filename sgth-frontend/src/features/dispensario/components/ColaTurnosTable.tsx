@@ -26,7 +26,7 @@ export function ColaTurnosTable({
       rowStyle={(turno) =>
         turno.id === masRecienteId
           ? {
-              backgroundColor: 'var(--mantine-color-emerald-light)',
+              backgroundColor: 'var(--sgth-accent-light)',
             }
           : undefined
       }

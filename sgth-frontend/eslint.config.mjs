@@ -65,16 +65,17 @@ const COLOR_HEX = {
 
 /*
 | Un color escrito a mano solo puede ser de la paleta del sistema
-| (design.tokens.ts): emerald, ocean, amethyst, amber, red, slate y dark, con
-| o sin tono (`amber.7`), además de dimmed, inherit, white, currentColor y los
-| tokens --sgth-* o --mantine-color-* de esas mismas escalas. `blue`, `orange`,
-| `gray`, `teal`, `violet`… quedan fuera: antes el mismo gesto salía de cinco
-| colores según quién hizo la pantalla (regla 03).
+| (design.tokens.ts): primario (el del subsistema), emerald, ocean, amethyst,
+| amber, red, slate y dark, con o sin tono (`amber.7`), además de dimmed,
+| inherit, white, currentColor y los tokens --sgth-* o --mantine-color-* de
+| esas mismas escalas. `blue`, `orange`, `gray`, `teal`, `violet`… quedan
+| fuera: antes el mismo gesto salía de cinco colores según quién hizo la
+| pantalla (regla 03).
 */
 const VALOR_DE_PALETA =
-  "/^(emerald|ocean|amethyst|amber|red|slate|dark)(\\.[0-9])?$|^(dimmed|inherit|white|currentColor)$|^var\\(--(sgth-|mantine-color-(emerald|ocean|amethyst|amber|red|slate|dark|dimmed|text|body|white|default))/";
+  "/^(primario|emerald|ocean|amethyst|amber|red|slate|dark)(\\.[0-9])?$|^(dimmed|inherit|white|currentColor)$|^var\\(--(sgth-|mantine-color-(primario|emerald|ocean|amethyst|amber|red|slate|dark|dimmed|text|body|white|default))/";
 const MENSAJE_PALETA =
-  "Color fuera de la paleta: use emerald, ocean, amethyst, amber, red o slate (o dimmed), mejor aún un tono de SEMANTIC_COLOR. Un ThemeIcon o Avatar decorativo va sin color: toma el acento del subsistema (regla 03).";
+  "Color fuera de la paleta: use primario (el del subsistema), emerald, ocean, amethyst, amber, red o slate (o dimmed), mejor aún un tono de SEMANTIC_COLOR. Un ThemeIcon o Avatar decorativo va sin color: toma el acento del subsistema (regla 03).";
 const PROP_COLOR = "JSXAttribute[name.name=/^(color|c|bg)$/]";
 const COLORES_FUERA_DE_PALETA = [
   `${PROP_COLOR} > Literal:not([value=${VALOR_DE_PALETA}])`,

@@ -19,9 +19,9 @@ interface OrganigramaNodeProps {
 }
 
 const NIVEL_COLORS = [
-  'var(--mantine-color-emerald-6)',
-  'var(--mantine-color-emerald-4)',
-  'var(--mantine-color-emerald-2)',
+  'var(--mantine-color-primario-6)',
+  'var(--mantine-color-primario-4)',
+  'var(--mantine-color-primario-2)',
   'var(--sgth-border-strong)',
 ]
 

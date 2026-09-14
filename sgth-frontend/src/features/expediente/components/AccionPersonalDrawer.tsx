@@ -68,7 +68,7 @@ export function AccionPersonalDrawer({ opened, onClose, servidor }: Props) {
             style={{
               borderRadius: 12,
               border: "1px solid var(--mantine-color-default-border)",
-              background: "var(--mantine-color-emerald-light)",
+              background: "var(--sgth-accent-light)",
             }}
           >
             <Avatar size={52} radius="xl" fw={700}>

@@ -59,10 +59,10 @@ export function CuentasBancariasTab({ servidorId }: Props) {
               style={{
                 borderRadius: 8,
                 border: (c.es_principal_sueldo || c.es_principal_viatico)
-                  ? '1.5px solid var(--mantine-color-emerald-6)'
+                  ? '1.5px solid var(--sgth-accent-border)'
                   : '1px solid var(--mantine-color-default-border)',
                 background: (c.es_principal_sueldo || c.es_principal_viatico)
-                  ? 'var(--mantine-color-emerald-light)'
+                  ? 'var(--sgth-accent-light)'
                   : undefined,
               }}
             >

@@ -49,7 +49,7 @@ function NuevaAdquisicion({
             onClick={() => setCreada(null)}
             style={{ cursor: 'pointer', textAlign: 'center' }}
           >
-            <Text size="sm" c="emerald" fw={600}>
+            <Text size="sm" c="primario" fw={600}>
               Registrar otra adquisición
             </Text>
           </Card.Section>

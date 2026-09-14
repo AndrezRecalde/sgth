@@ -98,7 +98,7 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
               withBorder
               radius="md"
               p="md"
-              style={{ borderLeft: '4px solid var(--mantine-color-emerald-6)' }}
+              style={{ borderLeft: '4px solid var(--sgth-accent)' }}
             >
               <Group gap="sm">
                 <ThemeIcon variant="light" size="lg" radius="xl">
