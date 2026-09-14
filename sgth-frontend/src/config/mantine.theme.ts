@@ -1,10 +1,25 @@
-import { createTheme, rem } from '@mantine/core'
+import { createTheme, rem, type MantineTheme } from '@mantine/core'
 import { Poppins, Inter } from 'next/font/google'
 import {
   EMERALD, OCEAN, AMETHYST, AMBER, SLATE, NIGHT,
   FONT_SIZES, LINE_HEIGHTS, HEADING_SIZES,
   SPACING, RADIUS, SHADOWS,
 } from './design.tokens'
+
+/**
+ * Las variables de color de un ThemeIcon o Avatar decorativo, tomadas del
+ * acento del subsistema (`--sgth-accent-*` en tokens.css). Solo las variantes
+ * `light` y `filled`; las demás siguen el tema.
+ */
+function acentoDecorativo(prefijo: '--ti' | '--avatar', variant?: string): Record<string, string> {
+  if (variant === 'filled') {
+    return { [`${prefijo}-bg`]: 'var(--sgth-accent)', [`${prefijo}-color`]: 'var(--mantine-color-white)' }
+  }
+  if (variant === undefined || variant === 'light') {
+    return { [`${prefijo}-bg`]: 'var(--sgth-accent-light)', [`${prefijo}-color`]: 'var(--sgth-accent-text)' }
+  }
+  return {}
+}
 
 /**
  * Tipografía dual:
@@ -85,7 +100,7 @@ export const theme = createTheme({
       defaultProps: { radius: 'md' },
     },
     ActionIcon: {
-      defaultProps: { variant: 'subtle', color: 'gray' },
+      defaultProps: { variant: 'subtle', color: 'slate' },
     },
 
     // ── Superficies ──────────────────────────────────────────
@@ -105,7 +120,19 @@ export const theme = createTheme({
 
     // ── Señalización ─────────────────────────────────────────
     Badge:      { defaultProps: { radius: 'sm', variant: 'light' } },
-    ThemeIcon:  { defaultProps: { variant: 'light', radius: 'md' } },
+    // Sin `color`, un ThemeIcon o un Avatar es decorativo y toma el acento del
+    // subsistema (verde en SGTH, azul en Dispensario, violeta en Portal). Con
+    // `color`, el color es un dato —ingreso o egreso, oro o plata— y manda.
+    ThemeIcon: {
+      defaultProps: { variant: 'light', radius: 'md' },
+      vars: (_theme: MantineTheme, props: { color?: string; variant?: string }) =>
+        props.color ? { root: {} } : { root: acentoDecorativo('--ti', props.variant) },
+    },
+    Avatar: {
+      defaultProps: { variant: 'light' },
+      vars: (_theme: MantineTheme, props: { color?: string; variant?: string }) =>
+        props.color ? { root: {} } : { root: acentoDecorativo('--avatar', props.variant) },
+    },
     Divider:    { defaultProps: { color: 'var(--sgth-border)' } },
 
     Tabs:       { defaultProps: { keepMounted: false } },
