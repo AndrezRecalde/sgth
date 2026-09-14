@@ -19,11 +19,13 @@ recordarlas:
 - `<form>` sin `noValidate` y `'use client'` en un `page.tsx`
 - en las hojas CSS (`scripts/lint-css.mjs`, que corre dentro de `npm run lint`):
   hexadecimales, `rgb()`/`hsl()`, colores con nombre y escalas fuera de la paleta
+- una página del área autenticada que no pinta dentro de `PageShell` en todos sus
+  estados, carga y «no encontrado» incluidos (ver [05](05-pagina-estandar.md))
 
-El resto sigue dependiendo de quien revisa: iconos sueltos en una fila, colores
-de la paleta elegidos sin significado, páginas sin `PageShell`. Se añaden al
-linter a medida que el código deja de romperlas: una regla que destapa avisos
-preexistentes entra junto con su arreglo, o no entra (ver [10](10-checklist.md)).
+El resto sigue dependiendo de quien revisa: iconos sueltos en una fila y colores
+de la paleta elegidos sin significado. Se añaden al linter a medida que el
+código deja de romperlas: una regla que destapa avisos preexistentes entra
+junto con su arreglo, o no entra (ver [10](10-checklist.md)).
 
 ## Tipado
 
