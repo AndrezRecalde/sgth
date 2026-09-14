@@ -54,7 +54,7 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
                 <Text size="xs" c="dimmed">
                   Estado
                 </Text>
-                <StatusBadge tone={TONO_NOMINA[nomina?.estado ?? ''] ?? 'neutral'} mt={4}>
+                <StatusBadge tone={TONO_NOMINA[nomina?.estado ?? ''] ?? 'neutral'} mt={4} mx="auto">
                   {nomina?.estado ?? "—"}
                 </StatusBadge>
               </Card>

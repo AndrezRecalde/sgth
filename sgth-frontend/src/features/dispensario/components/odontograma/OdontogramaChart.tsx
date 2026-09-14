@@ -64,17 +64,23 @@ export function OdontogramaChart({
     <Stack gap="md">
       <Stack gap={4}>
         <Text size="xs" c="dimmed" fw={600}>Dentición permanente</Text>
-        {renderFila(PERMANENTE_SUPERIOR_DERECHA, PERMANENTE_SUPERIOR_IZQUIERDA)}
-        {renderFila(PERMANENTE_INFERIOR_DERECHA, PERMANENTE_INFERIOR_IZQUIERDA)}
+        <div className={classes.lienzo}>
+          <Stack gap={4}>
+            {renderFila(PERMANENTE_SUPERIOR_DERECHA, PERMANENTE_SUPERIOR_IZQUIERDA)}
+            {renderFila(PERMANENTE_INFERIOR_DERECHA, PERMANENTE_INFERIOR_IZQUIERDA)}
+          </Stack>
+        </div>
       </Stack>
 
       {mostrarTemporal && (
         <>
           <Divider label="Dentición temporal" labelPosition="left" />
-          <Stack gap={4}>
-            {renderFila(TEMPORAL_SUPERIOR_DERECHA, TEMPORAL_SUPERIOR_IZQUIERDA)}
-            {renderFila(TEMPORAL_INFERIOR_DERECHA, TEMPORAL_INFERIOR_IZQUIERDA)}
-          </Stack>
+          <div className={classes.lienzo}>
+            <Stack gap={4}>
+              {renderFila(TEMPORAL_SUPERIOR_DERECHA, TEMPORAL_SUPERIOR_IZQUIERDA)}
+              {renderFila(TEMPORAL_INFERIOR_DERECHA, TEMPORAL_INFERIOR_IZQUIERDA)}
+            </Stack>
+          </div>
         </>
       )}
 

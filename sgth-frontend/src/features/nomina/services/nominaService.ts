@@ -1,6 +1,6 @@
 import api from '@/lib/axios'
 import type { DescuentoRecurrenteFormData } from '../schemas/descuentoRecurrente.schema'
-import type { ApiResponse, Nomina, RolPago, DescuentoRecurrente, ConceptoNomina } from '@/types/api'
+import type { ApiResponse, Nomina, DescuentoRecurrente, ConceptoNomina } from '@/types/api'
 
 export const nominaService = {
   listar: () =>
@@ -18,11 +18,6 @@ export const nominaService = {
   cerrar: (id: number) =>
     api.post<ApiResponse<Nomina>>(`/nomina/${id}/cerrar`)
       .then(r => r.data.datos),
-
-  rolPago: (nominaId: number, servidorId: number) =>
-    api.get<ApiResponse<RolPago>>(
-      `/nomina/${nominaId}/rol-pago/${servidorId}`
-    ).then(r => r.data.datos),
 
   conceptos: () =>
     api.get<ApiResponse<ConceptoNomina[]>>('/nomina/conceptos')
