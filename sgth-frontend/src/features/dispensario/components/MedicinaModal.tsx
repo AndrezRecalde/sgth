@@ -122,7 +122,7 @@ export function MedicinaModal({
         {!isEditing && (
           <Alert
             icon={<IconInfoCircle size={14} />}
-            color="blue"
+            color="ocean"
             variant="light"
           >
             <Text size="xs">

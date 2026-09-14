@@ -49,7 +49,7 @@ export function AccionPersonalDrawer({ opened, onClose, servidor }: Props) {
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="emerald" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconHistory size={16} />
           </ThemeIcon>
           <Text fw={700} size="md">
@@ -71,7 +71,7 @@ export function AccionPersonalDrawer({ opened, onClose, servidor }: Props) {
               background: "var(--mantine-color-emerald-light)",
             }}
           >
-            <Avatar size={52} radius="xl" color="emerald" fw={700}>
+            <Avatar size={52} radius="xl" fw={700}>
               {initials}
             </Avatar>
             <Stack gap={2} style={{ flex: 1 }}>
@@ -84,7 +84,7 @@ export function AccionPersonalDrawer({ opened, onClose, servidor }: Props) {
             </Stack>
           </Group>
 
-          <Tabs defaultValue="movimientos" color="emerald">
+          <Tabs defaultValue="movimientos">
             <Tabs.List>
               <Tabs.Tab
                 value="movimientos"

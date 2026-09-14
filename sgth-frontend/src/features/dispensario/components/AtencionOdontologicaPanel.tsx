@@ -69,7 +69,6 @@ export function AtencionOdontologicaPanel({
         <Group justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
             <Avatar
-              color={esServidor ? 'emerald' : 'blue'}
               radius="xl"
               size="md"
             >
@@ -101,7 +100,6 @@ export function AtencionOdontologicaPanel({
             <Button
               size="xs"
               variant="light"
-              color="emerald"
               rightSection={<IconArrowRight size={13} />}
               onClick={onFinalizar}
             >

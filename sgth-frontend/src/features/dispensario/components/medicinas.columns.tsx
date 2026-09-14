@@ -185,7 +185,7 @@ export function getMedicinasColumns(
               ? [{
                   label: "Dar de baja existencias",
                   icon: <IconTrash size={14} />,
-                  color: "orange",
+                  color: "red",
                   onClick: () => actions.onDarDeBaja(m),
                 }]
               : []),
@@ -209,6 +209,7 @@ export function getMedicinasColumns(
               ) : (
                 <IconCircleCheck size={14} />
               ),
+              color: m.estado ? "red" : undefined,
               onClick: () => actions.onToggleEstado(m),
             },
           ]}

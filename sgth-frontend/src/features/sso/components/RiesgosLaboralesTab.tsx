@@ -81,7 +81,6 @@ export function RiesgosLaboralesTab() {
             {
               label: 'Editar riesgo',
               icon: <IconEdit size={14} />,
-              color: 'blue',
               onClick: () => handleEdit(riesgo),
             },
             {
@@ -113,7 +112,6 @@ export function RiesgosLaboralesTab() {
         </Button>
         <Button
           leftSection={<IconPlus size={16} />}
-          color="emerald"
           variant="light"
           onClick={() => { setEditRiesgo(null); open() }}
         >

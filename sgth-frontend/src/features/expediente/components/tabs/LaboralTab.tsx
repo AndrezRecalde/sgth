@@ -153,7 +153,7 @@ function Vinculo({
       <Accordion.Panel>
         <Stack gap="md">
           {vinculo.reemplaza_a && (
-            <Alert variant="light" color="grape" icon={<IconInfoCircle size={16} />}>
+            <Alert variant="light" color="amethyst" icon={<IconInfoCircle size={16} />}>
               Contrato de reemplazo: cubre la{' '}
               {vinculo.reemplaza_a.etiqueta?.toLowerCase() ?? 'ausencia'} de{' '}
               <strong>{vinculo.reemplaza_a.servidor}</strong>
@@ -177,7 +177,6 @@ function Vinculo({
                   <Tooltip label="Prórroga o corrección del vencimiento" withArrow>
                     <ActionIcon
                       variant="subtle"
-                      color="emerald"
                       size="sm"
                       aria-label="Reprogramar el plazo"
                       onClick={() => onReprogramar(c)}
@@ -296,7 +295,7 @@ export function LaboralTab({ servidorId }: Props) {
 
   return (
     <Stack gap="md">
-      <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+      <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
         Cada vínculo conserva su número de contrato original. Traspasos,
         comisiones y sanciones no crean uno nuevo: se registran sobre el mismo,
         y se ven al desplegarlo.

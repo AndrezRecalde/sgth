@@ -50,7 +50,6 @@ export function DirectorioToolbar({
       />
       <ActionIcon
         variant="light"
-        color="gray"
         size="lg"
         onClick={onClear}
         title="Limpiar filtros"

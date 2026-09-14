@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { resultadoMedicoService } from '../services/resultadoMedicoService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useResultadosPorConsulta(
   historiaClinicaId: number,
@@ -38,23 +36,13 @@ export function useSubirResultado(consultaId: number) {
     mutationFn: (formData: FormData) =>
       resultadoMedicoService.subir(formData),
     onSuccess: () => {
-      notifications.show({
-        title:   'Resultado subido',
-        message: 'El archivo fue registrado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Resultado subido', 'El archivo fue registrado correctamente.')
       qc.invalidateQueries({
         queryKey: ['resultados', 'consulta', consultaId],
       })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -65,22 +53,12 @@ export function useEliminarResultado(consultaId: number) {
     mutationFn: (id: number) =>
       resultadoMedicoService.eliminar(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Resultado eliminado',
-        message: 'El archivo fue removido correctamente.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Resultado eliminado', 'El archivo fue removido correctamente.')
       qc.invalidateQueries({
         queryKey: ['resultados', 'consulta', consultaId],
       })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

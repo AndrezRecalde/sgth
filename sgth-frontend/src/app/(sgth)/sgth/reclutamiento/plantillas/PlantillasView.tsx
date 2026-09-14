@@ -76,7 +76,6 @@ export function PlantillasView() {
         description="Configuración de criterios reutilizables para convocatorias"
         actions={
           <Button
-            color="emerald"
             leftSection={<IconPlus size={14} />}
             onClick={open}
           >
@@ -122,7 +121,6 @@ export function PlantillasView() {
                 <Group gap="xs" wrap="nowrap">
                   <ActionIcon
                     variant="light"
-                    color="blue"
                     onClick={() =>
                       router.push(
                         `/sgth/reclutamiento/plantillas/${p.id}`

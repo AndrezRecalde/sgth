@@ -165,7 +165,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
       submitDisabled={figuraEquivocada}
     >
       <Stack gap="sm">
-        <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
           Queda <strong>pendiente de aprobación</strong>: el servidor asume el
           puesto —y con él la facultad de firmar— recién cuando su Acción de
           Personal se registre, con el dictamen presupuestario correspondiente.
@@ -249,7 +249,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
         />
 
         {figuraEquivocada && (
-          <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />}>
+          <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
             {puestoVacante ? (
               <>
                 <strong>{nombrePuesto}</strong> está vacante: no hay titular a
@@ -264,7 +264,6 @@ export function SubrogacionModal({ opened, onClose }: Props) {
             <Button
               size="xs"
               variant="light"
-              color="orange"
               mt="xs"
               onClick={() => elegirTipo(puestoVacante ? 'encargo' : 'subrogacion')}
             >
@@ -291,7 +290,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
 
             <Grid.Col span={{ base: 12, md: 4 }}>
               {tipo === 'encargo' ? (
-                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
+                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--sgth-surface-sunken)">
                   <Text size="sm" fw={700} mb="xs">TITULAR</Text>
                   <Text size="sm" c="dimmed">
                     Encargo: el puesto no tiene titular que reemplazar.
@@ -304,7 +303,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
                   soloVinculo
                 />
               ) : (
-                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
+                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--sgth-surface-sunken)">
                   <Text size="sm" fw={700} mb="xs">TITULAR SUBROGADO</Text>
                   <Text size="sm" c="dimmed">
                     {/* Ya no se elige: sale del puesto. */}

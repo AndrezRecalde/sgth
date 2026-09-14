@@ -75,7 +75,7 @@ export function ViaticoAcciones({
     <Stack gap="sm">
       <Group>
         <Button
-          size="xs" variant="light" color="blue"
+          size="xs" variant="light"
           leftSection={<IconFileText size={14} />}
           loading={loadings.solicitud}
           onClick={onSolicitud}
@@ -84,7 +84,7 @@ export function ViaticoAcciones({
         </Button>
         {conLiquidacion && (
           <Button
-            size="xs" variant="light" color="orange"
+            size="xs" variant="light"
             leftSection={<IconDownload size={14} />}
             loading={loadings.informe}
             onClick={onInforme}
@@ -94,7 +94,7 @@ export function ViaticoAcciones({
         )}
         {estadoActual === 'contabilizado' && (
           <Button
-            size="xs" variant="light" color="gray"
+            size="xs" variant="light"
             leftSection={<IconReceipt size={14} />}
             loading={loadings.comprobante}
             onClick={onComprobante}
@@ -108,37 +108,37 @@ export function ViaticoAcciones({
 
       <Group>
         {puede.aprobar(d) && (
-          <Button size="sm" color="blue" leftSection={<IconCheck size={14} />}
+          <Button size="sm" leftSection={<IconCheck size={14} />}
             loading={loadings.aprobar} onClick={onAprobar}>
             Aprobar viático
           </Button>
         )}
         {puede.entregarAnticipo(d) && (
-          <Button size="sm" color="cyan" leftSection={<IconCheck size={14} />}
+          <Button size="sm" leftSection={<IconCheck size={14} />}
             loading={loadings.anticipo} onClick={onEntregar}>
             Entregar anticipo
           </Button>
         )}
         {puede.marcarEnComision(d) && (
-          <Button size="sm" variant="light" color="violet" leftSection={<IconPlane size={14} />}
+          <Button size="sm" variant="light" leftSection={<IconPlane size={14} />}
             loading={loadings.comision} onClick={onComision}>
             Marcar en comisión
           </Button>
         )}
         {puede.marcarPendiente(d) && (
-          <Button size="sm" color="yellow" leftSection={<IconFileInvoice size={14} />}
+          <Button size="sm" leftSection={<IconFileInvoice size={14} />}
             loading={loadings.pendiente} onClick={onPendiente}>
             Marcar pendiente liquidación
           </Button>
         )}
         {puede.contabilizar(d) && (
-          <Button size="sm" color="emerald" leftSection={<IconCheck size={14} />}
+          <Button size="sm" leftSection={<IconCheck size={14} />}
             loading={loadings.contabilizar} onClick={onContabilizar} disabled={!revision.completa}>
             Contabilizar
           </Button>
         )}
         {puede.revisarLiquidacion(d) && (
-          <Button size="sm" variant="light" color="orange" leftSection={<IconArrowBack size={14} />}
+          <Button size="sm" variant="light" leftSection={<IconArrowBack size={14} />}
             loading={loadings.devolverCorreccion} onClick={onDevolverCorreccion}>
             Devolver a corrección
           </Button>
@@ -165,7 +165,7 @@ export function ViaticoAcciones({
       )}
 
       {(apruebaOtro || contabilizaOtro) && (
-        <Alert color="gray" variant="light">
+        <Alert color="slate" variant="light">
           <Text size="xs">
             Viaja en este viático: {apruebaOtro ? 'aprobarlo' : 'contabilizarlo'} le
             corresponde a otra persona de Financiero.

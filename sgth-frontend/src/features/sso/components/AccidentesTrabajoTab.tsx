@@ -88,7 +88,6 @@ export function AccidentesTrabajoTab() {
             {
               label: 'Editar accidente',
               icon: <IconEdit size={14} />,
-              color: 'blue',
               onClick: () => handleEdit(accidente),
             },
             {
@@ -113,7 +112,6 @@ export function AccidentesTrabajoTab() {
       <Group justify="flex-end" mb="md">
         <Button
           leftSection={<IconPlus size={16} />}
-          color="emerald"
           variant="light"
           onClick={() => { setEditAccidente(null); open() }}
         >

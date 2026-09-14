@@ -47,6 +47,11 @@ const IMPORTS_SOLO_CATALOGO = [
     message: "Use SgthTable de '@/components/ui', con las columnas en su .columns.tsx. Para pares etiqueta/valor, DetailList (regla 06).",
   },
   {
+    name: "@mantine/notifications",
+    importNames: ["notifications"],
+    message: "Use notificar.exito/error/aviso de '@/components/ui': el color y el icono salen del resultado, no se escriben en cada llamada (regla 08).",
+  },
+  {
     name: "mantine-datatable",
     importNames: ["DataTable"],
     message: "Use SgthTable de '@/components/ui' (regla 06).",
@@ -57,6 +62,28 @@ const COLOR_HEX = {
   selector: "Literal[value=/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]",
   message: "Nada de colores en hexadecimal: se rompen en modo oscuro. Use tokens --sgth-* o props de color de Mantine; en ECharts, useEChartsColors() (regla 03).",
 };
+
+/*
+| Un color escrito a mano solo puede ser de la paleta del sistema
+| (design.tokens.ts): emerald, ocean, amethyst, amber, red, slate y dark, con
+| o sin tono (`amber.7`), además de dimmed, inherit, white, currentColor y los
+| tokens --sgth-* o --mantine-color-* de esas mismas escalas. `blue`, `orange`,
+| `gray`, `teal`, `violet`… quedan fuera: antes el mismo gesto salía de cinco
+| colores según quién hizo la pantalla (regla 03).
+*/
+const VALOR_DE_PALETA =
+  "/^(emerald|ocean|amethyst|amber|red|slate|dark)(\\.[0-9])?$|^(dimmed|inherit|white|currentColor)$|^var\\(--(sgth-|mantine-color-(emerald|ocean|amethyst|amber|red|slate|dark|dimmed|text|body|white|default))/";
+const MENSAJE_PALETA =
+  "Color fuera de la paleta: use emerald, ocean, amethyst, amber, red o slate (o dimmed), mejor aún un tono de SEMANTIC_COLOR. Un ThemeIcon o Avatar decorativo va sin color: toma el acento del subsistema (regla 03).";
+const PROP_COLOR = "JSXAttribute[name.name=/^(color|c|bg)$/]";
+const COLORES_FUERA_DE_PALETA = [
+  `${PROP_COLOR} > Literal:not([value=${VALOR_DE_PALETA}])`,
+  `${PROP_COLOR} > JSXExpressionContainer > Literal:not([value=${VALOR_DE_PALETA}])`,
+  `${PROP_COLOR} > JSXExpressionContainer > ConditionalExpression > Literal:not([value=${VALOR_DE_PALETA}])`,
+  `Property[key.name="color"] > Literal:not([value=${VALOR_DE_PALETA}])`,
+  `Property[key.name="color"] > ConditionalExpression > Literal:not([value=${VALOR_DE_PALETA}])`,
+  "Literal[value=/var\\(--mantine-color-(blue|gray|orange|teal|yellow|violet|grape|cyan|green|indigo|pink|lime)-/]",
+].map((selector) => ({ selector, message: MENSAJE_PALETA }));
 
 const SINTAXIS_TS = [
   {
@@ -134,19 +161,19 @@ const eslintConfig = defineConfig([
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
       "no-restricted-imports": ["error", { paths: [...IMPORTS_PROHIBIDOS, ...IMPORTS_SOLO_CATALOGO] }],
-      "no-restricted-syntax": ["error", ...SINTAXIS_TS, COLOR_HEX],
+      "no-restricted-syntax": ["error", ...SINTAXIS_TS, COLOR_HEX, ...COLORES_FUERA_DE_PALETA],
     },
   },
   {
     files: ["**/*.tsx"],
     rules: {
-      "no-restricted-syntax": ["error", ...SINTAXIS_TS, COLOR_HEX, ...SINTAXIS_TSX],
+      "no-restricted-syntax": ["error", ...SINTAXIS_TS, COLOR_HEX, ...COLORES_FUERA_DE_PALETA, ...SINTAXIS_TSX],
     },
   },
   {
     files: ["src/app/**/page.tsx"],
     rules: {
-      "no-restricted-syntax": ["error", ...SINTAXIS_TS, COLOR_HEX, ...SINTAXIS_TSX, USE_CLIENT_EN_PAGINA],
+      "no-restricted-syntax": ["error", ...SINTAXIS_TS, COLOR_HEX, ...COLORES_FUERA_DE_PALETA, ...SINTAXIS_TSX, USE_CLIENT_EN_PAGINA],
     },
   },
   {

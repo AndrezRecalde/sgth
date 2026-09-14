@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge, notificar } from '@/components/ui'
 import {
   Stack,
   Text,
@@ -18,7 +18,6 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import React from "react";
 import { useTramos } from "../hooks/useViaticos";
 import { viaticoService } from "../services/viaticoService";
@@ -88,20 +87,12 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
     mutationFn: (tramoId: number) =>
       viaticoService.tramos.eliminar(viaticoId, tramoId),
     onSuccess: () => {
-      notifications.show({
-        title: "Tramo eliminado",
-        message: "El tramo fue eliminado del itinerario.",
-        color: "orange",
-      });
+      notificar.exito("Tramo eliminado", "El tramo fue eliminado del itinerario.");
       qc.invalidateQueries({ queryKey: ["tramos", viaticoId] });
       qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title: "Error",
-        message: getApiErrorMessage(error),
-        color: "red",
-      }),
+      notificar.error("Error", getApiErrorMessage(error)),
   });
 
   if (isLoading) {

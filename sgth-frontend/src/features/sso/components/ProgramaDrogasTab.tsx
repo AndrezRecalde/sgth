@@ -70,7 +70,6 @@ export function ProgramaDrogasTab() {
           <>
             <Button
               leftSection={<IconSearch size={16} />}
-              color="emerald"
               onClick={handleConsultar}
               disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
             >
@@ -97,7 +96,7 @@ export function ProgramaDrogasTab() {
       </Text>
 
       {!periodo && (
-        <Alert icon={<IconAlertCircle size={18} />} color="blue" variant="light">
+        <Alert icon={<IconAlertCircle size={18} />} color="ocean" variant="light">
           Ingrese un período y presione Consultar para ver la matriz de seguimiento del programa.
         </Alert>
       )}
@@ -109,7 +108,7 @@ export function ProgramaDrogasTab() {
           <Group gap="lg" mb="md">
             <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
             <Text size="sm" c="emerald">Ejecutadas: <Text span fw={600}>{lista.totales.ejecutada}</Text></Text>
-            <Text size="sm" c="yellow.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
+            <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
             <Text size="sm" c="red">No ejecutadas: <Text span fw={600}>{lista.totales.no_ejecutada}</Text></Text>
             <Text size="sm" c="dimmed">Pendientes: <Text span fw={600}>{lista.totales.pendiente}</Text></Text>
           </Group>

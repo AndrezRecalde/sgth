@@ -25,12 +25,11 @@ import {
   IconCheck,
   IconClock,
 } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
 import { useQuery } from "@tanstack/react-query";
 import { modals } from "@mantine/modals";
 import { asistenciaService } from "../services/asistenciaService";
 import { useAuthStore } from "@/store/auth.store";
-import { StatusBadge } from "@/components/ui";
+import { StatusBadge, notificar } from "@/components/ui";
 
 export function MarcacionOnlineTab() {
   const { usuario } = useAuthStore();
@@ -115,19 +114,13 @@ export function MarcacionOnlineTab() {
         latitud: ubicacion?.lat,
         longitud: ubicacion?.lon,
       });
-      notifications.show({
-        title: `${label} registrada`,
-        message: `Tu ${label.toLowerCase()} fue registrada correctamente.`,
-        color: "emerald",
-        icon: <IconCheck size={16} />,
-      });
+      notificar.exito(
+        `${label} registrada`,
+        `Tu ${label.toLowerCase()} fue registrada correctamente.`,
+      );
       refetch();
     } catch {
-      notifications.show({
-        title: "Error",
-        message: "No se pudo registrar la marcación.",
-        color: "red",
-      });
+      notificar.error("Error", "No se pudo registrar la marcación.");
     } finally {
       setRegistrando(false);
     }
@@ -137,7 +130,7 @@ export function MarcacionOnlineTab() {
     return (
       <Alert
         icon={<IconInfoCircle size={16} />}
-        color="orange"
+        color="amber"
         variant="light"
         radius="md"
       >
@@ -164,7 +157,7 @@ export function MarcacionOnlineTab() {
       <Paper withBorder radius="md" p="md" bg="var(--mantine-color-body)">
         <Group justify="space-between" align="center" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <ThemeIcon size={32} radius="xl" variant="light" color="blue">
+            <ThemeIcon size={32} radius="xl" variant="light" color="ocean">
               <IconInfoCircle size={18} />
             </ThemeIcon>
             <Text size="xs" c="dimmed" lh={1.3} maw={250}>
@@ -207,7 +200,6 @@ export function MarcacionOnlineTab() {
                   <Button
                     size="compact-xs"
                     variant="subtle"
-                    color="blue"
                     onClick={handleReintentar}
                   >
                     Reintentar
@@ -245,14 +237,13 @@ export function MarcacionOnlineTab() {
 
             {cargandoEstado ? (
               <Center py="xl">
-                <Loader size="sm" color="emerald" />
+                <Loader size="sm" />
               </Center>
             ) : (
               <Timeline
                 active={activeStep}
                 bulletSize={24}
                 lineWidth={2}
-                color="emerald"
               >
                 <Timeline.Item
                   bullet={
@@ -343,7 +334,6 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="emerald"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("I", "Entrada")}
@@ -364,7 +354,7 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="red"
+                  color="slate"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("I", "Salida")}
@@ -385,7 +375,6 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="orange"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("O", "Salida Almuerzo")}
@@ -408,7 +397,6 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="blue"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("O", "Retorno Almuerzo")}

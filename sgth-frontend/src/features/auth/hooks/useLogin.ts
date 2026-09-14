@@ -1,13 +1,11 @@
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { notifications } from '@mantine/notifications'
-import { IconX } from '@tabler/icons-react'
 import { authService } from '../services/authService'
 import { useAuth } from '@/hooks/useAuth'
 import { destinoSeguro } from '@/lib/destino'
 import type { AxiosError } from 'axios'
 import type { ApiResponse, LoginResponse } from '@/types/api'
-import React from 'react'
+import { notificar } from '@/components/ui'
 
 export function useLogin() {
   const router = useRouter()
@@ -55,12 +53,10 @@ export function useLogin() {
       }
     },
     onError: (error: AxiosError<ApiResponse>) => {
-      notifications.show({
-        title: 'Error al iniciar sesión',
-        message: error.response?.data?.mensaje ?? 'Error inesperado. Intente nuevamente.',
-        color: 'red',
-        icon: React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error(
+        'Error al iniciar sesión',
+        error.response?.data?.mensaje ?? 'Error inesperado. Intente nuevamente.',
+      )
     },
   })
 }

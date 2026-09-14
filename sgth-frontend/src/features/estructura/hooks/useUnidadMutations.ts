@@ -1,11 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { estructuraService } from '../services/estructuraService'
 import type { UnidadFormData } from '../schemas/unidad.schema'
 import type { ApiResponse } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useUnidadMutations() {
   const qc = useQueryClient()
@@ -16,24 +14,14 @@ export function useUnidadMutations() {
   }
 
   const onError = (error: AxiosError<ApiResponse>) => {
-    notifications.show({
-      title: 'Error',
-      message: error.response?.data?.mensaje ?? 'Error inesperado',
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const crear = useMutation({
     mutationFn: (data: UnidadFormData) =>
       estructuraService.crearUnidad(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Unidad creada',
-        message: 'La unidad administrativa fue registrada.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Unidad creada', 'La unidad administrativa fue registrada.')
       invalidar()
     },
     onError,
@@ -43,12 +31,7 @@ export function useUnidadMutations() {
     mutationFn: ({ id, data }: { id: number; data: UnidadFormData }) =>
       estructuraService.editarUnidad(id, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Unidad actualizada',
-        message: 'Los datos fueron actualizados.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Unidad actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
     onError,
@@ -57,12 +40,7 @@ export function useUnidadMutations() {
   const eliminar = useMutation({
     mutationFn: (id: number) => estructuraService.eliminarUnidad(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Unidad eliminada',
-        message: 'La unidad fue eliminada correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Unidad eliminada', 'La unidad fue eliminada correctamente.')
       invalidar()
     },
     onError,

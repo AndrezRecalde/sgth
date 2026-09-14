@@ -65,7 +65,6 @@ export function OrganigramaView() {
             </Button>
             {gestion.puedeGestionar && (
               <Button
-                color="emerald"
                 leftSection={<IconCubePlus size={16} />}
                 variant="light"
                 onClick={gestion.crear}
@@ -81,7 +80,6 @@ export function OrganigramaView() {
         <SegmentedControl
           value={vista}
           onChange={(v) => setVista(v as 'acordeon' | 'nodo')}
-          color="emerald"
           data={[
             {
               value: 'acordeon',
@@ -107,7 +105,6 @@ export function OrganigramaView() {
         {vista === 'nodo' && (
           <Switch
             label="Mostrar subprocesos"
-            color="emerald"
             checked={subprocesos}
             onChange={(e) => setSubprocesos(e.currentTarget.checked)}
           />

@@ -39,7 +39,7 @@ export function AsignarServidorModal({ opened, onClose, usuario }: Props) {
       size="md"
     >
       <Stack gap="md">
-        <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             Al vincular la ficha, el usuario vuelve a quedar activo y recupera el
             acceso a su expediente.

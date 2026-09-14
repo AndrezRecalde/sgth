@@ -1,10 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { vinculacionInicialService } from '../services/vinculacionInicialService'
 import { getApiErrorMessage } from '@/types/api'
 import { useAuth } from '@/hooks/useAuth'
+import { notificar } from '@/components/ui'
 
 /** Permiso que habilita la carga inicial. Se revoca al terminar la migración. */
 export const PERMISO_VINCULACION_INICIAL = 'vincular-servidor-inicial'
@@ -20,22 +18,18 @@ export function useVinculacionInicial() {
   return useMutation({
     mutationFn: vinculacionInicialService.registrar,
     onSuccess: () => {
-      notifications.show({
-        title: 'Servidor vinculado',
-        message: 'Se registró la ficha y su contrato vigente. Quedó marcado como carga inicial.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Servidor vinculado',
+        'Se registró la ficha y su contrato vigente. Quedó marcado como carga inicial.',
+      )
       qc.invalidateQueries({ queryKey: ['servidores'] })
       qc.invalidateQueries({ queryKey: ['vinculacion-inicial'] })
     },
     onError: (error) => {
-      notifications.show({
-        title: 'No se pudo registrar',
-        message: getApiErrorMessage(error, 'No se pudo registrar la vinculación inicial.'),
-        color: 'red',
-        icon: React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error(
+        'No se pudo registrar',
+        getApiErrorMessage(error, 'No se pudo registrar la vinculación inicial.'),
+      )
     },
   })
 }

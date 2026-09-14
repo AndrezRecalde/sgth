@@ -1,12 +1,10 @@
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { notifications } from '@mantine/notifications'
-import { IconX, IconCheck } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { authService } from '../services/authService'
 import type { ApiResponse } from '@/types/api'
 import type { CambiarPasswordFormData } from '../schemas/cambiarPassword.schema'
+import { notificar } from '@/components/ui'
 
 export function useCambiarPassword() {
   const router = useRouter()
@@ -22,21 +20,17 @@ export function useCambiarPassword() {
       }),
     onSuccess: () => {
       deleteCookie('sgth_primer_login')
-      notifications.show({
-        title: 'Contraseña actualizada',
-        message: 'Su contraseña ha sido cambiada exitosamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Contraseña actualizada',
+        'Su contraseña ha sido cambiada exitosamente.',
+      )
       router.push('/portal')
     },
     onError: (error: AxiosError<ApiResponse>) => {
-      notifications.show({
-        title: 'Error al cambiar contraseña',
-        message: error.response?.data?.mensaje ?? 'Error inesperado.',
-        color: 'red',
-        icon: React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error(
+        'Error al cambiar contraseña',
+        error.response?.data?.mensaje ?? 'Error inesperado.',
+      )
     },
   })
 }

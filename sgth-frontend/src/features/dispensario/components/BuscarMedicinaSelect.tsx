@@ -127,7 +127,7 @@ export function BuscarMedicinaSelect({
                   </Text>
                   <Text
                     size="xs"
-                    c={m.stock_actual === 0 ? "orange" : "dimmed"}
+                    c={m.stock_actual === 0 ? "amber" : "dimmed"}
                   >
                     {m.stock_actual === 0
                       ? "Agotada"

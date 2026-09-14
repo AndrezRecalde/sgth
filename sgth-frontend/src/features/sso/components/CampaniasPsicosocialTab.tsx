@@ -1,10 +1,9 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, notificar } from '@/components/ui'
 import { useState } from 'react'
 import { Group, Button, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { notifications } from '@mantine/notifications'
 import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
@@ -25,11 +24,10 @@ export function CampaniasPsicosocialTab() {
   const copiarLink = (codigo: string) => {
     const url = `${window.location.origin}/psicosocial/${codigo}`
     navigator.clipboard.writeText(url).then(() => {
-      notifications.show({
-        title: 'Enlace copiado',
-        message: 'Comparta este enlace con el personal para que responda el cuestionario.',
-        color: 'emerald',
-      })
+      notificar.exito(
+        'Enlace copiado',
+        'Comparta este enlace con el personal para que responda el cuestionario.',
+      )
     })
   }
 
@@ -115,7 +113,7 @@ export function CampaniasPsicosocialTab() {
         <Text size="sm" c="dimmed">
           Cuestionario anónimo de evaluación de riesgo psicosocial (Ministerio del Trabajo, 58 ítems).
         </Text>
-        <Button leftSection={<IconPlus size={16} />} color="emerald" onClick={openCrear}>
+        <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
           Nueva campaña
         </Button>
       </Group>

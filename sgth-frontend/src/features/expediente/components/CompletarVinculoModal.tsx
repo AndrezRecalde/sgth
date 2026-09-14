@@ -141,7 +141,7 @@ function Formulario({
 
   return (
     <Stack gap="sm">
-      <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />}>
+      <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
         Al registrar se crea el vínculo laboral con estos datos. Después la acción
         queda inmutable: solo se corrige registrando una acción nueva.
       </Alert>
@@ -222,7 +222,7 @@ function Formulario({
       />
 
       {!derivaDelPuesto && (
-        <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             Bajo Código del Trabajo y Servicios Profesionales la remuneración es
             la negociada con el trabajador, no la del puesto.

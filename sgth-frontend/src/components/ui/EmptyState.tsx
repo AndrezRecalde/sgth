@@ -22,7 +22,7 @@ interface Props {
 export function EmptyState({ icon: Icono, title, description, action }: Props) {
   return (
     <Stack align="center" gap="md" py={48}>
-      <ThemeIcon size={52} radius="xl" variant="light" color="gray">
+      <ThemeIcon size={52} radius="xl" variant="light" color="slate">
         <Icono size={26} stroke={1.6} />
       </ThemeIcon>
 

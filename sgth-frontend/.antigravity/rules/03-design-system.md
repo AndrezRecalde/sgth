@@ -37,13 +37,43 @@ success  → emerald      warning → amber
 danger   → red          info    → ocean       neutral → slate
 ```
 
-Se consumen a través de `StatusBadge` o del mapa `SEMANTIC_COLOR`, nunca
-escribiendo `color="green"` a mano.
+Se consumen a través de `StatusBadge`, `notificar` o el mapa `SEMANTIC_COLOR`.
+
+### Solo la paleta
+
+**ESLint rechaza cualquier color escrito a mano que no sea de la paleta**, en
+`color`, `c` y `bg`, en propiedades `color:` de un objeto y en
+`var(--mantine-color-*)` dentro de estilos:
+
+```
+permitido   emerald ocean amethyst amber red slate dark  (con tono: amber.7)
+            dimmed inherit white currentColor
+            var(--sgth-*)  var(--mantine-color-{esas escalas}-*)
+rechazado   blue orange gray teal violet grape cyan yellow green …
+```
+
+Antes el mismo gesto salía de cinco colores: guardar en verde, azul, naranja,
+turquesa o violeta; un aviso en naranja o amarillo; un gris que se veía bien
+en claro y desaparecía en oscuro. Que un nombre esté permitido no lo vuelve
+libre: se sigue eligiendo por significado.
+
+| Qué | Color |
+|---|---|
+| Botón principal, `Switch`, `Tabs`, `Stepper`, `Loader` | Ninguno: lo pone el tema |
+| Botón o acción de fila que destruye | `red` |
+| `ActionIcon` que no destruye | Ninguno: el tema lo pone gris sutil |
+| `Alert` | `ocean` informa, `amber` advierte, `red` error, `emerald` éxito, `slate` neutro |
+| Montos | `emerald` ingreso, `red` descuento o egreso |
+| `ThemeIcon` o `Avatar` decorativo | **Ninguno**: toma el acento del subsistema |
+| `ThemeIcon` que es un dato | Su color: ingreso/egreso en el kardex, oro/plata/bronce del ranking |
+| Resaltar una selección o un fondo | `var(--sgth-accent-light)`, `var(--sgth-surface-sunken)` |
+| Bordes en estilos en línea | `var(--sgth-border)`, `var(--sgth-border-strong)` |
 
 ### Acento por subsistema
 
-`SGTHAppShell` escribe `data-subsistema` en su raíz y de ahí cuelgan seis
-tokens. Todo lo que signifique "el color de este subsistema" los usa:
+`SGTHAppShell` escribe `data-subsistema` en su raíz **y en `<html>`** —para
+que modales, drawers y menús, que se montan en un portal fuera del shell,
+también lo hereden— y de ahí cuelgan seis tokens. Todo lo que signifique "el color de este subsistema" los usa:
 
 ```css
 --sgth-accent              relleno sólido
@@ -53,6 +83,11 @@ tokens. Todo lo que signifique "el color de este subsistema" los usa:
 --sgth-accent-text         texto sobre fondo tenue
 --sgth-accent-border       borde
 ```
+
+Un `ThemeIcon` o `Avatar` sin `color` los toma solo: el tema
+(`mantine.theme.ts`) les asigna `--sgth-accent-light` y `--sgth-accent-text`
+cuando no reciben color. Por eso el icono de una tarjeta sale verde en SGTH,
+azul en el Dispensario y violeta en el Portal sin que la pantalla lo diga.
 
 Así un mismo CSS sirve para los tres subsistemas. Agregar un subsistema es un
 bloque en `tokens.css` y una entrada en `config/subsistemas.ts`.

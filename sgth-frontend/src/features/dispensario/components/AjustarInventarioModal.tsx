@@ -84,7 +84,7 @@ export function AjustarInventarioModal({
 
         <Alert
           icon={<IconAlertTriangle size={14} />}
-          color="orange"
+          color="amber"
           variant="light"
         >
           <Text size="xs">

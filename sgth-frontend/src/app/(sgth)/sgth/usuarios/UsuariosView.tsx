@@ -153,7 +153,6 @@ export function UsuariosView() {
 
       <Group justify="flex-end">
         <Button
-          color="emerald"
           variant="light"
           leftSection={<IconUserPlus size={16} />}
           onClick={handleNuevo}
@@ -190,7 +189,6 @@ export function UsuariosView() {
             description="Comienza creando el primer usuario del sistema."
             action={
               <Button
-                color="emerald"
                 variant="light"
                 leftSection={<IconUserPlus size={14} />}
                 onClick={handleNuevo}

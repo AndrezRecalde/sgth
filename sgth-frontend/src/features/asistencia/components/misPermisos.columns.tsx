@@ -117,7 +117,6 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
             {
               label: acciones.exportandoId === p.id ? 'Exportando...' : 'Imprimir permiso',
               icon: <IconPrinter size={14} />,
-              color: 'blue',
               onClick: () => acciones.onExportar(p.id),
             },
           ]}

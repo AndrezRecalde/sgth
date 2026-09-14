@@ -139,19 +139,17 @@ export function getRecetasColumns(
               icon:    cerrada
                 ? <IconEye size={14} />
                 : <IconCheck size={14} />,
-              color:   cerrada ? 'blue' : 'emerald',
               onClick: () => onAbrir(r),
             },
             {
               label:   'Imprimir receta',
               icon:    <IconPrinter size={14} />,
-              color:   'ocean',
               onClick: () => onImprimir(r),
             },
             ...(NO_ANULABLES.includes(r.estado) ? [] : [{
               label:   'Anular receta',
               icon:    <IconBan size={14} />,
-              color:   'orange',
+              color:   'red',
               onClick: () => onAnular(r),
             }]),
           ]} />

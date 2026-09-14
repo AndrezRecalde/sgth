@@ -15,7 +15,7 @@ export default function CambiarPasswordPage() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        background: 'var(--mantine-color-gray-0)',
+        background: 'var(--sgth-canvas)',
       }}
       p="md"
     >

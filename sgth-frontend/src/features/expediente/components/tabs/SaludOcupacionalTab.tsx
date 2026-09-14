@@ -93,7 +93,6 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
           <Button
             size="xs"
             variant="light"
-            color="blue"
             leftSection={<IconDownload size={13} />}
             loading={descargando}
             onClick={() =>

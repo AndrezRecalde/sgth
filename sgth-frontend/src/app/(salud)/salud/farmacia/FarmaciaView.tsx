@@ -126,14 +126,12 @@ export function FarmaciaView() {
               component={Link}
               href="/salud/farmacia/adquisiciones"
               variant="light"
-              color="blue"
               leftSection={<IconShoppingCart size={14} />}
             >
               Adquisiciones
             </Button>
             <Button
               variant="light"
-              color="emerald"
               leftSection={<IconCubePlus size={14} />}
               onClick={() => {
                 setMedicinaSel(null);
@@ -172,7 +170,6 @@ export function FarmaciaView() {
               <ActionIcon
                 size="sm"
                 variant="subtle"
-                color="gray"
                 onClick={() => {
                   setSearch("");
                   setQuery("");
@@ -205,7 +202,7 @@ export function FarmaciaView() {
             );
             setPage(1);
           }}
-          color="gray"
+          color="slate"
           size="sm"
         >
           Inactivas

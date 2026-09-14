@@ -85,7 +85,7 @@ export function DocumentosTab({ servidorId }: Props) {
     return (
       <Stack gap="md">
         <Group justify="flex-end">
-          <Button size="xs" color="emerald" variant="light"
+          <Button size="xs" variant="light"
             leftSection={<IconPlus size={14} />} onClick={open}>
             Subir documento
           </Button>
@@ -104,7 +104,7 @@ export function DocumentosTab({ servidorId }: Props) {
   return (
     <Stack gap="md">
       <Group justify="flex-end">
-        <Button size="xs" color="emerald" variant="light"
+        <Button size="xs" variant="light"
           leftSection={<IconPlus size={14} />} onClick={open}>
           Subir documento
         </Button>
@@ -141,7 +141,7 @@ export function DocumentosTab({ servidorId }: Props) {
                     </StatusBadge>
                   )}
                   <Tooltip label="Descargar" withArrow>
-                    <ActionIcon variant="subtle" color="blue"
+                    <ActionIcon variant="subtle"
                       onClick={() => handleDescargar(doc)}>
                       <IconDownload size={14} />
                     </ActionIcon>

@@ -72,7 +72,6 @@ export function MisPermisosView() {
         actions={
           puedeRegistrar && (
             <Button
-              color="emerald"
               variant="light"
               leftSection={<IconCubePlus size={16} />}
               onClick={abrirModal}

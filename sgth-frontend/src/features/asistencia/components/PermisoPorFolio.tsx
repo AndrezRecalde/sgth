@@ -110,7 +110,6 @@ export function PermisoPorFolio({ folio }: Props) {
         {pendiente && puede.confirmar && (
           <Button
             size="md"
-            color="emerald"
             variant="light"
             leftSection={<IconCheck size={18} />}
             loading={confirmar.isPending}
@@ -125,7 +124,6 @@ export function PermisoPorFolio({ folio }: Props) {
         {pendiente && puede.rechazar && (
           <Button
             size="md"
-            color="orange"
             variant="light"
             leftSection={<IconX size={18} />}
             onClick={() => setConMotivo('rechazar')}
@@ -137,7 +135,6 @@ export function PermisoPorFolio({ folio }: Props) {
         {confirmado && puede.revertir && (
           <Button
             size="md"
-            color="orange"
             variant="light"
             leftSection={<IconArrowBackUp size={18} />}
             onClick={() => setConMotivo('revertir')}

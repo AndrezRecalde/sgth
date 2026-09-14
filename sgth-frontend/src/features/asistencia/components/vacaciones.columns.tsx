@@ -119,13 +119,11 @@ export function getVacacionesColumns(
                 ? 'Exportando...'
                 : 'Imprimir solicitud',
               icon: <IconPrinter size={14} />,
-              color: 'blue',
               onClick: () => actions.onExportar(v.id),
             },
             {
               label: 'Aprobar',
               icon: <IconCheck size={14} />,
-              color: 'emerald',
               onClick: () => actions.onAprobar(v.id),
               hidden: !actions.puedeResolver || v.estado !== 'pendiente',
             },
@@ -147,7 +145,7 @@ export function getVacacionesColumns(
             {
               label: 'Anular',
               icon: <IconBan size={14} />,
-              color: 'orange',
+              color: 'red',
               onClick: () => actions.onAnular(v),
               hidden: !actions.puedeResolver || !sePuedeAnular(v),
             },

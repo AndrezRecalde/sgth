@@ -49,7 +49,6 @@ export function PerfilServidorCard({ usuario }: Props) {
 
         <Group gap="lg" wrap="nowrap">
           <Avatar
-            color="emerald"
             size={84}
             radius="xl"
             style={{ fontSize: 28, fontWeight: 700 }}

@@ -45,7 +45,7 @@ export function PermisoModal({ opened, onClose, soloPropio = false }: Props) {
       </Stepper>
 
       {registro.paso === 0 && !registro.puedeRegistrar && (
-        <Alert icon={<IconInfoCircle size={16} />} color="orange" variant="light">
+        <Alert icon={<IconInfoCircle size={16} />} color="amber" variant="light">
           <Text size="sm">
             Su usuario no está vinculado a un servidor con unidad asignada, así
             que no hay a nombre de quién registrar el permiso. Pídale a Talento

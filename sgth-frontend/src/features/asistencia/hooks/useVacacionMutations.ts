@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { asistenciaService } from '../services/asistenciaService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useVacacionMutations() {
   const qc = useQueryClient()
@@ -15,22 +13,13 @@ export function useVacacionMutations() {
     qc.invalidateQueries({ queryKey: ['periodos-vacaciones'] })
   }
 
-  const onError = (error: unknown) => notifications.show({
-    title: 'Error', message: getApiErrorMessage(error),
-    color: 'red',
-    icon: React.createElement(IconX, { size: 16 }),
-  })
+  const onError = (error: unknown) => notificar.error('Error', getApiErrorMessage(error))
 
   const crear = useMutation({
     mutationFn: (data: Parameters<typeof asistenciaService.vacaciones.crear>[0]) =>
       asistenciaService.vacaciones.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Solicitud registrada',
-        message: 'La solicitud de vacaciones fue registrada.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Solicitud registrada', 'La solicitud de vacaciones fue registrada.')
       invalidar()
     },
     onError,
@@ -43,12 +32,7 @@ export function useVacacionMutations() {
     }) =>
       asistenciaService.vacaciones.actualizar(id, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Solicitud actualizada',
-        message: 'La solicitud fue procesada correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Solicitud actualizada', 'La solicitud fue procesada correctamente.')
       invalidar()
     },
     onError,
@@ -58,12 +42,7 @@ export function useVacacionMutations() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       asistenciaService.vacaciones.anular(id, motivo),
     onSuccess: (respuesta) => {
-      notifications.show({
-        title: 'Solicitud anulada',
-        message: respuesta.mensaje,
-        color: 'orange',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Solicitud anulada', respuesta.mensaje)
       invalidar()
     },
     onError,

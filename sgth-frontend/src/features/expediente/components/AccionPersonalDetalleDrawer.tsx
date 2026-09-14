@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge, notificar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Alert, Box, Button, Divider, Drawer, Grid, Group, Paper,
@@ -11,7 +11,6 @@ import {
   IconAlertTriangle, IconBan, IconCheck, IconFileDownload,
   IconPencil, IconUserOff,
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { expedienteService } from '../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
@@ -92,11 +91,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
       link.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: getApiErrorMessage(error, 'No se pudo generar el PDF.'),
-        color: 'red',
-      })
+      notificar.error('Error', getApiErrorMessage(error, 'No se pudo generar el PDF.'))
     } finally {
       setDescargando(false)
     }
@@ -199,7 +194,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           {/* Sin columna derecha —cesación, sanción— la actual ocupa el ancho
               completo en vez de dejar medio panel vacío. */}
           <Grid.Col span={{ base: 12, sm: propone || ausencia ? 6 : 12 }}>
-            <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
+            <Paper withBorder p="sm" radius="md" h="100%" bg="var(--sgth-surface-sunken)">
               <Text size="sm" fw={700} mb="xs">
                 {propone ? 'SITUACIÓN ACTUAL' : 'SITUACIÓN DEL SERVIDOR'}
               </Text>
@@ -350,7 +345,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         )}
 
         {mv.cubre_movimiento && (
-          <Alert variant="light" color="violet" icon={<IconUserOff size={16} />}>
+          <Alert variant="light" color="amethyst" icon={<IconUserOff size={16} />}>
             Contratación de reemplazo: cubre la ausencia de{' '}
             <strong>
               {[mv.cubre_movimiento.servidor?.apellido, mv.cubre_movimiento.servidor?.nombre]
@@ -364,7 +359,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         )}
 
         {esIngreso && estado === 'suscrita' && (
-          <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />}>
+          <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
             Al aprobar se creará el contrato. Se pedirán el número de contrato y la
             remuneración, que aún no están registrados.
           </Alert>
@@ -408,7 +403,6 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             {avanzar.map((destino) => (
               <Button
                 key={destino}
-                color="emerald"
                 leftSection={<IconCheck size={14} />}
                 loading={transicionar.isPending}
                 onClick={() => {

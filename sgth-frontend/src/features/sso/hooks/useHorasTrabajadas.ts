@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { ssoService } from '../services/ssoService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 interface Params {
   page?: number
@@ -28,23 +26,16 @@ export function useHorasTrabajadasMutations() {
   }
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title: 'Error',
-      message: getApiErrorMessage(error),
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const registrar = useMutation({
     mutationFn: (data: { periodo: string; unidad_administrativa_id?: number; total_horas: number }) =>
       ssoService.registrarHorasTrabajadas(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Horas registradas',
-        message: 'Las horas trabajadas del período fueron registradas.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Horas registradas',
+        'Las horas trabajadas del período fueron registradas.',
+      )
       invalidar()
     },
     onError,
@@ -53,12 +44,7 @@ export function useHorasTrabajadasMutations() {
   const eliminar = useMutation({
     mutationFn: (id: number) => ssoService.eliminarHorasTrabajadas(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Registro eliminado',
-        message: 'El registro de horas trabajadas fue eliminado.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Registro eliminado', 'El registro de horas trabajadas fue eliminado.')
       invalidar()
     },
     onError,

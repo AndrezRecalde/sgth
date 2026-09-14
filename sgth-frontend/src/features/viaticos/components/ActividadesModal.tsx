@@ -133,7 +133,7 @@ export function ActividadesModal({
       <Stack gap="md">
         <Alert
           icon={<IconAlertCircle size={14} />}
-          color="blue"
+          color="ocean"
           variant="light"
         >
           <Text size="xs" fw={500}>Período del viático</Text>
@@ -167,7 +167,6 @@ export function ActividadesModal({
 
         <Button
           variant="light"
-          color="blue"
           size="sm"
           leftSection={<IconPlus size={14} />}
           onClick={() => append({ ...ACTIVIDAD_VACIA })}

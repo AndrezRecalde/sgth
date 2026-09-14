@@ -51,7 +51,7 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="violet" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconShieldCheck size={16} />
           </ThemeIcon>
           <Stack gap={0}>
@@ -113,7 +113,6 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
             <Group gap="xs">
               <Button variant="default" onClick={onClose}>Cancelar</Button>
               <Button
-                color="violet"
                 loading={sincronizarPermisos.isPending}
                 leftSection={<IconShieldCheck size={14} />}
                 onClick={handleGuardar}

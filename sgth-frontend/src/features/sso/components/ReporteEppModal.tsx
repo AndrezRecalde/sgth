@@ -88,7 +88,6 @@ export function ReporteEppModal({ opened, onClose }: Props) {
           />
           <Button
             leftSection={<IconSearch size={16} />}
-            color="emerald"
             onClick={handleBuscar}
             disabled={!fechaInicio || !fechaFin}
           >

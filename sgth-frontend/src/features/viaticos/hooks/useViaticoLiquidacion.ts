@@ -1,20 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications }               from '@mantine/notifications'
-import { IconCheck, IconX }            from '@tabler/icons-react'
-import React                           from 'react'
 import { viaticoService }              from '../services/viaticoService'
 import { getApiErrorMessage }          from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useViaticoLiquidacion() {
   const qc = useQueryClient()
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title:   'Error',
-      message: getApiErrorMessage(error),
-      color:   'red',
-      icon:    React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const guardarActividades = useMutation({
     mutationFn: ({
@@ -28,12 +21,7 @@ export function useViaticoLiquidacion() {
       viaticoId, actividades
     ),
     onSuccess: (_data, { viaticoId }) => {
-      notifications.show({
-        title:   'Actividades guardadas',
-        message: 'Las actividades se guardaron correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Actividades guardadas', 'Las actividades se guardaron correctamente.')
       qc.invalidateQueries({ queryKey: ['liquidacion', viaticoId] })
       qc.invalidateQueries({ queryKey: ['viatico'] })
     },
@@ -52,12 +40,7 @@ export function useViaticoLiquidacion() {
       viaticoId, facturas
     ),
     onSuccess: (_data, { viaticoId }) => {
-      notifications.show({
-        title:   'Facturas guardadas',
-        message: 'Los comprobantes se guardaron correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Facturas guardadas', 'Los comprobantes se guardaron correctamente.')
       qc.invalidateQueries({ queryKey: ['liquidacion', viaticoId] })
       qc.invalidateQueries({ queryKey: ['viatico'] })
     },
@@ -72,14 +55,12 @@ export function useViaticoLiquidacion() {
       observacion?: string
     }) => viaticoService.liquidacion.revisarFactura(viaticoId, facturaId, { decision, observacion }),
     onSuccess: (_data, { decision }) => {
-      notifications.show({
-        title:   decision === 'aceptada' ? 'Comprobante aceptado' : 'Comprobante observado',
-        message: decision === 'aceptada'
+      notificar.exito(
+        decision === 'aceptada' ? 'Comprobante aceptado' : 'Comprobante observado',
+        decision === 'aceptada'
           ? 'El comprobante cuenta para contabilizar.'
           : 'El servidor verá la observación al corregir la liquidación.',
-        color: decision === 'aceptada' ? 'emerald' : 'orange',
-        icon:  React.createElement(IconCheck, { size: 16 }),
-      })
+      )
       qc.invalidateQueries({ queryKey: ['viatico'] })
       qc.invalidateQueries({ queryKey: ['liquidacion'] })
     },
@@ -90,12 +71,10 @@ export function useViaticoLiquidacion() {
     mutationFn: (viaticoId: number) =>
       viaticoService.liquidacion.confirmar(viaticoId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Liquidación registrada',
-        message: 'La liquidación fue confirmada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Liquidación registrada',
+        'La liquidación fue confirmada correctamente.',
+      )
       qc.invalidateQueries({ queryKey: ['viaticos'] })
       qc.invalidateQueries({ queryKey: ['viatico'] })
       qc.invalidateQueries({ queryKey: ['liquidacion'] })

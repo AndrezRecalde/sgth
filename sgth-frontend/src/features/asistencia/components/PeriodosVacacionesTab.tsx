@@ -28,7 +28,7 @@ import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
 import { TopeAcumulacionCard } from "./TopeAcumulacionCard";
 import { confirmar, SgthTable, StatusBadge, TableActions, Toolbar } from "@/components/ui";
-import { type SemanticTone } from "@/config/design.tokens";
+import { SEMANTIC_COLOR, type SemanticTone } from "@/config/design.tokens";
 import type {
   ServidorConRelaciones,
   PeriodoVacacion,
@@ -169,7 +169,7 @@ export function PeriodosVacacionesTab() {
       title: "Generados",
       width: 90,
       render: ({ dias_generados }) => (
-        <Text size="sm" ta="center" c="blue">
+        <Text size="sm" ta="center" c="ocean">
           {formatDias(dias_generados)}
         </Text>
       ),
@@ -182,7 +182,7 @@ export function PeriodosVacacionesTab() {
         const val = Number(dias_vacaciones_aprobadas ?? 0);
         return (
           <Stack gap={2}>
-            <Text size="sm" ta="center" c="blue" fw={500}>
+            <Text size="sm" ta="center" c="ocean" fw={500}>
               {val.toFixed(2)}
             </Text>
             <Text size="xs" c="dimmed" ta="center">
@@ -210,7 +210,7 @@ export function PeriodosVacacionesTab() {
 
         return (
           <Stack gap={2} align="center">
-            <Text size="sm" fw={500} c="orange">
+            <Text size="sm" fw={500} c="amber">
               {val.toFixed(3)} días
             </Text>
             <Text size="xs" c="dimmed">
@@ -239,7 +239,7 @@ export function PeriodosVacacionesTab() {
           generado > 0
             ? Math.min(100, Math.round((usado / generado) * 100))
             : 0;
-        const color = pct >= 80 ? "red" : pct >= 50 ? "orange" : "emerald";
+        const tono: SemanticTone = pct >= 80 ? "danger" : pct >= 50 ? "warning" : "success";
 
         return (
           <Stack gap={3}>
@@ -255,7 +255,7 @@ export function PeriodosVacacionesTab() {
               style={{
                 width: "100%",
                 height: 6,
-                background: "var(--mantine-color-gray-2)",
+                background: "var(--sgth-surface-sunken)",
                 borderRadius: 3,
                 overflow: "hidden",
               }}
@@ -264,12 +264,7 @@ export function PeriodosVacacionesTab() {
                 style={{
                   width: `${pct}%`,
                   height: "100%",
-                  background:
-                    color === "red"
-                      ? "var(--mantine-color-red-5)"
-                      : color === "orange"
-                        ? "var(--mantine-color-orange-5)"
-                        : "var(--mantine-color-green-5)",
+                  background: `var(--mantine-color-${SEMANTIC_COLOR[tono]}-5)`,
                   borderRadius: 3,
                   transition: "width 0.3s ease",
                 }}
@@ -294,10 +289,10 @@ export function PeriodosVacacionesTab() {
         const enAlerta = tope !== null && acum >= tope * 0.75;
         return (
           <Group gap={4}>
-            <Text size="sm" fw={600} c={enAlerta ? "orange" : "inherit"}>
+            <Text size="sm" fw={600} c={enAlerta ? "amber" : "inherit"}>
               {formatDias(saldo_acumulado)}
             </Text>
-            {enAlerta && <IconAlertTriangle size={12} color="orange" />}
+            {enAlerta && <IconAlertTriangle size={12} color="var(--mantine-color-amber-6)" />}
           </Group>
         );
       },
@@ -322,7 +317,6 @@ export function PeriodosVacacionesTab() {
             {
               label: "Recalcular este período",
               icon: <IconRefreshAlert size={14} />,
-              color: "orange",
               // Solo en los cerrados: un período abierto se recalcula con la
               // generación normal, que no necesita advertencia ni bitácora.
               hidden: periodo.estado === "abierto",
@@ -358,7 +352,6 @@ export function PeriodosVacacionesTab() {
               }
             />
             <Button
-              color="emerald"
               variant="light"
               leftSection={<IconUsers size={16} />}
               loading={generarTodos.isPending}
@@ -444,7 +437,7 @@ export function PeriodosVacacionesTab() {
               <IconInfoCircle size={16} />
             )
           }
-          color={alertaLimite ? "orange" : "blue"}
+          color={alertaLimite ? "amber" : "ocean"}
           variant="light"
         >
           <Group gap="sm">
@@ -453,7 +446,7 @@ export function PeriodosVacacionesTab() {
               {Number(saldoTotal).toFixed(1)} días
             </StatusBadge>
             {alertaLimite && tope !== null && (
-              <Text size="xs" c="orange" fw={500}>
+              <Text size="xs" c="amber" fw={500}>
                 {excedente > 0
                   ? `Pasa su tope de ${tope.toFixed(0)} días por ${excedente.toFixed(1)}: Talento Humano debe decidir si vence el excedente.`
                   : `Se acerca a su tope de ${tope.toFixed(0)} días: conviene que goce vacaciones pronto.`}
@@ -467,7 +460,7 @@ export function PeriodosVacacionesTab() {
       {!servidorSelId ? (
         <Alert
           icon={<IconCalendarStats size={16} />}
-          color="gray"
+          color="slate"
           variant="light"
         >
           <Text size="sm">
@@ -479,7 +472,7 @@ export function PeriodosVacacionesTab() {
       ) : periodos.length === 0 ? (
         <Alert
           icon={<IconInfoCircle size={16} />}
-          color="orange"
+          color="amber"
           variant="light"
         >
           <Text size="sm">
@@ -503,7 +496,7 @@ export function PeriodosVacacionesTab() {
               <Grid>
                 <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
-                    <Text size="xl" fw={700} c="blue">
+                    <Text size="xl" fw={700} c="ocean">
                       {periodos.length}
                     </Text>
                     <Text size="xs" c="dimmed" ta="center">
@@ -523,7 +516,7 @@ export function PeriodosVacacionesTab() {
                 </Grid.Col>
                 <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
-                    <Text size="xl" fw={700} c="orange">
+                    <Text size="xl" fw={700} c="amber">
                       {periodos
                         .reduce((acc, p) => acc + Number(p.dias_utilizados), 0)
                         .toFixed(1)}
@@ -535,7 +528,7 @@ export function PeriodosVacacionesTab() {
                 </Grid.Col>
                 <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
-                    <Text size="xl" fw={700} c="blue">
+                    <Text size="xl" fw={700} c="ocean">
                       {Number(resumen?.total_vacaciones_aprobadas ?? 0).toFixed(
                         1,
                       )}
@@ -547,7 +540,7 @@ export function PeriodosVacacionesTab() {
                 </Grid.Col>
                 <Grid.Col span={{ base: 6, sm: 2 }}>
                   <Stack gap={2} align="center">
-                    <Text size="xl" fw={700} c="orange">
+                    <Text size="xl" fw={700} c="amber">
                       {Number(resumen?.total_permisos_personales ?? 0).toFixed(
                         3,
                       )}
@@ -562,7 +555,7 @@ export function PeriodosVacacionesTab() {
                     <Text
                       size="xl"
                       fw={700}
-                      c={alertaLimite ? "orange" : "gray"}
+                      c={alertaLimite ? "amber" : "dimmed"}
                     >
                       {periodos
                         .reduce((acc, p) => acc + Number(p.dias_generados), 0)

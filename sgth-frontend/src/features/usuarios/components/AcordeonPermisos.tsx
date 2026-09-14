@@ -27,7 +27,7 @@ export function AcordeonPermisos({
 }: Props) {
   if (grupos.length === 0) {
     return (
-      <Alert color="gray" variant="light" icon={<IconInfoCircle size={16} />}>
+      <Alert color="slate" variant="light" icon={<IconInfoCircle size={16} />}>
         <Text size="xs">No hay permisos disponibles configurados.</Text>
       </Alert>
     )
@@ -67,7 +67,7 @@ export function AcordeonPermisos({
                       <Group gap="xs" wrap="nowrap">
                         <Checkbox
                           size="sm"
-                          color="violet"
+                          color="amethyst"
                           checked={activo || cubierto}
                           disabled={cubierto}
                           onChange={() => onToggle(p.nombre)}

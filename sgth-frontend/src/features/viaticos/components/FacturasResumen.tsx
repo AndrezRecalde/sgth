@@ -24,7 +24,7 @@ export function FacturasResumen({ viatico, totalFacturas }: Props) {
   const justificadoCompleto = totalFacturas >= monto70;
 
   return (
-    <Card withBorder radius="md" p="sm" bg="gray.0">
+    <Card withBorder radius="md" p="sm" bg="var(--sgth-surface-sunken)">
       <Group justify="space-between">
         <Text size="sm" c="dimmed">
           Monto total asignado:
@@ -55,9 +55,9 @@ export function FacturasResumen({ viatico, totalFacturas }: Props) {
         <Text size="sm" c="dimmed">
           Total comprobantes:
         </Text>
-        <Text size="sm" fw={600} c={justificadoCompleto ? "teal" : "orange"}>
+        <Text size="sm" fw={600} c={justificadoCompleto ? "emerald" : "amber"}>
           ${totalFacturas.toFixed(2)}{" "}
-          <Text span size="xs" c={justificadoCompleto ? "teal" : "orange"}>
+          <Text span size="xs" c={justificadoCompleto ? "emerald" : "amber"}>
             ({porcentajeJustif}%)
           </Text>
         </Text>
@@ -67,12 +67,12 @@ export function FacturasResumen({ viatico, totalFacturas }: Props) {
         <Text size="sm" fw={600}>
           A devolver a la institución:
         </Text>
-        <Text size="sm" fw={700} c={justificadoCompleto ? "teal" : "orange"}>
+        <Text size="sm" fw={700} c={justificadoCompleto ? "emerald" : "amber"}>
           {diferencia >= 0 ? `$${diferencia.toFixed(2)}` : "$0.00"}
         </Text>
       </Group>
       {!justificadoCompleto && diferencia > 0 && (
-        <Alert color="yellow" variant="light" p="xs" mt={4}>
+        <Alert color="amber" variant="light" p="xs" mt={4}>
           <Text size="xs">
             Faltan <strong>${diferencia.toFixed(2)}</strong> en H&A por
             justificar.
@@ -80,7 +80,7 @@ export function FacturasResumen({ viatico, totalFacturas }: Props) {
         </Alert>
       )}
       {diferencia < 0 && (
-        <Alert color="orange" variant="light" p="xs" mt={4}>
+        <Alert color="amber" variant="light" p="xs" mt={4}>
           <Text size="xs">
             Los comprobantes exceden en{" "}
             <strong>${Math.abs(diferencia).toFixed(2)}</strong>. Gastos extras a

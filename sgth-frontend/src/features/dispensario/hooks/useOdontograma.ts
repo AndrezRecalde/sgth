@@ -1,12 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { odontogramaService } from '../services/odontogramaService'
 import { getApiErrorMessage } from '@/types/api'
 import type {
   RegistrarProcedimientoData, AnularProcedimientoData,
 } from '../services/odontogramaService'
+import { notificar } from '@/components/ui'
 
 export function useOdontograma(historiaClinicaId: number | null) {
   return useQuery({
@@ -24,21 +22,14 @@ export function useRegistrarProcedimiento(historiaClinicaId: number | null) {
     mutationFn: (data: RegistrarProcedimientoData) =>
       odontogramaService.registrarProcedimiento(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Procedimiento registrado',
-        message: 'El odontograma fue actualizado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Procedimiento registrado',
+        'El odontograma fue actualizado correctamente.',
+      )
       qc.invalidateQueries({ queryKey: ['odontograma', historiaClinicaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -49,21 +40,14 @@ export function useAnularProcedimiento(historiaClinicaId: number | null) {
     mutationFn: ({ id, data }: { id: number; data: AnularProcedimientoData }) =>
       odontogramaService.anularProcedimiento(id, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Procedimiento anulado',
-        message: 'El registro quedó anulado en el historial y la pieza se actualizó.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Procedimiento anulado',
+        'El registro quedó anulado en el historial y la pieza se actualizó.',
+      )
       qc.invalidateQueries({ queryKey: ['odontograma', historiaClinicaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 

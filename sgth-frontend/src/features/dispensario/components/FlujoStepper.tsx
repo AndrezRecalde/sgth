@@ -30,7 +30,7 @@ export function FlujoStepper({ pasoActual }: Props) {
   const indiceActual = ORDEN_PASOS.indexOf(pasoActual);
 
   return (
-    <Stepper active={indiceActual} size="sm" color="emerald" mb="lg">
+    <Stepper active={indiceActual} size="sm" mb="lg">
       {ORDEN_PASOS.map((paso) => (
         <Stepper.Step key={paso} label={ETIQUETAS[paso]} />
       ))}

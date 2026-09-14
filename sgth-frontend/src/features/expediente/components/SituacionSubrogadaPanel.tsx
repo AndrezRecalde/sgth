@@ -67,7 +67,7 @@ export function SituacionSubrogadaPanel({ unidad, puesto, rmuSubrogante }: Props
             ) : diferencia > 0 ? (
               <Text size="sm" fw={700} c="emerald">{dinero(diferencia)}</Text>
             ) : (
-              <Text size="xs" c="orange">
+              <Text size="xs" c="amber">
                 El puesto no supera la remuneración actual: no genera diferencia.
               </Text>
             )}

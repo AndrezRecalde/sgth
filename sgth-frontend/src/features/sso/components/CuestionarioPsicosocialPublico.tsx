@@ -5,13 +5,13 @@ import {
   Box, Container, Stack, Stepper, Title, Text, Radio, Group, Button,
   Select, Skeleton, Alert, Paper, Divider,
 } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCuestionarioPsicosocial, useEnviarRespuestaPsicosocial } from '../hooks/usePsicosocial'
 import { OPCIONES_LIKERT_PSICOSOCIAL } from '../schemas/psicosocial.schema'
 import { getApiErrorMessage } from '@/types/api'
 import type { RespuestaPsicosocialPayload } from '../services/psicosocialService'
+import { notificar } from '@/components/ui'
 
 interface Props {
   codigo: string
@@ -89,11 +89,10 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
     if (!dimensionActualKey) return true
     const faltantes = itemsActuales.filter((n) => respuestas[n] === undefined)
     if (faltantes.length > 0) {
-      notifications.show({
-        title: 'Faltan respuestas',
-        message: `Debe responder todos los ítems de esta sección (faltan ${faltantes.length}).`,
-        color: 'red',
-      })
+      notificar.error(
+        'Faltan respuestas',
+        `Debe responder todos los ítems de esta sección (faltan ${faltantes.length}).`,
+      )
       return false
     }
     return true
@@ -108,11 +107,10 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
 
   const handleEnviar = () => {
     if (Object.keys(respuestas).length !== 58) {
-      notifications.show({
-        title: 'Cuestionario incompleto',
-        message: 'Debe responder los 58 ítems del cuestionario antes de enviar.',
-        color: 'red',
-      })
+      notificar.error(
+        'Cuestionario incompleto',
+        'Debe responder los 58 ítems del cuestionario antes de enviar.',
+      )
       return
     }
 
@@ -124,11 +122,7 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
     enviar.mutate(payload, {
       onSuccess: () => setEnviado(true),
       onError: (err) => {
-        notifications.show({
-          title: 'No se pudo enviar',
-          message: getApiErrorMessage(err),
-          color: 'red',
-        })
+        notificar.error('No se pudo enviar', getApiErrorMessage(err))
       },
     })
   }
@@ -241,7 +235,6 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
           </Button>
           {esUltimoPaso ? (
             <Button
-              color="emerald"
               loading={enviar.isPending}
               onClick={() => {
                 if (!validarPasoActual()) return
@@ -251,7 +244,7 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
               Enviar cuestionario
             </Button>
           ) : (
-            <Button color="emerald" onClick={siguiente}>
+            <Button onClick={siguiente}>
               Siguiente
             </Button>
           )}

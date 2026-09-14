@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { nominaService } from '../services/nominaService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useNominaMutations() {
   const qc = useQueryClient()
@@ -11,21 +9,12 @@ export function useNominaMutations() {
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['nominas'] })
 
-  const onError = (error: unknown) => notifications.show({
-    title: 'Error', message: getApiErrorMessage(error),
-    color: 'red',
-    icon: React.createElement(IconX, { size: 16 }),
-  })
+  const onError = (error: unknown) => notificar.error('Error', getApiErrorMessage(error))
 
   const calcular = useMutation({
     mutationFn: (periodo: string) => nominaService.calcular(periodo),
     onSuccess: () => {
-      notifications.show({
-        title: 'Nómina calculada',
-        message: 'La nómina fue calculada en borrador.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Nómina calculada', 'La nómina fue calculada en borrador.')
       invalidar()
     },
     onError,
@@ -34,12 +23,7 @@ export function useNominaMutations() {
   const cerrar = useMutation({
     mutationFn: (id: number) => nominaService.cerrar(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Nómina cerrada',
-        message: 'La nómina fue cerrada correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Nómina cerrada', 'La nómina fue cerrada correctamente.')
       invalidar()
     },
     onError,

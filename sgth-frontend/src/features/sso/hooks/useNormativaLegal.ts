@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { ssoService } from '../services/ssoService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useNormativas(params?: { tipo?: string; solo_activas?: boolean }) {
   return useQuery({
@@ -22,23 +20,13 @@ export function useNormativaMutations() {
   }
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title: 'Error',
-      message: getApiErrorMessage(error),
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const crear = useMutation({
     mutationFn: (data: { nombre: string; tipo: string; fecha_vigencia?: string; descripcion?: string }) =>
       ssoService.crearNormativa(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Normativa registrada',
-        message: 'La normativa fue agregada al catálogo.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Normativa registrada', 'La normativa fue agregada al catálogo.')
       invalidar()
     },
     onError,
@@ -47,12 +35,7 @@ export function useNormativaMutations() {
   const eliminar = useMutation({
     mutationFn: (id: number) => ssoService.eliminarNormativa(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Normativa eliminada',
-        message: 'La normativa fue eliminada del catálogo.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Normativa eliminada', 'La normativa fue eliminada del catálogo.')
       invalidar()
     },
     onError,

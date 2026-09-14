@@ -1,12 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { criterioService } from '../services/criterioService'
 import { getApiErrorMessage } from '@/types/api'
 import type {
   CrearCriterioData, CalificacionItem,
 } from '../services/criterioService'
+import { notificar } from '@/components/ui'
 
 export function useCriterios(convocatoriaId: number | null) {
   return useQuery({
@@ -23,21 +21,11 @@ export function useCrearCriterio(convocatoriaId: number) {
     mutationFn: (data: CrearCriterioData) =>
       criterioService.crear(convocatoriaId, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Criterio agregado',
-        message: 'El criterio fue registrado correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Criterio agregado', 'El criterio fue registrado correctamente.')
       qc.invalidateQueries({ queryKey: ['criterios', convocatoriaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -47,21 +35,11 @@ export function useEliminarCriterio(convocatoriaId: number) {
     mutationFn: (criterioId: number) =>
       criterioService.eliminar(convocatoriaId, criterioId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Criterio eliminado',
-        message: 'El criterio fue removido.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Criterio eliminado', 'El criterio fue removido.')
       qc.invalidateQueries({ queryKey: ['criterios', convocatoriaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -90,12 +68,10 @@ export function useGuardarCalificaciones(
         convocatoriaId, postulanteId, calificaciones
       ),
     onSuccess: () => {
-      notifications.show({
-        title:   'Calificación guardada',
-        message: 'Los puntajes fueron registrados correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Calificación guardada',
+        'Los puntajes fueron registrados correctamente.',
+      )
       qc.invalidateQueries({
         queryKey: ['calificaciones', convocatoriaId, postulanteId],
       })
@@ -108,11 +84,6 @@ export function useGuardarCalificaciones(
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

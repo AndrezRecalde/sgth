@@ -67,11 +67,10 @@ export function AtencionEnfermeriaForm({
       <Stack gap="md">
         <Card
           withBorder radius="md" p="sm"
-          style={{ backgroundColor: 'var(--mantine-color-blue-light)' }}
+          style={{ backgroundColor: 'var(--sgth-accent-light)' }}
         >
           <Group gap="sm">
             <Avatar
-              color={paciente.tipo === 'servidor' ? 'emerald' : 'blue'}
               radius="xl"
             >
               {paciente.tipo === 'servidor'
@@ -129,7 +128,6 @@ export function AtencionEnfermeriaForm({
           </Button>
           <Button
             type="submit"
-            color="violet"
             leftSection={<IconCheck size={14} />}
             loading={registrar.isPending}
           >

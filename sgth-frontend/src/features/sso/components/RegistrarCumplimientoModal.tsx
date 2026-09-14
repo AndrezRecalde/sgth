@@ -111,7 +111,7 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
             error={errors.observaciones?.message}
           />
           <Group justify="flex-end">
-            <Button type="submit" loading={registrar.isPending} color="emerald" size="xs" variant="light">
+            <Button type="submit" loading={registrar.isPending} size="xs" variant="light">
               Guardar
             </Button>
           </Group>

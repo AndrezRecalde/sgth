@@ -37,10 +37,10 @@ function calcularImc(pesoKg?: number, tallaCm?: number): number | null {
 function clasificacionImc(imc: number | null): {
   texto: string; color: string
 } {
-  if (imc === null) return { texto: '—', color: 'gray' }
-  if (imc < 18.5) return { texto: 'Bajo peso', color: 'blue' }
+  if (imc === null) return { texto: '—', color: 'slate' }
+  if (imc < 18.5) return { texto: 'Bajo peso', color: 'ocean' }
   if (imc < 25)   return { texto: 'Normal',    color: 'emerald' }
-  if (imc < 30)   return { texto: 'Sobrepeso', color: 'orange' }
+  if (imc < 30)   return { texto: 'Sobrepeso', color: 'amber' }
   return { texto: 'Obesidad', color: 'red' }
 }
 
@@ -106,7 +106,6 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
           <Group justify="space-between" wrap="nowrap">
             <Group gap="sm">
               <Avatar
-                color={esServidor ? 'emerald' : 'blue'}
                 radius="xl"
               >
                 {esServidor
@@ -348,7 +347,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
           {alterados.length > 0 && (
             <Alert
               icon={<IconAlertTriangle size={16} />}
-              color={hayCritico ? 'red' : 'orange'}
+              color={hayCritico ? 'red' : 'amber'}
               variant="light"
               radius="md"
               title={
@@ -386,7 +385,6 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
             </Button>
             <Button
               type="submit"
-              color={hayCritico ? 'red' : 'emerald'}
               leftSection={<IconCheck size={14} />}
               loading={registrar.isPending}
             >

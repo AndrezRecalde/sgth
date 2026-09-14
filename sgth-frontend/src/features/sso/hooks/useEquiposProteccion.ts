@@ -1,10 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { ssoService } from '../services/ssoService'
 import { getApiErrorMessage } from '@/types/api'
 import type { EquipoProteccion } from '../services/ssoService'
+import { notificar } from '@/components/ui'
 
 interface Params {
   page?: number
@@ -26,22 +24,15 @@ export function useEquipoProteccionMutations() {
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-equipos-proteccion'] })
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title: 'Error',
-      message: getApiErrorMessage(error),
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const crear = useMutation({
     mutationFn: (data: Partial<EquipoProteccion>) => ssoService.crearEquipoProteccion(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Equipo registrado',
-        message: 'El equipo de protección fue registrado correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Equipo registrado',
+        'El equipo de protección fue registrado correctamente.',
+      )
       invalidar()
     },
     onError,
@@ -51,12 +42,7 @@ export function useEquipoProteccionMutations() {
     mutationFn: ({ id, data }: { id: number; data: Partial<EquipoProteccion> }) =>
       ssoService.actualizarEquipoProteccion(id, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Equipo actualizado',
-        message: 'Los datos fueron actualizados.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Equipo actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
     onError,
@@ -65,12 +51,7 @@ export function useEquipoProteccionMutations() {
   const eliminar = useMutation({
     mutationFn: (id: number) => ssoService.eliminarEquipoProteccion(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Equipo eliminado',
-        message: 'El registro fue eliminado.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Equipo eliminado', 'El registro fue eliminado.')
       invalidar()
     },
     onError,

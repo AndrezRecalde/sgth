@@ -44,7 +44,7 @@ export function LiquidacionFacturasCard({
     <Card withBorder radius="md" h="100%">
       <Group justify="space-between" mb="sm">
         <Group gap="xs">
-          <ThemeIcon color="orange" variant="light" size="sm">
+          <ThemeIcon variant="light" size="sm">
             <IconFileInvoice size={14} />
           </ThemeIcon>
           <Text fw={600} size="sm">
@@ -64,7 +64,7 @@ export function LiquidacionFacturasCard({
         <Stack gap="xs" align="center" py="md">
           <Alert
             icon={<IconAlertCircle size={14} />}
-            color="orange"
+            color="amber"
             variant="light"
             w="100%"
           >
@@ -74,7 +74,6 @@ export function LiquidacionFacturasCard({
           </Alert>
           {onRegistrar && (
             <Button
-              color="orange"
               variant="light"
               size="sm"
               leftSection={<IconFileInvoice size={14} />}
@@ -106,7 +105,7 @@ export function LiquidacionFacturasCard({
                       {REVISION_LABELS[f.estado_revision]}
                     </StatusBadge>
                   )}
-                  <Text size="xs" fw={600} c="orange">
+                  <Text size="xs" fw={600} c="amber">
                     ${Number(f.monto).toFixed(2)}
                   </Text>
                 </Group>
@@ -137,7 +136,6 @@ export function LiquidacionFacturasCard({
             <Button
               size="xs"
               variant="subtle"
-              color="orange"
               leftSection={<IconPencil size={12} />}
               onClick={onEditar}
             >

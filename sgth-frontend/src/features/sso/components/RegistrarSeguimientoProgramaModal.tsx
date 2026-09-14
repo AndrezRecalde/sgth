@@ -130,7 +130,7 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
             error={errors.observaciones?.message}
           />
           <Group justify="flex-end">
-            <Button type="submit" loading={registrarSeguimiento.isPending} color="emerald" size="xs" variant="light">
+            <Button type="submit" loading={registrarSeguimiento.isPending} size="xs" variant="light">
               Guardar
             </Button>
           </Group>

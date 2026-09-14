@@ -107,7 +107,7 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
       size="md"
     >
       <Stack gap="md">
-        <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
           Es el único dato editable de un vínculo ya creado. Cambiar la
           modalidad o el puesto exige cerrarlo y abrir otro bajo su acción de
           personal.
@@ -141,7 +141,7 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
         />
 
         {!exigePlazo && !nueva && (
-          <Alert color="orange" variant="light" icon={<IconAlertTriangle size={16} />}>
+          <Alert color="amber" variant="light" icon={<IconAlertTriangle size={16} />}>
             Sin fecha de vencimiento el vínculo deja de tener término: no se
             generará su Cesación de Funciones por plazo cumplido.
           </Alert>

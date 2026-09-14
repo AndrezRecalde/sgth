@@ -1,7 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import {
   disciplinarioService,
@@ -9,23 +6,17 @@ import {
   type TransicionarVistoBuenoData,
 } from '../services/disciplinarioService'
 import type { ApiResponse, SumarioFormData, VistoBuenoFormData } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 function onError(error: AxiosError<ApiResponse>) {
-  notifications.show({
-    title: 'No se pudo completar la acción',
-    message: error.response?.data?.mensaje ?? 'Error inesperado',
-    color: 'red',
-    icon: React.createElement(IconX, { size: 16 }),
-  })
+  notificar.error(
+    'No se pudo completar la acción',
+    error.response?.data?.mensaje ?? 'Error inesperado',
+  )
 }
 
 function exito(title: string, message: string) {
-  notifications.show({
-    title,
-    message,
-    color: 'emerald',
-    icon: React.createElement(IconCheck, { size: 16 }),
-  })
+  notificar.exito(title, message)
 }
 
 export function useDisciplinarioMutations() {

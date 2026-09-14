@@ -126,7 +126,7 @@ export function PartidaPresupuestariaModal({ opened, onClose, partida }: Props) 
 
         <Alert
           variant="light"
-          color="blue"
+          color="ocean"
           icon={<IconInfoCircle size={16} />}
         >
           Las acciones de personal con efecto económico no pueden suscribirse

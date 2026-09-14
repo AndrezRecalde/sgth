@@ -1,65 +1,38 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import React from "react";
 import { asistenciaService } from "../services/asistenciaService";
 import { getApiErrorMessage } from "@/types/api";
+import { notificar } from "@/components/ui";
 
 export function usePermisoMutations() {
   const qc = useQueryClient();
   const invalidar = () => qc.invalidateQueries({ queryKey: ["permisos"] });
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title: "Error",
-      message: getApiErrorMessage(error),
-      color: "red",
-      icon: React.createElement(IconX, { size: 16 }),
-    });
+    notificar.error("Error", getApiErrorMessage(error));
 
   const crear = useMutation({
     mutationFn: (data: Parameters<typeof asistenciaService.permisos.crear>[0]) =>
       asistenciaService.permisos.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title: "Permiso registrado",
-        message: "El permiso fue registrado correctamente.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito("Permiso registrado", "El permiso fue registrado correctamente.");
       invalidar();
       // «Mis permisos» del portal lee otra consulta: sin esto, el permiso
       // recién registrado no aparecía en la lista hasta recargar.
       qc.invalidateQueries({ queryKey: ["mis-permisos"] });
     },
     onError: (error: unknown) => {
-      notifications.show({
-        title: "Error",
-        message: getApiErrorMessage(error),
-        color: "red",
-        icon: React.createElement(IconX, { size: 16 }),
-      });
+      notificar.error("Error", getApiErrorMessage(error));
     },
   });
 
   const confirmar = useMutation({
     mutationFn: (folio: string) => asistenciaService.permisos.confirmar(folio),
     onSuccess: () => {
-      notifications.show({
-        title: "Permiso confirmado",
-        message: "El permiso fue confirmado por Recepción.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito("Permiso confirmado", "El permiso fue confirmado por Recepción.");
       invalidar();
     },
     onError: (error: unknown) => {
-      notifications.show({
-        title: "Error",
-        message: getApiErrorMessage(error),
-        color: "red",
-        icon: React.createElement(IconX, { size: 16 }),
-      });
+      notificar.error("Error", getApiErrorMessage(error));
     },
   });
 
@@ -67,12 +40,7 @@ export function usePermisoMutations() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       asistenciaService.permisos.anular(id, motivo),
     onSuccess: () => {
-      notifications.show({
-        title: "Permiso anulado",
-        message: "El permiso fue anulado correctamente.",
-        color: "orange",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito("Permiso anulado", "El permiso fue anulado correctamente.");
       invalidar();
     },
     onError,
@@ -82,12 +50,10 @@ export function usePermisoMutations() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       asistenciaService.permisos.rechazar(id, motivo),
     onSuccess: () => {
-      notifications.show({
-        title: "Permiso rechazado",
-        message: "El documento fue rechazado y el motivo quedó registrado.",
-        color: "orange",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito(
+        "Permiso rechazado",
+        "El documento fue rechazado y el motivo quedó registrado.",
+      );
       invalidar();
     },
     onError,
@@ -97,13 +63,10 @@ export function usePermisoMutations() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       asistenciaService.permisos.revertirConfirmacion(id, motivo),
     onSuccess: () => {
-      notifications.show({
-        title: "Confirmación revertida",
-        message:
-          "El permiso vuelve a pendiente y se devolvió el saldo descontado.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito(
+        "Confirmación revertida",
+        "El permiso vuelve a pendiente y se devolvió el saldo descontado.",
+      );
       invalidar();
       // El saldo vacacional cambió: lo que lo muestre tiene que releerlo.
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
@@ -114,12 +77,10 @@ export function usePermisoMutations() {
   const validarTs = useMutation({
     mutationFn: (id: number) => asistenciaService.permisos.validarTs(id),
     onSuccess: () => {
-      notifications.show({
-        title: "Validado por Trabajo Social",
-        message: "El permiso fue validado correctamente.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito(
+        "Validado por Trabajo Social",
+        "El permiso fue validado correctamente.",
+      );
       invalidar();
     },
     onError,

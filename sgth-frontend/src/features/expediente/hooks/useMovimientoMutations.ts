@@ -1,13 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import {
   expedienteService,
   type ActualizarBorradorData,
   type TransicionarData,
 } from '../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useMovimientoMutations(servidorId?: number | null) {
   const qc = useQueryClient()
@@ -16,12 +14,10 @@ export function useMovimientoMutations(servidorId?: number | null) {
     mutationFn: ({ id, data }: { id: number; data: ActualizarBorradorData }) =>
       expedienteService.actualizarBorradorMovimiento(id, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Borrador actualizado',
-        message: 'Los cambios quedaron guardados en la acción de personal.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Borrador actualizado',
+        'Los cambios quedaron guardados en la acción de personal.',
+      )
       qc.invalidateQueries({ queryKey: ['movimientos', servidorId ?? undefined] })
       qc.invalidateQueries({ queryKey: ['movimientos'] })
       // El detalle abierto en el drawer vive bajo otra clave.
@@ -29,12 +25,10 @@ export function useMovimientoMutations(servidorId?: number | null) {
       qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })
     },
     onError: (error) => {
-      notifications.show({
-        title: 'No se pudo guardar',
-        message: getApiErrorMessage(error, 'No se pudo actualizar el borrador.'),
-        color: 'red',
-        icon: React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error(
+        'No se pudo guardar',
+        getApiErrorMessage(error, 'No se pudo actualizar el borrador.'),
+      )
     },
   })
 
@@ -42,12 +36,7 @@ export function useMovimientoMutations(servidorId?: number | null) {
     mutationFn: ({ id, ...datos }: { id: number } & TransicionarData) =>
       expedienteService.transicionarMovimiento(id, datos),
     onSuccess: () => {
-      notifications.show({
-        title: 'Acción actualizada',
-        message: 'La acción de personal avanzó de estado.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Acción actualizada', 'La acción de personal avanzó de estado.')
       qc.invalidateQueries({ queryKey: ['movimientos'] })
       qc.invalidateQueries({ queryKey: ['movimiento'] })
       qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })
@@ -57,12 +46,10 @@ export function useMovimientoMutations(servidorId?: number | null) {
       qc.invalidateQueries({ queryKey: ['actividad-laboral'] })
     },
     onError: (error) => {
-      notifications.show({
-        title: 'No se pudo avanzar',
-        message: getApiErrorMessage(error, 'No se pudo cambiar el estado de la acción.'),
-        color: 'red',
-        icon: React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error(
+        'No se pudo avanzar',
+        getApiErrorMessage(error, 'No se pudo cambiar el estado de la acción.'),
+      )
     },
   })
 

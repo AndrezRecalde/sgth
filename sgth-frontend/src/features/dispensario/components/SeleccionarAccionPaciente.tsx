@@ -28,12 +28,11 @@ export function SeleccionarAccionPaciente({
     <Stack gap="md">
       <Card
         withBorder radius="md" p="sm"
-        style={{ backgroundColor: 'var(--mantine-color-blue-light)' }}
+        style={{ backgroundColor: 'var(--sgth-accent-light)' }}
       >
         <Group justify="space-between">
           <Group gap="sm">
             <Avatar
-              color={esServidor ? 'emerald' : 'blue'}
               radius="xl"
             >
               {esServidor
@@ -52,7 +51,6 @@ export function SeleccionarAccionPaciente({
           <Button
             size="xs"
             variant="subtle"
-            color="gray"
             leftSection={<IconArrowLeft size={12} />}
             onClick={onVolver}
           >
@@ -75,7 +73,6 @@ export function SeleccionarAccionPaciente({
         >
           <Stack gap="sm" align="center">
             <ThemeIcon
-              color="emerald"
               variant="light"
               size={48}
               radius="xl"
@@ -100,7 +97,6 @@ export function SeleccionarAccionPaciente({
         >
           <Stack gap="sm" align="center">
             <ThemeIcon
-              color="violet"
               variant="light"
               size={48}
               radius="xl"

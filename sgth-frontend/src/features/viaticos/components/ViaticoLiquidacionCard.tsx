@@ -87,7 +87,7 @@ export function ViaticoLiquidacionCard({
   return (
     <Card withBorder radius="md">
       <Group gap="xs" mb="sm">
-        <ThemeIcon color="emerald" variant="light" size="sm">
+        <ThemeIcon variant="light" size="sm">
           <IconFileInvoice size={14} />
         </ThemeIcon>
         <Text fw={600} size="sm">
@@ -100,7 +100,7 @@ export function ViaticoLiquidacionCard({
         <LiquidacionSection viatico={d} onSuccess={onSuccess} />
       ) : d.liquidacion ? (
         <Stack gap="xs">
-          <Text size="xs" fw={700} c="blue" mb={4}>
+          <Text size="xs" fw={700} c="ocean" mb={4}>
             Viático diario — H&A
           </Text>
           <Group justify="space-between">
@@ -136,7 +136,7 @@ export function ViaticoLiquidacionCard({
             <Text
               size="xs"
               fw={700}
-              c={justificadoCompleto ? "teal" : "orange"}
+              c={justificadoCompleto ? "emerald" : "amber"}
             >
               {fmtMonto(totalHospAli)} ({porcentajeHA}%)
             </Text>
@@ -157,7 +157,7 @@ export function ViaticoLiquidacionCard({
             <Text
               size="xs"
               fw={700}
-              c={diferenciaDevolver > 0 ? "red" : "teal"}
+              c={diferenciaDevolver > 0 ? "red" : "emerald"}
             >
               {fmtMonto(diferenciaDevolver)}
             </Text>
@@ -171,7 +171,7 @@ export function ViaticoLiquidacionCard({
             </Alert>
           )}
           {justificadoCompleto && (
-            <Alert color="teal" variant="light" p="xs" mt={4}>
+            <Alert color="emerald" variant="light" p="xs" mt={4}>
               <Text size="xs">
                 Justificación completa del 70%. Devengado: {fmtMonto(monto30)}
               </Text>
@@ -184,7 +184,7 @@ export function ViaticoLiquidacionCard({
                 <Text size="xs" c="dimmed">
                   Total movilización
                 </Text>
-                <Text size="xs" fw={600} c="orange">
+                <Text size="xs" fw={600} c="amber">
                   {fmtMonto(totalMovilizacion)}
                 </Text>
               </Group>
@@ -200,7 +200,7 @@ export function ViaticoLiquidacionCard({
               </Text>
               {d.liquidacion.actividades!.map((a, i) => (
                 <Group key={i} gap="xs">
-                  <ThemeIcon size="xs" color="blue" variant="light" radius="xl">
+                  <ThemeIcon size="xs" variant="light" radius="xl">
                     <IconChecks size={8} />
                   </ThemeIcon>
                   <Text size="xs">

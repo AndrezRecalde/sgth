@@ -56,7 +56,7 @@ export function SeleccionarPlantillaModal({
       <Stack gap="md">
         {tieneCriterios && (
           <Alert
-            color="orange"
+            color="amber"
             variant="light"
             icon={<IconAlertTriangle size={16} />}
           >
@@ -69,7 +69,7 @@ export function SeleccionarPlantillaModal({
         )}
 
         <Alert
-          color="blue"
+          color="ocean"
           variant="light"
           icon={<IconInfoCircle size={16} />}
         >
@@ -102,7 +102,7 @@ export function SeleccionarPlantillaModal({
                     p="sm"
                     style={{
                       borderColor: isSelected
-                        ? 'var(--mantine-color-blue-6)'
+                        ? 'var(--sgth-accent)'
                         : undefined,
                       borderWidth: isSelected ? 2 : 1,
                       cursor: 'pointer',

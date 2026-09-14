@@ -37,7 +37,6 @@ export function RegistroConfirmado({
         <Group justify="center" mt="xs">
           <Button
             variant="light"
-            color="blue"
             leftSection={<IconFileDownload size={16} />}
             loading={exportando}
             onClick={onExportar}

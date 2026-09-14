@@ -69,7 +69,6 @@ export function EquiposProteccionTab() {
             {
               label: 'Editar equipo',
               icon: <IconEdit size={14} />,
-              color: 'blue',
               onClick: () => handleEdit(equipo),
             },
             {
@@ -101,7 +100,6 @@ export function EquiposProteccionTab() {
         </Button>
         <Button
           leftSection={<IconPlus size={16} />}
-          color="emerald"
           variant="light"
           onClick={() => { setEditEquipo(null); open() }}
         >

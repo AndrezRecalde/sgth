@@ -72,13 +72,11 @@ export const getPuestoColumns = (
         {
           label: 'Actividades del puesto',
           icon: <IconList size={14} />,
-          color: 'emerald',
           onClick: () => onActividades(puesto),
         },
         {
           label: 'Editar puesto',
           icon: <IconEdit size={14} />,
-          color: 'blue',
           onClick: () => onEdit(puesto),
         },
         {

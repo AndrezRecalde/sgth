@@ -49,7 +49,6 @@ export function SolicitudesPendientesTriajeList({ onSeleccionar }: Props) {
         <Button
           size="xs"
           variant="light"
-          color="emerald"
           leftSection={<IconHeartbeat size={13} />}
           onClick={() => onSeleccionar(s)}
         >

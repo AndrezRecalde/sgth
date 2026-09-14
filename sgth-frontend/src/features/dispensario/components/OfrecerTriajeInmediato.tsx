@@ -39,7 +39,6 @@ export function OfrecerTriajeInmediato({
                 Más tarde
               </Button>
               <Button
-                color="emerald"
                 leftSection={<IconClipboardCheck size={14} />}
                 onClick={onTomarTriaje}
               >

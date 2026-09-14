@@ -85,7 +85,6 @@ export function PuestosTab() {
         actions={
           <Button
             leftSection={<IconCubePlus size={16} />}
-            color="emerald"
             variant="light"
             onClick={() => {
               setEditPuesto(null);

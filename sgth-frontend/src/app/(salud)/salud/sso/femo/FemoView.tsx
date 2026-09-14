@@ -109,7 +109,6 @@ export function FemoView() {
           {
             label:   'Ver detalle',
             icon:    <IconEye size={14} />,
-            color:   'blue',
             onClick: () => router.push(
               `/salud/sso/femo/${f.id}`
             ),

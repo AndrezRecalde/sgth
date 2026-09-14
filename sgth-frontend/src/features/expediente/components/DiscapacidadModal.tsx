@@ -3,14 +3,12 @@
 import React, { useEffect } from 'react'
 import { Stack, TextInput,
          NumberInput, Select } from '@mantine/core'
-import { FormModal } from '@/components/ui'
+import { FormModal, notificar } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { expedienteService } from '../services/expedienteService'
 import { useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
 import { discapacidadSchema, type DiscapacidadFormData }
   from '../schemas/discapacidad.schema'
 
@@ -85,22 +83,15 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
         )
       }
       qc.invalidateQueries({ queryKey: ['discapacidades', servidorId] })
-      notifications.show({
-        title:   isEditing ? 'Discapacidad actualizada' : 'Discapacidad registrada',
-        message: isEditing
+      notificar.exito(
+        isEditing ? 'Discapacidad actualizada' : 'Discapacidad registrada',
+        isEditing
           ? 'El registro fue actualizado correctamente.'
           : 'La discapacidad fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      )
       handleClose()
     } catch {
-      notifications.show({
-        title:   'Error',
-        message: 'No se pudo procesar el registro.',
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error('Error', 'No se pudo procesar el registro.')
     }
   }
 

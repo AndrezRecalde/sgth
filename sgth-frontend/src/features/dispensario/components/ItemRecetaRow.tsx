@@ -34,9 +34,8 @@ export function ItemRecetaRow({
       radius="md"
       p="sm"
       style={{
-        borderLeft: `3px solid var(--mantine-color-${
-          externo ? 'amber' : 'blue'
-        }-6)`,
+        // Fuera de farmacia es un aviso; dentro, el acento del subsistema.
+        borderLeft: `3px solid ${externo ? 'var(--mantine-color-amber-6)' : 'var(--sgth-accent)'}`,
       }}
     >
       <Stack gap="sm">

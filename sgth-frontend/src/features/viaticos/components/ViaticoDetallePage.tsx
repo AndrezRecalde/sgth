@@ -163,7 +163,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
       {/* Stepper */}
       <Card withBorder radius="md" p="sm">
-        <Stepper active={pasoActivo} size="xs" color="emerald">
+        <Stepper active={pasoActivo} size="xs">
           <Stepper.Step label="Solicitud" />
           <Stepper.Step label="Aprobado" />
           <Stepper.Step label="Anticipo" />
@@ -336,7 +336,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
             {!mostrarTramoForm ? (
               <Button
                 variant="light"
-                color="blue"
                 onClick={() => setMostrarTramoForm(true)}
               >
                 Agregar tramo

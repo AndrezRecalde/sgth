@@ -64,7 +64,6 @@ export function ConsolidadoPermisosTab() {
         <Group justify="flex-end" gap="sm">
           <Button
             variant="light"
-            color="blue"
             size="xs"
             leftSection={<IconFileTypeCsv size={14} />}
             loading={exportando === "excel"}
@@ -74,7 +73,6 @@ export function ConsolidadoPermisosTab() {
           </Button>
           <Button
             variant="light"
-            color="red"
             size="xs"
             leftSection={<IconFileDownload size={14} />}
             loading={exportando === "pdf"}
@@ -86,7 +84,7 @@ export function ConsolidadoPermisosTab() {
       )}
 
       {!buscar ? (
-        <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+        <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
           <Text size="sm">
             Selecciona un rango de fechas y el tipo de permiso, luego presiona
             Consultar.

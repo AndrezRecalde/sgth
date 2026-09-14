@@ -84,7 +84,6 @@ export function CargosTab() {
             {
               label: "Editar cargo",
               icon: <IconEdit size={14} />,
-              color: "blue",
               onClick: () => handleEdit(cargo),
             },
             {
@@ -116,7 +115,6 @@ export function CargosTab() {
         actions={
           <Button
             leftSection={<IconPlus size={16} />}
-            color="emerald"
             variant="light"
             onClick={() => {
               setEditCargo(null);

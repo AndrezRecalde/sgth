@@ -54,6 +54,14 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
     if (sinSesion) router.replace(ROUTES.AUTH.LOGIN)
   }, [sinSesion, router])
 
+  // También en <html>: modales, drawers y menús se montan en un portal fuera
+  // del shell, y sin esto heredaban el acento institucional en vez del del
+  // subsistema (un ThemeIcon de un drawer del Dispensario salía verde).
+  useEffect(() => {
+    document.documentElement.dataset.subsistema = subsistema
+    return () => { delete document.documentElement.dataset.subsistema }
+  }, [subsistema])
+
   // Cerrar el sidebar móvil al navegar: en móvil tapa el contenido.
   useEffect(() => {
     mobile.close()

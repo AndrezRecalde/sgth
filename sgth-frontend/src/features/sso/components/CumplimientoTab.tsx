@@ -83,7 +83,6 @@ export function CumplimientoTab() {
           <>
             <Button
               leftSection={<IconSearch size={16} />}
-              color="emerald"
               onClick={handleConsultar}
               disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
             >
@@ -106,7 +105,7 @@ export function CumplimientoTab() {
       </Toolbar>
 
       {!periodo && (
-        <Alert icon={<IconAlertCircle size={18} />} color="blue" variant="light">
+        <Alert icon={<IconAlertCircle size={18} />} color="ocean" variant="light">
           Ingrese un período y presione Consultar para ver la lista de verificación de cumplimiento.
         </Alert>
       )}
@@ -119,7 +118,7 @@ export function CumplimientoTab() {
             <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
             <Text size="sm" c="emerald">Cumple: <Text span fw={600}>{lista.totales.cumple}</Text></Text>
             <Text size="sm" c="red">No cumple: <Text span fw={600}>{lista.totales.no_cumple}</Text></Text>
-            <Text size="sm" c="yellow.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
+            <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
             <Text size="sm" c="dimmed">Sin registrar: <Text span fw={600}>{lista.totales.no_registrado}</Text></Text>
           </Group>
 

@@ -115,7 +115,6 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
               />
               <Button
                 type="submit"
-                color="emerald"
                 leftSection={<IconPlus size={16} />}
                 loading={crearActividad.isPending}
               >

@@ -5,13 +5,13 @@ import {
   Box, Container, Stack, Stepper, Title, Text, Checkbox, Group, Button,
   Select, Skeleton, Alert, Paper, Divider,
 } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCuestionarioAssist, useEnviarRespuestaAssist } from '../hooks/useAssist'
 import { AssistSustanciaFormulario } from './AssistSustanciaFormulario'
 import { getApiErrorMessage } from '@/types/api'
 import type { RespuestaAssistPayload, RespuestaSustanciaAssist } from '../services/assistService'
+import { notificar } from '@/components/ui'
 
 interface Props {
   codigo: string
@@ -100,11 +100,10 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
   const siguiente = () => {
     if (esPasoP1) {
       if (seleccionadas.length === 0 && !sinConsumo) {
-        notifications.show({
-          title: 'Falta una respuesta',
-          message: 'Seleccione las sustancias que ha consumido, o marque "No he consumido ninguna de estas sustancias" antes de continuar.',
-          color: 'red',
-        })
+        notificar.error(
+          'Falta una respuesta',
+          'Seleccione las sustancias que ha consumido, o marque "No he consumido ninguna de estas sustancias" antes de continuar.',
+        )
         return
       }
       if (sinConsumo) {
@@ -119,11 +118,10 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
     if (sustanciaActual) {
       const [key] = sustanciaActual
       if (!validarPasoSustancia(key)) {
-        notifications.show({
-          title: 'Faltan respuestas',
-          message: 'Debe responder todas las preguntas de esta sección antes de continuar.',
-          color: 'red',
-        })
+        notificar.error(
+          'Faltan respuestas',
+          'Debe responder todas las preguntas de esta sección antes de continuar.',
+        )
         return
       }
       setStep((s) => s + 1)
@@ -138,11 +136,7 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
       {
         onSuccess: () => setEnviado(true),
         onError: (err) => {
-          notifications.show({
-            title: 'No se pudo enviar',
-            message: getApiErrorMessage(err),
-            color: 'red',
-          })
+          notificar.error('No se pudo enviar', getApiErrorMessage(err))
         },
       }
     )
@@ -150,11 +144,10 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
 
   const handleEnviar = () => {
     if (!usoInyectable) {
-      notifications.show({
-        title: 'Falta una respuesta',
-        message: 'Debe responder la última pregunta antes de enviar.',
-        color: 'red',
-      })
+      notificar.error(
+        'Falta una respuesta',
+        'Debe responder la última pregunta antes de enviar.',
+      )
       return
     }
 
@@ -168,11 +161,7 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
     enviar.mutate(payload, {
       onSuccess: () => setEnviado(true),
       onError: (err) => {
-        notifications.show({
-          title: 'No se pudo enviar',
-          message: getApiErrorMessage(err),
-          color: 'red',
-        })
+        notificar.error('No se pudo enviar', getApiErrorMessage(err))
       },
     })
   }
@@ -258,11 +247,11 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
             Atrás
           </Button>
           {esPasoInyectable ? (
-            <Button color="emerald" loading={enviar.isPending} onClick={handleEnviar}>
+            <Button loading={enviar.isPending} onClick={handleEnviar}>
               Enviar tamizaje
             </Button>
           ) : (
-            <Button color="emerald" loading={esPasoP1 && sinConsumo && enviar.isPending} onClick={siguiente}>
+            <Button loading={esPasoP1 && sinConsumo && enviar.isPending} onClick={siguiente}>
               Siguiente
             </Button>
           )}

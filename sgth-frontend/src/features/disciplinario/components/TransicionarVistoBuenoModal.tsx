@@ -103,7 +103,7 @@ function FormularioTransicion({
       </Text>
 
       {opciones.length === 0 ? (
-        <Alert variant="light" color="gray">
+        <Alert variant="light" color="slate">
           Este trámite ya está en un estado terminal y no admite más cambios.
         </Alert>
       ) : (
@@ -158,7 +158,7 @@ function FormularioTransicion({
           )}
 
           {destino === 'concedido' && (
-            <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />}>
+            <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
               Al conceder el visto bueno se generará una Cesación de Funciones en
               borrador. El vínculo del trabajador no se cierra aquí: Talento Humano
               debe revisarla y aprobarla desde Acciones de Personal.

@@ -1,31 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import React from "react";
 import { asistenciaService } from "../services/asistenciaService";
 import { getApiErrorMessage } from "@/types/api";
+import { notificar } from "@/components/ui";
 
 export function usePeriodosMutations() {
   const qc = useQueryClient();
 
   const onError = () =>
-    notifications.show({
-      title: "Error",
-      message: "No se pudo completar la operación.",
-      color: "red",
-      icon: React.createElement(IconX, { size: 16 }),
-    });
+    notificar.error("Error", "No se pudo completar la operación.");
 
   const generar = useMutation({
     mutationFn: ({ servidorId, anio }: { servidorId: number; anio: number }) =>
       asistenciaService.periodos.generar(servidorId, anio),
     onSuccess: (_, vars) => {
-      notifications.show({
-        title: "Período generado",
-        message: `Período ${vars.anio} generado correctamente.`,
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito("Período generado", `Período ${vars.anio} generado correctamente.`);
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
     onError,
@@ -35,12 +23,10 @@ export function usePeriodosMutations() {
     mutationFn: (anio: number) => asistenciaService.periodos.generarTodos(anio),
     onSuccess: (data) => {
       const generados = (data as { generados?: number })?.generados ?? 0;
-      notifications.show({
-        title: "Períodos generados",
-        message: `Se generaron ${generados} períodos correctamente.`,
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito(
+        "Períodos generados",
+        `Se generaron ${generados} períodos correctamente.`,
+      );
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
     onError,
@@ -70,13 +56,11 @@ export function usePeriodosMutations() {
     mutationFn: ({ servidorId, anio }: { servidorId: number; anio: number }) =>
       asistenciaService.periodos.recalcularCerrado(servidorId, anio),
     onSuccess: (respuesta) => {
-      notifications.show({
-        title: "Período recalculado",
-        message: respuesta.mensaje ?? "El período cerrado fue recalculado.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-        autoClose: 8000,
-      });
+      notificar.exito(
+        "Período recalculado",
+        respuesta.mensaje ?? "El período cerrado fue recalculado.",
+        { autoClose: 8000 },
+      );
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
     onError,
@@ -91,22 +75,11 @@ export function usePeriodosMutations() {
     mutationFn: (servidorId: number) =>
       asistenciaService.periodos.vencerExcedente(servidorId),
     onSuccess: (respuesta) => {
-      notifications.show({
-        title: "Excedente vencido",
-        message: respuesta.mensaje,
-        color: "orange",
-        icon: React.createElement(IconCheck, { size: 16 }),
-        autoClose: 8000,
-      });
+      notificar.exito("Excedente vencido", respuesta.mensaje, { autoClose: 8000 });
       qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title: "Error",
-        message: getApiErrorMessage(error),
-        color: "red",
-        icon: React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error("Error", getApiErrorMessage(error)),
   });
 
   return {

@@ -22,7 +22,7 @@ const NIVEL_COLORS = [
   'var(--mantine-color-emerald-6)',
   'var(--mantine-color-emerald-4)',
   'var(--mantine-color-emerald-2)',
-  'var(--mantine-color-gray-3)',
+  'var(--sgth-border-strong)',
 ]
 
 function formatFecha(fecha: string): string {
@@ -92,7 +92,6 @@ export function OrganigramaNode({
           {hasChildren && (
             <ActionIcon
               variant="subtle"
-              color="gray"
               onClick={() => onToggle(Number(unidad.id))}
               aria-label={expanded ? 'Colapsar' : 'Expandir'}
             >

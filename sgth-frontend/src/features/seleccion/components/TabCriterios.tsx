@@ -37,12 +37,11 @@ const TIPO_LABELS: Record<string, string> = {
 }
 
 function SeccionCriterios({
-  titulo, criterios, color, convocatoriaId, editable,
+  titulo, criterios, convocatoriaId, editable,
   onAgregar,
 }: {
   titulo:         string
   criterios:      CriterioEvaluacion[]
-  color:          string
   convocatoriaId: number
   editable:       boolean
   onAgregar:      () => void
@@ -65,7 +64,6 @@ function SeccionCriterios({
           <Button
             size="compact-xs"
             variant="light"
-            color={color}
             leftSection={<IconPlus size={12} />}
             onClick={onAgregar}
           >
@@ -75,7 +73,7 @@ function SeccionCriterios({
       </Group>
 
       {criterios.length === 0 ? (
-        <Alert color="gray" variant="light"
+        <Alert color="slate" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             No hay criterios configurados para esta sección.
@@ -89,7 +87,7 @@ function SeccionCriterios({
               <Group justify="space-between" wrap="nowrap">
                 <Group gap="sm" wrap="nowrap">
                   <ThemeIcon
-                    size="sm" color={color} variant="light"
+                    size="sm" variant="light"
                   >
                     {TIPO_ICONS[c.tipo_input]}
                   </ThemeIcon>
@@ -177,7 +175,7 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
   return (
     <Stack gap="md" p="md">
       {!editable && (
-        <Alert color="blue" variant="light"
+        <Alert color="ocean" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             Los criterios solo pueden modificarse mientras
@@ -199,7 +197,6 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
             <Button
               size="compact-xs"
               variant="light"
-              color="blue"
               leftSection={<IconTemplate size={12} />}
               onClick={abrirPlantilla}
             >
@@ -210,7 +207,7 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
       </Group>
 
       {totalPts !== 100 && criterios.length > 0 && (
-        <Alert color="orange" variant="light"
+        <Alert color="amber" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             Los criterios deben sumar exactamente 100 puntos.
@@ -222,7 +219,6 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
       <SeccionCriterios
         titulo="Méritos (hoja de vida)"
         criterios={meritos}
-        color="blue"
         convocatoriaId={convocatoriaId}
         editable={editable}
         onAgregar={() => abrirModal('meritos')}
@@ -233,7 +229,6 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
       <SeccionCriterios
         titulo="Oposición (evaluación directa)"
         criterios={oposicion}
-        color="orange"
         convocatoriaId={convocatoriaId}
         editable={editable}
         onAgregar={() => abrirModal('oposicion')}

@@ -162,7 +162,6 @@ export function FemoDetalleView({ id }: Props) {
           </Button>
           {wizard.active < 3 ? (
             <Button
-              color="blue"
               rightSection={<IconArrowRight size={14} />}
               onClick={() => wizard.setActive(a => a + 1)}
             >
@@ -170,7 +169,6 @@ export function FemoDetalleView({ id }: Props) {
             </Button>
           ) : (
             <Button
-              color="emerald"
               leftSection={<IconCheck size={14} />}
               loading={actualizar.isPending}
               onClick={handleGuardar}
@@ -205,7 +203,6 @@ export function FemoDetalleView({ id }: Props) {
               Descargar PDF
             </Button>
             <Button
-              color="blue"
               leftSection={<IconEdit size={14} />}
               onClick={() => setModo('edicion')}
             >

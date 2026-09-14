@@ -154,7 +154,7 @@ function SeccionVista({
     <Stack
       gap={4}
       py="sm"
-      style={{ borderTop: "0.5px solid var(--mantine-color-gray-2)" }}
+      style={{ borderTop: "0.5px solid var(--sgth-border)" }}
     >
       <Text
         size="xs"
@@ -398,7 +398,7 @@ export function TabConsulta({
           align="center"
           px="md"
           py="sm"
-          style={{ borderBottom: "0.5px solid var(--mantine-color-gray-2)" }}
+          style={{ borderBottom: "0.5px solid var(--sgth-border)" }}
         >
           <Group gap="xs" wrap="wrap">
             <StatusBadge tone="success">
@@ -426,7 +426,6 @@ export function TabConsulta({
               <Button
                 size="compact-xs"
                 variant="subtle"
-                color="blue"
                 leftSection={<IconEdit size={13} />}
                 disabled={!!noEditable}
                 onClick={() => setModoEdicion(true)}
@@ -460,15 +459,15 @@ export function TabConsulta({
               px="sm"
               my="xs"
               style={{
-                borderTop: "0.5px solid var(--mantine-color-gray-2)",
-                backgroundColor: "var(--mantine-color-blue-light)",
+                borderTop: "0.5px solid var(--sgth-border)",
+                backgroundColor: "var(--sgth-accent-light)",
                 borderRadius: 8,
               }}
             >
               <Text
                 size="xs"
                 fw={500}
-                c="blue"
+                c="ocean"
                 tt="uppercase"
                 style={{ letterSpacing: "0.05em" }}
               >
@@ -525,7 +524,7 @@ export function TabConsulta({
         {recuperado && (
           <Alert
             icon={<IconHistory size={15} />}
-            color="blue"
+            color="ocean"
             variant="light"
             p="xs"
           >
@@ -540,7 +539,6 @@ export function TabConsulta({
               <Button
                 size="compact-xs"
                 variant="subtle"
-                color="gray"
                 onClick={() => {
                   reset({
                     tipo_atencion: "primera_vez",
@@ -568,14 +566,14 @@ export function TabConsulta({
           <Group gap={6} justify="flex-end">
             {borradorCtl.estado === "error" ? (
               <>
-                <IconCloudOff size={13} color="var(--mantine-color-orange-6)" />
-                <Text size="xs" c="orange">
+                <IconCloudOff size={13} color="var(--mantine-color-amber-6)" />
+                <Text size="xs" c="amber">
                   No se pudo guardar el borrador. Lo escrito sigue en pantalla.
                 </Text>
               </>
             ) : (
               <>
-                <IconCloud size={13} color="var(--mantine-color-gray-6)" />
+                <IconCloud size={13} color="var(--mantine-color-slate-6)" />
                 <Text size="xs" c="dimmed">
                   {borradorCtl.estado === "guardando"
                     ? "Guardando borrador…"
@@ -597,7 +595,6 @@ export function TabConsulta({
             <Button
               size="xs"
               variant="subtle"
-              color="gray"
               leftSection={<IconX size={13} />}
               onClick={() => setModoEdicion(false)}
             >
@@ -744,7 +741,6 @@ export function TabConsulta({
         <Group justify="flex-end" pt="sm">
           <Button
             type="submit"
-            color="emerald"
             leftSection={<IconCheck size={14} />}
             loading={registrar.isPending || actualizar.isPending}
           >

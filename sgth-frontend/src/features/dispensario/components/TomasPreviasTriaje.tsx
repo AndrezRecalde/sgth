@@ -32,7 +32,7 @@ export function TomasPreviasTriaje({ agendaId }: Props) {
   return (
     <Alert
       icon={<IconHistory size={16} />}
-      color="blue"
+      color="ocean"
       variant="light"
       radius="md"
       title={

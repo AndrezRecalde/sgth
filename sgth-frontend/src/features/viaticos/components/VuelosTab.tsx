@@ -10,12 +10,11 @@ import { useVuelosAutorizacion } from "../hooks/useViaticos";
 import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { viaticoService } from "../services/viaticoService";
-import { notifications } from "@mantine/notifications";
 import { getApiErrorMessage } from "@/types/api";
 import React from "react";
 import type { AutorizacionVuelo } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
-import { StatusBadge } from "@/components/ui";
+import { StatusBadge, notificar } from "@/components/ui";
 
 type AutorizacionVueloConRelaciones = AutorizacionVuelo & {
   viatico?: {
@@ -66,20 +65,11 @@ export function VuelosTab() {
   const aprobar = useMutation({
     mutationFn: (id: number) => viaticoService.vuelos.aprobar(id),
     onSuccess: () => {
-      notifications.show({
-        title: "Vuelo aprobado",
-        message: "La autorización fue aprobada.",
-        color: "emerald",
-        icon: React.createElement(IconCheck, { size: 16 }),
-      });
+      notificar.exito("Vuelo aprobado", "La autorización fue aprobada.");
       qc.invalidateQueries({ queryKey: ["vuelos-autorizacion"] });
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title: "Error",
-        message: getApiErrorMessage(error),
-        color: "red",
-      }),
+      notificar.error("Error", getApiErrorMessage(error)),
   });
 
   const rechazar = useMutation({
@@ -88,20 +78,11 @@ export function VuelosTab() {
         observacion: "Rechazado por el gestor",
       }),
     onSuccess: () => {
-      notifications.show({
-        title: "Vuelo rechazado",
-        message: "La autorización fue rechazada.",
-        color: "orange",
-        icon: React.createElement(IconX, { size: 16 }),
-      });
+      notificar.exito("Vuelo rechazado", "La autorización fue rechazada.");
       qc.invalidateQueries({ queryKey: ["vuelos-autorizacion"] });
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title: "Error",
-        message: getApiErrorMessage(error),
-        color: "red",
-      }),
+      notificar.error("Error", getApiErrorMessage(error)),
   });
 
   const columns: DataTableColumn<AutorizacionVuelo>[] = [
@@ -110,7 +91,7 @@ export function VuelosTab() {
       title: 'Código',
       width: 150,
       render: (v) => (
-        <Text size="sm" fw={600} c="blue">
+        <Text size="sm" fw={600} c="ocean">
           {(v as AutorizacionVueloConRelaciones)
             .viatico?.codigo_viatico ?? '—'}
         </Text>
@@ -224,7 +205,6 @@ export function VuelosTab() {
             {
               label: 'Aprobar',
               icon: <IconCheck size={14} />,
-              color: 'emerald',
               onClick: () => aprobar.mutate(Number(v.id)),
               hidden: !decide(v),
             },

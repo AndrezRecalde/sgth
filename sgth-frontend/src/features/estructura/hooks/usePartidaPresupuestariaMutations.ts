@@ -1,10 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { partidaPresupuestariaService } from '../services/partidaPresupuestariaService'
 import type { ApiResponse, PartidaPresupuestariaFormData } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function usePartidaPresupuestariaMutations() {
   const qc = useQueryClient()
@@ -16,24 +14,17 @@ export function usePartidaPresupuestariaMutations() {
   }
 
   const onError = (error: AxiosError<ApiResponse>) => {
-    notifications.show({
-      title: 'Error',
-      message: error.response?.data?.mensaje ?? 'Error inesperado',
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const crear = useMutation({
     mutationFn: (data: PartidaPresupuestariaFormData) =>
       partidaPresupuestariaService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Partida creada',
-        message: 'La partida presupuestaria fue registrada correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Partida creada',
+        'La partida presupuestaria fue registrada correctamente.',
+      )
       invalidar()
     },
     onError,
@@ -43,12 +34,7 @@ export function usePartidaPresupuestariaMutations() {
     mutationFn: ({ id, data }: { id: number; data: Partial<PartidaPresupuestariaFormData> }) =>
       partidaPresupuestariaService.actualizar(id, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Partida actualizada',
-        message: 'Los datos fueron actualizados.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Partida actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
     onError,
@@ -57,12 +43,7 @@ export function usePartidaPresupuestariaMutations() {
   const eliminar = useMutation({
     mutationFn: (id: number) => partidaPresupuestariaService.eliminar(id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Partida eliminada',
-        message: 'La partida presupuestaria fue eliminada.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Partida eliminada', 'La partida presupuestaria fue eliminada.')
       invalidar()
     },
     onError,

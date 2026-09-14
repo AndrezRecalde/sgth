@@ -38,7 +38,6 @@ export function DetalleAdquisicionDrawer({
       title={
         <Group gap="xs">
           <ThemeIcon
-            color={adquisicion?.tipo === 'donacion' ? 'violet' : 'blue'}
             variant="light"
             size="md"
             radius="md"
@@ -64,7 +63,7 @@ export function DetalleAdquisicionDrawer({
           {adquisicion.anulado_en && (
             <Alert
               icon={<IconBan size={16} />}
-              color="orange"
+              color="amber"
               variant="light"
               title="Adquisición anulada"
             >

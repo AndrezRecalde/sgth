@@ -141,7 +141,6 @@ function ItemsRecetaTable({
           {
             label:   'Editar',
             icon:    <IconEdit size={14} />,
-            color:   'blue',
             onClick: () => { setItemSel(item); abrirEdit() },
           },
           {
@@ -207,7 +206,6 @@ export function TabReceta({ turno, consulta }: Props) {
         </Text>
         <Button
           size="xs"
-          color="emerald"
           leftSection={<IconPlus size={13} />}
           onClick={abrirModal}
           loading={emitir.isPending}
@@ -235,7 +233,7 @@ export function TabReceta({ turno, consulta }: Props) {
                   <Group justify="space-between">
                     <Group gap="xs">
                       <ThemeIcon
-                        size="sm" color="emerald" variant="light"
+                        size="sm" variant="light"
                       >
                         <IconPill size={12} />
                       </ThemeIcon>
@@ -255,7 +253,6 @@ export function TabReceta({ turno, consulta }: Props) {
                       <Button
                         size="compact-xs"
                         variant="light"
-                        color="ocean"
                         leftSection={<IconPrinter size={13} />}
                         loading={abriendo === receta.id}
                         onClick={() => abrirPdf(receta.id)}

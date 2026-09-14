@@ -64,7 +64,6 @@ export function BuscadorServidor({
             <ActionIcon
               size="sm"
               variant="subtle"
-              color="gray"
               aria-label="Limpiar búsqueda"
               onClick={() => setBusqueda('')}
             >
@@ -75,7 +74,7 @@ export function BuscadorServidor({
       />
 
       {sinResultados && (
-        <Alert color="gray" variant="light">
+        <Alert color="slate" variant="light">
           <Text size="xs">
             No se encontraron servidores sin usuario para “{consulta}”.
           </Text>
@@ -91,7 +90,7 @@ export function BuscadorServidor({
             <Paper key={s.id} withBorder radius="md" p="sm">
               <Group justify="space-between" wrap="nowrap">
                 <Group gap="sm" wrap="nowrap">
-                  <Avatar color="emerald" size="md" radius="xl">
+                  <Avatar size="md" radius="xl">
                     {iniciales(s.nombre_completo)}
                   </Avatar>
                   <Stack gap={0}>
@@ -101,7 +100,6 @@ export function BuscadorServidor({
                 </Group>
                 <Button
                   size="xs"
-                  color="emerald"
                   variant="light"
                   loading={idEnProceso === s.id}
                   disabled={idEnProceso !== null && idEnProceso !== s.id}

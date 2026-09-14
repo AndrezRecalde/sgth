@@ -81,11 +81,10 @@ export function DetallePlantillaView({ id }: Props) {
 
   const renderCriterios = (
     criterios: typeof meritos,
-    color: string
   ) => (
     <Stack gap="xs">
       {criterios.length === 0 ? (
-        <Alert color="gray" variant="light"
+        <Alert color="slate" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">Sin criterios en esta sección.</Text>
         </Alert>
@@ -95,7 +94,7 @@ export function DetallePlantillaView({ id }: Props) {
             <Group justify="space-between" wrap="nowrap">
               <Group gap="sm" wrap="nowrap">
                 <ThemeIcon
-                  size="sm" color={color} variant="light"
+                  size="sm" variant="light"
                 >
                   {TIPO_ICONS[c.tipo_input]}
                 </ThemeIcon>
@@ -170,7 +169,7 @@ export function DetallePlantillaView({ id }: Props) {
       </Card>
 
       {totalPts !== 100 && (plantilla.criterios?.length ?? 0) > 0 && (
-        <Alert color="orange" variant="light"
+        <Alert color="amber" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             Los criterios deben sumar exactamente 100 puntos.
@@ -193,14 +192,13 @@ export function DetallePlantillaView({ id }: Props) {
             <Button
               size="compact-xs"
               variant="light"
-              color="blue"
               leftSection={<IconPlus size={12} />}
               onClick={() => abrirModal('meritos')}
             >
               Agregar criterio
             </Button>
           </Group>
-          {renderCriterios(meritos, 'blue')}
+          {renderCriterios(meritos)}
         </Stack>
 
         <Divider />
@@ -218,14 +216,13 @@ export function DetallePlantillaView({ id }: Props) {
             <Button
               size="compact-xs"
               variant="light"
-              color="orange"
               leftSection={<IconPlus size={12} />}
               onClick={() => abrirModal('oposicion')}
             >
               Agregar criterio
             </Button>
           </Group>
-          {renderCriterios(oposicion, 'orange')}
+          {renderCriterios(oposicion)}
         </Stack>
       </Stack>
 

@@ -1,12 +1,10 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { convocatoriaService } from '../services/convocatoriaService'
 import { getApiErrorMessage } from '@/types/api'
 import type { CrearConvocatoriaData } from '../services/convocatoriaService'
+import { notificar } from '@/components/ui'
 
 export function useConvocatorias(params?: Record<string, unknown>) {
   return useQuery({
@@ -31,21 +29,11 @@ export function useCrearConvocatoria() {
     mutationFn: (data: CrearConvocatoriaData) =>
       convocatoriaService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Convocatoria creada',
-        message: 'La convocatoria fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Convocatoria creada', 'La convocatoria fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -57,22 +45,12 @@ export function useActualizarConvocatoria() {
       data: Partial<CrearConvocatoriaData & { estado: string }>
     }) => convocatoriaService.actualizar(id, data),
     onSuccess: (_, { id }) => {
-      notifications.show({
-        title:   'Convocatoria actualizada',
-        message: 'Los cambios fueron guardados.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Convocatoria actualizada', 'Los cambios fueron guardados.')
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
       qc.invalidateQueries({ queryKey: ['convocatoria', id] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -81,22 +59,15 @@ export function usePublicarConvocatoria() {
   return useMutation({
     mutationFn: (id: number) => convocatoriaService.publicar(id),
     onSuccess: (_, id) => {
-      notifications.show({
-        title:   'Convocatoria publicada',
-        message: 'La convocatoria ya es visible para los postulantes.',
-        color:   'blue',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Convocatoria publicada',
+        'La convocatoria ya es visible para los postulantes.',
+      )
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
       qc.invalidateQueries({ queryKey: ['convocatoria', id] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -105,21 +76,11 @@ export function useEliminarConvocatoria() {
   return useMutation({
     mutationFn: (id: number) => convocatoriaService.eliminar(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Convocatoria eliminada',
-        message: 'La convocatoria fue eliminada.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Convocatoria eliminada', 'La convocatoria fue eliminada.')
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -138,12 +99,7 @@ export function useInscribirPostulante(convocatoriaId: number) {
     mutationFn: (data: Parameters<typeof convocatoriaService.inscribirPostulante>[1]) =>
       convocatoriaService.inscribirPostulante(convocatoriaId, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Postulante inscrito',
-        message: 'El postulante fue inscrito correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Postulante inscrito', 'El postulante fue inscrito correctamente.')
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
       // El aspirante aparece también en Reclutamiento Express, bajo otras
       // claves: sin esto los conteos del contenedor y el filtro de años se
@@ -153,12 +109,7 @@ export function useInscribirPostulante(convocatoriaId: number) {
       qc.invalidateQueries({ queryKey: ['express-anios'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -178,21 +129,11 @@ export function useCalificarPostulante(convocatoriaId: number) {
         data
       ).then(r => r.data.datos),
     onSuccess: () => {
-      notifications.show({
-        title:   'Calificación registrada',
-        message: 'El puntaje del candidato fue guardado.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Calificación registrada', 'El puntaje del candidato fue guardado.')
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -216,15 +157,13 @@ export function useEnviarAlDispensario(convocatoriaId: number) {
     onSuccess: (_data, variables) => {
       const cantidad = Array.isArray(variables) ? variables.length : 1
 
-      notifications.show({
-        title:   'Enviado al Dispensario',
-        message: cantidad === 1
+      notificar.exito(
+        'Enviado al Dispensario',
+        cantidad === 1
           ? 'El candidato fue enviado al Dispensario Médico para evaluación. El ganador será confirmado tras el dictamen médico.'
           : `${cantidad} candidatos fueron enviados al Dispensario Médico. Cada uno se confirma tras su propio dictamen.`,
-        color:   'blue',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-        autoClose: 8000,
-      })
+        { autoClose: 8000 },
+      )
       qc.invalidateQueries({ queryKey: ['convocatoria', convocatoriaId] })
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
       // Los mismos postulantes se listan en Reclutamiento Express bajo otra
@@ -233,12 +172,7 @@ export function useEnviarAlDispensario(convocatoriaId: number) {
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -248,22 +182,15 @@ export function useConfirmarGanador(convocatoriaId: number) {
     mutationFn: () =>
       convocatoriaService.confirmarGanador(convocatoriaId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Ganador confirmado',
-        message: 'El candidato fue declarado ganador oficial. La convocatoria ha sido finalizada.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-        autoClose: 6000,
-      })
+      notificar.exito(
+        'Ganador confirmado',
+        'El candidato fue declarado ganador oficial. La convocatoria ha sido finalizada.',
+        { autoClose: 6000 },
+      )
       qc.invalidateQueries({ queryKey: ['convocatoria', convocatoriaId] })
       qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

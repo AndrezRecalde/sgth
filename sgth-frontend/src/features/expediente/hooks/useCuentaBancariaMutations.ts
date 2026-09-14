@@ -1,11 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { cuentaBancariaService } from '../services/cuentaBancariaService'
 import type { CuentaBancariaFormData } from '../schemas/cuentaBancaria.schema'
 import type { ApiResponse } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useCuentaBancariaMutations(servidorId: number) {
   const qc = useQueryClient()
@@ -14,24 +12,14 @@ export function useCuentaBancariaMutations(servidorId: number) {
     qc.invalidateQueries({ queryKey: ['cuentas-bancarias', servidorId] })
 
   const onError = (error: AxiosError<ApiResponse>) => {
-    notifications.show({
-      title: 'Error',
-      message: error.response?.data?.mensaje ?? 'Error inesperado',
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const crear = useMutation({
     mutationFn: (data: CuentaBancariaFormData) =>
       cuentaBancariaService.crear(servidorId, data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Cuenta registrada',
-        message: 'La cuenta bancaria fue registrada.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Cuenta registrada', 'La cuenta bancaria fue registrada.')
       invalidar()
     },
     onError,
@@ -41,12 +29,10 @@ export function useCuentaBancariaMutations(servidorId: number) {
     mutationFn: ({ id, proposito }: { id: number; proposito: 'sueldo' | 'viatico' }) =>
       cuentaBancariaService.setPrincipal(servidorId, id, proposito),
     onSuccess: () => {
-      notifications.show({
-        title: 'Cuenta principal actualizada',
-        message: 'La cuenta fue marcada como principal.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Cuenta principal actualizada',
+        'La cuenta fue marcada como principal.',
+      )
       invalidar()
     },
     onError,
@@ -56,12 +42,7 @@ export function useCuentaBancariaMutations(servidorId: number) {
     mutationFn: (id: number) =>
       cuentaBancariaService.eliminar(servidorId, id),
     onSuccess: () => {
-      notifications.show({
-        title: 'Cuenta eliminada',
-        message: 'La cuenta fue eliminada correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Cuenta eliminada', 'La cuenta fue eliminada correctamente.')
       invalidar()
     },
     onError,

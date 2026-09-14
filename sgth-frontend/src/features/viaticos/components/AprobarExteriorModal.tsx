@@ -95,11 +95,11 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
       submitting={isSubmitting || aprobar.isPending}
     >
       <Stack gap="sm">
-        <Card withBorder radius="md" p="sm" bg="blue.0">
+        <Card withBorder radius="md" p="sm" bg="var(--sgth-surface-sunken)">
           <Text size="xs" c="dimmed">
             Tarifa base aplicable
           </Text>
-          <Text size="sm" fw={700} c="blue">
+          <Text size="sm" fw={700} c="ocean">
             {esDignatario ? "Dignatario" : "Servidor"}: $
             {tarifaBase.toFixed(2)}/día
           </Text>

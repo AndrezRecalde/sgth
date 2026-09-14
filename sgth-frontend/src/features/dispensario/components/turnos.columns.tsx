@@ -51,7 +51,7 @@ export function getTurnosColumns(
           <Group gap="xs" wrap="nowrap">
             {esServidor
               ? <IconUser size={14} color="var(--mantine-color-emerald-6)" />
-              : <IconUsers size={14} color="var(--mantine-color-blue-6)" />}
+              : <IconUsers size={14} color="var(--mantine-color-ocean-6)" />}
             <Text size="sm">{nombre.trim() || '—'}</Text>
           </Group>
         )
@@ -157,7 +157,6 @@ export function getTurnosColumns(
             {
               label:    tieneTriaje ? 'Rehacer triaje' : 'Tomar triaje',
               icon:     <IconClipboardCheck size={14} />,
-              color:    tieneTriaje ? 'blue' : 'emerald',
               onClick:  () => actions.onTomarTriaje?.(turno),
               disabled: turno.estado === 'atendido'
                 || turno.estado === 'cancelado',
@@ -169,7 +168,7 @@ export function getTurnosColumns(
                 ? 'No se puede cancelar (ya con triaje)'
                 : 'Cancelar turno',
               icon:     <IconX size={14} />,
-              color:    tieneTriaje ? 'gray' : 'red',
+              color:    tieneTriaje ? undefined : 'red',
               onClick:  () => actions.onCancelar?.(turno.id),
               disabled: tieneTriaje || yaNoEstaEnEspera,
               hidden:   !actions.onCancelar,

@@ -81,7 +81,7 @@ export function ServidoresModal({ opened, onClose, viatico }: Props) {
     >
       <Stack gap="sm">
         {/* Titular — no editable */}
-        <Card withBorder radius="md" p="xs" bg="blue.0">
+        <Card withBorder radius="md" p="xs" bg="var(--sgth-surface-sunken)">
           <Group gap="xs">
             <StatusBadge size="xs">
               Titular

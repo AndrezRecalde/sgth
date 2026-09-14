@@ -35,7 +35,7 @@ export function LiquidacionActividadesCard({
     <Card withBorder radius="md" h="100%">
       <Group justify="space-between" mb="sm">
         <Group gap="xs">
-          <ThemeIcon color="blue" variant="light" size="sm">
+          <ThemeIcon variant="light" size="sm">
             <IconClipboardList size={14} />
           </ThemeIcon>
           <Text fw={600} size="sm">
@@ -55,7 +55,7 @@ export function LiquidacionActividadesCard({
         <Stack gap="xs" align="center" py="md">
           <Alert
             icon={<IconAlertCircle size={14} />}
-            color="orange"
+            color="amber"
             variant="light"
             w="100%"
           >
@@ -65,7 +65,6 @@ export function LiquidacionActividadesCard({
           </Alert>
           {onRegistrar && (
             <Button
-              color="blue"
               variant="light"
               size="sm"
               leftSection={<IconClipboardList size={14} />}
@@ -108,7 +107,6 @@ export function LiquidacionActividadesCard({
             <Button
               size="xs"
               variant="subtle"
-              color="blue"
               leftSection={<IconPencil size={12} />}
               onClick={onEditar}
             >

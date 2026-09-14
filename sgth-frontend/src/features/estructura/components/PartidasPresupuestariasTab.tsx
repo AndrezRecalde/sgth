@@ -100,7 +100,6 @@ export function PartidasPresupuestariasTab() {
             {
               label: "Editar partida",
               icon: <IconEdit size={14} />,
-              color: "blue",
               onClick: () => handleEdit(partida),
             },
             {
@@ -135,7 +134,6 @@ export function PartidasPresupuestariasTab() {
         actions={
           <Button
             leftSection={<IconPlus size={16} />}
-            color="emerald"
             variant="light"
             onClick={() => {
               setEditPartida(null);

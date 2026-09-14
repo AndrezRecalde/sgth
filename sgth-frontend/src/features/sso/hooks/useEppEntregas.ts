@@ -1,10 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { ssoService } from '../services/ssoService'
 import { getApiErrorMessage } from '@/types/api'
 import type { EppEntrega } from '../services/ssoService'
+import { notificar } from '@/components/ui'
 
 interface Params {
   page?: number
@@ -46,22 +44,15 @@ export function useEppEntregaMutations() {
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-epp-entregas'] })
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title: 'Error',
-      message: getApiErrorMessage(error),
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const registrar = useMutation({
     mutationFn: (data: Partial<EppEntrega>) => ssoService.registrarEntregaEpp(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Entrega registrada',
-        message: 'El movimiento de EPP fue registrado correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Entrega registrada',
+        'El movimiento de EPP fue registrado correctamente.',
+      )
       invalidar()
     },
     onError,
@@ -75,12 +66,10 @@ export function useEppEntregaMutations() {
       equipos: { equipo_proteccion_id: number; cantidad?: number }[]
     }) => ssoService.registrarEntregaKitEpp(data),
     onSuccess: (entregas) => {
-      notifications.show({
-        title: 'Kit entregado',
-        message: `Se registraron ${entregas.length} equipos de protección.`,
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Kit entregado',
+        `Se registraron ${entregas.length} equipos de protección.`,
+      )
       invalidar()
     },
     onError,

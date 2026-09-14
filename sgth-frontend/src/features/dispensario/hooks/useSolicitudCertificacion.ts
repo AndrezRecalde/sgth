@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { solicitudCertificacionService } from '../services/solicitudCertificacionService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useSolicitudesCertificacion(params?: {
   page?:        number
@@ -38,12 +36,7 @@ export function useIniciarProceso() {
     mutationFn: (id: number) =>
       solicitudCertificacionService.iniciarProceso(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Proceso iniciado',
-        message: 'La solicitud está en proceso de atención.',
-        color:   'blue',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Proceso iniciado', 'La solicitud está en proceso de atención.')
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
@@ -53,12 +46,7 @@ export function useIniciarProceso() {
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -74,23 +62,13 @@ export function useCompletarSolicitud() {
       }
     }) => solicitudCertificacionService.completar(id, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Solicitud completada',
-        message: 'La certificación médica fue emitida.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Solicitud completada', 'La certificación médica fue emitida.')
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -102,26 +80,21 @@ export function useCrearSolicitudLote() {
     onSuccess: (resultado) => {
       const nCreadas  = resultado?.creadas?.length ?? 0
       const nOmitidas = resultado?.omitidas?.length ?? 0
-      notifications.show({
-        title:   'Solicitudes generadas',
-        message: nOmitidas > 0
+      // Sin ninguna creada no se completó nada: todas tenían una solicitud activa.
+      const avisar = nCreadas > 0 ? notificar.exito : notificar.aviso
+      avisar(
+        'Solicitudes generadas',
+        nOmitidas > 0
           ? `${nCreadas} solicitud(es) creada(s), ${nOmitidas} omitida(s) por tener una solicitud activa.`
           : `${nCreadas} solicitud(es) creada(s) correctamente.`,
-        color:   nCreadas > 0 ? 'emerald' : 'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-        autoClose: 6000,
-      })
+        { autoClose: 6000 },
+      )
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -131,23 +104,16 @@ export function useConfirmarIncorporacion() {
     mutationFn: (id: number) =>
       solicitudCertificacionService.confirmarIncorporacion(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Identidad creada, ingreso pendiente de aprobación',
-        message: 'Se creó el expediente del servidor. El ingreso quedó registrado en borrador y requiere revisión y aprobación de Talento Humano en Expediente / Movimientos antes de quedar vinculado formalmente.',
-        color:   'blue',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-        autoClose: 8000,
-      })
+      notificar.exito(
+        'Identidad creada, ingreso pendiente de aprobación',
+        'Se creó el expediente del servidor. El ingreso quedó registrado en borrador y requiere revisión y aprobación de Talento Humano en Expediente / Movimientos antes de quedar vinculado formalmente.',
+        { autoClose: 8000 },
+      )
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

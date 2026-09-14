@@ -24,19 +24,16 @@ const OPCIONES = [
     value: "destino",
     label: "DESTINO",
     description: "Realizas actividades de la comisión en esta ciudad.",
-    color: "teal",
   },
   {
     value: "escala",
     label: "PARADA / ESCALA",
     description: "Solo pasas por esta ciudad, no realizas actividades.",
-    color: "orange",
   },
   {
     value: "regreso",
     label: "REGRESO",
     description: "Último tramo de vuelta a tu ciudad base.",
-    color: "red",
   },
 ];
 
@@ -47,9 +44,9 @@ export function TramoTipoSelector({
 }: Props) {
   if (esPrimerTramo) {
     return (
-      <Alert color="blue" variant="light" p="xs">
+      <Alert color="ocean" variant="light" p="xs">
         <Group gap="xs">
-          <Text size="xs" fw={600} c="blue">
+          <Text size="xs" fw={600} c="ocean">
             Tramo de IDA
           </Text>
           <Text size="xs" c="dimmed">
@@ -84,13 +81,10 @@ export function TramoTipoSelector({
                       radius="md"
                       p="sm"
                       style={{
-                        borderColor: selected
-                          ? `var(--mantine-color-${opt.color}-6)`
-                          : undefined,
+                        // El tipo de tramo es una categoría: la selección se marca con el acento, no con un color por tipo.
+                        borderColor: selected ? "var(--sgth-accent)" : undefined,
                         borderWidth: selected ? 2 : 1,
-                        background: selected
-                          ? `var(--mantine-color-${opt.color}-0)`
-                          : undefined,
+                        background: selected ? "var(--sgth-accent-light)" : undefined,
                         cursor: "pointer",
                         transition: "all 0.15s ease",
                       }}
@@ -103,10 +97,10 @@ export function TramoTipoSelector({
                             borderRadius: 4,
                             border: selected
                               ? "none"
-                              : "2px solid var(--mantine-color-gray-4)",
+                              : "2px solid var(--sgth-border-strong)",
                             background: selected
-                              ? `var(--mantine-color-${opt.color}-6)`
-                              : "white",
+                              ? "var(--sgth-accent)"
+                              : "var(--mantine-color-body)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -128,7 +122,7 @@ export function TramoTipoSelector({
                       <Text
                         size="xs"
                         fw={700}
-                        c={selected ? opt.color : "dark"}
+                        c={selected ? "var(--sgth-accent-text)" : undefined}
                         mb={4}
                       >
                         {opt.label}

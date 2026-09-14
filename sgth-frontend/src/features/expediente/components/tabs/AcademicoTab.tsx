@@ -87,7 +87,6 @@ export function AcademicoTab({ servidorId }: Props) {
           {
             label: 'Editar',
             icon: <IconEdit size={14} />,
-            color: 'blue',
             onClick: () => { setEditItem(item); open() },
           },
           {
@@ -109,7 +108,7 @@ export function AcademicoTab({ servidorId }: Props) {
   return (
     <Stack gap="md">
       <Group justify="flex-end">
-        <Button size="xs" color="emerald" variant="light"
+        <Button size="xs" variant="light"
           leftSection={<IconPlus size={14} />} onClick={open}>
           Agregar registro
         </Button>

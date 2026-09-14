@@ -49,7 +49,6 @@ export function DisponibilidadToggle() {
         size="compact-sm"
         radius="xl"
         variant="light"
-        color={disponible ? 'emerald' : 'gray'}
         loading={alternar.isPending}
         onClick={() => alternar.mutate()}
         aria-label={disponible
@@ -63,7 +62,7 @@ export function DisponibilidadToggle() {
               borderRadius: '50%',
               backgroundColor: disponible
                 ? 'var(--mantine-color-emerald-6)'
-                : 'var(--mantine-color-gray-5)',
+                : 'var(--sgth-border-strong)',
             }}
           />
         }

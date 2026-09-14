@@ -148,7 +148,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
       {presenta && !puedeRegistrar && (
         <Alert
           icon={<IconAlertCircle size={14} />}
-          color="gray"
+          color="slate"
           variant="light"
         >
           <Text size="xs">
@@ -161,7 +161,6 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
 
       {presenta && (
         <Button
-          color="emerald"
           size="md"
           disabled={!puedeRegistrar}
           loading={confirmarLiquidacion.isPending}

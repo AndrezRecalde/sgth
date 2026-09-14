@@ -35,7 +35,7 @@ export function AtencionesEnfermeriaDrawer({
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="violet" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconVaccine size={16} />
           </ThemeIcon>
           <Text fw={700} size="sm">

@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { puestoActividadService } from '../services/puestoActividadService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function usePuestoActividades(puestoId: number | null) {
   return useQuery({
@@ -20,21 +18,11 @@ export function useCrearActividad(puestoId: number) {
     mutationFn: (descripcion: string) =>
       puestoActividadService.crear(puestoId, descripcion),
     onSuccess: () => {
-      notifications.show({
-        title:   'Actividad agregada',
-        message: 'La actividad fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Actividad agregada', 'La actividad fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -44,21 +32,11 @@ export function useEliminarActividad(puestoId: number) {
     mutationFn: (actividadId: number) =>
       puestoActividadService.eliminar(puestoId, actividadId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Actividad eliminada',
-        message: 'La actividad fue removida.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Actividad eliminada', 'La actividad fue removida.')
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -73,11 +51,6 @@ export function useActualizarActividad(puestoId: number) {
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

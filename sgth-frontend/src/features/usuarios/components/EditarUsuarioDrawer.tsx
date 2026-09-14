@@ -81,7 +81,7 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="emerald" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconUser size={16} />
           </ThemeIcon>
           <Text fw={700}>Editar usuario</Text>
@@ -101,7 +101,7 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
               style={{ borderLeft: '4px solid var(--mantine-color-emerald-6)' }}
             >
               <Group gap="sm">
-                <ThemeIcon color="emerald" variant="light" size="lg" radius="xl">
+                <ThemeIcon variant="light" size="lg" radius="xl">
                   <IconUser size={18} />
                 </ThemeIcon>
                 <Stack gap={0}>
@@ -116,7 +116,7 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
             </Paper>
 
             {!usuario.servidor_id && (
-              <Alert color="orange" variant="light" icon={<IconUserOff size={16} />}>
+              <Alert color="amber" variant="light" icon={<IconUserOff size={16} />}>
                 <Text size="xs">
                   Este usuario no tiene ficha de servidor vinculada. Puede editar
                   sus datos de acceso, pero permanecerá inactivo y sin expediente
@@ -137,7 +137,6 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
               </Button>
               <Button
                 type="submit"
-                color="emerald"
                 loading={isSubmitting || actualizar.isPending}
                 leftSection={<IconCheck size={14} />}
               >

@@ -105,7 +105,6 @@ export function PanelContextoPaciente({
       <Stack gap="sm">
         <Group gap="xs" wrap="nowrap">
           <Avatar
-            color={esServidor ? 'emerald' : 'blue'}
             radius="xl"
             size="sm"
           >
@@ -174,7 +173,6 @@ export function PanelContextoPaciente({
               <ActionIcon
                 size="xs"
                 variant="subtle"
-                color="blue"
                 onClick={abrirAlergia}
               >
                 <IconPlus size={10} />
@@ -200,7 +198,6 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="orange"
                   onClick={() => {
                     setRegistroAnular({
                       id: a.id, tipo: 'alergia',
@@ -223,7 +220,6 @@ export function PanelContextoPaciente({
               <ActionIcon
                 size="xs"
                 variant="subtle"
-                color="blue"
                 onClick={abrirAntecedentePersonal}
               >
                 <IconPlus size={10} />
@@ -247,7 +243,6 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="orange"
                   onClick={() => {
                     setRegistroAnular({
                       id: a.id, tipo: 'antecedente',
@@ -270,7 +265,6 @@ export function PanelContextoPaciente({
               <ActionIcon
                 size="xs"
                 variant="subtle"
-                color="blue"
                 onClick={abrirAntecedenteFamiliar}
               >
                 <IconPlus size={10} />
@@ -293,7 +287,6 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
-                  color="orange"
                   onClick={() => {
                     setRegistroAnular({
                       id: a.id, tipo: 'antecedente',

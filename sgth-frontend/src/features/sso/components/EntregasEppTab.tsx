@@ -71,7 +71,6 @@ export function EntregasEppTab() {
         </Button>
         <Button
           leftSection={<IconPlus size={16} />}
-          color="emerald"
           variant="light"
           onClick={open}
         >

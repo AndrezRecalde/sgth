@@ -1,10 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX, IconAlertTriangle } from '@tabler/icons-react'
 import React from 'react'
 import { recetaService } from '../services/recetaService'
 import { getApiErrorMessage } from '@/types/api'
 import type { EmitirRecetaData } from '../services/recetaService'
+import { notificar } from '@/components/ui'
 
 export function useEmitirReceta(consultaId?: number) {
   const qc = useQueryClient()
@@ -15,23 +14,10 @@ export function useEmitirReceta(consultaId?: number) {
     onSuccess: (result) => {
       if (result?.alertas_alergias?.length) {
         result.alertas_alergias.forEach(alerta =>
-          notifications.show({
-            title:   'Alerta de alergia',
-            message: alerta,
-            color:   'orange',
-            icon:    React.createElement(
-              IconAlertTriangle, { size: 16 }
-            ),
-            autoClose: false,
-          })
+          notificar.aviso('Alerta de alergia', alerta, { autoClose: false })
         )
       }
-      notifications.show({
-        title:   'Receta emitida',
-        message: 'La receta médica fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Receta emitida', 'La receta médica fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['consultas'] })
       if (consultaId) {
         qc.invalidateQueries({
@@ -40,12 +26,7 @@ export function useEmitirReceta(consultaId?: number) {
       }
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -58,12 +39,7 @@ export function useAccionesItem(consultaId: number) {
     })
 
   const onError = (error: unknown) =>
-    notifications.show({
-      title:   'Error',
-      message: getApiErrorMessage(error),
-      color:   'red',
-      icon:    React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', getApiErrorMessage(error))
 
   const actualizarItem = useMutation({
     mutationFn: ({ recetaId, itemId, data }: {
@@ -78,12 +54,7 @@ export function useAccionesItem(consultaId: number) {
       }
     }) => recetaService.actualizarItem(recetaId, itemId, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Ítem actualizado',
-        message: 'El medicamento fue actualizado.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Ítem actualizado', 'El medicamento fue actualizado.')
       invalidar()
     },
     onError,
@@ -94,12 +65,7 @@ export function useAccionesItem(consultaId: number) {
       recetaId: number; itemId: number
     }) => recetaService.quitarItem(recetaId, itemId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Ítem eliminado',
-        message: 'El medicamento fue removido de la receta.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Ítem eliminado', 'El medicamento fue removido de la receta.')
       invalidar()
     },
     onError,
@@ -149,24 +115,17 @@ export function useRecetaPdf() {
       const ventana = window.open(url, '_blank')
 
       if (!ventana) {
-        notifications.show({
-          title:   'Permite las ventanas emergentes',
-          message: 'El navegador bloqueó la pestaña con la receta.',
-          color:   'orange',
-          icon:    React.createElement(IconAlertTriangle, { size: 16 }),
-        })
+        notificar.exito(
+          'Permite las ventanas emergentes',
+          'El navegador bloqueó la pestaña con la receta.',
+        )
       }
 
       // Se revoca tarde: antes la pestaña recién abierta se quedaba sin nada
       // que mostrar.
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
     } catch (error: unknown) {
-      notifications.show({
-        title:   'No se pudo generar la receta',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      })
+      notificar.error('No se pudo generar la receta', getApiErrorMessage(error))
     } finally {
       setAbriendo(null)
     }
@@ -182,23 +141,13 @@ export function useAnularReceta() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       recetaService.anular(id, motivo),
     onSuccess: () => {
-      notifications.show({
-        title:   'Receta anulada',
-        message: 'La receta ya no aparecerá pendiente de entrega.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Receta anulada', 'La receta ya no aparecerá pendiente de entrega.')
       // Anular no mueve stock: lo entregado ya salió y su egreso sigue en pie.
       qc.invalidateQueries({ queryKey: ['recetas'] })
       qc.invalidateQueries({ queryKey: ['consultas'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'No se pudo anular',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('No se pudo anular', getApiErrorMessage(error)),
   })
 }
 
@@ -211,12 +160,10 @@ export function useDespacharReceta() {
       data: import('../services/recetaService').DespacharRecetaData
     }) => recetaService.despachar(id, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Receta despachada',
-        message: 'Los medicamentos fueron despachados correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Receta despachada',
+        'Los medicamentos fueron despachados correctamente.',
+      )
       qc.invalidateQueries({ queryKey: ['recetas'] })
       // Despachar descuenta existencias: el listado de Farmacia, el kardex y
       // el contador de stock bajo del menú cuelgan de esta clave y quedaban
@@ -226,11 +173,6 @@ export function useDespacharReceta() {
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error al despachar',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error al despachar', getApiErrorMessage(error)),
   })
 }

@@ -182,7 +182,7 @@ export function AdquisicionForm({ onCreada }: Props) {
               {fields.length === 0 ? (
                 <Alert
                   icon={<IconInfoCircle size={14} />}
-                  color="gray"
+                  color="slate"
                   variant="light"
                 >
                   <Text size="xs">
@@ -212,7 +212,6 @@ export function AdquisicionForm({ onCreada }: Props) {
             <Group justify="flex-end" mt="sm">
               <Button
                 type="submit"
-                color="emerald"
                 leftSection={<IconCheck size={14} />}
                 loading={registrar.isPending}
               >

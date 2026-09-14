@@ -23,7 +23,7 @@ export function PuestosCargosView() {
         description="Catálogo de puestos, denominaciones y escala ocupacional"
       />
 
-      <Tabs defaultValue="puestos" color="emerald" keepMounted={false}>
+      <Tabs defaultValue="puestos" keepMounted={false}>
         <Tabs.List mb="md">
           <Tabs.Tab value="puestos" leftSection={<IconBriefcase size={16} />}>
             Puestos

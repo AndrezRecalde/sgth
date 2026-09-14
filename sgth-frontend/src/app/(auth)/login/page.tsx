@@ -99,7 +99,7 @@ export default function LoginPage() {
           <Title order={2} className={classes.welcomeTitle}>
             Bienvenido a nuestra intranet
           </Title>
-          <Text c="gray.4" size="lg" mb="xl" className={classes.welcomeText}>
+          <Text c="dimmed" size="lg" mb="xl" className={classes.welcomeText}>
             El Sistema de Gestión de Talento Humano ayuda a organizar de forma
             eficiente los procesos del GAD Provincial de Esmeraldas.
           </Text>

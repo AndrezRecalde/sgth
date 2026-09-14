@@ -234,7 +234,7 @@ export function RecetaModal({
           {fields.length === 0 ? (
             <Alert
               icon={<IconInfoCircle size={14} />}
-              color="gray"
+              color="slate"
               variant="light"
             >
               <Text size="xs">

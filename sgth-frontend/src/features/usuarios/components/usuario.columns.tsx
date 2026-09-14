@@ -105,7 +105,6 @@ export const getUsuarioColumns = ({
               checked={!!usuario.activo}
               onChange={() => onToggleActivo(usuario)}
               disabled={sinServidor}
-              color="emerald"
               size="sm"
               aria-label={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
             />
@@ -123,19 +122,16 @@ export const getUsuarioColumns = ({
         {
           label:   'Editar usuario',
           icon:    <IconEdit size={14} />,
-          color:   'blue',
           onClick: () => onEdit(usuario),
         },
         {
           label:   'Asignar permisos',
           icon:    <IconShieldCheck size={14} />,
-          color:   'violet',
           onClick: () => onPermisos(usuario),
         },
         {
           label:   'Restablecer contraseña',
           icon:    <IconKey size={14} />,
-          color:   'orange',
           onClick: () => onRestablecerPassword(usuario),
           // El backend la restablece a la cédula del servidor: sin ficha
           // vinculada no hay a qué restablecerla.
@@ -144,14 +140,13 @@ export const getUsuarioColumns = ({
         {
           label:   'Asignar servidor',
           icon:    <IconUserCheck size={14} />,
-          color:   'teal',
           onClick: () => onAsignarServidor(usuario),
           hidden:  !!usuario.servidor_id,
         },
         {
           label:   'Desvincular servidor',
           icon:    <IconUserOff size={14} />,
-          color:   'orange',
+          color: 'red',
           onClick: () => onDesvincular(usuario),
           hidden:  !usuario.servidor_id,
         },

@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge, notificar } from '@/components/ui'
 import { useState } from "react";
 import {
   Stack,
@@ -30,14 +30,12 @@ import { DiscapacidadCargaFamiliarModal } from "../DiscapacidadCargaFamiliarModa
 import { EnfermedadCargaFamiliarModal } from "../EnfermedadCargaFamiliarModal";
 import { expedienteService } from "../../services/expedienteService";
 import { useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
 import type {
   CargaFamiliar,
   DiscapacidadCargaFamiliar,
   EnfermedadCatastroficaCargaFamiliar,
 } from "@/types/api";
 import React from "react";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 const PARENTESCO_LABELS: Record<string, string> = {
   conyuge: "Cónyuge",
@@ -97,20 +95,10 @@ function CargaRow({
             Number(carga.id),
             id,
           );
-          notifications.show({
-            title: "Eliminado",
-            color: "emerald",
-            message: "Discapacidad eliminada.",
-            icon: React.createElement(IconCheck, { size: 16 }),
-          });
+          notificar.exito("Eliminado", "Discapacidad eliminada.");
           qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
         } catch {
-          notifications.show({
-            title: "Error",
-            color: "red",
-            message: "No se pudo eliminar.",
-            icon: React.createElement(IconX, { size: 16 }),
-          });
+          notificar.error("Error", "No se pudo eliminar.");
         }
       },
     });
@@ -124,20 +112,10 @@ function CargaRow({
       onConfirm: async () => {
         try {
           await expedienteService.eliminarEnfermedadCarga(Number(carga.id), id);
-          notifications.show({
-            title: "Eliminado",
-            color: "emerald",
-            message: "Enfermedad eliminada.",
-            icon: React.createElement(IconCheck, { size: 16 }),
-          });
+          notificar.exito("Eliminado", "Enfermedad eliminada.");
           qc.invalidateQueries({ queryKey: ["cargas-familiares", servidorId] });
         } catch {
-          notifications.show({
-            title: "Error",
-            color: "red",
-            message: "No se pudo eliminar.",
-            icon: React.createElement(IconX, { size: 16 }),
-          });
+          notificar.error("Error", "No se pudo eliminar.");
         }
       },
     });
@@ -207,14 +185,12 @@ function CargaRow({
               checked={carga.estado}
               onChange={() => onToggleEstado(Number(carga.id))}
               disabled={togglePending}
-              color="emerald"
               size="sm"
             />
           </Tooltip>
           <Tooltip label="Editar" withArrow>
             <ActionIcon
               variant="subtle"
-              color="blue"
               size="sm"
               onClick={() => onEdit(carga)}
             >
@@ -249,13 +225,12 @@ function CargaRow({
           {carga.persona_con_discapacidad && (
             <div>
               <Group justify="space-between" mb="xs">
-                <Text size="xs" fw={600} c="orange">
+                <Text size="xs" fw={600} c="amber">
                   Discapacidades
                 </Text>
                 <Button
                   size="xs"
                   variant="subtle"
-                  color="orange"
                   leftSection={<IconPlus size={12} />}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -277,7 +252,7 @@ function CargaRow({
                     p="xs"
                     style={{
                       borderRadius: 6,
-                      background: "var(--mantine-color-orange-light)",
+                      background: "var(--mantine-color-amber-light)",
                     }}
                   >
                     <div>
@@ -319,7 +294,6 @@ function CargaRow({
                 <Button
                   size="xs"
                   variant="subtle"
-                  color="red"
                   leftSection={<IconPlus size={12} />}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -423,7 +397,6 @@ export function FamiliaTab({ servidorId }: Props) {
       <Group justify="flex-end">
         <Button
           size="xs"
-          color="emerald"
           variant="light"
           leftSection={<IconPlus size={14} />}
           onClick={() => {

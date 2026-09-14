@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import { plantillaService } from '../services/plantillaService'
 import { getApiErrorMessage } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function usePlantillas() {
   return useQuery({
@@ -27,21 +25,11 @@ export function useCrearPlantilla() {
   return useMutation({
     mutationFn: plantillaService.crear,
     onSuccess: () => {
-      notifications.show({
-        title:   'Plantilla creada',
-        message: 'La plantilla fue registrada correctamente.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Plantilla creada', 'La plantilla fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['plantillas'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -50,21 +38,11 @@ export function useEliminarPlantilla() {
   return useMutation({
     mutationFn: (id: number) => plantillaService.eliminar(id),
     onSuccess: () => {
-      notifications.show({
-        title:   'Plantilla eliminada',
-        message: 'La plantilla fue removida.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Plantilla eliminada', 'La plantilla fue removida.')
       qc.invalidateQueries({ queryKey: ['plantillas'] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -74,21 +52,11 @@ export function useAgregarCriterioPlantilla(plantillaId: number) {
     mutationFn: (data: Parameters<typeof plantillaService.agregarCriterio>[1]) =>
       plantillaService.agregarCriterio(plantillaId, data),
     onSuccess: () => {
-      notifications.show({
-        title:   'Criterio agregado',
-        message: 'El criterio fue agregado a la plantilla.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Criterio agregado', 'El criterio fue agregado a la plantilla.')
       qc.invalidateQueries({ queryKey: ['plantilla', plantillaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -98,21 +66,11 @@ export function useEliminarCriterioPlantilla(plantillaId: number) {
     mutationFn: (criterioId: number) =>
       plantillaService.eliminarCriterio(plantillaId, criterioId),
     onSuccess: () => {
-      notifications.show({
-        title:   'Criterio eliminado',
-        message: 'El criterio fue removido de la plantilla.',
-        color:   'orange',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Criterio eliminado', 'El criterio fue removido de la plantilla.')
       qc.invalidateQueries({ queryKey: ['plantilla', plantillaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }
 
@@ -130,20 +88,13 @@ export function useAplicarPlantilla() {
       convocatoriaId: number
     }) => plantillaService.aplicarAConvocatoria(plantillaId, convocatoriaId),
     onSuccess: (_, { convocatoriaId }) => {
-      notifications.show({
-        title:   'Plantilla aplicada',
-        message: 'Los criterios fueron copiados a la convocatoria.',
-        color:   'emerald',
-        icon:    React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Plantilla aplicada',
+        'Los criterios fueron copiados a la convocatoria.',
+      )
       qc.invalidateQueries({ queryKey: ['criterios', convocatoriaId] })
     },
     onError: (error: unknown) =>
-      notifications.show({
-        title:   'Error',
-        message: getApiErrorMessage(error),
-        color:   'red',
-        icon:    React.createElement(IconX, { size: 16 }),
-      }),
+      notificar.error('Error', getApiErrorMessage(error)),
   })
 }

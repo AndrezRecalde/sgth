@@ -325,7 +325,7 @@ export function CalificarPostulanteModal({
           </Group>
           <Progress
             value={total}
-            color={aprueba ? 'emerald' : 'red'}
+            color={aprueba ? undefined : 'red'}
             size="sm"
             radius="xl"
             mt="xs"
@@ -338,7 +338,7 @@ export function CalificarPostulanteModal({
         </Card>
 
         {criterios.length === 0 && !isLoading && (
-          <Alert color="orange" variant="light"
+          <Alert color="amber" variant="light"
             icon={<IconInfoCircle size={16} />}>
             <Text size="xs">
               Esta convocatoria no tiene criterios de evaluación
@@ -373,7 +373,7 @@ export function CalificarPostulanteModal({
                         <Group justify="space-between" wrap="nowrap">
                           <Group gap="xs">
                             <ThemeIcon
-                              size="xs" color="blue" variant="light"
+                              size="xs" variant="light"
                             >
                               {TIPO_ICONS[c.tipo_input]}
                             </ThemeIcon>
@@ -400,7 +400,7 @@ export function CalificarPostulanteModal({
                             }))
                           }
                         />
-                        <Text size="xs" c="blue" ta="right">
+                        <Text size="xs" c="ocean" ta="right">
                           Puntaje: {calcularPuntajeCriterio(
                             c, estados[c.id] ?? {}
                           ).toFixed(2)} pts
@@ -429,7 +429,7 @@ export function CalificarPostulanteModal({
                           <Group justify="space-between" wrap="nowrap">
                             <Group gap="xs">
                               <ThemeIcon
-                                size="xs" color="orange" variant="light"
+                                size="xs" variant="light"
                               >
                                 {TIPO_ICONS[c.tipo_input]}
                               </ThemeIcon>
@@ -456,7 +456,7 @@ export function CalificarPostulanteModal({
                               }))
                             }
                           />
-                          <Text size="xs" c="orange" ta="right">
+                          <Text size="xs" c="amber" ta="right">
                             Puntaje: {calcularPuntajeCriterio(
                               c, estados[c.id] ?? {}
                             ).toFixed(2)} pts

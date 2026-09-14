@@ -76,7 +76,7 @@ export function EnfermeriaColaMonitoreoView() {
           <Chip
             checked={vista === 'todos'}
             onChange={() => setVista('todos')}
-            color="blue"
+            color="ocean"
             size="sm"
           >
             Todos los turnos
@@ -84,7 +84,7 @@ export function EnfermeriaColaMonitoreoView() {
           <Chip
             checked={vista === 'pendientes_triaje'}
             onChange={() => setVista('pendientes_triaje')}
-            color="orange"
+            color="amber"
             size="sm"
           >
             Pendientes de triaje
@@ -104,7 +104,6 @@ export function EnfermeriaColaMonitoreoView() {
         <ActionIcon
           size="xl"
           variant="light"
-          color="violet"
           onClick={abrirDrawer}
           title="Servicios de enfermería"
         >

@@ -72,7 +72,6 @@ export function NominaToolbar({ onEstadoChange }: Props) {
       />
       <Button
         size="sm"
-        color="emerald"
         variant="light"
         leftSection={<IconCalculator size={16} />}
         loading={calcular.isPending}

@@ -98,7 +98,6 @@ export function SumariosTab() {
               {
                 label: `Avanzar a ${ESTADO_SUMARIO_LABELS[siguiente]}`,
                 icon: <IconArrowRight size={14} />,
-                color: 'blue',
                 onClick: () => avanzarSumario.mutate({
                   id: s.id,
                   data: { estado: siguiente },
@@ -117,7 +116,6 @@ export function SumariosTab() {
         actions={
           <Button
             leftSection={<IconPlus size={16} />}
-            color="emerald"
             variant="light"
             onClick={open}
           >

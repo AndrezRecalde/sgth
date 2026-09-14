@@ -137,7 +137,6 @@ export function DetalleConvocatoriaView({ id }: Props) {
             icon:    p.evaluacion
               ? <IconEdit size={14} />
               : <IconStar size={14} />,
-            color:   p.evaluacion ? 'blue' : 'orange',
             onClick: () => {
               setPostulanteSel(p)
               abrirCalModal()
@@ -146,7 +145,6 @@ export function DetalleConvocatoriaView({ id }: Props) {
           {
             label:   'Ver perfil',
             icon:    <IconUsers size={14} />,
-            color:   'blue',
             onClick: () => router.push(
               `/sgth/reclutamiento/convocatorias/${convocatoriaId}/postulantes/${p.id}`
             ),
@@ -185,7 +183,6 @@ export function DetalleConvocatoriaView({ id }: Props) {
             </Button>
             {convocatoria.estado === 'borrador' && (
               <Button
-                color="blue"
                 leftSection={<IconWorldUpload size={14} />}
                 loading={publicar.isPending}
                 onClick={() => confirmar({
@@ -200,7 +197,6 @@ export function DetalleConvocatoriaView({ id }: Props) {
             )}
             {convocatoria.estado === 'en_evaluacion_medica' && (
               <Button
-                color="emerald"
                 leftSection={<IconCircleCheck size={14} />}
                 loading={confirmarGanador.isPending}
                 onClick={() => confirmar({
@@ -254,7 +250,6 @@ export function DetalleConvocatoriaView({ id }: Props) {
                     <Group gap="xs">
                       <ThemeIcon
                         size="xs"
-                        color="gray"
                         variant="subtle"
                       >
                         <IconCalendar size={12} />
@@ -359,7 +354,6 @@ export function DetalleConvocatoriaView({ id }: Props) {
                 ) && (
                   <Button
                     size="xs"
-                    color="emerald"
                     leftSection={<IconPlus size={13} />}
                     onClick={abrirModal}
                   >

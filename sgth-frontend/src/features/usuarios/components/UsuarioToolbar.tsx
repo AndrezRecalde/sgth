@@ -54,7 +54,6 @@ export function UsuarioToolbar({
             <ActionIcon
               size="sm"
               variant="subtle"
-              color="gray"
               aria-label="Limpiar búsqueda"
               onClick={() => onSearch('')}
             >

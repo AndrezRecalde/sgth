@@ -39,7 +39,7 @@ function BarraOcupacion({ ocupadas, plazas }: { ocupadas: number; plazas: number
           {pct}%
         </Text>
       </Group>
-      <Progress value={pct} size="sm" radius="xl" color="emerald" />
+      <Progress value={pct} size="sm" radius="xl" />
     </Stack>
   )
 }

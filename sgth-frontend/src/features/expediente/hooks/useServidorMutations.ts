@@ -1,12 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { notifications } from '@mantine/notifications'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import React from 'react'
 import type { AxiosError } from 'axios'
 import { expedienteService } from '../services/expedienteService'
 import type {} from '../schemas/servidor.schema'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { ApiResponse } from '@/types/api'
+import { notificar } from '@/components/ui'
 
 export function useServidorMutations() {
   const qc = useQueryClient()
@@ -17,24 +15,14 @@ export function useServidorMutations() {
   }
 
   const onError = (error: AxiosError<ApiResponse>) => {
-    notifications.show({
-      title: 'Error',
-      message: error.response?.data?.mensaje ?? 'Error inesperado',
-      color: 'red',
-      icon: React.createElement(IconX, { size: 16 }),
-    })
+    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
   }
 
   const crear = useMutation({
     mutationFn: (data: ServidorBasicoFormData) =>
       expedienteService.crear(data),
     onSuccess: () => {
-      notifications.show({
-        title: 'Servidor registrado',
-        message: 'El expediente fue creado correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito('Servidor registrado', 'El expediente fue creado correctamente.')
       invalidar()
     },
     onError,
@@ -44,12 +32,10 @@ export function useServidorMutations() {
     mutationFn: ({ id, data }: { id: number; data: ServidorBasicoFormData }) =>
       expedienteService.editar(id, data),
     onSuccess: (_, { id }) => {
-      notifications.show({
-        title: 'Expediente actualizado',
-        message: 'Los datos fueron actualizados correctamente.',
-        color: 'emerald',
-        icon: React.createElement(IconCheck, { size: 16 }),
-      })
+      notificar.exito(
+        'Expediente actualizado',
+        'Los datos fueron actualizados correctamente.',
+      )
       invalidar()
       qc.invalidateQueries({ queryKey: ['servidor', id] })
     },
