@@ -1,20 +1,16 @@
 "use client";
 
 import {
-  Modal,
   Stack,
   Card,
   Text,
   Group,
-  Button,
   MultiSelect,
-  ThemeIcon,
   Badge,
   Divider,
 } from "@mantine/core";
-import { IconUsers, IconCheck } from "@tabler/icons-react";
+import { FormModal } from "@/components/ui";
 import { useForm, Controller } from "react-hook-form";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
@@ -28,7 +24,6 @@ interface Props {
 }
 
 export function ServidoresModal({ opened, onClose, viatico }: Props) {
-  const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { actualizar } = useViaticoMutations();
 
@@ -76,76 +71,54 @@ export function ServidoresModal({ opened, onClose, viatico }: Props) {
   };
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon color="teal" variant="light" size="sm">
-            <IconUsers size={14} />
-          </ThemeIcon>
-          <Text fw={600}>Servidores en comisión</Text>
-        </Group>
-      }
+      title="Servidores en comisión"
       size="md"
-      radius="xl"
-      fullScreen={isMobile}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Guardar cambios"
+      submitting={isSubmitting}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          {/* Titular — no editable */}
-          <Card withBorder radius="md" p="xs" bg="blue.0">
-            <Group gap="xs">
-              <Badge size="xs" color="blue" variant="filled">
-                Titular
-              </Badge>
-              <Text size="sm" fw={500}>
-                {[titular?.servidor?.apellido, titular?.servidor?.nombre]
-                  .filter(Boolean)
-                  .join(" ") || "—"}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {titular?.servidor?.puesto?.cargo?.nombre ?? ""}
-              </Text>
-            </Group>
-          </Card>
-
-          <Divider label="Acompañantes" labelPosition="left" />
-
-          <Controller
-            name="acompanantes"
-            control={control}
-            render={({ field }) => (
-              <MultiSelect
-                label="Servidores acompañantes"
-                description="Seleccione los servidores que participan
-                  en esta comisión junto al titular"
-                placeholder="Buscar servidor..."
-                data={servidoresOptions}
-                searchable
-                clearable
-                {...contained}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="teal"
-              loading={isSubmitting}
-              leftSection={<IconCheck size={14} />}
-            >
-              Guardar cambios
-            </Button>
+      <Stack gap="sm">
+        {/* Titular — no editable */}
+        <Card withBorder radius="md" p="xs" bg="blue.0">
+          <Group gap="xs">
+            <Badge size="xs" color="blue" variant="filled">
+              Titular
+            </Badge>
+            <Text size="sm" fw={500}>
+              {[titular?.servidor?.apellido, titular?.servidor?.nombre]
+                .filter(Boolean)
+                .join(" ") || "—"}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {titular?.servidor?.puesto?.cargo?.nombre ?? ""}
+            </Text>
           </Group>
-        </Stack>
-      </form>
-    </Modal>
+        </Card>
+
+        <Divider label="Acompañantes" labelPosition="left" />
+
+        <Controller
+          name="acompanantes"
+          control={control}
+          render={({ field }) => (
+            <MultiSelect
+              label="Servidores acompañantes"
+              description="Seleccione los servidores que participan
+                en esta comisión junto al titular"
+              placeholder="Buscar servidor..."
+              data={servidoresOptions}
+              searchable
+              clearable
+              {...contained}
+              value={field.value}
+              onChange={field.onChange}
+            />
+          )}
+        />
+      </Stack>
+    </FormModal>
   );
 }

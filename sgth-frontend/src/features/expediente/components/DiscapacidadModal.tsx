@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { Modal, Button, Group, Stack, TextInput,
+import { Stack, TextInput,
          NumberInput, Select } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { expedienteService } from '../services/expedienteService'
 import { useQueryClient } from '@tanstack/react-query'
@@ -36,7 +36,6 @@ interface Props {
 }
 
 export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const qc = useQueryClient()
 
@@ -106,43 +105,39 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
   }
 
   return (
-    <Modal opened={opened} onClose={handleClose}
+    <FormModal
+      opened={opened}
+      onClose={handleClose}
       title={initialValues ? 'Editar discapacidad' : 'Registrar discapacidad'}
-      size="sm" fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Controller name="tipo_discapacidad" control={control}
-            render={({ field }) => (
-              <Select label="Tipo de discapacidad"
-                data={TIPO_OPTIONS} {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? '')}
-                error={errors.tipo_discapacidad?.message} />
-            )} />
-          <Controller name="porcentaje" control={control}
-            render={({ field }) => (
-              <NumberInput label="Porcentaje de discapacidad"
-                placeholder="%" min={1} max={100} suffix="%"
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(typeof v === 'number' ? v : 1)}
-                error={errors.porcentaje?.message} />
-            )} />
-          <TextInput label="Número de carnet CONADIS"
-            placeholder="Ingrese el número de carnet"
-            {...contained} {...register('numero_carnet_conadis')}
-            error={errors.numero_carnet_conadis?.message} />
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>Cancelar</Button>
-            <Button type="submit" color="emerald" variant="light"
-              loading={isSubmitting}>
-              {initialValues ? 'Actualizar' : 'Registrar discapacidad'}
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+      size="sm"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel={initialValues ? 'Actualizar' : 'Registrar discapacidad'}
+      submitting={isSubmitting}
+    >
+      <Stack gap="sm">
+        <Controller name="tipo_discapacidad" control={control}
+          render={({ field }) => (
+            <Select label="Tipo de discapacidad"
+              data={TIPO_OPTIONS} {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? '')}
+              error={errors.tipo_discapacidad?.message} />
+          )} />
+        <Controller name="porcentaje" control={control}
+          render={({ field }) => (
+            <NumberInput label="Porcentaje de discapacidad"
+              placeholder="%" min={1} max={100} suffix="%"
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(typeof v === 'number' ? v : 1)}
+              error={errors.porcentaje?.message} />
+          )} />
+        <TextInput label="Número de carnet CONADIS"
+          placeholder="Ingrese el número de carnet"
+          {...contained} {...register('numero_carnet_conadis')}
+          error={errors.numero_carnet_conadis?.message} />
+      </Stack>
+    </FormModal>
   )
 }
 

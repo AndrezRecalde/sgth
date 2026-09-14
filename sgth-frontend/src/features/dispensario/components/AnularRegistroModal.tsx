@@ -1,13 +1,13 @@
 'use client'
 
 import {
-  Modal, Stack, Select, Textarea,
-  Button, Group, Text, Alert,
+  Stack, Select, Textarea,
+  Text, Alert,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { useState } from 'react'
-import { IconAlertTriangle, IconCheck } from '@tabler/icons-react'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 
 interface MotivoOption {
   value: string
@@ -77,7 +77,6 @@ export function AnularRegistroModal({
   motivos = MOTIVOS_CLINICOS,
 }: Props) {
   const contained = useContainedInput()
-  const { isMobile } = useMobileBreakpoint()
   const [motivoSel, setMotivoSel] = useState<string>('')
   const [motivoLibre, setMotivoLibre] = useState('')
 
@@ -100,16 +99,14 @@ export function AnularRegistroModal({
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title={titulo}
       size="sm"
-      radius={isMobile ? 0 : 'xl'}
       // A pantalla completa en móvil: centrado, con el aviso, el select y el
       // textarea de «otro motivo», el diálogo se comía la pantalla y dejaba los
       // botones fuera de alcance.
-      fullScreen={isMobile}
     >
       <Stack gap="sm">
         <Alert
@@ -147,22 +144,15 @@ export function AnularRegistroModal({
             onChange={(e) => setMotivoLibre(e.currentTarget.value)}
           />
         )}
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            color="orange"
-            leftSection={<IconCheck size={14} />}
-            disabled={!puedeConfirmar}
-            loading={loading}
-            onClick={handleConfirmar}
-          >
-            Confirmar anulación
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={handleClose}
+        submitLabel="Confirmar anulación"
+        submitting={loading}
+        submitDisabled={!puedeConfirmar}
+        destructiva
+        onSubmit={handleConfirmar}
+      />
+    </SgthModal>
   )
 }

@@ -1,12 +1,12 @@
 'use client'
 
 import {
-  Modal, Stack, Text, Card, Badge,
-  Button, Group, Radio, Divider,
+  Stack, Text, Card, Badge,
+  Group, Radio, Divider,
   Alert, Skeleton,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import {
-  IconTemplate, IconCheck,
   IconInfoCircle, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { useState } from 'react'
@@ -48,17 +48,11 @@ export function SeleccionarPlantillaModal({
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
-      title={
-        <Group gap="xs">
-          <IconTemplate size={18} />
-          <Text fw={600}>Seleccionar plantilla de evaluación</Text>
-        </Group>
-      }
+      title="Seleccionar plantilla de evaluación"
       size="lg"
-      radius="xl"
     >
       <Stack gap="md">
         {tieneCriterios && (
@@ -153,22 +147,14 @@ export function SeleccionarPlantillaModal({
         )}
 
         <Divider />
-
-        <Group justify="flex-end">
-          <Button variant="default" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            color="emerald"
-            leftSection={<IconCheck size={14} />}
-            disabled={!seleccionada}
-            loading={aplicar.isPending}
-            onClick={handleAplicar}
-          >
-            Aplicar plantilla
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={handleClose}
+        submitLabel="Aplicar plantilla"
+        submitting={aplicar.isPending}
+        submitDisabled={!seleccionada}
+        onSubmit={handleAplicar}
+      />
+    </SgthModal>
   )
 }

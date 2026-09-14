@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import {
-  Modal, Stack, Group, Button,
+  Stack, Group, Button,
   Text, Badge, Skeleton,
 } from '@mantine/core'
+import { SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconSearch } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useReporteEppEntregas } from '../hooks/useEppEntregas'
@@ -22,7 +22,6 @@ interface Props {
 }
 
 export function ReporteEppModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
 
   const [fechaInicio, setFechaInicio] = useState('')
@@ -58,13 +57,11 @@ export function ReporteEppModal({ opened, onClose }: Props) {
   ]
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Lista de EPP entregados"
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <Group align="flex-end" wrap="wrap">
@@ -122,6 +119,6 @@ export function ReporteEppModal({ opened, onClose }: Props) {
           </>
         )}
       </Stack>
-    </Modal>
+    </SgthModal>
   )
 }

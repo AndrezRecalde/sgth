@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Button, Group, Modal, Stepper } from '@mantine/core'
+import { Alert, Button, Group, Stepper } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { FormProvider, useForm, Controller, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconBriefcase, IconInfoCircle, IconPhone, IconUser } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { ServidorFormPersonal } from './ServidorFormPersonal'
 import { ServidorFormContacto } from './ServidorFormContacto'
@@ -81,7 +81,6 @@ const fromDate = (d: Date | string | null): string | null => {
  * el del vínculo, que es lo que distingue esta vía.
  */
 export function VinculacionInicialModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const registrar = useVinculacionInicial()
   const [paso, setPaso] = useState(0)
@@ -110,13 +109,11 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={cerrar}
       title="Vinculación inicial — servidor ya vinculado"
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stepper active={paso} size="sm" color="emerald" mb="lg" allowNextStepsSelect={false}>
         <Stepper.Step label="Datos personales" icon={<IconUser size={16} />} />
@@ -184,27 +181,20 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
 
           {paso === 2 && <VinculacionInicialFormVinculo />}
 
-          <Group justify="space-between" mt="xl">
-            <Button variant="default" onClick={cerrar}>Cancelar</Button>
-            <Group>
-              {paso > 0 && (
-                <Button variant="default" onClick={() => setPaso((p) => p - 1)}>
-                  Atrás
-                </Button>
-              )}
-              {paso < 2 ? (
-                <Button color="emerald" variant="light" onClick={avanzar}>
-                  Siguiente
-                </Button>
-              ) : (
-                <Button type="submit" color="emerald" loading={registrar.isPending}>
-                  Registrar servidor y vínculo
-                </Button>
-              )}
-            </Group>
-          </Group>
+          <ModalFooter
+            onCancel={cerrar}
+            leftSection={paso > 0 && (
+              <Button variant="default" onClick={() => setPaso((p) => p - 1)}>
+                Atrás
+              </Button>
+            )}
+            // Sin `onSubmit` el botón pasa a enviar el formulario: solo en el último paso.
+            onSubmit={paso < 2 ? avanzar : undefined}
+            submitLabel={paso < 2 ? 'Siguiente' : 'Registrar servidor y vínculo'}
+            submitting={registrar.isPending}
+          />
         </form>
       </FormProvider>
-    </Modal>
+    </SgthModal>
   )
 }

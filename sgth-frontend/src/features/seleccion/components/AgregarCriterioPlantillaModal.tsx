@@ -1,12 +1,13 @@
 'use client'
 
 import {
-  Modal, Stack, TextInput, 
+  Stack, TextInput, 
   NumberInput, Textarea, Button,
   Group, Text, ActionIcon, Card,
   SegmentedControl, Divider,
 } from '@mantine/core'
-import { IconPlus, IconTrash, IconCheck } from '@tabler/icons-react'
+import { FormModal } from '@/components/ui'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -93,178 +94,164 @@ export function AgregarCriterioPlantillaModal({
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={handleClose}
       title="Agregar criterio a la plantilla"
       size="lg"
-      radius="xl"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Agregar criterio"
+      submitting={agregar.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="md">
-          <Stack gap="xs">
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-              style={{ letterSpacing: '0.05em' }}>
-              Sección
-            </Text>
-            <SegmentedControl
-              value={seccion}
-              onChange={(v) => setSeccion(v as SeccionCriterio)}
-              data={[
-                { label: 'Méritos', value: 'meritos' },
-                { label: 'Oposición', value: 'oposicion' },
-              ]}
-              fullWidth
-            />
-          </Stack>
-
-          <TextInput
-            label="Nombre del criterio"
-            placeholder="Ej: Instrucción formal"
-            required
-            {...contained}
-            {...register('nombre')}
-            error={errors.nombre?.message}
+      <Stack gap="md">
+        <Stack gap="xs">
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+            style={{ letterSpacing: '0.05em' }}>
+            Sección
+          </Text>
+          <SegmentedControl
+            value={seccion}
+            onChange={(v) => setSeccion(v as SeccionCriterio)}
+            data={[
+              { label: 'Méritos', value: 'meritos' },
+              { label: 'Oposición', value: 'oposicion' },
+            ]}
+            fullWidth
           />
+        </Stack>
 
-          <Textarea
-            label="Descripción"
-            placeholder="Cómo se evalúa este criterio"
-            autosize
-            minRows={2}
-            {...contained}
-            {...register('descripcion')}
-          />
+        <TextInput
+          label="Nombre del criterio"
+          placeholder="Ej: Instrucción formal"
+          required
+          {...contained}
+          {...register('nombre')}
+          error={errors.nombre?.message}
+        />
 
-          <Divider label="Configuración" />
+        <Textarea
+          label="Descripción"
+          placeholder="Cómo se evalúa este criterio"
+          autosize
+          minRows={2}
+          {...contained}
+          {...register('descripcion')}
+        />
 
-          <Controller
-            name="tipo_input"
-            control={control}
-            render={({ field }) => (
-              <Stack gap="xs">
-                <Text size="sm" fw={500}>Tipo de evaluación</Text>
-                <SegmentedControl
-                  value={field.value}
-                  onChange={field.onChange}
-                  data={Object.entries(TIPO_LABELS).map(
-                    ([value, label]) => ({ value, label })
-                  )}
-                  fullWidth
-                />
-                <Text size="xs" c="dimmed">
-                  {TIPO_DESCRIPTIONS[field.value as TipoInput]}
-                </Text>
-              </Stack>
-            )}
-          />
+        <Divider label="Configuración" />
 
-          <Controller
-            name="puntaje_maximo"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label="Puntaje máximo"
-                min={0.5}
-                max={100}
-                decimalScale={2}
-                required
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(Number(v) || 0)}
-                error={errors.puntaje_maximo?.message}
-              />
-            )}
-          />
-
-          {tipoInput !== 'numero' && (
+        <Controller
+          name="tipo_input"
+          control={control}
+          render={({ field }) => (
             <Stack gap="xs">
-              <Group justify="space-between">
-                <Text size="sm" fw={500}>Opciones</Text>
-                <Button
-                  size="compact-xs"
-                  variant="subtle"
-                  leftSection={<IconPlus size={12} />}
-                  onClick={() =>
-                    setOpciones(p => [
-                      ...p, { etiqueta: '', puntaje: 0 },
-                    ])
-                  }
-                >
-                  Agregar opción
-                </Button>
-              </Group>
-              {opciones.map((op, i) => (
-                <Card key={i} withBorder radius="md" p="sm">
-                  <Group gap="sm" wrap="nowrap">
-                    <TextInput
-                      placeholder="Etiqueta de la opción"
-                      style={{ flex: 1 }}
-                      size="sm"
-                      {...contained}
-                      value={op.etiqueta}
-                      onChange={(e) =>
-                        setOpciones(prev =>
-                          prev.map((o, idx) =>
-                            idx === i
-                              ? { ...o, etiqueta: e.currentTarget.value }
-                              : o
-                          )
-                        )
-                      }
-                    />
-                    <NumberInput
-                      placeholder="Pts"
-                      style={{ width: 80 }}
-                      size="sm"
-                      min={0}
-                      decimalScale={2}
-                      {...contained}
-                      value={op.puntaje}
-                      onChange={(v) =>
-                        setOpciones(prev =>
-                          prev.map((o, idx) =>
-                            idx === i
-                              ? { ...o, puntaje: Number(v) || 0 }
-                              : o
-                          )
-                        )
-                      }
-                    />
-                    <ActionIcon
-                      size="sm"
-                      color="red"
-                      variant="subtle"
-                      disabled={opciones.length === 1}
-                      onClick={() =>
-                        setOpciones(p =>
-                          p.filter((_, idx) => idx !== i)
-                        )
-                      }
-                    >
-                      <IconTrash size={13} />
-                    </ActionIcon>
-                  </Group>
-                </Card>
-              ))}
+              <Text size="sm" fw={500}>Tipo de evaluación</Text>
+              <SegmentedControl
+                value={field.value}
+                onChange={field.onChange}
+                data={Object.entries(TIPO_LABELS).map(
+                  ([value, label]) => ({ value, label })
+                )}
+                fullWidth
+              />
+              <Text size="xs" c="dimmed">
+                {TIPO_DESCRIPTIONS[field.value as TipoInput]}
+              </Text>
             </Stack>
           )}
+        />
 
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              leftSection={<IconCheck size={14} />}
-              loading={agregar.isPending}
-            >
-              Agregar criterio
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Controller
+          name="puntaje_maximo"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Puntaje máximo"
+              min={0.5}
+              max={100}
+              decimalScale={2}
+              required
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(Number(v) || 0)}
+              error={errors.puntaje_maximo?.message}
+            />
+          )}
+        />
+
+        {tipoInput !== 'numero' && (
+          <Stack gap="xs">
+            <Group justify="space-between">
+              <Text size="sm" fw={500}>Opciones</Text>
+              <Button
+                size="compact-xs"
+                variant="subtle"
+                leftSection={<IconPlus size={12} />}
+                onClick={() =>
+                  setOpciones(p => [
+                    ...p, { etiqueta: '', puntaje: 0 },
+                  ])
+                }
+              >
+                Agregar opción
+              </Button>
+            </Group>
+            {opciones.map((op, i) => (
+              <Card key={i} withBorder radius="md" p="sm">
+                <Group gap="sm" wrap="nowrap">
+                  <TextInput
+                    placeholder="Etiqueta de la opción"
+                    style={{ flex: 1 }}
+                    size="sm"
+                    {...contained}
+                    value={op.etiqueta}
+                    onChange={(e) =>
+                      setOpciones(prev =>
+                        prev.map((o, idx) =>
+                          idx === i
+                            ? { ...o, etiqueta: e.currentTarget.value }
+                            : o
+                        )
+                      )
+                    }
+                  />
+                  <NumberInput
+                    placeholder="Pts"
+                    style={{ width: 80 }}
+                    size="sm"
+                    min={0}
+                    decimalScale={2}
+                    {...contained}
+                    value={op.puntaje}
+                    onChange={(v) =>
+                      setOpciones(prev =>
+                        prev.map((o, idx) =>
+                          idx === i
+                            ? { ...o, puntaje: Number(v) || 0 }
+                            : o
+                        )
+                      )
+                    }
+                  />
+                  <ActionIcon
+                    size="sm"
+                    color="red"
+                    variant="subtle"
+                    disabled={opciones.length === 1}
+                    onClick={() =>
+                      setOpciones(p =>
+                        p.filter((_, idx) => idx !== i)
+                      )
+                    }
+                  >
+                    <IconTrash size={13} />
+                  </ActionIcon>
+                </Group>
+              </Card>
+            ))}
+          </Stack>
+        )}
+      </Stack>
+    </FormModal>
   )
 }

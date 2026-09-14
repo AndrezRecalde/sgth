@@ -1,15 +1,14 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, SgthModal } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Modal, Stack, Group, TextInput, Select, Button,
+  Stack, Group, TextInput, Select, Button,
   ActionIcon, Badge,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactoresRiesgo'
@@ -25,7 +24,6 @@ interface Props {
 }
 
 export function FactoresRiesgoModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { data: factores = [], isLoading } = useFactoresRiesgo()
   const { crear, eliminar } = useFactorRiesgoMutations()
@@ -81,13 +79,11 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
   ]
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Catálogo de factores de riesgo"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -133,6 +129,6 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
           minHeight={120}
         />
       </Stack>
-    </Modal>
+    </SgthModal>
   )
 }

@@ -1,18 +1,15 @@
 "use client";
 
 import {
-  Modal,
   Stack,
   Select,
   Textarea,
-  Button,
-  Group,
   Text,
   FileInput,
 } from "@mantine/core";
+import { ModalFooter, SgthModal } from "@/components/ui";
 import { DatePickerInput } from "@mantine/dates";
 import { useState } from "react";
-import { IconCheck } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useSubirResultado } from "../hooks/useResultadoMedico";
 import { TIPO_RESULTADO_OPTIONS } from "../services/resultadoMedicoService";
@@ -92,12 +89,11 @@ export function SubirResultadoModal({
   };
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title="Subir resultado médico"
       size="md"
-      radius="xl"
     >
       <Stack gap="sm">
         <Select
@@ -151,21 +147,13 @@ export function SubirResultadoModal({
             {error}
           </Text>
         )}
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            color="emerald"
-            leftSection={<IconCheck size={14} />}
-            loading={subir.isPending}
-            onClick={handleSubmit}
-          >
-            Subir resultado
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={handleClose}
+        submitLabel="Subir resultado"
+        submitting={subir.isPending}
+        onSubmit={handleSubmit}
+      />
+    </SgthModal>
   );
 }

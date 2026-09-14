@@ -1,13 +1,13 @@
 'use client'
 
-import { Alert, Button, Group, Modal, Stack, Textarea } from '@mantine/core'
+import { Alert, Stack, Textarea } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { FormModal } from './FormModal'
 
 /*
 | Confirmar una acción que exige motivo: rechazar o anular un permiso, una
@@ -34,6 +34,8 @@ interface Props {
   /** Qué va a pasar exactamente, con el folio nombrado. */
   descripcion: React.ReactNode
   confirmLabel: string
+  /** `true` si la acción anula o rechaza: el botón principal va en rojo. */
+  destructiva?: boolean
   cargando?: boolean
   /** Texto con el que abre el campo, para editarlo en vez de escribirlo. */
   valorInicial?: string
@@ -46,12 +48,12 @@ export function MotivoModal({
   title,
   descripcion,
   confirmLabel,
+  destructiva = false,
   cargando = false,
   valorInicial = '',
   onConfirm,
 }: Props) {
   const contained = useContainedInput()
-  const { isMobile } = useMobileBreakpoint()
 
   const {
     register,
@@ -80,47 +82,38 @@ export function MotivoModal({
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={cerrar}
       title={title}
-      centered
-      radius={isMobile ? 0 : 'xl'}
-      fullScreen={isMobile}
+      size="md"
       closeOnClickOutside={false}
+      onSubmit={handleSubmit(enviar)}
+      submitLabel={confirmLabel}
+      submitting={cargando}
+      destructiva={destructiva}
     >
-      <form onSubmit={handleSubmit(enviar)} noValidate>
-        <Stack gap="md">
-          <Alert
-            icon={<IconInfoCircle size={16} />}
-            color="amber"
-            variant="light"
-            py={8}
-          >
-            {descripcion}
-          </Alert>
+      <Stack gap="md">
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="amber"
+          variant="light"
+          py={8}
+        >
+          {descripcion}
+        </Alert>
 
-          <Textarea
-            label="Motivo"
-            placeholder="Por qué se realiza esta acción"
-            autosize
-            minRows={3}
-            maxRows={6}
-            {...contained}
-            {...register('motivo')}
-            error={errors.motivo?.message}
-          />
-
-          <Group justify="flex-end">
-            <Button variant="default" onClick={cerrar}>
-              Cancelar
-            </Button>
-            <Button type="submit" color="orange" variant="light" loading={cargando}>
-              {confirmLabel}
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Textarea
+          label="Motivo"
+          placeholder="Por qué se realiza esta acción"
+          autosize
+          minRows={3}
+          maxRows={6}
+          {...contained}
+          {...register('motivo')}
+          error={errors.motivo?.message}
+        />
+      </Stack>
+    </FormModal>
   )
 }

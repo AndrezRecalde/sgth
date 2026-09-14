@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import {
-  Alert, Button, Group, Modal, Select, Stack, Text, TextInput, Textarea,
+  Alert, Select, Stack, Text, TextInput, Textarea,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconAlertTriangle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
 import {
@@ -23,16 +23,12 @@ interface Props {
 }
 
 export function TransicionarVistoBuenoModal({ opened, onClose, tramite }: Props) {
-  const { isMobile } = useMobileBreakpoint()
-
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Actualizar trámite de visto bueno"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       {/* El formulario se remonta al cambiar de trámite (key), así arranca con
           los valores de ese trámite sin resetear estado desde un efecto. */}
@@ -43,7 +39,7 @@ export function TransicionarVistoBuenoModal({ opened, onClose, tramite }: Props)
           onClose={onClose}
         />
       )}
-    </Modal>
+    </SgthModal>
   )
 }
 
@@ -173,18 +169,14 @@ function FormularioTransicion({
         </>
       )}
 
-      <Group justify="flex-end" mt="md">
-        <Button variant="default" onClick={onClose}>Cerrar</Button>
-        {opciones.length > 0 && (
-          <Button
-            color="emerald"
-            loading={transicionarVistoBueno.isPending}
-            onClick={submit}
-          >
-            Actualizar trámite
-          </Button>
-        )}
-      </Group>
+      <ModalFooter
+        onCancel={onClose}
+        cancelLabel="Cerrar"
+        submitLabel="Actualizar trámite"
+        submitting={transicionarVistoBueno.isPending}
+        sinPrincipal={opciones.length === 0}
+        onSubmit={submit}
+      />
     </Stack>
   )
 }

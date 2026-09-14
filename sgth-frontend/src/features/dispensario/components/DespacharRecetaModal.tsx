@@ -1,16 +1,16 @@
 'use client'
 
 import {
-  Modal, Stack, Text, Group, Badge,
-  NumberInput, Button, Alert, Card,
+  Stack, Text, Group, Badge,
+  NumberInput, Alert, Card,
   ThemeIcon, Grid,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import {
-  IconPill, IconCheck, IconAlertTriangle,
+  IconPill, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useDespacharReceta } from '../hooks/useReceta'
 import { esItemExterno, nombreDeItem } from '../services/recetaService'
 import type { RecetaMedica, ItemReceta } from '../services/recetaService'
@@ -58,7 +58,6 @@ export function DespacharRecetaModal({
 }: Props) {
   const contained  = useContainedInput()
   const despachar  = useDespacharReceta()
-  const { isMobile } = useMobileBreakpoint()
 
   const [cantidades, setCantidades] = useState<Record<number, number>>({})
 
@@ -122,13 +121,11 @@ export function DespacharRecetaModal({
     // A pantalla completa en el teléfono, como el de emitir: despachar es
     // rellenar cantidades ítem por ítem, y en una ventana flotante de 375px eso
     // ocurre dentro de un recuadro que apenas deja ver dos medicamentos.
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title="Despachar receta médica"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="sm">
         <Card withBorder radius="md" p="sm">
@@ -320,27 +317,19 @@ export function DespacharRecetaModal({
             })}
           </Stack>
         )}
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            color="emerald"
-            leftSection={<IconCheck size={14} />}
-            loading={despachar.isPending}
-            disabled={
-              itemsPendientes.length === 0 ||
-              itemsPendientes.every(
-                item => (cantidades[item.id!] ?? 0) === 0
-              )
-            }
-            onClick={handleDespachar}
-          >
-            Confirmar despacho
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={handleClose}
+        submitLabel="Confirmar despacho"
+        submitting={despachar.isPending}
+        submitDisabled={
+          itemsPendientes.length === 0 ||
+          itemsPendientes.every(
+            item => (cantidades[item.id!] ?? 0) === 0
+          )
+        }
+        onSubmit={handleDespachar}
+      />
+    </SgthModal>
   )
 }

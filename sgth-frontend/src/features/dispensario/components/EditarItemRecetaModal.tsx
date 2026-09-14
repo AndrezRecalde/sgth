@@ -1,12 +1,12 @@
 'use client'
 
 import {
-  Modal, Stack, NumberInput, TextInput,
-  Textarea, Button, Group, Text,
+  Stack, NumberInput, TextInput,
+  Textarea, Text,
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
-import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAccionesItem } from '../hooks/useReceta'
 import { nombreDeItem } from '../services/recetaService'
@@ -77,7 +77,7 @@ export function EditarItemRecetaModal({
   if (!item) return null
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={onClose}
       title={
@@ -89,75 +89,62 @@ export function EditarItemRecetaModal({
         </Text>
       }
       size="sm"
-      radius="xl"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Guardar cambios"
+      submitting={actualizarItem.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Controller
-            name="cantidad_prescrita"
-            control={control}
-            rules={{
-              required: 'Indique la cantidad',
-              min: { value: 1, message: 'Debe ser al menos 1' },
-            }}
-            render={({ field }) => (
-              <NumberInput
-                label="Cantidad"
-                min={1}
-                required
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(Number(v) || 1)}
-                error={errors.cantidad_prescrita?.message}
-              />
-            )}
-          />
-          <TextInput
-            label="Dosis"
-            placeholder="Ej: 1 tableta"
-            required
-            {...contained}
-            {...register('dosis', { required: 'Indique la dosis' })}
-            error={errors.dosis?.message}
-          />
-          <TextInput
-            label="Frecuencia"
-            placeholder="Ej: Cada 8 horas"
-            required
-            {...contained}
-            {...register('frecuencia', { required: 'Indique la frecuencia' })}
-            error={errors.frecuencia?.message}
-          />
-          <TextInput
-            label="Duración"
-            placeholder="Ej: 5 días"
-            required
-            {...contained}
-            {...register('duracion', { required: 'Indique la duración' })}
-            error={errors.duracion?.message}
-          />
-          <Textarea
-            label="Observaciones (opcional)"
-            autosize
-            minRows={2}
-            {...contained}
-            {...register('observaciones')}
-          />
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              leftSection={<IconCheck size={14} />}
-              loading={actualizarItem.isPending}
-            >
-              Guardar cambios
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+      <Stack gap="sm">
+        <Controller
+          name="cantidad_prescrita"
+          control={control}
+          rules={{
+            required: 'Indique la cantidad',
+            min: { value: 1, message: 'Debe ser al menos 1' },
+          }}
+          render={({ field }) => (
+            <NumberInput
+              label="Cantidad"
+              min={1}
+              required
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(Number(v) || 1)}
+              error={errors.cantidad_prescrita?.message}
+            />
+          )}
+        />
+        <TextInput
+          label="Dosis"
+          placeholder="Ej: 1 tableta"
+          required
+          {...contained}
+          {...register('dosis', { required: 'Indique la dosis' })}
+          error={errors.dosis?.message}
+        />
+        <TextInput
+          label="Frecuencia"
+          placeholder="Ej: Cada 8 horas"
+          required
+          {...contained}
+          {...register('frecuencia', { required: 'Indique la frecuencia' })}
+          error={errors.frecuencia?.message}
+        />
+        <TextInput
+          label="Duración"
+          placeholder="Ej: 5 días"
+          required
+          {...contained}
+          {...register('duracion', { required: 'Indique la duración' })}
+          error={errors.duracion?.message}
+        />
+        <Textarea
+          label="Observaciones (opcional)"
+          autosize
+          minRows={2}
+          {...contained}
+          {...register('observaciones')}
+        />
+      </Stack>
+    </FormModal>
   )
 }

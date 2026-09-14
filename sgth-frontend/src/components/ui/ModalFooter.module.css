@@ -1,6 +1,6 @@
 /*
- * El pie con los botones queda a la vista aunque el formulario sea más alto
- * que la pantalla. Con un error de validación, en una laptop de 768 px, los
+ * El pie con los botones queda a la vista aunque el contenido sea más alto que
+ * la pantalla. Con un error de validación, en una laptop de 768 px, los
  * botones quedaban por debajo del borde y había que desplazarse para enviar.
  *
  * Se estira hasta los bordes del modal con el mismo relleno que Mantine le da
@@ -8,13 +8,19 @@
  * abajo. Mantine no define `--mb-padding`: la usa con `--mantine-spacing-md`
  * de respaldo, y sin ese respaldo aquí la variable vacía anulaba los márgenes
  * y el relleno.
+ *
+ * Nació en el modal de permisos, que fue el primero en necesitarlo. Allí
+ * llevaba `bottom` negativo, que hundía el relleno inferior bajo el borde: con
+ * el contenido desplazado, los botones quedaban pegados al filo de la pantalla.
+ * Con `bottom: 0` el pie guarda el mismo aire desplazado que al final.
  */
 .pie {
   --relleno-modal: var(--mb-padding, var(--mantine-spacing-md));
 
   position: sticky;
-  bottom: calc(var(--relleno-modal) * -1);
+  bottom: 0;
   z-index: 1;
+  margin-top: var(--mantine-spacing-md);
   margin-inline: calc(var(--relleno-modal) * -1);
   margin-bottom: calc(var(--relleno-modal) * -1);
   padding: var(--mantine-spacing-sm) var(--relleno-modal) var(--relleno-modal);

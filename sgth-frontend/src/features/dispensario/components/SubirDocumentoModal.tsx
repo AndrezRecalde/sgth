@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import {
-  Modal, Stack, Group, Button, Text,
+  Stack, Text,
   FileInput,
 } from '@mantine/core'
-import { IconUpload, IconCheck } from '@tabler/icons-react'
+import { ModalFooter, SgthModal } from '@/components/ui'
+import { IconUpload } from '@tabler/icons-react'
 import { useSubirDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
 
@@ -32,12 +33,11 @@ export function SubirDocumentoModal({
   if (!adquisicion) return null
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Subir documento de respaldo"
       size="sm"
-      radius="xl"
     >
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
@@ -54,22 +54,14 @@ export function SubirDocumentoModal({
           value={archivo}
           onChange={setArchivo}
         />
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            color="emerald"
-            leftSection={<IconCheck size={14} />}
-            disabled={!archivo}
-            loading={subir.isPending}
-            onClick={handleSubir}
-          >
-            Subir documento
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={onClose}
+        submitLabel="Subir documento"
+        submitting={subir.isPending}
+        submitDisabled={!archivo}
+        onSubmit={handleSubir}
+      />
+    </SgthModal>
   )
 }

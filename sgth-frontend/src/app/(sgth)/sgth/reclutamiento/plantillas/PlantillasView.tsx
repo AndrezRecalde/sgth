@@ -1,12 +1,11 @@
 'use client'
 
-import { Stack, Group, Badge, Text, Button, Card, ActionIcon, Modal, TextInput, Textarea, Select } from '@mantine/core'
+import { Stack, Group, Badge, Text, Button, Card, ActionIcon, TextInput, Textarea, Select } from '@mantine/core'
 import {
   IconTemplate,
   IconPlus,
   IconEdit,
   IconTrash,
-  IconCheck,
 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
@@ -20,7 +19,7 @@ import {
 import {
   TIPO_CONTRATO_PLANTILLA_OPTIONS,
 } from '@/features/seleccion/services/plantillaService'
-import { EmptyState, PageHeader, PageShell , confirmar } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, confirmar, FormModal } from '@/components/ui'
 
 export function PlantillasView() {
   const router   = useRouter()
@@ -151,63 +150,47 @@ export function PlantillasView() {
         </Stack>
       )}
 
-      <Modal
+      <FormModal
         opened={modalOpened}
         onClose={() => { reset(); close() }}
         title="Nueva plantilla de evaluación"
         size="md"
-        radius="xl"
+        onSubmit={handleSubmit(onSubmit)}
+        submitLabel="Crear plantilla"
+        submitting={crear.isPending}
       >
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <Stack gap="sm">
-            <TextInput
-              label="Nombre de la plantilla"
-              placeholder="Ej: Concurso LOSEP estándar"
-              required
-              {...contained}
-              {...register('nombre', {
-                required: 'El nombre de la plantilla es obligatorio',
-              })}
-              error={errors.nombre?.message}
-            />
-            <Textarea
-              label="Descripción"
-              placeholder="Describe cuándo usar esta plantilla"
-              autosize
-              minRows={2}
-              {...contained}
-              {...register('descripcion')}
-            />
-            <Select
-              label="Tipo de contrato"
-              description="Ayuda a filtrar la plantilla según el tipo de convocatoria"
-              data={TIPO_CONTRATO_PLANTILLA_OPTIONS}
-              clearable
-              {...contained}
-              value={tipoContrato ?? null}
-              onChange={(v) =>
-                setValue('tipo_contrato', v ?? '')
-              }
-            />
-            <Group justify="flex-end" mt="sm">
-              <Button
-                variant="default"
-                onClick={() => { reset(); close() }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                color="emerald"
-                leftSection={<IconCheck size={14} />}
-                loading={crear.isPending}
-              >
-                Crear plantilla
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      </Modal>
+        <Stack gap="sm">
+          <TextInput
+            label="Nombre de la plantilla"
+            placeholder="Ej: Concurso LOSEP estándar"
+            required
+            {...contained}
+            {...register('nombre', {
+              required: 'El nombre de la plantilla es obligatorio',
+            })}
+            error={errors.nombre?.message}
+          />
+          <Textarea
+            label="Descripción"
+            placeholder="Describe cuándo usar esta plantilla"
+            autosize
+            minRows={2}
+            {...contained}
+            {...register('descripcion')}
+          />
+          <Select
+            label="Tipo de contrato"
+            description="Ayuda a filtrar la plantilla según el tipo de convocatoria"
+            data={TIPO_CONTRATO_PLANTILLA_OPTIONS}
+            clearable
+            {...contained}
+            value={tipoContrato ?? null}
+            onChange={(v) =>
+              setValue('tipo_contrato', v ?? '')
+            }
+          />
+        </Stack>
+      </FormModal>
     </PageShell>
   )
 }

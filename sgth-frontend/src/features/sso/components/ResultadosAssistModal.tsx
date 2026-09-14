@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal, Stack, Text, Badge, Group, Skeleton, Alert, SimpleGrid, Paper } from '@mantine/core'
+import { Stack, Text, Badge, Group, Skeleton, Alert, SimpleGrid, Paper } from '@mantine/core'
+import { SgthModal } from '@/components/ui'
 import { IconAlertCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useResultadosAssist } from '../hooks/useAssist'
 import { NIVEL_RIESGO_ASSIST_COLORS, NIVEL_RIESGO_ASSIST_LABELS } from '../schemas/assist.schema'
@@ -18,7 +18,6 @@ interface Props {
 }
 
 export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { data: resultados, isLoading } = useResultadosAssist(campaniaId)
 
   const columns: DataTableColumn<FilaSustancia>[] = [
@@ -48,13 +47,11 @@ export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
   ]
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Resultados del tamizaje ASSIST"
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       {isLoading && <Skeleton height={300} radius="md" />}
 
@@ -101,6 +98,6 @@ export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
           />
         </Stack>
       )}
-    </Modal>
+    </SgthModal>
   )
 }

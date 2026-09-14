@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Group, Modal, Stack, Stepper } from '@mantine/core'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { Stack, Stepper } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { useVacacionForm } from '../hooks/useVacacionForm'
 import { RegistroConfirmado } from './RegistroConfirmado'
 import { VacacionFechasCampos } from './VacacionFechasCampos'
@@ -22,18 +22,15 @@ interface Props {
  * `RegistroConfirmado`, que comparte con permisos.
  */
 export function VacacionModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const solicitud = useVacacionForm(onClose)
   const { isSubmitting } = solicitud.form.formState
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={solicitud.cerrar}
       title="Solicitud de vacaciones / permiso"
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stepper active={solicitud.paso} mb="lg" size="sm">
         <Stepper.Step label="Datos de la solicitud" />
@@ -53,15 +50,13 @@ export function VacacionModal({ opened, onClose }: Props) {
 
             <VacacionFechasCampos form={solicitud.form} />
 
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={solicitud.cerrar}>
-                Cancelar
-              </Button>
-              <Button type="submit" color="emerald" variant="light" loading={isSubmitting}>
-                Registrar solicitud
-              </Button>
-            </Group>
           </Stack>
+
+          <ModalFooter
+            onCancel={solicitud.cerrar}
+            submitLabel="Registrar solicitud"
+            submitting={isSubmitting}
+          />
         </form>
       )}
 
@@ -75,6 +70,6 @@ export function VacacionModal({ opened, onClose }: Props) {
           onCerrar={solicitud.cerrar}
         />
       )}
-    </Modal>
+    </SgthModal>
   )
 }

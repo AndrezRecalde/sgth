@@ -1,14 +1,13 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, SgthModal } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Modal, Stack, Group, Select, NumberInput, Button,
+  Stack, Group, Select, NumberInput, Button,
   ActionIcon, Divider,
 } from '@mantine/core'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useEquiposPorPuesto, usePuestoEppMutations } from '../hooks/usePuestoEpp'
@@ -22,7 +21,6 @@ interface Props {
 }
 
 export function AsignarEppPuestoModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
 
   const [puestoId, setPuestoId] = useState<number | null>(null)
@@ -92,13 +90,11 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
   ]
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title="EPP requerido por puesto"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <BuscarPuestoSelect
@@ -158,6 +154,6 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
           </>
         )}
       </Stack>
-    </Modal>
+    </SgthModal>
   )
 }

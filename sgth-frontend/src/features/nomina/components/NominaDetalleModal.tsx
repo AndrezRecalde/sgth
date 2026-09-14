@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Modal,
   Stack,
   Text,
   Badge,
@@ -12,8 +11,8 @@ import {
   Card,
   Grid,
 } from "@mantine/core";
+import { SgthModal } from "@/components/ui";
 import { useQuery } from "@tanstack/react-query";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { nominaService } from "../services/nominaService";
 import type { Nomina } from "@/types/api";
 
@@ -40,8 +39,6 @@ function formatMonto(v?: number | string | null): string {
 }
 
 export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
-  const { isMobile } = useMobileBreakpoint();
-
   const { data: detalle, isLoading } = useQuery({
     queryKey: ["nomina-detalle", nomina?.id],
     queryFn: () => nominaService.obtener(nomina!.id),
@@ -53,13 +50,11 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
   const roles = (detalle as Nomina)?.roles_pago ?? [];
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title={`Detalle de nómina — ${nomina?.periodo ?? ""}`}
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : "xl"}
     >
       {isLoading ? (
         <Stack gap="sm">
@@ -173,6 +168,6 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
           )}
         </Stack>
       )}
-    </Modal>
+    </SgthModal>
   );
 }

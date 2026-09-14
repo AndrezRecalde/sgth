@@ -1,12 +1,13 @@
 'use client'
 
 import {
-  Modal, Stack, NumberInput, Textarea, Select,
-  Button, Group, Text, Badge, Alert,
+  Stack, NumberInput, Textarea, Select,
+  Group, Text, Badge, Alert,
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useEffect } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
-import { IconCheck, IconAlertTriangle } from '@tabler/icons-react'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useInventarioMutations, useLotesDeMedicina,
@@ -123,150 +124,137 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
   const caducado = loteElegido ? loteCaducado(loteElegido) : false
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={() => { reset(); onClose() }}
       title="Dar de baja existencias"
       size="sm"
-      radius="xl"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Dar de baja"
+      submitting={registrarBaja.isPending}
+      destructiva
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Group justify="space-between">
-            <Text size="sm" fw={600}>{medicina.nombre}</Text>
-            <Badge variant="light" color="blue">
-              Stock: {medicina.stock_actual}
-            </Badge>
-          </Group>
+      <Stack gap="sm">
+        <Group justify="space-between">
+          <Text size="sm" fw={600}>{medicina.nombre}</Text>
+          <Badge variant="light" color="blue">
+            Stock: {medicina.stock_actual}
+          </Badge>
+        </Group>
 
-          <Alert
-            icon={<IconAlertTriangle size={14} />}
-            color={caducado ? 'red' : 'orange'}
-            variant="light"
-          >
-            <Text size="xs">
-              {caducado
-                ? 'Este lote está caducado y el despacho lo rechaza. Al darlo de baja sale del inventario y queda constancia en el kardex.'
-                : 'Las unidades salen del inventario por una causa conocida y queda constancia en el kardex. Para corregir una diferencia de conteo use «Ajustar inventario».'}
-            </Text>
-          </Alert>
+        <Alert
+          icon={<IconAlertTriangle size={14} />}
+          color={caducado ? 'red' : 'orange'}
+          variant="light"
+        >
+          <Text size="xs">
+            {caducado
+              ? 'Este lote está caducado y el despacho lo rechaza. Al darlo de baja sale del inventario y queda constancia en el kardex.'
+              : 'Las unidades salen del inventario por una causa conocida y queda constancia en el kardex. Para corregir una diferencia de conteo use «Ajustar inventario».'}
+          </Text>
+        </Alert>
 
-          {/* De qué lote sale. Una caja rota o un lote que retira el
-              fabricante son de uno concreto, y hacerlo salir por el más
-              próximo a caducar anotaría una mentira en el kardex. */}
-          <Controller
-            name="lote_id"
-            control={control}
-            rules={{ required: 'Indique de qué lote salen' }}
-            render={({ field }) => (
-              <Select
-                label="Lote"
-                placeholder={lotes.length ? 'Seleccione' : 'Sin existencias'}
-                data={lotes.map(l => ({
-                  value: String(l.id),
-                  label: etiquetaDeLote(l),
-                }))}
-                disabled={lotes.length === 0}
-                required
-                {...contained}
-                value={field.value}
-                onChange={(v) => {
-                  field.onChange(v ?? '')
+        {/* De qué lote sale. Una caja rota o un lote que retira el
+            fabricante son de uno concreto, y hacerlo salir por el más
+            próximo a caducar anotaría una mentira en el kardex. */}
+        <Controller
+          name="lote_id"
+          control={control}
+          rules={{ required: 'Indique de qué lote salen' }}
+          render={({ field }) => (
+            <Select
+              label="Lote"
+              placeholder={lotes.length ? 'Seleccione' : 'Sin existencias'}
+              data={lotes.map(l => ({
+                value: String(l.id),
+                label: etiquetaDeLote(l),
+              }))}
+              disabled={lotes.length === 0}
+              required
+              {...contained}
+              value={field.value}
+              onChange={(v) => {
+                field.onChange(v ?? '')
 
-                  // La cantidad se reajusta al lote nuevo. Sin esto quedaba la
-                  // del lote anterior —ochenta unidades para un lote de
-                  // veinticinco—, que el formulario mostraba como válida y el
-                  // servidor rechazaba después.
-                  const nuevo = lotes.find(l => String(l.id) === v)
-                  if (!nuevo) return
+                // La cantidad se reajusta al lote nuevo. Sin esto quedaba la
+                // del lote anterior —ochenta unidades para un lote de
+                // veinticinco—, que el formulario mostraba como válida y el
+                // servidor rechazaba después.
+                const nuevo = lotes.find(l => String(l.id) === v)
+                if (!nuevo) return
 
-                  setValue(
-                    'cantidad',
-                    loteCaducado(nuevo)
-                      ? nuevo.stock_actual
-                      : Math.min(cantidad, nuevo.stock_actual),
-                    { shouldValidate: true }
-                  )
-                }}
-                error={errors.lote_id?.message}
-              />
-            )}
-          />
-
-          <Controller
-            name="cantidad"
-            control={control}
-            rules={{
-              required: 'Indique cuántas unidades salen',
-              min: { value: 1, message: 'Debe ser al menos 1' },
-              max: {
-                value: tope,
-                message: `El lote tiene ${tope} unidades`,
-              },
-            }}
-            render={({ field }) => (
-              <NumberInput
-                label="Unidades a dar de baja"
-                min={1}
-                max={tope}
-                required
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(Number(v) || 0)}
-                error={errors.cantidad?.message}
-              />
-            )}
-          />
-
-          {cantidad > 0 && cantidad <= tope && (
-            <Text size="xs" c="dimmed">
-              El lote quedará en {tope - cantidad} y el stock total en{' '}
-              {medicina.stock_actual - cantidad}.
-            </Text>
+                setValue(
+                  'cantidad',
+                  loteCaducado(nuevo)
+                    ? nuevo.stock_actual
+                    : Math.min(cantidad, nuevo.stock_actual),
+                  { shouldValidate: true }
+                )
+              }}
+              error={errors.lote_id?.message}
+            />
           )}
+        />
 
-          <Controller
-            name="causa"
-            control={control}
-            rules={{ required: 'Seleccione la causa' }}
-            render={({ field }) => (
-              <Select
-                label="Causa"
-                placeholder="Seleccione"
-                data={CAUSAS}
-                required
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? '')}
-                error={errors.causa?.message}
-              />
-            )}
-          />
+        <Controller
+          name="cantidad"
+          control={control}
+          rules={{
+            required: 'Indique cuántas unidades salen',
+            min: { value: 1, message: 'Debe ser al menos 1' },
+            max: {
+              value: tope,
+              message: `El lote tiene ${tope} unidades`,
+            },
+          }}
+          render={({ field }) => (
+            <NumberInput
+              label="Unidades a dar de baja"
+              min={1}
+              max={tope}
+              required
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(Number(v) || 0)}
+              error={errors.cantidad?.message}
+            />
+          )}
+        />
 
-          <Textarea
-            label="Detalle (opcional)"
-            placeholder="Ej: lote L123 vencido el 12/08/2026"
-            autosize
-            minRows={2}
-            {...contained}
-            {...register('detalle')}
-          />
+        {cantidad > 0 && cantidad <= tope && (
+          <Text size="xs" c="dimmed">
+            El lote quedará en {tope - cantidad} y el stock total en{' '}
+            {medicina.stock_actual - cantidad}.
+          </Text>
+        )}
 
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="orange"
-              leftSection={<IconCheck size={14} />}
-              loading={registrarBaja.isPending}
-            >
-              Dar de baja
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Controller
+          name="causa"
+          control={control}
+          rules={{ required: 'Seleccione la causa' }}
+          render={({ field }) => (
+            <Select
+              label="Causa"
+              placeholder="Seleccione"
+              data={CAUSAS}
+              required
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? '')}
+              error={errors.causa?.message}
+            />
+          )}
+        />
+
+        <Textarea
+          label="Detalle (opcional)"
+          placeholder="Ej: lote L123 vencido el 12/08/2026"
+          autosize
+          minRows={2}
+          {...contained}
+          {...register('detalle')}
+        />
+      </Stack>
+    </FormModal>
   )
 }

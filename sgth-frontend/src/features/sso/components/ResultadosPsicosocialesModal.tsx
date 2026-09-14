@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal, Stack, Text, Badge, Group, Skeleton, Alert } from '@mantine/core'
+import { Stack, Text, Badge, Group, Skeleton, Alert } from '@mantine/core'
+import { SgthModal } from '@/components/ui'
 import { IconAlertCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useResultadosPsicosociales } from '../hooks/usePsicosocial'
 import { NIVEL_RIESGO_PSICOSOCIAL_COLORS, NIVEL_RIESGO_PSICOSOCIAL_LABELS } from '../schemas/psicosocial.schema'
@@ -18,7 +18,6 @@ interface Props {
 }
 
 export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { data: resultados, isLoading } = useResultadosPsicosociales(campaniaId)
 
   const columns: DataTableColumn<FilaDimension>[] = [
@@ -29,13 +28,11 @@ export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Pr
   ]
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Resultados de la evaluación psicosocial"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       {isLoading && <Skeleton height={300} radius="md" />}
 
@@ -70,6 +67,6 @@ export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Pr
           />
         </Stack>
       )}
-    </Modal>
+    </SgthModal>
   )
 }

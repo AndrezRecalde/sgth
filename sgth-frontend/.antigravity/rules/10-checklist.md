@@ -54,7 +54,7 @@ script y no la buena memoria de quien lee.
 - [ ] ¿Los colores salen de tokens o de props de Mantine? ¿Cero hex?
 - [ ] ¿Se ve bien en modo oscuro? **Compruébalo, no lo supongas.**
 - [ ] ¿Funciona a 375px de ancho? ¿`Grid.Col` con `base: 12`?
-- [ ] ¿Los modales son de pantalla completa en móvil?
+- [ ] ¿Los botones del modal van en `ModalFooter` (o en `FormModal`), y no en un `Group` escrito a mano?
 
 ## Formularios
 

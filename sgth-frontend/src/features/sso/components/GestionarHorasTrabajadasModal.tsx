@@ -1,14 +1,13 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, SgthModal } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Modal, Stack, Group, TextInput, NumberInput, Button,
+  Stack, Group, TextInput, NumberInput, Button,
   ActionIcon, Text, Select,
 } from '@mantine/core'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useHorasTrabajadas, useHorasTrabajadasMutations } from '../hooks/useHorasTrabajadas'
@@ -22,7 +21,6 @@ interface Props {
 }
 
 export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
 
   const [periodo, setPeriodo] = useState('')
@@ -87,13 +85,11 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
   ]
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Horas trabajadas por período"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <Text size="xs" c="dimmed">
@@ -147,6 +143,6 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           minHeight={120}
         />
       </Stack>
-    </Modal>
+    </SgthModal>
   )
 }

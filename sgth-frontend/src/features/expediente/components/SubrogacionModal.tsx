@@ -1,14 +1,14 @@
 'use client'
 
 import {
-  Modal, Button, Group, Stack, Select, TextInput, Textarea, SegmentedControl,
+  Button, Group, Stack, Select, TextInput, Textarea, SegmentedControl,
   Grid, Paper, Text, Alert,
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, useWatch, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { usePuestos } from '@/features/estructura/hooks/usePuestos'
@@ -57,7 +57,6 @@ interface Props {
 }
 
 export function SubrogacionModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { registrar } = useSubrogacionMutations()
 
@@ -155,258 +154,243 @@ export function SubrogacionModal({ opened, onClose }: Props) {
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={handleClose}
       title="Nueva subrogación / encargo"
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Registrar"
+      submitting={registrar.isPending}
+      submitDisabled={figuraEquivocada}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
-            Queda <strong>pendiente de aprobación</strong>: el servidor asume el
-            puesto —y con él la facultad de firmar— recién cuando su Acción de
-            Personal se registre, con el dictamen presupuestario correspondiente.
-          </Alert>
+      <Stack gap="sm">
+        <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+          Queda <strong>pendiente de aprobación</strong>: el servidor asume el
+          puesto —y con él la facultad de firmar— recién cuando su Acción de
+          Personal se registre, con el dictamen presupuestario correspondiente.
+        </Alert>
 
-          <Controller
-            name="tipo"
-            control={control}
-            render={({ field }) => (
-              <SegmentedControl
-                data={TIPO_OPTIONS}
-                value={field.value}
-                onChange={elegirTipo}
-                fullWidth
-              />
-            )}
-          />
-
-          <Controller
-            name="servidor_subrogante_id"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label={tipo === 'encargo' ? 'Servidor encargado' : 'Servidor subrogante'}
-                placeholder="Seleccionar servidor"
-                data={servidorOptions}
-                searchable
-                {...contained}
-                value={field.value ? String(field.value) : null}
-                onChange={(v) => field.onChange(v ? Number(v) : undefined)}
-                error={errors.servidor_subrogante_id?.message}
-              />
-            )}
-          />
-
-          <Controller
-            name="unidad_administrativa_id"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Unidad administrativa"
-                placeholder="Seleccionar unidad"
-                data={unidadOptions}
-                searchable
-                {...contained}
-                value={field.value ? String(field.value) : null}
-                onChange={(v) => {
-                  field.onChange(v ? Number(v) : undefined)
-                  resetField('puesto_subrogado_id')
-                }}
-                error={errors.unidad_administrativa_id?.message}
-              />
-            )}
-          />
-
-          <Controller
-            name="puesto_subrogado_id"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Puesto"
-                placeholder={unidadSelId ? 'Seleccionar puesto' : 'Seleccione primero la unidad'}
-                data={puestoOptions}
-                searchable
-                disabled={!unidadSelId}
-                {...contained}
-                value={field.value ? String(field.value) : null}
-                onChange={(v) => {
-                  const id = v ? Number(v) : undefined
-                  field.onChange(id)
-                  // De aquí sale el titular, así que no puede quedar el del
-                  // puesto anterior.
-                  setValue(
-                    'servidor_subrogado_id',
-                    tipo === 'encargo' ? null : (ocupanteDe(id)?.id ?? null),
-                  )
-                }}
-                error={errors.puesto_subrogado_id?.message}
-              />
-            )}
-          />
-
-          {figuraEquivocada && (
-            <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />}>
-              {puestoVacante ? (
-                <>
-                  <strong>{nombrePuesto}</strong> está vacante: no hay titular a
-                  quien subrogar. La figura que corresponde es el encargo.
-                </>
-              ) : (
-                <>
-                  <strong>{nombrePuesto}</strong> lo ocupa {ocupante?.nombre}:
-                  la figura que corresponde es la subrogación.
-                </>
-              )}
-              <Button
-                size="xs"
-                variant="light"
-                color="orange"
-                mt="xs"
-                onClick={() => elegirTipo(puestoVacante ? 'encargo' : 'subrogacion')}
-              >
-                Cambiar a {puestoVacante ? 'encargo' : 'subrogación'}
-              </Button>
-            </Alert>
-          )}
-
-          {/* Las tres situaciones del acto: de dónde viene quien subroga, a
-              quién reemplaza y qué puesto asume. Sin esto, Talento Humano
-              autorizaba a ciegas — en particular la diferencia de
-              remuneraciones, que es lo que realmente se paga. */}
-          {(subroganteId || puestoSel) && (
-            <Grid mt="xs">
-              {subroganteId && (
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                  <SituacionActualPanel
-                    servidorId={Number(subroganteId)}
-                    titulo={tipo === 'encargo' ? 'SITUACIÓN DEL ENCARGADO' : 'SITUACIÓN DEL SUBROGANTE'}
-                    soloVinculo
-                  />
-                </Grid.Col>
-              )}
-
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                {tipo === 'encargo' ? (
-                  <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
-                    <Text size="sm" fw={700} mb="xs">TITULAR</Text>
-                    <Text size="sm" c="dimmed">
-                      Encargo: el puesto no tiene titular que reemplazar.
-                    </Text>
-                  </Paper>
-                ) : subrogadoId ? (
-                  <SituacionActualPanel
-                    servidorId={Number(subrogadoId)}
-                    titulo="TITULAR SUBROGADO"
-                    soloVinculo
-                  />
-                ) : (
-                  <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
-                    <Text size="sm" fw={700} mb="xs">TITULAR SUBROGADO</Text>
-                    <Text size="sm" c="dimmed">
-                      {/* Ya no se elige: sale del puesto. */}
-                      {puestoSel
-                        ? 'El puesto está vacante — no hay titular.'
-                        : 'Seleccione el puesto: el titular es quien lo ocupa.'}
-                    </Text>
-                  </Paper>
-                )}
-              </Grid.Col>
-
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <SituacionSubrogadaPanel
-                  unidad={unidadSel}
-                  puesto={puestoSel}
-                  rmuSubrogante={rmuSubrogante}
-                />
-              </Grid.Col>
-            </Grid>
-          )}
-
-          <Group grow>
-            <Controller
-              name="fecha_inicio"
-              control={control}
-              render={({ field }) => (
-                <DatePickerInput
-                  label="Fecha de inicio"
-                  placeholder="Seleccionar fecha"
-                  valueFormat="YYYY-MM-DD"
-                  {...contained}
-                  value={toDate(field.value)}
-                  onChange={(d) => field.onChange(fromDate(d) ?? '')}
-                  error={errors.fecha_inicio?.message}
-                />
-              )}
+        <Controller
+          name="tipo"
+          control={control}
+          render={({ field }) => (
+            <SegmentedControl
+              data={TIPO_OPTIONS}
+              value={field.value}
+              onChange={elegirTipo}
+              fullWidth
             />
-            <Controller
-              name="fecha_fin"
-              control={control}
-              render={({ field }) => (
-                <DatePickerInput
-                  label="Fecha de fin"
-                  placeholder="Seleccionar fecha"
-                  valueFormat="YYYY-MM-DD"
-                  {...contained}
-                  value={toDate(field.value)}
-                  onChange={(d) => field.onChange(fromDate(d) ?? '')}
-                  error={errors.fecha_fin?.message}
-                />
-              )}
+          )}
+        />
+
+        <Controller
+          name="servidor_subrogante_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label={tipo === 'encargo' ? 'Servidor encargado' : 'Servidor subrogante'}
+              placeholder="Seleccionar servidor"
+              data={servidorOptions}
+              searchable
+              {...contained}
+              value={field.value ? String(field.value) : null}
+              onChange={(v) => field.onChange(v ? Number(v) : undefined)}
+              error={errors.servidor_subrogante_id?.message}
             />
-          </Group>
+          )}
+        />
 
-          <Controller
-            name="motivo"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Motivo"
-                data={MOTIVO_OPTIONS}
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? 'otro')}
-                error={errors.motivo?.message}
-              />
+        <Controller
+          name="unidad_administrativa_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Unidad administrativa"
+              placeholder="Seleccionar unidad"
+              data={unidadOptions}
+              searchable
+              {...contained}
+              value={field.value ? String(field.value) : null}
+              onChange={(v) => {
+                field.onChange(v ? Number(v) : undefined)
+                resetField('puesto_subrogado_id')
+              }}
+              error={errors.unidad_administrativa_id?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="puesto_subrogado_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Puesto"
+              placeholder={unidadSelId ? 'Seleccionar puesto' : 'Seleccione primero la unidad'}
+              data={puestoOptions}
+              searchable
+              disabled={!unidadSelId}
+              {...contained}
+              value={field.value ? String(field.value) : null}
+              onChange={(v) => {
+                const id = v ? Number(v) : undefined
+                field.onChange(id)
+                // De aquí sale el titular, así que no puede quedar el del
+                // puesto anterior.
+                setValue(
+                  'servidor_subrogado_id',
+                  tipo === 'encargo' ? null : (ocupanteDe(id)?.id ?? null),
+                )
+              }}
+              error={errors.puesto_subrogado_id?.message}
+            />
+          )}
+        />
+
+        {figuraEquivocada && (
+          <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />}>
+            {puestoVacante ? (
+              <>
+                <strong>{nombrePuesto}</strong> está vacante: no hay titular a
+                quien subrogar. La figura que corresponde es el encargo.
+              </>
+            ) : (
+              <>
+                <strong>{nombrePuesto}</strong> lo ocupa {ocupante?.nombre}:
+                la figura que corresponde es la subrogación.
+              </>
             )}
-          />
-
-          <TextInput
-            label="Número de resolución"
-            placeholder="Opcional"
-            {...contained}
-            {...register('resolucion_numero')}
-            error={errors.resolucion_numero?.message}
-          />
-
-          <Textarea
-            label="Observación"
-            placeholder="Opcional"
-            minRows={2}
-            {...contained}
-            {...register('observacion')}
-            error={errors.observacion?.message}
-          />
-
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>Cancelar</Button>
             <Button
-              type="submit"
-              color="emerald"
+              size="xs"
               variant="light"
-              loading={registrar.isPending}
-              // El backend lo rechaza igual; esto evita ofrecer un guardado
-              // que ya se sabe que va a fallar.
-              disabled={figuraEquivocada}
+              color="orange"
+              mt="xs"
+              onClick={() => elegirTipo(puestoVacante ? 'encargo' : 'subrogacion')}
             >
-              Registrar
+              Cambiar a {puestoVacante ? 'encargo' : 'subrogación'}
             </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+          </Alert>
+        )}
+
+        {/* Las tres situaciones del acto: de dónde viene quien subroga, a
+            quién reemplaza y qué puesto asume. Sin esto, Talento Humano
+            autorizaba a ciegas — en particular la diferencia de
+            remuneraciones, que es lo que realmente se paga. */}
+        {(subroganteId || puestoSel) && (
+          <Grid mt="xs">
+            {subroganteId && (
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <SituacionActualPanel
+                  servidorId={Number(subroganteId)}
+                  titulo={tipo === 'encargo' ? 'SITUACIÓN DEL ENCARGADO' : 'SITUACIÓN DEL SUBROGANTE'}
+                  soloVinculo
+                />
+              </Grid.Col>
+            )}
+
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              {tipo === 'encargo' ? (
+                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
+                  <Text size="sm" fw={700} mb="xs">TITULAR</Text>
+                  <Text size="sm" c="dimmed">
+                    Encargo: el puesto no tiene titular que reemplazar.
+                  </Text>
+                </Paper>
+              ) : subrogadoId ? (
+                <SituacionActualPanel
+                  servidorId={Number(subrogadoId)}
+                  titulo="TITULAR SUBROGADO"
+                  soloVinculo
+                />
+              ) : (
+                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--mantine-color-gray-0)">
+                  <Text size="sm" fw={700} mb="xs">TITULAR SUBROGADO</Text>
+                  <Text size="sm" c="dimmed">
+                    {/* Ya no se elige: sale del puesto. */}
+                    {puestoSel
+                      ? 'El puesto está vacante — no hay titular.'
+                      : 'Seleccione el puesto: el titular es quien lo ocupa.'}
+                  </Text>
+                </Paper>
+              )}
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <SituacionSubrogadaPanel
+                unidad={unidadSel}
+                puesto={puestoSel}
+                rmuSubrogante={rmuSubrogante}
+              />
+            </Grid.Col>
+          </Grid>
+        )}
+
+        <Group grow>
+          <Controller
+            name="fecha_inicio"
+            control={control}
+            render={({ field }) => (
+              <DatePickerInput
+                label="Fecha de inicio"
+                placeholder="Seleccionar fecha"
+                valueFormat="YYYY-MM-DD"
+                {...contained}
+                value={toDate(field.value)}
+                onChange={(d) => field.onChange(fromDate(d) ?? '')}
+                error={errors.fecha_inicio?.message}
+              />
+            )}
+          />
+          <Controller
+            name="fecha_fin"
+            control={control}
+            render={({ field }) => (
+              <DatePickerInput
+                label="Fecha de fin"
+                placeholder="Seleccionar fecha"
+                valueFormat="YYYY-MM-DD"
+                {...contained}
+                value={toDate(field.value)}
+                onChange={(d) => field.onChange(fromDate(d) ?? '')}
+                error={errors.fecha_fin?.message}
+              />
+            )}
+          />
+        </Group>
+
+        <Controller
+          name="motivo"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Motivo"
+              data={MOTIVO_OPTIONS}
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? 'otro')}
+              error={errors.motivo?.message}
+            />
+          )}
+        />
+
+        <TextInput
+          label="Número de resolución"
+          placeholder="Opcional"
+          {...contained}
+          {...register('resolucion_numero')}
+          error={errors.resolucion_numero?.message}
+        />
+
+        <Textarea
+          label="Observación"
+          placeholder="Opcional"
+          minRows={2}
+          {...contained}
+          {...register('observacion')}
+          error={errors.observacion?.message}
+        />
+      </Stack>
+    </FormModal>
   )
 }

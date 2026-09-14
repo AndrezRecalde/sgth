@@ -1,12 +1,12 @@
 'use client'
 
 import {
-  Modal, Stack, Select, Textarea,
-  Button, Group, Text, List, ScrollArea,
+  Stack, Select, Textarea,
+  Text, List, ScrollArea,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useState } from 'react'
-import { IconSend } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCrearSolicitudLote } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import type { ServidorConRelaciones } from '@/types/api'
@@ -74,12 +74,11 @@ export function SolicitarCertificacionLoteModal({
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={() => { resetForm(); onClose() }}
       title="Solicitar certificación médica"
       size="md"
-      radius="xl"
     >
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
@@ -129,25 +128,14 @@ export function SolicitarCertificacionLoteModal({
           value={observaciones}
           onChange={(e) => setObservaciones(e.currentTarget.value)}
         />
-
-        <Group justify="flex-end" mt="sm">
-          <Button
-            variant="default"
-            onClick={() => { resetForm(); onClose() }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="emerald"
-            leftSection={<IconSend size={14} />}
-            loading={crearLote.isPending}
-            disabled={!tipoEvento || servidores.length === 0}
-            onClick={handleSubmit}
-          >
-            Enviar solicitudes
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={() => { resetForm(); onClose() }}
+        submitLabel="Enviar solicitudes"
+        submitting={crearLote.isPending}
+        submitDisabled={!tipoEvento || servidores.length === 0}
+        onSubmit={handleSubmit}
+      />
+    </SgthModal>
   )
 }

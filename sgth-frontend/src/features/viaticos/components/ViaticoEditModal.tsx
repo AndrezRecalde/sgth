@@ -1,21 +1,15 @@
 "use client";
 
 import {
-  Modal,
   Stack,
   Grid,
   Select,
   Textarea,
-  Button,
-  Group,
-  Text,
-  ThemeIcon,
 } from "@mantine/core";
+import { FormModal } from "@/components/ui";
 import { DateTimePicker } from "@mantine/dates";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconPencil } from "@tabler/icons-react";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { viaticoSchema, type ViaticoFormData } from "../schemas/viatico.schema";
@@ -49,7 +43,6 @@ export function ViaticoEditModal({
   viatico,
   onSuccess,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
   const { actualizar } = useViaticoMutations();
 
@@ -96,131 +89,114 @@ export function ViaticoEditModal({
   };
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon color="blue" variant="light" size="sm">
-            <IconPencil size={14} />
-          </ThemeIcon>
-          <Text fw={600}>Editar información del viático</Text>
-        </Group>
-      }
+      title="Editar información del viático"
       size="lg"
-      radius="xl"
-      fullScreen={isMobile}
       closeOnClickOutside={false}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Guardar cambios"
+      submitting={isSubmitting}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Grid>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Controller
-                name="zona"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Zona geográfica"
-                    data={ZONA_OPTIONS}
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(v ?? "fuera_provincia")}
-                    error={errors.zona?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Controller
-                name="modalidad_anticipo"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Modalidad de anticipo"
-                    data={MODALIDAD_OPTIONS}
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(v ?? "total")}
-                    error={errors.modalidad_anticipo?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Controller
-                name="datetime_salida"
-                control={control}
-                render={({ field }) => (
-                  <DateTimePicker
-                    label="Fecha y hora de salida"
-                    description="¿Cuándo sale de Esmeraldas?"
-                    valueFormat="DD/MM/YYYY HH:mm"
-                    timePickerProps={{
-                      withDropdown: true,
-                      popoverProps: { withinPortal: false },
-                      format: "24h",
-                    }}
-                    {...contained}
-                    value={field.value ? new Date(field.value) : null}
-                    onChange={(v) => field.onChange(fromDateTime(v))}
-                    error={errors.datetime_salida?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Controller
-                name="datetime_llegada"
-                control={control}
-                render={({ field }) => (
-                  <DateTimePicker
-                    label="Fecha y hora de regreso"
-                    description="¿Cuándo regresa a Esmeraldas?"
-                    valueFormat="DD/MM/YYYY HH:mm"
-                    timePickerProps={{
-                      withDropdown: true,
-                      popoverProps: { withinPortal: false },
-                      format: "24h",
-                    }}
-                    {...contained}
-                    value={field.value ? new Date(field.value) : null}
-                    onChange={(v) => field.onChange(fromDateTime(v))}
-                    error={errors.datetime_llegada?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-          </Grid>
+      <Stack gap="sm">
+        <Grid>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Controller
+              name="zona"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Zona geográfica"
+                  data={ZONA_OPTIONS}
+                  {...contained}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v ?? "fuera_provincia")}
+                  error={errors.zona?.message}
+                />
+              )}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Controller
+              name="modalidad_anticipo"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Modalidad de anticipo"
+                  data={MODALIDAD_OPTIONS}
+                  {...contained}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v ?? "total")}
+                  error={errors.modalidad_anticipo?.message}
+                />
+              )}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Controller
+              name="datetime_salida"
+              control={control}
+              render={({ field }) => (
+                <DateTimePicker
+                  label="Fecha y hora de salida"
+                  description="¿Cuándo sale de Esmeraldas?"
+                  valueFormat="DD/MM/YYYY HH:mm"
+                  timePickerProps={{
+                    withDropdown: true,
+                    popoverProps: { withinPortal: false },
+                    format: "24h",
+                  }}
+                  {...contained}
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(v) => field.onChange(fromDateTime(v))}
+                  error={errors.datetime_salida?.message}
+                />
+              )}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Controller
+              name="datetime_llegada"
+              control={control}
+              render={({ field }) => (
+                <DateTimePicker
+                  label="Fecha y hora de regreso"
+                  description="¿Cuándo regresa a Esmeraldas?"
+                  valueFormat="DD/MM/YYYY HH:mm"
+                  timePickerProps={{
+                    withDropdown: true,
+                    popoverProps: { withinPortal: false },
+                    format: "24h",
+                  }}
+                  {...contained}
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(v) => field.onChange(fromDateTime(v))}
+                  error={errors.datetime_llegada?.message}
+                />
+              )}
+            />
+          </Grid.Col>
+        </Grid>
 
-          <Controller
-            name="justificacion"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                label="Justificación del viaje"
-                description="Explique el objetivo de la comisión"
-                autosize
-                minRows={3}
-                maxRows={6}
-                {...contained}
-                value={field.value}
-                onChange={(e) => field.onChange(e.currentTarget.value)}
-                error={errors.justificacion?.message}
-              />
-            )}
-          />
-
-          <Group justify="flex-end" mt="xs">
-            <Button variant="default" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" color="blue" loading={isSubmitting}>
-              Guardar cambios
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+        <Controller
+          name="justificacion"
+          control={control}
+          render={({ field }) => (
+            <Textarea
+              label="Justificación del viaje"
+              description="Explique el objetivo de la comisión"
+              autosize
+              minRows={3}
+              maxRows={6}
+              {...contained}
+              value={field.value}
+              onChange={(e) => field.onChange(e.currentTarget.value)}
+              error={errors.justificacion?.message}
+            />
+          )}
+        />
+      </Stack>
+    </FormModal>
   );
 }

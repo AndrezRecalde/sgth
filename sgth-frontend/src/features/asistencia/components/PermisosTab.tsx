@@ -180,6 +180,7 @@ export function PermisosTab() {
         onClose={() => setConMotivo(null)}
         title={TEXTOS[accion].titulo}
         confirmLabel={TEXTOS[accion].boton}
+        destructiva={accion !== "revertir"}
         cargando={mutaciones[accion].isPending}
         onConfirm={enviarMotivo}
         descripcion={consecuencia[accion]}

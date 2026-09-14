@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal, Stack, Textarea, Button, Group, Text } from '@mantine/core'
+import { Stack, Textarea, Text } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { useState } from 'react'
-import { IconBan } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAnularProcedimiento } from '@/features/dispensario/hooks/useOdontograma'
 import { PROCEDIMIENTO_OPTIONS } from '@/features/dispensario/services/odontogramaService'
@@ -51,12 +51,11 @@ export function AnularProcedimientoModal({
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={() => { resetForm(); onClose() }}
       title="Anular procedimiento"
       size="sm"
-      radius="xl"
     >
       <Stack gap="sm">
         {item && (
@@ -78,25 +77,15 @@ export function AnularProcedimientoModal({
           onChange={(e) => setMotivo(e.currentTarget.value)}
           required
         />
-
-        <Group justify="flex-end" mt="sm">
-          <Button
-            variant="default"
-            onClick={() => { resetForm(); onClose() }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="red"
-            leftSection={<IconBan size={14} />}
-            loading={anular.isPending}
-            disabled={!motivo.trim()}
-            onClick={handleSubmit}
-          >
-            Anular
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={() => { resetForm(); onClose() }}
+        submitLabel="Anular"
+        submitting={anular.isPending}
+        submitDisabled={!motivo.trim()}
+        destructiva
+        onSubmit={handleSubmit}
+      />
+    </SgthModal>
   )
 }

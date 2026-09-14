@@ -1,13 +1,14 @@
 'use client'
 
 import {
-  Modal, Stack, TextInput, Button,
-  Group, Text, Alert, Select,
+  Stack, TextInput, 
+  Text, Alert, Select,
   Grid, Divider,
 } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import {
-  IconCheck, IconInfoCircle,
+  IconInfoCircle,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
@@ -148,237 +149,223 @@ export function InscribirPostulanteModal({
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={handleClose}
       title="Inscribir candidato"
       size="xl"
-      radius="xl"
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Inscribir candidato"
+      submitting={inscribir.isPending}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="md">
-          <Alert
-            color="blue"
-            variant="light"
-            icon={<IconInfoCircle size={16} />}
-          >
-            <Text size="xs">
-              Ingrese los datos del candidato tal como aparecen
-              en su cédula de ciudadanía. Los datos demográficos
-              se copiarán automáticamente al expediente si el
-              candidato es seleccionado.
-            </Text>
-          </Alert>
+      <Stack gap="md">
+        <Alert
+          color="blue"
+          variant="light"
+          icon={<IconInfoCircle size={16} />}
+        >
+          <Text size="xs">
+            Ingrese los datos del candidato tal como aparecen
+            en su cédula de ciudadanía. Los datos demográficos
+            se copiarán automáticamente al expediente si el
+            candidato es seleccionado.
+          </Text>
+        </Alert>
 
-          {requierePuesto && (
-            <Stack gap="xs">
-              <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-                style={{ letterSpacing: '0.05em' }}>
-                Vacante a la que aspira
-              </Text>
-              <Grid>
-                <Grid.Col span={{ base: 12, md: 8 }}>
-                  <BuscarPuestoSelect
-                    label="Puesto"
-                    value={puestoId}
-                    onChange={setPuestoId}
-                    error={errorPuesto ?? undefined}
-                  />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                  <DatePickerInput
-                    label="Fecha de inscripción"
-                    description="Define el año en que se contabiliza."
-                    value={fechaInscripcion}
-                    onChange={(v) => setFechaInscripcion(v as Date | null)}
-                    valueFormat="DD/MM/YYYY"
-                    {...contained}
-                  />
-                </Grid.Col>
-              </Grid>
-              <Divider />
-            </Stack>
-          )}
-
+        {requierePuesto && (
           <Stack gap="xs">
             <Text size="xs" fw={600} c="dimmed" tt="uppercase"
               style={{ letterSpacing: '0.05em' }}>
-              Identificación
+              Vacante a la que aspira
             </Text>
             <Grid>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <TextInput
-                  label="Cédula de ciudadanía"
-                  placeholder="0802704171"
-                  required
-                  {...contained}
-                  {...register('cedula')}
-                  error={errors.cedula?.message}
+              <Grid.Col span={{ base: 12, md: 8 }}>
+                <BuscarPuestoSelect
+                  label="Puesto"
+                  value={puestoId}
+                  onChange={setPuestoId}
+                  error={errorPuesto ?? undefined}
                 />
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 4 }}>
-                <TextInput
-                  label="Correo electrónico"
-                  placeholder="candidato@correo.com"
-                  description="Para notificaciones del proceso"
-                  required
+                <DatePickerInput
+                  label="Fecha de inscripción"
+                  description="Define el año en que se contabiliza."
+                  value={fechaInscripcion}
+                  onChange={(v) => setFechaInscripcion(v as Date | null)}
+                  valueFormat="DD/MM/YYYY"
                   {...contained}
-                  {...register('correo')}
-                  error={errors.correo?.message}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <TextInput
-                  label="Teléfono"
-                  placeholder="0991234567"
-                  {...contained}
-                  {...register('telefono')}
                 />
               </Grid.Col>
             </Grid>
+            <Divider />
           </Stack>
+        )}
 
-          <Divider />
-
-          <Stack gap="xs">
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-              style={{ letterSpacing: '0.05em' }}>
-              Nombres y apellidos
-            </Text>
-            <Grid>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Primer nombre"
-                  placeholder="Primer nombre"
-                  required
-                  {...contained}
-                  {...register('nombres')}
-                  error={errors.nombres?.message}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Segundo nombre"
-                  placeholder="Opcional"
-                  {...contained}
-                  {...register('segundo_nombre')}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Primer apellido"
-                  placeholder="Primer apellido"
-                  required
-                  {...contained}
-                  {...register('apellidos')}
-                  error={errors.apellidos?.message}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Segundo apellido"
-                  placeholder="Opcional"
-                  {...contained}
-                  {...register('segundo_apellido')}
-                />
-              </Grid.Col>
-            </Grid>
-          </Stack>
-
-          <Divider />
-
-          <Stack gap="xs">
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-              style={{ letterSpacing: '0.05em' }}>
-              Datos demográficos
-            </Text>
-            <Grid>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Controller
-                  name="genero"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Género"
-                      data={GENERO_OPTIONS}
-                      required
-                      {...contained}
-                      value={field.value ?? null}
-                      onChange={(v) => field.onChange(v)}
-                      error={errors.genero?.message}
-                    />
-                  )}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Controller
-                  name="estado_civil"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Estado civil"
-                      data={ESTADO_CIVIL_OPTIONS}
-                      clearable
-                      {...contained}
-                      value={field.value ?? null}
-                      onChange={(v) => field.onChange(v)}
-                    />
-                  )}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Controller
-                  name="tipo_sangre"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Tipo de sangre"
-                      data={TIPO_SANGRE_OPTIONS}
-                      clearable
-                      {...contained}
-                      value={field.value ?? null}
-                      onChange={(v) => field.onChange(v)}
-                    />
-                  )}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Controller
-                  name="fecha_nacimiento"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePickerInput
-                      label="Fecha de nacimiento"
-                      valueFormat="DD/MM/YYYY"
-                      clearable
-                      maxDate={new Date()}
-                      {...contained}
-                      value={toDate(field.value)}
-                      onChange={(d) =>
-                        field.onChange(fromDate(d as Date | null))
-                      }
-                    />
-                  )}
-                />
-              </Grid.Col>
-            </Grid>
-          </Stack>
-
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="emerald"
-              leftSection={<IconCheck size={14} />}
-              loading={inscribir.isPending}
-            >
-              Inscribir candidato
-            </Button>
-          </Group>
+        <Stack gap="xs">
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+            style={{ letterSpacing: '0.05em' }}>
+            Identificación
+          </Text>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <TextInput
+                label="Cédula de ciudadanía"
+                placeholder="0802704171"
+                required
+                {...contained}
+                {...register('cedula')}
+                error={errors.cedula?.message}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <TextInput
+                label="Correo electrónico"
+                placeholder="candidato@correo.com"
+                description="Para notificaciones del proceso"
+                required
+                {...contained}
+                {...register('correo')}
+                error={errors.correo?.message}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <TextInput
+                label="Teléfono"
+                placeholder="0991234567"
+                {...contained}
+                {...register('telefono')}
+              />
+            </Grid.Col>
+          </Grid>
         </Stack>
-      </form>
-    </Modal>
+
+        <Divider />
+
+        <Stack gap="xs">
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+            style={{ letterSpacing: '0.05em' }}>
+            Nombres y apellidos
+          </Text>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Primer nombre"
+                placeholder="Primer nombre"
+                required
+                {...contained}
+                {...register('nombres')}
+                error={errors.nombres?.message}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Segundo nombre"
+                placeholder="Opcional"
+                {...contained}
+                {...register('segundo_nombre')}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Primer apellido"
+                placeholder="Primer apellido"
+                required
+                {...contained}
+                {...register('apellidos')}
+                error={errors.apellidos?.message}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Segundo apellido"
+                placeholder="Opcional"
+                {...contained}
+                {...register('segundo_apellido')}
+              />
+            </Grid.Col>
+          </Grid>
+        </Stack>
+
+        <Divider />
+
+        <Stack gap="xs">
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
+            style={{ letterSpacing: '0.05em' }}>
+            Datos demográficos
+          </Text>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Controller
+                name="genero"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Género"
+                    data={GENERO_OPTIONS}
+                    required
+                    {...contained}
+                    value={field.value ?? null}
+                    onChange={(v) => field.onChange(v)}
+                    error={errors.genero?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Controller
+                name="estado_civil"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Estado civil"
+                    data={ESTADO_CIVIL_OPTIONS}
+                    clearable
+                    {...contained}
+                    value={field.value ?? null}
+                    onChange={(v) => field.onChange(v)}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Controller
+                name="tipo_sangre"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Tipo de sangre"
+                    data={TIPO_SANGRE_OPTIONS}
+                    clearable
+                    {...contained}
+                    value={field.value ?? null}
+                    onChange={(v) => field.onChange(v)}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Controller
+                name="fecha_nacimiento"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerInput
+                    label="Fecha de nacimiento"
+                    valueFormat="DD/MM/YYYY"
+                    clearable
+                    maxDate={new Date()}
+                    {...contained}
+                    value={toDate(field.value)}
+                    onChange={(d) =>
+                      field.onChange(fromDate(d as Date | null))
+                    }
+                  />
+                )}
+              />
+            </Grid.Col>
+          </Grid>
+        </Stack>
+      </Stack>
+    </FormModal>
   )
 }

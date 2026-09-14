@@ -1,11 +1,11 @@
 'use client'
 
-import { Modal, Button, Group, Stack,
+import { Stack,
          Select, NumberInput, TextInput } from '@mantine/core'
+import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
@@ -43,7 +43,6 @@ interface Props {
 export function DiscapacidadCargaFamiliarModal({
   opened, onClose, cargaId, servidorId,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained    = useContainedInput()
   const qc           = useQueryClient()
 
@@ -92,73 +91,59 @@ export function DiscapacidadCargaFamiliarModal({
   }
 
   return (
-    <Modal
+    <FormModal
       opened={opened}
       onClose={handleClose}
       title="Registrar discapacidad"
       size="sm"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
+      onSubmit={handleSubmit(onSubmit)}
+      submitLabel="Registrar discapacidad"
+      submitting={isSubmitting}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack gap="sm">
-          <Controller
-            name="tipo_discapacidad"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Tipo de discapacidad"
-                placeholder="Seleccionar tipo"
-                data={TIPO_OPTIONS}
-                {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? 'fisica')}
-                error={errors.tipo_discapacidad?.message}
-              />
-            )}
-          />
-          <Controller
-            name="porcentaje"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label="Porcentaje de discapacidad"
-                placeholder="Ej: 45"
-                min={1}
-                max={100}
-                suffix="%"
-                {...contained}
-                value={field.value}
-                onChange={(v) =>
-                  field.onChange(typeof v === 'number' ? v : 1)
-                }
-                error={errors.porcentaje?.message}
-              />
-            )}
-          />
-          <TextInput
-            label="Número de carnet CONADIS"
-            placeholder="Número del carnet (opcional)"
-            {...contained}
-            {...register('numero_carnet_conadis')}
-            error={errors.numero_carnet_conadis?.message}
-          />
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              color="orange"
-              variant="light"
-              loading={isSubmitting}
-            >
-              Registrar discapacidad
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
+      <Stack gap="sm">
+        <Controller
+          name="tipo_discapacidad"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Tipo de discapacidad"
+              placeholder="Seleccionar tipo"
+              data={TIPO_OPTIONS}
+              {...contained}
+              value={field.value}
+              onChange={(v) => field.onChange(v ?? 'fisica')}
+              error={errors.tipo_discapacidad?.message}
+            />
+          )}
+        />
+        <Controller
+          name="porcentaje"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Porcentaje de discapacidad"
+              placeholder="Ej: 45"
+              min={1}
+              max={100}
+              suffix="%"
+              {...contained}
+              value={field.value}
+              onChange={(v) =>
+                field.onChange(typeof v === 'number' ? v : 1)
+              }
+              error={errors.porcentaje?.message}
+            />
+          )}
+        />
+        <TextInput
+          label="Número de carnet CONADIS"
+          placeholder="Número del carnet (opcional)"
+          {...contained}
+          {...register('numero_carnet_conadis')}
+          error={errors.numero_carnet_conadis?.message}
+        />
+      </Stack>
+    </FormModal>
   )
 }
 

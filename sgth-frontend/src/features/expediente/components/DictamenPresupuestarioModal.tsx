@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Button, Group, Modal, Stack, Text, TextInput } from '@mantine/core'
+import { Alert, Stack, Text, TextInput } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { IconInfoCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import type { MovimientoPersonal } from '@/types/api'
@@ -32,7 +32,6 @@ function dinero(v?: string | number | null): string | null {
 }
 
 export function DictamenPresupuestarioModal({ opened, onClose, movimiento }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { transicionar } = useMovimientoMutations()
 
@@ -75,13 +74,11 @@ export function DictamenPresupuestarioModal({ opened, onClose, movimiento }: Pro
     : propuesta != null ? Number(propuesta) : null
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={cerrar}
       title="Suscribir con dictamen presupuestario"
       size="md"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
@@ -108,18 +105,13 @@ export function DictamenPresupuestarioModal({ opened, onClose, movimiento }: Pro
           error={error}
           data-autofocus
         />
-
-        <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={cerrar}>Cancelar</Button>
-          <Button
-            color="emerald"
-            loading={transicionar.isPending}
-            onClick={suscribir}
-          >
-            Suscribir
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={cerrar}
+        submitLabel="Suscribir"
+        submitting={transicionar.isPending}
+        onSubmit={suscribir}
+      />
+    </SgthModal>
   )
 }

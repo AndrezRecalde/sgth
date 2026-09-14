@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal, Stack, Select, Textarea, Button, Group, Text, Badge } from '@mantine/core'
+import { Stack, Select, Textarea, Group, Text, Badge } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { useState } from 'react'
-import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRegistrarProcedimiento } from '@/features/dispensario/hooks/useOdontograma'
 import {
@@ -56,12 +56,11 @@ export function RegistrarProcedimientoModal({
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={() => { resetForm(); onClose() }}
       title={pieza ? `Pieza ${pieza.numero_pieza}` : 'Registrar procedimiento'}
       size="sm"
-      radius="xl"
     >
       <Stack gap="sm">
         {pieza && (
@@ -102,25 +101,14 @@ export function RegistrarProcedimientoModal({
           value={observaciones}
           onChange={(e) => setObservaciones(e.currentTarget.value)}
         />
-
-        <Group justify="flex-end" mt="sm">
-          <Button
-            variant="default"
-            onClick={() => { resetForm(); onClose() }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="emerald"
-            leftSection={<IconCheck size={14} />}
-            loading={registrar.isPending}
-            disabled={!procedimiento}
-            onClick={handleSubmit}
-          >
-            Registrar
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={() => { resetForm(); onClose() }}
+        submitLabel="Registrar"
+        submitting={registrar.isPending}
+        submitDisabled={!procedimiento}
+        onSubmit={handleSubmit}
+      />
+    </SgthModal>
   )
 }

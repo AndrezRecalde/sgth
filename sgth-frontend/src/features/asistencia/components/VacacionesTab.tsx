@@ -162,6 +162,7 @@ export function VacacionesTab() {
         title="Anular solicitud de vacaciones"
         descripcion={anulando && consecuenciaDeAnular(anulando)}
         confirmLabel="Anular"
+        destructiva
         cargando={anular.isPending}
         onConfirm={(motivo) => {
           if (!anulando) return;

@@ -1,7 +1,7 @@
 'use client'
 
-import { Modal, Button, Group, Stack } from '@mantine/core'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { Stack } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { usePuestoMutations } from '../hooks/usePuestoMutations'
 import { PuestoForm } from './PuestoForm'
 import type { PuestoFormData } from '../schemas/puesto.schema'
@@ -14,7 +14,6 @@ interface Props {
 }
 
 export function PuestoModal({ opened, onClose, puesto }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { crear, editar } = usePuestoMutations()
   const isEditing = !!puesto
 
@@ -26,13 +25,11 @@ export function PuestoModal({ opened, onClose, puesto }: Props) {
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title={isEditing ? 'Editar puesto' : 'Nuevo puesto'}
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack>
         <PuestoForm
@@ -50,20 +47,13 @@ export function PuestoModal({ opened, onClose, puesto }: Props) {
           } : undefined}
           onSubmit={handleSubmit}
         />
-        <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="puesto-form"
-            loading={crear.isPending || editar.isPending}
-            color="emerald"
-          >
-            {isEditing ? 'Actualizar' : 'Crear puesto'}
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={onClose}
+        form="puesto-form"
+        submitLabel={isEditing ? 'Actualizar' : 'Crear puesto'}
+        submitting={crear.isPending || editar.isPending}
+      />
+    </SgthModal>
   )
 }

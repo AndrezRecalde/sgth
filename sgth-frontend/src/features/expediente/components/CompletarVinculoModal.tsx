@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import {
-  Alert, Button, Grid, Group, Modal, NumberInput, Stack, Switch, Text, TextInput,
+  Alert, Grid, NumberInput, Stack, Switch, Text, TextInput,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
@@ -42,16 +42,12 @@ function fechaLegible(f?: string | null): string {
 }
 
 export function CompletarVinculoModal({ opened, onClose, movimiento, onSaved }: Props) {
-  const { isMobile } = useMobileBreakpoint()
-
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={onClose}
       title="Aprobar y registrar el vínculo"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       {opened && movimiento && (
         <Formulario
@@ -61,7 +57,7 @@ export function CompletarVinculoModal({ opened, onClose, movimiento, onSaved }: 
           onSaved={onSaved}
         />
       )}
-    </Modal>
+    </SgthModal>
   )
 }
 
@@ -254,12 +250,12 @@ function Formulario({
 
       {error && <Alert variant="light" color="red">{error}</Alert>}
 
-      <Group justify="flex-end" mt="md">
-        <Button variant="default" onClick={onClose}>Cancelar</Button>
-        <Button color="emerald" loading={pendiente} onClick={submit}>
-          Registrar vínculo
-        </Button>
-      </Group>
+      <ModalFooter
+        onCancel={onClose}
+        submitLabel="Registrar vínculo"
+        submitting={pendiente}
+        onSubmit={submit}
+      />
     </Stack>
   )
 }

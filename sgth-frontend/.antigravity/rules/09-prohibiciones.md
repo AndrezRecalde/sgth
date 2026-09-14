@@ -2,6 +2,26 @@
 
 Cada una tiene un motivo. Se aplican siempre, sin importar el módulo.
 
+## Cuáles comprueba ESLint
+
+Las que se pueden verificar leyendo el código están en `eslint.config.mjs`
+como error, y `npm run lint` falla si alguien las rompe. No hace falta
+recordarlas:
+
+- `any` y `as unknown as`
+- `Modal` de Mantine y `DataTable` fuera de `src/components/`
+- `@mantine/form`, `@mantine/charts` e importar desde `zod` a secas
+- `fetch` nativo y el `confirm()` del navegador
+- colores en hexadecimal en TS/TSX, salvo `design.tokens.ts`,
+  `useEChartsColors.ts` y `app/layout.tsx`
+- `<form>` sin `noValidate` y `'use client'` en un `page.tsx`
+
+El resto sigue dependiendo de quien revisa: tablas HTML, `Badge` con colores
+escritos a mano, iconos sueltos en una fila, hexadecimales en CSS Modules. Se
+añaden al linter a medida que el código deja de romperlas: una regla que
+destapa avisos preexistentes entra junto con su arreglo, o no entra
+(ver [10](10-checklist.md)).
+
 ## Tipado
 
 **Nunca `any`.**

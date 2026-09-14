@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Button, Group, Modal, Stack, Text, Textarea } from '@mantine/core'
+import { Alert, Stack, Text, Textarea } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useContratoMutations } from '../hooks/useContratoMutations'
 import type { ContratoConRelaciones } from '@/types/api'
@@ -53,7 +53,6 @@ function legible(f?: string | null): string {
 }
 
 export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { reprogramarPlazo } = useContratoMutations(servidorId)
 
@@ -101,13 +100,11 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={cerrar}
       title="Reprogramar el plazo del contrato"
       size="md"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="md">
         <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
@@ -163,18 +160,13 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
           }}
           error={errores.motivo}
         />
-
-        <Group justify="flex-end">
-          <Button variant="default" onClick={cerrar}>Cancelar</Button>
-          <Button
-            color="emerald"
-            loading={reprogramarPlazo.isPending}
-            onClick={guardar}
-          >
-            Reprogramar
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={cerrar}
+        submitLabel="Reprogramar"
+        submitting={reprogramarPlazo.isPending}
+        onSubmit={guardar}
+      />
+    </SgthModal>
   )
 }

@@ -1,13 +1,12 @@
 "use client";
 
-import { Alert, Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { Alert, Stack, Stepper, Text } from "@mantine/core";
+import { ModalFooter, SgthModal } from "@/components/ui";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 import { usePermisoForm } from "../hooks/usePermisoForm";
 import { PermisoDatosCampos } from "./PermisoDatosCampos";
 import { PermisoSolicitanteCampos } from "./PermisoSolicitanteCampos";
 import { RegistroConfirmado } from "./RegistroConfirmado";
-import classes from "./PermisoModal.module.css";
 
 interface Props {
   opened: boolean;
@@ -29,19 +28,16 @@ interface Props {
  * confirmación, en `RegistroConfirmado`, que comparte con vacaciones.
  */
 export function PermisoModal({ opened, onClose, soloPropio = false }: Props) {
-  const { isMobile } = useMobileBreakpoint();
   const registro = usePermisoForm(onClose, soloPropio);
   const { isSubmitting } = registro.form.formState;
 
   return (
-    <Modal
+    <SgthModal
       closeOnClickOutside={false}
       opened={opened}
       onClose={registro.cerrar}
       title="Registrar permiso de ausencia"
       size="xl"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : "xl"}
     >
       <Stepper active={registro.paso} mb="lg" size="sm">
         <Stepper.Step label="Datos del permiso" />
@@ -71,17 +67,13 @@ export function PermisoModal({ opened, onClose, soloPropio = false }: Props) {
 
             <PermisoDatosCampos form={registro.form} />
 
-            {/* Pie fijo, y la acción principal con relleno: en verde claro
-                apenas se distinguía de «Cancelar». */}
-            <Group justify="flex-end" className={classes.pie}>
-              <Button variant="default" onClick={registro.cerrar}>
-                Cancelar
-              </Button>
-              <Button type="submit" color="emerald" variant="filled" loading={isSubmitting}>
-                Crear permiso
-              </Button>
-            </Group>
           </Stack>
+
+          <ModalFooter
+            onCancel={registro.cerrar}
+            submitLabel="Crear permiso"
+            submitting={isSubmitting}
+          />
         </form>
       )}
 
@@ -95,6 +87,6 @@ export function PermisoModal({ opened, onClose, soloPropio = false }: Props) {
           onCerrar={registro.cerrar}
         />
       )}
-    </Modal>
+    </SgthModal>
   );
 }

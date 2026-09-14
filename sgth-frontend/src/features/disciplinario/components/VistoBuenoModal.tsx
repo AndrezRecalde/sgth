@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import {
-  Alert, Button, Group, Modal, Select, Stack, TextInput, Textarea,
+  Alert, Select, Stack, TextInput, Textarea,
 } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconInfoCircle } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
@@ -23,7 +23,6 @@ const CAUSAL_OPTIONS = (Object.keys(CAUSAL_LABELS) as CausalVistoBueno[])
   .map((c) => ({ value: c, label: `${CAUSAL_NUMERAL[c]}. ${CAUSAL_LABELS[c]}` }))
 
 export function VistoBuenoModal({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput()
   const { crearVistoBueno } = useDisciplinarioMutations()
 
@@ -75,13 +74,11 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
   }
 
   return (
-    <Modal
+    <SgthModal
       opened={opened}
       onClose={handleClose}
       title="Solicitar visto bueno"
       size="lg"
-      fullScreen={isMobile}
-      radius={isMobile ? 0 : 'xl'}
     >
       <Stack gap="sm">
         <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
@@ -142,14 +139,13 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
         />
 
         {error && <Alert variant="light" color="red">{error}</Alert>}
-
-        <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={handleClose}>Cancelar</Button>
-          <Button color="emerald" loading={crearVistoBueno.isPending} onClick={submit}>
-            Registrar solicitud
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+      <ModalFooter
+        onCancel={handleClose}
+        submitLabel="Registrar solicitud"
+        submitting={crearVistoBueno.isPending}
+        onSubmit={submit}
+      />
+    </SgthModal>
   )
 }
