@@ -23,7 +23,8 @@ import { TIPO_CONTRATO_PLANTILLA_OPTIONS } from
 import type { SeccionCriterio } from
   '@/features/seleccion/services/criterioService'
 import { useState } from 'react'
-import { confirmar, PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { confirmar, EmptyState, PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 interface Props {
   id: string
@@ -60,14 +61,26 @@ export function DetallePlantillaView({ id }: Props) {
 
   if (isLoading) {
     return (
-      <Stack gap="md">
+      <PageShell>
         <Skeleton height={80} radius="lg" />
         <Skeleton height={200} radius="lg" />
-      </Stack>
+      </PageShell>
     )
   }
 
-  if (!plantilla) return null
+  // Antes devolvía null: una plantilla inexistente dejaba la página en blanco.
+  if (!plantilla) {
+    return (
+      <PageShell>
+        <PageHeader title="Plantilla" onBack={() => router.push(ROUTES.SGTH.PLANTILLAS)} />
+        <EmptyState
+          icon={IconList}
+          title="Plantilla no encontrada"
+          description="No existe o no está disponible. Vuelva al listado y ábrala desde allí."
+        />
+      </PageShell>
+    )
+  }
 
   const meritos   = plantilla.criterios?.filter(
     c => c.seccion === 'meritos'
@@ -151,7 +164,7 @@ export function DetallePlantillaView({ id }: Props) {
             variant="default"
             leftSection={<IconArrowLeft size={14} />}
             onClick={() =>
-              router.push('/sgth/reclutamiento/plantillas')
+              router.push(ROUTES.SGTH.PLANTILLAS)
             }
           >
             Volver

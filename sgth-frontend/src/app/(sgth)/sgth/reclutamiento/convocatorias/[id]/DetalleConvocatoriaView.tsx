@@ -156,14 +156,26 @@ export function DetalleConvocatoriaView({ id }: Props) {
 
   if (isLoading) {
     return (
-      <Stack gap="md">
+      <PageShell>
         <Skeleton height={80} radius="lg" />
         <Skeleton height={200} radius="lg" />
-      </Stack>
+      </PageShell>
     )
   }
 
-  if (!convocatoria) return null
+  // Antes devolvía null: una convocatoria inexistente dejaba la página en blanco.
+  if (!convocatoria) {
+    return (
+      <PageShell>
+        <PageHeader title="Convocatoria" onBack={() => router.push(ROUTES.SGTH.CONVOCATORIAS)} />
+        <EmptyState
+          icon={IconClipboardList}
+          title="Convocatoria no encontrada"
+          description="No existe o no está disponible. Vuelva al listado y ábrala desde allí."
+        />
+      </PageShell>
+    )
+  }
 
   return (
     <PageShell>
@@ -176,7 +188,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
               variant="default"
               leftSection={<IconArrowLeft size={14} />}
               onClick={() =>
-                router.push('/sgth/reclutamiento/convocatorias')
+                router.push(ROUTES.SGTH.CONVOCATORIAS)
               }
             >
               Volver
@@ -426,3 +438,4 @@ export function DetalleConvocatoriaView({ id }: Props) {
 }
 
 import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { ROUTES } from '@/config/routes'

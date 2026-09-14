@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import paginaConPageShell from "./eslint-rules/pagina-con-pageshell.mjs";
 
 /*
 | Las prohibiciones de `.antigravity/rules/09-prohibiciones.md` que se pueden
@@ -187,6 +188,15 @@ const eslintConfig = defineConfig([
     files: ["src/app/**/page.tsx"],
     rules: {
       "no-restricted-syntax": ["error", ...SINTAXIS_TS, COLOR_HEX, ...COLORES_FUERA_DE_PALETA, ...SINTAXIS_TSX, USE_CLIENT_EN_PAGINA],
+    },
+  },
+  {
+    // Solo el área autenticada: login, cambiar contraseña y los cuestionarios
+    // públicos tienen su propio lienzo, sin shell.
+    files: ["src/app/(sgth)/**/page.tsx", "src/app/(salud)/**/page.tsx", "src/app/(portal)/**/page.tsx"],
+    plugins: { sgth: { rules: { "pagina-con-pageshell": paginaConPageShell } } },
+    rules: {
+      "sgth/pagina-con-pageshell": "error",
     },
   },
   {

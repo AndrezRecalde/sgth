@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stack, Skeleton, Alert, Text, Button, Group, Card, SimpleGrid, Stepper } from '@mantine/core'
+import { Stack, Skeleton, Text, Button, Group, Card, SimpleGrid, Stepper } from '@mantine/core'
 import {
-  IconAlertCircle, IconStethoscope, IconDownload,
+  IconStethoscope, IconDownload,
   IconEdit, IconUser, IconStretching, IconBriefcase,
   IconArrowLeft, IconArrowRight, IconCheck, IconX,
 } from '@tabler/icons-react'
@@ -25,7 +25,8 @@ import { FemoPaso3 } from
 import {
   TIPO_FICHA_OPTIONS, APTITUD_OPTIONS, TONO_APTITUD,
 } from '@/features/dispensario/services/femoOptions'
-import { PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 interface Props {
   id: string
@@ -53,18 +54,23 @@ export function FemoDetalleView({ id }: Props) {
 
   if (isLoading) {
     return (
-      <Stack gap="md">
+      <PageShell>
         <Skeleton height={60} radius="lg" />
         <Skeleton height={400} radius="lg" />
-      </Stack>
+      </PageShell>
     )
   }
 
   if (isError || !ficha) {
     return (
-      <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" title="Ficha no encontrada">
-        <Text size="sm">La ficha FEMO #{id} no existe o no está disponible.</Text>
-      </Alert>
+      <PageShell>
+        <PageHeader title={`Ficha FEMO #${femoId}`} onBack={() => router.push(ROUTES.SALUD.FEMO)} />
+        <EmptyState
+          icon={IconStethoscope}
+          title="Ficha no encontrada"
+          description={`La ficha FEMO #${id} no existe o no está disponible. Vuelva al listado y ábrala desde allí.`}
+        />
+      </PageShell>
     )
   }
 
@@ -317,7 +323,7 @@ export function FemoDetalleView({ id }: Props) {
         </Card>
       )}
 
-      <Button variant="subtle" onClick={() => router.push('/salud/sso/femo')}>
+      <Button variant="subtle" onClick={() => router.push(ROUTES.SALUD.FEMO)}>
         Volver al listado
       </Button>
     </PageShell>

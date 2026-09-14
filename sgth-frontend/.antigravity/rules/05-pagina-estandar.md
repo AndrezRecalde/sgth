@@ -23,6 +23,31 @@ borde. `PageShell` aporta el ancho de lectura y el ritmo vertical.
 `PageShell` acepta `fluid` para lienzos que necesitan todo el ancho
 (organigrama, odontograma, calendarios). Nunca en un listado.
 
+**Todos los estados de la página van dentro de `PageShell`**, no solo el
+normal: el esqueleto de carga y el «no encontrado» también. Un `<Stack>` de
+esqueletos suelto pierde el ancho de lectura y la página salta al terminar de
+cargar; un `return null` deja la pantalla en blanco sin decir por qué.
+
+```tsx
+if (isLoading) return <PageShell><Skeleton height={80} radius="lg" /></PageShell>
+
+if (!convocatoria) {
+  return (
+    <PageShell>
+      <PageHeader title="Convocatoria" onBack={() => router.push(ROUTES…)} />
+      <EmptyState icon={IconClipboardList} title="Convocatoria no encontrada"
+        description="No existe o no está disponible. Vuelva al listado y ábrala desde allí." />
+    </PageShell>
+  )
+}
+```
+
+ESLint lo comprueba (`sgth/pagina-con-pageshell`, en `eslint-rules/`): sigue
+el componente que devuelve cada `page.tsx` de `(sgth)`, `(salud)` y `(portal)`
+hasta su archivo y revisa cada `return`. Un componente intermedio —un
+esqueleto local— se sigue a su vez. Una página que solo llama a `redirect()`
+no pinta nada y pasa.
+
 ## Ejemplo completo
 
 ```tsx
