@@ -179,6 +179,9 @@ class Servidor extends Model
      * Años de servicio calculados desde la fecha de referencia según régimen
      * (mismo criterio que PeriodoVacacionService::calcularAntiguedad, pero
      * contado hasta hoy en vez de al cierre de un año fiscal).
+     *
+     * Años cumplidos, enteros: `diffInYears()` devuelve un float desde Carbon 3
+     * y el expediente llegó a mostrar «9.034447289411942 años».
      */
     protected function aniosServicio(): Attribute
     {
@@ -193,7 +196,7 @@ class Servidor extends Model
                     return null;
                 }
 
-                return \Carbon\Carbon::parse($fechaRef)->diffInYears(now());
+                return (int) floor(\Carbon\Carbon::parse($fechaRef)->diffInYears(now()));
             }
         );
     }
