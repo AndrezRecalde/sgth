@@ -1,14 +1,11 @@
 'use client'
 
 import { useEffect } from 'react'
-import {
-  Drawer, Stack, Button, Group, Text, Paper,
-  ThemeIcon, Alert, ScrollArea,
-} from '@mantine/core'
+import { Stack, Group, Text, Paper, ThemeIcon, Alert } from '@mantine/core'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconUser, IconCheck, IconUserOff } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { IconUser, IconUserOff } from '@tabler/icons-react'
+import { ModalFooter, SgthDrawer } from '@/components/ui'
 import { useUsuarioMutations } from '../hooks/useUsuarioMutations'
 import { CamposAccesoUsuario } from './CamposAccesoUsuario'
 import { usuarioSchema, type UsuarioFormValues } from '../schemas/usuario.schema'
@@ -29,7 +26,6 @@ interface Props {
  * tiene que poder editarlo igualmente.
  */
 export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { actualizar } = useUsuarioMutations()
 
   const {
@@ -76,22 +72,7 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
   }
 
   return (
-    <Drawer
-      opened={opened}
-      onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon variant="light" size="md" radius="md">
-            <IconUser size={16} />
-          </ThemeIcon>
-          <Text fw={700}>Editar usuario</Text>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 520}
-      padding="lg"
-    >
-      <ScrollArea h="calc(100vh - 80px)">
+    <SgthDrawer opened={opened} onClose={onClose} title="Editar usuario">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="md">
             <Paper
@@ -131,21 +112,13 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
               errors={errors}
             />
 
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                loading={isSubmitting || actualizar.isPending}
-                leftSection={<IconCheck size={14} />}
-              >
-                Guardar cambios
-              </Button>
-            </Group>
           </Stack>
+          <ModalFooter
+            onCancel={onClose}
+            submitLabel="Guardar cambios"
+            submitting={isSubmitting || actualizar.isPending}
+          />
         </form>
-      </ScrollArea>
-    </Drawer>
+    </SgthDrawer>
   )
 }

@@ -1,12 +1,9 @@
 'use client'
 
+import { SgthDrawer } from '@/components/ui'
 import { useState } from 'react'
-import {
-  Drawer, Stack, Group, Text, ThemeIcon,
-} from '@mantine/core'
+import { Stack } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { IconVaccine } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { AtencionesEnfermeriaTable } from './AtencionesEnfermeriaTable'
 
 interface Props {
@@ -24,28 +21,15 @@ function formatFechaLocal(d: Date): string {
 export function AtencionesEnfermeriaDrawer({
   opened, onClose,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const [fecha, setFecha] = useState<Date | null>(new Date())
 
   const fechaStr = formatFechaLocal(fecha ?? new Date())
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon variant="light" size="md" radius="md">
-            <IconVaccine size={16} />
-          </ThemeIcon>
-          <Text fw={700} size="sm">
-            Servicios de enfermería
-          </Text>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 520}
-      padding="lg"
+      title="Servicios de enfermería"
     >
       <Stack gap="md">
         <DatePickerInput
@@ -62,6 +46,6 @@ export function AtencionesEnfermeriaDrawer({
 
         <AtencionesEnfermeriaTable fecha={fechaStr} />
       </Stack>
-    </Drawer>
+    </SgthDrawer>
   )
 }

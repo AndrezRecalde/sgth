@@ -1,16 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  Drawer, Stack, Button, Group, Text, Paper,
-  ThemeIcon, Alert, ScrollArea,
-} from '@mantine/core'
+import { Stack, Button, Group, Text, Paper, ThemeIcon, Alert } from '@mantine/core'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  IconUser, IconCheck, IconArrowLeft, IconAlertTriangle,
-} from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { IconCheck, IconArrowLeft, IconAlertTriangle } from '@tabler/icons-react'
+import { ModalFooter, SgthDrawer } from '@/components/ui'
 import { useUsuarioMutations } from '../hooks/useUsuarioMutations'
 import { usuarioService } from '../services/usuarioService'
 import { BuscadorServidor, type ServidorItem } from './BuscadorServidor'
@@ -38,7 +33,6 @@ interface Props {
  * en el esquema: no hay forma de llegar al paso 2 sin haberlo elegido.
  */
 export function CrearUsuarioDrawer({ opened, onClose }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { crear } = useUsuarioMutations()
 
   const [paso, setPaso] = useState<Paso>('buscar')
@@ -110,25 +104,12 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
   }
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
       onExitTransitionEnd={reiniciarAsistente}
-      title={
-        <Group gap="xs">
-          <ThemeIcon variant="light" size="md" radius="md">
-            <IconUser size={16} />
-          </ThemeIcon>
-          <Text fw={700}>
-            {paso === 'buscar' ? 'Buscar servidor' : 'Configurar acceso'}
-          </Text>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 520}
-      padding="lg"
+      title={paso === 'buscar' ? 'Buscar servidor' : 'Configurar acceso'}
     >
-      <ScrollArea h="calc(100vh - 80px)">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack gap="md">
             {paso === 'buscar' && (
@@ -184,24 +165,17 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
                   errors={errors}
                   cargandoTi={cargandoTi}
                 />
-
-                <Group justify="flex-end" mt="md">
-                  <Button variant="default" onClick={onClose}>
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    loading={isSubmitting || crear.isPending}
-                    leftSection={<IconCheck size={14} />}
-                  >
-                    Crear usuario
-                  </Button>
-                </Group>
               </>
             )}
           </Stack>
+          {paso === 'configurar' && servidorSel && (
+            <ModalFooter
+              onCancel={onClose}
+              submitLabel="Crear usuario"
+              submitting={isSubmitting || crear.isPending}
+            />
+          )}
         </form>
-      </ScrollArea>
-    </Drawer>
+    </SgthDrawer>
   )
 }

@@ -1,16 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Alert, Button, Drawer, Group, Select, Stack, Text,
-} from '@mantine/core'
+import { Alert, Button, Group, Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconAlertTriangle, IconSettings, IconStar, IconStethoscope, IconUserCheck,
 } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { SgthTable, StatusBadge, TableActions, confirmar } from '@/components/ui'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { confirmar, SgthDrawer, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAspirantesExpress } from '../hooks/useExpress'
 import { useCriterios } from '../hooks/useCriterio'
@@ -112,7 +109,6 @@ interface Props {
 export function AspirantesExpressDrawer({
   opened, onClose, contenedor, filtro, estado, onEstadoChange,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const contained = useContainedInput('sm')
 
   const [aspiranteSel, setAspiranteSel] = useState<AspiranteExpress | null>(null)
@@ -285,12 +281,11 @@ export function AspirantesExpressDrawer({
 
   return (
     <>
-      <Drawer
+      <SgthDrawer
         opened={opened}
         onClose={onClose}
-        position="right"
-        size={isMobile ? '100%' : 'xl'}
         title={contenedor?.titulo ?? 'Aspirantes'}
+        ancho="lg"
       >
         <Stack gap="md">
           {convocatoriaId && !tieneCriterios && (
@@ -355,7 +350,7 @@ export function AspirantesExpressDrawer({
             minHeight={200}
           />
         </Stack>
-      </Drawer>
+      </SgthDrawer>
 
       {convocatoriaId && (
         <>

@@ -9,7 +9,7 @@ como error, y `npm run lint` falla si alguien las rompe. No hace falta
 recordarlas:
 
 - `any` y `as unknown as`
-- `Modal`, `Badge`, `Table` de Mantine, `DataTable` y `<table>` fuera de `src/components/`
+- `Modal`, `Drawer`, `Badge`, `Table` de Mantine, `DataTable` y `<table>` fuera de `src/components/`
 - `@mantine/form`, `@mantine/charts` e importar desde `zod` a secas
 - `fetch` nativo y el `confirm()` del navegador
 - colores en hexadecimal en TS/TSX, salvo `design.tokens.ts`,

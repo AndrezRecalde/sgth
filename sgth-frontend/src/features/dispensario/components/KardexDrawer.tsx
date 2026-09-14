@@ -1,18 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Drawer, Stack, Group, Text, ThemeIcon, Skeleton, Pagination, Center, Alert,
-} from '@mantine/core'
+import { Stack, Group, Text, ThemeIcon, Skeleton, Pagination, Center, Alert } from '@mantine/core'
 import {
   IconHistory, IconArrowUp, IconArrowDown, IconAlertTriangle,
 } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useKardexMedicina } from '../hooks/useInventarioMedicina'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { getApiErrorMessage } from '@/types/api'
 import type { InventarioMedicina } from '../services/inventarioMedicinaService'
-import { StatusBadge } from '@/components/ui'
+import { SgthDrawer, StatusBadge } from '@/components/ui'
 
 interface Props {
   opened:   boolean
@@ -28,7 +25,6 @@ function formatFecha(fecha: string): string {
 }
 
 export function KardexDrawer({ opened, onClose, medicina }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const [page, setPage] = useState(1)
 
   // Cambiar de medicina sin volver a la primera página deja el cajón mostrando
@@ -49,23 +45,12 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
   const ultimaPagina = data?.ultimaPagina ?? 1
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon variant="light" size="md" radius="md">
-            <IconHistory size={16} />
-          </ThemeIcon>
-          <Stack gap={0}>
-            <Text fw={700} size="sm">Kardex de movimientos</Text>
-            <Text size="xs" c="dimmed">{medicina?.nombre}</Text>
-          </Stack>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 480}
-      padding="lg"
+      title="Kardex de movimientos"
+      description={medicina?.nombre}
+      ancho="sm"
     >
       <Stack gap="sm">
         {isLoading ? (
@@ -169,6 +154,6 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
           </Stack>
         )}
       </Stack>
-    </Drawer>
+    </SgthDrawer>
   )
 }

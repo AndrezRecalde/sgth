@@ -28,6 +28,7 @@ del módulo.
 | `SgthTable` | La única tabla del sistema | `PAGINACION_ES` si hay paginación |
 | `TableActions` | Menú de acciones de una fila | Última columna, `width: 50` |
 | `SgthModal` | Base de todo modal | Nunca el `Modal` de Mantine directo |
+| `SgthDrawer` | Panel lateral: detalle o formulario junto a una lista | Nunca el `Drawer` de Mantine directo |
 | `ModalFooter` | Pie de un modal de acción | Pegajoso; principal relleno |
 | `FormModal` | Modal de formulario | `SgthModal` + `<form>` + `ModalFooter` |
 | `MotivoModal` | Confirmación que pide un motivo | `destructiva` al anular o rechazar |
@@ -235,6 +236,38 @@ confirmar({
   onConfirm: () => eliminar.mutate(ext.id),
 })
 ```
+
+## Paneles laterales
+
+**Ninguna pantalla importa `Drawer` de Mantine.** ESLint lo rechaza fuera de
+`src/components/`. Se usa `SgthDrawer`, que decide lo que cada panel resolvía
+a su manera: a la derecha, pantalla completa por debajo de 768 px y el scroll
+del propio panel.
+
+Un drawer en vez de un modal cuando lo que se abre acompaña a la lista que
+sigue a la vista: el detalle de una fila, el kardex de una medicina, los
+permisos de un usuario.
+
+| Prop | Qué |
+|---|---|
+| `title` | Texto, sin icono decorativo, como el de un modal |
+| `description` | El registro abierto: el nombre del usuario, el folio |
+| `ancho` | `sm` 480 (una lista angosta) · `md` 560, por defecto · `lg` 720 (un expediente) |
+
+```tsx
+<SgthDrawer opened={opened} onClose={cerrar} title="Permisos adicionales" description={usuario.nombre}>
+  …contenido…
+  <ModalFooter onCancel={cerrar} onSubmit={guardar} submitLabel="Guardar permisos" />
+</SgthDrawer>
+```
+
+**Nunca un `ScrollArea` de alto fijo dentro del panel.** El cuerpo ya tiene
+scroll: ocho de los trece drawers metían uno de `calc(100vh - 80px)`, con dos
+barras, y la de dentro cortaba el final. El pie de botones es `ModalFooter`,
+que también es pegajoso aquí.
+
+Antes eran siete anchos (480, 520, 560, 580, 720, `lg`, `xl`) y la cabecera
+armada de cuatro formas.
 
 ## Botones
 
