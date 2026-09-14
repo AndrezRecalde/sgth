@@ -38,6 +38,11 @@ const IMPORTS_SOLO_CATALOGO = [
   },
   {
     name: "@mantine/core",
+    importNames: ["Drawer"],
+    message: "Use SgthDrawer de '@/components/ui': pone la pantalla completa en móvil, uno de tres anchos y la cabecera con título y descripción. El pie con botones va en ModalFooter (regla 06).",
+  },
+  {
+    name: "@mantine/core",
     importNames: ["Badge"],
     message: "Use StatusBadge (estados, señales y categorías), CountBadge (una cifra) o LegendBadge (leyenda de un gráfico) de '@/components/ui': el color sale del significado, no se escribe a mano (regla 06).",
   },

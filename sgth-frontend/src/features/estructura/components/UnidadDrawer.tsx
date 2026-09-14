@@ -1,15 +1,11 @@
 'use client'
 
-import {
-  Drawer, Stack, Text, Group,
-  Divider, Skeleton, ScrollArea,
-} from '@mantine/core'
+import { Stack, Text, Group, Divider, Skeleton } from '@mantine/core'
 import {
   IconBuilding, IconBriefcase, IconSitemap,
 } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import type { UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
-import { StatusBadge } from '@/components/ui'
+import { SgthDrawer, StatusBadge } from '@/components/ui'
 
 interface Props {
   opened: boolean
@@ -19,142 +15,129 @@ interface Props {
 }
 
 export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
-  const { isMobile } = useMobileBreakpoint()
 
   const hijos    = unidad?.hijos ?? []
   const puestos  = unidad?.puestos ?? []
   const tipoAcronimo = unidad?.tipo_unidad?.acronimo ?? ''
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <IconBuilding size={18} />
-          <Text fw={700} size="md">
-            {unidad?.nombre ?? 'Unidad'}
-          </Text>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 520}
-      padding="lg"
+      title={unidad?.nombre ?? 'Unidad'}
     >
-      <ScrollArea h="calc(100vh - 80px)">
-        <Stack gap="md">
-          {isLoading ? (
-            <>
-              <Skeleton height={20} />
-              <Skeleton height={20} />
-              <Skeleton height={80} />
-            </>
-          ) : (
-            <>
-              {tipoAcronimo && (
-                <StatusBadge>
-                  {unidad?.tipo_unidad?.descripcion ?? tipoAcronimo}
-                </StatusBadge>
-              )}
+      <Stack gap="md">
+        {isLoading ? (
+          <>
+            <Skeleton height={20} />
+            <Skeleton height={20} />
+            <Skeleton height={80} />
+          </>
+        ) : (
+          <>
+            {tipoAcronimo && (
+              <StatusBadge>
+                {unidad?.tipo_unidad?.descripcion ?? tipoAcronimo}
+              </StatusBadge>
+            )}
 
-              {hijos.length > 0 && (
-                <>
-                  <Divider
-                    label={
-                      <Group gap="xs">
-                        <IconSitemap size={14} />
-                        <Text size="sm" fw={600}>
-                          Subprocesos ({hijos.length})
-                        </Text>
-                      </Group>
-                    }
-                    labelPosition="left"
-                  />
-                  <Stack gap="xs">
-                    {hijos.map(hijo => (
+            {hijos.length > 0 && (
+              <>
+                <Divider
+                  label={
+                    <Group gap="xs">
+                      <IconSitemap size={14} />
+                      <Text size="sm" fw={600}>
+                        Subprocesos ({hijos.length})
+                      </Text>
+                    </Group>
+                  }
+                  labelPosition="left"
+                />
+                <Stack gap="xs">
+                  {hijos.map(hijo => (
+                    <Group
+                      key={Number(hijo.id)}
+                      gap="xs"
+                      p="xs"
+                      style={{
+                        borderRadius: 8,
+                        border: '1px solid var(--mantine-color-default-border)',
+                      }}
+                    >
+                      <IconBuilding
+                        size={14}
+                        color="var(--mantine-color-dimmed)"
+                      />
+                      <Text size="sm">{hijo.nombre}</Text>
+                    </Group>
+                  ))}
+                </Stack>
+              </>
+            )}
+
+            {puestos.length > 0 && (
+              <>
+                <Divider
+                  label={
+                    <Group gap="xs">
+                      <IconBriefcase size={14} />
+                      <Text size="sm" fw={600}>
+                        Puestos ({puestos.length})
+                      </Text>
+                    </Group>
+                  }
+                  labelPosition="left"
+                />
+                <Stack gap="xs">
+                  {puestos.map((puesto, i) => {
+                    const p = puesto as PuestoConRelaciones
+                    return (
                       <Group
-                        key={Number(hijo.id)}
-                        gap="xs"
+                        key={p.id ?? i}
+                        justify="space-between"
                         p="xs"
                         style={{
                           borderRadius: 8,
                           border: '1px solid var(--mantine-color-default-border)',
                         }}
                       >
-                        <IconBuilding
-                          size={14}
-                          color="var(--mantine-color-dimmed)"
-                        />
-                        <Text size="sm">{hijo.nombre}</Text>
-                      </Group>
-                    ))}
-                  </Stack>
-                </>
-              )}
-
-              {puestos.length > 0 && (
-                <>
-                  <Divider
-                    label={
-                      <Group gap="xs">
-                        <IconBriefcase size={14} />
-                        <Text size="sm" fw={600}>
-                          Puestos ({puestos.length})
-                        </Text>
-                      </Group>
-                    }
-                    labelPosition="left"
-                  />
-                  <Stack gap="xs">
-                    {puestos.map((puesto, i) => {
-                      const p = puesto as PuestoConRelaciones
-                      return (
-                        <Group
-                          key={p.id ?? i}
-                          justify="space-between"
-                          p="xs"
-                          style={{
-                            borderRadius: 8,
-                            border: '1px solid var(--mantine-color-default-border)',
-                          }}
-                        >
-                          <Group gap="xs">
-                            <IconBriefcase
-                              size={14}
-                              color="var(--mantine-color-dimmed)"
-                            />
-                            <Text size="sm">{p.denominacion ?? '-'}</Text>
-                          </Group>
-                          <Group gap="xs">
-                            {p.regimen_laboral && (
-                              <StatusBadge size="xs">
-                                {p.regimen_laboral === 'losep'
-                                  ? 'LOSEP'
-                                  : 'CT'}
-                              </StatusBadge>
-                            )}
-                            {p.plazas && p.plazas > 1 && (
-                              <StatusBadge size="xs" variant="outline">
-                                {p.plazas} plazas
-                              </StatusBadge>
-                            )}
-                          </Group>
+                        <Group gap="xs">
+                          <IconBriefcase
+                            size={14}
+                            color="var(--mantine-color-dimmed)"
+                          />
+                          <Text size="sm">{p.denominacion ?? '-'}</Text>
                         </Group>
-                      )
-                    })}
-                  </Stack>
-                </>
-              )}
+                        <Group gap="xs">
+                          {p.regimen_laboral && (
+                            <StatusBadge size="xs">
+                              {p.regimen_laboral === 'losep'
+                                ? 'LOSEP'
+                                : 'CT'}
+                            </StatusBadge>
+                          )}
+                          {p.plazas && p.plazas > 1 && (
+                            <StatusBadge size="xs" variant="outline">
+                              {p.plazas} plazas
+                            </StatusBadge>
+                          )}
+                        </Group>
+                      </Group>
+                    )
+                  })}
+                </Stack>
+              </>
+            )}
 
-              {hijos.length === 0 && puestos.length === 0 && (
-                <Text size="sm" c="dimmed" ta="center" mt="xl">
-                  Esta unidad no tiene subprocesos ni puestos registrados.
-                </Text>
-              )}
-            </>
-          )}
-        </Stack>
-      </ScrollArea>
-    </Drawer>
+            {hijos.length === 0 && puestos.length === 0 && (
+              <Text size="sm" c="dimmed" ta="center" mt="xl">
+                Esta unidad no tiene subprocesos ni puestos registrados.
+              </Text>
+            )}
+          </>
+        )}
+      </Stack>
+    </SgthDrawer>
   )
 }

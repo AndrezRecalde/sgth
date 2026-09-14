@@ -1,14 +1,8 @@
 'use client'
 
-import { confirmar, StatusBadge } from '@/components/ui'
-import {
-  Drawer, Stack, Text, Group, TextInput, ActionIcon, Card,
-  Skeleton, Divider, Switch, ThemeIcon,
-} from '@mantine/core'
-import {
-  IconPlus, IconTrash, IconBriefcase,
-  IconGripVertical,
-} from '@tabler/icons-react'
+import { confirmar, SgthDrawer, StatusBadge } from '@/components/ui'
+import { Stack, Text, Group, TextInput, ActionIcon, Card, Skeleton, Divider, Switch, ThemeIcon } from '@mantine/core'
+import { IconPlus, IconTrash, IconGripVertical } from '@tabler/icons-react'
 import { useState } from 'react'
 import {
   DndContext,
@@ -28,7 +22,6 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import {
   usePuestoActividades,
   useCrearActividad,
@@ -137,7 +130,6 @@ export function PuestoActividadesDrawer({
   opened, onClose, puesto,
 }: Props) {
   const contained     = useContainedInput()
-  const { isMobile }  = useMobileBreakpoint()
   const [nueva, setNueva] = useState('')
   const qc = useQueryClient()
 
@@ -191,27 +183,12 @@ export function PuestoActividadesDrawer({
   }
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon variant="light" size="md" radius="md">
-            <IconBriefcase size={16} />
-          </ThemeIcon>
-          <Stack gap={0}>
-            <Text fw={700} size="sm">
-              {puesto?.cargo?.nombre ?? 'Puesto'}
-            </Text>
-            <Text size="xs" c="dimmed">
-              Actividades del puesto
-            </Text>
-          </Stack>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 480}
-      padding="lg"
+      title="Actividades del puesto"
+      description={puesto?.cargo?.nombre}
+      ancho="sm"
     >
       <Stack gap="md">
         <Stack gap="xs">
@@ -328,6 +305,6 @@ export function PuestoActividadesDrawer({
           )}
         </Stack>
       </Stack>
-    </Drawer>
+    </SgthDrawer>
   )
 }

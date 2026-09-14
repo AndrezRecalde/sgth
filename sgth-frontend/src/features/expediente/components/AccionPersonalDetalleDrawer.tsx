@@ -1,17 +1,13 @@
 'use client'
 
-import { confirmar, StatusBadge, notificar } from '@/components/ui'
+import { confirmar, notificar, SgthDrawer, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
-import {
-  Alert, Box, Button, Divider, Drawer, Grid, Group, Paper,
-  Skeleton, Stack, Text,
-} from '@mantine/core'
+import { Alert, Box, Button, Divider, Grid, Group, Paper, Skeleton, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconAlertTriangle, IconBan, IconCheck, IconFileDownload,
   IconPencil, IconUserOff,
 } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { expedienteService } from '../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
 import { useMovimiento, useMovimientoMutations } from '../hooks/useMovimientoMutations'
@@ -61,7 +57,6 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) 
  * el formulario que completa los datos del vínculo.
  */
 export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { data: m, isLoading } = useMovimiento(opened ? movimientoId : null)
   const { transicionar } = useMovimientoMutations()
 
@@ -456,14 +451,13 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
   }
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
-      position="right"
-      size={isMobile ? '100%' : 'lg'}
       title="Acción de personal"
+      ancho="lg"
     >
       {contenido()}
-    </Drawer>
+    </SgthDrawer>
   )
 }

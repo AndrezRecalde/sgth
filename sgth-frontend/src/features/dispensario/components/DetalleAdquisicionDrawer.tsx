@@ -1,15 +1,10 @@
 'use client'
 
-import {
-  Drawer, Stack, Group, Text, ThemeIcon, Divider, Alert, Button,
-} from '@mantine/core'
-import {
-  IconShoppingCart, IconFileText, IconBan, IconFileSearch,
-} from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { Stack, Text, Divider, Alert, Button } from '@mantine/core'
+import { IconFileText, IconBan, IconFileSearch } from '@tabler/icons-react'
 import { useDescargarDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
-import { DetailList, SgthTable, StatusBadge } from '@/components/ui'
+import { DetailList, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
 import { columnasItemsAdquisicion } from './itemsAdquisicion.columns'
 
 interface Props {
@@ -28,35 +23,14 @@ function formatFecha(fecha?: string | null): string {
 export function DetalleAdquisicionDrawer({
   opened, onClose, adquisicion,
 }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const descargarDocumento = useDescargarDocumentoAdquisicion()
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon
-            variant="light"
-            size="md"
-            radius="md"
-          >
-            <IconShoppingCart size={16} />
-          </ThemeIcon>
-          <Stack gap={0}>
-            <Text fw={700} size="sm">
-              Detalle de adquisición
-            </Text>
-            <Text size="xs" c="dimmed" ff="monospace">
-              {adquisicion?.folio}
-            </Text>
-          </Stack>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 580}
-      padding="lg"
+      title="Detalle de adquisición"
+      description={adquisicion?.folio}
     >
       {adquisicion && (
         <Stack gap="md">
@@ -136,6 +110,6 @@ export function DetalleAdquisicionDrawer({
           />
         </Stack>
       )}
-    </Drawer>
+    </SgthDrawer>
   )
 }

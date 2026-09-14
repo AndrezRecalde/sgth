@@ -1,10 +1,7 @@
 'use client'
 
-import {
-  Box, Button, Drawer, Group, Loader, ScrollArea, Stack, Text, ThemeIcon,
-} from '@mantine/core'
-import { IconShieldCheck } from '@tabler/icons-react'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
+import { Group, Loader, Stack, Text } from '@mantine/core'
+import { ModalFooter, SgthDrawer } from '@/components/ui'
 import { useSeleccionPermisos } from '../hooks/useSeleccionPermisos'
 import { useUsuarioMutations } from '../hooks/useUsuarioMutations'
 import { PermisosPorRol } from './PermisosPorRol'
@@ -19,7 +16,6 @@ interface Props {
 
 /** Panel de permisos directos: los que se conceden fuera de los roles. */
 export function PermisosDrawer({ opened, onClose, usuario }: Props) {
-  const { isMobile } = useMobileBreakpoint()
   const { sincronizarPermisos } = useUsuarioMutations()
 
   const {
@@ -46,30 +42,13 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
     || '—'
 
   return (
-    <Drawer
+    <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <ThemeIcon variant="light" size="md" radius="md">
-            <IconShieldCheck size={16} />
-          </ThemeIcon>
-          <Stack gap={0}>
-            <Text fw={700} size="sm">Permisos adicionales</Text>
-            <Text size="xs" c="dimmed">{nombreUsuario}</Text>
-          </Stack>
-        </Group>
-      }
-      position="right"
-      size={isMobile ? '100%' : 520}
-      padding="lg"
+      title="Permisos adicionales"
+      description={nombreUsuario}
     >
-      {/* Columna a altura completa: el pie queda anclado y solo scrollea la
-          lista. Antes el pie vivía fuera del ScrollArea de alto fijo y en
-          pantallas cortas los botones quedaban fuera del viewport. */}
-      <Stack gap={0} h="calc(100vh - 80px)">
-        <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-          <Stack gap="md" pr="xs">
+          <Stack gap="md">
             {cargando ? (
               <Group justify="center" py="xl">
                 <Loader size="sm" />
@@ -100,29 +79,20 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
               </>
             )}
           </Stack>
-        </ScrollArea>
 
-        <Box
-          pt="md"
-          style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
-        >
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed">
-              {seleccionados.length} permiso(s) adicional(es)
-            </Text>
-            <Group gap="xs">
-              <Button variant="default" onClick={onClose}>Cancelar</Button>
-              <Button
-                loading={sincronizarPermisos.isPending}
-                leftSection={<IconShieldCheck size={14} />}
-                onClick={handleGuardar}
-              >
-                Guardar permisos
-              </Button>
-            </Group>
-          </Group>
-        </Box>
-      </Stack>
-    </Drawer>
+      {/* El pie de ModalFooter es pegajoso: con la lista larga los botones se
+          quedan al fondo del panel. */}
+      <ModalFooter
+        onCancel={onClose}
+        onSubmit={handleGuardar}
+        submitLabel="Guardar permisos"
+        submitting={sincronizarPermisos.isPending}
+        leftSection={
+          <Text size="xs" c="dimmed">
+            {seleccionados.length} permiso(s) adicional(es)
+          </Text>
+        }
+      />
+    </SgthDrawer>
   )
 }
