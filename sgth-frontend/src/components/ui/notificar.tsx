@@ -1,6 +1,7 @@
 import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconCheck, IconX } from '@tabler/icons-react'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { getApiErrorMessage } from '@/types/api'
 
 /*
 | El resultado de una acción del usuario, siempre con el mismo color e icono
@@ -13,11 +14,19 @@ import { SEMANTIC_COLOR } from '@/config/design.tokens'
 | Antes eran 310 llamadas a `notifications.show` que repetían color e icono a
 | mano: el mismo «se guardó» salía en verde, naranja o azul según el módulo.
 |
+| El `onError` de una mutación, con el mensaje que devolvió el API:
+|
+|   useMutation({ …, onError: notificar.alFallar('No se pudo crear el cargo') })
+|
+| El título dice qué falló. «Error» no dice nada: con 105 mutaciones que lo
+| usaban, la misma notificación roja servía para un cargo, un turno o una
+| nómina, y el usuario no sabía cuál de sus acciones no se había guardado.
+|
 | Para una espera que termina en éxito o error —exportar un PDF—:
 |
 |   const aviso = notificar.proceso('Exportando PDF', 'Generando el archivo…')
 |   try { …; aviso.exito('PDF descargado', '…') }
-|   catch { aviso.error('No se pudo exportar', '…') }
+|   catch { aviso.error('No se pudo exportar el PDF', '…') }
 */
 
 type Desenlace = 'exito' | 'error' | 'aviso'
@@ -47,6 +56,9 @@ export const notificar = {
   exito: (title: string, message?: React.ReactNode, opciones?: Opciones) => mostrar('exito', title, message, opciones),
   error: (title: string, message?: React.ReactNode, opciones?: Opciones) => mostrar('error', title, message, opciones),
   aviso: (title: string, message?: React.ReactNode, opciones?: Opciones) => mostrar('aviso', title, message, opciones),
+
+  /** Manejador de error para `onError`: el título dice qué falló; el mensaje, lo que respondió el API. */
+  alFallar: (title: string) => (error: unknown) => mostrar('error', title, getApiErrorMessage(error)),
 
   /** Una espera visible que después se convierte en su resultado. */
   proceso(title: string, message?: React.ReactNode) {

@@ -122,7 +122,7 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
     enviar.mutate(payload, {
       onSuccess: () => setEnviado(true),
       onError: (err) => {
-        notificar.error('No se pudo enviar', getApiErrorMessage(err))
+        notificar.error('No se pudo enviar el cuestionario', getApiErrorMessage(err))
       },
     })
   }

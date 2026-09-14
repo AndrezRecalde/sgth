@@ -1,15 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { expedienteService } from '../services/expedienteService'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useDeclaracionMutations(servidorId: number) {
   const qc = useQueryClient()
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['declaraciones', servidorId] })
-  const onError = (e: AxiosError<ApiResponse>) =>
-    notificar.error('Error', e.response?.data?.mensaje ?? 'Error inesperado')
 
   const crear = useMutation({
     mutationFn: (data: Parameters<typeof expedienteService.crearDeclaracion>[1]) =>
@@ -18,17 +14,17 @@ export function useDeclaracionMutations(servidorId: number) {
       notificar.exito('Declaración registrada', 'La declaración juramentada fue registrada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la declaración'),
   })
 
   const eliminar = useMutation({
     mutationFn: (id: number) =>
       expedienteService.eliminarDeclaracion(servidorId, id),
     onSuccess: () => {
-      notificar.exito('Eliminado', 'La declaración fue eliminada.')
+      notificar.exito('Declaración eliminada', 'La declaración fue eliminada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la declaración'),
   })
 
   const exportar = () =>

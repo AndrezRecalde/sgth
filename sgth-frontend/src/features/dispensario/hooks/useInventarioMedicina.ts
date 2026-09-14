@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { inventarioMedicinaService } from '../services/inventarioMedicinaService'
-import { getApiErrorMessage } from '@/types/api'
 import type {
   CrearMedicinaData, ActualizarMedicinaData,
 } from '../services/inventarioMedicinaService'
@@ -62,9 +61,6 @@ export function useInventarioMutations() {
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crear = useMutation({
     mutationFn: (data: CrearMedicinaData) =>
       inventarioMedicinaService.crear(data),
@@ -72,7 +68,7 @@ export function useInventarioMutations() {
       notificar.exito('Medicina registrada', 'La medicina fue agregada al inventario.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la medicina'),
   })
 
   const actualizar = useMutation({
@@ -83,7 +79,7 @@ export function useInventarioMutations() {
       notificar.exito('Medicina actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar la medicina'),
   })
 
   const registrarBaja = useMutation({
@@ -99,7 +95,7 @@ export function useInventarioMutations() {
       // Lo que se retiró ya no debe ofrecerse al recetar.
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudieron dar de baja las existencias'),
   })
 
   const ajustarInventario = useMutation({
@@ -112,7 +108,7 @@ export function useInventarioMutations() {
       notificar.exito('Inventario ajustado', 'El stock fue corregido correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo ajustar el inventario'),
   })
 
 
@@ -131,7 +127,7 @@ export function useInventarioMutations() {
       // Deja de estar disponible —o vuelve a estarlo— para recetar.
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo cambiar el estado de la medicina'),
   })
 
   return { crear, actualizar, registrarBaja, ajustarInventario, toggleEstado }

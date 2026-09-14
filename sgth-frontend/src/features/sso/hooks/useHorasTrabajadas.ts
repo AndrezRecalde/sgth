@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 interface Params {
@@ -25,9 +24,6 @@ export function useHorasTrabajadasMutations() {
     qc.invalidateQueries({ queryKey: ['sso-indicadores-reactivos'] })
   }
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const registrar = useMutation({
     mutationFn: (data: { periodo: string; unidad_administrativa_id?: number; total_horas: number }) =>
       ssoService.registrarHorasTrabajadas(data),
@@ -38,7 +34,7 @@ export function useHorasTrabajadasMutations() {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudieron registrar las horas'),
   })
 
   const eliminar = useMutation({
@@ -47,7 +43,7 @@ export function useHorasTrabajadasMutations() {
       notificar.exito('Registro eliminado', 'El registro de horas trabajadas fue eliminado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el registro de horas'),
   })
 
   return { registrar, eliminar }

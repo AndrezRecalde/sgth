@@ -59,9 +59,7 @@ export function CondicionTab({ servidorId }: Props) {
       notificar.exito("Registro eliminado", "La discapacidad fue eliminada del expediente.");
       qc.invalidateQueries({ queryKey: ["discapacidades", servidorId] });
     },
-    onError: () => {
-      notificar.error("Error", "No se pudo eliminar la discapacidad.");
-    },
+    onError: notificar.alFallar("No se pudo eliminar la discapacidad"),
   });
 
   const delEnf = useMutation<ApiResponse<void>, Error, number>({
@@ -74,9 +72,7 @@ export function CondicionTab({ servidorId }: Props) {
       );
       qc.invalidateQueries({ queryKey: ["enfermedades", servidorId] });
     },
-    onError: () => {
-      notificar.error("Error", "No se pudo eliminar la enfermedad.");
-    },
+    onError: notificar.alFallar("No se pudo eliminar la enfermedad"),
   });
 
   const discColumns: DataTableColumn<DiscapacidadServidor>[] = [

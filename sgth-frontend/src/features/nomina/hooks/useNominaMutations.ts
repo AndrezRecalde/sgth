@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { nominaService } from '../services/nominaService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useNominaMutations() {
@@ -9,15 +8,13 @@ export function useNominaMutations() {
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['nominas'] })
 
-  const onError = (error: unknown) => notificar.error('Error', getApiErrorMessage(error))
-
   const calcular = useMutation({
     mutationFn: (periodo: string) => nominaService.calcular(periodo),
     onSuccess: () => {
       notificar.exito('Nómina calculada', 'La nómina fue calculada en borrador.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo calcular la nómina'),
   })
 
   const cerrar = useMutation({
@@ -26,7 +23,7 @@ export function useNominaMutations() {
       notificar.exito('Nómina cerrada', 'La nómina fue cerrada correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo cerrar la nómina'),
   })
 
   return { calcular, cerrar }

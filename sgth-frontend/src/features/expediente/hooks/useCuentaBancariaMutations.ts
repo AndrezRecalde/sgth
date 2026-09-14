@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { cuentaBancariaService } from '../services/cuentaBancariaService'
 import type { CuentaBancariaFormData } from '../schemas/cuentaBancaria.schema'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useCuentaBancariaMutations(servidorId: number) {
@@ -11,10 +9,6 @@ export function useCuentaBancariaMutations(servidorId: number) {
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['cuentas-bancarias', servidorId] })
 
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
-
   const crear = useMutation({
     mutationFn: (data: CuentaBancariaFormData) =>
       cuentaBancariaService.crear(servidorId, data),
@@ -22,7 +16,7 @@ export function useCuentaBancariaMutations(servidorId: number) {
       notificar.exito('Cuenta registrada', 'La cuenta bancaria fue registrada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la cuenta'),
   })
 
   const setPrincipal = useMutation({
@@ -35,7 +29,7 @@ export function useCuentaBancariaMutations(servidorId: number) {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo cambiar la cuenta principal'),
   })
 
   const eliminar = useMutation({
@@ -45,7 +39,7 @@ export function useCuentaBancariaMutations(servidorId: number) {
       notificar.exito('Cuenta eliminada', 'La cuenta fue eliminada correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la cuenta'),
   })
 
   return { crear, setPrincipal, eliminar }

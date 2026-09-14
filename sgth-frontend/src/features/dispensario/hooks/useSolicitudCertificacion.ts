@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { solicitudCertificacionService } from '../services/solicitudCertificacionService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useSolicitudesCertificacion(params?: {
@@ -45,8 +44,7 @@ export function useIniciarProceso() {
       qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo iniciar el proceso'),
   })
 }
 
@@ -67,8 +65,7 @@ export function useCompletarSolicitud() {
         queryKey: ['solicitudes-certificacion'],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo completar la solicitud'),
   })
 }
 
@@ -93,8 +90,7 @@ export function useCrearSolicitudLote() {
         queryKey: ['solicitudes-certificacion'],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudieron generar las solicitudes'),
   })
 }
 
@@ -113,7 +109,6 @@ export function useConfirmarIncorporacion() {
         queryKey: ['solicitudes-certificacion'],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo confirmar la incorporación'),
   })
 }

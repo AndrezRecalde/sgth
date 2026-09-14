@@ -88,8 +88,8 @@ export function ExpedienteView() {
       URL.revokeObjectURL(url)
     } catch (error) {
       notificar.error(
-        'Error',
-        getApiErrorMessage(error, 'No se pudo generar la exportación.'),
+        `No se pudo exportar el listado a ${tipo === 'excel' ? 'Excel' : 'PDF'}`,
+        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
       )
     } finally {
       setExportando(null)

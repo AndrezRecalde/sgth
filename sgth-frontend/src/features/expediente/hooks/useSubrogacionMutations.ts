@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { subrogacionService } from '../services/subrogacionService'
 import type { SubrogacionFormData } from '../schemas/subrogacion.schema'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useSubrogacionMutations() {
@@ -13,36 +11,32 @@ export function useSubrogacionMutations() {
     qc.invalidateQueries({ queryKey: ['subrogaciones-vigentes'] })
   }
 
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
-
   const registrar = useMutation({
     mutationFn: (data: SubrogacionFormData) => subrogacionService.registrar(data),
     onSuccess: () => {
-      notificar.exito('Registrado', 'La subrogación/encargo fue registrado correctamente.')
+      notificar.exito('Subrogación registrada', 'La subrogación/encargo fue registrado correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la subrogación'),
   })
 
   const finalizar = useMutation({
     mutationFn: (id: number) => subrogacionService.finalizar(id),
     onSuccess: () => {
-      notificar.exito('Finalizado', 'La subrogación/encargo fue finalizado correctamente.')
+      notificar.exito('Subrogación finalizada', 'La subrogación/encargo fue finalizado correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo finalizar la subrogación'),
   })
 
   const cancelar = useMutation({
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       subrogacionService.cancelar(id, motivo),
     onSuccess: () => {
-      notificar.exito('Cancelado', 'La subrogación/encargo fue cancelado.')
+      notificar.exito('Subrogación cancelada', 'La subrogación/encargo fue cancelado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo cancelar la subrogación'),
   })
 
   return { registrar, finalizar, cancelar }

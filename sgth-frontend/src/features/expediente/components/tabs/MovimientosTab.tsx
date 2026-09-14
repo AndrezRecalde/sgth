@@ -55,8 +55,8 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
       URL.revokeObjectURL(url)
     } catch (error) {
       notificar.error(
-        'Error',
-        getApiErrorMessage(error, 'No se pudo generar el PDF de Acción de Personal.'),
+        'No se pudo generar el PDF de la acción de personal',
+        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
       )
     } finally {
       setDescargandoId(null)

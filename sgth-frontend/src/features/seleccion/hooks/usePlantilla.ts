@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { plantillaService } from '../services/plantillaService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function usePlantillas() {
@@ -28,8 +27,7 @@ export function useCrearPlantilla() {
       notificar.exito('Plantilla creada', 'La plantilla fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['plantillas'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo crear la plantilla'),
   })
 }
 
@@ -41,8 +39,7 @@ export function useEliminarPlantilla() {
       notificar.exito('Plantilla eliminada', 'La plantilla fue removida.')
       qc.invalidateQueries({ queryKey: ['plantillas'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo eliminar la plantilla'),
   })
 }
 
@@ -55,8 +52,7 @@ export function useAgregarCriterioPlantilla(plantillaId: number) {
       notificar.exito('Criterio agregado', 'El criterio fue agregado a la plantilla.')
       qc.invalidateQueries({ queryKey: ['plantilla', plantillaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo agregar el criterio a la plantilla'),
   })
 }
 
@@ -69,8 +65,7 @@ export function useEliminarCriterioPlantilla(plantillaId: number) {
       notificar.exito('Criterio eliminado', 'El criterio fue removido de la plantilla.')
       qc.invalidateQueries({ queryKey: ['plantilla', plantillaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo quitar el criterio de la plantilla'),
   })
 }
 
@@ -94,7 +89,6 @@ export function useAplicarPlantilla() {
       )
       qc.invalidateQueries({ queryKey: ['criterios', convocatoriaId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo aplicar la plantilla'),
   })
 }

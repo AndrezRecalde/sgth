@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { asistenciaService } from '../services/asistenciaService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useVacacionMutations() {
@@ -13,8 +12,6 @@ export function useVacacionMutations() {
     qc.invalidateQueries({ queryKey: ['periodos-vacaciones'] })
   }
 
-  const onError = (error: unknown) => notificar.error('Error', getApiErrorMessage(error))
-
   const crear = useMutation({
     mutationFn: (data: Parameters<typeof asistenciaService.vacaciones.crear>[0]) =>
       asistenciaService.vacaciones.crear(data),
@@ -22,7 +19,7 @@ export function useVacacionMutations() {
       notificar.exito('Solicitud registrada', 'La solicitud de vacaciones fue registrada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la solicitud de vacaciones'),
   })
 
   const actualizar = useMutation({
@@ -35,7 +32,7 @@ export function useVacacionMutations() {
       notificar.exito('Solicitud actualizada', 'La solicitud fue procesada correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar la solicitud de vacaciones'),
   })
 
   const anular = useMutation({
@@ -45,7 +42,7 @@ export function useVacacionMutations() {
       notificar.exito('Solicitud anulada', respuesta.mensaje)
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo anular la solicitud de vacaciones'),
   })
 
   return { crear, actualizar, anular }

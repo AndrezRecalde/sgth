@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { expedienteService } from '../services/expedienteService'
 import React from 'react'
 
+import { getApiErrorMessage } from '@/types/api'
 const TIPO_OPTIONS = [
   { value: 'fisica',      label: 'Física' },
   { value: 'sensorial',   label: 'Sensorial (Visual / Auditiva)' },
@@ -76,8 +77,8 @@ export function DiscapacidadCargaFamiliarModal({
       )
       qc.invalidateQueries({ queryKey: ['cargas-familiares', servidorId] })
       handleClose()
-    } catch {
-      notificar.error('Error', 'No se pudo registrar la discapacidad.')
+    } catch (error) {
+      notificar.error('No se pudo registrar la discapacidad', getApiErrorMessage(error))
     }
   }
 

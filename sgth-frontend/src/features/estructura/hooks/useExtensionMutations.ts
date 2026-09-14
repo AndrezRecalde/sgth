@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { puestosExtensionesService } from '../services/puestosExtensionesService'
 import type { ExtensionFormData } from '../schemas/extension.schema'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useExtensionMutations() {
@@ -11,10 +9,6 @@ export function useExtensionMutations() {
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['directorio'] })
 
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
-
   const crear = useMutation({
     mutationFn: (data: ExtensionFormData) =>
       puestosExtensionesService.crearExtension(data),
@@ -22,7 +16,7 @@ export function useExtensionMutations() {
       notificar.exito('Extensión registrada', 'La extensión fue creada correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la extensión'),
   })
 
   const editar = useMutation({
@@ -32,7 +26,7 @@ export function useExtensionMutations() {
       notificar.exito('Extensión actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar la extensión'),
   })
 
   const eliminar = useMutation({
@@ -42,7 +36,7 @@ export function useExtensionMutations() {
       notificar.exito('Extensión eliminada', 'La extensión fue eliminada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la extensión'),
   })
 
   return { crear, editar, eliminar }

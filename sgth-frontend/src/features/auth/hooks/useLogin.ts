@@ -54,7 +54,7 @@ export function useLogin() {
     },
     onError: (error: AxiosError<ApiResponse>) => {
       notificar.error(
-        'Error al iniciar sesión',
+        'No se pudo iniciar sesión',
         error.response?.data?.mensaje ?? 'Error inesperado. Intente nuevamente.',
       )
     },

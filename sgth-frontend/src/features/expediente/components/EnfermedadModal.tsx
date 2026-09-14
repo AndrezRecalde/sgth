@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Stack, TextInput } from '@mantine/core'
 import { FormModal, notificar } from '@/components/ui'
+import { getApiErrorMessage } from '@/types/api'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -101,8 +102,11 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
         'El registro fue procesado correctamente.',
       )
       handleClose()
-    } catch {
-      notificar.error('Error', 'No se pudo procesar el registro.')
+    } catch (error) {
+      notificar.error(
+        isEditing ? 'No se pudo actualizar la enfermedad' : 'No se pudo registrar la enfermedad',
+        getApiErrorMessage(error),
+      )
     }
   }
 

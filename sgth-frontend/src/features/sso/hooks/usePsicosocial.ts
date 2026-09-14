@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { psicosocialService, type RespuestaPsicosocialPayload } from '../services/psicosocialService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useCampaniasPsicosocial(params?: { periodo?: string }) {
@@ -23,9 +22,6 @@ export function useResultadosPsicosociales(campaniaId: number | null) {
 export function usePsicosocialMutations() {
   const qc = useQueryClient()
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crearCampania = useMutation({
     mutationFn: (data: { periodo: string; unidad_administrativa_id?: number | null; fecha_apertura: string; fecha_cierre?: string | null }) =>
       psicosocialService.crearCampania(data),
@@ -36,7 +32,7 @@ export function usePsicosocialMutations() {
       )
       qc.invalidateQueries({ queryKey: ['sso-psicosocial-campanias'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo crear la campaña psicosocial'),
   })
 
   const cerrarCampania = useMutation({
@@ -45,7 +41,7 @@ export function usePsicosocialMutations() {
       notificar.exito('Campaña cerrada', 'La campaña fue cerrada exitosamente.')
       qc.invalidateQueries({ queryKey: ['sso-psicosocial-campanias'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo cerrar la campaña psicosocial'),
   })
 
   return { crearCampania, cerrarCampania }

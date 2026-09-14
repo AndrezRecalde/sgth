@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import type { RiesgoLaboral } from '../services/ssoService'
 import { notificar } from '@/components/ui'
 
@@ -23,16 +22,13 @@ export function useRiesgoLaboralMutations() {
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-riesgos'] })
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crear = useMutation({
     mutationFn: (data: Partial<RiesgoLaboral>) => ssoService.crearRiesgo(data),
     onSuccess: () => {
       notificar.exito('Riesgo laboral registrado', 'El riesgo fue registrado correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el riesgo laboral'),
   })
 
   const editar = useMutation({
@@ -42,7 +38,7 @@ export function useRiesgoLaboralMutations() {
       notificar.exito('Riesgo laboral actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el riesgo laboral'),
   })
 
   const eliminar = useMutation({
@@ -51,7 +47,7 @@ export function useRiesgoLaboralMutations() {
       notificar.exito('Riesgo laboral eliminado', 'El registro fue eliminado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el riesgo laboral'),
   })
 
   return { crear, editar, eliminar }

@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { estructuraService } from '../services/estructuraService'
 import type { UnidadFormData } from '../schemas/unidad.schema'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useUnidadMutations() {
@@ -13,10 +11,6 @@ export function useUnidadMutations() {
     qc.invalidateQueries({ queryKey: ['unidades'] })
   }
 
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
-
   const crear = useMutation({
     mutationFn: (data: UnidadFormData) =>
       estructuraService.crearUnidad(data),
@@ -24,7 +18,7 @@ export function useUnidadMutations() {
       notificar.exito('Unidad creada', 'La unidad administrativa fue registrada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo crear la unidad'),
   })
 
   const editar = useMutation({
@@ -34,7 +28,7 @@ export function useUnidadMutations() {
       notificar.exito('Unidad actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar la unidad'),
   })
 
   const eliminar = useMutation({
@@ -43,7 +37,7 @@ export function useUnidadMutations() {
       notificar.exito('Unidad eliminada', 'La unidad fue eliminada correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la unidad'),
   })
 
   return { crear, editar, eliminar }

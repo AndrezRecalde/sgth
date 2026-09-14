@@ -27,8 +27,8 @@ export function useVinculacionInicial() {
     },
     onError: (error) => {
       notificar.error(
-        'No se pudo registrar',
-        getApiErrorMessage(error, 'No se pudo registrar la vinculación inicial.'),
+        'No se pudo registrar la vinculación inicial',
+        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
       )
     },
   })

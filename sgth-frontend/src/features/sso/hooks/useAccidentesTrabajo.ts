@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import type { AccidenteTrabajo } from '../services/ssoService'
 import { notificar } from '@/components/ui'
 
@@ -23,9 +22,6 @@ export function useAccidenteTrabajoMutations() {
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-accidentes'] })
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crear = useMutation({
     mutationFn: (data: Partial<AccidenteTrabajo>) => ssoService.crearAccidente(data),
     onSuccess: () => {
@@ -35,7 +31,7 @@ export function useAccidenteTrabajoMutations() {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el accidente'),
   })
 
   const editar = useMutation({
@@ -45,7 +41,7 @@ export function useAccidenteTrabajoMutations() {
       notificar.exito('Accidente actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el accidente'),
   })
 
   const eliminar = useMutation({
@@ -54,7 +50,7 @@ export function useAccidenteTrabajoMutations() {
       notificar.exito('Accidente eliminado', 'El registro fue eliminado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el accidente'),
   })
 
   return { crear, editar, eliminar }

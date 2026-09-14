@@ -10,7 +10,6 @@ import { useVuelosAutorizacion } from "../hooks/useViaticos";
 import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { viaticoService } from "../services/viaticoService";
-import { getApiErrorMessage } from "@/types/api";
 import React from "react";
 import type { AutorizacionVuelo } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
@@ -68,8 +67,7 @@ export function VuelosTab() {
       notificar.exito("Vuelo aprobado", "La autorización fue aprobada.");
       qc.invalidateQueries({ queryKey: ["vuelos-autorizacion"] });
     },
-    onError: (error: unknown) =>
-      notificar.error("Error", getApiErrorMessage(error)),
+    onError: notificar.alFallar("No se pudo aprobar el vuelo"),
   });
 
   const rechazar = useMutation({
@@ -81,8 +79,7 @@ export function VuelosTab() {
       notificar.exito("Vuelo rechazado", "La autorización fue rechazada.");
       qc.invalidateQueries({ queryKey: ["vuelos-autorizacion"] });
     },
-    onError: (error: unknown) =>
-      notificar.error("Error", getApiErrorMessage(error)),
+    onError: notificar.alFallar("No se pudo rechazar el vuelo"),
   });
 
   const columns: DataTableColumn<AutorizacionVuelo>[] = [

@@ -25,8 +25,7 @@ export function useEmitirReceta(consultaId?: number) {
         })
       }
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo emitir la receta'),
   })
 }
 
@@ -37,9 +36,6 @@ export function useAccionesItem(consultaId: number) {
     qc.invalidateQueries({
       queryKey: ['recetas', 'consulta', consultaId],
     })
-
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
 
   const actualizarItem = useMutation({
     mutationFn: ({ recetaId, itemId, data }: {
@@ -57,7 +53,7 @@ export function useAccionesItem(consultaId: number) {
       notificar.exito('Ítem actualizado', 'El medicamento fue actualizado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el ítem de la receta'),
   })
 
   const quitarItem = useMutation({
@@ -68,7 +64,7 @@ export function useAccionesItem(consultaId: number) {
       notificar.exito('Ítem eliminado', 'El medicamento fue removido de la receta.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo quitar el ítem de la receta'),
   })
 
   return { actualizarItem, quitarItem }
@@ -146,8 +142,7 @@ export function useAnularReceta() {
       qc.invalidateQueries({ queryKey: ['recetas'] })
       qc.invalidateQueries({ queryKey: ['consultas'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('No se pudo anular', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo anular la receta'),
   })
 }
 
@@ -172,7 +167,6 @@ export function useDespacharReceta() {
       // Y lo que se agotó al despachar ya no debe ofrecerse al recetar.
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error al despachar', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo despachar la receta'),
   })
 }

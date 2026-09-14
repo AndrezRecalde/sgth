@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { disponibilidadService } from '../services/disponibilidadService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useMiDisponibilidad(activo = true) {
@@ -28,7 +27,6 @@ export function useAlternarDisponibilidad() {
           : 'Ya no apareces disponible para atención.',
       )
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo cambiar la disponibilidad'),
   })
 }

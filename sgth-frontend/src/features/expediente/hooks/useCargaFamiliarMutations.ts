@@ -1,15 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { expedienteService } from '../services/expedienteService'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useCargaFamiliarMutations(servidorId: number) {
   const qc = useQueryClient()
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['cargas-familiares', servidorId] })
-  const onError = (e: AxiosError<ApiResponse>) =>
-    notificar.error('Error', e.response?.data?.mensaje ?? 'Error inesperado')
 
   const crear = useMutation({
     mutationFn: (data: Parameters<typeof expedienteService.crearCargaFamiliar>[1]) =>
@@ -18,7 +14,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
       notificar.exito('Carga familiar registrada', 'La carga familiar fue registrada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la carga familiar'),
   })
 
   const editar = useMutation({
@@ -28,17 +24,17 @@ export function useCargaFamiliarMutations(servidorId: number) {
       notificar.exito('Carga familiar actualizada', 'La carga familiar fue actualizada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar la carga familiar'),
   })
 
   const eliminar = useMutation({
     mutationFn: (id: number) =>
       expedienteService.eliminarCargaFamiliar(servidorId, id),
     onSuccess: () => {
-      notificar.exito('Eliminado', 'La carga familiar fue eliminada.')
+      notificar.exito('Carga familiar eliminada', 'La carga familiar fue eliminada.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la carga familiar'),
   })
 
   const toggleEstado = useMutation({
@@ -80,7 +76,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
           qc.setQueryData(queryKey, data)
         })
       }
-      onError(error as AxiosError<ApiResponse>)
+      notificar.alFallar('No se pudo cambiar el estado de la carga familiar')(error)
     },
     onSettled: () => {
       invalidar()

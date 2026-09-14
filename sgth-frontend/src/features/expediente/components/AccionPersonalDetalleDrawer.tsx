@@ -91,7 +91,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
       link.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      notificar.error('Error', getApiErrorMessage(error, 'No se pudo generar el PDF.'))
+      notificar.error('No se pudo generar el PDF de la acción de personal', getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'))
     } finally {
       setDescargando(false)
     }

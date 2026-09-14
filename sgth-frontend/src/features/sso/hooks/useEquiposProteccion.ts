@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import type { EquipoProteccion } from '../services/ssoService'
 import { notificar } from '@/components/ui'
 
@@ -23,9 +22,6 @@ export function useEquipoProteccionMutations() {
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-equipos-proteccion'] })
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const crear = useMutation({
     mutationFn: (data: Partial<EquipoProteccion>) => ssoService.crearEquipoProteccion(data),
     onSuccess: () => {
@@ -35,7 +31,7 @@ export function useEquipoProteccionMutations() {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el equipo'),
   })
 
   const editar = useMutation({
@@ -45,7 +41,7 @@ export function useEquipoProteccionMutations() {
       notificar.exito('Equipo actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el equipo'),
   })
 
   const eliminar = useMutation({
@@ -54,7 +50,7 @@ export function useEquipoProteccionMutations() {
       notificar.exito('Equipo eliminado', 'El registro fue eliminado.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el equipo'),
   })
 
   return { crear, editar, eliminar }

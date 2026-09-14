@@ -99,6 +99,13 @@ const SINTAXIS_TS = [
     selector: 'CallExpression[callee.name="confirm"], CallExpression[callee.object.name="window"][callee.property.name="confirm"]',
     message: "Nunca el confirm() del navegador: use confirmar() de '@/components/ui' (regla 06).",
   },
+  // El título de una notificación dice qué pasó y con qué. Eran 105 «Error»
+  // idénticos: la misma notificación roja para un cargo, un turno o una nómina.
+  {
+    selector:
+      'CallExpression[callee.property.name=/^(exito|error|aviso|alFallar)$/]:not([callee.object.name="console"]) > Literal.arguments:first-child[value=/^(Error|Éxito|Exito|Aviso|Atención|Advertencia|Listo|Hecho|Guardado|Eliminado|Eliminada|Registrado|Registrada|Actualizado|Finalizado|Cancelado|Operación exitosa|No se pudo [a-záéíóú]+|No se pudieron [a-záéíóú]+|Error al .+)$/]',
+    message: "Título de notificación genérico: diga qué pasó y con qué, «No se pudo anular el permiso» o «Cargo creado» (regla 08).",
+  },
 ];
 
 const SINTAXIS_TSX = [

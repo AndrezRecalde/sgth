@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { puestosExtensionesService } from '../services/puestosExtensionesService'
 import type { PuestoFormData } from '../schemas/puesto.schema'
-import type { ApiResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function usePuestoMutations() {
@@ -11,10 +9,6 @@ export function usePuestoMutations() {
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['puestos'] })
 
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
-
   const crear = useMutation({
     mutationFn: (data: PuestoFormData) =>
       puestosExtensionesService.crearPuesto(data),
@@ -22,7 +16,7 @@ export function usePuestoMutations() {
       notificar.exito('Puesto creado', 'El puesto fue registrado correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo crear el puesto'),
   })
 
   const editar = useMutation({
@@ -32,7 +26,7 @@ export function usePuestoMutations() {
       notificar.exito('Puesto actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el puesto'),
   })
 
   const eliminar = useMutation({
@@ -41,7 +35,7 @@ export function usePuestoMutations() {
       notificar.exito('Puesto eliminado', 'El puesto fue eliminado correctamente.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar el puesto'),
   })
 
   return { crear, editar, eliminar }

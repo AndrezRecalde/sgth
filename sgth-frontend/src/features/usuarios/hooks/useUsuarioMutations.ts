@@ -1,11 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import { usuarioService } from '../services/usuarioService'
-import type {
-  ApiResponse,
-  UsuarioFormData,
-  UsuarioUpdateData,
-} from '@/types/api'
+import type { UsuarioFormData, UsuarioUpdateData } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useUsuarioMutations() {
@@ -13,10 +8,6 @@ export function useUsuarioMutations() {
 
   const invalidar = () =>
     qc.invalidateQueries({ queryKey: ['usuarios'] })
-
-  const onError = (error: AxiosError<ApiResponse>) => {
-    notificar.error('Error', error.response?.data?.mensaje ?? 'Error inesperado')
-  }
 
   const crear = useMutation({
     mutationFn: (data: UsuarioFormData) =>
@@ -27,7 +18,7 @@ export function useUsuarioMutations() {
       // Ese servidor ya no está disponible para vincular a otro usuario.
       qc.invalidateQueries({ queryKey: ['servidores-sin-usuario'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo crear el usuario'),
   })
 
   const actualizar = useMutation({
@@ -37,7 +28,7 @@ export function useUsuarioMutations() {
       notificar.exito('Usuario actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el usuario'),
   })
 
   const toggleActivo = useMutation({
@@ -82,7 +73,7 @@ export function useUsuarioMutations() {
           qc.setQueryData(queryKey, data)
         })
       }
-      onError(error as AxiosError<ApiResponse>)
+      notificar.alFallar('No se pudo cambiar el estado del usuario')(error)
     },
     onSettled: () => {
       // Sincronizar con el servidor al terminar
@@ -101,7 +92,7 @@ export function useUsuarioMutations() {
       // primer_login vuelve a true y la tabla lo muestra.
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo restablecer la contraseña'),
   })
 
   const sincronizarPermisos = useMutation({
@@ -122,7 +113,7 @@ export function useUsuarioMutations() {
       // tiene staleTime de 5 min y solo se invalidaba la lista de usuarios.
       qc.invalidateQueries({ queryKey: ['permisos-usuario', id] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudieron actualizar los permisos'),
   })
 
   const desvincularServidor = useMutation({
@@ -135,7 +126,7 @@ export function useUsuarioMutations() {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo desvincular al servidor'),
   })
 
   const asignarServidor = useMutation({
@@ -149,7 +140,7 @@ export function useUsuarioMutations() {
       invalidar()
       qc.invalidateQueries({ queryKey: ['servidores-sin-usuario'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo asignar el servidor'),
   })
 
   return {

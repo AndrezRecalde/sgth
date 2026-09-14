@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useEquiposPorPuesto(puestoId: number | null) {
@@ -17,9 +16,6 @@ export function usePuestoEppMutations(puestoId: number | null) {
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-puesto-epp', puestoId] })
 
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
-
   const asignar = useMutation({
     mutationFn: (data: { equipo_proteccion_id: number; cantidad_requerida?: number; frecuencia_reposicion_meses?: number }) =>
       ssoService.asignarEquipoAPuesto(puestoId!, data),
@@ -27,7 +23,7 @@ export function usePuestoEppMutations(puestoId: number | null) {
       notificar.exito('Equipo asignado', 'El equipo de protección fue asignado al puesto.')
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo asignar el equipo'),
   })
 
   const eliminar = useMutation({
@@ -39,7 +35,7 @@ export function usePuestoEppMutations(puestoId: number | null) {
       )
       invalidar()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo eliminar la asignación'),
   })
 
   return { asignar, eliminar }

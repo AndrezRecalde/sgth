@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { resultadoMedicoService } from '../services/resultadoMedicoService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useResultadosPorConsulta(
@@ -41,8 +40,7 @@ export function useSubirResultado(consultaId: number) {
         queryKey: ['resultados', 'consulta', consultaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo subir el resultado'),
   })
 }
 
@@ -58,7 +56,6 @@ export function useEliminarResultado(consultaId: number) {
         queryKey: ['resultados', 'consulta', consultaId],
       })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo eliminar el resultado'),
   })
 }

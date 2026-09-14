@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { puestoActividadService } from '../services/puestoActividadService'
-import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function usePuestoActividades(puestoId: number | null) {
@@ -21,8 +20,7 @@ export function useCrearActividad(puestoId: number) {
       notificar.exito('Actividad agregada', 'La actividad fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo agregar la actividad'),
   })
 }
 
@@ -35,8 +33,7 @@ export function useEliminarActividad(puestoId: number) {
       notificar.exito('Actividad eliminada', 'La actividad fue removida.')
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo eliminar la actividad'),
   })
 }
 
@@ -50,7 +47,6 @@ export function useActualizarActividad(puestoId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo actualizar la actividad'),
   })
 }

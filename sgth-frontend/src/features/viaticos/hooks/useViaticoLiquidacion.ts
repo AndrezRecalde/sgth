@@ -1,13 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { viaticoService }              from '../services/viaticoService'
-import { getApiErrorMessage }          from '@/types/api'
 import { notificar } from '@/components/ui'
 
 export function useViaticoLiquidacion() {
   const qc = useQueryClient()
-
-  const onError = (error: unknown) =>
-    notificar.error('Error', getApiErrorMessage(error))
 
   const guardarActividades = useMutation({
     mutationFn: ({
@@ -25,7 +21,7 @@ export function useViaticoLiquidacion() {
       qc.invalidateQueries({ queryKey: ['liquidacion', viaticoId] })
       qc.invalidateQueries({ queryKey: ['viatico'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudieron guardar las actividades'),
   })
 
   const guardarFacturas = useMutation({
@@ -44,7 +40,7 @@ export function useViaticoLiquidacion() {
       qc.invalidateQueries({ queryKey: ['liquidacion', viaticoId] })
       qc.invalidateQueries({ queryKey: ['viatico'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudieron guardar las facturas'),
   })
 
   const revisarFactura = useMutation({
@@ -64,7 +60,7 @@ export function useViaticoLiquidacion() {
       qc.invalidateQueries({ queryKey: ['viatico'] })
       qc.invalidateQueries({ queryKey: ['liquidacion'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo revisar el comprobante'),
   })
 
   const confirmarLiquidacion = useMutation({
@@ -79,7 +75,7 @@ export function useViaticoLiquidacion() {
       qc.invalidateQueries({ queryKey: ['viatico'] })
       qc.invalidateQueries({ queryKey: ['liquidacion'] })
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar la liquidación'),
   })
 
   return {

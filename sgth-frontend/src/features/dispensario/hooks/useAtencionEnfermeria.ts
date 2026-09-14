@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { atencionEnfermeriaService } from '../services/atencionEnfermeriaService'
-import { getApiErrorMessage } from '@/types/api'
 import type { CrearAtencionEnfermeriaData } from '../services/atencionEnfermeriaService'
 import { notificar } from '@/components/ui'
 
@@ -35,8 +34,7 @@ export function useAnularAtencionEnfermeria() {
       notificar.exito('Atención anulada', `${data.folio} quedó anulada con su motivo.`)
       qc.invalidateQueries({ queryKey: ['atenciones-enfermeria'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo anular la atención'),
   })
 }
 
@@ -50,7 +48,6 @@ export function useRegistrarAtencionEnfermeria() {
       notificar.exito('Atención registrada', `Folio ${data.folio} registrado correctamente.`)
       qc.invalidateQueries({ queryKey: ['atenciones-enfermeria'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo registrar la atención'),
   })
 }

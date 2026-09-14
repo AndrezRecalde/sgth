@@ -1,19 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { AxiosError } from 'axios'
 import {
   disciplinarioService,
   type AvanzarSumarioData,
   type TransicionarVistoBuenoData,
 } from '../services/disciplinarioService'
-import type { ApiResponse, SumarioFormData, VistoBuenoFormData } from '@/types/api'
+import type { SumarioFormData, VistoBuenoFormData } from '@/types/api'
 import { notificar } from '@/components/ui'
-
-function onError(error: AxiosError<ApiResponse>) {
-  notificar.error(
-    'No se pudo completar la acción',
-    error.response?.data?.mensaje ?? 'Error inesperado',
-  )
-}
 
 function exito(title: string, message: string) {
   notificar.exito(title, message)
@@ -38,7 +30,7 @@ export function useDisciplinarioMutations() {
       exito('Sumario abierto', 'El sumario administrativo fue registrado.')
       invalidarSumarios()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo abrir el sumario'),
   })
 
   const avanzarSumario = useMutation({
@@ -48,7 +40,7 @@ export function useDisciplinarioMutations() {
       exito('Sumario actualizado', 'Se registró el avance procesal.')
       invalidarSumarios()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo registrar el avance del sumario'),
   })
 
   const crearVistoBueno = useMutation({
@@ -57,7 +49,7 @@ export function useDisciplinarioMutations() {
       exito('Visto bueno solicitado', 'El trámite quedó registrado.')
       invalidarVistosBuenos()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo solicitar el visto bueno'),
   })
 
   const transicionarVistoBueno = useMutation({
@@ -72,7 +64,7 @@ export function useDisciplinarioMutations() {
       )
       invalidarVistosBuenos()
     },
-    onError,
+    onError: notificar.alFallar('No se pudo actualizar el trámite de visto bueno'),
   })
 
   return { crearSumario, avanzarSumario, crearVistoBueno, transicionarVistoBueno }

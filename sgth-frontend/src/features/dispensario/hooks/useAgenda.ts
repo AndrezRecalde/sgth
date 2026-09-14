@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { agendaService } from '../services/agendaService'
 import { personalMedicoService } from '../services/personalMedicoService'
-import { getApiErrorMessage } from '@/types/api'
 import type { CrearAgendaData } from '../services/agendaService'
 import { notificar } from '@/components/ui'
 
@@ -57,8 +56,7 @@ export function useCrearTurno() {
       notificar.exito('Turno creado', 'El turno fue registrado correctamente.')
       qc.invalidateQueries({ queryKey: ['agenda'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo crear el turno'),
   })
 }
 
@@ -71,8 +69,7 @@ export function useCancelarTurno() {
       notificar.exito('Turno cancelado', 'El turno fue cancelado correctamente.')
       qc.invalidateQueries({ queryKey: ['agenda'] })
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo cancelar el turno'),
   })
 }
 
@@ -111,8 +108,7 @@ export function useAccionesTurno() {
       notificar.exito('Turno marcado', 'Paciente marcado como no presentado.')
       invalidar()
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo marcar el turno como no presentado'),
   })
 
   const reactivar = useMutation({
@@ -122,16 +118,14 @@ export function useAccionesTurno() {
       notificar.exito('Turno reactivado', 'El paciente fue reactivado en la cola.')
       invalidar()
     },
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo reactivar el turno'),
   })
 
   const enConsulta = useMutation({
     mutationFn: (id: number) =>
       agendaService.marcarEnConsulta(id),
     onSuccess: () => invalidar(),
-    onError: (error: unknown) =>
-      notificar.error('Error', getApiErrorMessage(error)),
+    onError: notificar.alFallar('No se pudo pasar el turno a consulta'),
   })
 
   return { noPresentado, reactivar, enConsulta }
