@@ -1,9 +1,8 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import {
-  Stack, Text, Button, Group, Badge,
-  Card, ThemeIcon, Skeleton, Anchor,
+  Stack, Text, Button, Group, Card, ThemeIcon, Skeleton, Anchor,
   ActionIcon, Tooltip,
 } from '@mantine/core'
 import {
@@ -102,13 +101,9 @@ export function TabResultados({
                   </ThemeIcon>
                   <Stack gap={0}>
                     <Group gap="xs">
-                      <Badge
-                        size="xs"
-                        variant="light"
-                        color="blue"
-                      >
+                      <StatusBadge size="xs">
                         {getLabelTipo(r.tipo)}
-                      </Badge>
+                      </StatusBadge>
                       <Text size="xs" c="dimmed">
                         {formatFecha(r.fecha_resultado)}
                       </Text>

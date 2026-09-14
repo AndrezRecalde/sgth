@@ -1,17 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Button, Select, Stack, Text } from '@mantine/core'
+import { Button, Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconArrowRight, IconGavel, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, SgthTable, TableActions, Toolbar } from '@/components/ui'
+import { DataState, SgthTable, StatusBadge, TableActions, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSumarios } from '../hooks/useDisciplinario'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
 import { SumarioModal } from './SumarioModal'
 import {
-  ESTADO_SUMARIO_COLORS,
+  TONO_SUMARIO,
   ESTADO_SUMARIO_LABELS,
   SIGUIENTE_HITO_SUMARIO,
   TIPO_SANCION_LABELS,
@@ -64,9 +64,9 @@ export function SumariosTab() {
       title: 'Estado',
       width: 140,
       render: (s) => (
-        <Badge color={ESTADO_SUMARIO_COLORS[s.estado]} variant="light" size="sm">
+        <StatusBadge tone={TONO_SUMARIO[s.estado]}>
           {ESTADO_SUMARIO_LABELS[s.estado]}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -75,13 +75,11 @@ export function SumariosTab() {
       width: 150,
       render: (s) => s.sancion
         ? (
-          <Badge
-            color={s.sancion.tipo_sancion === 'destitucion' ? 'red' : 'gray'}
-            variant="light"
-            size="sm"
+          <StatusBadge
+            tone={s.sancion.tipo_sancion === 'destitucion' ? 'danger' : 'neutral'}
           >
             {TIPO_SANCION_LABELS[s.sancion.tipo_sancion]}
-          </Badge>
+          </StatusBadge>
         )
         : <Text size="sm" c="dimmed">—</Text>,
     },

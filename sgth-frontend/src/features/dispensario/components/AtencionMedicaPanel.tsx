@@ -1,8 +1,8 @@
 'use client'
 
+import { TONO_TURNO } from '../constants/turnos'
 import {
-  Grid, Card, Tabs, Group, Text, Badge,
-  Button, Stack, Avatar, ScrollArea,
+  Grid, Card, Tabs, Group, Text, Button, Stack, Avatar, ScrollArea,
 } from '@mantine/core'
 import {
   IconStethoscope, IconPill,
@@ -20,20 +20,13 @@ import { TabResultados } from './TabResultados'
 import { IconMicroscope } from '@tabler/icons-react'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   turno:             AgendaMedica
   historiaClinicaId: number
   totalEnEspera:     number
   onFinalizar:       () => void
-}
-
-const ESTADO_COLOR: Record<string, string> = {
-  en_espera:     'gray',
-  en_sala:       'blue',
-  en_consulta:   'blue',
-  atendido:      'emerald',
-  no_presentado: 'orange',
 }
 
 export function AtencionMedicaPanel({
@@ -62,7 +55,6 @@ export function AtencionMedicaPanel({
     ? `${turno.servidor?.nombre ?? ''} ${turno.servidor?.apellido ?? ''}`
     : `${turno.carga_familiar?.nombres ?? ''} ${turno.carga_familiar?.apellidos ?? ''}`
 
-  const estadoColor = ESTADO_COLOR[turno.estado] ?? 'gray'
 
   const handleGuardada = (consulta: ConsultaMedica) => {
     setConsultaGuardada(consulta)
@@ -89,13 +81,9 @@ export function AtencionMedicaPanel({
                   <Text size="sm" fw={700}>
                     {nombrePaciente.trim() || '—'}
                   </Text>
-                  <Badge
-                    size="xs"
-                    variant="light"
-                    color={estadoColor}
-                  >
+                  <StatusBadge tone={TONO_TURNO[turno.estado] ?? 'neutral'} size="xs">
                     {turno.estado.replace('_', ' ')}
-                  </Badge>
+                  </StatusBadge>
                 </Group>
                 <Text size="xs" c="dimmed" ff="monospace">
                   {turno.folio} · {esServidor ? 'Servidor' : 'Familiar'}
@@ -105,9 +93,9 @@ export function AtencionMedicaPanel({
 
             <Group gap="xs" wrap="nowrap">
               {totalEnEspera > 0 && (
-                <Badge size="sm" variant="light" color="gray">
+                <StatusBadge>
                   {totalEnEspera} en espera
-                </Badge>
+                </StatusBadge>
               )}
               <Button
                 size="xs"

@@ -5,7 +5,6 @@ import {
   Stack,
   Button,
   Text,
-  Badge,
   Group,
   Card,
   Alert,
@@ -31,6 +30,7 @@ import { useQuery } from "@tanstack/react-query";
 import { modals } from "@mantine/modals";
 import { asistenciaService } from "../services/asistenciaService";
 import { useAuthStore } from "@/store/auth.store";
+import { StatusBadge } from "@/components/ui";
 
 export function MarcacionOnlineTab() {
   const { usuario } = useAuthStore();
@@ -175,21 +175,19 @@ export function MarcacionOnlineTab() {
 
           <Stack gap={4} align="flex-end">
             {cargandoUbicacion ? (
-              <Badge variant="dot" color="gray" size="sm">
+              <StatusBadge variant="dot">
                 Ubicando...
-              </Badge>
+              </StatusBadge>
             ) : ubicacion ? (
               <>
-                <Badge
-                  variant="light"
-                  color="emerald"
-                  size="sm"
+                <StatusBadge
+                  tone="success"
                   leftSection={
                     <IconMapPin size={10} style={{ marginLeft: 6 }} />
                   }
                 >
                   GPS Activo
-                </Badge>
+                </StatusBadge>
                 <Text size="10px" c="dimmed" fw={500}>
                   {ubicacion.lat.toFixed(4)}, {ubicacion.lon.toFixed(4)}
                 </Text>
@@ -215,16 +213,14 @@ export function MarcacionOnlineTab() {
                     Reintentar
                   </Button>
                 )}
-                <Badge
-                  variant="light"
-                  color="red"
-                  size="sm"
+                <StatusBadge
+                  tone="danger"
                   leftSection={
                     <IconMapPinOff size={10} style={{ marginLeft: 6 }} />
                   }
                 >
                   GPS Inactivo
-                </Badge>
+                </StatusBadge>
               </Group>
             )}
           </Stack>

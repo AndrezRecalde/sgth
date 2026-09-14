@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import {
-  Stack, Group, Button, Text, Badge, Grid, Card, Skeleton, Alert, Table,
+  Stack, Group, Button, Text, Grid, Card, Skeleton, Alert, Table,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
@@ -14,6 +14,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { asistenciaService } from '@/features/asistencia/services/asistenciaService'
 import { fromDateValue } from '@/lib/fecha'
 import type { ConsolidadoPermiso } from '@/types/api'
+import { CountBadge } from '@/components/ui'
 
 const TIPO_ENFERMEDAD = 'enfermedad'
 
@@ -202,7 +203,7 @@ export function AusentismoTab() {
                   <Table.Td><Text size="sm" fw={500}>{fila.servidor_nombre}</Text></Table.Td>
                   <Table.Td><Text size="sm" c="dimmed">{fila.unidad}</Text></Table.Td>
                   <Table.Td ta="center">
-                    <Badge variant="light" color="blue" size="sm">{fila.total_permisos}</Badge>
+                    <CountBadge>{fila.total_permisos}</CountBadge>
                   </Table.Td>
                   <Table.Td ta="right"><Text size="sm" ff="monospace">{fila.total_minutos}</Text></Table.Td>
                   <Table.Td ta="right"><Text size="sm" ff="monospace" fw={500}>{fila.tiempo_total}</Text></Table.Td>

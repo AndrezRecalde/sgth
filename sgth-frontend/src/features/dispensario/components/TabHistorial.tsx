@@ -5,7 +5,6 @@ import {
   Text,
   Card,
   Group,
-  Badge,
   Skeleton,
   Button,
   ThemeIcon,
@@ -25,6 +24,7 @@ import { DetalleConsultaDrawer } from "./DetalleConsultaDrawer";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getApiErrorMessage } from "@/types/api";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
+import { StatusBadge } from "@/components/ui";
 
 interface Props {
   historiaClinicaId: number;
@@ -67,31 +67,22 @@ function ConsultaItem({
               {formatFecha(consulta.fecha_consulta)}
             </Text>
             {consulta.especialidad && (
-              <Badge
-                size="xs"
-                variant="light"
-                color={esOdontologia ? "teal" : "blue"}
-              >
+              <StatusBadge size="xs">
                 {esOdontologia ? "Odontología" : "Medicina general"}
-              </Badge>
+              </StatusBadge>
             )}
             {consulta.tipo_atencion && (
-              <Badge size="xs" variant="light" color="gray">
+              <StatusBadge size="xs">
                 {consulta.tipo_atencion.replace("_", " ")}
-              </Badge>
+              </StatusBadge>
             )}
             {consulta.tipo_diagnostico && (
-              <Badge
+              <StatusBadge
+                tone={consulta.tipo_diagnostico === 'definitivo' ? 'success' : 'warning'}
                 size="xs"
-                variant="light"
-                color={
-                  consulta.tipo_diagnostico === "definitivo"
-                    ? "emerald"
-                    : "orange"
-                }
               >
                 {consulta.tipo_diagnostico}
-              </Badge>
+              </StatusBadge>
             )}
           </Group>
           <Button

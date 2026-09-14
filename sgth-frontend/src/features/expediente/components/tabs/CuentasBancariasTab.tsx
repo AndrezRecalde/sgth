@@ -1,8 +1,8 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
-import { Stack, Text, Badge, Group, Button,
+import { Stack, Text, Group, Button,
          ActionIcon, Tooltip, Skeleton, Menu } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash, IconStar, IconEdit,
@@ -81,14 +81,14 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                       ?? '-'}
                   </Text>
                   {c.es_principal_sueldo && (
-                    <Badge size="xs" color="emerald" variant="light">
+                    <StatusBadge size="xs">
                       Principal nómina
-                    </Badge>
+                    </StatusBadge>
                   )}
                   {c.es_principal_viatico && (
-                    <Badge size="xs" color="blue" variant="light">
+                    <StatusBadge size="xs">
                       Principal viáticos
-                    </Badge>
+                    </StatusBadge>
                   )}
                 </Group>
                 <Text size="xs" c="dimmed">

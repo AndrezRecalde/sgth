@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import {
-  TextInput, Badge, Stack, Combobox,
+  TextInput, Stack, Combobox,
   useCombobox, Text, Group, ActionIcon,
 } from '@mantine/core'
 import { IconX } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useBuscarCie10 } from '../hooks/useCie10'
 import type { DiagnosticoCie10 } from '../services/cie10Service'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   value:    DiagnosticoCie10 | null
@@ -30,10 +31,8 @@ export function BuscarCie10Input({ value, onChange }: Props) {
       <Stack gap={4}>
         <Text size="sm" fw={500}>Diagnóstico (CIE-10)</Text>
         <Group gap={6}>
-          <Badge
+          <StatusBadge
             size="lg"
-            variant="light"
-            color="blue"
             rightSection={
               <ActionIcon
                 size="xs"
@@ -49,7 +48,7 @@ export function BuscarCie10Input({ value, onChange }: Props) {
               {value.codigo}
             </Text>
             {' — '}{value.descripcion}
-          </Badge>
+          </StatusBadge>
         </Group>
       </Stack>
     )

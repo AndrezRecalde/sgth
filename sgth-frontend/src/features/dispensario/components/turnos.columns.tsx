@@ -1,6 +1,7 @@
 'use client'
 
-import { Text, Badge, Group, Stack } from '@mantine/core'
+import { TONO_TURNO } from '../constants/turnos'
+import { Text, Group, Stack } from '@mantine/core'
 import {
   IconUser, IconUsers, IconX, IconClipboardCheck,
   IconStethoscope, IconAlertTriangle,
@@ -9,13 +10,7 @@ import { TableActions } from '@/components/ui/TableActions'
 import { NIVEL_ALERTA } from '../constants/signosVitales'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { AgendaMedica } from '../services/agendaService'
-
-const ESTADO_COLORS: Record<string, string> = {
-  en_espera:  'orange',
-  en_sala:    'blue',
-  atendida:   'emerald',
-  cancelada:  'red',
-}
+import { StatusBadge } from '@/components/ui'
 
 const ESTADO_LABELS: Record<string, string> = {
   en_espera:  'En espera',
@@ -67,14 +62,10 @@ export function getTurnosColumns(
       title:    'Atención',
       width:    150,
       render: (turno) => (
-        <Badge
-          size="sm"
-          variant="light"
-          color={turno.tipo_atencion === 'odontologia' ? 'cyan' : 'blue'}
-        >
+        <StatusBadge>
           {turno.tipo_atencion === 'odontologia'
             ? 'Odontología' : 'Medicina General'}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -131,22 +122,18 @@ export function getTurnosColumns(
 
         return (
           <Stack gap={4}>
-            <Badge
-              size="sm"
-              variant="light"
-              color={ESTADO_COLORS[turno.estado] ?? 'gray'}
-            >
+            <StatusBadge tone={TONO_TURNO[turno.estado] ?? 'neutral'}>
               {ESTADO_LABELS[turno.estado] ?? turno.estado}
-            </Badge>
+            </StatusBadge>
             {destacar && (
-              <Badge
+              <StatusBadge
+                tone={nivel === 'critico' ? 'danger' : 'warning'}
                 size="xs"
                 variant="filled"
-                color={nivel === 'critico' ? 'red' : 'orange'}
                 leftSection={<IconAlertTriangle size={10} />}
               >
                 {NIVEL_ALERTA[nivel].etiqueta}
-              </Badge>
+              </StatusBadge>
             )}
           </Stack>
         )

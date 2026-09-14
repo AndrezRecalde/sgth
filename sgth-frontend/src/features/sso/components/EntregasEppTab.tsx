@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Button, Group, Badge, Text } from '@mantine/core'
+import { Box, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconReportAnalytics } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useEppEntregas } from '../hooks/useEppEntregas'
 import { RegistrarEntregaEppModal } from './RegistrarEntregaEppModal'
 import { ReporteEppModal } from './ReporteEppModal'
-import { MOTIVO_ENTREGA_COLORS, MOTIVO_ENTREGA_OPTIONS } from '../schemas/eppEntrega.schema'
+import { MOTIVO_ENTREGA_OPTIONS } from '../schemas/eppEntrega.schema'
 import { formatFecha } from '@/lib/fecha'
 import type { EppEntrega } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { StatusBadge } from '@/components/ui'
 
 export function EntregasEppTab() {
   const [page, setPage] = useState(1)
@@ -51,9 +52,9 @@ export function EntregasEppTab() {
       title: 'Motivo',
       width: 130,
       render: (e) => (
-        <Badge color={MOTIVO_ENTREGA_COLORS[e.motivo] ?? 'gray'} variant="light" size="sm">
+        <StatusBadge>
           {getMotivoLabel(e.motivo)}
-        </Badge>
+        </StatusBadge>
       ),
     },
   ]

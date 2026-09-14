@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Button, Select, Stack, Text, Tooltip } from '@mantine/core'
+import { Button, Select, Stack, Text, Tooltip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconFileCheck, IconPencil, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, SgthTable, TableActions, Toolbar } from '@/components/ui'
+import { DataState, SgthTable, StatusBadge, TableActions, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useVistosBuenos } from '../hooks/useDisciplinario'
 import { VistoBuenoModal } from './VistoBuenoModal'
 import { TransicionarVistoBuenoModal } from './TransicionarVistoBuenoModal'
 import {
   CAUSAL_LABELS,
-  ESTADO_VISTO_BUENO_COLORS,
+  TONO_VISTO_BUENO,
   ESTADO_VISTO_BUENO_LABELS,
   TRANSICIONES_VISTO_BUENO,
   formatFecha,
@@ -80,9 +80,9 @@ export function VistosBuenosTab() {
       title: 'Estado',
       width: 160,
       render: (t) => (
-        <Badge color={ESTADO_VISTO_BUENO_COLORS[t.estado]} variant="light" size="sm">
+        <StatusBadge tone={TONO_VISTO_BUENO[t.estado]}>
           {ESTADO_VISTO_BUENO_LABELS[t.estado]}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -91,9 +91,9 @@ export function VistosBuenosTab() {
       width: 130,
       render: (t) => t.movimiento_personal
         ? (
-          <Badge color="violet" variant="light" size="sm">
+          <StatusBadge>
             {t.movimiento_personal.codigo_registro ?? 'En borrador'}
-          </Badge>
+          </StatusBadge>
         )
         : <Text size="sm" c="dimmed">—</Text>,
     },

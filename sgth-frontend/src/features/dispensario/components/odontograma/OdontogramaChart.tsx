@@ -1,12 +1,13 @@
 'use client'
 
-import { Stack, Group, Text, Divider, Badge } from '@mantine/core'
+import { Stack, Group, Text, Divider } from '@mantine/core'
 import {
   CONDICION_LABELS, CONDICION_COLORS,
 } from '@/features/dispensario/services/odontogramaService'
 import type { OdontogramaPieza } from '@/features/dispensario/services/odontogramaService'
 import { Tooth } from './Tooth'
 import classes from './OdontogramaChart.module.css'
+import { LegendBadge } from '@/components/ui'
 
 interface Props {
   piezas:              OdontogramaPieza[]
@@ -79,14 +80,9 @@ export function OdontogramaChart({
 
       <Group gap="xs" wrap="wrap">
         {condicionesEnUso.map(condicion => (
-          <Badge
-            key={condicion}
-            size="xs"
-            variant="light"
-            color={CONDICION_COLORS[condicion]}
-          >
+          <LegendBadge key={condicion} color={CONDICION_COLORS[condicion]}>
             {CONDICION_LABELS[condicion]}
-          </Badge>
+          </LegendBadge>
         ))}
       </Group>
     </Stack>

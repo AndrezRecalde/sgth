@@ -1,9 +1,10 @@
 'use client'
 
-import { Alert, Badge, Group, Text } from '@mantine/core'
+import { Alert, Group, Text } from '@mantine/core'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { usePeriodosVacaciones } from '../hooks/usePeriodosVacaciones'
 import { MOTIVOS_QUE_DESCUENTAN } from './vacaciones.constants'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   servidorId: number
@@ -25,9 +26,9 @@ export function SaldoVacacionesAlert({ servidorId, motivo }: Props) {
     >
       <Group gap="sm">
         <Text size="sm">Saldo disponible de vacaciones:</Text>
-        <Badge color={alertaLimite ? 'orange' : 'emerald'} size="lg">
+        <StatusBadge tone={alertaLimite ? 'warning' : 'success'} size="lg">
           {Number(saldo).toFixed(1)} días
-        </Badge>
+        </StatusBadge>
         {alertaLimite && (
           <Text size="xs" c="orange">
             Se acerca al límite máximo de acumulación

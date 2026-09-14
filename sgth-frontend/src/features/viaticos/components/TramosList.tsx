@@ -1,12 +1,11 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import {
   Stack,
   Text,
   Card,
   Group,
-  Badge,
   Timeline,
   ActionIcon,
   Tooltip,
@@ -37,14 +36,11 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
   maritimo: <IconShip size={14} />,
 };
 
-const TIPO_TRAMO_CONFIG: Record<string, {
-  label: string
-  color: string
-}> = {
-  ida:     { label: 'IDA',           color: 'blue'    },
-  destino: { label: 'DESTINO',       color: 'teal'    },
-  escala:  { label: 'PARADA/ESCALA', color: 'orange'  },
-  regreso: { label: 'REGRESO',       color: 'red'     },
+const TIPO_TRAMO_LABELS: Record<string, string> = {
+  ida:     'IDA',
+  destino: 'DESTINO',
+  escala:  'PARADA/ESCALA',
+  regreso: 'REGRESO',
 }
 
 function formatDateTime(dt?: string | null): string {
@@ -146,31 +142,18 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                     <Text size="sm" fw={600}>
                       Tramo {t.orden}
                     </Text>
-                    <Badge size="xs" variant="light" color="blue">
+                    <StatusBadge size="xs">
                       {t.empresa?.nombre ?? "—"}
-                    </Badge>
+                    </StatusBadge>
                     {t.tipo_tramo && (
-                      <Badge
-                        size="xs"
-                        color={
-                          TIPO_TRAMO_CONFIG[t.tipo_tramo]?.color ?? 'gray'
-                        }
-                        variant="filled"
-                      >
-                        {TIPO_TRAMO_CONFIG[t.tipo_tramo]?.label
-                          ?? t.tipo_tramo}
-                      </Badge>
+                      <StatusBadge size="xs">
+                        {TIPO_TRAMO_LABELS[t.tipo_tramo] ?? t.tipo_tramo}
+                      </StatusBadge>
                     )}
                     {requiereAuth && (
-                      <Badge
+                      <StatusBadge
+                        tone={estadoAuth === 'aprobada' ? 'success' : estadoAuth === 'rechazada' ? 'danger' : 'warning'}
                         size="xs"
-                        color={
-                          estadoAuth === "aprobada"
-                            ? "emerald"
-                            : estadoAuth === "rechazada"
-                              ? "red"
-                              : "orange"
-                        }
                         variant="dot"
                       >
                         Auth. vuelo:{" "}
@@ -179,7 +162,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                           : estadoAuth === "rechazada"
                             ? "rechazada"
                             : "pendiente"}
-                      </Badge>
+                      </StatusBadge>
                     )}
                   </Group>
                   {puedeEditar && (

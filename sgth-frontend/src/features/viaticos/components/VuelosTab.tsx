@@ -1,6 +1,7 @@
 "use client";
 
-import { Text, Badge, Stack } from "@mantine/core";
+import type { SemanticTone } from '@/config/design.tokens'
+import { Text, Stack } from "@mantine/core";
 import { IconCheck, IconX, IconAlertCircle } from "@tabler/icons-react";
 import { SgthTable } from "@/components/ui/SgthTable";
 import { TableActions } from "@/components/ui/TableActions";
@@ -14,6 +15,7 @@ import { getApiErrorMessage } from "@/types/api";
 import React from "react";
 import type { AutorizacionVuelo } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
+import { StatusBadge } from "@/components/ui";
 
 type AutorizacionVueloConRelaciones = AutorizacionVuelo & {
   viatico?: {
@@ -39,6 +41,14 @@ type AutorizacionVueloConRelaciones = AutorizacionVuelo & {
     destinoProvincia?: { nombre?: string }
     destinoCanton?: { nombre?: string }
   }
+}
+
+const TONO_VUELO: Record<string, SemanticTone> = {
+  pendiente: 'warning',
+  aprobado:  'success',
+  aprobada:  'success',
+  rechazado: 'danger',
+  rechazada: 'danger',
 }
 
 export function VuelosTab() {
@@ -197,21 +207,10 @@ export function VuelosTab() {
       title: 'Estado',
       width: 110,
       render: ({ estado }) => {
-        const colors: Record<string, string> = {
-          pendiente: 'orange',
-          aprobado:  'emerald',
-          aprobada:  'emerald',
-          rechazado: 'red',
-          rechazada: 'red',
-        }
         return (
-          <Badge
-            color={colors[estado as string] ?? 'gray'}
-            variant="light"
-            size="sm"
-          >
+          <StatusBadge tone={TONO_VUELO[estado as string] ?? 'neutral'}>
             {String(estado).toUpperCase()}
-          </Badge>
+          </StatusBadge>
         )
       },
     },

@@ -1,8 +1,9 @@
-import { Badge, Text } from '@mantine/core'
+import { Text } from '@mantine/core'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ExtensionConRelaciones } from '@/types/api'
+import { StatusBadge } from '@/components/ui'
 
 type Handlers = {
   onEdit:   (record: ExtensionConRelaciones) => void
@@ -17,9 +18,9 @@ export const getDirectorioColumns = (
     title: 'Extensión',
     width: 110,
     render: ({ numero_extension }) => (
-      <Badge color="emerald" variant="light">
+      <StatusBadge>
         Ext. {numero_extension ?? '-'}
-      </Badge>
+      </StatusBadge>
     ),
   },
   {

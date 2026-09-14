@@ -1,5 +1,3 @@
-import type { SemanticTone } from '@/config/design.tokens'
-
 /**
  * Régimen laboral de un servidor. Espeja `App\Enums\RegimenLaboral`.
  *
@@ -22,13 +20,6 @@ export const REGIMEN_LABELS: Record<string, string> = {
   losep: 'LOSEP',
   codigo_trabajo: 'Código del Trabajo',
   servicios_profesionales: 'Servicios Profesionales',
-}
-
-/** Tono semántico: distingue los tres, sin sugerir que uno sea mejor. */
-export const REGIMEN_TONOS: Record<string, SemanticTone> = {
-  losep: 'info',
-  codigo_trabajo: 'warning',
-  servicios_profesionales: 'neutral',
 }
 
 /**

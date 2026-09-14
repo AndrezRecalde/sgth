@@ -1,6 +1,7 @@
-import { Badge, Group, Stack, Text } from '@mantine/core'
+import { Group, Stack, Text } from '@mantine/core'
 import { IconBriefcase } from '@tabler/icons-react'
 import classes from './PuestoSellado.module.css'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   nombre?: string | null
@@ -37,13 +38,13 @@ export function PuestoSellado({ nombre, ciuo }: Props) {
             <Text fw={600}>{nombre || 'Sin cargo registrado'}</Text>
 
             {ciuo ? (
-              <Badge variant="light" size="sm" radius="sm">
+              <StatusBadge>
                 CIUO {ciuo}
-              </Badge>
+              </StatusBadge>
             ) : (
-              <Badge variant="light" color="amber" size="sm" radius="sm">
+              <StatusBadge tone="warning">
                 Sin código CIUO
-              </Badge>
+              </StatusBadge>
             )}
           </Group>
 

@@ -1,8 +1,9 @@
 'use client'
 
+import type { SemanticTone } from '@/config/design.tokens'
 import {
   Card, Stack, Group, Text, Avatar,
-  Badge, Divider, Skeleton, 
+  Divider, Skeleton, 
   ActionIcon, Textarea, 
   Collapse,
 } from '@mantine/core'
@@ -23,16 +24,17 @@ import { AnularRegistroModal } from './AnularRegistroModal'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   turno:             AgendaMedica
   historiaClinicaId: number
 }
 
-const SEVERIDAD_COLORS: Record<string, string> = {
-  leve:     'yellow',
-  moderada: 'orange',
-  grave:    'red',
+const TONO_SEVERIDAD: Record<string, SemanticTone> = {
+  leve:     'info',
+  moderada: 'warning',
+  grave:    'danger',
 }
 
 function CampoTriaje({ label, valor }: { label: string; valor?: string | number | null }) {
@@ -190,13 +192,9 @@ export function PanelContextoPaciente({
                 justify="space-between"
               >
                 <Group gap={5} wrap="nowrap" style={{ flex: 1 }}>
-                  <Badge
-                    size="xs"
-                    variant="light"
-                    color={SEVERIDAD_COLORS[a.severidad] ?? 'gray'}
-                  >
+                  <StatusBadge tone={TONO_SEVERIDAD[a.severidad] ?? 'neutral'} size="xs">
                     {a.severidad}
-                  </Badge>
+                  </StatusBadge>
                   <Text size="xs" lineClamp={1}>{a.descripcion}</Text>
                 </Group>
                 <ActionIcon

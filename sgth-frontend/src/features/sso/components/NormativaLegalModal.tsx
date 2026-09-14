@@ -1,10 +1,9 @@
 'use client'
 
-import { confirmar, SgthModal } from '@/components/ui'
+import { confirmar, SgthModal, StatusBadge } from '@/components/ui'
 import {
   Stack, Group, TextInput, Select, Textarea, Button,
-  ActionIcon, Badge,
-} from '@mantine/core'
+  ActionIcon, } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -50,7 +49,7 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
       accessor: 'tipo',
       title: 'Tipo',
       width: 160,
-      render: (n) => <Badge variant="light" size="sm">{getTipoLabel(n.tipo)}</Badge>,
+      render: (n) => <StatusBadge>{getTipoLabel(n.tipo)}</StatusBadge>,
     },
     {
       accessor: 'acciones',

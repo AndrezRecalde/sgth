@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Text, Badge, Select } from '@mantine/core'
+import { Button, Text, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconArrowsExchange, IconPlus, IconPlayerStop, IconBan } from '@tabler/icons-react'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
@@ -12,10 +12,7 @@ import { CancelarSubrogacionModal } from '@/features/expediente/components/Cance
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { Subrogacion, TipoSubrogacion, UnidadConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
-import {
-  DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions,
-  Toolbar, confirmar,
-} from '@/components/ui'
+import { confirmar, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions, Toolbar } from '@/components/ui'
 
 const TIPO_LABELS: Record<TipoSubrogacion, string> = {
   subrogacion: 'Subrogación',
@@ -70,9 +67,9 @@ export function SubrogacionesView() {
       title: 'Tipo',
       width: 140,
       render: ({ tipo }) => (
-        <Badge color={tipo === 'encargo' ? 'blue' : 'grape'} variant="light" size="sm">
+        <StatusBadge>
           {TIPO_LABELS[tipo]}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

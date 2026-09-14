@@ -1,3 +1,4 @@
+import type { SemanticTone } from '@/config/design.tokens'
 export const TIPO_FICHA_OPTIONS = [
   { value: 'ingreso',    label: 'Ingreso / Pre-ocupacional' },
   { value: 'periodica',  label: 'Periódica'                 },
@@ -13,11 +14,11 @@ export const APTITUD_OPTIONS = [
   { value: 'no_apto',               label: 'No apto'                 },
 ]
 
-export const APTITUD_COLORS: Record<string, string> = {
-  apto:                   'emerald',
-  apto_con_restricciones: 'orange',
-  en_observacion:         'blue',
-  no_apto:                'red',
+export const TONO_APTITUD: Record<string, SemanticTone> = {
+  apto:                   'success',
+  apto_con_restricciones: 'warning',
+  en_observacion:         'info',
+  no_apto:                'danger',
 }
 
 export const TIPO_ANTECEDENTE_OPTIONS = [

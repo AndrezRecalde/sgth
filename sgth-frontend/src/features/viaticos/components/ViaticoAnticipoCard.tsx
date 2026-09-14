@@ -1,10 +1,10 @@
 "use client";
 
+import { StatusBadge } from "@/components/ui";
 import {
   Card,
   Group,
   Text,
-  Badge,
   Divider,
   Stack,
   ThemeIcon,
@@ -40,10 +40,10 @@ export function ViaticoAnticipoCard({ viatico: d }: Props) {
           <Text size="xs" c="dimmed">
             Modalidad
           </Text>
-          <Badge size="sm" color="orange" variant="light">
+          <StatusBadge>
             {MODALIDAD_LABELS[d.modalidad_anticipo ?? ""] ??
               d.modalidad_anticipo}
-          </Badge>
+          </StatusBadge>
         </Group>
         <Group justify="space-between">
           <Text size="xs" c="dimmed">

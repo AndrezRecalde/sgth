@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react'
 import {
-  TextInput, Select, Textarea, Grid, Switch, Divider, Text, Badge, Group,
+  TextInput, Select, Textarea, Grid, Switch, Divider, Text, Group,
   Skeleton, Stack,
 } from '@mantine/core'
 import {
@@ -19,6 +19,7 @@ import {
   unidadSchema, unidadConPadreSchema, type UnidadFormData,
 } from '../schemas/unidad.schema'
 import type { UnidadAdministrativa } from '@/types/api'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   initialValues?: Partial<UnidadFormData>
@@ -279,9 +280,9 @@ export function UnidadForm({ initialValues, onSubmit, unidadId }: Props) {
               </Text>
             ) : (
               <>
-                <Badge size="sm" variant="light" color="emerald">
+                <StatusBadge>
                   Nivel {nivelResultante} · {etiquetaNivel(nivelResultante)}
-                </Badge>
+                </StatusBadge>
                 {nivelResultante >= PROFUNDIDAD_MAXIMA && (
                   <Text size="xs" c="dimmed">
                     Último nivel: no podrá tener unidades debajo.

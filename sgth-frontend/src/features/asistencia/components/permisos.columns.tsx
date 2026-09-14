@@ -1,11 +1,10 @@
 'use client'
 
-import { Badge, Stack, Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import {
   IconArrowBackUp, IconCheck, IconPrinter, IconShieldCheck, IconX,
 } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
-import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import {
   ESTADOS_CONFIRMADOS, ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO,
 } from './permisos.constants'
@@ -64,9 +63,9 @@ export function getPermisosColumns(
       // salía por la derecha, igual que CALAMIDAD y PERSONAL.
       width: 130,
       render: ({ tipo }) => (
-        <Badge size="sm" variant="light" color={SEMANTIC_COLOR.info}>
+        <StatusBadge>
           {TIPO_LABELS[tipo as string] ?? tipo}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -95,9 +94,9 @@ export function getPermisosColumns(
             <Text size="sm" ff="monospace">
               {hora_inicio.substring(0, 5)} — {hora_fin.substring(0, 5)}
             </Text>
-            <Badge size="xs" color={SEMANTIC_COLOR.info} variant="light">
+            <StatusBadge size="xs">
               {duracion(hora_inicio, hora_fin)}
-            </Badge>
+            </StatusBadge>
           </Stack>
         )
       },
@@ -118,13 +117,9 @@ export function getPermisosColumns(
         )
 
         return (
-          <Badge
-            size="sm"
-            variant="light"
-            color={SEMANTIC_COLOR[dias <= 1 ? 'danger' : 'warning']}
-          >
+          <StatusBadge tone={dias <= 1 ? 'danger' : 'warning'}>
             {dias <= 0 ? 'Vencido' : dias === 1 ? 'Hoy' : `${dias} días`}
-          </Badge>
+          </StatusBadge>
         )
       },
     },

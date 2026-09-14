@@ -50,7 +50,7 @@ script y no la buena memoria de quien lee.
 
 - [ ] ¿Las tablas usan `SgthTable` y las acciones `TableActions`?
 - [ ] ¿Los iconos son de Tabler? ¿Cero emojis?
-- [ ] ¿Los estados usan `StatusBadge` con tono semántico?
+- [ ] ¿Las etiquetas usan `StatusBadge` con el tono de su significado, y las categorías van sin tono?
 - [ ] ¿Los colores salen de tokens o de props de Mantine? ¿Cero hex?
 - [ ] ¿Se ve bien en modo oscuro? **Compruébalo, no lo supongas.**
 - [ ] ¿Funciona a 375px de ancho? ¿`Grid.Col` con `base: 12`?

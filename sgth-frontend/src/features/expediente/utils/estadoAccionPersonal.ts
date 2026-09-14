@@ -1,4 +1,5 @@
 import type { EstadoAccionPersonal } from '@/types/api'
+import type { SemanticTone } from '@/config/design.tokens'
 
 export const ESTADO_LABELS: Record<EstadoAccionPersonal, string> = {
   borrador: 'Borrador',
@@ -8,12 +9,12 @@ export const ESTADO_LABELS: Record<EstadoAccionPersonal, string> = {
   anulada: 'Anulada',
 }
 
-export const ESTADO_COLORS: Record<EstadoAccionPersonal, string> = {
-  borrador: 'gray',
-  suscrita: 'yellow',
-  registrada: 'green',
-  notificada: 'green',
-  anulada: 'red',
+export const TONO_ACCION: Record<EstadoAccionPersonal, SemanticTone> = {
+  borrador: 'neutral',
+  suscrita: 'warning',
+  registrada: 'success',
+  notificada: 'success',
+  anulada: 'danger',
 }
 
 /**

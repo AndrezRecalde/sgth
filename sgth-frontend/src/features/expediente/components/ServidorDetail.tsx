@@ -7,7 +7,6 @@ import {
   Group,
   Stack,
   Text,
-  Badge,
   Button,
   ThemeIcon,
   ScrollArea,
@@ -34,7 +33,8 @@ import { DeclaracionesTab } from "./tabs/DeclaracionesTab";
 import { CondicionTab } from "./tabs/CondicionTab";
 import { SaludOcupacionalTab } from "./tabs/SaludOcupacionalTab";
 import type { ServidorConRelaciones } from "@/types/api";
-import { REGIMEN_LABELS, REGIMEN_TONOS } from '@/lib/regimen'
+import { REGIMEN_LABELS } from '@/lib/regimen'
+import { StatusBadge } from '@/components/ui';
 
 interface Props {
   opened: boolean;
@@ -108,35 +108,27 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
               </Text>
               <Group gap="xs">
                 {servidor.regimen_laboral && (
-                  <Badge
-                    color={REGIMEN_TONOS[servidor.regimen_laboral] ?? "gray"}
-                    variant="light"
-                    size="xs"
-                  >
+                  <StatusBadge size="xs">
                     {REGIMEN_LABELS[servidor.regimen_laboral] ??
                       servidor.regimen_laboral}
-                  </Badge>
+                  </StatusBadge>
                 )}
                 {servidor.anios_servicio != null && (
-                  <Badge color="grape" variant="light" size="xs">
+                  <StatusBadge size="xs">
                     {servidor.anios_servicio}{" "}
                     {servidor.anios_servicio === 1
                       ? "año de servicio"
                       : "años de servicio"}
-                  </Badge>
+                  </StatusBadge>
                 )}
                 {servidor.contrato_vigente?.estado && (
-                  <Badge
-                    color={
-                      servidor.contrato_vigente.estado === "vigente"
-                        ? "emerald"
-                        : "gray"
-                    }
+                  <StatusBadge
+                    tone={servidor.contrato_vigente.estado === 'vigente' ? 'success' : 'neutral'}
                     variant="dot"
                     size="xs"
                   >
                     {servidor.contrato_vigente.estado}
-                  </Badge>
+                  </StatusBadge>
                 )}
               </Group>
             </Stack>

@@ -1,16 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Select, Stack, Text } from '@mantine/core'
+import { Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconEye, IconFileDescription } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, SgthTable, TableActions, Toolbar } from '@/components/ui'
+import { DataState, SgthTable, StatusBadge, TableActions, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useBandejaMovimientos } from '../hooks/useMovimientoMutations'
 import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
 import {
-  ESTADO_COLORS, ESTADO_LABELS,
+  TONO_ACCION, ESTADO_LABELS,
 } from '../utils/estadoAccionPersonal'
 import { SUBTIPO_LABELS, etiquetaTipoMovimiento } from '../utils/taxonomiaAccionPersonal'
 import type { EstadoAccionPersonal, MovimientoPersonal } from '@/types/api'
@@ -100,9 +100,9 @@ export function BandejaAccionesPersonal() {
       width: 150,
       render: (m) => m.estado
         ? (
-          <Badge color={ESTADO_COLORS[m.estado]} variant="light" size="sm">
+          <StatusBadge tone={TONO_ACCION[m.estado]}>
             {ESTADO_LABELS[m.estado]}
-          </Badge>
+          </StatusBadge>
         )
         : <Text size="sm" c="dimmed">—</Text>,
     },

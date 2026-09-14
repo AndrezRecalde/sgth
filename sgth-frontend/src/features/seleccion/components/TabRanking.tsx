@@ -1,8 +1,9 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { TONO_POSTULANTE } from '../services/convocatoriaService'
+import { confirmar, StatusBadge } from '@/components/ui'
 import {
-  Stack, Text, Group, Badge, Card,
+  Stack, Text, Group, Card,
   Button, ThemeIcon, Progress,
   Alert, Skeleton, Checkbox, Box,
 } from '@mantine/core'
@@ -45,18 +46,6 @@ function PosicionIcon({ pos }: { pos: number }) {
       <Text size="xs" fw={700}>{pos}</Text>
     </ThemeIcon>
   )
-}
-
-const ESTADO_COLORS: Record<string, string> = {
-  inscrito:           'gray',
-  en_evaluacion:      'blue',
-  aprobado:           'emerald',
-  reprobado:          'red',
-  seleccionado:       'yellow',
-  ganador_potencial:  'violet',
-  no_seleccionado:    'gray',
-  lista_espera:       'orange',
-  incorporado:        'teal',
 }
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -174,10 +163,10 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
               style={{ letterSpacing: '0.05em' }}>
               Ranking de candidatos
             </Text>
-            <Badge size="sm" variant="light" color="gray">
+            <StatusBadge>
               {ranking.length} calificado
               {ranking.length !== 1 ? 's' : ''}
-            </Badge>
+            </StatusBadge>
           </Group>
 
           {puedeEnviar && seleccionados.length > 0 && (
@@ -262,20 +251,12 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
                       </Stack>
                     </Group>
                     <Group gap="xs" wrap="nowrap">
-                      <Badge
-                        size="sm"
-                        variant="light"
-                        color={ESTADO_COLORS[p.estado] ?? 'gray'}
-                      >
+                      <StatusBadge tone={TONO_POSTULANTE[p.estado] ?? 'neutral'}>
                         {ESTADO_LABELS[p.estado] ?? p.estado}
-                      </Badge>
-                      <Badge
-                        size="lg"
-                        variant="light"
-                        color={aprueba ? 'emerald' : 'red'}
-                      >
+                      </StatusBadge>
+                      <StatusBadge tone={aprueba ? 'success' : 'danger'} size="lg">
                         {Number(total).toFixed(2)} pts
-                      </Badge>
+                      </StatusBadge>
                     </Group>
                   </Group>
 

@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Accordion, ActionIcon, Alert, Badge, Card, Checkbox, Group,
+  Accordion, ActionIcon, Alert, Card, Checkbox, Group,
   Skeleton, Stack, Text, Textarea, TextInput,
 } from '@mantine/core'
 import { IconAlertTriangle, IconTrash } from '@tabler/icons-react'
@@ -11,6 +11,7 @@ import { useCatalogoRiesgos } from '../../hooks/useCatalogoRiesgos'
 import type { ActividadRiesgoForm, FactorRiesgoForm } from '../../schemas/femo.schema'
 import { FemoSeccion } from './FemoSeccion'
 import classes from './FemoMatrizRiesgos.module.css'
+import { CountBadge, StatusBadge } from '@/components/ui'
 
 interface Props {
   puestoId:            number | null
@@ -145,10 +146,10 @@ export function FemoMatrizRiesgos({
                     <Group justify="space-between" pr="sm">
                       <Text size="sm" fw={500}>{act.actividad}</Text>
                       {factoresActividad.length > 0 && (
-                        <Badge size="sm" variant="light" radius="sm">
+                        <StatusBadge>
                           {factoresActividad.length} riesgo
                           {factoresActividad.length !== 1 ? 's' : ''}
-                        </Badge>
+                        </StatusBadge>
                       )}
                     </Group>
                   </Accordion.Control>
@@ -181,9 +182,9 @@ export function FemoMatrizRiesgos({
                           <Group gap="xs" mb="sm">
                             <Text size="sm" fw={600}>{cat.etiqueta}</Text>
                             {seleccionados.length > 0 && (
-                              <Badge size="xs" variant="light" radius="sm">
+                              <CountBadge size="xs">
                                 {seleccionados.length}
-                              </Badge>
+                              </CountBadge>
                             )}
                           </Group>
 

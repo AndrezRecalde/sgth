@@ -37,6 +37,11 @@ const IMPORTS_SOLO_CATALOGO = [
     message: "Use SgthModal o FormModal de '@/components/ui': resuelven la pantalla completa en móvil y el pie estándar (regla 06).",
   },
   {
+    name: "@mantine/core",
+    importNames: ["Badge"],
+    message: "Use StatusBadge (estados, señales y categorías), CountBadge (una cifra) o LegendBadge (leyenda de un gráfico) de '@/components/ui': el color sale del significado, no se escribe a mano (regla 06).",
+  },
+  {
     name: "mantine-datatable",
     importNames: ["DataTable"],
     message: "Use SgthTable de '@/components/ui' (regla 06).",

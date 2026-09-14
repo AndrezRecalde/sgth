@@ -1,12 +1,11 @@
 "use client";
 
-import { confirmar } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack,
   Group,
   Text,
-  Badge,
   Button,
   Divider,
   Skeleton,
@@ -113,9 +112,9 @@ export function CondicionTab({ servidorId }: Props) {
       title: "%",
       width: 80,
       render: ({ porcentaje }) => (
-        <Badge color="orange" variant="light" size="sm">
+        <StatusBadge>
           {porcentaje ?? "-"}%
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

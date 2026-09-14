@@ -1,11 +1,12 @@
 'use client'
 
-import { Badge, Stack, Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { TableActions } from '@/components/ui'
+import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFechaHora } from '@/lib/fecha'
-import { ESTADO_COLORS, ESTADO_LABELS } from '../../constants/viatico.constants'
+import { ESTADO_LABELS, TONO_VIATICO } from '../../constants/viatico.constants'
+import type { SemanticTone } from '@/config/design.tokens'
 import type { EtapaBandeja, ViaticoBandeja } from '@/types/api'
 
 const monto = (v: number | string) => `$${Number(v ?? 0).toFixed(2)}`
@@ -15,14 +16,14 @@ function Plazo({ plazo }: { plazo: ViaticoBandeja['plazo'] }) {
   if (!plazo) return <Text size="sm" c="dimmed">—</Text>
 
   const dias = plazo.dias_habiles_restantes
-  const color = plazo.vencida ? 'red' : dias <= 1 ? 'amber' : 'emerald'
+  const tone: SemanticTone = plazo.vencida ? 'danger' : dias <= 1 ? 'warning' : 'success'
   const texto = plazo.vencida
     ? 'Vencida'
     : dias === 0 ? 'Vence hoy' : `${dias} día${dias === 1 ? '' : 's'} hábil${dias === 1 ? '' : 'es'}`
 
   return (
     <Stack gap={2}>
-      <Badge color={color} variant="light" size="sm">{texto}</Badge>
+      <StatusBadge tone={tone}>{texto}</StatusBadge>
       <Text size="xs" c="dimmed">Hasta {formatFechaHora(plazo.fecha_limite)}</Text>
     </Stack>
   )
@@ -85,9 +86,9 @@ export function getBandejaColumns(
           title:    'Estado',
           width:    170,
           render:   (v) => (
-            <Badge color={ESTADO_COLORS[v.estado] ?? 'gray'} variant="light" size="sm">
+            <StatusBadge tone={TONO_VIATICO[v.estado] ?? 'neutral'}>
               {ESTADO_LABELS[v.estado] ?? v.estado}
-            </Badge>
+            </StatusBadge>
           ),
         },
     {

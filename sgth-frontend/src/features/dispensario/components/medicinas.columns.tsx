@@ -1,6 +1,7 @@
 "use client";
 
-import { Text, Badge, Group, Tooltip } from "@mantine/core";
+import type { SemanticTone } from "@/config/design.tokens";
+import { Text, Group, Tooltip } from "@mantine/core";
 import {
   IconEdit,
   IconHistory,
@@ -13,6 +14,7 @@ import {
 import { TableActions } from "@/components/ui/TableActions";
 import type { DataTableColumn } from "mantine-datatable";
 import type { InventarioMedicina } from "../services/inventarioMedicinaService";
+import { StatusBadge } from "@/components/ui";
 
 interface ColumnActions {
   onEditar: (m: InventarioMedicina) => void;
@@ -98,9 +100,9 @@ export function getMedicinasColumns(
                 label={`${caducado} unid. vencidas, pendientes de dar de baja`}
                 withArrow
               >
-                <Badge size="xs" variant="light" color="red">
+                <StatusBadge tone="danger" size="xs">
                   +{caducado}
-                </Badge>
+                </StatusBadge>
               </Tooltip>
             )}
           </Group>
@@ -130,20 +132,20 @@ export function getMedicinasColumns(
           (caduca.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24),
         );
 
-        let color = "emerald";
+        let tone: SemanticTone = "success";
         let label = "OK";
 
         if (dias < 0) {
-          color = "red";
+          tone = "danger";
           label = "Vencido";
         } else if (dias <= 30) {
-          color = "red";
+          tone = "danger";
           label = `${dias}d`;
         } else if (dias <= 90) {
-          color = "orange";
+          tone = "warning";
           label = `${dias}d`;
         } else {
-          color = "emerald";
+          tone = "success";
           label = caduca.toLocaleDateString("es-EC", {
             day: "2-digit",
             month: "short",
@@ -152,9 +154,9 @@ export function getMedicinasColumns(
         }
 
         return (
-          <Badge size="sm" variant="light" color={color}>
+          <StatusBadge tone={tone}>
             {label}
-          </Badge>
+          </StatusBadge>
         );
       },
     },
@@ -162,9 +164,9 @@ export function getMedicinasColumns(
       accessor: "estado",
       title: "Estado",
       render: (m) => (
-        <Badge size="sm" variant="light" color={m.estado ? "emerald" : "gray"}>
+        <StatusBadge tone={m.estado ? 'success' : 'neutral'}>
           {m.estado ? "Activo" : "Inactivo"}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

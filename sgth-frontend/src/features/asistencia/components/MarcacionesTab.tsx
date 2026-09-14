@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Stack,
   Text,
-  Badge,
   Button,
   Select,
   Grid,
@@ -20,6 +19,7 @@ import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { IconSearch, IconClock } from "@tabler/icons-react";
 import type { MarcacionBiometrica, ServidorConRelaciones } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
+import { StatusBadge } from "@/components/ui";
 
 const fromDate = (d: Date | string | null): string => {
   if (!d) return "";
@@ -132,9 +132,9 @@ export function MarcacionesTab() {
       width: 110,
       render: ({ TipoPermiso }) =>
         TipoPermiso ? (
-          <Badge size="xs" color="blue" variant="light">
+          <StatusBadge size="xs">
             {TipoPermiso}
-          </Badge>
+          </StatusBadge>
         ) : null,
     },
   ];

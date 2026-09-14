@@ -1,9 +1,10 @@
 'use client'
 
-import { Alert, Badge, Card, Group, SimpleGrid, Skeleton, Text } from '@mantine/core'
+import { Alert, Card, Group, SimpleGrid, Skeleton, Text } from '@mantine/core'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { useFirmantesVigentes } from '../hooks/useFirmantes'
 import type { FirmanteVigente } from '@/types/api'
+import { StatusBadge } from '@/components/ui'
 
 function nombre(s?: { nombre?: string | null; apellido?: string | null } | null): string {
   if (!s) return '—'
@@ -18,7 +19,7 @@ function Tarjeta({ firmante }: { firmante: FirmanteVigente }) {
           {firmante.etiqueta}
         </Text>
         {firmante.subrogado && (
-          <Badge color="violet" variant="light" size="sm">Subrogado</Badge>
+          <StatusBadge>Subrogado</StatusBadge>
         )}
       </Group>
 

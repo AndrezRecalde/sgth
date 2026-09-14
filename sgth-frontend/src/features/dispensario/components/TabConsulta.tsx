@@ -7,7 +7,6 @@ import {
   Group,
   Button,
   Text,
-  Badge,
   Card,
   Tooltip,
   Alert,
@@ -37,6 +36,7 @@ import {
 import type { AgendaMedica } from "../services/agendaService";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 import type { DiagnosticoCie10 } from "../services/cie10Service";
+import { StatusBadge } from "@/components/ui";
 
 interface Props {
   turno: AgendaMedica;
@@ -401,23 +401,17 @@ export function TabConsulta({
           style={{ borderBottom: "0.5px solid var(--mantine-color-gray-2)" }}
         >
           <Group gap="xs" wrap="wrap">
-            <Badge size="sm" variant="light" color="emerald">
+            <StatusBadge tone="success">
               Guardada
-            </Badge>
-            <Badge size="sm" variant="light" color="blue">
+            </StatusBadge>
+            <StatusBadge>
               {consultaPrevia.tipo_atencion?.replace(/_/g, " ")}
-            </Badge>
-            <Badge
-              size="sm"
-              variant="light"
-              color={
-                consultaPrevia.tipo_diagnostico === "definitivo"
-                  ? "emerald"
-                  : "orange"
-              }
+            </StatusBadge>
+            <StatusBadge
+              tone={consultaPrevia.tipo_diagnostico === 'definitivo' ? 'success' : 'warning'}
             >
               {consultaPrevia.tipo_diagnostico}
-            </Badge>
+            </StatusBadge>
           </Group>
           <Tooltip
             label={noEditable ?? "Editar consulta"}
@@ -481,9 +475,9 @@ export function TabConsulta({
                 Diagnóstico
               </Text>
               <Group gap="xs" align="flex-start">
-                <Badge size="md" color="blue" variant="light">
+                <StatusBadge size="md">
                   {consultaPrevia.diagnostico_cie10_principal.codigo}
-                </Badge>
+                </StatusBadge>
                 <Text size="sm" fw={500} style={{ flex: 1, lineHeight: 1.5 }}>
                   {consultaPrevia.diagnostico_cie10_principal.descripcion}
                 </Text>
@@ -493,9 +487,9 @@ export function TabConsulta({
                 <Stack gap={4}>
                   {consultaPrevia.diagnosticos_secundarios?.map((ds) => (
                     <Group key={ds.id} gap="xs" align="flex-start">
-                      <Badge size="sm" variant="default">
+                      <StatusBadge>
                         {ds.diagnostico?.codigo}
-                      </Badge>
+                      </StatusBadge>
                       <Text size="xs" c="dimmed" style={{ flex: 1 }}>
                         {ds.diagnostico?.descripcion}
                       </Text>

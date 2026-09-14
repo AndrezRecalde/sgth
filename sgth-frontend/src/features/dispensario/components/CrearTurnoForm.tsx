@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import {
   Stack, Group, Select, Button,
   Textarea, Switch, Text, Card,
-  Avatar, Badge, Alert,
+  Avatar, Alert,
 } from '@mantine/core'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -16,6 +16,7 @@ import { usePersonalDisponible, useCrearTurno } from '../hooks/useAgenda'
 import { agendaSchema, type AgendaFormData } from '../schemas/agenda.schema'
 import type { PacienteEncontrado } from '../services/pacienteService'
 import type { AgendaMedica } from '../services/agendaService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   paciente:    PacienteEncontrado
@@ -103,9 +104,9 @@ export function CrearTurnoForm({
               <Text size="sm" fw={600}>
                 {paciente.nombre_completo}
               </Text>
-              <Badge size="xs" variant="light">
+              <StatusBadge size="xs">
                 {paciente.tipo === 'servidor' ? 'Servidor' : 'Familiar'}
-              </Badge>
+              </StatusBadge>
             </Stack>
           </Group>
         </Card>

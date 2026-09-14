@@ -1,12 +1,13 @@
 'use client'
 
-import { Stack, SimpleGrid, UnstyledButton, Text, Tooltip, Box, Badge } from '@mantine/core'
+import { Stack, SimpleGrid, UnstyledButton, Text, Tooltip, Box } from '@mantine/core'
 import { BuscarServidorSelect } from './BuscarServidorSelect'
 import {
   CATEGORIAS_ACCION_PERSONAL, categoriaHabilitada,
 } from '../utils/categoriasAccionPersonal'
 import type { AccionTipo } from '../utils/taxonomiaAccionPersonal'
 import type { ServidorConRelaciones } from '@/types/api'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   servidor:          ServidorConRelaciones | null
@@ -55,9 +56,9 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
           </Text>
 
           {pendienteVinculacion == null && (
-            <Badge color="yellow" variant="light" size="sm" style={{ alignSelf: 'flex-start' }}>
+            <StatusBadge tone="warning" style={{ alignSelf: 'flex-start' }}>
               No se pudo determinar el estado de vínculo de este servidor
-            </Badge>
+            </StatusBadge>
           )}
 
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">

@@ -1,9 +1,10 @@
 'use client'
 
-import { Badge, Text } from '@mantine/core'
+import { Text } from '@mantine/core'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { ConsolidadoPermiso, ConsolidadoPermisoResponse } from '@/types/api'
+import { CountBadge } from '@/components/ui'
 
 type Totales = ConsolidadoPermisoResponse['totales']
 
@@ -41,7 +42,7 @@ export function getConsolidadoColumns(totales?: Totales): DataTableColumn<Consol
       textAlign: 'center',
       width: 100,
       render: ({ total_permisos }) => (
-        <Badge variant="light" color={SEMANTIC_COLOR.info} size="sm">{total_permisos}</Badge>
+        <CountBadge>{total_permisos}</CountBadge>
       ),
       footer: totales && pie(totales.total_permisos),
     },

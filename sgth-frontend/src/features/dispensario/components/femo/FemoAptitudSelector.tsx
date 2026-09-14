@@ -3,13 +3,16 @@
 import { Stack, Grid, Card, Radio, Text, Textarea } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { FichaBaseForm } from '../../schemas/femo.schema'
-import { APTITUD_OPTIONS, APTITUD_COLORS } from '../../services/femoOptions'
+import { APTITUD_OPTIONS, TONO_APTITUD } from '../../services/femoOptions'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { FemoSeccion } from './FemoSeccion'
 
 interface Props {
   fichaData:     Partial<FichaBaseForm>
   onFichaChange: (data: Partial<FichaBaseForm>) => void
 }
+
+const colorDe = (aptitud: string) => SEMANTIC_COLOR[TONO_APTITUD[aptitud] ?? 'neutral']
 
 export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
   const contained = useContainedInput()
@@ -27,7 +30,7 @@ export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
                 p="sm"
                 style={{
                   borderColor: isSelected
-                    ? `var(--mantine-color-${APTITUD_COLORS[opt.value]}-6)`
+                    ? `var(--mantine-color-${colorDe(opt.value)}-6)`
                     : undefined,
                   borderWidth: isSelected ? 2 : 1,
                   cursor: 'pointer',
@@ -41,13 +44,13 @@ export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
                   <Radio
                     checked={isSelected}
                     onChange={() => {}}
-                    color={APTITUD_COLORS[opt.value]}
+                    color={colorDe(opt.value)}
                   />
                   <Text
                     size="sm"
                     fw={500}
                     ta="center"
-                    c={isSelected ? APTITUD_COLORS[opt.value] : undefined}
+                    c={isSelected ? colorDe(opt.value) : undefined}
                   >
                     {opt.label}
                   </Text>

@@ -1,9 +1,10 @@
 'use client'
 
-import { Accordion, Alert, Badge, Checkbox, Group, Stack, Text } from '@mantine/core'
+import { Accordion, Alert, Checkbox, Group, Stack, Text } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { etiquetaPermiso } from '../constants/permisos'
 import type { PermisoGrupo, PermisoItem } from '@/types/api'
+import { CountBadge, StatusBadge } from '@/components/ui'
 
 interface Props {
   grupos: PermisoGrupo[]
@@ -45,13 +46,13 @@ export function AcordeonPermisos({
               <Group gap="xs">
                 <Text size="sm" fw={600}>{grupo.modulo}</Text>
                 {extras > 0 && (
-                  <Badge size="xs" variant="filled" color="violet">
+                  <CountBadge tone="info" destacado size="xs">
                     {extras}
-                  </Badge>
+                  </CountBadge>
                 )}
-                <Badge size="xs" variant="outline" color="gray">
+                <CountBadge size="xs">
                   {grupo.permisos.length}
-                </Badge>
+                </CountBadge>
               </Group>
             </Accordion.Control>
 
@@ -77,9 +78,9 @@ export function AcordeonPermisos({
                         </Text>
                       </Group>
                       {cubierto && (
-                        <Badge size="xs" color="teal" variant="light">
+                        <StatusBadge size="xs">
                           por rol
-                        </Badge>
+                        </StatusBadge>
                       )}
                     </Group>
                   )

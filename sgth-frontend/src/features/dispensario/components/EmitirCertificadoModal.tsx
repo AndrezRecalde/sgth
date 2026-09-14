@@ -3,9 +3,8 @@
 import {
   Stack, Textarea,
   Group, Text, Alert,
-  Badge, 
-} from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+  } from '@mantine/core'
+import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useState } from 'react'
 import { IconAlertCircle } from '@tabler/icons-react'
@@ -160,9 +159,9 @@ export function EmitirCertificadoModal({
           {dias > 0 && !rangoExcede && (
             <Group gap="xs">
               <Text size="xs" c="dimmed">Días de reposo:</Text>
-              <Badge size="sm" variant="light" color="emerald">
+              <StatusBadge>
                 {dias} día{dias !== 1 ? 's' : ''}
-              </Badge>
+              </StatusBadge>
             </Group>
           )}
         </Stack>

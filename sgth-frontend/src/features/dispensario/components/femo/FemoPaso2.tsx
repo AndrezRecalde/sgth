@@ -9,8 +9,7 @@ import {
   Button,
   Card,
   ActionIcon,
-  Badge,
-} from '@mantine/core'
+  } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
@@ -24,6 +23,7 @@ import { FemoMatrizRiesgos } from './FemoMatrizRiesgos'
 import { TIPO_EVENTO_LABORAL_OPTIONS } from '../../services/femoOptions'
 import { FemoSeccion } from './FemoSeccion'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   fichaData:            Partial<FichaBaseForm>
@@ -89,11 +89,11 @@ export function FemoPaso2({
                         {emp.centro_trabajo}
                       </Text>
                       {emp.tipo_evento_laboral && emp.tipo_evento_laboral !== 'ninguno' && (
-                        <Badge size="xs" variant="light" color="red">
+                        <StatusBadge size="xs">
                           {TIPO_EVENTO_LABORAL_OPTIONS.find(
                             o => o.value === emp.tipo_evento_laboral
                           )?.label}
-                        </Badge>
+                        </StatusBadge>
                       )}
                     </Group>
                     {emp.actividades_desempenadas && (

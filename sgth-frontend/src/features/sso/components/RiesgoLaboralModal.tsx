@@ -1,5 +1,6 @@
 'use client'
 
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useEffect, useMemo } from 'react'
 import {
   Group, Stack,
@@ -16,7 +17,7 @@ import { useFactoresRiesgo } from '../hooks/useFactoresRiesgo'
 import {
   riesgoLaboralSchema, type RiesgoLaboralFormData,
   NIVEL_DEFICIENCIA_OPTIONS, NIVEL_EXPOSICION_OPTIONS, NIVEL_CONSECUENCIAS_OPTIONS,
-  NIVEL_INTERVENCION_LABELS, NIVEL_INTERVENCION_COLORS, calcularNtp330,
+  NIVEL_INTERVENCION_LABELS, TONO_NIVEL_INTERVENCION, calcularNtp330,
 } from '../schemas/riesgoLaboral.schema'
 import type { RiesgoLaboral } from '../services/ssoService'
 
@@ -189,7 +190,7 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
 
         <Alert
           icon={<IconGauge size={18} />}
-          color={NIVEL_INTERVENCION_COLORS[resultado.nivelIntervencion]}
+          color={SEMANTIC_COLOR[TONO_NIVEL_INTERVENCION[resultado.nivelIntervencion]]}
           variant="light"
         >
           <Text size="sm">

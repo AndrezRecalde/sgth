@@ -2,7 +2,8 @@
 
 import { Card, Divider, Group, Stack, Text, ThemeIcon, Timeline } from '@mantine/core'
 import { IconHistory } from '@tabler/icons-react'
-import { ESTADO_COLORS, ESTADO_LABELS } from '../constants/viatico.constants'
+import { ESTADO_LABELS, TONO_VIATICO } from '../constants/viatico.constants'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { formatFechaHora } from '@/lib/fecha'
 import type { ViaticoHistorialEstado } from '@/types/api'
 
@@ -35,7 +36,7 @@ export function ViaticoHistorialCard({ historial }: Props) {
         {historial.map((paso) => (
           <Timeline.Item
             key={paso.id}
-            color={ESTADO_COLORS[paso.estado_nuevo] ?? 'gray'}
+            color={SEMANTIC_COLOR[TONO_VIATICO[paso.estado_nuevo] ?? 'neutral']}
             title={
               <Text size="sm" fw={500}>
                 {ESTADO_LABELS[paso.estado_nuevo] ?? paso.estado_nuevo}

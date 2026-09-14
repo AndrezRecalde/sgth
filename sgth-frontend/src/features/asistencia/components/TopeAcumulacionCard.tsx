@@ -11,7 +11,7 @@ import {
   confirmar,
 } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
-import { REGIMEN_LABELS, REGIMEN_TONOS } from "@/lib/regimen";
+import { REGIMEN_LABELS } from "@/lib/regimen";
 import { useServidoresSobreTope } from "../hooks/useServidoresSobreTope";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
 import type { ServidorSobreTope } from "@/types/api";
@@ -70,7 +70,7 @@ export function TopeAcumulacionCard() {
       title: "Régimen",
       width: 150,
       render: ({ regimen }) => (
-        <StatusBadge tone={REGIMEN_TONOS[regimen] ?? "neutral"}>
+        <StatusBadge>
           {REGIMEN_LABELS[regimen] ?? regimen}
         </StatusBadge>
       ),

@@ -1,9 +1,9 @@
 "use client";
 
+import { TONO_NOMINA } from "../constants/estadoNomina";
 import {
   Stack,
   Text,
-  Badge,
   Table,
   Divider,
   Skeleton,
@@ -11,7 +11,7 @@ import {
   Card,
   Grid,
 } from "@mantine/core";
-import { SgthModal } from "@/components/ui";
+import { SgthModal, StatusBadge } from "@/components/ui";
 import { useQuery } from "@tanstack/react-query";
 import { nominaService } from "../services/nominaService";
 import type { Nomina } from "@/types/api";
@@ -21,14 +21,6 @@ interface Props {
   onClose: () => void;
   nomina: Nomina | null;
 }
-
-const ESTADO_COLORS: Record<string, string> = {
-  borrador: "gray",
-  en_proceso: "blue",
-  cerrada: "orange",
-  contabilizada: "violet",
-  pagada: "emerald",
-};
 
 function formatMonto(v?: number | string | null): string {
   if (v === null || v === undefined) return "—";
@@ -70,14 +62,9 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
                 <Text size="xs" c="dimmed">
                   Estado
                 </Text>
-                <Badge
-                  color={ESTADO_COLORS[nomina?.estado ?? ""] ?? "gray"}
-                  variant="light"
-                  size="sm"
-                  mt={4}
-                >
+                <StatusBadge tone={TONO_NOMINA[nomina?.estado ?? ''] ?? 'neutral'} mt={4}>
                   {nomina?.estado ?? "—"}
-                </Badge>
+                </StatusBadge>
               </Card>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>

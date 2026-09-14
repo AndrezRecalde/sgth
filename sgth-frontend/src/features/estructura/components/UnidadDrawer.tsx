@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Drawer, Stack, Text, Badge, Group,
+  Drawer, Stack, Text, Group,
   Divider, Skeleton, ScrollArea,
 } from '@mantine/core'
 import {
@@ -9,19 +9,13 @@ import {
 } from '@tabler/icons-react'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import type { UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   opened: boolean
   onClose: () => void
   unidad: UnidadConRelaciones | null
   isLoading?: boolean
-}
-
-const TIPO_COLORS: Record<string, string> = {
-  G:   'blue',
-  HAP: 'orange',
-  HA:  'violet',
-  AV:  'emerald',
 }
 
 export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
@@ -58,13 +52,9 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
           ) : (
             <>
               {tipoAcronimo && (
-                <Badge
-                  color={TIPO_COLORS[tipoAcronimo] ?? 'gray'}
-                  variant="light"
-                  size="sm"
-                >
+                <StatusBadge>
                   {unidad?.tipo_unidad?.descripcion ?? tipoAcronimo}
-                </Badge>
+                </StatusBadge>
               )}
 
               {hijos.length > 0 && (
@@ -137,24 +127,16 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
                           </Group>
                           <Group gap="xs">
                             {p.regimen_laboral && (
-                              <Badge
-                                size="xs"
-                                variant="light"
-                                color={
-                                  p.regimen_laboral === 'losep'
-                                    ? 'emerald'
-                                    : 'blue'
-                                }
-                              >
+                              <StatusBadge size="xs">
                                 {p.regimen_laboral === 'losep'
                                   ? 'LOSEP'
                                   : 'CT'}
-                              </Badge>
+                              </StatusBadge>
                             )}
                             {p.plazas && p.plazas > 1 && (
-                              <Badge size="xs" variant="outline" color="gray">
+                              <StatusBadge size="xs" variant="outline">
                                 {p.plazas} plazas
-                              </Badge>
+                              </StatusBadge>
                             )}
                           </Group>
                         </Group>

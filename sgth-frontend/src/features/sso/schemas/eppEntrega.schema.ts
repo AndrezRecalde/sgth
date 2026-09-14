@@ -16,9 +16,3 @@ export const MOTIVO_ENTREGA_OPTIONS = [
   { value: 'devolucion', label: 'Devolución' },
   { value: 'reposicion', label: 'Reposición' },
 ]
-
-export const MOTIVO_ENTREGA_COLORS: Record<string, string> = {
-  entrega: 'emerald',
-  devolucion: 'blue',
-  reposicion: 'orange',
-}

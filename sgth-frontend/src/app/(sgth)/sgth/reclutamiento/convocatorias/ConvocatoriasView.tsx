@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Badge, Text, Button } from '@mantine/core'
+import { Stack, Text, Button } from '@mantine/core'
 import {
   IconSpeakerphone, IconPlus,
   IconEye, IconEdit, IconTrash,
@@ -15,14 +15,14 @@ import {
   usePublicarConvocatoria,
 } from '@/features/seleccion/hooks/useConvocatoria'
 import {
-  ESTADO_CONVOCATORIA_COLORS,
+  TONO_CONVOCATORIA,
   ESTADO_CONVOCATORIA_OPTIONS,
   TIPO_CONVOCATORIA_OPTIONS,
 } from '@/features/seleccion/services/convocatoriaService'
 import type { Convocatoria } from
   '@/features/seleccion/services/convocatoriaService'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions , confirmar } from '@/components/ui'
+import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 
 export function ConvocatoriasView() {
   const router   = useRouter()
@@ -70,9 +70,9 @@ export function ConvocatoriasView() {
       title:    'Tipo',
       width:    100,
       render: (c) => (
-        <Badge size="sm" variant="light" color="blue">
+        <StatusBadge>
           {getLabelTipo(c.tipo)}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -104,13 +104,9 @@ export function ConvocatoriasView() {
       title:    'Estado',
       width:    120,
       render: (c) => (
-        <Badge
-          size="sm"
-          variant="light"
-          color={ESTADO_CONVOCATORIA_COLORS[c.estado] ?? 'gray'}
-        >
+        <StatusBadge tone={TONO_CONVOCATORIA[c.estado] ?? 'neutral'}>
           {getLabelEstado(c.estado)}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

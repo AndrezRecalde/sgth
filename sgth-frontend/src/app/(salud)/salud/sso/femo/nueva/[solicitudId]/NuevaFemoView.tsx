@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stepper, Button, Group, Card, Text, Alert, Badge, Skeleton } from '@mantine/core'
+import { Stepper, Button, Group, Card, Text, Alert, Skeleton } from '@mantine/core'
 import {
   IconUser, IconBriefcase, IconStethoscope,
   IconArrowLeft, IconArrowRight, IconCheck,
@@ -28,7 +28,7 @@ import { DictamenMedicoModal } from
 import type { FichaBaseForm } from '@/features/dispensario/schemas/femo.schema'
 import api from '@/lib/axios'
 import { fromDateValue } from '@/lib/fecha'
-import { PageHeader, PageShell } from '@/components/ui'
+import { PageHeader, PageShell, StatusBadge } from '@/components/ui'
 
 interface Props {
   solicitudId: string
@@ -265,9 +265,9 @@ export function NuevaFemoView({ solicitudId }: Props) {
       >
         <Group gap="xs" wrap="wrap">
           <Text size="xs">Solicitud de Talento Humano —</Text>
-          <Badge size="xs" variant="light" color="blue">
+          <StatusBadge size="xs">
             {TIPO_EVENTO_LABELS[solicitudDetalle.tipo_evento]}
-          </Badge>
+          </StatusBadge>
           <Text size="xs" fw={600}>
             {solicitudDetalle.nombres_paciente}
           </Text>

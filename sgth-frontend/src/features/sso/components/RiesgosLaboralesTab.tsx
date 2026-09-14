@@ -1,15 +1,14 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Group, Badge, Text, Stack } from '@mantine/core'
+import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconEdit, IconTrash, IconList, IconAlertTriangle } from '@tabler/icons-react'
-import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useRiesgosLaborales, useRiesgoLaboralMutations } from '../hooks/useRiesgosLaborales'
 import { RiesgoLaboralModal } from './RiesgoLaboralModal'
 import { FactoresRiesgoModal } from './FactoresRiesgoModal'
-import { NIVEL_INTERVENCION_LABELS, NIVEL_INTERVENCION_COLORS } from '../schemas/riesgoLaboral.schema'
+import { NIVEL_INTERVENCION_LABELS, TONO_NIVEL_INTERVENCION } from '../schemas/riesgoLaboral.schema'
 import type { RiesgoLaboral } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
 
@@ -57,9 +56,9 @@ export function RiesgosLaboralesTab() {
       title: 'Nivel de intervención',
       width: 200,
       render: (r) => (
-        <Badge color={NIVEL_INTERVENCION_COLORS[r.nivel_intervencion] ?? 'gray'} variant="light" size="sm">
+        <StatusBadge tone={TONO_NIVEL_INTERVENCION[r.nivel_intervencion] ?? 'neutral'}>
           {NIVEL_INTERVENCION_LABELS[r.nivel_intervencion] ?? r.nivel_intervencion}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Group, Text, Badge, ThemeIcon } from "@mantine/core";
+import { Card, Group, Text, ThemeIcon } from "@mantine/core";
 import { IconUser } from "@tabler/icons-react";
+import { StatusBadge } from "@/components/ui";
 
 interface Servidor {
   nombre?: string | null;
@@ -46,9 +47,9 @@ export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
             {servidor.puesto?.unidad_administrativa?.nombre ?? ""}
           </Text>
         </div>
-        <Badge size="xs" color="blue" variant="light" ml="auto">
+        <StatusBadge size="xs" ml="auto">
           Solicitante
-        </Badge>
+        </StatusBadge>
       </Group>
     </Card>
   );

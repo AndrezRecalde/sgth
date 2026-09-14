@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Grid, Select, Group, Text, Button, Card, ActionIcon, Badge } from '@mantine/core'
+import { Stack, Grid, Select, Group, Text, Button, Card, ActionIcon } from '@mantine/core'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -8,6 +8,7 @@ import { BuscarCie10Input } from '../BuscarCie10Input'
 import type { DiagnosticoFemoForm } from '../../schemas/femo.schema'
 import type { DiagnosticoCie10 } from '../../services/cie10Service'
 import { FemoSeccion } from './FemoSeccion'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   diagnosticos:     DiagnosticoFemoForm[]
@@ -79,9 +80,9 @@ export function FemoDiagnosticosCie10({ diagnosticos, onChange }: Props) {
               <Group justify="space-between" wrap="nowrap">
                 <Group gap="xs">
                   <Text size="xs" c="dimmed">{i + 1}.</Text>
-                  <Badge size="sm" variant="light" color={d.tipo === 'definitivo' ? 'emerald' : 'orange'}>
+                  <StatusBadge tone={d.tipo === 'definitivo' ? 'success' : 'warning'}>
                     {d.tipo}
-                  </Badge>
+                  </StatusBadge>
                   <Text size="sm" fw={500}>CIE-10 #{d.diagnostico_cie10_id}</Text>
                 </Group>
                 <ActionIcon size="sm" color="red" variant="subtle" onClick={() => handleEliminar(i)}>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Card, Divider, Group, Stack, Text } from '@mantine/core'
+import { Card, Divider, Group, Stack, Text } from '@mantine/core'
 import { StatusBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import { ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
@@ -47,9 +47,9 @@ export function PermisoResumen({ permiso }: { permiso: PermisoServidor }) {
 
         <Group justify="space-between" wrap="nowrap">
           <Text size="sm" c="dimmed">Tipo</Text>
-          <Badge size="sm" variant="light" color="blue">
+          <StatusBadge>
             {TIPO_LABELS[permiso.tipo as string] ?? permiso.tipo}
-          </Badge>
+          </StatusBadge>
         </Group>
         <Dato etiqueta="Fecha" valor={formatFecha(permiso.fecha)} />
         <Dato

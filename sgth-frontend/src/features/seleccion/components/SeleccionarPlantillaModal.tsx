@@ -1,11 +1,10 @@
 'use client'
 
 import {
-  Stack, Text, Card, Badge,
-  Group, Radio, Divider,
+  Stack, Text, Card, Group, Radio, Divider,
   Alert, Skeleton,
 } from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
 import {
   IconInfoCircle, IconAlertTriangle,
 } from '@tabler/icons-react'
@@ -121,20 +120,12 @@ export function SeleccionarPlantillaModal({
                             </Text>
                           )}
                           <Group gap="xs" mt={2}>
-                            <Badge
-                              size="xs"
-                              variant="light"
-                              color="blue"
-                            >
+                            <StatusBadge size="xs">
                               {getLabelTipo(p.tipo_contrato)}
-                            </Badge>
-                            <Badge
-                              size="xs"
-                              variant="light"
-                              color="gray"
-                            >
+                            </StatusBadge>
+                            <StatusBadge size="xs">
                               {p.criterios_count ?? 0} criterios
-                            </Badge>
+                            </StatusBadge>
                           </Group>
                         </Stack>
                       </Group>

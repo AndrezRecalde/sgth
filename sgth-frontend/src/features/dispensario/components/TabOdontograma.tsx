@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Skeleton, Divider, Grid, Text, Badge, Button, Group } from '@mantine/core'
+import { Stack, Skeleton, Divider, Grid, Text, Button, Group } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useState } from 'react'
 import { IconDental, IconBan } from '@tabler/icons-react'
@@ -18,6 +18,7 @@ import type {
   OdontogramaPieza, OdontogramaProcedimientoDetalle,
 } from '../services/odontogramaService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   historiaClinicaId: number
@@ -157,7 +158,7 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
             {getLabelProcedimiento(item.procedimiento)}
           </Text>
           {item.anulado_en && (
-            <Badge size="xs" variant="light" color="red">Anulado</Badge>
+            <StatusBadge tone="danger" size="xs">Anulado</StatusBadge>
           )}
         </Group>
       ),

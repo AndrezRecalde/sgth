@@ -3,8 +3,7 @@
 import { useMemo } from 'react'
 import {
   Stack, Group, NumberInput, Button,
-  Textarea, Text, Card, Avatar, Badge,
-  Divider, Alert, 
+  Textarea, Text, Card, Avatar, Divider, Alert, 
 } from '@mantine/core'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -123,10 +122,10 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 </Text>
               </Stack>
             </Group>
-            <Badge size="sm" variant="light" color="blue">
+            <StatusBadge>
               {turno.tipo_atencion === 'medicina_general'
                 ? 'Medicina General' : 'Odontología'}
-            </Badge>
+            </StatusBadge>
           </Group>
 
           <TomasPreviasTriaje agendaId={turno.id} />

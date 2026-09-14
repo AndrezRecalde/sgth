@@ -1,10 +1,9 @@
 'use client'
 
-import { confirmar, SgthModal } from '@/components/ui'
+import { confirmar, SgthModal, StatusBadge } from '@/components/ui'
 import {
   Stack, Group, TextInput, Select, Textarea, Button,
-  ActionIcon, Badge,
-} from '@mantine/core'
+  ActionIcon, } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
@@ -48,7 +47,7 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
       accessor: 'fase',
       title: 'Fase',
       width: 200,
-      render: (a) => <Badge variant="light" size="sm">{getFaseLabel(a.fase)}</Badge>,
+      render: (a) => <StatusBadge>{getFaseLabel(a.fase)}</StatusBadge>,
     },
     {
       accessor: 'acciones',

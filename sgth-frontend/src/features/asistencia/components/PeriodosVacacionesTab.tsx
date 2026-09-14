@@ -6,7 +6,6 @@ import {
   Group,
   Button,
   Text,
-  Badge,
   Select,
   NumberInput,
   Alert,
@@ -28,13 +27,7 @@ import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
 import { TopeAcumulacionCard } from "./TopeAcumulacionCard";
-import {
-  SgthTable,
-  StatusBadge,
-  TableActions,
-  Toolbar,
-  confirmar,
-} from "@/components/ui";
+import { confirmar, SgthTable, StatusBadge, TableActions, Toolbar } from "@/components/ui";
 import { type SemanticTone } from "@/config/design.tokens";
 import type {
   ServidorConRelaciones,
@@ -42,7 +35,7 @@ import type {
   PrevisualizacionRecalculo,
 } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
-import { REGIMEN_LABELS, REGIMEN_TONOS, generaVacaciones } from '@/lib/regimen'
+import { REGIMEN_LABELS, generaVacaciones } from '@/lib/regimen'
 
 const TONO_ESTADO: Record<string, SemanticTone> = {
   abierto: "success",
@@ -156,7 +149,7 @@ export function PeriodosVacacionesTab() {
       title: "Régimen",
       width: 130,
       render: ({ regimen }) => (
-        <StatusBadge tone={REGIMEN_TONOS[regimen] ?? "neutral"}>
+        <StatusBadge>
           {REGIMEN_LABELS[regimen] ?? regimen}
         </StatusBadge>
       ),
@@ -224,9 +217,9 @@ export function PeriodosVacacionesTab() {
               {horas}h descontadas
             </Text>
             {(regimen as string) === "losep" && (
-              <Badge size="xs" color="orange" variant="dot">
+              <StatusBadge size="xs" variant="dot">
                 LOSEP
-              </Badge>
+              </StatusBadge>
             )}
           </Stack>
         );
@@ -456,13 +449,9 @@ export function PeriodosVacacionesTab() {
         >
           <Group gap="sm">
             <Text size="sm">Saldo total disponible:</Text>
-            <Badge
-              variant="default"
-              color={alertaLimite ? "orange" : "emerald"}
-              size="lg"
-            >
+            <StatusBadge tone={alertaLimite ? 'warning' : 'success'} size="lg">
               {Number(saldoTotal).toFixed(1)} días
-            </Badge>
+            </StatusBadge>
             {alertaLimite && tope !== null && (
               <Text size="xs" c="orange" fw={500}>
                 {excedente > 0

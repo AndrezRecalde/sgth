@@ -1,15 +1,16 @@
 'use client'
 
-import { Text, Badge, Stack } from '@mantine/core'
+import { Text, Stack } from '@mantine/core'
 import {
   IconPlane, IconCheck, IconCurrencyDollar,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
-import { ESTADO_COLORS, ESTADO_LABELS } from '../constants/viatico.constants'
+import { ESTADO_LABELS, TONO_VIATICO } from '../constants/viatico.constants'
 import type { EstadoViatico, ViaticoConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { AccionesViatico } from '../hooks/useAccionesViatico'
 import { formatFechaHora } from '@/lib/fecha'
+import { StatusBadge } from '@/components/ui'
 
 const ZONA_ABREV: Record<string, string> = {
   dentro_provincia: 'Dentro prov.',
@@ -68,9 +69,9 @@ export function getViaticoColumns(
       render: ({ datetime_salida, datetime_llegada, total_dias }) => {
         if (!datetime_salida) {
           return (
-            <Badge color="orange" variant="dot" size="sm">
+            <StatusBadge tone="warning" variant="dot">
               Sin itinerario
-            </Badge>
+            </StatusBadge>
           )
         }
         const fmt = (f: string) => formatFechaHora(f, { conHora: false })
@@ -102,13 +103,9 @@ export function getViaticoColumns(
       title:    'Estado',
       width:    140,
       render: ({ estado }) => (
-        <Badge
-          color={ESTADO_COLORS[estado as EstadoViatico] ?? 'gray'}
-          variant="light"
-          size="sm"
-        >
+        <StatusBadge tone={TONO_VIATICO[estado as EstadoViatico] ?? 'neutral'}>
           {ESTADO_LABELS[estado as EstadoViatico] ?? estado}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

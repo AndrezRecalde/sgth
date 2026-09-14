@@ -1,14 +1,13 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Group, Badge, Text, Stack } from '@mantine/core'
+import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconEdit, IconTrash, IconAlertTriangle } from '@tabler/icons-react'
-import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '../hooks/useAccidentesTrabajo'
 import { AccidenteTrabajoModal } from './AccidenteTrabajoModal'
-import { GRAVEDAD_COLORS, TIPO_EVENTO_ACCIDENTE_COLORS, TIPO_EVENTO_ACCIDENTE_OPTIONS } from '../schemas/accidenteTrabajo.schema'
+import { TONO_GRAVEDAD, TONO_TIPO_EVENTO_ACCIDENTE, TIPO_EVENTO_ACCIDENTE_OPTIONS } from '../schemas/accidenteTrabajo.schema'
 import { formatFecha } from '@/lib/fecha'
 import type { AccidenteTrabajo } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -47,9 +46,9 @@ export function AccidentesTrabajoTab() {
       title: 'Tipo',
       width: 110,
       render: (a) => (
-        <Badge color={TIPO_EVENTO_ACCIDENTE_COLORS[a.tipo_evento] ?? 'gray'} variant="light" size="sm">
+        <StatusBadge tone={TONO_TIPO_EVENTO_ACCIDENTE[a.tipo_evento] ?? 'neutral'}>
           {TIPO_EVENTO_ACCIDENTE_OPTIONS.find(o => o.value === a.tipo_evento)?.label.split(' ')[0] ?? a.tipo_evento}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -64,9 +63,9 @@ export function AccidentesTrabajoTab() {
       title: 'Gravedad',
       width: 120,
       render: (a) => (
-        <Badge color={GRAVEDAD_COLORS[a.gravedad] ?? 'gray'} variant="light" size="sm">
+        <StatusBadge tone={TONO_GRAVEDAD[a.gravedad] ?? 'neutral'}>
           {a.gravedad}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {

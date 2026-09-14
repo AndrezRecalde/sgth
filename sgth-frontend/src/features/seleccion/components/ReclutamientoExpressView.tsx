@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Alert, Badge, Box, Button, Card, Group, SegmentedControl, Select,
+  Alert, Box, Button, Card, Group, SegmentedControl, Select,
   SimpleGrid, Skeleton, Stack, Text,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -12,6 +12,7 @@ import { useAniosExpress, useResumenExpress } from '../hooks/useExpress'
 import { AspirantesExpressDrawer } from './AspirantesExpressDrawer'
 import { InscribirPostulanteModal } from './InscribirPostulanteModal'
 import type { FiltroAnios, TarjetaExpress } from '../services/expressService'
+import { StatusBadge } from '@/components/ui'
 
 type ModoFiltro = 'todos' | 'anio' | 'rango'
 
@@ -138,7 +139,7 @@ export function ReclutamientoExpressView() {
                 <div>
                   <Group justify="space-between" align="flex-start">
                     <Text fw={600}>{c.titulo}</Text>
-                    <Badge variant="light" color="gray" size="sm">{c.codigo}</Badge>
+                    <StatusBadge>{c.codigo}</StatusBadge>
                   </Group>
                   <Text size="xs" c="dimmed" lineClamp={2} mt={4}>
                     {c.descripcion}

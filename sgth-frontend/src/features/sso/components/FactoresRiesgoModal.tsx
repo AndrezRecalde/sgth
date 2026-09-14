@@ -1,11 +1,10 @@
 'use client'
 
-import { confirmar, SgthModal } from '@/components/ui'
+import { confirmar, SgthModal, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Group, TextInput, Select, Button,
-  ActionIcon, Badge,
-} from '@mantine/core'
+  ActionIcon, } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
@@ -51,7 +50,7 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
       accessor: 'categoria',
       title: 'Categoría',
       width: 160,
-      render: (f) => <Badge variant="light" size="sm">{getCategoriaLabel(f.categoria)}</Badge>,
+      render: (f) => <StatusBadge>{getCategoriaLabel(f.categoria)}</StatusBadge>,
     },
     {
       accessor: 'acciones',

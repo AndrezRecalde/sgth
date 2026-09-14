@@ -1,16 +1,10 @@
-import { Text, Badge } from '@mantine/core'
+import { TONO_NOMINA } from '../constants/estadoNomina'
+import { Text } from '@mantine/core'
 import { TableActions } from '@/components/ui/TableActions'
 import { IconEye, IconLock } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Nomina, EstadoNomina } from '@/types/api'
-
-const ESTADO_COLORS: Record<EstadoNomina, string> = {
-  borrador:       'gray',
-  en_proceso:     'blue',
-  cerrada:        'orange',
-  contabilizada:  'violet',
-  pagada:         'emerald',
-}
+import { StatusBadge } from '@/components/ui'
 
 const ESTADO_LABELS: Record<EstadoNomina, string> = {
   borrador:       'Borrador',
@@ -108,12 +102,9 @@ export const getNominaColumns = (
     title:    'Estado',
     width:    120,
     render: ({ estado }) => (
-      <Badge
-        color={ESTADO_COLORS[estado] ?? 'gray'}
-        variant="light" size="sm"
-      >
+      <StatusBadge tone={TONO_NOMINA[estado] ?? 'neutral'}>
         {ESTADO_LABELS[estado] ?? estado}
-      </Badge>
+      </StatusBadge>
     ),
   },
   {

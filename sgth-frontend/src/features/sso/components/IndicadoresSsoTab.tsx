@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import {
   Box, Group, TextInput, Button, SimpleGrid, Card,
-  Text, Alert, Skeleton, Badge, Stack,
+  Text, Alert, Skeleton, Stack,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconSearch, IconClock, IconAlertCircle, IconGauge, IconShieldCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useIndicadoresReactivos, useIndicadoresProactivos } from '../hooks/useIndicadoresSso'
 import { GestionarHorasTrabajadasModal } from './GestionarHorasTrabajadasModal'
+import { StatusBadge } from '@/components/ui'
 
 function StatCard({ label, value, color = 'emerald' }: { label: string; value: string | number; color?: string }) {
   return (
@@ -124,9 +125,9 @@ export function IndicadoresSsoTab() {
                 </SimpleGrid>
                 {proactivos.cobertura_epp.total_puestos_con_epp_requerido > 0 && (
                   <Group mt="xs" gap="xs">
-                    <Badge variant="light" color="blue" size="sm">
+                    <StatusBadge>
                       {proactivos.cobertura_epp.puestos_con_entrega_en_periodo} de {proactivos.cobertura_epp.total_puestos_con_epp_requerido} puestos con entrega registrada en el período
-                    </Badge>
+                    </StatusBadge>
                   </Group>
                 )}
                 <Text size="xs" c="dimmed" mt="xs">

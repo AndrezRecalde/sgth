@@ -1,8 +1,7 @@
 'use client'
 
 import {
-  Drawer, Stack, Group, Text, Badge,
-  ThemeIcon, Divider, Table, Skeleton,
+  Drawer, Stack, Group, Text, ThemeIcon, Divider, Table, Skeleton,
   ScrollArea,
 } from '@mantine/core'
 import {
@@ -11,6 +10,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { consultaMedicaService } from '../services/consultaMedicaService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   opened:     boolean
@@ -98,19 +98,16 @@ export function DetalleConsultaDrawer({
           <Stack gap="md">
             <Group gap="xs">
               {consulta.tipo_atencion && (
-                <Badge size="sm" variant="light" color="blue">
+                <StatusBadge>
                   {consulta.tipo_atencion.replace('_', ' ')}
-                </Badge>
+                </StatusBadge>
               )}
               {consulta.tipo_diagnostico && (
-                <Badge
-                  size="sm"
-                  variant="light"
-                  color={consulta.tipo_diagnostico === 'definitivo'
-                    ? 'emerald' : 'orange'}
+                <StatusBadge
+                  tone={consulta.tipo_diagnostico === 'definitivo' ? 'success' : 'warning'}
                 >
                   {consulta.tipo_diagnostico}
-                </Badge>
+                </StatusBadge>
               )}
               <Text size="xs" c="dimmed">
                 Dr. {consulta.medico?.nombre_completo ?? '—'}
@@ -161,17 +158,12 @@ export function DetalleConsultaDrawer({
                       <Text size="xs" c="dimmed">
                         Emitida: {formatFecha(receta.fecha_emision)}
                       </Text>
-                      <Badge
+                      <StatusBadge
+                        tone={receta.estado === 'despachada_completa' ? 'success' : receta.estado === 'despachada_parcial' ? 'warning' : 'neutral'}
                         size="xs"
-                        variant="light"
-                        color={receta.estado === 'despachada_completa'
-                          ? 'emerald'
-                          : receta.estado === 'despachada_parcial'
-                            ? 'orange'
-                            : 'gray'}
                       >
                         {receta.estado.replace(/_/g, ' ')}
-                      </Badge>
+                      </StatusBadge>
                     </Group>
 
                     {receta.indicaciones_generales && (

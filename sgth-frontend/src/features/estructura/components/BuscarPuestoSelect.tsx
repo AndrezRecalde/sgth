@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Combobox, InputBase, useCombobox,
-  Text, Stack, Loader, Badge, Group,
+  Text, Stack, Loader, Group,
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
+import { StatusBadge } from '@/components/ui'
 
 // Cada tecla pedía una lista: escribir «Analista» disparaba siete peticiones y
 // solo importaba la última. Contra el servidor de desarrollo, que atiende de
@@ -163,9 +164,9 @@ export function BuscarPuestoSelect({
                       </Text>
                     )}
                     {p.regimen_laboral && (
-                      <Badge size="xs" variant="light" color="orange">
+                      <StatusBadge size="xs">
                         {p.regimen_laboral.toUpperCase()}
-                      </Badge>
+                      </StatusBadge>
                     )}
                   </Group>
                 </Stack>

@@ -2,8 +2,7 @@
 
 import {
   Stack, Group, Select, Button,
-  Textarea, Text, Card, Avatar, Badge,
-} from '@mantine/core'
+  Textarea, Text, Card, Avatar, } from '@mantine/core'
 import { useForm, Controller } from 'react-hook-form'
 import { IconCheck, IconUser, IconUsers } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -13,6 +12,7 @@ import {
 } from '../hooks/useAtencionEnfermeria'
 import type { PacienteEncontrado } from '../services/pacienteService'
 import type { AtencionEnfermeria } from '../services/atencionEnfermeriaService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   paciente:   PacienteEncontrado
@@ -82,9 +82,9 @@ export function AtencionEnfermeriaForm({
               <Text size="sm" fw={600}>
                 {paciente.nombre_completo}
               </Text>
-              <Badge size="xs" variant="light">
+              <StatusBadge size="xs">
                 {paciente.tipo === 'servidor' ? 'Servidor' : 'Familiar'}
-              </Badge>
+              </StatusBadge>
             </Stack>
           </Group>
         </Card>

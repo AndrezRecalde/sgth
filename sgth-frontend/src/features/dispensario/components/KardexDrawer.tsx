@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Drawer, Stack, Group, Text, Badge,
-  ThemeIcon, Skeleton, Pagination, Center, Alert,
+  Drawer, Stack, Group, Text, ThemeIcon, Skeleton, Pagination, Center, Alert,
 } from '@mantine/core'
 import {
   IconHistory, IconArrowUp, IconArrowDown, IconAlertTriangle,
@@ -13,6 +12,7 @@ import { useKardexMedicina } from '../hooks/useInventarioMedicina'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { getApiErrorMessage } from '@/types/api'
 import type { InventarioMedicina } from '../services/inventarioMedicinaService'
+import { StatusBadge } from '@/components/ui'
 
 interface Props {
   opened:   boolean
@@ -128,9 +128,9 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
                           ?? m.registrador?.usuario_ti ?? '—'}
                       </Text>
                       {m.lote && (
-                        <Badge size="xs" variant="outline" color="gray">
+                        <StatusBadge size="xs" variant="outline">
                           Lote {m.lote.codigo_lote ?? 'sin identificar'}
-                        </Badge>
+                        </StatusBadge>
                       )}
                     </Group>
                   </Stack>
@@ -143,9 +143,9 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
                   >
                     {esIngreso ? '+' : ''}{m.cantidad}
                   </Text>
-                  <Badge size="xs" variant="light" color="gray">
+                  <StatusBadge size="xs">
                     Stock: {m.stock_resultante}
-                  </Badge>
+                  </StatusBadge>
                 </Stack>
               </Group>
             )

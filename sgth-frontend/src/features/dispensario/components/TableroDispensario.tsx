@@ -1,27 +1,23 @@
 'use client'
 
 import {
-  SimpleGrid, Stack, Group, Text, Badge, Table, Progress, Alert,
+  SimpleGrid, Stack, Group, Text, Table, Progress, Alert,
 } from '@mantine/core'
 import {
   IconStethoscope, IconDental, IconUsers, IconAlertTriangle,
   IconClockExclamation, IconPill, IconChartBar,
 } from '@tabler/icons-react'
-import {
-  DataState, SectionCard, StatCard,
-} from '@/components/ui'
+import { DataState, SectionCard, StatCard, StatusBadge } from '@/components/ui'
 import { useKpisDispensario } from '../hooks/useKpis'
 import { useAuthStore } from '@/store/auth.store'
 import { ETIQUETA_ESPECIALIDAD } from '../services/kpisService'
 import type { Especialidad } from '../services/kpisService'
 
 function InsigniaEspecialidad({ valor }: { valor: Especialidad }) {
-  const esOdonto = valor === 'odontologia'
-
   return (
-    <Badge size="xs" variant="light" color={esOdonto ? 'teal' : 'blue'}>
+    <StatusBadge size="xs">
       {ETIQUETA_ESPECIALIDAD[valor]}
-    </Badge>
+    </StatusBadge>
   )
 }
 
@@ -165,9 +161,9 @@ export function TableroDispensario() {
               <Stack gap="xs">
                 {kpis?.top_diagnosticos.map((d) => (
                   <Group key={`${d.codigo}-${d.especialidad}`} gap="xs" wrap="nowrap">
-                    <Badge size="sm" variant="outline" ff="monospace">
+                    <StatusBadge variant="outline" ff="monospace">
                       {d.codigo}
-                    </Badge>
+                    </StatusBadge>
                     <Text size="xs" style={{ flex: 1 }} lineClamp={1}>
                       {d.descripcion}
                     </Text>

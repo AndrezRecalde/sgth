@@ -29,30 +29,6 @@ export const ROL_ETIQUETAS: Record<string, string> = {
   'auditor':           'Auditor',
 }
 
-/** Colores del tema Mantine. `auditor` usaba 'brown', que no está en la paleta. */
-export const ROL_COLORS: Record<string, string> = {
-  'admin-ti':          'red',
-  'admin-uath':        'violet',
-  'asistente-uath':    'grape',
-  'analista-uath':     'grape',
-  'maxima-autoridad':  'dark',
-  'director':          'blue',
-  'jefe-unidad':       'cyan',
-  'servidor':          'teal',
-  'recepcion':         'orange',
-  'trabajo-social':    'pink',
-  'financiero':        'emerald',
-  'medico':            'green',
-  'odontologo':        'lime',
-  'enfermera':         'yellow',
-  'admin-dispensario': 'indigo',
-  'tecnico-dtic':      'gray',
-  'auditor':           'dark',
-}
-
 /** Etiqueta legible de un rol; cae al slug si el rol es desconocido. */
 export const etiquetaRol = (valor: string): string =>
   ROL_ETIQUETAS[valor] ?? valor
-
-export const colorRol = (valor: string): string =>
-  ROL_COLORS[valor] ?? 'gray'

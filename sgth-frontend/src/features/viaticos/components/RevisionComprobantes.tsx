@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Badge, Group, Stack, Text } from '@mantine/core'
-import { MotivoModal } from '@/components/ui'
+import { Alert, Group, Stack, Text } from '@mantine/core'
+import { MotivoModal, StatusBadge } from '@/components/ui'
 import { useAccionesViatico } from '../hooks/useAccionesViatico'
 import { useViaticoMutations } from '../hooks/useViaticoMutations'
 import { resumenRevision } from '../utils/revisionComprobantes'
@@ -44,9 +44,9 @@ export function RevisionComprobantes({ viatico }: Props) {
       <Group justify="space-between">
         <Text size="xs" fw={600} c="dimmed">COMPROBANTES</Text>
         <Group gap={6}>
-          <Badge size="sm" variant="light" color="emerald">{resumen.aceptadas} aceptado(s)</Badge>
-          {resumen.observadas > 0 && <Badge size="sm" variant="light" color="red">{resumen.observadas} observado(s)</Badge>}
-          {resumen.pendientes > 0 && <Badge size="sm" variant="light" color="gray">{resumen.pendientes} por revisar</Badge>}
+          <StatusBadge tone="success">{resumen.aceptadas} aceptado(s)</StatusBadge>
+          {resumen.observadas > 0 && <StatusBadge tone="danger">{resumen.observadas} observado(s)</StatusBadge>}
+          {resumen.pendientes > 0 && <StatusBadge>{resumen.pendientes} por revisar</StatusBadge>}
         </Group>
       </Group>
 

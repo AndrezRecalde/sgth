@@ -6,10 +6,10 @@ import {
   Stack,
   Text,
   Avatar,
-  Badge,
   Divider,
 } from "@mantine/core";
 import type { UsuarioAuth } from "@/store/auth.store";
+import { StatusBadge } from "@/components/ui";
 
 interface Props {
   usuario: UsuarioAuth;
@@ -76,17 +76,13 @@ export function PerfilServidorCard({ usuario }: Props) {
 
             <Group gap={6} mt={6}>
               {servidor?.tipo_nombramiento_label && (
-                <Badge size="sm" variant="light" color="blue">
+                <StatusBadge>
                   {servidor.tipo_nombramiento_label}
-                </Badge>
+                </StatusBadge>
               )}
-              <Badge
-                size="sm"
-                variant="light"
-                color={activo ? "emerald" : "red"}
-              >
+              <StatusBadge tone={activo ? 'success' : 'danger'}>
                 {activo ? "Activo" : "Inactivo"}
-              </Badge>
+              </StatusBadge>
             </Group>
           </Stack>
         </Group>

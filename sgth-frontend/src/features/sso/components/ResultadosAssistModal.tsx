@@ -1,11 +1,11 @@
 'use client'
 
-import { Stack, Text, Badge, Group, Skeleton, Alert, SimpleGrid, Paper } from '@mantine/core'
-import { SgthModal } from '@/components/ui'
+import { Stack, Text, Group, Skeleton, Alert, SimpleGrid, Paper } from '@mantine/core'
+import { CountBadge, SgthModal, StatusBadge } from '@/components/ui'
 import { IconAlertCircle } from '@tabler/icons-react'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { useResultadosAssist } from '../hooks/useAssist'
-import { NIVEL_RIESGO_ASSIST_COLORS, NIVEL_RIESGO_ASSIST_LABELS } from '../schemas/assist.schema'
+import { NIVEL_RIESGO_ASSIST_LABELS, TONO_RIESGO_ASSIST } from '../schemas/assist.schema'
 import type { ResultadoSustanciaAgregado } from '../services/assistService'
 import type { DataTableColumn } from 'mantine-datatable'
 
@@ -28,21 +28,21 @@ export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
       title: 'Bajo',
       textAlign: 'center',
       width: 80,
-      render: (f) => <Badge color={NIVEL_RIESGO_ASSIST_COLORS.bajo} variant="light" size="sm">{f.bajo}</Badge>,
+      render: (f) => <CountBadge tone={TONO_RIESGO_ASSIST.bajo}>{f.bajo}</CountBadge>,
     },
     {
       accessor: 'moderado',
       title: 'Moderado',
       textAlign: 'center',
       width: 90,
-      render: (f) => <Badge color={NIVEL_RIESGO_ASSIST_COLORS.moderado} variant="light" size="sm">{f.moderado}</Badge>,
+      render: (f) => <CountBadge tone={TONO_RIESGO_ASSIST.moderado}>{f.moderado}</CountBadge>,
     },
     {
       accessor: 'alto',
       title: 'Alto',
       textAlign: 'center',
       width: 80,
-      render: (f) => <Badge color={NIVEL_RIESGO_ASSIST_COLORS.alto} variant="light" size="sm">{f.alto}</Badge>,
+      render: (f) => <CountBadge tone={TONO_RIESGO_ASSIST.alto}>{f.alto}</CountBadge>,
     },
   ]
 
@@ -84,9 +84,9 @@ export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
 
           <Group gap="xs">
             {(['bajo', 'moderado', 'alto'] as const).map((nivel) => (
-              <Badge key={nivel} color={NIVEL_RIESGO_ASSIST_COLORS[nivel]} variant="light">
+              <StatusBadge tone={TONO_RIESGO_ASSIST[nivel]} key={nivel}>
                 {NIVEL_RIESGO_ASSIST_LABELS[nivel]}
-              </Badge>
+              </StatusBadge>
             ))}
           </Group>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Badge, Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import {
   IconClipboardHeart, IconEye,
 } from '@tabler/icons-react'
@@ -11,12 +11,12 @@ import { useFemos } from
 import {
   TIPO_FICHA_OPTIONS,
   APTITUD_OPTIONS,
-  APTITUD_COLORS,
+  TONO_APTITUD,
 } from '@/features/dispensario/services/femoService'
 import type { FichaSaludOcupacional } from
   '@/features/dispensario/services/femoService'
 import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, TableActions } from '@/components/ui'
+import { EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 
 export function FemoView() {
   const router = useRouter()
@@ -72,9 +72,9 @@ export function FemoView() {
       title:    'Tipo',
       width:    150,
       render: (f) => (
-        <Badge size="sm" variant="light" color="blue">
+        <StatusBadge>
           {getLabelTipo(f.tipo_ficha)}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
@@ -82,13 +82,9 @@ export function FemoView() {
       title:    'Aptitud',
       width:    160,
       render: (f) => (
-        <Badge
-          size="sm"
-          variant="light"
-          color={APTITUD_COLORS[f.aptitud] ?? 'gray'}
-        >
+        <StatusBadge tone={TONO_APTITUD[f.aptitud] ?? 'neutral'}>
           {getLabelAptitud(f.aptitud)}
-        </Badge>
+        </StatusBadge>
       ),
     },
     {
