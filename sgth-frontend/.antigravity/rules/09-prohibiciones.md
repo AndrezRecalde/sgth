@@ -14,11 +14,13 @@ recordarlas:
 - `fetch` nativo y el `confirm()` del navegador
 - colores en hexadecimal en TS/TSX, salvo `design.tokens.ts`,
   `useEChartsColors.ts` y `app/layout.tsx`
+- colores fuera de la paleta (`blue`, `orange`, `gray`, `var(--mantine-color-gray-2)`…) y
+  `notifications` de Mantine fuera de `src/components/`
 - `<form>` sin `noValidate` y `'use client'` en un `page.tsx`
 
 El resto sigue dependiendo de quien revisa: iconos sueltos en una fila, colores
-escritos a mano en otros componentes (`Alert`, `ThemeIcon`), hexadecimales en
-CSS Modules, páginas sin `PageShell`. Se añaden al linter a medida que el
+de la paleta elegidos sin significado, hexadecimales y grises fijos en CSS
+Modules, páginas sin `PageShell`. Se añaden al linter a medida que el
 código deja de romperlas: una regla que destapa avisos preexistentes entra
 junto con su arreglo, o no entra (ver [10](10-checklist.md)).
 
