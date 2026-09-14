@@ -183,7 +183,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
 
           {regimenActual === 'codigo_trabajo' && (
             <Grid.Col span={12}>
-              <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+              <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
                 Bajo Código del Trabajo la remuneración se pacta en cada contrato,
                 no se deriva de una escala. Se ingresa al aprobar la acción de
                 personal de ingreso.
@@ -268,7 +268,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
                   label="Es jefe de unidad"
                   checked={field.value}
                   onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  color="emerald"
                   mt="xs"
                 />
               )}
@@ -283,7 +282,6 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
                   label="Puesto activo"
                   checked={field.value}
                   onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  color="emerald"
                   mt="xs"
                 />
               )}

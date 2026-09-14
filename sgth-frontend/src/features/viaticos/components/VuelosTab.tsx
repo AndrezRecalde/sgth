@@ -91,7 +91,7 @@ export function VuelosTab() {
       title: 'Código',
       width: 150,
       render: (v) => (
-        <Text size="sm" fw={600} c="blue">
+        <Text size="sm" fw={600} c="ocean">
           {(v as AutorizacionVueloConRelaciones)
             .viatico?.codigo_viatico ?? '—'}
         </Text>
@@ -205,7 +205,6 @@ export function VuelosTab() {
             {
               label: 'Aprobar',
               icon: <IconCheck size={14} />,
-              color: 'emerald',
               onClick: () => aprobar.mutate(Number(v.id)),
               hidden: !decide(v),
             },

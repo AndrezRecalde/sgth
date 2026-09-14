@@ -132,7 +132,6 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
               />
               <Button
                 type="submit"
-                color="emerald"
                 leftSection={<IconPlus size={16} />}
                 loading={crear.isPending}
               >

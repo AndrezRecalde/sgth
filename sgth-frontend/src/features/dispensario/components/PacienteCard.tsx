@@ -37,7 +37,6 @@ export function PacienteCard({
         <Group justify="space-between" wrap="nowrap">
           <Group gap="md" wrap="nowrap">
             <Avatar
-              color={esServidor ? 'emerald' : 'blue'}
               size={56}
               radius="xl"
               style={{ fontWeight: 700 }}
@@ -88,7 +87,7 @@ export function PacienteCard({
         {!paciente.tiene_historia_clinica ? (
           <Alert
             icon={<IconAlertCircle size={14} />}
-            color="orange"
+            color="amber"
             variant="light"
           >
             <Text size="xs" mb="xs">
@@ -97,7 +96,6 @@ export function PacienteCard({
             </Text>
             <Button
               size="xs"
-              color="orange"
               variant="light"
               leftSection={<IconPlus size={14} />}
               loading={creandoHistoria}
@@ -108,7 +106,6 @@ export function PacienteCard({
           </Alert>
         ) : (
           <Button
-            color="emerald"
             onClick={onContinuar}
           >
             Continuar — Crear turno

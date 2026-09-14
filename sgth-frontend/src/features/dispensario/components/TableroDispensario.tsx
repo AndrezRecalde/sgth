@@ -91,7 +91,7 @@ export function TableroDispensario() {
               <Progress.Root size="xl" radius="md">
                 <Progress.Section
                   value={(general / total) * 100}
-                  color="blue"
+                  color="ocean"
                 >
                   {general > 0 && (
                     <Progress.Label>{general}</Progress.Label>
@@ -99,7 +99,7 @@ export function TableroDispensario() {
                 </Progress.Section>
                 <Progress.Section
                   value={(odonto / total) * 100}
-                  color="teal"
+                  color="emerald"
                 >
                   {odonto > 0 && <Progress.Label>{odonto}</Progress.Label>}
                 </Progress.Section>
@@ -107,11 +107,11 @@ export function TableroDispensario() {
 
               <Group gap="lg">
                 <Group gap={6}>
-                  <IconStethoscope size={14} color="var(--mantine-color-blue-6)" />
+                  <IconStethoscope size={14} color="var(--mantine-color-ocean-6)" />
                   <Text size="xs" c="dimmed">Medicina general</Text>
                 </Group>
                 <Group gap={6}>
-                  <IconDental size={14} color="var(--mantine-color-teal-6)" />
+                  <IconDental size={14} color="var(--mantine-color-emerald-6)" />
                   <Text size="xs" c="dimmed">Odontología</Text>
                 </Group>
               </Group>
@@ -184,7 +184,7 @@ export function TableroDispensario() {
                 {kpis?.medicamentos_mas_despachados.map((m) => (
                   <Group key={m.nombre} justify="space-between" gap="xs">
                     <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-                      <IconPill size={13} color="var(--mantine-color-gray-6)" />
+                      <IconPill size={13} color="var(--mantine-color-slate-6)" />
                       <Text size="xs" lineClamp={1}>{m.nombre}</Text>
                     </Group>
                     <Text size="sm" fw={600}>{m.total_despachado}</Text>
@@ -208,7 +208,7 @@ export function TableroDispensario() {
               {bajoStock.length > 0 && (
                 <Alert
                   icon={<IconAlertTriangle size={15} />}
-                  color="orange"
+                  color="amber"
                   variant="light"
                   p="xs"
                 >

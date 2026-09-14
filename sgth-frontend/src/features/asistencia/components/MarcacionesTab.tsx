@@ -96,7 +96,7 @@ export function MarcacionesTab() {
           size="sm"
           c={
             Entrada && HoraEntradaProgramada && Entrada > HoraEntradaProgramada
-              ? "orange"
+              ? "amber"
               : "inherit"
           }
         >
@@ -177,7 +177,6 @@ export function MarcacionesTab() {
           <Button
             fullWidth
             size="sm"
-            color="emerald"
             variant="light"
             leftSection={<IconSearch size={16} />}
             disabled={!servidorSel || !fechaInicio || !fechaFin}

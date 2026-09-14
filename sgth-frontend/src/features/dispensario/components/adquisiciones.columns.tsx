@@ -113,13 +113,11 @@ export function getAdquisicionesColumns(
           {
             label:   'Ver detalle',
             icon:    <IconEye size={14} />,
-            color:   'blue',
             onClick: () => actions.onVerDetalle(a),
           },
           ...(a.documento_respaldo ? [{
             label:   'Descargar respaldo',
             icon:    <IconFileSearch size={14} />,
-            color:   'blue',
             onClick: () => actions.onDescargarDocumento(a),
           }] : []),
           // Una adquisición anulada ya no admite respaldo ni segunda
@@ -130,13 +128,12 @@ export function getAdquisicionesColumns(
                 ? 'Reemplazar documento'
                 : 'Subir documento de respaldo',
               icon:    <IconFileText size={14} />,
-              color:   a.documento_respaldo ? 'gray' : 'emerald',
               onClick: () => actions.onSubirDocumento(a),
             },
             {
               label:   'Anular adquisición',
               icon:    <IconBan size={14} />,
-              color:   'orange',
+              color:   'red',
               onClick: () => actions.onAnular(a),
             },
           ]),

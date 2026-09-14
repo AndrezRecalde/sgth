@@ -181,21 +181,18 @@ function accionesDe(s: SolicitudCertificacion, a: AccionesSso) {
     ...(s.estado === 'pendiente' ? [{
       label: s.constantes_vitales ? 'Iniciar y crear FEMO' : sinSignos,
       icon: <IconPlayerPlay size={14} />,
-      color: 'blue',
       disabled: !s.constantes_vitales,
       onClick: () => a.onIniciar(s.id),
     }] : []),
     ...(s.estado === 'en_proceso' ? [{
       label: s.constantes_vitales ? 'Continuar FEMO' : sinSignos,
       icon: <IconFileText size={14} />,
-      color: 'blue',
       disabled: !s.constantes_vitales,
       onClick: () => a.onContinuar(s.id),
     }] : []),
     ...(s.ficha_femo_id ? [{
       label: 'Descargar PDF de la ficha FEMO',
       icon: <IconDownload size={14} />,
-      color: 'blue',
       disabled: a.descargando,
       onClick: () => a.onDescargarFemo(
         s.ficha_femo_id!, `femo-${s.cedula_paciente}-${s.id}.pdf`,
@@ -206,7 +203,6 @@ function accionesDe(s: SolicitudCertificacion, a: AccionesSso) {
       (s.dictamen === 'apto' || s.dictamen === 'apto_con_restricciones') ? [{
       label: 'Confirmar incorporación',
       icon: <IconUserCheck size={14} />,
-      color: 'emerald',
       onClick: () => confirmar({
         title: 'Confirmar incorporación',
         message: (

@@ -100,7 +100,6 @@ export function ViaticoView() {
           <Group justify="flex-end">
             <Button
               size="xs"
-              color="emerald"
               variant="light"
               leftSection={<IconPlus size={14} />}
               onClick={open}

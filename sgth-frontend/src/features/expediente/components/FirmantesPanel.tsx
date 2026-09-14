@@ -37,7 +37,7 @@ function Tarjeta({ firmante }: { firmante: FirmanteVigente }) {
       {!firmante.resuelto && (
         <Alert
           variant="light"
-          color="orange"
+          color="amber"
           icon={<IconAlertTriangle size={14} />}
           mt="xs"
           p="xs"
@@ -71,7 +71,7 @@ export function FirmantesPanel({ compacto = false }: { compacto?: boolean }) {
   return (
     <>
       {!compacto && (
-        <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />} mb="md">
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />} mb="md">
           Los firmantes salen del organigrama: son los jefes de la unidad de
           Talento Humano y de la máxima autoridad. Para cambiarlos se cambia el
           organigrama, no hay designación aparte. Al suscribir una acción, estos
@@ -84,7 +84,7 @@ export function FirmantesPanel({ compacto = false }: { compacto?: boolean }) {
       </SimpleGrid>
 
       {sinResolver.length > 0 && !compacto && (
-        <Alert variant="light" color="orange" icon={<IconAlertTriangle size={16} />} mt="md">
+        <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />} mt="md">
           Los documentos saldrán con el cargo pero sin nombre mientras esto no se
           resuelva. Se corrige en Estructura → Unidades, marcando la unidad
           correspondiente y asegurando que su puesto de jefatura esté ocupado.

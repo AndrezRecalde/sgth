@@ -126,7 +126,6 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           />
           <Button
             leftSection={<IconPlus size={16} />}
-            color="emerald"
             loading={registrar.isPending}
             onClick={handleRegistrar}
             disabled={!periodo || !totalHoras}

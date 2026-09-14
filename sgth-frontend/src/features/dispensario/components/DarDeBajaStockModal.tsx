@@ -144,7 +144,7 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
 
         <Alert
           icon={<IconAlertTriangle size={14} />}
-          color={caducado ? 'red' : 'orange'}
+          color={caducado ? 'red' : 'amber'}
           variant="light"
         >
           <Text size="xs">

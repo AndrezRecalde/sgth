@@ -233,7 +233,6 @@ export function CuentaBancariaModal({
                   description="Pago de sueldo mensual"
                   checked={field.value ?? false}
                   onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  color="emerald"
                 />
               )}
             />
@@ -250,7 +249,7 @@ export function CuentaBancariaModal({
                   description="Pago de viáticos y comisiones"
                   checked={field.value ?? false}
                   onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  color="blue"
+                  color="ocean"
                 />
               )}
             />

@@ -59,7 +59,6 @@ export function TabCertificado({ turno, consulta }: Props) {
         </Text>
         <Button
           size="xs"
-          color="emerald"
           leftSection={<IconPlus size={13} />}
           onClick={abrirModal}
         >
@@ -93,7 +92,6 @@ export function TabCertificado({ turno, consulta }: Props) {
                   <Group gap="xs">
                     <ThemeIcon
                       size="sm"
-                      color={anulado ? 'gray' : 'blue'}
                       variant="light"
                     >
                       <IconCertificate size={12} />
@@ -119,7 +117,7 @@ export function TabCertificado({ turno, consulta }: Props) {
                 </Group>
 
                 <Group gap="xs">
-                  <IconCalendar size={13} color="gray" />
+                  <IconCalendar size={13} color="var(--mantine-color-slate-6)" />
                   <Text size="xs" c="dimmed">
                     {formatFecha(cert.fecha_inicio)} →{' '}
                     {formatFecha(cert.fecha_fin)}
@@ -145,7 +143,7 @@ export function TabCertificado({ turno, consulta }: Props) {
 
                 {cert.permiso_servidor && (
                   <Group gap="xs">
-                    <IconUser size={13} color="gray" />
+                    <IconUser size={13} color="var(--mantine-color-slate-6)" />
                     <Text size="xs" c="dimmed">
                       Permiso generado:{' '}
                       <Text span ff="monospace">
@@ -184,7 +182,6 @@ export function TabCertificado({ turno, consulta }: Props) {
                     <Button
                       size="compact-xs"
                       variant="subtle"
-                      color="orange"
                       leftSection={<IconBan size={13} />}
                       onClick={() => setAAnular(cert)}
                     >

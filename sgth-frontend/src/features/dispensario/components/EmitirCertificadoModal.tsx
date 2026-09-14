@@ -122,7 +122,7 @@ export function EmitirCertificadoModal({
       <Stack gap="sm">
         <Alert
           icon={<IconAlertCircle size={14} />}
-          color="blue"
+          color="ocean"
           variant="light"
         >
           <Text size="xs">

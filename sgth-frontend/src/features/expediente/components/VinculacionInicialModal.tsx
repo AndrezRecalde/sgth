@@ -115,7 +115,7 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
       title="Vinculación inicial — servidor ya vinculado"
       size="xl"
     >
-      <Stepper active={paso} size="sm" color="emerald" mb="lg" allowNextStepsSelect={false}>
+      <Stepper active={paso} size="sm" mb="lg" allowNextStepsSelect={false}>
         <Stepper.Step label="Datos personales" icon={<IconUser size={16} />} />
         <Stepper.Step label="Contacto y antigüedad" icon={<IconPhone size={16} />} />
         <Stepper.Step label="Vínculo vigente" icon={<IconBriefcase size={16} />} />
@@ -131,7 +131,7 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
 
               <Alert
                 variant="light"
-                color="blue"
+                color="ocean"
                 icon={<IconInfoCircle size={16} />}
                 mt="md"
                 mb="sm"

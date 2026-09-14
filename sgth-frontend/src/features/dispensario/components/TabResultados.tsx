@@ -68,7 +68,6 @@ export function TabResultados({
         </Text>
         <Button
           size="xs"
-          color="emerald"
           leftSection={<IconPlus size={13} />}
           onClick={abrirModal}
         >
@@ -95,7 +94,7 @@ export function TabResultados({
               <Group justify="space-between" wrap="nowrap">
                 <Group gap="sm" wrap="nowrap">
                   <ThemeIcon
-                    size="md" variant="light" color="blue" radius="xl"
+                    size="md" variant="light" radius="xl"
                   >
                     {getIcon(TIPO_RESULTADO_ICONS[r.tipo] ?? 'IconFileText', 16)}
                   </ThemeIcon>
@@ -128,7 +127,6 @@ export function TabResultados({
                       <ActionIcon
                         size="sm"
                         variant="light"
-                        color="blue"
                       >
                         <IconExternalLink size={13} />
                       </ActionIcon>

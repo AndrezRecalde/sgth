@@ -41,7 +41,7 @@ export function ServidorFormLaboral({ tipoNombramiento }: Props) {
       <Grid.Col span={12}>
         <Alert
           icon={<IconInfoCircle size={16} />}
-          color="blue"
+          color="ocean"
           variant="light"
           radius="md"
           mb="xs"

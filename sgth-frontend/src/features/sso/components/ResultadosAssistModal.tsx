@@ -56,7 +56,7 @@ export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
       {isLoading && <Skeleton height={300} radius="md" />}
 
       {!isLoading && resultados && resultados.total_respuestas === 0 && (
-        <Alert icon={<IconAlertCircle size={18} />} color="blue" variant="light">
+        <Alert icon={<IconAlertCircle size={18} />} color="ocean" variant="light">
           Todavía no se han registrado respuestas para esta campaña.
         </Alert>
       )}

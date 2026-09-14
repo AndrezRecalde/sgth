@@ -118,20 +118,17 @@ export function getViaticoColumns(
             {
               label:   'Ver detalle',
               icon:    <IconPlane size={14} />,
-              color:   'blue',
               onClick: () => actions.onVer(v),
             },
             {
               label:   'Aprobar',
               icon:    <IconCheck size={14} />,
-              color:   'emerald',
               onClick: () => actions.onAprobar(v),
               hidden:  !actions.puede.aprobar(v),
             },
             {
               label:   'Liquidar',
               icon:    <IconCurrencyDollar size={14} />,
-              color:   'orange',
               onClick: () => actions.onLiquidar(v),
               hidden:  !actions.puede.liquidar(v),
             },

@@ -127,7 +127,6 @@ export function ExpedienteView() {
         {hasPermiso('solicitar-certificacion-medica') &&
           selectedRecords.length > 0 && (
           <Button
-            color="blue"
             variant="light"
             leftSection={<IconStethoscope size={16} />}
             onClick={openLote}
@@ -137,7 +136,6 @@ export function ExpedienteView() {
         )}
         <Button
           variant="light"
-          color="gray"
           leftSection={<IconFileSpreadsheet size={16} />}
           loading={exportando === 'excel'}
           onClick={() => handleExportar('excel')}
@@ -146,7 +144,6 @@ export function ExpedienteView() {
         </Button>
         <Button
           variant="light"
-          color="gray"
           leftSection={<IconFileTypePdf size={16} />}
           loading={exportando === 'pdf'}
           onClick={() => handleExportar('pdf')}
@@ -157,7 +154,6 @@ export function ExpedienteView() {
             tenga el permiso. Al revocarlo el botón desaparece solo. */}
         {puedeVincularInicial && (
           <Button
-            color="grape"
             variant="light"
             leftSection={<IconHistoryToggle size={16} />}
             onClick={abrirVinculacion}
@@ -168,7 +164,6 @@ export function ExpedienteView() {
         {/* "Registrar ficha" y no "Nuevo servidor": esto crea a la persona,
             no la contrata. El vínculo se registra en el paso siguiente. */}
         <Button
-          color="emerald"
           variant="light"
           leftSection={<IconUserPlus size={16} />}
           onClick={handleNuevo}
@@ -181,7 +176,7 @@ export function ExpedienteView() {
       {(pendientes ?? 0) > 0 && pendienteVinculacion !== true && (
         <Alert
           variant="light"
-          color="yellow"
+          color="amber"
           icon={<IconAlertTriangle size={16} />}
           mb="md"
           title={`${pendientes} ficha(s) sin vínculo laboral registrado`}
@@ -194,7 +189,6 @@ export function ExpedienteView() {
             <Button
               size="xs"
               variant="light"
-              color="yellow"
               onClick={() => { setPendienteVinculacion(true); setPage(1) }}
             >
               Ver quiénes
@@ -220,7 +214,7 @@ export function ExpedienteView() {
           title="No hay servidores registrados"
           description="Comience registrando la ficha del primer servidor. El vínculo laboral se registra después, con su Acción de Personal de Ingreso."
           action={
-            <Button color="emerald" variant="light"
+            <Button variant="light"
               leftSection={<IconUserPlus size={14} />}
               onClick={handleNuevo}>
               Registrar ficha

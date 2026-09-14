@@ -143,7 +143,6 @@ export function SubrogacionesView() {
             ...(s.estado === 'activa' ? [{
               label: 'Finalizar',
               icon: <IconPlayerStop size={14} />,
-              color: 'emerald',
               onClick: () => confirmar({
                 title:   'Finalizar subrogación',
                 message: 'Se dará por terminada esta subrogación o encargo con fecha de hoy.',
@@ -175,8 +174,7 @@ export function SubrogacionesView() {
 
       <Toolbar
         actions={
-          <Button
-            color="emerald" variant="light"
+          <Button variant="light"
             leftSection={<IconPlus size={16} />}
             onClick={openModal}
           >
@@ -219,7 +217,7 @@ export function SubrogacionesView() {
           title: 'Sin subrogaciones/encargos vigentes',
           description: 'Aquí aparecerán las subrogaciones y encargos pendientes de aprobación y los que ya surten efecto.',
           action: (
-            <Button color="emerald" variant="light" leftSection={<IconPlus size={14} />} onClick={openModal}>
+            <Button variant="light" leftSection={<IconPlus size={14} />} onClick={openModal}>
               Nueva subrogación / encargo
             </Button>
           ),

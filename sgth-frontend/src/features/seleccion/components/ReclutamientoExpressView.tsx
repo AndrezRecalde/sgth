@@ -71,7 +71,7 @@ export function ReclutamientoExpressView() {
 
   return (
     <Box>
-      <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />} mb="md">
+      <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />} mb="md">
         Estas cuatro modalidades no pasan por concurso de méritos y oposición, pero
         cada aspirante sí se evalúa individualmente y, si aprueba, se despacha al
         dispensario médico para la ficha ocupacional.
@@ -149,15 +149,14 @@ export function ReclutamientoExpressView() {
                 <Group gap="xl">
                   <Metrica etiqueta="Aspirantes" valor={c.total_aspirantes} />
                   <Metrica etiqueta="Aprobados" valor={c.aprobados} color="emerald" />
-                  <Metrica etiqueta="Incorporados" valor={c.incorporados} color="violet" />
-                  <Metrica etiqueta="Pendientes" valor={c.pendientes} color="blue" />
+                  <Metrica etiqueta="Incorporados" valor={c.incorporados} color="amethyst" />
+                  <Metrica etiqueta="Pendientes" valor={c.pendientes} color="ocean" />
                 </Group>
 
                 <Group>
                   <Button
                     size="xs"
                     variant="light"
-                    color="emerald"
                     leftSection={<IconPlus size={14} />}
                     onClick={() => inscribirEn(c)}
                   >

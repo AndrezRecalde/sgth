@@ -271,7 +271,6 @@ export function AspirantesExpressDrawer({
               // «En evaluación médica» sin más opciones que recalificar.
               label: 'Confirmar incorporación',
               icon: <IconUserCheck size={14} />,
-              color: 'emerald',
               onClick: () => incorporar(a),
               hidden: a.estado !== 'ganador_potencial',
               // Visible pero inerte mientras el dispensario no cierre el

@@ -31,9 +31,9 @@ export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
     .join(" ");
 
   return (
-    <Card withBorder radius="md" p="sm" bg="blue.0">
+    <Card withBorder radius="md" p="sm" bg="var(--sgth-surface-sunken)">
       <Group gap="sm">
-        <ThemeIcon color="blue" variant="light" size="lg" radius="xl">
+        <ThemeIcon variant="light" size="lg" radius="xl">
           <IconUser size={18} />
         </ThemeIcon>
         <div>

@@ -38,7 +38,7 @@ export function AccionesPersonalView() {
         description="Registre nuevas acciones y revise las que esperan aprobación de Talento Humano"
       />
 
-      <Tabs defaultValue="bandeja" color="emerald">
+      <Tabs defaultValue="bandeja">
         <Tabs.List mb="md">
           <Tabs.Tab value="bandeja" leftSection={<IconInbox size={16} />}>
             Bandeja de acciones

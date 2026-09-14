@@ -185,14 +185,12 @@ function CargaRow({
               checked={carga.estado}
               onChange={() => onToggleEstado(Number(carga.id))}
               disabled={togglePending}
-              color="emerald"
               size="sm"
             />
           </Tooltip>
           <Tooltip label="Editar" withArrow>
             <ActionIcon
               variant="subtle"
-              color="blue"
               size="sm"
               onClick={() => onEdit(carga)}
             >
@@ -227,13 +225,12 @@ function CargaRow({
           {carga.persona_con_discapacidad && (
             <div>
               <Group justify="space-between" mb="xs">
-                <Text size="xs" fw={600} c="orange">
+                <Text size="xs" fw={600} c="amber">
                   Discapacidades
                 </Text>
                 <Button
                   size="xs"
                   variant="subtle"
-                  color="orange"
                   leftSection={<IconPlus size={12} />}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -255,7 +252,7 @@ function CargaRow({
                     p="xs"
                     style={{
                       borderRadius: 6,
-                      background: "var(--mantine-color-orange-light)",
+                      background: "var(--mantine-color-amber-light)",
                     }}
                   >
                     <div>
@@ -297,7 +294,6 @@ function CargaRow({
                 <Button
                   size="xs"
                   variant="subtle"
-                  color="red"
                   leftSection={<IconPlus size={12} />}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -401,7 +397,6 @@ export function FamiliaTab({ servidorId }: Props) {
       <Group justify="flex-end">
         <Button
           size="xs"
-          color="emerald"
           variant="light"
           leftSection={<IconPlus size={14} />}
           onClick={() => {

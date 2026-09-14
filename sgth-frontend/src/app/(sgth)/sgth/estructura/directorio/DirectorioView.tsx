@@ -49,7 +49,6 @@ export function DirectorioView() {
         description="Extensiones por unidad administrativa"
         actions={
           <Button
-            color="emerald"
             leftSection={<IconCubePlus size={16} />}
             variant="light"
             onClick={modal.open}

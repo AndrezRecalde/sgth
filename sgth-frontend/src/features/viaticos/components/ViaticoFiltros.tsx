@@ -2,14 +2,16 @@
 
 import { Group, Chip, TextInput, Button, ActionIcon } from "@mantine/core";
 import { IconSearch, IconX } from "@tabler/icons-react";
+import { SEMANTIC_COLOR } from "@/config/design.tokens";
+import { TONO_VIATICO } from "../constants/viatico.constants";
 
 const ESTADO_CHIPS = [
-  { value: "todos", label: "Todos", color: "gray" },
-  { value: "solicitado", label: "Solicitados", color: "orange" },
-  { value: "aprobado", label: "Aprobados", color: "blue" },
-  { value: "con_anticipo", label: "Con anticipo", color: "cyan" },
-  { value: "pendiente_liquidacion", label: "Pend. liquid.", color: "yellow" },
-  { value: "liquidado", label: "Liquidados", color: "emerald" },
+  { value: "todos", label: "Todos" },
+  { value: "solicitado", label: "Solicitados" },
+  { value: "aprobado", label: "Aprobados" },
+  { value: "con_anticipo", label: "Con anticipo" },
+  { value: "pendiente_liquidacion", label: "Pend. liquid." },
+  { value: "liquidado", label: "Liquidados" },
 ];
 
 interface Props {
@@ -46,7 +48,6 @@ export function ViaticoFiltros({
               <ActionIcon
                 size="sm"
                 variant="subtle"
-                color="gray"
                 onClick={onLimpiar}
               >
                 <IconX size={12} />
@@ -68,7 +69,8 @@ export function ViaticoFiltros({
           <Chip
             key={op.value}
             size="sm"
-            color={op.color}
+            // El chip de un estado lleva el tono de ese estado, igual que su etiqueta.
+            color={SEMANTIC_COLOR[TONO_VIATICO[op.value] ?? "neutral"]}
             checked={filtroEstado === op.value}
             onChange={() => onEstadoChange(op.value)}
           >

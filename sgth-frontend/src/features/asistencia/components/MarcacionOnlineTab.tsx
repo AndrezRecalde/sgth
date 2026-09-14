@@ -130,7 +130,7 @@ export function MarcacionOnlineTab() {
     return (
       <Alert
         icon={<IconInfoCircle size={16} />}
-        color="orange"
+        color="amber"
         variant="light"
         radius="md"
       >
@@ -157,7 +157,7 @@ export function MarcacionOnlineTab() {
       <Paper withBorder radius="md" p="md" bg="var(--mantine-color-body)">
         <Group justify="space-between" align="center" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <ThemeIcon size={32} radius="xl" variant="light" color="blue">
+            <ThemeIcon size={32} radius="xl" variant="light" color="ocean">
               <IconInfoCircle size={18} />
             </ThemeIcon>
             <Text size="xs" c="dimmed" lh={1.3} maw={250}>
@@ -200,7 +200,6 @@ export function MarcacionOnlineTab() {
                   <Button
                     size="compact-xs"
                     variant="subtle"
-                    color="blue"
                     onClick={handleReintentar}
                   >
                     Reintentar
@@ -238,14 +237,13 @@ export function MarcacionOnlineTab() {
 
             {cargandoEstado ? (
               <Center py="xl">
-                <Loader size="sm" color="emerald" />
+                <Loader size="sm" />
               </Center>
             ) : (
               <Timeline
                 active={activeStep}
                 bulletSize={24}
                 lineWidth={2}
-                color="emerald"
               >
                 <Timeline.Item
                   bullet={
@@ -336,7 +334,6 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="emerald"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("I", "Entrada")}
@@ -357,7 +354,7 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="red"
+                  color="slate"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("I", "Salida")}
@@ -378,7 +375,6 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="orange"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("O", "Salida Almuerzo")}
@@ -401,7 +397,6 @@ export function MarcacionOnlineTab() {
                 <Button
                   h={100}
                   radius="md"
-                  color="blue"
                   variant="light"
                   loading={registrando}
                   onClick={() => registrar("O", "Retorno Almuerzo")}

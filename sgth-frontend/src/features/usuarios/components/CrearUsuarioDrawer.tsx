@@ -116,7 +116,7 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
       onExitTransitionEnd={reiniciarAsistente}
       title={
         <Group gap="xs">
-          <ThemeIcon color="emerald" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconUser size={16} />
           </ThemeIcon>
           <Text fw={700}>
@@ -162,7 +162,6 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
                     <Button
                       size="xs"
                       variant="subtle"
-                      color="gray"
                       leftSection={<IconArrowLeft size={12} />}
                       onClick={volverABuscar}
                     >
@@ -171,7 +170,7 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
                   </Group>
                 </Paper>
 
-                <Alert color="blue" variant="light" icon={<IconAlertTriangle size={16} />}>
+                <Alert color="ocean" variant="light" icon={<IconAlertTriangle size={16} />}>
                   <Text size="xs">
                     La contraseña inicial será la cédula del servidor
                     ({servidorSel.cedula}). El sistema pedirá cambiarla en el
@@ -192,7 +191,6 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
                   </Button>
                   <Button
                     type="submit"
-                    color="emerald"
                     loading={isSubmitting || crear.isPending}
                     leftSection={<IconCheck size={14} />}
                   >

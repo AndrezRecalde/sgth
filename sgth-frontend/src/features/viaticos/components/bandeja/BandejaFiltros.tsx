@@ -49,7 +49,7 @@ export function BandejaFiltros({ filtros, unidades, onCambiar }: Props) {
         style={{ minWidth: 240 }}
         rightSection={
           filtros.busqueda ? (
-            <ActionIcon size="sm" variant="subtle" color="gray" onClick={() => onCambiar({ busqueda: '' })}>
+            <ActionIcon size="sm" variant="subtle" onClick={() => onCambiar({ busqueda: '' })}>
               <IconX size={12} />
             </ActionIcon>
           ) : null

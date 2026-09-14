@@ -29,7 +29,7 @@ export function UltimoTriajeReferencia({ agendaId }: Props) {
     return (
       <Card withBorder radius="md" p="sm">
         <Group gap="xs">
-          <ThemeIcon color="gray" variant="light" size="sm">
+          <ThemeIcon variant="light" size="sm">
             <IconInfoCircle size={13} />
           </ThemeIcon>
           <Text size="xs" c="dimmed">
@@ -47,14 +47,14 @@ export function UltimoTriajeReferencia({ agendaId }: Props) {
       radius="md"
       p="sm"
       style={{
-        backgroundColor: 'var(--mantine-color-blue-light)',
+        backgroundColor: 'var(--sgth-accent-light)',
       }}
     >
       <Group gap="xs" mb="xs">
-        <ThemeIcon color="blue" variant="light" size="sm">
+        <ThemeIcon variant="light" size="sm">
           <IconHistory size={13} />
         </ThemeIcon>
-        <Text size="xs" fw={600} c="blue">
+        <Text size="xs" fw={600} c="ocean">
           Último triaje registrado — {formatFecha(triaje.registrado_en)}
         </Text>
       </Group>

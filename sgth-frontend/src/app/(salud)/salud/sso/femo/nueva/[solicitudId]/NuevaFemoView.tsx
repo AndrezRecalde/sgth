@@ -259,7 +259,7 @@ export function NuevaFemoView({ solicitudId }: Props) {
       />
 
       <Alert
-        color="blue"
+        color="ocean"
         variant="light"
         icon={<IconInfoCircle size={16} />}
       >

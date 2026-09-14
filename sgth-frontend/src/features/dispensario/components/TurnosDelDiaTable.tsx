@@ -138,7 +138,7 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
       render: (t) => (
         <Text
           size="xs"
-          c={t.triaje ? 'emerald' : t.requiere_triaje ? 'orange' : 'dimmed'}
+          c={t.triaje ? 'emerald' : t.requiere_triaje ? 'amber' : 'dimmed'}
         >
           {t.triaje ? 'Listo' : t.requiere_triaje ? 'Pendiente' : '—'}
         </Text>
@@ -174,19 +174,16 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
             ...(puedeAtender ? [{
               label:   enConsulta ? 'Continuar consulta' : 'Atender',
               icon:    <IconStethoscope size={14} />,
-              color:   'emerald',
               onClick: () => onAtender(t),
             }] : []),
             ...((esAtendido || enConsulta) ? [{
               label:   'Ver consulta',
               icon:    <IconEye size={14} />,
-              color:   'blue',
               onClick: () => onVerConsulta(t),
             }] : []),
             ...(esPendiente ? [{
               label:   'No se presentó',
               icon:    <IconUserOff size={14} />,
-              color:   'orange',
               onClick: () => confirmar({
                 title:   'Marcar como no presentado',
                 message: 'El turno quedará marcado como no presentado. Podrás reactivarlo después.',
@@ -197,7 +194,6 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
             ...(esNoPresentado ? [{
               label:   'Reactivar turno',
               icon:    <IconRefresh size={14} />,
-              color:   'blue',
               onClick: () => confirmar({
                 title:   'Reactivar turno',
                 message: 'El turno volverá a la cola de atención del día.',
@@ -234,7 +230,6 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
           {filtroActivo && (
             <ActionIcon
               variant="subtle"
-              color="gray"
               onClick={handleLimpiar}
             >
               <IconX size={14} />

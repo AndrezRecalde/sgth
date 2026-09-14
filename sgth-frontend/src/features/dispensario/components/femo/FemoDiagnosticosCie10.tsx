@@ -60,7 +60,6 @@ export function FemoDiagnosticosCie10({ diagnosticos, onChange }: Props) {
           <Grid.Col span={{ base: 12, md: 2 }}>
             <Button
               fullWidth
-              color="emerald"
               leftSection={<IconPlus size={13} />}
               disabled={!cie10Sel}
               onClick={handleAgregar}

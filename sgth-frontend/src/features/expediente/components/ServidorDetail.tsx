@@ -73,7 +73,7 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="emerald" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconUser size={16} />
           </ThemeIcon>
           <Text fw={700} size="md">
@@ -96,7 +96,7 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
               background: "var(--mantine-color-emerald-light)",
             }}
           >
-            <Avatar size={52} radius="xl" color="emerald" fw={700}>
+            <Avatar size={52} radius="xl" fw={700}>
               {initials}
             </Avatar>
             <Stack gap={2} style={{ flex: 1 }}>
@@ -136,7 +136,6 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
               <Button
                 size="xs"
                 variant="light"
-                color="gray"
                 leftSection={<IconEdit size={12} />}
                 onClick={() => onEdit(servidor)}
               >
@@ -146,7 +145,7 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
           </Group>
 
           {/* Tabs del expediente */}
-          <Tabs defaultValue="personal" color="emerald">
+          <Tabs defaultValue="personal">
             <Tabs.List>
               <Tabs.Tab value="personal" leftSection={<IconUser size={13} />}>
                 Personal

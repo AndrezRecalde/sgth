@@ -195,7 +195,7 @@ export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
       title={isEditing ? 'Editar datos del servidor' : 'Registrar ficha del servidor'}
       size="xl"
     >
-      <Stepper active={step} size="sm" color="emerald" mb="lg" allowNextStepsSelect={false}>
+      <Stepper active={step} size="sm" mb="lg" allowNextStepsSelect={false}>
         <Stepper.Step label="Datos personales" icon={<IconUser size={16} />} />
         <Stepper.Step label="Contacto" icon={<IconPhone size={16} />} />
         {isEditing && (

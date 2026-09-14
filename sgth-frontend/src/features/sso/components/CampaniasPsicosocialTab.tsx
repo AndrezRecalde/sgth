@@ -113,7 +113,7 @@ export function CampaniasPsicosocialTab() {
         <Text size="sm" c="dimmed">
           Cuestionario anónimo de evaluación de riesgo psicosocial (Ministerio del Trabajo, 58 ítems).
         </Text>
-        <Button leftSection={<IconPlus size={16} />} color="emerald" onClick={openCrear}>
+        <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
           Nueva campaña
         </Button>
       </Group>

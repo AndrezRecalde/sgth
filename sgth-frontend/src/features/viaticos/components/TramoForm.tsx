@@ -358,7 +358,7 @@ export function TramoForm({
               </Alert>
             )}
             {alertaSalida === "error" && (
-              <Alert color="orange" variant="light" p="xs">
+              <Alert color="amber" variant="light" p="xs">
                 <Text size="xs" fw={500}>
                   El primer tramo debe salir exactamente el{" "}
                   <strong>
@@ -396,7 +396,6 @@ export function TramoForm({
           <Button
             type="submit"
             size="sm"
-            color="emerald"
             variant="light"
             loading={crear.isPending}
           >

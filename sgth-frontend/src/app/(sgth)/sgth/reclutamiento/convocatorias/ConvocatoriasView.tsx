@@ -118,7 +118,6 @@ export function ConvocatoriasView() {
           {
             label:   'Ver detalle',
             icon:    <IconEye size={14} />,
-            color:   'blue',
             onClick: () => router.push(
               `/sgth/reclutamiento/convocatorias/${c.id}`
             ),
@@ -126,7 +125,6 @@ export function ConvocatoriasView() {
           ...(c.estado === 'borrador' ? [{
             label:   'Publicar',
             icon:    <IconWorldUpload size={14} />,
-            color:   'emerald',
             onClick: () => confirmar({
               title:   'Publicar convocatoria',
               message: (
@@ -142,7 +140,6 @@ export function ConvocatoriasView() {
           {
             label:   'Editar',
             icon:    <IconEdit size={14} />,
-            color:   'blue',
             onClick: () => router.push(
               `/sgth/reclutamiento/convocatorias/${c.id}/editar`
             ),
@@ -170,7 +167,6 @@ export function ConvocatoriasView() {
         description="Gestión de procesos de selección e incorporación"
         actions={
           <Button
-            color="emerald"
             leftSection={<IconPlus size={14} />}
             onClick={() =>
               router.push('/sgth/reclutamiento/convocatorias/nueva')

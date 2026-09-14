@@ -114,7 +114,7 @@ export function AssistCampaniasTab() {
           Tamizaje anónimo de consumo de sustancias (ASSIST v3.1, OMS/OPS) — Fase 4 del programa de
           prevención de drogas.
         </Text>
-        <Button leftSection={<IconPlus size={16} />} color="emerald" onClick={openCrear}>
+        <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
           Nueva campaña
         </Button>
       </Group>

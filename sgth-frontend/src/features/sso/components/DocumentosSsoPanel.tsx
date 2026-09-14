@@ -41,7 +41,7 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
 
   if (!documentableId) {
     return (
-      <Alert icon={<IconAlertCircle size={16} />} color="blue" variant="light">
+      <Alert icon={<IconAlertCircle size={16} />} color="ocean" variant="light">
         Guarde el registro primero para poder adjuntar documentos de respaldo.
       </Alert>
     )
@@ -84,7 +84,6 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
           <Group gap={4} wrap="nowrap">
             <ActionIcon
               variant="subtle"
-              color="emerald"
               loading={descargar.isPending}
               onClick={() => descargar.mutate(doc.id)}
               aria-label="Descargar"
@@ -143,7 +142,6 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
       <Button
         size="xs"
         variant="light"
-        color="emerald"
         leftSection={<IconUpload size={14} />}
         loading={subir.isPending}
         onClick={handleSubir}

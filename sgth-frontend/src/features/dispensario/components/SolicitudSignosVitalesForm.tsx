@@ -36,10 +36,10 @@ function calcularImc(pesoKg?: number, tallaCm?: number): number | null {
 function clasificacionImc(imc: number | null): {
   texto: string; color: string
 } {
-  if (imc === null) return { texto: '—', color: 'gray' }
-  if (imc < 18.5) return { texto: 'Bajo peso', color: 'blue' }
+  if (imc === null) return { texto: '—', color: 'slate' }
+  if (imc < 18.5) return { texto: 'Bajo peso', color: 'ocean' }
   if (imc < 25)   return { texto: 'Normal',    color: 'emerald' }
-  if (imc < 30)   return { texto: 'Sobrepeso', color: 'orange' }
+  if (imc < 30)   return { texto: 'Sobrepeso', color: 'amber' }
   return { texto: 'Obesidad', color: 'red' }
 }
 
@@ -93,7 +93,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
 
           <Group justify="space-between" wrap="nowrap">
             <Group gap="sm">
-              <Avatar color="blue" radius="xl">
+              <Avatar radius="xl">
                 <IconUser size={16} />
               </Avatar>
               <Stack gap={0}>
@@ -317,7 +317,6 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
             </Button>
             <Button
               type="submit"
-              color="emerald"
               leftSection={<IconCheck size={14} />}
               loading={registrar.isPending}
             >

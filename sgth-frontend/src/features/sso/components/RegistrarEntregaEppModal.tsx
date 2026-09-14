@@ -257,7 +257,7 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
             )}
 
             {kitServidorId && !kitLoading && kitEquipos.length === 0 && (
-              <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+              <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
                 Este puesto no tiene equipos de protección definidos en su catálogo.
                 Puede agregar equipos manualmente abajo.
               </Alert>

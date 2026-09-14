@@ -110,7 +110,6 @@ export function AusentismoTab() {
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 2 }} style={{ display: 'flex', alignItems: 'flex-end' }}>
             <Button
-              color="emerald"
               variant="light"
               leftSection={<IconSearch size={16} />}
               disabled={!canSearch}
@@ -128,7 +127,6 @@ export function AusentismoTab() {
         <Group justify="flex-end" gap="sm">
           <Button
             variant="light"
-            color="blue"
             size="xs"
             leftSection={<IconFileTypeCsv size={14} />}
             loading={exportando === 'excel'}
@@ -138,7 +136,6 @@ export function AusentismoTab() {
           </Button>
           <Button
             variant="light"
-            color="red"
             size="xs"
             leftSection={<IconFileDownload size={14} />}
             loading={exportando === 'pdf'}
@@ -150,13 +147,13 @@ export function AusentismoTab() {
       )}
 
       {!buscar ? (
-        <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+        <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
           <Text size="sm">Seleccione un rango de fechas y presione Consultar.</Text>
         </Alert>
       ) : isLoading ? (
         <Skeleton height={200} radius="md" />
       ) : consolidado.length === 0 ? (
-        <Alert icon={<IconClipboardList size={16} />} color="gray" variant="light">
+        <Alert icon={<IconClipboardList size={16} />} color="slate" variant="light">
           <Text size="sm">Sin permisos por enfermedad registrados en el período seleccionado.</Text>
         </Alert>
       ) : (

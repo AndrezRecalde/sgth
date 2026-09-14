@@ -202,7 +202,7 @@ export function FacturasModal({
 
         <Alert
           icon={<IconInfoCircle size={14} />}
-          color="orange"
+          color="amber"
           variant="light"
         >
           <Text size="xs" fw={500}>
@@ -239,7 +239,6 @@ export function FacturasModal({
 
         <Button
           variant="light"
-          color="orange"
           leftSection={<IconPlus size={14} />}
           onClick={() => append({ ...FACTURA_VACIA })}
         >

@@ -89,11 +89,10 @@ export function CrearTurnoForm({
       <Stack gap="md">
         <Card
           withBorder radius="md" p="sm"
-          style={{ backgroundColor: 'var(--mantine-color-blue-light)' }}
+          style={{ backgroundColor: 'var(--sgth-accent-light)' }}
         >
           <Group gap="sm">
             <Avatar
-              color={paciente.tipo === 'servidor' ? 'emerald' : 'blue'}
               radius="xl"
             >
               {paciente.tipo === 'servidor'
@@ -158,7 +157,7 @@ export function CrearTurnoForm({
         {!cargandoPersonal && personalOptions.length === 0 && (
           <Alert
             icon={<IconInfoCircle size={14} />}
-            color="orange"
+            color="amber"
             variant="light"
           >
             <Text size="xs">
@@ -170,7 +169,7 @@ export function CrearTurnoForm({
         {!cargandoPersonal && personalOptions.length > 0 && !hayDisponibles && (
           <Alert
             icon={<IconInfoCircle size={14} />}
-            color="orange"
+            color="amber"
             variant="light"
           >
             <Text size="xs">
@@ -206,7 +205,6 @@ export function CrearTurnoForm({
                 el tipo de atención"
               checked={field.value}
               onChange={(e) => field.onChange(e.currentTarget.checked)}
-              color="emerald"
             />
           )}
         />
@@ -217,7 +215,6 @@ export function CrearTurnoForm({
           </Button>
           <Button
             type="submit"
-            color="emerald"
             leftSection={<IconCheck size={14} />}
             loading={crearTurno.isPending}
           >

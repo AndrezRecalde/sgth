@@ -11,7 +11,7 @@ export function NoticiasCard() {
     <Card withBorder radius="xl" p="xl">
       <Stack gap="md">
         <Group gap="xs">
-          <ThemeIcon color="orange" variant="light" size="md">
+          <ThemeIcon variant="light" size="md">
             <IconSpeakerphone size={16} />
           </ThemeIcon>
           <Text fw={600} size="md">
@@ -22,7 +22,6 @@ export function NoticiasCard() {
         <Center py="xl">
           <Stack gap={4} align="center">
             <ThemeIcon
-              color="gray"
               variant="light"
               size={48}
               radius="xl"

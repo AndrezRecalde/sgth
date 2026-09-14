@@ -68,7 +68,7 @@ export function PermisoDatosCampos({ form }: Props) {
 
       {/* Una frase por aviso: el del personal eran 257 caracteres en naranja. */}
       {tipo === 'personal' && (
-        <Alert icon={<IconInfoCircle size={14} />} color="blue" variant="light" py={6}>
+        <Alert icon={<IconInfoCircle size={14} />} color="ocean" variant="light" py={6}>
           <Text size="xs">
             Hasta 4 horas por día, que se descuentan de las vacaciones. Solo en
             días laborables.
@@ -77,7 +77,7 @@ export function PermisoDatosCampos({ form }: Props) {
       )}
 
       {esRetroactivo && (
-        <Alert icon={<IconInfoCircle size={14} />} color="blue" variant="light" py={6}>
+        <Alert icon={<IconInfoCircle size={14} />} color="ocean" variant="light" py={6}>
           <Text size="xs">
             Se registra con la fecha en que ocurrió: hasta dos días hábiles
             atrás y nunca a futuro.

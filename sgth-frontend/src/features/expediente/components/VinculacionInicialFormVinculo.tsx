@@ -58,7 +58,7 @@ export function VinculacionInicialFormVinculo() {
   return (
     <Grid>
       <Grid.Col span={12}>
-        <Alert variant="light" color="orange" icon={<IconInfoCircle size={16} />}>
+        <Alert variant="light" color="amber" icon={<IconInfoCircle size={16} />}>
           Este vínculo se registrará <strong>sin Acción de Personal</strong>, porque
           el acto administrativo ya ocurrió en papel. Quedará marcado como carga
           inicial. Todo lo que pase después —traspasos, comisiones, cesaciones—

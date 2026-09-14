@@ -51,7 +51,6 @@ export function IndicadoresSsoTab() {
           />
           <Button
             leftSection={<IconSearch size={16} />}
-            color="emerald"
             onClick={handleConsultar}
             disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
           >
@@ -64,7 +63,7 @@ export function IndicadoresSsoTab() {
       </Group>
 
       {!periodo && (
-        <Alert icon={<IconAlertCircle size={18} />} color="blue" variant="light">
+        <Alert icon={<IconAlertCircle size={18} />} color="ocean" variant="light">
           Ingrese un período y presione Consultar para ver los índices reactivos (CD 513) y proactivos.
         </Alert>
       )}
@@ -80,7 +79,7 @@ export function IndicadoresSsoTab() {
             {cargandoReactivos && <Skeleton height={100} radius="md" />}
 
             {!cargandoReactivos && reactivos?.sin_datos && (
-              <Alert icon={<IconAlertCircle size={18} />} color="yellow" variant="light">
+              <Alert icon={<IconAlertCircle size={18} />} color="amber" variant="light">
                 {reactivos.mensaje}
               </Alert>
             )}
@@ -89,11 +88,11 @@ export function IndicadoresSsoTab() {
               <>
                 <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
                   <StatCard label="Índice de frecuencia (IF)" value={reactivos.indice_frecuencia ?? '—'} />
-                  <StatCard label="Índice de gravedad (IG)" value={reactivos.indice_gravedad ?? '—'} color="orange" />
+                  <StatCard label="Índice de gravedad (IG)" value={reactivos.indice_gravedad ?? '—'} color="amber" />
                   <StatCard label="Tasa de riesgo (TR)" value={reactivos.tasa_riesgo ?? '—'} color="red" />
-                  <StatCard label="Lesiones (accidentes)" value={reactivos.numero_lesiones} color="gray" />
-                  <StatCard label="Días perdidos" value={reactivos.dias_perdidos} color="gray" />
-                  <StatCard label="Horas trabajadas" value={reactivos.horas_trabajadas.toLocaleString()} color="gray" />
+                  <StatCard label="Lesiones (accidentes)" value={reactivos.numero_lesiones} color="slate" />
+                  <StatCard label="Días perdidos" value={reactivos.dias_perdidos} color="slate" />
+                  <StatCard label="Horas trabajadas" value={reactivos.horas_trabajadas.toLocaleString()} color="slate" />
                 </SimpleGrid>
                 <Text size="xs" c="dimmed" mt="xs">
                   Fórmulas CD 513 (IESS): IF = (lesiones × 200000) / horas; IG = (días perdidos × 200000) / horas;
@@ -120,7 +119,7 @@ export function IndicadoresSsoTab() {
                   <StatCard
                     label="Cobertura EPP"
                     value={proactivos.cobertura_epp.porcentaje !== null ? `${proactivos.cobertura_epp.porcentaje}%` : '—'}
-                    color="blue"
+                    color="ocean"
                   />
                 </SimpleGrid>
                 {proactivos.cobertura_epp.total_puestos_con_epp_requerido > 0 && (

@@ -59,7 +59,7 @@ export function CorreccionesConsulta({ consultaId }: Props) {
   return (
     <Alert
       icon={<IconHistory size={16} />}
-      color="orange"
+      color="amber"
       variant="light"
       radius="md"
       mx="md"
@@ -78,7 +78,6 @@ export function CorreccionesConsulta({ consultaId }: Props) {
         <Button
           size="compact-xs"
           variant="subtle"
-          color="orange"
           onClick={() => setAbierto((v) => !v)}
         >
           {abierto ? "Ocultar versiones anteriores" : "Ver qué decía antes"}

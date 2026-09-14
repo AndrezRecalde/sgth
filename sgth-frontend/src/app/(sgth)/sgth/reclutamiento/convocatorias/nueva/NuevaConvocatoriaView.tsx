@@ -117,7 +117,7 @@ export function NuevaConvocatoriaView() {
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack gap="md">
           <Alert
-            color="grape"
+            color="amethyst"
             variant="light"
             icon={<IconBolt size={16} />}
           >
@@ -249,7 +249,7 @@ export function NuevaConvocatoriaView() {
               <Divider label="Período del proceso" labelPosition="left" />
 
               <Alert
-                color="blue"
+                color="ocean"
                 variant="light"
                 icon={<IconInfoCircle size={16} />}
               >
@@ -315,7 +315,6 @@ export function NuevaConvocatoriaView() {
             </Button>
             <Button
               type="submit"
-              color="emerald"
               leftSection={<IconSpeakerphone size={14} />}
               loading={crear.isPending}
             >

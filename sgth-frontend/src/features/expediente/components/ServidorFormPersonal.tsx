@@ -214,7 +214,6 @@ export function ServidorFormPersonal({ form }: Props) {
                 setValue('provincia_nacimiento_id', null)
                 setValue('canton_nacimiento_id', null)
               }}
-              color="emerald"
               mt="xs"
             />
           )}
@@ -300,7 +299,6 @@ export function ServidorFormPersonal({ form }: Props) {
               label="¿Tiene discapacidad?"
               checked={field.value}
               onChange={(e) => field.onChange(e.currentTarget.checked)}
-              color="emerald"
               mt="xs"
             />
           )}
@@ -315,7 +313,6 @@ export function ServidorFormPersonal({ form }: Props) {
               label="¿Tiene enfermedad catastrófica?"
               checked={field.value}
               onChange={(e) => field.onChange(e.currentTarget.checked)}
-              color="emerald"
               mt="xs"
             />
           )}

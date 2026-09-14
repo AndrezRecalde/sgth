@@ -111,7 +111,7 @@ export function AnularRegistroModal({
       <Stack gap="sm">
         <Alert
           icon={<IconAlertTriangle size={14} />}
-          color="orange"
+          color="amber"
           variant="light"
         >
           <Text size="xs">

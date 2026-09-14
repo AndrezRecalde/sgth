@@ -37,7 +37,6 @@ export function BuscarCie10Input({ value, onChange }: Props) {
               <ActionIcon
                 size="xs"
                 variant="transparent"
-                color="blue"
                 onClick={() => onChange(null)}
               >
                 <IconX size={12} />

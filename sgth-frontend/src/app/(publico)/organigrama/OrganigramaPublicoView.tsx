@@ -56,7 +56,6 @@ export function OrganigramaPublicoView() {
 
             <Button
               variant="light"
-              color="emerald"
               leftSection={<IconFileTypePdf size={16} />}
               component="a"
               href={estructuraService.organigramaPdfUrl()}
@@ -71,7 +70,6 @@ export function OrganigramaPublicoView() {
             <SegmentedControl
               value={vista}
               onChange={(v) => setVista(v as 'acordeon' | 'nodo')}
-              color="emerald"
               data={[
                 {
                   value: 'nodo',
@@ -97,7 +95,6 @@ export function OrganigramaPublicoView() {
             {vista === 'nodo' && (
               <Switch
                 label="Mostrar subprocesos"
-                color="emerald"
                 checked={subprocesos}
                 onChange={(e) => setSubprocesos(e.currentTarget.checked)}
               />

@@ -285,7 +285,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
           <>
             <Alert
               icon={<IconInfoCircle size={14} />}
-              color="orange"
+              color="amber"
               variant="light"
             >
               <Text size="xs" fw={500}>
@@ -333,7 +333,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
               </Grid.Col>
             </Grid>
             <Alert
-              color="blue"
+              color="ocean"
               variant="light"
               p="xs"
               icon={<IconInfoCircle size={12} />}
@@ -352,10 +352,9 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
         />
 
         {servidor && (
-          <Card withBorder radius="md" p="xs" bg="emerald.0">
+          <Card withBorder radius="md" p="xs" bg="var(--sgth-surface-sunken)">
             <Group gap="xs">
               <ThemeIcon
-                color="emerald"
                 variant="light"
                 size="sm"
                 radius="xl"

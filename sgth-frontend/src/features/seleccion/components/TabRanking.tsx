@@ -27,22 +27,22 @@ interface Props {
 
 function PosicionIcon({ pos }: { pos: number }) {
   if (pos === 1) return (
-    <ThemeIcon size="md" color="yellow" variant="filled" radius="xl">
+    <ThemeIcon size="md" color="amber.4" variant="filled" radius="xl">
       <IconTrophy size={14} />
     </ThemeIcon>
   )
   if (pos === 2) return (
-    <ThemeIcon size="md" color="gray" variant="filled" radius="xl">
+    <ThemeIcon size="md" color="slate.4" variant="filled" radius="xl">
       <IconMedal size={14} />
     </ThemeIcon>
   )
   if (pos === 3) return (
-    <ThemeIcon size="md" color="orange" variant="light" radius="xl">
+    <ThemeIcon size="md" color="amber.8" variant="light" radius="xl">
       <IconMedal2 size={14} />
     </ThemeIcon>
   )
   return (
-    <ThemeIcon size="md" color="gray" variant="light" radius="xl">
+    <ThemeIcon size="md" color="slate.4" variant="light" radius="xl">
       <Text size="xs" fw={700}>{pos}</Text>
     </ThemeIcon>
   )
@@ -118,7 +118,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
       )}
 
       {enEvalMedica && (
-        <Alert color="violet" variant="light"
+        <Alert color="amethyst" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             El candidato{' '}
@@ -136,7 +136,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
       )}
 
       {!enEvalMedica && !finalizada && ranking.length === 0 && (
-        <Alert color="orange" variant="light"
+        <Alert color="amber" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             Ningún candidato ha sido calificado aún.
@@ -146,7 +146,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
       )}
 
       {sinCalificar.length > 0 && !finalizada && (
-        <Alert color="blue" variant="light"
+        <Alert color="ocean" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             {sinCalificar.length} candidato
@@ -170,7 +170,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
           </Group>
 
           {puedeEnviar && seleccionados.length > 0 && (
-            <Card withBorder radius="md" padding="sm" bg="var(--mantine-color-blue-0)">
+            <Card withBorder radius="md" padding="sm" bg="var(--sgth-surface-sunken)">
               <Group justify="space-between" wrap="nowrap">
                 <div>
                   <Text size="sm" fw={600}>
@@ -184,7 +184,6 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
                 </div>
                 <Button
                   size="xs"
-                  color="blue"
                   leftSection={<IconSend size={13} />}
                   loading={enviar.isPending}
                   onClick={() => {
@@ -232,7 +231,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
                 p="sm"
                 style={{
                   borderColor: esPrimero && aprueba
-                    ? 'var(--mantine-color-yellow-6)'
+                    ? 'var(--mantine-color-amber-4)'
                     : undefined,
                   borderWidth: esPrimero && aprueba ? 2 : 1,
                 }}
@@ -276,7 +275,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
 
                   <Progress
                     value={Number(total)}
-                    color={aprueba ? 'emerald' : 'red'}
+                    color={aprueba ? undefined : 'red'}
                     size="xs"
                     radius="xl"
                   />

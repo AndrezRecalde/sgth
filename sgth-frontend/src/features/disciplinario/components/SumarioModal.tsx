@@ -64,7 +64,7 @@ export function SumarioModal({ opened, onClose }: Props) {
       size="lg"
     >
       <Stack gap="sm">
-        <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
           El sumario administrativo es el procedimiento de la LOSEP. A los obreros
           bajo Código del Trabajo se les tramita un visto bueno ante el Inspector
           del Trabajo.

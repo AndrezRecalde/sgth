@@ -21,7 +21,7 @@ export function SaldoVacacionesAlert({ servidorId, motivo }: Props) {
   return (
     <Alert
       icon={alertaLimite ? <IconAlertTriangle size={16} /> : <IconInfoCircle size={16} />}
-      color={alertaLimite ? 'orange' : 'blue'}
+      color={alertaLimite ? 'amber' : 'ocean'}
       variant="light"
     >
       <Group gap="sm">
@@ -30,7 +30,7 @@ export function SaldoVacacionesAlert({ servidorId, motivo }: Props) {
           {Number(saldo).toFixed(1)} días
         </StatusBadge>
         {alertaLimite && (
-          <Text size="xs" c="orange">
+          <Text size="xs" c="amber">
             Se acerca al límite máximo de acumulación
           </Text>
         )}

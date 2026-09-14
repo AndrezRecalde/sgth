@@ -72,7 +72,7 @@ export function DetalleConsultaDrawer({
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="blue" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconStethoscope size={16} />
           </ThemeIcon>
           <Stack gap={0}>

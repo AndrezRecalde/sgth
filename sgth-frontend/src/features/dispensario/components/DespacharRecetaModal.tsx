@@ -202,7 +202,7 @@ export function DespacharRecetaModal({
               const faltante = item.cantidad_prescrita -
                 (item.cantidad_despachada ?? 0)
               const estadoItem = ESTADO_ITEM[item.estado ?? 'pendiente']
-                ?? { label: item.estado, color: 'gray' }
+                ?? { label: item.estado, }
               const hayEntregable = entregable(item)
               const caducadas = item.inventario?.stock_caducado ?? 0
               const tope = Math.min(faltante, hayEntregable)
@@ -230,7 +230,7 @@ export function DespacharRecetaModal({
                       // se avisa de lo otro, que hay que dar de baja.
                       <Alert
                         icon={<IconAlertTriangle size={14} />}
-                        color="orange"
+                        color="amber"
                         variant="light"
                         p="xs"
                       >
@@ -243,7 +243,7 @@ export function DespacharRecetaModal({
                     <Group justify="space-between" wrap="nowrap">
                       <Group gap="xs" wrap="nowrap">
                         <ThemeIcon
-                          size="sm" color="blue" variant="light"
+                          size="sm" variant="light"
                         >
                           <IconPill size={12} />
                         </ThemeIcon>
@@ -284,7 +284,7 @@ export function DespacharRecetaModal({
                       </Grid.Col>
                       <Grid.Col span={{ base: 4, sm: 2 }}>
                         <Text size="xs" c="dimmed">Faltante</Text>
-                        <Text size="sm" fw={500} c="orange">
+                        <Text size="sm" fw={500} c="amber">
                           {faltante}
                         </Text>
                       </Grid.Col>

@@ -235,7 +235,6 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
           </Button>
           {esUltimoPaso ? (
             <Button
-              color="emerald"
               loading={enviar.isPending}
               onClick={() => {
                 if (!validarPasoActual()) return
@@ -245,7 +244,7 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
               Enviar cuestionario
             </Button>
           ) : (
-            <Button color="emerald" onClick={siguiente}>
+            <Button onClick={siguiente}>
               Siguiente
             </Button>
           )}

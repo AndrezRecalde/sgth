@@ -47,7 +47,6 @@ export const getDirectorioColumns = (
         {
           label: 'Editar extensión',
           icon: <IconEdit size={14} />,
-          color: 'blue',
           onClick: () => handlers.onEdit(record),
         },
         {

@@ -104,19 +104,16 @@ export const getServidorColumns = (
         {
           label:   'Ver expediente',
           icon:    <IconEye size={14} />,
-          color:   'blue',
           onClick: () => onView(servidor),
         },
         {
           label:   'Acción de Personal',
           icon:    <IconHistory size={14} />,
-          color:   'emerald',
           onClick: () => onAccionPersonal(servidor),
         },
         {
           label:   'Editar datos',
           icon:    <IconEdit size={14} />,
-          color:   'gray',
           onClick: () => onEdit(servidor),
         },
       ]} />

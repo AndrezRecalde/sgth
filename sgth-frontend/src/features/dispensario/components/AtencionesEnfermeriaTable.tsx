@@ -75,16 +75,14 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
               p="sm"
               wrap="nowrap"
               style={{
-                border: '1px solid var(--mantine-color-gray-2)',
+                border: '1px solid var(--sgth-border)',
                 borderRadius: 8,
                 opacity: anulada ? 0.6 : 1,
               }}
             >
               <Group gap="sm" wrap="nowrap">
                 <Avatar
-                  color={anulada
-                    ? 'gray'
-                    : (esServidor ? 'emerald' : 'blue')}
+                  color={anulada ? 'slate' : undefined}
                   radius="xl"
                   size="sm"
                 >
@@ -142,7 +140,6 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
                   <Tooltip label="Anular atención" withArrow>
                     <ActionIcon
                       variant="subtle"
-                      color="orange"
                       onClick={() => setAAnular(atencion)}
                       aria-label="Anular atención"
                     >

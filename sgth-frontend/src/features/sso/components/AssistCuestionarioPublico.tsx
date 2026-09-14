@@ -247,11 +247,11 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
             Atrás
           </Button>
           {esPasoInyectable ? (
-            <Button color="emerald" loading={enviar.isPending} onClick={handleEnviar}>
+            <Button loading={enviar.isPending} onClick={handleEnviar}>
               Enviar tamizaje
             </Button>
           ) : (
-            <Button color="emerald" loading={esPasoP1 && sinConsumo && enviar.isPending} onClick={siguiente}>
+            <Button loading={esPasoP1 && sinConsumo && enviar.isPending} onClick={siguiente}>
               Siguiente
             </Button>
           )}

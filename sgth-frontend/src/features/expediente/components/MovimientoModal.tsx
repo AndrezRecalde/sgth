@@ -335,7 +335,7 @@ function FormularioAccion({
   return (
     <>
       {!sinPasoDeTipo && tipos.length === 0 ? (
-        <Alert icon={<IconInfoCircle size={16} />} color="yellow" variant="light">
+        <Alert icon={<IconInfoCircle size={16} />} color="amber" variant="light">
           El servidor no tiene un contrato vigente elegible para ninguna acción de
           personal formal, o no tiene contrato vigente registrado.
         </Alert>
@@ -345,7 +345,6 @@ function FormularioAccion({
             active={paso}
             onStepClick={sinPasoDeTipo ? undefined : setPaso}
             size="sm"
-            color="emerald"
           >
             {/* Con el tipo ya fijado, lo único que queda por elegir aquí es el
                 subtipo — y el rótulo debe decirlo solo cuando de verdad lo
@@ -401,7 +400,7 @@ function FormularioAccion({
                 )}
 
                 {tipo && requiereSubtipo(tipo) && subtipos.length === 0 && (
-                  <Alert color="yellow" variant="light" icon={<IconInfoCircle size={16} />}>
+                  <Alert color="amber" variant="light" icon={<IconInfoCircle size={16} />}>
                     Ningún subtipo de {TIPO_LABELS[tipo]} aplica al nombramiento vigente
                     de este servidor.
                   </Alert>
@@ -585,7 +584,7 @@ function FormularioAccion({
                               )}
 
                               {ausenciaSel && (
-                                <Alert variant="light" color="violet" icon={<IconInfoCircle size={16} />}>
+                                <Alert variant="light" color="amethyst" icon={<IconInfoCircle size={16} />}>
                                   Reemplaza a <strong>{ausenciaSel.servidor.nombre}</strong> en{' '}
                                   {ausenciaSel.puesto ?? 'su puesto'}. El contrato no puede
                                   pasar del {fechaCorta(ausenciaSel.hasta)}, que es cuando regresa.
@@ -670,7 +669,7 @@ function FormularioAccion({
 
                 {muestraFechas && (
                   <>
-                    <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                    <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
                       La comisión de servicios dura entre 1 y 6 años, y el servidor
                       necesita al menos 2 años de antigüedad en la institución.
                     </Alert>

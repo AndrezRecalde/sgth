@@ -87,7 +87,6 @@ export function ExtensionForm({ initialValues, onSubmit }: Props) {
                 label="Extensión activa"
                 checked={field.value}
                 onChange={(e) => field.onChange(e.currentTarget.checked)}
-                color="emerald"
               />
             )}
           />

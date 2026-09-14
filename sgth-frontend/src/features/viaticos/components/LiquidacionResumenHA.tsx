@@ -33,7 +33,7 @@ export function LiquidacionResumenHA({
   return (
     <Stack gap="sm">
       <Card withBorder radius="md" p="sm">
-        <Text size="xs" fw={700} c="blue" mb="xs">
+        <Text size="xs" fw={700} c="ocean" mb="xs">
           Viático diario — Hospedaje y Alimentación
         </Text>
         <Group justify="space-between">
@@ -67,7 +67,7 @@ export function LiquidacionResumenHA({
           <Text size="xs" c="dimmed">
             Total H&A presentado:
           </Text>
-          <Text size="xs" fw={700} c={justificadoCompleto ? "teal" : "orange"}>
+          <Text size="xs" fw={700} c={justificadoCompleto ? "emerald" : "amber"}>
             ${totalHospAli.toFixed(2)} ({porcentajeHA}%)
           </Text>
         </Group>
@@ -84,7 +84,7 @@ export function LiquidacionResumenHA({
         {!justificadoCompleto &&
           diferenciaDevolver === 0 &&
           modalidad === "sin_anticipo" && (
-            <Alert color="yellow" variant="light" p="xs" mt={4}>
+            <Alert color="amber" variant="light" p="xs" mt={4}>
               <Text size="xs">
                 Faltan <strong>${(monto70 - totalHospAli).toFixed(2)}</strong>{" "}
                 en H&A. Recibirás solo lo justificado + el 30% devengado ($
@@ -93,7 +93,7 @@ export function LiquidacionResumenHA({
             </Alert>
           )}
         {justificadoCompleto && (
-          <Alert color="teal" variant="light" p="xs" mt={4}>
+          <Alert color="emerald" variant="light" p="xs" mt={4}>
             <Text size="xs">
               Justificación completa del 70%. Recibirás el 30% devengado
               adicional (${monto30.toFixed(2)}).
@@ -104,14 +104,14 @@ export function LiquidacionResumenHA({
 
       {totalMovilizacion > 0 && (
         <Card withBorder radius="md" p="sm">
-          <Text size="xs" fw={700} c="orange" mb="xs">
+          <Text size="xs" fw={700} c="amber" mb="xs">
             Movilización (rubro independiente)
           </Text>
           <Group justify="space-between">
             <Text size="xs" c="dimmed">
               Total movilización:
             </Text>
-            <Text size="xs" fw={600} c="orange">
+            <Text size="xs" fw={600} c="amber">
               ${totalMovilizacion.toFixed(2)}
             </Text>
           </Group>

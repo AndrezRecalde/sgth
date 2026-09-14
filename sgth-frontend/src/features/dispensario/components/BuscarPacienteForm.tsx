@@ -109,7 +109,6 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
               <ActionIcon
                 size="sm"
                 variant="subtle"
-                color="gray"
                 onClick={() => {
                   setCedula("");
                   buscar.reset();

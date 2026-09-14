@@ -77,8 +77,8 @@ function SortableItem({
         style={{
           opacity: actividad.activo ? 1 : 0.6,
           borderLeft: actividad.activo
-            ? '3px solid var(--mantine-color-blue-6)'
-            : '3px solid var(--mantine-color-gray-4)',
+            ? '3px solid var(--sgth-accent)'
+            : '3px solid var(--sgth-border-strong)',
           cursor: isDragging ? 'grabbing' : 'default',
         }}
       >
@@ -87,7 +87,6 @@ function SortableItem({
             <ThemeIcon
               size="xs"
               variant="subtle"
-              color="gray"
               style={{ cursor: 'grab', touchAction: 'none' }}
               {...attributes}
               {...listeners}
@@ -197,7 +196,7 @@ export function PuestoActividadesDrawer({
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="blue" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconBriefcase size={16} />
           </ThemeIcon>
           <Stack gap={0}>
@@ -279,7 +278,6 @@ export function PuestoActividadesDrawer({
               }}
             />
             <ActionIcon
-              color="emerald"
               size="lg"
               onClick={handleAgregar}
               loading={crear.isPending}

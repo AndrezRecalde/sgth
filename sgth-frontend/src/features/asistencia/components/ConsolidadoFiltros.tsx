@@ -44,7 +44,6 @@ export function ConsolidadoFiltros({
     <Toolbar
       actions={
         <Button
-          color="emerald"
           variant="light"
           leftSection={<IconSearch size={16} />}
           disabled={!puedeConsultar}

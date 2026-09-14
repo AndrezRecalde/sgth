@@ -60,13 +60,13 @@ export function ComprobanteRevisionItem({ factura: f, onAceptar, onObservar, car
         {(onAceptar || onObservar) && (
           <Group gap="xs" justify="flex-end">
             {onObservar && (
-              <Button size="xs" variant="subtle" color="red" leftSection={<IconMessageExclamation size={14} />}
+              <Button size="xs" variant="subtle" leftSection={<IconMessageExclamation size={14} />}
                 onClick={onObservar} disabled={cargando}>
                 Observar
               </Button>
             )}
             {onAceptar && estado !== 'aceptada' && (
-              <Button size="xs" variant="light" color="emerald" leftSection={<IconCheck size={14} />}
+              <Button size="xs" variant="light" leftSection={<IconCheck size={14} />}
                 onClick={onAceptar} loading={cargando}>
                 Aceptar
               </Button>

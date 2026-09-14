@@ -54,7 +54,7 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon color="blue" variant="light" size="md" radius="md">
+          <ThemeIcon variant="light" size="md" radius="md">
             <IconHistory size={16} />
           </ThemeIcon>
           <Stack gap={0}>
@@ -100,7 +100,7 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
                 justify="space-between"
                 p="sm"
                 style={{
-                  border: '1px solid var(--mantine-color-gray-2)',
+                  border: '1px solid var(--sgth-border)',
                   borderRadius: 8,
                 }}
               >

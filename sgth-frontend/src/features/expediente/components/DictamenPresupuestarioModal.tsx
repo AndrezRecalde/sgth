@@ -81,7 +81,7 @@ export function DictamenPresupuestarioModal({ opened, onClose, movimiento }: Pro
       size="md"
     >
       <Stack gap="md">
-        <Alert color="blue" variant="light" icon={<IconInfoCircle size={16} />}>
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
           Esta acción compromete presupuesto, así que no puede suscribirse sin la
           certificación previa de la Dirección Financiera (Art. 105 LOSEP).
         </Alert>

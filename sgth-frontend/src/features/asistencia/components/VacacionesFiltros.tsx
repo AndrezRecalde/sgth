@@ -68,7 +68,6 @@ export function VacacionesFiltros({ filtros, onCambiar, onNueva }: Props) {
       actions={
         onNueva && (
           <Button
-            color="emerald"
             variant="light"
             leftSection={<IconCubePlus size={16} />}
             onClick={onNueva}
@@ -92,7 +91,6 @@ export function VacacionesFiltros({ filtros, onCambiar, onNueva }: Props) {
             <ActionIcon
               size="sm"
               variant="subtle"
-              color="gray"
               onClick={() => onCambiar({ folio: '' })}
             >
               <IconX size={12} />

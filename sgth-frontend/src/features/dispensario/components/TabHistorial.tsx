@@ -56,7 +56,6 @@ function ConsultaItem({
                 había forma de distinguirlas de un vistazo. */}
             <ThemeIcon
               size="sm"
-              color={esOdontologia ? "teal" : "blue"}
               variant="light"
             >
               {esOdontologia
@@ -88,7 +87,6 @@ function ConsultaItem({
           <Button
             size="compact-xs"
             variant="subtle"
-            color="blue"
             onClick={() => onVerDetalle(consulta.id)}
           >
             Ver detalle
@@ -175,7 +173,6 @@ export function TabHistorial({ historiaClinicaId }: Props) {
             <Button
               size="compact-xs"
               variant="light"
-              color="red"
               leftSection={<IconRefresh size={13} />}
               onClick={() => refetch()}
             >

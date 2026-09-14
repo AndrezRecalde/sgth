@@ -46,7 +46,7 @@ export function ViaticoItinerarioCard({
       {!d.datetime_salida && (
         <Alert
           icon={<IconAlertCircle size={14} />}
-          color="orange"
+          color="amber"
           variant="light"
           mt="sm"
         >

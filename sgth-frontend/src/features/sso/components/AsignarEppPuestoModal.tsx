@@ -135,7 +135,6 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
               />
               <Button
                 leftSection={<IconPlus size={16} />}
-                color="emerald"
                 loading={asignar.isPending}
                 onClick={handleAsignar}
                 disabled={!equipoId}

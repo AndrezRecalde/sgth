@@ -118,7 +118,6 @@ export function BandejaAccionesPersonal() {
             {
               label: 'Ver detalle',
               icon: <IconEye size={14} />,
-              color: 'blue',
               onClick: () => {
                 setSeleccionadoId(Number(m.id))
                 abrirDetalle()

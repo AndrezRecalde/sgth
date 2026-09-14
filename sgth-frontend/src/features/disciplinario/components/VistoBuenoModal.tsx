@@ -81,7 +81,7 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
       size="lg"
     >
       <Stack gap="sm">
-        <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />}>
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
           El visto bueno lo resuelve el Inspector del Trabajo, no la institución.
           Aquí se registra el trámite y, más adelante, la resolución que emita el
           Ministerio. Solo aplica a obreros bajo Código del Trabajo.

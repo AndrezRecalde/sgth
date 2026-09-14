@@ -208,7 +208,6 @@ export function CargaFamiliarModal({
               label="Persona con discapacidad"
               checked={field.value}
               onChange={(e) => field.onChange(e.currentTarget.checked)}
-              color="emerald"
             />
           )}
         />
@@ -221,7 +220,6 @@ export function CargaFamiliarModal({
               label="Posee enfermedad catastrófica"
               checked={field.value}
               onChange={(e) => field.onChange(e.currentTarget.checked)}
-              color="emerald"
             />
           )}
         />

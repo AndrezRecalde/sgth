@@ -110,7 +110,6 @@ export function VistosBuenosTab() {
               {
                 label: 'Actualizar trámite',
                 icon: <IconPencil size={14} />,
-                color: 'blue',
                 onClick: () => abrirTransicion(t),
               },
             ]}
@@ -126,7 +125,6 @@ export function VistosBuenosTab() {
         actions={
           <Button
             leftSection={<IconPlus size={16} />}
-            color="emerald"
             variant="light"
             onClick={openCrear}
           >

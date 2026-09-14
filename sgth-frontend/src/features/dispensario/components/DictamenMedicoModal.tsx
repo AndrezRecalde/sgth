@@ -82,7 +82,7 @@ export function DictamenMedicoModal({
           </Stack>
         </Card>
 
-        <Alert color="blue" variant="light"
+        <Alert color="ocean" variant="light"
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             El dictamen médico será notificado a Talento Humano.

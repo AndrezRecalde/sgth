@@ -135,7 +135,6 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
             {
               label: 'Ver detalle',
               icon: <IconEye size={14} />,
-              color: 'blue',
               onClick: () => {
                 setDetalleId(Number(m.id))
                 abrirDetalle()
@@ -146,7 +145,6 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
                 ? 'Descargar PDF de Acción de Personal'
                 : 'Sin documento imprimible',
               icon: <IconFileDownload size={14} />,
-              color: 'blue',
               disabled: descargandoId === Number(m.id)
                 || !puedeDescargarPdf(m.estado, m.tipo_movimiento),
               onClick: () => handleDescargarPdf(m),
@@ -164,7 +162,7 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
           Historial inmutable de movimientos y acciones de personal del servidor.
         </Text>
         <Button
-          size="xs" color="emerald" variant="light"
+          size="xs" variant="light"
           leftSection={<IconPlus size={14} />}
           onClick={open}
         >

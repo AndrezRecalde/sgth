@@ -30,7 +30,6 @@ export function CuentasBancariasTab({ servidorId }: Props) {
       <Group justify="flex-end">
         <Button
           size="xs"
-          color="emerald"
           variant="light"
           leftSection={<IconPlus size={14} />}
           onClick={open}
@@ -72,7 +71,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                   {(c.es_principal_sueldo || c.es_principal_viatico) && (
                     <IconStarFilled
                       size={14}
-                      color={c.es_principal_sueldo ? 'var(--mantine-color-emerald-6)' : 'var(--mantine-color-blue-6)'}
+                      color={c.es_principal_sueldo ? 'var(--mantine-color-emerald-6)' : 'var(--mantine-color-ocean-6)'}
                     />
                   )}
                   <Text size="sm" fw={600}>
@@ -109,7 +108,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                   <Menu position="bottom-end" shadow="md" width={200}>
                     <Menu.Target>
                       <Tooltip label="Establecer como principal" withArrow>
-                        <ActionIcon variant="subtle" color="emerald" size="sm">
+                        <ActionIcon variant="subtle" size="sm">
                           <IconStar size={14} />
                         </ActionIcon>
                       </Tooltip>
@@ -126,7 +125,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                       )}
                       {!c.es_principal_viatico && (
                         <Menu.Item
-                          leftSection={<IconStarFilled size={14} color="var(--mantine-color-blue-6)" />}
+                          leftSection={<IconStarFilled size={14} color="var(--mantine-color-ocean-6)" />}
                           onClick={() => setPrincipal.mutate({ id: Number(c.id), proposito: 'viatico' })}
                         >
                           Viáticos
@@ -137,7 +136,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                 )}
                 <Tooltip label="Editar cuenta" withArrow>
                   <ActionIcon
-                    variant="subtle" color="blue" size="sm"
+                    variant="subtle" size="sm"
                     onClick={() => { setEditCuenta(c); openEdit() }}
                   >
                     <IconEdit size={14} />

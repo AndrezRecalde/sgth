@@ -116,7 +116,6 @@ export function CondicionTab({ servidorId }: Props) {
             {
               label: "Editar",
               icon: <IconEdit size={14} />,
-              color: "blue",
               onClick: () => {
                 setEditDisc(item);
                 openDisc();
@@ -188,7 +187,6 @@ export function CondicionTab({ servidorId }: Props) {
             {
               label: "Editar",
               icon: <IconEdit size={14} />,
-              color: "blue",
               onClick: () => {
                 setEditEnf(item);
                 openEnf();
@@ -228,7 +226,6 @@ export function CondicionTab({ servidorId }: Props) {
           />
           <Button
             size="xs"
-            color="emerald"
             variant="light"
             leftSection={<IconPlus size={14} />}
             onClick={openDisc}
@@ -263,7 +260,6 @@ export function CondicionTab({ servidorId }: Props) {
           />
           <Button
             size="xs"
-            color="emerald"
             variant="light"
             leftSection={<IconPlus size={14} />}
             onClick={openEnf}

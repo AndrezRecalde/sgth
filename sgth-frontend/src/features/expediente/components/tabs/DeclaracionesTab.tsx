@@ -83,13 +83,11 @@ export function DeclaracionesTab({ servidorId }: Props) {
             {
               label: "Descargar documento",
               icon: <IconDownload size={14} />,
-              color: "blue",
               onClick: () => {},
             },
             {
               label: "Editar",
               icon: <IconEdit size={14} />,
-              color: "blue",
               onClick: () => {
                 setEditItem(item);
                 open();
@@ -120,7 +118,6 @@ export function DeclaracionesTab({ servidorId }: Props) {
         <Button
           size="xs"
           variant="light"
-          color="gray"
           leftSection={<IconDownload size={14} />}
           onClick={exportar}
         >
@@ -128,7 +125,6 @@ export function DeclaracionesTab({ servidorId }: Props) {
         </Button>
         <Button
           size="xs"
-          color="emerald"
           variant="light"
           leftSection={<IconPlus size={14} />}
           onClick={open}

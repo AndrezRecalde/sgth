@@ -149,27 +149,24 @@ export function getPermisosColumns(
               {
                 label: actions.exportandoId === p.id ? 'Exportando...' : 'Imprimir permiso',
                 icon: <IconPrinter size={14} />,
-                color: 'blue',
                 onClick: () => actions.onExportar(p.id),
               },
               {
                 label: 'Confirmar recepción',
                 icon: <IconCheck size={14} />,
-                color: 'blue',
                 onClick: () => p.folio && actions.onConfirmar(p.folio),
                 hidden: !pendiente || !actions.puede.confirmar,
               },
               {
                 label: 'Rechazar documento',
                 icon: <IconX size={14} />,
-                color: 'orange',
+                color: 'red',
                 onClick: () => actions.onRechazar(p),
                 hidden: !pendiente || !actions.puede.rechazar,
               },
               {
                 label: 'Validar Trabajo Social',
                 icon: <IconShieldCheck size={14} />,
-                color: 'emerald',
                 onClick: () => actions.onValidarTs(p.id),
                 hidden:
                   !actions.puede.validarTs ||
@@ -179,7 +176,6 @@ export function getPermisosColumns(
               {
                 label: 'Revertir confirmación',
                 icon: <IconArrowBackUp size={14} />,
-                color: 'orange',
                 onClick: () => actions.onRevertir(p),
                 hidden: !actions.puede.revertir || !ESTADOS_CONFIRMADOS.includes(estado),
               },

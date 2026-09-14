@@ -116,13 +116,11 @@ export const getNominaColumns = (
         {
           label:   'Ver detalle',
           icon:    <IconEye size={14} />,
-          color:   'blue',
           onClick: () => onVer(nomina),
         },
         {
           label:   'Cerrar nómina',
           icon:    <IconLock size={14} />,
-          color:   'orange',
           onClick: () => onCerrar(nomina),
           hidden: nomina.estado !== 'borrador' && nomina.estado !== 'en_proceso',
         },

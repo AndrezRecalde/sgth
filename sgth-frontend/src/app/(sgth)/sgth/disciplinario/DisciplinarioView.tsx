@@ -16,7 +16,7 @@ export function DisciplinarioView() {
 
       <Alert
         variant="light"
-        color="blue"
+        color="ocean"
         icon={<IconInfoCircle size={16} />}
         mb="md"
       >
@@ -27,7 +27,7 @@ export function DisciplinarioView() {
         una Cesación de Funciones que Talento Humano debe revisar y aprobar.
       </Alert>
 
-      <Tabs defaultValue="sumarios" color="emerald">
+      <Tabs defaultValue="sumarios">
         <Tabs.List mb="md">
           <Tabs.Tab value="sumarios" leftSection={<IconScale size={16} />}>
             Sumarios administrativos (LOSEP)

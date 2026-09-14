@@ -47,7 +47,6 @@ export function DashboardSsoTab() {
             />
             <Button
               leftSection={<IconSearch size={16} />}
-              color="emerald"
               onClick={handleConsultar}
               disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
             >
@@ -57,7 +56,7 @@ export function DashboardSsoTab() {
         </Group>
 
         {!periodo && (
-          <Alert icon={<IconAlertCircle size={18} />} color="blue" variant="light">
+          <Alert icon={<IconAlertCircle size={18} />} color="ocean" variant="light">
             Ingrese un período y presione Consultar para ver el resumen de indicadores de todas las fases del módulo SSO.
           </Alert>
         )}
@@ -71,8 +70,8 @@ export function DashboardSsoTab() {
               <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
                 <StatCard label="Riesgos activos" value={resumen.riesgos.total_activos} />
                 <StatCard label="Accidentes en el período" value={resumen.accidentes.total} color="red" />
-                <StatCard label="Con atención médica" value={resumen.accidentes.con_atencion_medica} color="orange" />
-                <StatCard label="Días de reposo" value={resumen.accidentes.dias_reposo_total} color="orange" />
+                <StatCard label="Con atención médica" value={resumen.accidentes.con_atencion_medica} color="amber" />
+                <StatCard label="Días de reposo" value={resumen.accidentes.dias_reposo_total} color="amber" />
               </SimpleGrid>
             </Box>
 
@@ -86,13 +85,13 @@ export function DashboardSsoTab() {
                 <StatCard
                   label="Índice de gravedad"
                   value={resumen.indicadores_reactivos.sin_datos ? '—' : resumen.indicadores_reactivos.indice_gravedad ?? '—'}
-                  color="orange"
+                  color="amber"
                 />
-                <StatCard label="Equipos EPP activos" value={resumen.epp.equipos_activos} color="blue" />
+                <StatCard label="Equipos EPP activos" value={resumen.epp.equipos_activos} color="ocean" />
                 <StatCard
                   label="Cobertura EPP"
                   value={resumen.indicadores_proactivos.cobertura_epp.porcentaje !== null ? `${resumen.indicadores_proactivos.cobertura_epp.porcentaje}%` : '—'}
-                  color="blue"
+                  color="ocean"
                 />
               </SimpleGrid>
             </Box>
@@ -103,7 +102,7 @@ export function DashboardSsoTab() {
                 <StatCard label="Normativa cumple" value={resumen.cumplimiento.cumple} color="emerald" />
                 <StatCard label="Normativa no cumple" value={resumen.cumplimiento.no_cumple} color="red" />
                 <StatCard label="Actividades ejecutadas" value={resumen.programa_drogas.ejecutada} color="emerald" />
-                <StatCard label="Actividades pendientes" value={resumen.programa_drogas.pendiente} color="gray" />
+                <StatCard label="Actividades pendientes" value={resumen.programa_drogas.pendiente} color="slate" />
               </SimpleGrid>
             </Box>
 

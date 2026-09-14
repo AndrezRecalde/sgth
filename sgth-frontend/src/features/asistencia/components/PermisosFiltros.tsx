@@ -64,7 +64,6 @@ export function PermisosFiltros({ filtros, onCambiar, onNuevo }: Props) {
     <Toolbar
       actions={
         <Button
-          color="emerald"
           variant="light"
           leftSection={<IconCubePlus size={16} />}
           onClick={onNuevo}
@@ -87,7 +86,6 @@ export function PermisosFiltros({ filtros, onCambiar, onNuevo }: Props) {
             <ActionIcon
               size="sm"
               variant="subtle"
-              color="gray"
               onClick={() => onCambiar({ folio: '' })}
             >
               <IconX size={12} />

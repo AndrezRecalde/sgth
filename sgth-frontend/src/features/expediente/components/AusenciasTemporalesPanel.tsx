@@ -132,7 +132,7 @@ export function AusenciasTemporalesPanel() {
 
   return (
     <Box>
-      <Alert variant="light" color="blue" icon={<IconInfoCircle size={16} />} mb="md">
+      <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />} mb="md">
         El titular conserva su vínculo y su plaza mientras dura la ausencia. El
         reemplazo se contrata por Servicios Ocasionales o Profesionales, encima
         de esa plaza y sin pasar de la fecha en que el titular regresa.
