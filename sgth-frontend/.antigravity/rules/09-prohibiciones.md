@@ -19,12 +19,13 @@ recordarlas:
 - títulos de notificación genéricos: «Error», «Éxito», «Eliminado», «Error al …»,
   «No se pudo <verbo>» sin decir qué (ver [08](08-datos-y-estado.md))
 - `<form>` sin `noValidate` y `'use client'` en un `page.tsx`
+- en las hojas CSS (`scripts/lint-css.mjs`, que corre dentro de `npm run lint`):
+  hexadecimales, `rgb()`/`hsl()`, colores con nombre y escalas fuera de la paleta
 
 El resto sigue dependiendo de quien revisa: iconos sueltos en una fila, colores
-de la paleta elegidos sin significado, hexadecimales y grises fijos en CSS
-Modules, páginas sin `PageShell`. Se añaden al linter a medida que el
-código deja de romperlas: una regla que destapa avisos preexistentes entra
-junto con su arreglo, o no entra (ver [10](10-checklist.md)).
+de la paleta elegidos sin significado, páginas sin `PageShell`. Se añaden al
+linter a medida que el código deja de romperlas: una regla que destapa avisos
+preexistentes entra junto con su arreglo, o no entra (ver [10](10-checklist.md)).
 
 ## Tipado
 

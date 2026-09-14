@@ -15,8 +15,10 @@
 }
 
 .raiz {
-  fill: var(--mantine-color-gray-3);
-  stroke: var(--mantine-color-gray-5);
+  /* Neutra en los dos esquemas: la condición de la pieza se lee en la corona.
+     Con gray-3 fijo, en oscuro las raíces salían casi blancas. */
+  fill: var(--sgth-border-strong);
+  stroke: var(--sgth-text-muted);
   stroke-width: 1;
 }
 
