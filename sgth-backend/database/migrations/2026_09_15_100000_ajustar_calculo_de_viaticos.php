@@ -40,6 +40,10 @@ return new class extends Migration
             WHERE datetime_salida IS NOT NULL AND datetime_llegada IS NOT NULL
         ");
 
+        // Una noche no se parte por la mitad: la columna era decimal(5,2)
+        // porque contaba días con fracciones que nadie llegó a usar.
+        DB::statement('ALTER TABLE viaticos ALTER COLUMN noches TYPE smallint USING ROUND(noches)');
+
         DB::table('tarifas_viatico')->where('tipo_tarifa', 'subsistencia')->delete();
 
         foreach ([['servidor', 185.00], ['autoridad', 220.00]] as [$nivel, $valor]) {
@@ -53,6 +57,28 @@ return new class extends Migration
                 'updated_at'   => now(),
             ]);
         }
+
+        // Las solicitudes que nadie ha aprobado se rehacen con la regla nueva:
+        // nada se ha pagado todavía y el monto que muestran incluye el día de
+        // regreso. Las aprobadas se dejan como están —ese monto ya se
+        // comprometió— y las corrige Financiero si hace falta.
+        DB::statement("
+            UPDATE viaticos AS v
+            SET monto_calculado = ROUND(v.noches * t.valor_diario, 2)
+            FROM servidores AS s
+            JOIN puestos AS p ON p.id = s.puesto_id
+            LEFT JOIN unidades_administrativas AS u ON u.id = p.unidad_administrativa_id
+            CROSS JOIN tarifas_viatico AS t
+            WHERE s.id = v.servidor_id
+              AND t.zona = v.zona
+              AND t.tipo_tarifa = 'con_pernocte'
+              AND t.nivel = CASE
+                  WHEN p.es_jefe AND COALESCE(u.es_maxima_autoridad, false) THEN 'autoridad'
+                  ELSE 'servidor'
+              END
+              AND v.estado = 'solicitado'
+              AND v.zona <> 'exterior'
+        ");
 
         Schema::table('liquidaciones_viatico', function (Blueprint $table) {
             $table->decimal('total_justificado', 10, 2)->default(0)->after('total_facturas');
@@ -112,6 +138,8 @@ return new class extends Migration
                 'updated_at'   => now(),
             ]);
         }
+
+        DB::statement('ALTER TABLE viaticos ALTER COLUMN noches TYPE numeric(5,2)');
 
         DB::statement("
             UPDATE viaticos

@@ -1,19 +1,12 @@
 "use client";
 
-import {
-  Card,
-  Group,
-  Text,
-  Divider,
-  Stack,
-  ThemeIcon,
-  Alert,
-} from "@mantine/core";
+import { Card, Group, Text, Divider, Stack, ThemeIcon } from "@mantine/core";
 import { IconFileInvoice, IconChecks } from "@tabler/icons-react";
+import { formatFecha } from "@/lib/fecha";
 import { LiquidacionSection } from "./LiquidacionSection";
+import { CalculoViaticoCard } from "./CalculoViaticoCard";
 import { RevisionComprobantes } from "./RevisionComprobantes";
-import type { ViaticoConRelaciones, CategoriaFactura } from "@/types/api";
-import { useCategoriasFactura } from "../hooks/useViaticos";
+import type { ViaticoConRelaciones } from "@/types/api";
 
 interface Props {
   viatico: ViaticoConRelaciones;
@@ -21,69 +14,20 @@ interface Props {
   onSuccess: () => void;
 }
 
-function fmtMonto(v?: number | string | null): string {
-  if (v == null) return "—";
-  return `$${Number(v).toFixed(2)}`;
-}
+/*
+| La liquidación en la ficha del viático: se presenta mientras está pendiente y
+| se consulta después.
+|
+| La cuenta la resuelve el backend y llega en `viatico.calculo`. Aquí se
+| rehacía entera —con otra fórmula que la de la pantalla de liquidación y la de
+| los PDF— y no mostraba el 30 % que se reconoce sin comprobante.
+*/
 
 export function ViaticoLiquidacionCard({
   viatico: d,
   estadoActual,
   onSuccess,
 }: Props) {
-  const { data: categoriasData = [] } = useCategoriasFactura();
-
-  type FacturaConCategoria = {
-    monto?: number | string | null;
-    categoria?: { grupo?: string } | null;
-  };
-
-  const facturas = (d.liquidacion?.detalles_factura ??
-    []) as FacturaConCategoria[];
-
-  const idsViatico = (categoriasData as CategoriaFactura[])
-    .filter((c) => c.grupo === "viatico")
-    .map((c) => Number(c.id));
-
-  const montoAsignado = Number(d.monto_calculado ?? 0);
-  const anticipo = Number(d.monto_anticipo ?? 0);
-  const monto70 = Math.round(montoAsignado * 0.7 * 100) / 100;
-  const monto30 = Math.round(montoAsignado * 0.3 * 100) / 100;
-  const modalidad = (d.modalidad_anticipo as string) ?? "sin_anticipo";
-
-  const totalHospAli = facturas
-    .filter((f) =>
-      idsViatico.includes(
-        Number(
-          (f as { categoria_factura_id?: number }).categoria_factura_id ?? 0,
-        ),
-      ),
-    )
-    .reduce((sum, f) => sum + Number(f.monto ?? 0), 0);
-
-  const totalMovilizacion = facturas
-    .filter(
-      (f) =>
-        !idsViatico.includes(
-          Number(
-            (f as { categoria_factura_id?: number }).categoria_factura_id ?? 0,
-          ),
-        ),
-    )
-    .reduce((sum, f) => sum + Number(f.monto ?? 0), 0);
-
-  const porcentajeHA =
-    monto70 > 0 ? Math.min(Math.round((totalHospAli / monto70) * 100), 100) : 0;
-
-  const justificadoCompleto = totalHospAli >= monto70;
-
-  const diferenciaDevolver =
-    modalidad === "sin_anticipo"
-      ? 0
-      : totalHospAli >= anticipo
-        ? 0
-        : Math.round((anticipo - totalHospAli) * 100) / 100;
-
   return (
     <Card withBorder radius="md">
       <Group gap="xs" mb="sm">
@@ -100,99 +44,8 @@ export function ViaticoLiquidacionCard({
         <LiquidacionSection viatico={d} onSuccess={onSuccess} />
       ) : d.liquidacion ? (
         <Stack gap="xs">
-          <Text size="xs" fw={700} c="ocean" mb={4}>
-            Viático diario — H&A
-          </Text>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed">
-              Monto asignado
-            </Text>
-            <Text size="xs" fw={600}>
-              {fmtMonto(montoAsignado)}
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed">
-              70% a justificar (H&A)
-            </Text>
-            <Text size="xs" fw={600}>
-              {fmtMonto(monto70)}
-            </Text>
-          </Group>
-          {anticipo > 0 && (
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                Anticipo entregado
-              </Text>
-              <Text size="xs" fw={600}>
-                {fmtMonto(anticipo)}
-              </Text>
-            </Group>
-          )}
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed">
-              Total H&A presentado
-            </Text>
-            <Text
-              size="xs"
-              fw={700}
-              c={justificadoCompleto ? "emerald" : "amber"}
-            >
-              {fmtMonto(totalHospAli)} ({porcentajeHA}%)
-            </Text>
-          </Group>
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed">
-              30% devengado
-            </Text>
-            <Text size="xs" fw={600}>
-              {fmtMonto(monto30)}
-            </Text>
-          </Group>
-          <Divider my={4} />
-          <Group justify="space-between">
-            <Text size="xs" fw={600}>
-              A devolver a la institución
-            </Text>
-            <Text
-              size="xs"
-              fw={700}
-              c={diferenciaDevolver > 0 ? "red" : "emerald"}
-            >
-              {fmtMonto(diferenciaDevolver)}
-            </Text>
-          </Group>
-          {diferenciaDevolver > 0 && (
-            <Alert color="red" variant="light" p="xs" mt={4}>
-              <Text size="xs">
-                Faltan <strong>{fmtMonto(diferenciaDevolver)}</strong> en H&A
-                por justificar.
-              </Text>
-            </Alert>
-          )}
-          {justificadoCompleto && (
-            <Alert color="emerald" variant="light" p="xs" mt={4}>
-              <Text size="xs">
-                Justificación completa del 70%. Devengado: {fmtMonto(monto30)}
-              </Text>
-            </Alert>
-          )}
-          {totalMovilizacion > 0 && (
-            <>
-              <Divider my={6} label="Movilización" labelPosition="left" />
-              <Group justify="space-between">
-                <Text size="xs" c="dimmed">
-                  Total movilización
-                </Text>
-                <Text size="xs" fw={600} c="amber">
-                  {fmtMonto(totalMovilizacion)}
-                </Text>
-              </Group>
-              <Text size="xs" c="dimmed">
-                Rubro independiente — no afecta el viático diario
-              </Text>
-            </>
-          )}
+          {d.calculo && <CalculoViaticoCard calculo={d.calculo} />}
+
           {(d.liquidacion.actividades?.length ?? 0) > 0 && (
             <Stack gap={4}>
               <Text size="xs" fw={600} c="dimmed">
@@ -204,13 +57,7 @@ export function ViaticoLiquidacionCard({
                     <IconChecks size={8} />
                   </ThemeIcon>
                   <Text size="xs">
-                    {a.fecha
-                      ? new Date(a.fecha).toLocaleDateString("es-EC", {
-                          timeZone: "UTC",
-                          day: "2-digit",
-                          month: "2-digit",
-                        })
-                      : "—"}
+                    {a.fecha ? formatFecha(a.fecha) : "—"}
                     {" — "}
                     {a.lugar}
                   </Text>
@@ -218,8 +65,8 @@ export function ViaticoLiquidacionCard({
               ))}
             </Stack>
           )}
-          <RevisionComprobantes viatico={d} />
 
+          <RevisionComprobantes viatico={d} />
         </Stack>
       ) : (
         <Text size="sm" c="dimmed">

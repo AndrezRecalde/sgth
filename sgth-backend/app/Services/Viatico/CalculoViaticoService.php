@@ -88,13 +88,21 @@ final class CalculoViaticoService
             : 'servidor';
     }
 
-    /** Tarifa diaria del catálogo, la única fuente de los valores. */
-    public function tarifaDiaria(string $zona, string $nivel): float
+    /** Tarifa diaria del catálogo, o null si esa combinación no está sembrada. */
+    public function tarifaDiariaSiExiste(string $zona, string $nivel): ?float
     {
         $tarifa = TarifaViatico::where('zona', $zona)
             ->where('nivel', $nivel)
             ->where('tipo_tarifa', 'con_pernocte')
             ->value('valor_diario');
+
+        return $tarifa === null ? null : (float) $tarifa;
+    }
+
+    /** Tarifa diaria del catálogo, la única fuente de los valores. */
+    public function tarifaDiaria(string $zona, string $nivel): float
+    {
+        $tarifa = $this->tarifaDiariaSiExiste($zona, $nivel);
 
         if ($tarifa === null) {
             throw new ReglaNegocioException(
@@ -103,7 +111,7 @@ final class CalculoViaticoService
             );
         }
 
-        return (float) $tarifa;
+        return $tarifa;
     }
 
     /**
@@ -154,10 +162,10 @@ final class CalculoViaticoService
      * el comprobante y la revisa Financiero.
      *
      * @return array{
-     *     noches: int, derecho: float, tope_justificable: float,
-     *     reconocido_sin_comprobante: float, total_comprobantes: float,
-     *     justificado: float, excedente: float, reconocido: float,
-     *     anticipo: float, saldo: float
+     *     noches: int, tarifa_diaria: float|null, derecho: float,
+     *     tope_justificable: float, reconocido_sin_comprobante: float,
+     *     total_comprobantes: float, justificado: float, excedente: float,
+     *     reconocido: float, anticipo: float, saldo: float
      * }
      */
     public function resumen(Viatico $viatico, ?LiquidacionViatico $liquidacion = null): array
@@ -178,6 +186,12 @@ final class CalculoViaticoService
 
         return [
             'noches'                     => (int) $viatico->noches,
+            // La usa el modal del exterior para anticipar el monto con el
+            // coeficiente antes de aprobar; tenía las tarifas escritas a mano.
+            'tarifa_diaria'              => $this->tarifaDiariaSiExiste(
+                $this->valor($viatico->zona),
+                $this->nivel($viatico->servidor)
+            ),
             'derecho'                    => $derecho,
             'tope_justificable'          => $tope,
             'reconocido_sin_comprobante' => $libre,

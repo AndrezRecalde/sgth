@@ -2,7 +2,7 @@ import api from '@/lib/axios'
 import type {
   ApiResponse, Viatico,
   LiquidacionViatico, FacturaViatico,
-  ActividadLiquidacion, ComprobanteRevisado,
+  ActividadLiquidacion, ComprobanteRevisado, CalculoViatico,
 } from '@/types/api'
 import type { ActividadData } from '../components/ActividadesModal'
 import type { FacturaData }   from '../components/FacturasModal'
@@ -12,6 +12,7 @@ export const liquidacionService = {
     api.get<ApiResponse<LiquidacionViatico & {
       actividades?:      ActividadLiquidacion[]
       detalles_factura?: ComprobanteRevisado[]
+      calculo?:          CalculoViatico
     }>>(`/viaticos/${viaticoId}/liquidacion`)
       .then(r => r.data.datos),
 

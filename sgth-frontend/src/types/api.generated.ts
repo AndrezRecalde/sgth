@@ -687,6 +687,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/companeros-de-unidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Los compañeros de unidad, para elegir al jefe inmediato de un permiso
+         *     propio. Ver `AutoservicioService::obtenerCompanerosDeUnidad()`
+         */
+        get: operations["autoservicio.companerosDeUnidad"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/autoservicio/mis-vacaciones": {
         parameters: {
             query?: never;
@@ -7402,6 +7422,11 @@ export interface components {
             fecha_factura: string | null;
             tipo_comprobante: string;
             numero_ticket: string | null;
+            estado_revision: string;
+            observacion_revision: string | null;
+            revisado_por: number | null;
+            /** Format: date-time */
+            revisado_en: string | null;
         };
         /**
          * FaseProgramaDrogas
@@ -7628,7 +7653,6 @@ export interface components {
             id: number;
             viatico_id: number;
             total_facturas: string;
-            diferencia_devolver: string;
             /** Format: date-time */
             fecha_retorno: string | null;
             /** Format: date-time */
@@ -7646,6 +7670,9 @@ export interface components {
             cargo_jefe_financiero: string | null;
             contabilizado_por: number | null;
             fecha_contabilizacion: string | null;
+            total_justificado: string;
+            monto_reconocido: string;
+            saldo: string;
         };
         /** LiquidarViaticoRequest */
         LiquidarViaticoRequest: {
@@ -9296,6 +9323,11 @@ export interface components {
             observacion?: string | null;
             unidad_administrativa_id?: number | null;
             servidor_id?: number | null;
+            /**
+             * @description Alguien tiene que firmar: el jefe inmediato elegido o, con la
+             *     opción activa, el jefe de Talento Humano que resuelve el servicio.
+             *     Sin ninguno de los dos, el permiso quedaba sin firmante.
+             */
             jefe_id?: number | null;
             /**
              * @description En true, el jefe lo resuelve el servicio y `jefe_id` se ignora:
@@ -10508,7 +10540,7 @@ export interface components {
             datetime_salida: string;
             /** Format: date-time */
             datetime_llegada: string;
-            total_dias: string;
+            noches: number;
             coeficiente_exterior: string | null;
             motivo_rechazo: string | null;
         };
@@ -12473,6 +12505,32 @@ export interface operations {
                         /** @constant */
                         mensaje: "Mis permisos obtenidos.";
                         datos: Record<string, never>;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "autoservicio.companerosDeUnidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Compañeros de unidad obtenidos.";
+                        datos: unknown[];
                         meta: null;
                     };
                 };
