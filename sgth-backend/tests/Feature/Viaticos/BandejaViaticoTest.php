@@ -63,7 +63,7 @@ beforeEach(function () {
         'zona'               => 'dentro_provincia',
         'datetime_salida'    => '2026-10-10 08:00',
         'datetime_llegada'   => '2026-10-11 18:00',
-        'total_dias'         => 2,
+        'noches'             => 2,
         'justificacion'      => 'Comisión de servicio',
         'estado'             => $estado,
         'monto_calculado'    => 100,

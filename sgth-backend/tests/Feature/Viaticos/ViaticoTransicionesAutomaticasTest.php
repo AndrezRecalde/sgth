@@ -46,7 +46,7 @@ beforeEach(function () {
             'zona'               => 'dentro_provincia',
             'datetime_salida'    => $salida,
             'datetime_llegada'   => $llegada,
-            'total_dias'         => 2,
+            'noches'             => 2,
             'justificacion'      => 'Supervisión de obras',
             'estado'             => $estado,
             'monto_calculado'    => 160,

@@ -9,7 +9,6 @@ use App\Models\Expediente\Servidor;
 use App\Models\Viatico\ActividadLiquidacion;
 use App\Models\Viatico\FacturaViatico;
 use App\Models\Viatico\LiquidacionViatico;
-use App\Models\Viatico\TarifaViatico;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoHistorialEstado;
 use App\Models\Viatico\ViaticoServidor;
@@ -19,6 +18,10 @@ use Illuminate\Support\Facades\DB;
 final class ViaticoService implements ViaticoServiceInterface
 {
     use DiasHabilesHelper;
+
+    public function __construct(
+        private readonly CalculoViaticoService $calculo,
+    ) {}
 
     public function solicitar(
         int $servidorId,
@@ -39,29 +42,18 @@ final class ViaticoService implements ViaticoServiceInterface
         $datetimeSalida  = Carbon::parse($datos['datetime_salida']);
         $datetimeLlegada = Carbon::parse($datos['datetime_llegada']);
 
-        // Opción B: días calendario incluyendo día de regreso
-        // Solo fechas, sin importar la hora
-        $totalDias = (float) $datetimeSalida
-            ->copy()->startOfDay()
-            ->diffInDays($datetimeLlegada->copy()->startOfDay()) + 1;
+        $this->calculo->asegurarPernocte($datetimeSalida, $datetimeLlegada);
 
-        // Para exterior el monto viene manual
-        if ($zona === 'exterior') {
-            $montoCalculado = (float) ($datos['monto_calculado'] ?? 0.00);
-        } else {
-            $montoCalculado = $this->calcularMonto(
-                $servidor,
-                $zona,
-                $totalDias,
-                $datetimeSalida,
-                $datetimeLlegada
-            );
-        }
+        $noches = $this->calculo->noches($datetimeSalida, $datetimeLlegada);
+
+        // En el exterior el monto queda en 0 hasta que Financiero apruebe con
+        // el coeficiente del país.
+        $montoCalculado = $this->calculo->derecho($servidor, $zona, $noches);
 
         return DB::transaction(function () use (
             $servidorId, $datos, $userId,
             $montoCalculado, $datetimeSalida,
-            $datetimeLlegada, $totalDias
+            $datetimeLlegada, $noches
         ) {
             $viatico = Viatico::create([
                 'servidor_id'        => $servidorId,
@@ -69,7 +61,7 @@ final class ViaticoService implements ViaticoServiceInterface
                 'fecha_solicitud'    => now()->toDateString(),
                 'datetime_salida'    => $datetimeSalida,
                 'datetime_llegada'   => $datetimeLlegada,
-                'total_dias'         => $totalDias,
+                'noches'             => $noches,
                 'tipo_viaje'         => $datos['tipo_viaje']     ?? null,
                 'pais_destino'       => $datos['pais_destino']   ?? null,
                 'justificacion'      => $datos['justificacion'],
@@ -126,51 +118,16 @@ final class ViaticoService implements ViaticoServiceInterface
                 ? Carbon::parse($datos['fecha_retorno'])
                 : Carbon::parse($viatico->datetime_llegada);
 
-            $facturasPayload  = $datos['facturas']    ?? [];
+            $facturasPayload    = $datos['facturas']    ?? [];
             $actividadesPayload = $datos['actividades'] ?? [];
-            $totalFacturas    = collect($facturasPayload)->sum('monto');
-            $montoAsignado    = (float) ($viatico->monto_calculado ?? 0.00);
-            $montoAnticipo    = (float) ($viatico->monto_anticipo ?? 0.00);
-
-            // Solo H&A cuenta para justificar el 70%
-            $idsViatico = \App\Models\Viatico\CategoriaFactura
-                ::where('grupo', 'viatico')
-                ->pluck('id')
-                ->toArray();
-
-            $totalHospAli = collect($facturasPayload)
-                ->whereIn('categoria_factura_id', $idsViatico)
-                ->sum('monto');
-
-            $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
-                ? $viatico->modalidad_anticipo->value
-                : (string) $viatico->modalidad_anticipo;
-
-            if ($modalidad === 'sin_anticipo') {
-                // Sin anticipo: no debe nada,
-                // la institución le paga lo justificado + 30%
-                $diferenciaDevolver = 0;
-            } else {
-                // Con anticipo (70%):
-                // debe justificar el monto del anticipo
-                if ($totalHospAli >= $montoAnticipo ||
-                    $totalFacturas >= $montoAsignado) {
-                    $diferenciaDevolver = 0;
-                } else {
-                    $diferenciaDevolver = round(
-                        $montoAnticipo - $totalHospAli, 2
-                    );
-                }
-            }
 
             $liquidacion = LiquidacionViatico::create([
-                'viatico_id'          => $viaticoId,
-                'total_facturas'      => $totalFacturas,
-                'diferencia_devolver' => $diferenciaDevolver,
-                'fecha_retorno'       => $fechaRetorno,
-                'fecha_liquidacion'   => now()->toDateString(),
-                'observaciones'       => $datos['observaciones'] ?? null,
-                'created_by'          => $userId,
+                'viatico_id'        => $viaticoId,
+                'total_facturas'    => 0,
+                'fecha_retorno'     => $fechaRetorno,
+                'fecha_liquidacion' => now()->toDateString(),
+                'observaciones'     => $datos['observaciones'] ?? null,
+                'created_by'        => $userId,
             ]);
 
             // Crear facturas
@@ -201,6 +158,11 @@ final class ViaticoService implements ViaticoServiceInterface
                     'orden'                  => $i + 1,
                 ]);
             }
+
+            // Con los comprobantes ya guardados: lo justificado dentro del
+            // 70 %, lo reconocido y el saldo salen de la misma fórmula que usan
+            // la pantalla y el comprobante contable.
+            $this->calculo->guardarEn($liquidacion, $viatico);
 
             $viatico->estado     = EstadoViatico::LIQUIDADO;
             $viatico->updated_by = $userId;
@@ -250,67 +212,4 @@ final class ViaticoService implements ViaticoServiceInterface
         );
     }
 
-    /**
-     * Un desplazamiento de menos de 10 horas que no obliga a pernoctar paga
-     * subsistencia, no viático: la diferencia es que el viático cubre el
-     * alojamiento y la subsistencia solo la alimentación.
-     *
-     * El catálogo de tarifas ya distinguía las dos —subsistencia está sembrada
-     * a la mitad para cada zona y nivel— pero el cálculo pedía siempre
-     * 'con_pernocte', así que una comisión de ocho horas se pagaba como si el
-     * servidor hubiera dormido fuera.
-     */
-    private function aplicaSubsistencia(
-        ?Carbon $salida,
-        ?Carbon $llegada
-    ): bool {
-        if (!$salida || !$llegada) {
-            return false;
-        }
-
-        // Cruzar la medianoche implica pernoctar, dure lo que dure.
-        if (!$salida->isSameDay($llegada)) {
-            return false;
-        }
-
-        return $salida->diffInHours($llegada) < 10;
-    }
-
-    private function calcularMonto(
-        Servidor $servidor,
-        string $zona,
-        float $totalDias = 1,
-        ?Carbon $datetimeSalida = null,
-        ?Carbon $datetimeLlegada = null
-    ): float {
-        $denominacion = strtolower(
-            $servidor->puesto?->cargo?->nombre ?? ''
-        );
-        $esAutoridad = str_contains($denominacion, 'director')
-                    || str_contains($denominacion, 'prefecto')
-                    || str_contains($denominacion, 'coordinador')
-                    || str_contains($denominacion, 'secretario');
-        $nivel = $esAutoridad ? 'autoridad' : 'servidor';
-
-        $subsistencia = $this->aplicaSubsistencia($datetimeSalida, $datetimeLlegada);
-        $tipoTarifa   = $subsistencia ? 'subsistencia' : 'con_pernocte';
-
-        $tarifa = TarifaViatico::where('zona', $zona)
-            ->where('nivel', $nivel)
-            ->where('tipo_tarifa', $tipoTarifa)
-            ->first();
-
-        if (!$tarifa) {
-            throw new ReglaNegocioException(
-                "No se encontró tarifa para: zona={$zona}, " .
-                "nivel={$nivel}, tipo={$tipoTarifa}. Verifique las tarifas."
-            );
-        }
-
-        // La subsistencia se paga una sola vez: por definición no hay más de
-        // un día que cubrir.
-        $dias = $subsistencia ? 1 : $totalDias;
-
-        return round((float) $tarifa->valor_diario * $dias, 2);
-    }
 }

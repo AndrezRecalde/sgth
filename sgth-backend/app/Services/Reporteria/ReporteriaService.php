@@ -426,7 +426,7 @@ class ReporteriaService implements ReporteriaServiceInterface
                     'viaticos.estado',
                     'viaticos.datetime_salida',
                     'viaticos.datetime_llegada',
-                    'viaticos.total_dias',
+                    'viaticos.noches',
                     'viaticos.monto_calculado',
                     'viaticos.monto_anticipo',
                     'viaticos.partida_presupuestaria',

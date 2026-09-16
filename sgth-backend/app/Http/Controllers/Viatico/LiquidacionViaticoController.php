@@ -6,6 +6,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\ActividadLiquidacion;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
+use App\Services\Viatico\CalculoViaticoService;
 use App\Services\Viatico\ComprobantesViaticoService;
 use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ class LiquidacionViaticoController extends Controller
     public function __construct(
         private ViaticoEstadoService $estados,
         private ComprobantesViaticoService $comprobantes,
+        private CalculoViaticoService $calculo,
     ) {}
 
     /**
@@ -44,6 +46,9 @@ class LiquidacionViaticoController extends Controller
 
         if ($liquidacion) {
             $this->comprobantes->conAlertas($liquidacion->detallesFactura, $viatico);
+            // La misma cuenta que muestra la ficha del viático, para que la
+            // pantalla de liquidación no tenga que rehacerla.
+            $liquidacion->setAttribute('calculo', $this->calculo->resumen($viatico, $liquidacion));
         }
 
         return ApiResponse::ok(
@@ -182,34 +187,9 @@ class LiquidacionViaticoController extends Controller
                 'monto'                => $f['monto'],
             ], $data['facturas']));
 
-            // Recalcular totales
-            $liquidacion->load('detallesFactura.categoria');
-            $total = $liquidacion->detallesFactura->sum('monto');
-
-            $viatico     = $liquidacion->viatico;
-            $montoAsig   = (float) ($viatico->monto_calculado ?? 0);
-            $anticipo    = (float) ($viatico->monto_anticipo  ?? 0);
-            $modalidad   = $viatico->modalidad_anticipo instanceof \BackedEnum
-                ? $viatico->modalidad_anticipo->value
-                : (string) $viatico->modalidad_anticipo;
-
-            $idsViatico = \App\Models\Viatico\CategoriaFactura
-                ::where('grupo', 'viatico')
-                ->pluck('id')->toArray();
-
-            $totalHA = $liquidacion->detallesFactura
-                ->whereIn('categoria_factura_id', $idsViatico)
-                ->sum('monto');
-
-            $diferencia = $modalidad === 'sin_anticipo'
-                ? 0
-                : (($totalHA >= $anticipo) ? 0
-                    : round($anticipo - $totalHA, 2));
-
-            $liquidacion->update([
-                'total_facturas'      => round($total, 2),
-                'diferencia_devolver' => $diferencia,
-            ]);
+            // La cuenta se rehace con la fórmula única: cuentan todos los
+            // comprobantes hasta el 70 %, y el 30 % se reconoce igual.
+            $this->calculo->guardarEn($liquidacion);
         });
 
         $liquidacion->load('detallesFactura.categoria');
@@ -288,10 +268,9 @@ class LiquidacionViaticoController extends Controller
         return LiquidacionViatico::firstOrCreate(
             ['viatico_id' => $viaticoId],
             [
-                'total_facturas'      => 0,
-                'diferencia_devolver' => 0,
-                'fecha_liquidacion'   => now()->toDateString(),
-                'created_by'          => request()->user()->id,
+                'total_facturas'    => 0,
+                'fecha_liquidacion' => now()->toDateString(),
+                'created_by'        => request()->user()->id,
             ]
         );
     }

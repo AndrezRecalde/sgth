@@ -5,7 +5,13 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Tarifas diarias de viático y subsistencia (Acuerdo MRL-2014-0165).
+ * Tarifas diarias de viático, confirmadas por Gestión Financiera.
+ *
+ * La del exterior es la base: se multiplica por el coeficiente del país que
+ * Financiero ingresa al aprobar. Estaba escrita en el código del servicio de
+ * estados, donde nadie podía actualizarla.
+ *
+ * No hay tarifas de subsistencia: un viaje sin pernocte no genera viático.
  *
  * Se puede volver a correr: inserta solo las combinaciones de zona, nivel y
  * tipo que falten. Antes vaciaba la tabla con `truncate()` —en una base en uso
@@ -19,14 +25,12 @@ class TarifaViaticoSeeder extends Seeder
         $tarifas = [
             // NIVEL: servidor (todos los servidores y obreros)
             ['zona' => 'dentro_provincia', 'nivel' => 'servidor',  'tipo_tarifa' => 'con_pernocte', 'valor_diario' => 80.00],
-            ['zona' => 'dentro_provincia', 'nivel' => 'servidor',  'tipo_tarifa' => 'subsistencia', 'valor_diario' => 40.00],
             ['zona' => 'fuera_provincia',  'nivel' => 'servidor',  'tipo_tarifa' => 'con_pernocte', 'valor_diario' => 80.00],
-            ['zona' => 'fuera_provincia',  'nivel' => 'servidor',  'tipo_tarifa' => 'subsistencia', 'valor_diario' => 40.00],
-            // NIVEL: autoridad (grados 6, 7, 8 NJS: prefectos, alcaldes, generales, etc.)
+            ['zona' => 'exterior',         'nivel' => 'servidor',  'tipo_tarifa' => 'con_pernocte', 'valor_diario' => 185.00],
+            // NIVEL: autoridad (el Prefecto o la Prefecta; dignatario en el exterior)
             ['zona' => 'dentro_provincia', 'nivel' => 'autoridad', 'tipo_tarifa' => 'con_pernocte', 'valor_diario' => 130.00],
-            ['zona' => 'dentro_provincia', 'nivel' => 'autoridad', 'tipo_tarifa' => 'subsistencia', 'valor_diario' => 65.00],
             ['zona' => 'fuera_provincia',  'nivel' => 'autoridad', 'tipo_tarifa' => 'con_pernocte', 'valor_diario' => 130.00],
-            ['zona' => 'fuera_provincia',  'nivel' => 'autoridad', 'tipo_tarifa' => 'subsistencia', 'valor_diario' => 65.00],
+            ['zona' => 'exterior',         'nivel' => 'autoridad', 'tipo_tarifa' => 'con_pernocte', 'valor_diario' => 220.00],
         ];
 
         $nuevas = 0;

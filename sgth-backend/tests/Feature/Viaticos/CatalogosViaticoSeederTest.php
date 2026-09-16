@@ -49,7 +49,7 @@ it('los tres se pueden volver a correr sin duplicar ni pisar lo ajustado', funct
 
     $sembrar();
 
-    expect($conteos)->toBe([8, 9, 35, 13])
+    expect($conteos)->toBe([6, 9, 35, 13])
         ->and([
             DB::table('tarifas_viatico')->count(),
             DB::table('catalogo_transportes')->count(),

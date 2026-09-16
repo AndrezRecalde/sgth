@@ -9,6 +9,7 @@ use App\Http\Requests\Viatico\SolicitarViaticoRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoServidor;
+use App\Services\Viatico\CalculoViaticoService;
 use App\Services\Viatico\ComprobantesViaticoService;
 use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,7 @@ class ViaticoController extends Controller
     public function __construct(
         private ViaticoServiceInterface $viaticoService,
         private ViaticoEstadoService $estados,
+        private CalculoViaticoService $calculo,
     ) {}
 
     public function index(
@@ -115,6 +117,11 @@ class ViaticoController extends Controller
             app(ComprobantesViaticoService::class)->conAlertas($viatico->liquidacion->detallesFactura, $viatico);
         }
 
+        // La cuenta del viático viaja resuelta: el 70 % a justificar, lo
+        // presentado, el 30 % que se reconoce sin comprobante y el saldo. El
+        // frontend la rehacía por su cuenta, con otra fórmula.
+        $viatico->setAttribute('calculo', $this->calculo->resumen($viatico));
+
         return ApiResponse::ok(
             $viatico,
             'Detalle del viático.'
@@ -154,7 +161,9 @@ class ViaticoController extends Controller
             'servidores_acompanantes.*' => ['integer', 'exists:servidores,id'],
         ]);
 
-        // Recalcular total_dias si cambian las fechas
+        // Al cambiar las fechas se rehace la cuenta: las noches y, con ellas,
+        // lo que le corresponde al servidor. Lo resuelve el servicio de
+        // cálculo, que es donde vive la fórmula.
         if (
             isset($data['datetime_salida']) ||
             isset($data['datetime_llegada'])
@@ -165,39 +174,23 @@ class ViaticoController extends Controller
             $llegada = \Carbon\Carbon::parse(
                 $data['datetime_llegada'] ?? $viatico->datetime_llegada
             );
-            $data['total_dias'] = (float) $salida
-                ->copy()->startOfDay()
-                ->diffInDays($llegada->copy()->startOfDay()) + 1;
 
-            // Recalcular monto si es nacional
-            if (
-                ($data['zona'] ?? $viatico->zona) !== 'exterior' &&
-                !isset($data['monto_calculado'])
-            ) {
-                $servidor = \App\Models\Expediente\Servidor::with('puesto.cargo')
+            $this->calculo->asegurarPernocte($salida, $llegada);
+
+            $data['noches'] = $this->calculo->noches($salida, $llegada);
+
+            if (! isset($data['monto_calculado'])) {
+                $servidor = \App\Models\Expediente\Servidor::with('puesto')
                     ->findOrFail($viatico->servidor_id);
 
-                $denominacion = strtolower(
-                    $servidor->puesto?->cargo?->nombre ?? ''
+                $data['monto_calculado'] = $this->calculo->derecho(
+                    $servidor,
+                    $data['zona'] ?? $this->valorZona($viatico),
+                    $data['noches'],
+                    $viatico->coeficiente_exterior !== null
+                        ? (float) $viatico->coeficiente_exterior
+                        : null
                 );
-                $esAutoridad = str_contains($denominacion, 'director')
-                            || str_contains($denominacion, 'prefecto')
-                            || str_contains($denominacion, 'coordinador');
-                $nivel = $esAutoridad ? 'autoridad' : 'servidor';
-                $zona  = $data['zona'] ?? $viatico->zona;
-
-                $tarifa = \App\Models\Viatico\TarifaViatico::where('zona', $zona)
-                    ->where('nivel', $nivel)
-                    ->where('tipo_tarifa', 'con_pernocte')
-                    ->first();
-
-                if ($tarifa) {
-                    $data['monto_calculado'] = round(
-                        (float) $tarifa->valor_diario *
-                        $data['total_dias'],
-                        2
-                    );
-                }
             }
         }
 
@@ -385,6 +378,14 @@ class ViaticoController extends Controller
         }
 
         return $datos;
+    }
+
+    /** La zona como texto: el modelo la castea a enum. */
+    private function valorZona(Viatico $viatico): string
+    {
+        return $viatico->zona instanceof \BackedEnum
+            ? (string) $viatico->zona->value
+            : (string) $viatico->zona;
     }
 
     /**

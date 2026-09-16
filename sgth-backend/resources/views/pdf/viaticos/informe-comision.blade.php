@@ -277,7 +277,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
         ? \Carbon\Carbon::parse($viatico->datetime_llegada)->format('d/m/Y H:i')
         : '—' }}
     &nbsp;|&nbsp;
-    {{ number_format($viatico->total_dias ?? 0, 0) }} día(s) &nbsp;|&nbsp;
+    {{ $calculo["noches"] }} noche(s) &nbsp;|&nbsp;
     Anticipo: $ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}
   </div>
 </div>
@@ -458,140 +458,87 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 
 {{-- ══ RESUMEN FINANCIERO ══ --}}
 <div class="sec-hdr-alt">Resumen Financiero</div>
-  @php
-    $montoAsignado  = (float) ($viatico->monto_calculado ?? 0);
-    $anticipo       = (float) ($viatico->monto_anticipo ?? 0);
-    $monto70        = round($montoAsignado * 0.70, 2);
-    $monto30        = round($montoAsignado * 0.30, 2);
-
-    // Separar facturas por grupo
-    $totalHospAli = 0;
-    $totalMovilizacion = 0;
-    foreach ($viatico->liquidacion?->detallesFactura ?? [] as $f) {
-        if ($f->categoria?->grupo === 'viatico') {
-            $totalHospAli += (float) $f->monto;
-        } else {
-            $totalMovilizacion += (float) $f->monto;
-        }
-    }
-    $totalFacturas = $totalHospAli + $totalMovilizacion;
-
-    $porcentajeHA = $monto70 > 0
-        ? min(round(($totalHospAli / $monto70) * 100, 1), 100)
-        : 0;
-    $justificadoCompleto = $totalHospAli >= $monto70;
-
-    $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
-        ? $viatico->modalidad_anticipo->value
-        : (string) $viatico->modalidad_anticipo;
-
-    if ($modalidad === 'sin_anticipo') {
-        $diferenciaDevolver = 0;
-    } else {
-        $diferenciaDevolver = ($totalHospAli >= $anticipo ||
-                               $totalFacturas >= $montoAsignado)
-            ? 0
-            : round($anticipo - $totalHospAli, 2);
-    }
-  @endphp
-
-  {{-- Viático diario H&A --}}
   <div class="resumen-wrap">
     <div class="res-row">
       <div class="res-lbl">
-        Monto total asignado:
+        Viático por {{ $calculo['noches'] }} noche(s):
       </div>
       <div class="res-val">
-        $ {{ number_format($montoAsignado, 2) }}
+        $ {{ number_format($calculo['derecho'], 2) }}
       </div>
     </div>
     <div class="res-row">
       <div class="res-lbl">
-        70% a justificar (Hospedaje y Alimentación):
+        70% a justificar con comprobantes:
       </div>
       <div class="res-val">
-        $ {{ number_format($monto70, 2) }}
+        $ {{ number_format($calculo['tope_justificable'], 2) }}
       </div>
     </div>
-    @if($anticipo > 0)
+    <div class="res-row">
+      <div class="res-lbl">
+        Comprobantes presentados:
+      </div>
+      <div class="res-val">
+        $ {{ number_format($calculo['total_comprobantes'], 2) }}
+      </div>
+    </div>
+    <div class="res-row">
+      <div class="res-lbl">
+        Justificado (hasta el 70%):
+      </div>
+      <div class="res-val">
+        $ {{ number_format($calculo['justificado'], 2) }}
+      </div>
+    </div>
+    @if($calculo['excedente'] > 0)
+    <div class="res-row">
+      <div class="res-lbl">
+        Excedente a cargo del servidor:
+      </div>
+      <div class="res-val">
+        $ {{ number_format($calculo['excedente'], 2) }}
+      </div>
+    </div>
+    @endif
+    <div class="res-row">
+      <div class="res-lbl">
+        30% reconocido sin comprobante:
+      </div>
+      <div class="res-val">
+        $ {{ number_format($calculo['reconocido_sin_comprobante'], 2) }}
+      </div>
+    </div>
+    <div class="res-row">
+      <div class="res-lbl">
+        Total reconocido al servidor:
+      </div>
+      <div class="res-val">
+        $ {{ number_format($calculo['reconocido'], 2) }}
+      </div>
+    </div>
+    @if($calculo['anticipo'] > 0)
     <div class="res-row">
       <div class="res-lbl">
         Anticipo entregado:
       </div>
       <div class="res-val">
-        $ {{ number_format($anticipo, 2) }}
+        $ {{ number_format($calculo['anticipo'], 2) }}
       </div>
     </div>
     @endif
-    <div class="res-row">
-      <div class="res-lbl">
-        Total H&A presentado ({{ $porcentajeHA }}%):
+    <div class="res-row"
+      style="background:{{ $calculo['saldo'] < 0 ? '#fff0f0' : '#f2f8f4' }};">
+      <div class="res-total-lbl"
+        style="color:{{ $calculo['saldo'] < 0 ? '#c0392b' : '#2d6a4f' }};">
+        ★ {{ $calculo['saldo'] < 0 ? 'A devolver a la institución:' : 'A pagar al servidor:' }}
       </div>
-      <div class="res-val"
-        style="color:{{ $justificadoCompleto ? '#2d6a4f' : '#e67e22' }}">
-        $ {{ number_format($totalHospAli, 2) }}
-      </div>
-    </div>
-    <div class="res-row">
-      <div class="res-lbl">
-        30% devengado (sin comprobante):
-      </div>
-      <div class="res-val">
-        $ {{ number_format($monto30, 2) }}
-      </div>
-    </div>
-    @if($diferenciaDevolver > 0)
-    <div class="res-row" style="background:#fff0f0;">
-      <div class="res-total-lbl" style="color:#c0392b;">
-        ★ A devolver a la institución:
-      </div>
-      <div class="res-total-val" style="color:#c0392b;">
-        $ {{ number_format($diferenciaDevolver, 2) }}
-      </div>
-    </div>
-    @else
-    <div class="res-row">
-      <div class="res-total-lbl">
-        ★ A devolver a la institución:
-      </div>
-      <div class="res-total-val">
-        $ 0.00
-      </div>
-    </div>
-    @endif
-  </div>
-
-  {{-- Movilización --}}
-  @if($totalMovilizacion > 0)
-  <div style="margin-top:8px;">
-    <div class="sec-hdr-alt" style="margin-top: 0;">
-      Movilización (rubro independiente)
-    </div>
-    <div class="resumen-wrap">
-      @foreach($viatico->liquidacion->detallesFactura as $f)
-        @if($f->categoria?->grupo !== 'viatico')
-        <div class="res-row">
-          <div class="res-lbl">
-            {{ $f->categoria?->nombre ?? '—' }}
-            ({{ $f->nombre_proveedor ?? '—' }}):
-          </div>
-          <div class="res-val">
-            $ {{ number_format($f->monto ?? 0, 2) }}
-          </div>
-        </div>
-        @endif
-      @endforeach
-      <div class="res-row">
-        <div class="res-total-lbl">
-          Total Movilización:
-        </div>
-        <div class="res-total-val">
-          $ {{ number_format($totalMovilizacion, 2) }}
-        </div>
+      <div class="res-total-val"
+        style="color:{{ $calculo['saldo'] < 0 ? '#c0392b' : '#2d6a4f' }};">
+        $ {{ number_format(abs($calculo['saldo']), 2) }}
       </div>
     </div>
   </div>
-  @endif
 @else
 <div class="tbox" style="color:#718096">
   Sin comprobantes registrados en la liquidación.

@@ -9,6 +9,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PdfInformeViaticoService
 {
+    public function __construct(
+        private readonly CalculoViaticoService $calculo,
+    ) {}
+
     /**
      * Genera el PDF de solicitud y retorna
      * el contenido como string para ser
@@ -32,6 +36,7 @@ class PdfInformeViaticoService
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
                 'modalidadValue' => $modalidadValue,
+                'calculo'        => $this->calculo->resumen($viatico),
             ]
         )->setPaper('a4', 'portrait');
 
@@ -76,6 +81,7 @@ class PdfInformeViaticoService
                 'logo'           => public_path('images/logo-gadpe.png'),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
+                'calculo'        => $this->calculo->resumen($viatico),
             ]
         )->setPaper('a4', 'portrait');
 
@@ -187,9 +193,10 @@ class PdfInformeViaticoService
         $jefeUnidad    = $this->obtenerJefeUnidad($viatico);
         $directorFinanciero = $this->obtenerDirectorFinanciero();
 
-        // Número en letras
-        $total       = (float) ($viatico->monto_anticipo ?? 0);
-        $totalLetras = \App\Helpers\NumeroALetras::convertir($total);
+        // El comprobante imprime lo liquidado, no el anticipo: un viático sin
+        // anticipo salía en $0,00. Decidido con Gestión Financiera.
+        $calculo     = $this->calculo->resumen($viatico);
+        $totalLetras = \App\Helpers\NumeroALetras::convertir($calculo['reconocido']);
 
         // Agrupar facturas por categoría
         $facturasPorCategoria = $this->agruparFacturasPorCategoria(
@@ -205,6 +212,7 @@ class PdfInformeViaticoService
                 'directorFinanciero'  => $directorFinanciero,
                 'logo'                => public_path('images/logo-gadpe.png'),
                 'totalLetras'         => $totalLetras,
+                'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
                 'modalidadLabel'      => match(
                     $viatico->modalidad_anticipo instanceof \BackedEnum
