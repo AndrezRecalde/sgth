@@ -361,7 +361,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   del
   {{ $salida ? $salida->format('d') : '—' }}
   al
-  {{ $llegada ? $llegada->format('d \d\e F \d\e\l Y') : '—' }},
+  {{ $llegada ? $llegada->locale('es')->isoFormat('D [de] MMMM [del] YYYY') : '—' }},
   para <strong>{{ strtoupper($viatico->justificacion ?? '—') }}</strong>
 </div>
 
@@ -449,7 +449,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 </table>
 
 <div class="sec-hdr-alt">
-  Movilización (rubro independiente)
+  Movilización
 </div>
 <table class="ft">
   <tr>
