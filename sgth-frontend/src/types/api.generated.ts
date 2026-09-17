@@ -20540,6 +20540,10 @@ export interface operations {
             content: {
                 "application/json": {
                     facturas: {
+                        /**
+                         * @description Solo las categorías vigentes: el catálogo del formulario ya no
+                         *     ofrece las que el viático no cubre.
+                         */
                         categoria_factura_id: number;
                         nombre_proveedor: string;
                         monto: number;

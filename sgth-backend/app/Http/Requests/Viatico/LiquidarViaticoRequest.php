@@ -3,6 +3,7 @@ namespace App\Http\Requests\Viatico;
 
 use App\Models\Viatico\Viatico;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class LiquidarViaticoRequest extends FormRequest
 {
@@ -31,7 +32,10 @@ class LiquidarViaticoRequest extends FormRequest
 
             // Facturas nuevo modelo
             'facturas'                           => ['nullable', 'array'],
-            'facturas.*.categoria_factura_id'    => ['required_with:facturas', 'integer', 'exists:categorias_factura,id'],
+            'facturas.*.categoria_factura_id'    => [
+                'required_with:facturas', 'integer',
+                Rule::exists('categorias_factura', 'id')->where('activo', true),
+            ],
             'facturas.*.nombre_proveedor'        => ['required_with:facturas', 'string', 'max:200'],
             'facturas.*.monto'                   => ['required_with:facturas', 'numeric', 'min:0.01'],
             'facturas.*.tipo_comprobante'        => ['required_with:facturas', 'in:factura,ticket,recibo,otro'],
@@ -50,6 +54,7 @@ class LiquidarViaticoRequest extends FormRequest
             'actividades.*.descripcion.required_with' => 'La descripción de la actividad es obligatoria.',
             'actividades.*.lugar.required_with'       => 'El lugar de la actividad es obligatorio.',
             'facturas.*.categoria_factura_id.required_with' => 'La categoría del comprobante es obligatoria.',
+            'facturas.*.categoria_factura_id.exists'        => 'Esa categoría de comprobante ya no está vigente.',
             'facturas.*.nombre_proveedor.required_with'     => 'El nombre del proveedor es obligatorio.',
             'facturas.*.monto.required_with'                => 'El monto del comprobante es obligatorio.',
             'facturas.*.tipo_comprobante.required_with'     => 'El tipo de comprobante es obligatorio.',

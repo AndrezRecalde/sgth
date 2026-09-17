@@ -284,3 +284,25 @@ it('tampoco deja aceptar uno fuera de fecha registrado antes de la regla', funct
     ($this->revisar)($this->financiero, $viatico, $viejo, ['decision' => 'observada', 'observacion' => 'Fecha fuera del viaje'])
         ->assertOk();
 });
+
+it('no recibe comprobantes de una categoría que ya no está vigente', function () {
+    $viatico = ($this->viatico)(EstadoViatico::PENDIENTE_LIQUIDACION);
+    $retirada = CategoriaFactura::create([
+        'nombre' => 'Seguro de viaje', 'codigo' => 'SEG', 'grupo' => 'movilizacion', 'activo' => false,
+    ]);
+
+    $errores = $this->actingAs($this->titular, 'sanctum')
+        ->postJson("/api/v1/viaticos/{$viatico->id}/liquidacion/facturas", ['facturas' => [[
+            'categoria_factura_id' => $retirada->id, 'tipo_comprobante' => 'factura',
+            'numero_factura' => '001-001-000000321', 'ruc_proveedor' => '1790016919001',
+            'nombre_proveedor' => 'Aseguradora', 'fecha_factura' => '2026-10-06', 'monto' => 25,
+        ]]])
+        ->assertStatus(422)
+        ->json('errores');
+
+    expect($errores)->toBe([
+        'facturas.0.categoria_factura_id' => ['Esa categoría de comprobante ya no está vigente.'],
+    ]);
+
+    expect(FacturaViatico::count())->toBe(0);
+});

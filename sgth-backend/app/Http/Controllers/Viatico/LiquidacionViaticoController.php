@@ -12,6 +12,7 @@ use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class LiquidacionViaticoController extends Controller
 {
@@ -140,7 +141,12 @@ class LiquidacionViaticoController extends Controller
 
         $data = $request->validate([
             'facturas'                        => ['required', 'array', 'min:1'],
-            'facturas.*.categoria_factura_id' => ['required', 'integer'],
+            // Solo las categorías vigentes: el catálogo del formulario ya no
+            // ofrece las que el viático no cubre.
+            'facturas.*.categoria_factura_id' => [
+                'required', 'integer',
+                Rule::exists('categorias_factura', 'id')->where('activo', true),
+            ],
             'facturas.*.nombre_proveedor'     => ['required', 'string'],
             'facturas.*.monto'                => ['required', 'numeric', 'min:0.01'],
             'facturas.*.tipo_comprobante'     => ['required', 'in:factura,ticket,recibo,otro'],
@@ -150,7 +156,8 @@ class LiquidacionViaticoController extends Controller
             'facturas.*.fecha_factura'        => ['required', 'date'],
             'facturas.*.detalle'              => ['nullable', 'string'],
         ], [
-            'facturas.*.fecha_factura.required' => 'Indique la fecha del comprobante.',
+            'facturas.*.fecha_factura.required'      => 'Indique la fecha del comprobante.',
+            'facturas.*.categoria_factura_id.exists' => 'Esa categoría de comprobante ya no está vigente.',
         ]);
 
         // Un comprobante fuera de las fechas del viaje no se recibe.

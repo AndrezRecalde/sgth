@@ -21448,7 +21448,8 @@
                                             "type": "object",
                                             "properties": {
                                                 "categoria_factura_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "description": "Solo las categor\u00edas vigentes: el cat\u00e1logo del formulario ya no\nofrece las que el vi\u00e1tico no cubre."
                                                 },
                                                 "nombre_proveedor": {
                                                     "type": "string"
