@@ -8,7 +8,10 @@
 |   todos aceptados;
 | - al volver a guardar los comprobantes, los que no cambiaron conservan su
 |   revisión;
-| - RUC, fecha y duplicados solo avisan: no impiden guardar.
+| - RUC y duplicados solo avisan: no impiden guardar.
+|
+| Gestión Financiera, 2026-09-15: el comprobante debe estar fechado dentro de
+| las fechas del viaje, y fuera de ellas se rechaza.
 */
 
 use App\Enums\EstadoViatico;
@@ -67,7 +70,7 @@ beforeEach(function () {
         ]);
         LiquidacionViatico::create([
             'viatico_id' => $viatico->id, 'total_facturas' => 0,
-            'diferencia_devolver' => 0, 'fecha_liquidacion' => now()->toDateString(),
+            'fecha_liquidacion' => now()->toDateString(),
         ]);
 
         return $viatico;
@@ -189,16 +192,17 @@ it('al volver a guardar, lo que no cambió conserva su revisión y lo corregido 
 
 // ── Controles automáticos ────────────────────────────────────────────
 
-it('cada comprobante trae sus alertas, sin impedir guardarlo', function () {
+it('cada comprobante trae sus alertas', function () {
     $viatico = ($this->viatico)(EstadoViatico::LIQUIDADO);
     $otro = ($this->viatico)(EstadoViatico::CONTABILIZADO);
 
     ($this->comprobante)($otro, ['numero_factura' => '001-001-000000777']);
     ($this->comprobante)($viatico);                                                    // limpio
     ($this->comprobante)($viatico, ['numero_factura' => 'A', 'ruc_proveedor' => '1234567890123']);
-    // Regresó el 7: hasta el 12 vale (5 días después); el 13 ya no, ni el día antes de salir.
-    ($this->comprobante)($viatico, ['numero_factura' => 'B', 'fecha_factura' => '2026-10-13']);
-    ($this->comprobante)($viatico, ['numero_factura' => 'C', 'fecha_factura' => '2026-10-12']);
+    // Viajó del 5 al 7: el día del regreso vale; el siguiente ya no, ni el día
+    // antes de salir. Se guardan directo, como los registrados antes de la regla.
+    ($this->comprobante)($viatico, ['numero_factura' => 'B', 'fecha_factura' => '2026-10-08']);
+    ($this->comprobante)($viatico, ['numero_factura' => 'C', 'fecha_factura' => '2026-10-07']);
     ($this->comprobante)($viatico, ['numero_factura' => 'D', 'fecha_factura' => '2026-10-04']);
     ($this->comprobante)($viatico, ['numero_factura' => '001-001-000000777']);         // ya presentada
     ($this->comprobante)($viatico, ['numero_factura' => null, 'tipo_comprobante' => 'ticket', 'ruc_proveedor' => null, 'numero_ticket' => 'T-1']);
@@ -212,7 +216,7 @@ it('cada comprobante trae sus alertas, sin impedir guardarlo', function () {
     expect($codigos('001-001-000000123'))->toBe([])
         ->and($codigos('A'))->toBe(['ruc'])
         ->and($codigos('B'))->toBe(['fecha'])
-        ->and($facturas['B']['alertas'][0]['mensaje'])->toContain('05/10/2026 – 12/10/2026')
+        ->and($facturas['B']['alertas'][0]['mensaje'])->toContain('05/10/2026 – 07/10/2026')
         ->and($codigos('C'))->toBe([])
         ->and($codigos('D'))->toBe(['fecha'])
         ->and($codigos('001-001-000000777'))->toBe(['duplicado'])
@@ -231,3 +235,52 @@ it('valida el RUC ecuatoriano por tipo de contribuyente', function (string $ruc,
     'establecimiento 000'     => ['1710034065000', false],
     'longitud'                => ['179001691900', false],
 ]);
+
+// ── Fecha dentro del viaje ───────────────────────────────────────────
+
+it('no recibe comprobantes sin fecha o fechados fuera del viaje', function () {
+    $viatico = ($this->viatico)(EstadoViatico::PENDIENTE_LIQUIDACION);
+
+    $con = fn (?string $fecha, string $numero) => [
+        'categoria_factura_id' => $this->hospedaje->id, 'tipo_comprobante' => 'factura',
+        'numero_factura' => $numero, 'ruc_proveedor' => '1790016919001',
+        'nombre_proveedor' => 'Hotel Quinindé', 'fecha_factura' => $fecha, 'monto' => 40,
+    ];
+    $guardar = fn (array $facturas) => $this->actingAs($this->titular, 'sanctum')
+        ->postJson("/api/v1/viaticos/{$viatico->id}/liquidacion/facturas", ['facturas' => $facturas]);
+
+    // Viajó del 5 al 7 de octubre.
+    $errores = $guardar([
+        $con('2026-10-05', '001-001-000000001'),   // día de salida: vale
+        $con('2026-10-04', '001-001-000000002'),   // el día antes
+        $con('2026-10-08', '001-001-000000003'),   // el día después del regreso
+    ])->assertStatus(422)->json('errores');
+
+    expect($errores)->toBe([
+        'facturas.1.fecha_factura' => ['La fecha debe estar dentro del viaje (05/10/2026 – 07/10/2026).'],
+        'facturas.2.fecha_factura' => ['La fecha debe estar dentro del viaje (05/10/2026 – 07/10/2026).'],
+    ]);
+
+    expect($guardar([$con(null, '001-001-000000004')])->assertStatus(422)->json('errores'))
+        ->toBe(['facturas.0.fecha_factura' => ['Indique la fecha del comprobante.']]);
+
+    expect(FacturaViatico::count())->toBe(0);
+
+    // Del día de salida al de regreso, ambos incluidos.
+    $guardar([$con('2026-10-05', '001-001-000000005'), $con('2026-10-07', '001-001-000000006')])->assertOk();
+
+    expect(FacturaViatico::count())->toBe(2);
+});
+
+it('tampoco deja aceptar uno fuera de fecha registrado antes de la regla', function () {
+    $viatico = ($this->viatico)(EstadoViatico::LIQUIDADO);
+    $viejo = ($this->comprobante)($viatico, ['fecha_factura' => '2026-10-10']);
+
+    ($this->revisar)($this->financiero, $viatico, $viejo, ['decision' => 'aceptada'])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', 'El comprobante no está fechado dentro de las fechas del viaje (05/10/2026 – 07/10/2026): obsérvelo para que el servidor lo corrija.');
+
+    // Observarlo sí: es lo que lo devuelve al servidor.
+    ($this->revisar)($this->financiero, $viatico, $viejo, ['decision' => 'observada', 'observacion' => 'Fecha fuera del viaje'])
+        ->assertOk();
+});

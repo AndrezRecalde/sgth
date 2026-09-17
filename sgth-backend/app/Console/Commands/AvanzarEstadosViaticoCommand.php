@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
  *
  * Llegada la salida, lo aprobado pasa a «en comisión»; llegado el regreso, a
  * «pendiente de liquidación». Sin esto dependía de que Financiero pulsara el
- * botón, y el plazo de 5 días hábiles para liquidar no empezaba nunca.
+ * botón, y el plazo de 4 días hábiles para liquidar no empezaba nunca.
  *
  * Las reglas están en `ViaticoEstadoService::avanzarPorFechas()`.
  */

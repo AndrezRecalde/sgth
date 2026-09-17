@@ -107,6 +107,8 @@ function facturaDe(CategoriaFactura $categoria, float $monto): array
         'tipo_comprobante'     => 'factura',
         'numero_factura'       => '001-001-'.str_pad((string) random_int(1, 999999999), 9, '0', STR_PAD_LEFT),
         'ruc_proveedor'        => '1790016919001',
+        // Dentro del viaje, que va de hoy a dentro de dos días.
+        'fecha_factura'        => now()->addDay()->toDateString(),
         'monto'                => $monto,
     ];
 }

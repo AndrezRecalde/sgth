@@ -144,9 +144,10 @@ it('los filtros se aplican a los contadores y a la lista', function () {
 });
 
 it('en por liquidar cada fila trae su plazo, ordenadas por lo que vence antes', function () {
-    // Volvió el jueves 1: límite el jueves 8 a las 18:00 → quedan 2 días hábiles (7 y 8).
+    // Hoy es martes 6. Volvió el jueves 1: 4 días hábiles, límite el miércoles
+    // 7 a las 18:00 → queda 1 día hábil (el 7).
     ($this->viatico)($this->ana, EstadoViatico::PENDIENTE_LIQUIDACION, ['datetime_llegada' => '2026-10-01 18:00']);
-    // Volvió el lunes 28/09: límite el lunes 5/10 → vencida.
+    // Volvió el lunes 28/09: límite el viernes 2/10 → vencida.
     ($this->viatico)($this->luis, EstadoViatico::PENDIENTE_LIQUIDACION, ['datetime_llegada' => '2026-09-28 18:00']);
 
     $filas = ($this->get)($this->financiero, '/api/v1/viaticos/bandeja?etapa=por_liquidar')
@@ -158,8 +159,8 @@ it('en por liquidar cada fila trae su plazo, ordenadas por lo que vence antes', 
         ->and($filas[0]['plazo']['vencida'])->toBeTrue()
         ->and($filas[0]['plazo']['dias_habiles_restantes'])->toBe(0)
         ->and($filas[1]['plazo']['vencida'])->toBeFalse()
-        ->and($filas[1]['plazo']['dias_habiles_restantes'])->toBe(2)
-        ->and(substr($filas[1]['plazo']['fecha_limite'], 0, 10))->toBe('2026-10-08');
+        ->and($filas[1]['plazo']['dias_habiles_restantes'])->toBe(1)
+        ->and(substr($filas[1]['plazo']['fecha_limite'], 0, 10))->toBe('2026-10-07');
 
     ($this->get)($this->financiero, '/api/v1/viaticos/bandeja?etapa=por_liquidar&vencidas=1')
         ->assertJsonCount(1, 'datos')

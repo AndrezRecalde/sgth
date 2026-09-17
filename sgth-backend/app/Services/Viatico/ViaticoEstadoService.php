@@ -101,7 +101,8 @@ final class ViaticoEstadoService
 
             if ($this->viaticos->verificarBloqueo($viatico->servidor_id)) {
                 throw new ReglaNegocioException(
-                    'El servidor tiene liquidaciones de viático fuera del plazo de 5 días hábiles.'
+                    'El servidor tiene liquidaciones de viático fuera del plazo de '
+                        . ViaticoService::DIAS_HABILES_PARA_LIQUIDAR . ' días hábiles.'
                 );
             }
 
@@ -259,7 +260,7 @@ final class ViaticoEstadoService
      *
      * «En comisión» y «pendiente de liquidación» dependían de que Financiero
      * pulsara un botón. Si no lo hacía, el viático seguía «aprobado» después de
-     * volver, y el plazo de 5 días hábiles para liquidar —que solo cuenta con
+     * volver, y el plazo de 4 días hábiles para liquidar —que solo cuenta con
      * el viático pendiente de liquidación— nunca empezaba: el bloqueo por
      * liquidaciones vencidas no se aplicaba a nadie.
      *

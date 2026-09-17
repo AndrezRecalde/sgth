@@ -132,7 +132,7 @@ it('el recorrido completo deja cada paso en el historial', function () {
     // Contabilizar pide todos los comprobantes aceptados.
     comprobanteAceptado(LiquidacionViatico::create([
         'viatico_id' => $viatico->id, 'total_facturas' => 0,
-        'diferencia_devolver' => 0, 'fecha_liquidacion' => now()->toDateString(),
+        'fecha_liquidacion' => now()->toDateString(),
     ]));
 
     foreach (['aprobar', 'entregar-anticipo', 'marcar-en-comision', 'marcar-pendiente-liquidacion'] as $accion) {
@@ -270,7 +270,7 @@ it('Financiero no decide sobre un viático en el que viaja', function (string $a
     // Contabilizar pide todos los comprobantes aceptados.
     comprobanteAceptado(LiquidacionViatico::create([
         'viatico_id' => $viatico->id, 'total_facturas' => 0,
-        'diferencia_devolver' => 0, 'fecha_liquidacion' => now()->toDateString(),
+        'fecha_liquidacion' => now()->toDateString(),
     ]));
 
     ($this->post)($this->financiero, $viatico, $accion)

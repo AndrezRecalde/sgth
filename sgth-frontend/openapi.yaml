@@ -21485,10 +21485,7 @@
                                                     ]
                                                 },
                                                 "fecha_factura": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
+                                                    "type": "string",
                                                     "format": "date-time"
                                                 },
                                                 "detalle": {
@@ -21502,7 +21499,8 @@
                                                 "categoria_factura_id",
                                                 "nombre_proveedor",
                                                 "monto",
-                                                "tipo_comprobante"
+                                                "tipo_comprobante",
+                                                "fecha_factura"
                                             ]
                                         },
                                         "minItems": 1
@@ -45522,10 +45520,7 @@
                                     "maxLength": 20
                                 },
                                 "fecha_factura": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ],
+                                    "type": "string",
                                     "format": "date-time"
                                 },
                                 "detalle": {

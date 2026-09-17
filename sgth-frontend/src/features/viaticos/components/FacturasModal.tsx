@@ -8,6 +8,7 @@ import {
   Alert,
 } from "@mantine/core";
 import { FormModal } from "@/components/ui";
+import { formatFechaHora } from "@/lib/fecha";
 import {
   IconPlus,
   IconInfoCircle,
@@ -29,7 +30,7 @@ import type {
 
 export interface FacturaData {
   categoria_factura_id: number;
-  fecha_factura?: string | null;
+  fecha_factura: string | null;
   tipo_comprobante: "factura" | "ticket" | "recibo" | "otro";
   numero_factura?: string | null;
   numero_ticket?: string | null;
@@ -45,7 +46,11 @@ export interface FacturaData {
 const facturaItemSchema = z
   .object({
     categoria_factura_id: z.number().min(1, "Seleccione categoría"),
-    fecha_factura: z.string().optional().nullable(),
+    // Nulo mientras el campo está vacío: el calendario lo deja así al borrarlo.
+    fecha_factura: z
+      .string()
+      .nullable()
+      .refine((v) => !!v, "Indique la fecha del comprobante"),
     tipo_comprobante: z.enum(["factura", "ticket", "recibo", "otro"]),
     numero_factura: z.string().optional().nullable(),
     numero_ticket: z.string().optional().nullable(),
@@ -131,10 +136,11 @@ export function FacturasModal({
       })()
     : undefined;
 
+  // Solo las fechas del viaje: fuera de ellas el comprobante se rechaza
+  // (Gestión Financiera). Antes se admitían 5 días más tras el regreso.
   const maxFecha = viatico.datetime_llegada
     ? (() => {
         const d = new Date(viatico.datetime_llegada as string);
-        d.setDate(d.getDate() + 5);
         d.setHours(23, 59, 59, 999);
         return d;
       })()
@@ -171,16 +177,6 @@ export function FacturasModal({
     (sum, f) => sum + (Number(f.monto) || 0),
     0,
   );
-
-  const formatFecha = (f?: string | null) => {
-    if (!f) return "—";
-    return new Date(f).toLocaleDateString("es-EC", {
-      timeZone: "UTC",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  };
 
   const onSubmit = async (values: FormData) => {
     try {
@@ -223,16 +219,10 @@ export function FacturasModal({
             Período válido para comprobantes
           </Text>
           <Text size="xs" mt={2}>
-            Desde el{" "}
-            <strong>{formatFecha(viatico.datetime_salida as string)}</strong>{" "}
-            hasta 5 días después del regreso:{" "}
-            <strong>
-              {maxFecha?.toLocaleDateString("es-EC", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              }) ?? "—"}
-            </strong>
+            Solo se aceptan comprobantes fechados dentro del viaje: del{" "}
+            <strong>{formatFechaHora(viatico.datetime_salida as string, { conHora: false })}</strong>{" "}
+            al{" "}
+            <strong>{formatFechaHora(viatico.datetime_llegada as string, { conHora: false })}</strong>.
           </Text>
         </Alert>
 

@@ -23,7 +23,7 @@ interface ViaticoServiceInterface
     public function verificarBloqueo(int $servidorId): bool;
 
     /**
-     * Fecha y hora límite para liquidar: 5 días hábiles después del regreso.
+     * Fecha y hora límite para liquidar: 4 días hábiles después del regreso.
      */
     public function fechaLimiteLiquidacion(Viatico $viatico): \Carbon\Carbon;
 }

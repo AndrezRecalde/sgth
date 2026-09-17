@@ -135,7 +135,8 @@ class LiquidacionViaticoController extends Controller
         Request $request,
         int $viaticoId
     ): JsonResponse {
-        $this->estados->asegurarLiquidacionAbierta($this->autorizar($viaticoId, 'editar'));
+        $viatico = $this->autorizar($viaticoId, 'editar');
+        $this->estados->asegurarLiquidacionAbierta($viatico);
 
         $data = $request->validate([
             'facturas'                        => ['required', 'array', 'min:1'],
@@ -146,9 +147,14 @@ class LiquidacionViaticoController extends Controller
             'facturas.*.numero_factura'       => ['nullable', 'string'],
             'facturas.*.numero_ticket'        => ['nullable', 'string'],
             'facturas.*.ruc_proveedor'        => ['nullable', 'string'],
-            'facturas.*.fecha_factura'        => ['nullable', 'date'],
+            'facturas.*.fecha_factura'        => ['required', 'date'],
             'facturas.*.detalle'              => ['nullable', 'string'],
+        ], [
+            'facturas.*.fecha_factura.required' => 'Indique la fecha del comprobante.',
         ]);
+
+        // Un comprobante fuera de las fechas del viaje no se recibe.
+        $this->comprobantes->asegurarFechasDelViaje($viatico, $data['facturas']);
 
         $liquidacion = $this->getLiquidacion($viaticoId);
 

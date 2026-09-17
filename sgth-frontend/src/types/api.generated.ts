@@ -7699,7 +7699,7 @@ export interface components {
                 numero_ticket?: string | null;
                 ruc_proveedor?: string | null;
                 /** Format: date-time */
-                fecha_factura?: string | null;
+                fecha_factura?: string;
                 detalle?: string | null;
             }[] | null;
         };
@@ -20549,7 +20549,7 @@ export interface operations {
                         numero_ticket?: string | null;
                         ruc_proveedor?: string | null;
                         /** Format: date-time */
-                        fecha_factura?: string | null;
+                        fecha_factura: string;
                         detalle?: string | null;
                     }[];
                 };

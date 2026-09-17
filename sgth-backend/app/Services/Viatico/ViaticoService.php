@@ -19,6 +19,9 @@ final class ViaticoService implements ViaticoServiceInterface
 {
     use DiasHabilesHelper;
 
+    /** Días hábiles que tiene el servidor, desde que regresa, para liquidar. */
+    public const DIAS_HABILES_PARA_LIQUIDAR = 4;
+
     public function __construct(
         private readonly CalculoViaticoService $calculo,
     ) {}
@@ -32,7 +35,7 @@ final class ViaticoService implements ViaticoServiceInterface
             throw new ReglaNegocioException(
                 'El servidor tiene bloqueada la solicitud de ' .
                 'nuevos viáticos por mantener liquidaciones ' .
-                'pendientes fuera del plazo legal de 5 días hábiles.'
+                'pendientes fuera del plazo de ' . self::DIAS_HABILES_PARA_LIQUIDAR . ' días hábiles.'
             );
         }
 
@@ -197,18 +200,19 @@ final class ViaticoService implements ViaticoServiceInterface
     }
 
     /**
-     * Hasta cuándo puede liquidarse: 5 días hábiles después del regreso, a la
+     * Hasta cuándo puede liquidarse: 4 días hábiles después del regreso, a la
      * misma hora. La usan el bloqueo y la bandeja de Financiero, que tienen que
      * decir lo mismo.
+     *
+     * Eran 5; Gestión Financiera confirmó 4 el 2026-09-15.
+     * `calcularDiasHabiles()` empieza a contar el día siguiente al regreso: el
+     * día en que vuelve no cuenta.
      */
     public function fechaLimiteLiquidacion(Viatico $viatico): Carbon
     {
-        // Cinco, no cuatro: calcularDiasHabiles() cuenta a partir del día
-        // siguiente al retorno, así que pedirle 4 dejaba el plazo en
-        // cuatro días hábiles y bloqueaba al servidor un día antes de lo
-        // que permite la norma — la misma que cita el mensaje de error.
         return $this->calcularDiasHabiles(
-            Carbon::parse($viatico->datetime_llegada)->copy(), 5
+            Carbon::parse($viatico->datetime_llegada)->copy(),
+            self::DIAS_HABILES_PARA_LIQUIDAR
         );
     }
 
