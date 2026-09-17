@@ -6,7 +6,6 @@ use App\Enums\Permiso;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Models\Viatico\Viatico;
-use App\Models\Viatico\ViaticoServidor;
 
 /**
  * Quién puede ver, registrar y mover un viático.
@@ -17,7 +16,7 @@ use App\Models\Viatico\ViaticoServidor;
  * aprobar vuelos y descargar los PDF, que llevan la cuenta bancaria.
  *
  * Decidido con el usuario:
- * - El servidor solicita, edita y liquida lo suyo. Los acompañantes lo ven.
+ * - El servidor solicita, edita y liquida lo suyo: un viático es de uno solo.
  * - Financiero opera: `aprobar-viatico` aprueba y rechaza solicitudes y vuelos;
  *   `gestionar-viaticos` entrega el anticipo, marca la comisión, fija el monto y
  *   registra o corrige a nombre de otro; `liquidar-viatico` revisa la
@@ -55,13 +54,12 @@ class ViaticoPolicy
     public function ver(User $user, Viatico $viatico): bool
     {
         return $this->veTodos($user)
-            || $this->esTitular($user, $viatico)
-            || $this->esAcompanante($user, $viatico);
+            || $this->esTitular($user, $viatico);
     }
 
     /**
-     * Cambiar los datos, el itinerario, los acompañantes y la liquidación que
-     * presenta el servidor. El acompañante no: el viático lo firma el titular.
+     * Cambiar los datos, el itinerario y la liquidación que presenta el
+     * servidor.
      */
     public function editar(User $user, Viatico $viatico): bool
     {
@@ -134,11 +132,4 @@ class ViaticoPolicy
             && (int) $user->servidor_id === (int) $viatico->servidor_id;
     }
 
-    private function esAcompanante(User $user, Viatico $viatico): bool
-    {
-        return $user->servidor_id !== null
-            && ViaticoServidor::where('viatico_id', $viatico->id)
-                ->where('servidor_id', $user->servidor_id)
-                ->exists();
-    }
 }

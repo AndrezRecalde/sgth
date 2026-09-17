@@ -96,17 +96,6 @@ class Viatico extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function servidoresAcompanantes(): HasMany
-    {
-        return $this->hasMany(ViaticoServidor::class)
-                    ->where('es_titular', false);
-    }
-
-    public function todosServidores(): HasMany
-    {
-        return $this->hasMany(ViaticoServidor::class);
-    }
-
     /** Quién firma cada documento, sellado al emitirlo. */
     public function firmantes(): HasMany
     {

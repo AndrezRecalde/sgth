@@ -65,7 +65,6 @@ export function ViaticoEditModal({
       monto_calculado: null,
       tipo_viaje: null,
       pais_destino: null,
-      servidores_acompanantes: [],
     },
   });
 

@@ -275,18 +275,6 @@ export type ViaticoConRelaciones = Viatico & {
     detalles_factura?: ComprobanteRevisado[]
     calculo?:         CalculoViatico
   }
-  todos_servidores?: {
-    id:          number
-    es_titular:  boolean
-    servidor?: {
-      id:       number
-      nombre?:  string
-      apellido?: string
-      puesto?: {
-        cargo?: { nombre?: string } | null
-      } | null
-    }
-  }[]
   autorizaciones_vuelo?: AutorizacionVuelo[]
   motivo_rechazo?: string | null
   historial?: ViaticoHistorialEstado[]

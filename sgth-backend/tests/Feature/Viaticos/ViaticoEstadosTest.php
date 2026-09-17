@@ -12,8 +12,8 @@
 | - el titular corrige solo en `solicitado`; quien opera, hasta que se liquida;
 | - se rechaza solo antes de entregar el anticipo, y con motivo;
 | - el servidor cancela mientras está `solicitado`;
-| - nadie aprueba, entrega el anticipo, contabiliza ni autoriza los vuelos de un
-|   viático en el que viaja, como titular o como acompañante.
+| - nadie aprueba, entrega el anticipo, contabiliza ni autoriza los vuelos de su
+|   propio viático.
 */
 
 use App\Enums\EstadoViatico;
@@ -27,7 +27,6 @@ use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\TramoViatico;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoHistorialEstado;
-use App\Models\Viatico\ViaticoServidor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -86,7 +85,6 @@ beforeEach(function () {
             'monto_anticipo'     => 0,
             'modalidad_anticipo' => 'total',
         ], $extra));
-        ViaticoServidor::create(['viatico_id' => $viatico->id, 'servidor_id' => $quien->servidor_id, 'es_titular' => true]);
         TramoViatico::create([
             'viatico_id' => $viatico->id,
             'origen_tipo' => 'nacional', 'origen_ciudad' => 'Esmeraldas',
@@ -252,20 +250,6 @@ it('quien opera corrige hasta que se liquida', function (EstadoViatico $estado, 
     'rechazado'             => [EstadoViatico::RECHAZADO, 422],
 ]);
 
-it('los acompañantes se reemplazan sin repetir ni incluir al titular', function () {
-    $viatico = ($this->viaticoDe)($this->titular);
-    $acompanante = ($this->servidor)();
-
-    $this->actingAs($this->titular, 'sanctum')
-        ->patchJson("/api/v1/viaticos/{$viatico->id}", [
-            'servidores_acompanantes' => [$acompanante->id, $acompanante->id, $this->titular->servidor_id],
-        ])
-        ->assertOk();
-
-    expect(ViaticoServidor::where('viatico_id', $viatico->id)->where('es_titular', false)->pluck('servidor_id')->all())
-        ->toBe([$acompanante->id]);
-});
-
 // ── Nadie decide sobre su propio viático ─────────────────────────────
 
 it('Financiero no decide sobre un viático en el que viaja', function (string $accion, EstadoViatico $estado) {
@@ -287,14 +271,6 @@ it('Financiero no decide sobre un viático en el que viaja', function (string $a
     'entregar anticipo' => ['entregar-anticipo', EstadoViatico::APROBADO],
     'contabilizar'      => ['contabilizar', EstadoViatico::LIQUIDADO],
 ]);
-
-it('tampoco cuando va de acompañante', function () {
-    $viatico = ($this->viaticoDe)($this->titular);
-    ViaticoServidor::create(['viatico_id' => $viatico->id, 'servidor_id' => $this->financiero->servidor_id, 'es_titular' => false]);
-
-    ($this->post)($this->financiero, $viatico, 'aprobar')->assertStatus(422);
-    ($this->post)($this->otroFinanciero, $viatico, 'aprobar')->assertOk();
-});
 
 it('ni autoriza sus vuelos', function () {
     $viatico = ($this->viaticoDe)($this->financiero);

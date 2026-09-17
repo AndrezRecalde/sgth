@@ -11,7 +11,6 @@ use App\Models\Viatico\FacturaViatico;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoHistorialEstado;
-use App\Models\Viatico\ViaticoServidor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -80,23 +79,6 @@ final class ViaticoService implements ViaticoServiceInterface
                 'estado_nuevo' => EstadoViatico::SOLICITADO->value,
                 'usuario_id'   => $userId,
             ]);
-
-            // Registrar servidor titular
-            ViaticoServidor::create([
-                'viatico_id'  => $viatico->id,
-                'servidor_id' => $servidorId,
-                'es_titular'  => true,
-            ]);
-
-            // Servidores acompañantes
-            foreach ($datos['servidores_acompanantes'] ?? [] as $sid) {
-                if ((int) $sid === $servidorId) continue;
-                ViaticoServidor::create([
-                    'viatico_id'  => $viatico->id,
-                    'servidor_id' => (int) $sid,
-                    'es_titular'  => false,
-                ]);
-            }
 
             return $viatico;
         });

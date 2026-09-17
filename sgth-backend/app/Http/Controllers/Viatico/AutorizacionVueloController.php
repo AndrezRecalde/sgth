@@ -29,7 +29,6 @@ class AutorizacionVueloController extends Controller
 
         $autorizaciones = AutorizacionVuelo::with([
             'viatico.servidor.puesto.cargo',
-            'viatico.todosServidores:id,viatico_id,servidor_id',
             'tramo.empresa',
             'tramo.origenProvincia',
             'tramo.origenCanton',

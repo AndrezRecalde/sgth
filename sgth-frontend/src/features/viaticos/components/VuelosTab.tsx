@@ -18,7 +18,7 @@ import { StatusBadge, notificar } from "@/components/ui";
 type AutorizacionVueloConRelaciones = AutorizacionVuelo & {
   viatico?: {
     codigo_viatico?: string
-    servidores_ids?: number[]
+    servidor_id?: number
     servidor?: {
       nombre?: string
       apellido?: string
@@ -58,7 +58,7 @@ export function VuelosTab() {
   const decide = (v: AutorizacionVuelo) =>
     v.estado === 'pendiente' &&
     puede.decidirVuelo(
-      (v as AutorizacionVueloConRelaciones).viatico?.servidores_ids ?? [],
+      (v as AutorizacionVueloConRelaciones).viatico?.servidor_id ?? null,
     );
 
   const aprobar = useMutation({

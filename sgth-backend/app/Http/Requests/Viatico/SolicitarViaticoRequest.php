@@ -53,10 +53,6 @@ class SolicitarViaticoRequest extends FormRequest
             'tipo_viaje'   => ['nullable', 'string', 'max:100'],
             'pais_destino' => ['nullable', 'string', 'max:100'],
             'monto_calculado' => ['nullable', 'numeric', 'min:0'],
-            'servidores_acompanantes'   => ['nullable', 'array'],
-            'servidores_acompanantes.*' => [
-                'integer', 'exists:servidores,id',
-            ],
         ];
 
         if ($this->input('zona') === 'exterior') {

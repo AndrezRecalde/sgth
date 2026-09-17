@@ -8,7 +8,6 @@ use App\Http\Requests\Viatico\LiquidarViaticoRequest;
 use App\Http\Requests\Viatico\SolicitarViaticoRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\Viatico;
-use App\Models\Viatico\ViaticoServidor;
 use App\Services\Viatico\CalculoViaticoService;
 use App\Services\Viatico\ComprobantesViaticoService;
 use App\Services\Viatico\ViaticoEstadoService;
@@ -43,10 +42,7 @@ class ViaticoController extends Controller
         if ($request->boolean('propios') || ! $request->user()->can('veTodos', Viatico::class)) {
             $servidorId = $request->user()->servidor_id;
 
-            $query->where(function ($q) use ($servidorId) {
-                $q->where('servidor_id', $servidorId)
-                    ->orWhereHas('todosServidores', fn ($s) => $s->where('servidor_id', $servidorId));
-            });
+            $query->where('servidor_id', $servidorId);
         }
 
         // Filtro por estado
@@ -101,7 +97,6 @@ class ViaticoController extends Controller
             'liquidacion.detallesFactura.categoria',
             'liquidacion.jefeFinanciero',
             'liquidacion.contabilizadoPor',
-            'todosServidores.servidor.puesto.cargo',
             'autorizacionesVuelo',
             'historial.usuario:id,usuario_ti,email,servidor_id',
             'historial.usuario.servidor:id,nombre,apellido',
@@ -158,8 +153,6 @@ class ViaticoController extends Controller
             'monto_calculado'  => 'sometimes|nullable|numeric|min:0',
             'tipo_viaje'       => 'sometimes|nullable|string|max:100',
             'pais_destino'     => 'sometimes|nullable|string|max:100',
-            'servidores_acompanantes'   => ['nullable', 'array'],
-            'servidores_acompanantes.*' => ['integer', 'exists:servidores,id'],
         ]);
 
         // Al cambiar las fechas se rehace la cuenta: las noches y, con ellas,
@@ -196,32 +189,8 @@ class ViaticoController extends Controller
         }
 
         $data['updated_by'] = $request->user()->id;
-        unset($data['servidores_acompanantes']);
 
-        // Todo o nada. Antes, un acompañante repetido —o el propio titular en
-        // la lista— rompía el índice único después de borrar a los anteriores:
-        // la petición fallaba y el viático se quedaba sin acompañantes.
-        DB::transaction(function () use ($request, $viatico, $data) {
-            $viatico->update($data);
-
-            if (! $request->has('servidores_acompanantes')) {
-                return;
-            }
-
-            ViaticoServidor::where('viatico_id', $viatico->id)
-                ->where('es_titular', false)
-                ->delete();
-
-            collect($request->input('servidores_acompanantes', []))
-                ->map(fn ($id) => (int) $id)
-                ->reject(fn (int $id) => $id === (int) $viatico->servidor_id)
-                ->unique()
-                ->each(fn (int $id) => ViaticoServidor::create([
-                    'viatico_id'  => $viatico->id,
-                    'servidor_id' => $id,
-                    'es_titular'  => false,
-                ]));
-        });
+        $viatico->update($data);
 
         return ApiResponse::ok(
             $viatico->fresh(),

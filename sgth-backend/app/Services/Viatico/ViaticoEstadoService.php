@@ -11,7 +11,6 @@ use App\Models\Viatico\AutorizacionVuelo;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoHistorialEstado;
-use App\Models\Viatico\ViaticoServidor;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -25,15 +24,14 @@ use Illuminate\Support\Facades\DB;
  * - El grafo de estados. Antes cada acción miraba (o no) el estado a su
  *   manera: la liquidación se confirmaba desde `solicitado`, se rechazaba con el
  *   anticipo ya entregado y los tramos se cambiaban con el viático contabilizado.
- * - Nadie decide sobre un viático en el que viaja, como titular o como
- *   acompañante: no lo aprueba, no le entrega el anticipo, no lo contabiliza ni
- *   autoriza sus vuelos. Tampoco lo corrige como Financiero: para él rige lo
- *   mismo que para cualquier titular.
+ * - Nadie decide sobre su propio viático: no lo aprueba, no le entrega el
+ *   anticipo, no lo contabiliza ni autoriza sus vuelos. Tampoco lo corrige como
+ *   Financiero: para él rige lo mismo que para cualquier titular.
  * - Cada cambio de estado bloquea la fila y deja su rastro en el historial.
  *
  * Decidido con el usuario:
- * - El titular cambia datos, itinerario y acompañantes solo en `solicitado`;
- *   quien opera, hasta que se liquida.
+ * - El titular cambia datos e itinerario solo en `solicitado`; quien opera,
+ *   hasta que se liquida.
  * - Se rechaza solo antes de entregar el anticipo.
  * - El servidor cancela su solicitud mientras está `solicitado`.
  */
@@ -378,7 +376,7 @@ final class ViaticoEstadoService
     // ── Reglas para lo que no es una transición ──────────────────────
 
     /**
-     * Datos, itinerario y acompañantes. El titular, solo mientras está
+     * Datos e itinerario. El titular, solo mientras está
      * `solicitado`; quien opera, hasta que se liquida, salvo en un viático en
      * el que viaja.
      */
@@ -425,10 +423,7 @@ final class ViaticoEstadoService
             return false;
         }
 
-        return (int) $viatico->servidor_id === (int) $user->servidor_id
-            || ViaticoServidor::where('viatico_id', $viatico->id)
-                ->where('servidor_id', $user->servidor_id)
-                ->exists();
+        return (int) $viatico->servidor_id === (int) $user->servidor_id;
     }
 
     // ── Apoyos ───────────────────────────────────────────────────────

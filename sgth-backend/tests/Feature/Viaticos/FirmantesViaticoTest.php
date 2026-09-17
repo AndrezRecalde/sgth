@@ -26,7 +26,6 @@ use App\Models\User;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
 use App\Models\Viatico\ViaticoFirmante;
-use App\Models\Viatico\ViaticoServidor;
 use App\Services\Viatico\FirmanteViaticoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -85,7 +84,7 @@ beforeEach(function () {
     $this->titularUser = User::factory()->create(['servidor_id' => $this->titular->id]);
     $this->titularUser->assignRole('servidor');
 
-    $this->viatico = fn (EstadoViatico $estado = EstadoViatico::SOLICITADO) => tap(Viatico::create([
+    $this->viatico = fn (EstadoViatico $estado = EstadoViatico::SOLICITADO) => Viatico::create([
         'servidor_id'        => $this->titular->id,
         'zona'               => 'dentro_provincia',
         'datetime_salida'    => '2026-10-05 08:00',
@@ -96,9 +95,7 @@ beforeEach(function () {
         'monto_calculado'    => 160,
         'monto_anticipo'     => 0,
         'modalidad_anticipo' => 'sin_anticipo',
-    ]), fn (Viatico $v) => ViaticoServidor::create([
-        'viatico_id' => $v->id, 'servidor_id' => $this->titular->id, 'es_titular' => true,
-    ]));
+    ]);
 
     $this->sellar = fn (Viatico $v, string $documento, ?string $fecha = null) =>
         app(FirmanteViaticoService::class)->sellar($v, $documento, $fecha);
