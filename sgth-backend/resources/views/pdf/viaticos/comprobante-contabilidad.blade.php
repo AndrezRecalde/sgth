@@ -320,6 +320,14 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
     <div class="benef-val">{{ $totalLetras }}</div>
     <div class="benef-tipo"></div>
   </div>
+  {{-- El respaldo contable que asigna Financiero. --}}
+  <div class="benef-row">
+    <div class="benef-lbl">Resolución:</div>
+    <div class="benef-val">{{ $viatico->numero_resolucion ?: '—' }}</div>
+    <div class="benef-tipo">
+      PARTIDA: <span class="tipo-badge">{{ $viatico->partida_presupuestaria ?: '—' }}</span>
+    </div>
+  </div>
 </div>
 
 {{-- ══ DETALLE ══ --}}

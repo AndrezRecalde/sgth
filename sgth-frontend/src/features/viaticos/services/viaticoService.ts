@@ -11,6 +11,12 @@ import { liquidacionService }    from './liquidacionService'
 
 export type { CrearTramoData } from './tramoService'
 
+/** Lo que asigna Financiero para respaldar el pago. */
+export type RespaldoContable = {
+  numero_resolucion:      string
+  partida_presupuestaria: string
+}
+
 export const viaticoService = {
   listar: (params?: ViaticoParams) =>
     api.get<ApiResponse<PaginatedResponse<ViaticoConRelaciones>>>(
@@ -70,9 +76,9 @@ export const viaticoService = {
       `/viaticos/${id}/aprobar`, data ?? {}
     ).then(r => r.data.datos),
 
-  entregarAnticipo: (id: number) =>
+  entregarAnticipo: (id: number, datos: RespaldoContable) =>
     api.post<ApiResponse<Viatico>>(
-      `/viaticos/${id}/entregar-anticipo`
+      `/viaticos/${id}/entregar-anticipo`, datos
     ).then(r => r.data.datos),
 
   marcarEnComision: (id: number) =>
@@ -85,9 +91,10 @@ export const viaticoService = {
       `/viaticos/${id}/marcar-pendiente-liquidacion`
     ).then(r => r.data.datos),
 
-  contabilizar: (id: number) =>
+  /** El respaldo contable solo hace falta si el viático aún no lo tiene. */
+  contabilizar: (id: number, datos?: RespaldoContable) =>
     api.post<ApiResponse<{ liquidacion: import('@/types/api').LiquidacionViatico }>>(
-      `/viaticos/${id}/contabilizar`
+      `/viaticos/${id}/contabilizar`, datos ?? {}
     ).then(r => r.data.datos),
 
   devolverCorreccion: (id: number, motivo: string) =>

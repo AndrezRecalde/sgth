@@ -61,6 +61,29 @@ export function ViaticoAnticipoCard({ viatico: d }: Props) {
             {fmtMonto(d.monto_anticipo)}
           </Text>
         </Group>
+
+        {/* El respaldo que asigna Financiero; se imprime en el comprobante. */}
+        {(d.numero_resolucion || d.partida_presupuestaria) && (
+          <>
+            <Divider my={2} />
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">
+                Resolución
+              </Text>
+              <Text size="xs" fw={600}>
+                {d.numero_resolucion ?? "—"}
+              </Text>
+            </Group>
+            <Group justify="space-between">
+              <Text size="xs" c="dimmed">
+                Partida presupuestaria
+              </Text>
+              <Text size="xs" fw={600} ff="monospace">
+                {d.partida_presupuestaria ?? "—"}
+              </Text>
+            </Group>
+          </>
+        )}
       </Stack>
     </Card>
   );

@@ -310,7 +310,17 @@ class ViaticoController extends Controller
     {
         $this->authorize('operar', Viatico::findOrFail($id));
 
-        $viatico = $this->estados->entregarAnticipo($id, $request->user());
+        // Financiero asigna la resolución y la partida al entregar el dinero
+        // (decidido con ellos): sin eso no hay con qué respaldar el pago.
+        $datos = $request->validate([
+            'numero_resolucion'      => ['required', 'string', 'max:100'],
+            'partida_presupuestaria' => ['required', 'string', 'max:100'],
+        ], [
+            'numero_resolucion.required'      => 'Indique el número de resolución.',
+            'partida_presupuestaria.required' => 'Indique la partida presupuestaria.',
+        ]);
+
+        $viatico = $this->estados->entregarAnticipo($id, $request->user(), $datos);
 
         return ApiResponse::ok(
             $viatico,
@@ -365,9 +375,25 @@ class ViaticoController extends Controller
 
     public function contabilizar(int $id, Request $request): JsonResponse
     {
-        $this->authorize('revisarLiquidacion', Viatico::findOrFail($id));
+        $viatico = Viatico::findOrFail($id);
 
-        $liquidacion = $this->estados->contabilizar($id, $request->user());
+        $this->authorize('revisarLiquidacion', $viatico);
+
+        // En un viático sin anticipo no hubo entrega, así que la resolución y
+        // la partida se piden aquí. El que ya las tiene no las vuelve a pedir.
+        $exigir = $viatico->numero_resolucion && $viatico->partida_presupuestaria
+            ? 'nullable'
+            : 'required';
+
+        $datos = $request->validate([
+            'numero_resolucion'      => [$exigir, 'string', 'max:100'],
+            'partida_presupuestaria' => [$exigir, 'string', 'max:100'],
+        ], [
+            'numero_resolucion.required'      => 'Indique el número de resolución.',
+            'partida_presupuestaria.required' => 'Indique la partida presupuestaria.',
+        ]);
+
+        $liquidacion = $this->estados->contabilizar($id, $request->user(), array_filter($datos));
 
         return ApiResponse::ok($liquidacion, 'Viático contabilizado correctamente.');
     }
