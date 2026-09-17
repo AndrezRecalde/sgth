@@ -586,9 +586,9 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </div>
   <div class="fc">
     <div class="fline"></div>
-    @if($jefeUnidad)
-      <div class="fn">{{ collect([$jefeUnidad->apellido, $jefeUnidad->nombre])->filter()->join(' ') }}</div>
-      <div class="fc-cargo">{{ $jefeUnidad->puesto?->cargo?->nombre ?? 'Director/a' }}</div>
+    @if($firmas['jefe_unidad']['nombre'] ?? null)
+      <div class="fn">{{ $firmas['jefe_unidad']['nombre'] }}</div>
+      <div class="fc-cargo">{{ $firmas['jefe_unidad']['cargo'] }}</div>
     @else
       <div class="fn" style="color:#a0aec0">___________________________</div>
       <div class="fc-cargo" style="color:#a0aec0">Director/a de Unidad</div>
@@ -597,9 +597,9 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </div>
   <div class="fc">
     <div class="fline"></div>
-    @if($prefecto)
-      <div class="fn">{{ collect([$prefecto->apellido, $prefecto->nombre])->filter()->join(' ') }}</div>
-      <div class="fc-cargo">{{ $prefecto->puesto?->cargo?->nombre ?? 'Prefecto/a Provincial' }}</div>
+    @if($firmas['maxima_autoridad']['nombre'] ?? null)
+      <div class="fn">{{ $firmas['maxima_autoridad']['nombre'] }}</div>
+      <div class="fc-cargo">{{ $firmas['maxima_autoridad']['cargo'] }}</div>
     @else
       <div class="fn" style="color:#a0aec0">___________________________</div>
       <div class="fc-cargo">Prefecto/a Provincial</div>

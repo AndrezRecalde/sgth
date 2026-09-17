@@ -18566,7 +18566,18 @@
                                                         "type": "string"
                                                     },
                                                     "cargo": {
-                                                        "type": "string"
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "PREFECTO/A PROVINCIAL",
+                                                                    "DIRECTOR/A DE TALENTO HUMANO"
+                                                                ]
+                                                            }
+                                                        ]
                                                     },
                                                     "subrogado": {
                                                         "type": "string"
@@ -52789,6 +52800,9 @@
                     },
                     "es_maxima_autoridad": {
                         "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -54240,6 +54254,9 @@
                     },
                     "es_maxima_autoridad": {
                         "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -54256,7 +54273,8 @@
                     "acronimo",
                     "tipo_unidad_id",
                     "es_unidad_talento_humano",
-                    "es_maxima_autoridad"
+                    "es_maxima_autoridad",
+                    "es_unidad_financiera"
                 ],
                 "title": "UnidadAdministrativa"
             },
@@ -54301,6 +54319,9 @@
                         "description": "Anclajes de los firmantes de las Acciones de Personal."
                     },
                     "es_maxima_autoridad": {
+                        "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
                         "type": "boolean"
                     },
                     "tipo_unidad": {
@@ -54394,6 +54415,7 @@
                     "estado",
                     "es_unidad_talento_humano",
                     "es_maxima_autoridad",
+                    "es_unidad_financiera",
                     "puestos_count",
                     "subrogaciones_vigentes"
                 ],
@@ -56182,6 +56204,9 @@
                         "description": "Anclan de qu\u00e9 unidad sale cada firmante de las Acciones de\nPersonal. Marcar otra unidad desmarca la anterior \u2014 lo hace\nUnidadAdministrativaController para no chocar con el \u00edndice \u00fanico."
                     },
                     "es_maxima_autoridad": {
+                        "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
                         "type": "boolean"
                     }
                 },

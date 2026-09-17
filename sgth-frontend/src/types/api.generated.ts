@@ -9497,6 +9497,7 @@ export interface components {
              */
             es_unidad_talento_humano?: boolean;
             es_maxima_autoridad?: boolean;
+            es_unidad_financiera?: boolean;
         };
         /** StoreUsuarioRequest */
         StoreUsuarioRequest: {
@@ -9892,6 +9893,7 @@ export interface components {
             tipo_unidad_id: string | null;
             es_unidad_talento_humano: boolean;
             es_maxima_autoridad: boolean;
+            es_unidad_financiera: boolean;
         };
         /** UnidadAdministrativaResource */
         UnidadAdministrativaResource: {
@@ -9906,6 +9908,7 @@ export interface components {
             /** @description Anclajes de los firmantes de las Acciones de Personal. */
             es_unidad_talento_humano: boolean;
             es_maxima_autoridad: boolean;
+            es_unidad_financiera: boolean;
             tipo_unidad?: {
                 id: string;
                 acronimo: string;
@@ -10393,6 +10396,7 @@ export interface components {
              */
             es_unidad_talento_humano?: boolean;
             es_maxima_autoridad?: boolean;
+            es_unidad_financiera?: boolean;
         };
         /** UpdateUsuarioRequest */
         UpdateUsuarioRequest: {
@@ -19167,7 +19171,7 @@ export interface operations {
                             etiqueta: string;
                             unidad: string;
                             servidor: string;
-                            cargo: string;
+                            cargo: string | ("PREFECTO/A PROVINCIAL" | "DIRECTOR/A DE TALENTO HUMANO");
                             subrogado: string;
                             resuelto: boolean;
                             /**

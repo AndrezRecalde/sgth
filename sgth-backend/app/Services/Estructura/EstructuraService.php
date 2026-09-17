@@ -222,7 +222,7 @@ final class EstructuraService implements EstructuraServiceInterface
      */
     private function liberarAnclajesDeFirma(?int $id, array $datos): void
     {
-        foreach (['es_unidad_talento_humano', 'es_maxima_autoridad'] as $bandera) {
+        foreach (['es_unidad_talento_humano', 'es_maxima_autoridad', 'es_unidad_financiera'] as $bandera) {
             if (empty($datos[$bandera])) {
                 continue;
             }

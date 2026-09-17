@@ -559,16 +559,9 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   </div>
   <div class="fc">
     <div class="fline"></div>
-    @if($directorFinanciero)
-      <div class="fn">
-        {{ collect([
-            $directorFinanciero->apellido,
-            $directorFinanciero->nombre,
-          ])->filter()->join(' ') }}
-      </div>
-      <div class="fc-cargo">
-        {{ $directorFinanciero->puesto?->cargo?->nombre ?? 'Director/a Financiero/a' }}
-      </div>
+    @if($firmas['director_financiero']['nombre'] ?? null)
+      <div class="fn">{{ $firmas['director_financiero']['nombre'] }}</div>
+      <div class="fc-cargo">{{ $firmas['director_financiero']['cargo'] }}</div>
     @else
       <div class="fn" style="color:#a0aec0">___________________________</div>
       <div class="fc-cargo" style="color:#a0aec0">Director/a Financiero/a</div>

@@ -107,6 +107,12 @@ class Viatico extends Model
         return $this->hasMany(ViaticoServidor::class);
     }
 
+    /** Quién firma cada documento, sellado al emitirlo. */
+    public function firmantes(): HasMany
+    {
+        return $this->hasMany(ViaticoFirmante::class, 'viatico_id');
+    }
+
     /** Los cambios de estado, del más antiguo al más reciente. */
     public function historial(): HasMany
     {

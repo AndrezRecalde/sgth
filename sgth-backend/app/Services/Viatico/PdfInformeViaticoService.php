@@ -11,6 +11,7 @@ class PdfInformeViaticoService
 {
     public function __construct(
         private readonly CalculoViaticoService $calculo,
+        private readonly FirmanteViaticoService $firmantes,
     ) {}
 
     /**
@@ -21,8 +22,7 @@ class PdfInformeViaticoService
     public function generarSolicitudContent(
         int|string $identificador
     ): array {
-        $viatico  = $this->cargarViatico($identificador);
-        $prefecto = $this->obtenerPrefecto();
+        $viatico = $this->cargarViatico($identificador);
 
         [$zonaLabel, $modalidadLabel, $modalidadValue] = $this->etiquetas($viatico);
 
@@ -30,8 +30,7 @@ class PdfInformeViaticoService
             'pdf.viaticos.solicitud-viatico',
             [
                 'viatico'        => $viatico,
-                'prefecto'       => $prefecto,
-                'jefeUnidad'     => $this->obtenerJefeUnidad($viatico),
+                'firmas'         => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::SOLICITUD),
                 'logo'           => public_path('images/logo-gadpe.png'),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
@@ -68,16 +67,13 @@ class PdfInformeViaticoService
             );
         }
 
-        $prefecto = $this->obtenerPrefecto();
-
         [$zonaLabel, $modalidadLabel] = $this->etiquetas($viatico);
 
         $pdf = Pdf::loadView(
             'pdf.viaticos.informe-comision',
             [
                 'viatico'        => $viatico,
-                'prefecto'       => $prefecto,
-                'jefeUnidad'     => $this->obtenerJefeUnidad($viatico),
+                'firmas'         => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::INFORME),
                 'logo'           => public_path('images/logo-gadpe.png'),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
@@ -151,32 +147,6 @@ class PdfInformeViaticoService
                     ->firstOrFail();
     }
 
-    private function obtenerPrefecto(): ?Servidor
-    {
-        return Servidor::whereHas('puesto', function ($q) {
-            $q->whereHas('cargo', function ($q2) {
-                $q2->where('nombre', 'like', '%Prefect%');
-            });
-        })->with('puesto.cargo')->first();
-    }
-
-    private function obtenerJefeUnidad(
-        Viatico $viatico
-    ): ?Servidor {
-        $unidadId = $viatico->servidor
-            ?->puesto
-            ?->unidad_administrativa_id;
-
-        if (!$unidadId) return null;
-
-        return Servidor::whereHas('puesto', function ($q)
-            use ($unidadId) {
-                $q->where('es_jefe', true)
-                  ->where('unidad_administrativa_id', $unidadId);
-            }
-        )->with(['puesto.cargo'])->first();
-    }
-
     public function generarComprobanteContabilidad(
         int|string $identificador
     ): array {
@@ -188,10 +158,6 @@ class PdfInformeViaticoService
                 . 'generar el comprobante financiero.'
             );
         }
-
-        $prefecto      = $this->obtenerPrefecto();
-        $jefeUnidad    = $this->obtenerJefeUnidad($viatico);
-        $directorFinanciero = $this->obtenerDirectorFinanciero();
 
         // El comprobante imprime lo liquidado, no el anticipo: un viático sin
         // anticipo salía en $0,00. Decidido con Gestión Financiera.
@@ -207,9 +173,7 @@ class PdfInformeViaticoService
             'pdf.viaticos.comprobante-contabilidad',
             [
                 'viatico'             => $viatico,
-                'prefecto'            => $prefecto,
-                'jefeUnidad'          => $jefeUnidad,
-                'directorFinanciero'  => $directorFinanciero,
+                'firmas'              => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::COMPROBANTE),
                 'logo'                => public_path('images/logo-gadpe.png'),
                 'totalLetras'         => $totalLetras,
                 'calculo'             => $calculo,
@@ -230,16 +194,6 @@ class PdfInformeViaticoService
             'content'  => $pdf->output(),
             'filename' => "comprobante_{$viatico->codigo_viatico}.pdf",
         ];
-    }
-
-    private function obtenerDirectorFinanciero(): ?\App\Models\Expediente\Servidor
-    {
-        return \App\Models\Expediente\Servidor::whereHas('puesto', function ($q) {
-            $q->where('es_jefe', true)
-              ->whereHas('unidadAdministrativa', function ($q2) {
-                  $q2->where('nombre', 'like', '%Financier%');
-              });
-        })->with(['puesto.cargo'])->first();
     }
 
     private function agruparFacturasPorCategoria(

@@ -105,6 +105,7 @@ class ViaticoController extends Controller
             'autorizacionesVuelo',
             'historial.usuario:id,usuario_ti,email,servidor_id',
             'historial.usuario.servidor:id,nombre,apellido',
+            'firmantes',
         ]);
 
         $viatico = is_numeric($identificador)
