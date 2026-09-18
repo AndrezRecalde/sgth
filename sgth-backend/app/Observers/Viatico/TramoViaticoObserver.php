@@ -9,15 +9,21 @@ use Illuminate\Support\Facades\Log;
 class TramoViaticoObserver
 {
     /**
-     * Sin tipo de transporte, el tramo toma el de su empresa.
+     * El tramo toma el tipo de su empresa si no lo tiene, o si cambia de
+     * empresa sin decir el tipo.
      *
      * Antes de 2026-09-18 el tramo solo guardaba la empresa. Quien todavía
      * manda solo la empresa —y los tramos que se crean fuera del formulario—
-     * sigue funcionando.
+     * sigue funcionando. Y pasar un tramo de una cooperativa a una aerolínea
+     * lo vuelve vuelo: sin esto conservaba el tipo «bus» y no pedía
+     * autorización.
      */
     public function saving(TramoViatico $tramo): void
     {
-        if ($tramo->catalogo_transporte_id === null && $tramo->empresa_transporte_id !== null) {
+        $sinTipo = $tramo->catalogo_transporte_id === null;
+        $cambioSoloLaEmpresa = $tramo->isDirty('empresa_transporte_id') && ! $tramo->isDirty('catalogo_transporte_id');
+
+        if ($tramo->empresa_transporte_id !== null && ($sinTipo || $cambioSoloLaEmpresa)) {
             $tramo->catalogo_transporte_id = EmpresaTransporte::whereKey($tramo->empresa_transporte_id)
                 ->value('catalogo_transporte_id');
         }
