@@ -1,22 +1,19 @@
 "use client";
 
-import { Alert, Grid, Select, Stack, Text } from "@mantine/core";
-import { DateTimePicker } from "@mantine/dates";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Stack, Text } from "@mantine/core";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificar } from "@/components/ui";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { formatFechaHora, fromDateTimeValue } from "@/lib/fecha";
 import { useProvincias } from "@/features/expediente/hooks/useProvincias";
 import { useCantones } from "@/features/expediente/hooks/useCantones";
-import { useTiposTransporte, useEmpresasPorTipo } from "../hooks/useViaticos";
 import { viaticoService } from "../services/viaticoService";
 import { PAISES_OPTIONS } from "../constants/viatico.constants";
 import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 import { TramoLugarSelect } from "./TramoLugarSelect";
 import { TramoTipoSelector } from "./TramoTipoSelector";
-import type { CatalogoTransporte, EmpresaTransporte, Viatico } from "@/types/api";
+import { TramoTransporteCampos } from "./TramoTransporteCampos";
+import type { Viatico } from "@/types/api";
 
 /** El `id` del formulario: el botón de enviar vive en el pie del modal. */
 export const TRAMO_FORM_ID = "tramo-form";
@@ -60,41 +57,24 @@ const VACIO: TramoFormData = {
 | con un error de validación quedaban fuera de la vista.
 */
 export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess }: Props) {
-  const contained = useContainedInput();
   const qc = useQueryClient();
 
   const { control, handleSubmit, setValue, setError, formState: { errors } } =
     useForm<TramoFormData>({ resolver: zodResolver(tramoSchema), defaultValues: VACIO });
 
-  const [origenTipo, destinoTipo, catalogoId, origenProv, destinoProv, salida, llegada, tipoTramo] =
-    useWatch({
-      control,
-      name: [
-        "origen_tipo", "destino_tipo", "catalogo_transporte_id", "origen_provincia_id",
-        "destino_provincia_id", "datetime_salida", "datetime_llegada", "tipo_tramo",
-      ],
-    });
+  const [origenTipo, destinoTipo, origenProv, destinoProv, tipoTramo] = useWatch({
+    control,
+    name: ["origen_tipo", "destino_tipo", "origen_provincia_id", "destino_provincia_id", "tipo_tramo"],
+  });
 
   const esPrimerTramo = (tramosExistentes ?? 0) === 0;
   const tipoEfectivo = esPrimerTramo ? "ida" : tipoTramo;
 
-  const { data: tipos = [] } = useTiposTransporte();
   const { data: provincias = [] } = useProvincias();
-  const { data: empresas = [] } = useEmpresasPorTipo(catalogoId || null);
   const { data: cantonesOrigen = [] } = useCantones(origenProv ?? null);
   const { data: cantonesDestino = [] } = useCantones(destinoProv ?? null);
 
   const provinciaOptions = opciones(provincias as Opcion[]);
-  const empresaOptions = opciones(empresas as EmpresaTransporte[]);
-
-  // Solo el primer tramo tiene que salir con el viático; ninguno puede llegar
-  // después del regreso.
-  const salidaDistinta =
-    esPrimerTramo && !!viatico?.datetime_salida && !!salida &&
-    new Date(viatico.datetime_salida as string).getTime() !== new Date(salida).getTime();
-  const llegaTarde =
-    !!viatico?.datetime_llegada && !!llegada &&
-    new Date(llegada).getTime() > new Date(viatico.datetime_llegada as string).getTime();
 
   const crear = useMutation({
     mutationKey: CREAR_TRAMO,
@@ -125,23 +105,6 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess }: P
     setValue(`${prefijo}_ciudad`, "");
   };
 
-  const fechaHora = (name: "datetime_salida" | "datetime_llegada", label: string) => (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <DateTimePicker
-          label={label}
-          valueFormat="DD/MM/YYYY HH:mm"
-          {...contained}
-          value={field.value ? new Date(field.value) : null}
-          onChange={(v) => field.onChange(fromDateTimeValue(v))}
-          error={errors[name]?.message}
-        />
-      )}
-    />
-  );
-
   return (
     <form id={TRAMO_FORM_ID} onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack gap="md">
@@ -166,61 +129,13 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess }: P
 
         <Stack gap="xs">
           <Text size="sm" fw={600}>Transporte y horario</Text>
-          <Grid>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Controller
-                name="catalogo_transporte_id"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Tipo de transporte"
-                    data={opciones(tipos as CatalogoTransporte[])}
-                    searchable
-                    {...contained}
-                    value={field.value ? String(field.value) : null}
-                    onChange={(v) => {
-                      field.onChange(v ? Number(v) : 0);
-                      setValue("empresa_transporte_id", 0);
-                    }}
-                    error={errors.catalogo_transporte_id?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Controller
-                name="empresa_transporte_id"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Empresa"
-                    data={empresaOptions}
-                    searchable
-                    disabled={empresaOptions.length === 0}
-                    {...contained}
-                    value={field.value ? String(field.value) : null}
-                    onChange={(v) => field.onChange(v ? Number(v) : 0)}
-                    error={errors.empresa_transporte_id?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>{fechaHora("datetime_salida", "Salida")}</Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>{fechaHora("datetime_llegada", "Llegada")}</Grid.Col>
-          </Grid>
-
-          {salidaDistinta && (
-            <Alert color="amber" variant="light" p="xs">
-              El primer tramo sale con el viático: el{" "}
-              <strong>{formatFechaHora(viatico?.datetime_salida as string)}</strong>.
-            </Alert>
-          )}
-          {llegaTarde && (
-            <Alert color="red" variant="light" p="xs">
-              La llegada no puede pasar del regreso del viático:{" "}
-              <strong>{formatFechaHora(viatico?.datetime_llegada as string)}</strong>.
-            </Alert>
-          )}
+          <TramoTransporteCampos
+            control={control}
+            errors={errors}
+            setValue={setValue}
+            viatico={viatico}
+            esPrimerTramo={esPrimerTramo}
+          />
         </Stack>
 
         <Stack gap="xs">
