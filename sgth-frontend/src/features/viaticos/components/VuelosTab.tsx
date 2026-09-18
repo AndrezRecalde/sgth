@@ -1,6 +1,7 @@
 "use client";
 
 import type { SemanticTone } from '@/config/design.tokens'
+import { useState } from "react";
 import { Text, Stack } from "@mantine/core";
 import { IconCheck, IconX, IconAlertCircle } from "@tabler/icons-react";
 import { SgthTable } from "@/components/ui/SgthTable";
@@ -13,7 +14,8 @@ import { viaticoService } from "../services/viaticoService";
 import React from "react";
 import type { AutorizacionVuelo } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
-import { StatusBadge, notificar } from "@/components/ui";
+import { confirmar, MotivoModal, StatusBadge, notificar } from "@/components/ui";
+import { formatFechaHora } from "@/lib/fecha";
 
 type AutorizacionVueloConRelaciones = AutorizacionVuelo & {
   viatico?: {
@@ -53,6 +55,7 @@ export function VuelosTab() {
   const { data: vuelos = [], isLoading } = useVuelosAutorizacion();
   const qc = useQueryClient();
   const puede = useAccionesViatico();
+  const [rechazando, setRechazando] = useState<AutorizacionVuelo | null>(null);
 
   // Pendiente y de un viático en el que no viaja quien mira la pantalla.
   const decide = (v: AutorizacionVuelo) =>
@@ -71,11 +74,10 @@ export function VuelosTab() {
   });
 
   const rechazar = useMutation({
-    mutationFn: (id: number) =>
-      viaticoService.vuelos.rechazar(id, {
-        observacion: "Rechazado por el gestor",
-      }),
+    mutationFn: ({ id, observacion }: { id: number; observacion: string }) =>
+      viaticoService.vuelos.rechazar(id, { observacion }),
     onSuccess: () => {
+      setRechazando(null);
       notificar.exito("Vuelo rechazado", "La autorización fue rechazada.");
       qc.invalidateQueries({ queryKey: ["vuelos-autorizacion"] });
     },
@@ -151,22 +153,9 @@ export function VuelosTab() {
         const salida = (v as AutorizacionVueloConRelaciones)
           .tramo?.datetime_salida
         if (!salida) return <Text size="sm">—</Text>
-        return (
-          <Text size="sm" ff="monospace">
-            {new Date(salida as string).toLocaleDateString(
-              'es-EC',
-              { timeZone: 'UTC',
-                day: '2-digit', month: '2-digit',
-                year: '2-digit' }
-            )}
-            {' '}
-            {new Date(salida as string).toLocaleTimeString(
-              'es-EC',
-              { timeZone: 'UTC',
-                hour: '2-digit', minute: '2-digit' }
-            )}
-          </Text>
-        )
+        // En la hora de Ecuador: con `timeZone: 'UTC'` un vuelo de las 08:00
+        // se leía a las 13:00.
+        return <Text size="sm">{formatFechaHora(salida)}</Text>
       },
     },
     {
@@ -202,14 +191,19 @@ export function VuelosTab() {
             {
               label: 'Aprobar',
               icon: <IconCheck size={14} />,
-              onClick: () => aprobar.mutate(Number(v.id)),
+              onClick: () => confirmar({
+                title: 'Aprobar vuelo',
+                message: `Se autoriza el vuelo de ${(v as AutorizacionVueloConRelaciones).viatico?.codigo_viatico ?? 'este viático'}. No se puede deshacer.`,
+                confirmLabel: 'Aprobar vuelo',
+                onConfirm: () => aprobar.mutate(Number(v.id)),
+              }),
               hidden: !decide(v),
             },
             {
               label: 'Rechazar',
               icon: <IconX size={14} />,
               color: 'red',
-              onClick: () => rechazar.mutate(Number(v.id)),
+              onClick: () => setRechazando(v),
               hidden: !decide(v),
             },
           ]}
@@ -230,11 +224,26 @@ export function VuelosTab() {
   }
 
   return (
-    <SgthTable
-      records={vuelos as AutorizacionVuelo[]}
-      columns={columns}
-      fetching={isLoading}
-      minHeight={200}
-    />
+    <>
+      <SgthTable
+        records={vuelos as AutorizacionVuelo[]}
+        columns={columns}
+        fetching={isLoading}
+        minHeight={200}
+      />
+
+      <MotivoModal
+        opened={rechazando !== null}
+        onClose={() => setRechazando(null)}
+        title="Rechazar vuelo"
+        confirmLabel="Rechazar vuelo"
+        destructiva
+        cargando={rechazar.isPending}
+        descripcion={`El servidor verá este motivo en ${(rechazando as AutorizacionVueloConRelaciones | null)?.viatico?.codigo_viatico ?? 'su viático'}.`}
+        onConfirm={(observacion) =>
+          rechazando && rechazar.mutate({ id: Number(rechazando.id), observacion })
+        }
+      />
+    </>
   );
 }

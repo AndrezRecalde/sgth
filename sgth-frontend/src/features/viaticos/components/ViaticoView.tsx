@@ -9,7 +9,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconInbox, IconPlane, IconPlus } from "@tabler/icons-react";
 import { EmptyState, PageHeader, PageShell, SgthTable } from "@/components/ui";
 import { useViaticos } from "../hooks/useViaticos";
-import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { ViaticoModal } from "./ViaticoModal";
 import { ViaticoFiltros } from "./ViaticoFiltros";
 import { getViaticoColumns } from "./ViaticoColumns";
@@ -42,7 +41,6 @@ export function ViaticoView() {
     propios: 1,
   });
   const lista = (data?.data ?? []) as ViaticoConRelaciones[];
-  const { aprobar } = useViaticoMutations();
 
   const handleVer = (v: ViaticoConRelaciones) =>
     router.push(ROUTES.PORTAL.VIATICO_DETALLE(v.codigo_viatico ?? v.id));
@@ -52,7 +50,6 @@ export function ViaticoView() {
 
   const columns = getViaticoColumns({
     onVer: handleVer,
-    onAprobar: (v) => aprobar.mutate({ id: v.id }),
     onLiquidar: handleVer,
     puede,
   });

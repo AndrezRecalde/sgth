@@ -260,14 +260,18 @@ it('Financiero no decide sobre un viático en el que viaja', function (string $a
         'fecha_liquidacion' => now()->toDateString(),
     ]));
 
-    ($this->post)($this->financiero, $viatico, $accion, $this->respaldo)
+    // Rechazar pide el motivo; las demás acciones lo ignoran.
+    $datos = [...$this->respaldo, 'motivo' => 'No corresponde a la planificación'];
+
+    ($this->post)($this->financiero, $viatico, $accion, $datos)
         ->assertStatus(422)
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'en el que viaja'));
 
     // Otra persona de Financiero sí puede.
-    ($this->post)($this->otroFinanciero, $viatico, $accion, $this->respaldo)->assertOk();
+    ($this->post)($this->otroFinanciero, $viatico, $accion, $datos)->assertOk();
 })->with([
     'aprobar'           => ['aprobar', EstadoViatico::SOLICITADO],
+    'rechazar'          => ['rechazar', EstadoViatico::SOLICITADO],
     'entregar anticipo' => ['entregar-anticipo', EstadoViatico::APROBADO],
     'contabilizar'      => ['contabilizar', EstadoViatico::LIQUIDADO],
 ]);

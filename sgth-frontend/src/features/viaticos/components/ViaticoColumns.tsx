@@ -2,7 +2,7 @@
 
 import { Text, Stack } from '@mantine/core'
 import {
-  IconPlane, IconCheck, IconCurrencyDollar,
+  IconPlane, IconCurrencyDollar,
 } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import { ESTADO_LABELS, TONO_VIATICO } from '../constants/viatico.constants'
@@ -20,7 +20,6 @@ const ZONA_ABREV: Record<string, string> = {
 
 interface ColumnActions {
   onVer:    (v: ViaticoConRelaciones) => void
-  onAprobar: (v: ViaticoConRelaciones) => void
   onLiquidar: (v: ViaticoConRelaciones) => void
   puede:     AccionesViatico
 }
@@ -112,6 +111,9 @@ export function getViaticoColumns(
       accessor: 'acciones',
       title:    '',
       width:    50,
+      // Sin «Aprobar»: esta lista es la de los propios, y nadie aprueba un
+      // viático en el que viaja. Se aprueba desde la ficha, que además pide
+      // el coeficiente cuando el viaje es al exterior.
       render: (v) => (
         <TableActions
           actions={[
@@ -119,12 +121,6 @@ export function getViaticoColumns(
               label:   'Ver detalle',
               icon:    <IconPlane size={14} />,
               onClick: () => actions.onVer(v),
-            },
-            {
-              label:   'Aprobar',
-              icon:    <IconCheck size={14} />,
-              onClick: () => actions.onAprobar(v),
-              hidden:  !actions.puede.aprobar(v),
             },
             {
               label:   'Liquidar',

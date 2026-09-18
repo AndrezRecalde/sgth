@@ -4,32 +4,14 @@ import { Card, Group, Text, ThemeIcon } from "@mantine/core";
 import { IconUser } from "@tabler/icons-react";
 import { StatusBadge } from "@/components/ui";
 
-interface Servidor {
-  nombre?: string | null;
-  segundo_nombre?: string | null;
-  apellido?: string | null;
-  segundo_apellido?: string | null;
-  puesto?: {
-    cargo?: { nombre?: string } | null;
-    unidad_administrativa?: { nombre?: string } | null;
-  } | null;
-}
-
 interface Props {
-  servidor: Servidor;
-  nombreDisplay?: string;
+  nombre: string;
+  cargo?: string | null;
+  unidad?: string | null;
 }
 
-export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
-  const nombreCompleto = [
-    servidor.nombre,
-    servidor.segundo_nombre,
-    servidor.apellido,
-    servidor.segundo_apellido,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
+/** Quién solicita: el nombre, el cargo y la unidad del usuario con sesión. */
+export function ViaticoServidorCard({ nombre, cargo, unidad }: Props) {
   return (
     <Card withBorder radius="md" p="sm" bg="var(--sgth-surface-sunken)">
       <Group gap="sm">
@@ -38,14 +20,16 @@ export function ViaticoServidorCard({ servidor, nombreDisplay }: Props) {
         </ThemeIcon>
         <div>
           <Text fw={600} size="sm">
-            {nombreCompleto || nombreDisplay}
+            {nombre}
           </Text>
           <Text size="xs" c="dimmed">
-            {servidor.puesto?.cargo?.nombre ?? "Sin cargo asignado"}
+            {cargo ?? "Sin cargo asignado"}
           </Text>
-          <Text size="xs" c="dimmed">
-            {servidor.puesto?.unidad_administrativa?.nombre ?? ""}
-          </Text>
+          {unidad && (
+            <Text size="xs" c="dimmed">
+              {unidad}
+            </Text>
+          )}
         </div>
         <StatusBadge size="xs" ml="auto">
           Solicitante

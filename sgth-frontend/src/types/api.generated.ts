@@ -12426,10 +12426,10 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": {
-                    observacion?: string;
+                    observacion: string;
                 };
             };
         };
@@ -12450,6 +12450,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "autorizacionVuelo.subirDocumento": {

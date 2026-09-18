@@ -3595,15 +3595,20 @@
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
                                     "observacion": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "maxLength": 1000
                                     }
-                                }
+                                },
+                                "required": [
+                                    "observacion"
+                                ]
                             }
                         }
                     }
@@ -3642,6 +3647,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"

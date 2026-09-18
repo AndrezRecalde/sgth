@@ -177,8 +177,10 @@ export function TramoForm({
     label: e.nombre ?? "",
   }));
 
+  // Solo el primer tramo tiene que salir con el viático; los siguientes salen
+  // después, y el aviso les salía siempre.
   const alertaSalida: "ok" | "error" | null =
-    viatico && salidaTramo
+    esPrimerTramo && viatico && salidaTramo
       ? (() => {
           const sv = new Date(viatico.datetime_salida as string);
           const st = new Date(salidaTramo);
