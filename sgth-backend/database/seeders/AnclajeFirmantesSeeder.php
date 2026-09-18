@@ -6,8 +6,14 @@ use App\Models\Estructura\UnidadAdministrativa;
 use Illuminate\Database\Seeder;
 
 /**
- * Marca de arranque las unidades de las que salen los firmantes de las
- * Acciones de Personal: la máxima autoridad y Talento Humano.
+ * Marca de arranque las unidades de las que salen los firmantes: la máxima
+ * autoridad y Talento Humano en las Acciones de Personal, y Gestión Financiera
+ * en los documentos de Viáticos.
+ *
+ * La financiera se añadió con las firmas selladas de Viáticos: su migración
+ * intenta marcarla, pero corre antes de que existan las unidades, así que en
+ * una instalación nueva no encuentra ninguna. Sin la marca, la solicitud, el
+ * informe y el comprobante salen sin director financiero.
  *
  * Es solo un valor inicial. La inferencia se hace por el cargo del puesto de
  * jefatura —que es el dato más específico disponible— y **debe verificarse**:
@@ -21,6 +27,7 @@ class AnclajeFirmantesSeeder extends Seeder
     {
         $this->anclar('es_maxima_autoridad', '%prefect%', 'máxima autoridad');
         $this->anclar('es_unidad_talento_humano', '%talento humano%', 'Talento Humano');
+        $this->anclar('es_unidad_financiera', '%financ%', 'Gestión Financiera');
     }
 
     private function anclar(string $bandera, string $patronCargo, string $etiqueta): void
