@@ -299,6 +299,7 @@ export type ViaticoParams = {
   page?:        number
   per_page?:    number
   estado?:      EstadoViatico
+  zona?:        string
   servidor_id?: number
   search?:      string
   /** «Mis viáticos»: solo los propios, aunque quien pide vea los de todos. */

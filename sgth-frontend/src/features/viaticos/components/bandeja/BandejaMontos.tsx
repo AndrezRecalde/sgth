@@ -3,11 +3,8 @@
 import { Grid } from '@mantine/core'
 import { IconAlarm, IconCash, IconReceipt2, IconWallet } from '@tabler/icons-react'
 import { StatCard } from '@/components/ui'
+import { dolares } from '../../utils/monto'
 import type { BandejaResumen } from '@/types/api'
-
-const dolares = (v: number) =>
-  // Mismo formato que los montos de las tablas de viáticos: punto decimal.
-  `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 interface Props {
   resumen?: BandejaResumen

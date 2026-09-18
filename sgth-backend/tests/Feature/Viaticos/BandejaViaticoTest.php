@@ -187,3 +187,24 @@ it('«Mis viáticos» muestra solo los propios también a Financiero', function 
 
     ($this->get)($this->financiero, '/api/v1/viaticos')->assertJsonCount(2, 'datos.data');
 });
+
+it('«Mis viáticos» filtra por estado y zona, y busca el código sin distinguir mayúsculas', function () {
+    $mio = Servidor::findOrFail($this->financiero->servidor_id);
+    $solicitado = ($this->viatico)($mio, EstadoViatico::SOLICITADO);
+    ($this->viatico)($mio, EstadoViatico::APROBADO, ['zona' => 'fuera_provincia']);
+
+    $codigo = $solicitado->fresh()->codigo_viatico;
+    expect($codigo)->not->toBeNull();
+
+    ($this->get)($this->financiero, '/api/v1/viaticos?propios=1&search='.urlencode(mb_strtolower($codigo)))
+        ->assertJsonCount(1, 'datos.data')
+        ->assertJsonPath('datos.data.0.id', $solicitado->id);
+
+    ($this->get)($this->financiero, '/api/v1/viaticos?propios=1&estado=aprobado')
+        ->assertJsonCount(1, 'datos.data')
+        ->assertJsonPath('datos.data.0.zona', 'fuera_provincia');
+
+    ($this->get)($this->financiero, '/api/v1/viaticos?propios=1&zona=dentro_provincia')
+        ->assertJsonCount(1, 'datos.data')
+        ->assertJsonPath('datos.data.0.id', $solicitado->id);
+});
