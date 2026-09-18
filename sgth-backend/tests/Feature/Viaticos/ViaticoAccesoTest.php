@@ -270,10 +270,12 @@ it('la liquidación de otro no se lee ni se llena ni se confirma', function () {
 it('quien solo consulta abre la liquidación sin crearla', function () {
     ($this->en)(EstadoViatico::PENDIENTE_LIQUIDACION);
 
+    // Una vacía sin guardar: leerla no la crea, para nadie.
     $this->actingAs($this->adminUath, 'sanctum')
         ->getJson("/api/v1/viaticos/{$this->viatico->id}/liquidacion")
         ->assertOk()
-        ->assertJsonPath('datos', null);
+        ->assertJsonPath('datos.id', null)
+        ->assertJsonPath('datos.actividades', []);
 
     expect(LiquidacionViatico::count())->toBe(0);
 });

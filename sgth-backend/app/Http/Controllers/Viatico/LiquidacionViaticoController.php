@@ -23,34 +23,35 @@ class LiquidacionViaticoController extends Controller
     ) {}
 
     /**
-     * Obtener o crear la liquidación del viático
-     * Se crea vacía cuando el viático entra en
-     * estado pendiente_liquidacion
+     * La liquidación del viático, para verla o empezar a llenarla.
+     *
+     * Leerla no la crea. Antes esta ruta era «obtener o crear»: abrir la ficha
+     * de un viático pendiente de liquidación dejaba una fila vacía en la base,
+     * aunque nadie registrara nada. Ahora, si todavía no hay liquidación, se
+     * devuelve una vacía sin guardar —con la cuenta del viático, que la
+     * pantalla muestra desde el principio— y la crea el primer guardado de
+     * actividades o comprobantes.
      */
-    public function obtenerOCrear(
+    public function obtener(
         int $viaticoId
     ): JsonResponse {
         $viatico = $this->autorizar($viaticoId, 'ver');
 
-        // Abrirla solo la crea quien la va a llenar, y con el viático pendiente
-        // de liquidación. Quien solo consulta —Talento Humano, un acompañante—
-        // ve la que haya, o ninguna.
-        $liquidacion = request()->user()->can('editar', $viatico)
-            && $viatico->estado === \App\Enums\EstadoViatico::PENDIENTE_LIQUIDACION
-            ? $this->getLiquidacion($viaticoId)
-            : LiquidacionViatico::where('viatico_id', $viaticoId)->first();
-
-        $liquidacion?->load([
-            'actividades',
-            'detallesFactura.categoria',
-        ]);
+        $liquidacion = LiquidacionViatico::where('viatico_id', $viaticoId)
+            ->with(['actividades', 'detallesFactura.categoria'])
+            ->first();
 
         if ($liquidacion) {
             $this->comprobantes->conAlertas($liquidacion->detallesFactura, $viatico);
-            // La misma cuenta que muestra la ficha del viático, para que la
-            // pantalla de liquidación no tenga que rehacerla.
-            $liquidacion->setAttribute('calculo', $this->calculo->resumen($viatico, $liquidacion));
+        } else {
+            $liquidacion = (new LiquidacionViatico(['viatico_id' => $viatico->id, 'total_facturas' => 0]))
+                ->setRelation('actividades', collect())
+                ->setRelation('detallesFactura', collect());
         }
+
+        // La misma cuenta que muestra la ficha del viático, para que la
+        // pantalla de liquidación no tenga que rehacerla.
+        $liquidacion->setAttribute('calculo', $this->calculo->resumen($viatico, $liquidacion->exists ? $liquidacion : null));
 
         return ApiResponse::ok(
             $liquidacion,

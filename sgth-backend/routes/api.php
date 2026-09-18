@@ -904,7 +904,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::get('/',
                     [LiquidacionViaticoController::class,
-                        'obtenerOCrear']);
+                        'obtener']);
 
                 Route::get('actividades',
                     [LiquidacionViaticoController::class,

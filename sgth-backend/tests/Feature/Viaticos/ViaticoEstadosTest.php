@@ -217,8 +217,9 @@ it('la liquidación solo se llena y se presenta con el viático pendiente de liq
     ]])->assertStatus(422);
     $this->actingAs($this->titular, 'sanctum')->postJson("{$base}/confirmar")->assertStatus(422);
 
-    // Abrir la pantalla fuera de plazo tampoco crea la liquidación.
-    $this->actingAs($this->titular, 'sanctum')->getJson($base)->assertOk()->assertJsonPath('datos', null);
+    // Abrir la pantalla fuera de plazo tampoco crea la liquidación: devuelve
+    // una vacía sin guardar.
+    $this->actingAs($this->titular, 'sanctum')->getJson($base)->assertOk()->assertJsonPath('datos.id', null);
 
     expect($viatico->fresh()->estado)->toBe(EstadoViatico::SOLICITADO)
         ->and(LiquidacionViatico::count())->toBe(0);

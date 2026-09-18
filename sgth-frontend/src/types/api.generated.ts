@@ -3396,11 +3396,15 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Obtener o crear la liquidación del viático
-         *     Se crea vacía cuando el viático entra en
-         *     estado pendiente_liquidacion
+         * La liquidación del viático, para verla o empezar a llenarla
+         * @description Leerla no la crea. Antes esta ruta era «obtener o crear»: abrir la ficha
+         *     de un viático pendiente de liquidación dejaba una fila vacía en la base,
+         *     aunque nadie registrara nada. Ahora, si todavía no hay liquidación, se
+         *     devuelve una vacía sin guardar —con la cuenta del viático, que la
+         *     pantalla muestra desde el principio— y la crea el primer guardado de
+         *     actividades o comprobantes.
          */
-        get: operations["liquidacionViatico.obtenerOCrear"];
+        get: operations["liquidacionViatico.obtener"];
         put?: never;
         post?: never;
         delete?: never;
@@ -20406,7 +20410,7 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "liquidacionViatico.obtenerOCrear": {
+    "liquidacionViatico.obtener": {
         parameters: {
             query?: never;
             header?: never;
@@ -20426,7 +20430,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Liquidación obtenida.";
-                        datos: components["schemas"]["LiquidacionViatico"] | null;
+                        datos: components["schemas"]["LiquidacionViatico"];
                         meta: null;
                     };
                 };

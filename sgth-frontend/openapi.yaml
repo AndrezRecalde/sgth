@@ -21136,8 +21136,9 @@
         },
         "/v1/viaticos/{viaticoId}/liquidacion": {
             "get": {
-                "operationId": "liquidacionViatico.obtenerOCrear",
-                "summary": "Obtener o crear la liquidaci\u00f3n del vi\u00e1tico\nSe crea vac\u00eda cuando el vi\u00e1tico entra en\nestado pendiente_liquidacion",
+                "operationId": "liquidacionViatico.obtener",
+                "description": "Leerla no la crea. Antes esta ruta era \u00abobtener o crear\u00bb: abrir la ficha\nde un vi\u00e1tico pendiente de liquidaci\u00f3n dejaba una fila vac\u00eda en la base,\naunque nadie registrara nada. Ahora, si todav\u00eda no hay liquidaci\u00f3n, se\ndevuelve una vac\u00eda sin guardar \u2014con la cuenta del vi\u00e1tico, que la\npantalla muestra desde el principio\u2014 y la crea el primer guardado de\nactividades o comprobantes.",
+                "summary": "La liquidaci\u00f3n del vi\u00e1tico, para verla o empezar a llenarla",
                 "tags": [
                     "LiquidacionViatico"
                 ],
@@ -21167,14 +21168,7 @@
                                             "const": "Liquidaci\u00f3n obtenida."
                                         },
                                         "datos": {
-                                            "anyOf": [
-                                                {
-                                                    "$ref": "#/components/schemas/LiquidacionViatico"
-                                                },
-                                                {
-                                                    "type": "null"
-                                                }
-                                            ]
+                                            "$ref": "#/components/schemas/LiquidacionViatico"
                                         },
                                         "meta": {
                                             "type": "null"
