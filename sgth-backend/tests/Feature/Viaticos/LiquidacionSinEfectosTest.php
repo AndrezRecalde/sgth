@@ -86,12 +86,39 @@ test('un_viatico_que_no_existe_da_404_y_no_una_traza_de_postgres', function () {
     expect(LiquidacionViatico::count())->toBe(0);
 });
 
-test('abrir_la_liquidacion_si_la_crea_porque_para_eso_esta', function () {
-    // La ruta que la pantalla sí usa. Aquí crear es lo correcto: es la acción
-    // de abrir la liquidación, no un listado.
+test('abrir_la_liquidacion_tampoco_la_crea', function () {
+    // Antes esta ruta era «obtener o crear»: abrir la ficha de un viático
+    // pendiente de liquidación dejaba una fila vacía (2026-09-18). Ahora
+    // devuelve una sin guardar, con la cuenta del viático que la pantalla
+    // muestra desde el principio; la crea el primer guardado.
     $this->actingAs($this->usuario, 'sanctum')
         ->getJson("/api/v1/viaticos/{$this->viatico->id}/liquidacion")
-        ->assertOk();
+        ->assertOk()
+        ->assertJsonPath('datos.id', null)
+        ->assertJsonPath('datos.viatico_id', $this->viatico->id)
+        ->assertJsonPath('datos.actividades', [])
+        ->assertJsonPath('datos.detalles_factura', [])
+        ->assertJsonPath('datos.calculo.noches', 2)
+        ->assertJsonPath('datos.calculo.total_comprobantes', 0);
+
+    expect(LiquidacionViatico::count())->toBe(0);
+});
+
+test('abrir_una_liquidacion_que_existe_la_devuelve_con_lo_registrado', function () {
+    $this->actingAs($this->usuario, 'sanctum')->postJson(
+        "/api/v1/viaticos/{$this->viatico->id}/liquidacion/actividades",
+        ['actividades' => [[
+            'fecha' => now()->subDays(2)->toDateString(),
+            'descripcion' => 'Reunión con la contraparte', 'lugar' => 'Quito',
+        ]]],
+    )->assertOk();
+    $id = LiquidacionViatico::sole()->id;
+
+    $this->actingAs($this->usuario, 'sanctum')
+        ->getJson("/api/v1/viaticos/{$this->viatico->id}/liquidacion")
+        ->assertOk()
+        ->assertJsonPath('datos.id', $id)
+        ->assertJsonCount(1, 'datos.actividades');
 
     expect(LiquidacionViatico::count())->toBe(1);
 });
