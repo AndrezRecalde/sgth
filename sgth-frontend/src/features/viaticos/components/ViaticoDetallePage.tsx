@@ -164,7 +164,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
                   key={enForm === "nuevo" ? "nuevo" : enForm.id}
                   viaticoId={d.id}
                   viatico={d}
-                  tramosExistentes={tramos.length}
+                  tramos={tramos}
                   tramo={enForm === "nuevo" ? null : enForm}
                   onSuccess={() => setEnForm(null)}
                 />
