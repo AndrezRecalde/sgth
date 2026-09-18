@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Stack,
-  Grid,
-  Card,
-  Text,
-  Group,
-  Alert,
-  UnstyledButton,
-  Box,
-} from "@mantine/core";
+import { Alert, Grid, Group, Radio, Stack, Text } from "@mantine/core";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import type { TramoFormData } from "../schemas/viatico.schema";
 
@@ -20,39 +11,23 @@ interface Props {
 }
 
 const OPCIONES = [
-  {
-    value: "destino",
-    label: "DESTINO",
-    description: "Realizas actividades de la comisión en esta ciudad.",
-  },
-  {
-    value: "escala",
-    label: "PARADA / ESCALA",
-    description: "Solo pasas por esta ciudad, no realizas actividades.",
-  },
-  {
-    value: "regreso",
-    label: "REGRESO",
-    description: "Último tramo de vuelta a tu ciudad base.",
-  },
+  { value: "destino", label: "Destino", description: "Aquí se hacen actividades de la comisión." },
+  { value: "escala", label: "Parada o escala", description: "Solo se pasa por aquí, sin actividades." },
+  { value: "regreso", label: "Regreso", description: "El último tramo, de vuelta a Esmeraldas." },
 ];
 
-export function TramoTipoSelector({
-  control,
-  errors,
-  esPrimerTramo,
-}: Props) {
+/*
+| Qué es el tramo en el viaje. El primero siempre es la ida.
+|
+| Con `Radio.Card`: se elige con el teclado, se anuncia como opción y marca
+| la selección con el color del tema. Antes eran tarjetas con una casilla
+| dibujada a mano y una «V» como marca.
+*/
+export function TramoTipoSelector({ control, errors, esPrimerTramo }: Props) {
   if (esPrimerTramo) {
     return (
       <Alert color="ocean" variant="light" p="xs">
-        <Group gap="xs">
-          <Text size="xs" fw={600} c="ocean">
-            Tramo de IDA
-          </Text>
-          <Text size="xs" c="dimmed">
-            — se asigna automáticamente como el primer tramo
-          </Text>
-        </Group>
+        Es el primer tramo: se registra como la ida.
       </Alert>
     );
   }
@@ -61,87 +36,24 @@ export function TramoTipoSelector({
     <Controller
       name="tipo_tramo"
       control={control}
-      rules={{ required: "Debe seleccionar el tipo de tramo" }}
       render={({ field }) => (
-        <Stack gap="xs">
-          <Text size="xs" c="dimmed">
-            Selecciona el rol de este tramo en tu itinerario:
-          </Text>
+        <Radio.Group value={field.value ?? null} onChange={field.onChange} error={errors.tipo_tramo?.message}>
           <Grid>
-            {OPCIONES.map((opt) => {
-              const selected = field.value === opt.value;
-              return (
-                <Grid.Col key={opt.value} span={{ base: 12, sm: 4 }}>
-                  <UnstyledButton
-                    onClick={() => field.onChange(opt.value)}
-                    style={{ width: "100%" }}
-                  >
-                    <Card
-                      withBorder
-                      radius="md"
-                      p="sm"
-                      style={{
-                        // El tipo de tramo es una categoría: la selección se marca con el acento, no con un color por tipo.
-                        borderColor: selected ? "var(--sgth-accent)" : undefined,
-                        borderWidth: selected ? 2 : 1,
-                        background: selected ? "var(--sgth-accent-light)" : undefined,
-                        cursor: "pointer",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      <Group justify="flex-end" mb={4}>
-                        <Box
-                          style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: 4,
-                            border: selected
-                              ? "none"
-                              : "2px solid var(--sgth-border-strong)",
-                            background: selected
-                              ? "var(--sgth-accent)"
-                              : "var(--mantine-color-body)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {selected && (
-                            <Text
-                              size="xs"
-                              c="white"
-                              fw={700}
-                              style={{ lineHeight: 1 }}
-                            >
-                              V
-                            </Text>
-                          )}
-                        </Box>
-                      </Group>
-                      <Text
-                        size="xs"
-                        fw={700}
-                        c={selected ? "var(--sgth-accent-text)" : undefined}
-                        mb={4}
-                      >
-                        {opt.label}
-                      </Text>
-                      <Text size="xs" c="dimmed" lh={1.4}>
-                        {opt.description}
-                      </Text>
-                    </Card>
-                  </UnstyledButton>
-                </Grid.Col>
-              );
-            })}
+            {OPCIONES.map((o) => (
+              <Grid.Col key={o.value} span={{ base: 12, sm: 4 }}>
+                <Radio.Card value={o.value} radius="md" p="sm" h="100%">
+                  <Group wrap="nowrap" align="flex-start" gap="sm">
+                    <Radio.Indicator />
+                    <Stack gap={2}>
+                      <Text size="sm" fw={600}>{o.label}</Text>
+                      <Text size="xs" c="dimmed">{o.description}</Text>
+                    </Stack>
+                  </Group>
+                </Radio.Card>
+              </Grid.Col>
+            ))}
           </Grid>
-          {errors.tipo_tramo && (
-            <Text size="xs" c="red">
-              {errors.tipo_tramo.message as string}
-            </Text>
-          )}
-        </Stack>
+        </Radio.Group>
       )}
     />
   );

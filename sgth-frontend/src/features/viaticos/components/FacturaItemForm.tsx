@@ -1,75 +1,42 @@
 "use client";
 
-import {
-  Card,
-  Grid,
-  Select,
-  TextInput,
-  NumberInput,
-  ActionIcon,
-  Group,
-  Text,
-} from "@mantine/core";
+import { Grid, NumberInput, Paper, Select, TextInput } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { IconTrash } from "@tabler/icons-react";
 import {
   Controller,
   useWatch,
   type Control,
-  type UseFormRegister,
   type FieldErrors,
+  type UseFormRegister,
 } from "react-hook-form";
 import { useContainedInput } from "@/hooks/useContainedInput";
-
-type FacturaFormData = {
-  facturas: {
-    categoria_factura_id: number;
-    fecha_factura: string | null;
-    tipo_comprobante: "factura" | "ticket" | "recibo" | "otro";
-    numero_factura?: string | null;
-    numero_ticket?: string | null;
-    ruc_proveedor?: string | null;
-    nombre_proveedor: string;
-    detalle?: string | null;
-    monto: number;
-  }[];
-};
+import { fromDateValueOrNull, toDateValue } from "@/lib/fecha";
+import type { ComprobantesFormData } from "../schemas/liquidacion.schema";
+import { ItemCabecera } from "./ItemCabecera";
 
 type Opcion = { value: string; label: string };
 type GrupoOpcion = { group: string; items: Opcion[] };
 
+const TIPOS = [
+  { value: "factura", label: "Factura" },
+  { value: "ticket", label: "Ticket" },
+  { value: "recibo", label: "Recibo" },
+  { value: "otro", label: "Otro" },
+];
+
 interface Props {
   index: number;
-  control: Control<FacturaFormData>;
-  register: UseFormRegister<FacturaFormData>;
-  errors: FieldErrors<FacturaFormData>;
+  control: Control<ComprobantesFormData>;
+  register: UseFormRegister<ComprobantesFormData>;
+  errors: FieldErrors<ComprobantesFormData>;
   categoriaOptions: (Opcion | GrupoOpcion)[];
   minFecha?: Date;
   maxFecha?: Date;
-  onEliminar: () => void;
-  puedeEliminar: boolean;
+  /** Sin esto no se puede quitar: queda al menos uno. */
+  onEliminar?: () => void;
 }
 
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null;
-  const [y, m, d] = v.slice(0, 10).split("-").map(Number);
-  return new Date(y, m - 1, d);
-};
-
-const safeFormatDate = (v: Date | string | null | undefined): string => {
-  if (!v) return "";
-  const d = new Date(v);
-  if (isNaN(d.getTime())) return "";
-  if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) {
-    return d.toISOString().slice(0, 10);
-  }
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0"),
-  ].join("-");
-};
-
+/** Un comprobante: qué es, de quién, cuándo y cuánto. */
 export function FacturaItemForm({
   index,
   control,
@@ -79,34 +46,19 @@ export function FacturaItemForm({
   minFecha,
   maxFecha,
   onEliminar,
-  puedeEliminar,
 }: Props) {
   const contained = useContainedInput();
-
-  const tipoComp = useWatch({
-    control,
-    name: `facturas.${index}.tipo_comprobante`,
-  });
-
-  const errFactura = errors.facturas?.[index];
+  const tipo = useWatch({ control, name: `facturas.${index}.tipo_comprobante` });
+  const conRuc = tipo === "factura" || tipo === "recibo";
+  const err = errors.facturas?.[index];
 
   return (
-    <Card withBorder radius="md" p="sm">
-      <Group justify="space-between" mb="xs">
-        <Text size="xs" fw={600} c="dimmed">
-          Comprobante #{index + 1}
-        </Text>
-        {puedeEliminar && (
-          <ActionIcon
-            size="sm"
-            color="red"
-            variant="subtle"
-            onClick={onEliminar}
-          >
-            <IconTrash size={14} />
-          </ActionIcon>
-        )}
-      </Group>
+    <Paper withBorder radius="md" p="md">
+      <ItemCabecera
+        titulo={`Comprobante ${index + 1}`}
+        onEliminar={onEliminar}
+        etiquetaEliminar="Quitar este comprobante"
+      />
 
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -121,12 +73,11 @@ export function FacturaItemForm({
                 {...contained}
                 value={field.value ? String(field.value) : null}
                 onChange={(v) => field.onChange(v ? Number(v) : 0)}
-                error={errFactura?.categoria_factura_id?.message}
+                error={err?.categoria_factura_id?.message}
               />
             )}
           />
         </Grid.Col>
-
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <Controller
             name={`facturas.${index}.tipo_comprobante`}
@@ -134,16 +85,11 @@ export function FacturaItemForm({
             render={({ field }) => (
               <Select
                 label="Tipo de comprobante"
-                data={[
-                  { value: "factura", label: "Factura" },
-                  { value: "ticket", label: "Ticket" },
-                  { value: "recibo", label: "Recibo" },
-                  { value: "otro", label: "Otro" },
-                ]}
+                data={TIPOS}
                 {...contained}
                 value={field.value}
                 onChange={(v) => field.onChange(v ?? "factura")}
-                error={errFactura?.tipo_comprobante?.message}
+                error={err?.tipo_comprobante?.message}
               />
             )}
           />
@@ -151,74 +97,62 @@ export function FacturaItemForm({
 
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <TextInput
-            // El asterisco lo pone `withAsterisk`; escrito también en la
-            // etiqueta salía dos veces.
-            label={
-              ["factura", "recibo"].includes(tipoComp)
-                ? "RUC del proveedor"
-                : "RUC / Identificación (opcional)"
-            }
+            // Lo opcional lo dice la etiqueta, como en «Detalle (opcional)».
+            label={conRuc ? "RUC del proveedor" : "RUC o identificación (opcional)"}
             placeholder="0000000000001"
-            withAsterisk={["factura", "recibo"].includes(tipoComp)}
             {...contained}
             {...register(`facturas.${index}.ruc_proveedor`)}
-            error={errFactura?.ruc_proveedor?.message}
+            error={err?.ruc_proveedor?.message}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <TextInput
+            label="Proveedor"
+            placeholder="Ej: Hotel Quito"
+            {...contained}
+            {...register(`facturas.${index}.nombre_proveedor`)}
+            error={err?.nombre_proveedor?.message}
           />
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Nombre del proveedor"
-            placeholder="Ej: Hotel Quito"
-            {...contained}
-            {...register(`facturas.${index}.nombre_proveedor`)}
-            error={errFactura?.nombre_proveedor?.message}
-          />
-        </Grid.Col>
-
-        {tipoComp === "ticket" ? (
-          <Grid.Col span={{ base: 12, sm: 6 }}>
+          {tipo === "ticket" ? (
             <TextInput
               label="Número de ticket"
-              placeholder="T-001"
+              placeholder="Ej: T-001"
               {...contained}
               {...register(`facturas.${index}.numero_ticket`)}
-              error={errFactura?.numero_ticket?.message}
+              error={err?.numero_ticket?.message}
             />
-          </Grid.Col>
-        ) : (
-          <Grid.Col span={{ base: 12, sm: 6 }}>
+          ) : (
             <TextInput
               label="Número de comprobante"
-              placeholder="001-001-000001"
+              placeholder="Ej: 001-001-000001"
               {...contained}
               {...register(`facturas.${index}.numero_factura`)}
-              error={errFactura?.numero_factura?.message}
+              error={err?.numero_factura?.message}
             />
-          </Grid.Col>
-        )}
-
-        <Grid.Col span={{ base: 12, sm: 3 }}>
+          )}
+        </Grid.Col>
+        <Grid.Col span={{ base: 6, sm: 3 }}>
           <Controller
             name={`facturas.${index}.fecha_factura`}
             control={control}
             render={({ field }) => (
               <DatePickerInput
                 label="Fecha"
-                withAsterisk
                 valueFormat="DD/MM/YYYY"
-                {...contained}
                 minDate={minFecha}
                 maxDate={maxFecha}
-                value={toDate(field.value)}
-                onChange={(v) => field.onChange(v ? safeFormatDate(v) : null)}
-                error={errFactura?.fecha_factura?.message}
+                {...contained}
+                value={toDateValue(field.value)}
+                onChange={(v) => field.onChange(fromDateValueOrNull(v))}
+                error={err?.fecha_factura?.message}
               />
             )}
           />
         </Grid.Col>
-
-        <Grid.Col span={{ base: 12, sm: 3 }}>
+        <Grid.Col span={{ base: 6, sm: 3 }}>
           <Controller
             name={`facturas.${index}.monto`}
             control={control}
@@ -228,10 +162,11 @@ export function FacturaItemForm({
                 prefix="$"
                 decimalScale={2}
                 min={0.01}
+                hideControls
                 {...contained}
                 value={field.value}
                 onChange={(v) => field.onChange(typeof v === "number" ? v : 0)}
-                error={errFactura?.monto?.message}
+                error={err?.monto?.message}
               />
             )}
           />
@@ -246,6 +181,6 @@ export function FacturaItemForm({
           />
         </Grid.Col>
       </Grid>
-    </Card>
+    </Paper>
   );
 }

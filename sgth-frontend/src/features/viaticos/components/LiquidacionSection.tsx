@@ -12,8 +12,7 @@ import { FacturasModal } from "./FacturasModal";
 import { LiquidacionActividadesCard } from "./LiquidacionActividadesCard";
 import { LiquidacionFacturasCard } from "./LiquidacionFacturasCard";
 import { CalculoViaticoCard } from "./CalculoViaticoCard";
-import type { ActividadData } from "./ActividadesModal";
-import type { FacturaData } from "./FacturasModal";
+import type { ActividadData, FacturaData } from "../schemas/liquidacion.schema";
 import type {
   Viatico,
   CategoriaFactura,
@@ -136,7 +135,6 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         opened={actModalAbierto}
         onClose={cerrarAct}
         viatico={viatico}
-        onGuardar={() => {}}
         valorInicial={actividades}
       />
 
@@ -145,7 +143,6 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         onClose={cerrarFact}
         viatico={viatico}
         calculo={calculo}
-        onGuardar={() => {}}
         valorInicial={facturas}
       />
     </Stack>

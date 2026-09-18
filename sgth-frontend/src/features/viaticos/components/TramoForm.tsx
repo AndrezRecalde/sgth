@@ -1,209 +1,107 @@
 "use client";
 
-import {
-  Stack,
-  Grid,
-  Select,
-  Button,
-  Divider,
-  Alert,
-  Text,
-  Group,
-} from "@mantine/core";
+import { Alert, Grid, Select, Stack, Text } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import { useForm, Controller, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import React from "react";
+import { notificar } from "@/components/ui";
 import { useContainedInput } from "@/hooks/useContainedInput";
-import { useTiposTransporte, useEmpresasPorTipo } from "../hooks/useViaticos";
+import { formatFechaHora, fromDateTimeValue } from "@/lib/fecha";
 import { useProvincias } from "@/features/expediente/hooks/useProvincias";
 import { useCantones } from "@/features/expediente/hooks/useCantones";
+import { useTiposTransporte, useEmpresasPorTipo } from "../hooks/useViaticos";
 import { viaticoService } from "../services/viaticoService";
+import { PAISES_OPTIONS } from "../constants/viatico.constants";
+import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
 import { TramoLugarSelect } from "./TramoLugarSelect";
 import { TramoTipoSelector } from "./TramoTipoSelector";
-import type {
-  CatalogoTransporte,
-  EmpresaTransporte,
-  Viatico,
-} from "@/types/api";
-import { tramoSchema, type TramoFormData } from "../schemas/viatico.schema";
-import { formatFechaHora } from "@/lib/fecha";
-import { notificar } from "@/components/ui";
+import type { CatalogoTransporte, EmpresaTransporte, Viatico } from "@/types/api";
 
-const PAISES_COMUNES = [
-  "Colombia",
-  "Perú",
-  "Chile",
-  "Estados Unidos",
-  "España",
-  "Brasil",
-  "México",
-  "Panamá",
-  "Argentina",
-  "Bolivia",
-  "Costa Rica",
-  "Ecuador",
-  "Uruguay",
-  "Paraguay",
-  "Venezuela",
-  "Francia",
-  "Suiza",
-  "Alemania",
-  "Italia",
-  "Bélgica",
-  "Reino Unido",
-  "Canadá",
-  "China",
-  "Japón",
-  "Corea del Sur",
-  "República Dominicana",
-  "Guatemala",
-  "El Salvador",
-  "Honduras",
-  "Nicaragua",
-  "Cuba",
-  "Países Bajos",
-  "Austria",
-  "Israel",
-  "India",
-  "Australia",
-  "Otro",
-].map((p) => ({ value: p, label: p }));
-
-function fromDateTime(d: Date | null | string): string {
-  if (!d) return "";
-  const dt = typeof d === "string" ? new Date(d) : d;
-  if (isNaN(dt.getTime())) return "";
-  return (
-    [
-      dt.getFullYear(),
-      String(dt.getMonth() + 1).padStart(2, "0"),
-      String(dt.getDate()).padStart(2, "0"),
-    ].join("-") +
-    "T" +
-    [
-      String(dt.getHours()).padStart(2, "0"),
-      String(dt.getMinutes()).padStart(2, "0"),
-    ].join(":")
-  );
-}
+/** El `id` del formulario: el botón de enviar vive en el pie del modal. */
+export const TRAMO_FORM_ID = "tramo-form";
+/** Para que el pie del modal sepa que se está guardando. */
+export const CREAR_TRAMO = ["crear-tramo"];
 
 interface Props {
   viaticoId: number;
   viatico?: Viatico | null;
   tramosExistentes?: number;
   onSuccess: () => void;
-  onCancel: () => void;
 }
 
-export function TramoForm({
-  viaticoId,
-  viatico,
-  tramosExistentes,
-  onSuccess,
-  onCancel,
-}: Props) {
+type Opcion = { id: number; nombre?: string | null };
+const opciones = (lista: Opcion[]) =>
+  lista.map((o) => ({ value: String(o.id), label: o.nombre ?? "" }));
+
+const VACIO: TramoFormData = {
+  tipo_tramo: null,
+  origen_tipo: "nacional",
+  origen_provincia_id: null,
+  origen_canton_id: null,
+  origen_pais: null,
+  origen_ciudad: "",
+  destino_tipo: "nacional",
+  destino_provincia_id: null,
+  destino_canton_id: null,
+  destino_pais: null,
+  destino_ciudad: "",
+  catalogo_transporte_id: 0,
+  empresa_transporte_id: 0,
+  datetime_salida: "",
+  datetime_llegada: "",
+};
+
+/*
+| Un tramo nuevo del itinerario: de dónde a dónde, en qué y cuándo.
+|
+| Sin botones propios: los pone el pie del modal, por el `id` del formulario.
+| Antes el formulario traía su Cancelar y su Agregar debajo de los campos, y
+| con un error de validación quedaban fuera de la vista.
+*/
+export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess }: Props) {
   const contained = useContainedInput();
   const qc = useQueryClient();
 
-  const { data: tipos = [] } = useTiposTransporte();
-  const { data: provincias = [] } = useProvincias();
+  const { control, handleSubmit, setValue, setError, formState: { errors } } =
+    useForm<TramoFormData>({ resolver: zodResolver(tramoSchema), defaultValues: VACIO });
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    setError,
-    formState: { errors },
-  } = useForm<TramoFormData>({
-    resolver: zodResolver(tramoSchema),
-    defaultValues: {
-      tipo_tramo: null,
-      origen_tipo: "nacional",
-      origen_provincia_id: null,
-      origen_canton_id: null,
-      origen_pais: null,
-      origen_ciudad: "",
-      destino_tipo: "nacional",
-      destino_provincia_id: null,
-      destino_canton_id: null,
-      destino_pais: null,
-      destino_ciudad: "",
-      catalogo_transporte_id: 0,
-      empresa_transporte_id: 0,
-      datetime_salida: "",
-      datetime_llegada: "",
-    },
-  });
-
-  const origenTipo = useWatch({ control, name: "origen_tipo" });
-  const destinoTipo = useWatch({ control, name: "destino_tipo" });
-  const catalogoSelId = useWatch({ control, name: "catalogo_transporte_id" });
-  const origenProvId = useWatch({ control, name: "origen_provincia_id" });
-  const destinoProvId = useWatch({ control, name: "destino_provincia_id" });
-  const salidaTramo = useWatch({ control, name: "datetime_salida" });
-  const llegadaTramo = useWatch({ control, name: "datetime_llegada" });
-  const tipoTramo = useWatch({ control, name: "tipo_tramo" });
+  const [origenTipo, destinoTipo, catalogoId, origenProv, destinoProv, salida, llegada, tipoTramo] =
+    useWatch({
+      control,
+      name: [
+        "origen_tipo", "destino_tipo", "catalogo_transporte_id", "origen_provincia_id",
+        "destino_provincia_id", "datetime_salida", "datetime_llegada", "tipo_tramo",
+      ],
+    });
 
   const esPrimerTramo = (tramosExistentes ?? 0) === 0;
-  const tipoTramoEfectivo = esPrimerTramo ? "ida" : tipoTramo;
+  const tipoEfectivo = esPrimerTramo ? "ida" : tipoTramo;
 
-  const { data: empresas = [] } = useEmpresasPorTipo(catalogoSelId || null);
-  const { data: cantonesOrigen = [] } = useCantones(origenProvId ?? null);
-  const { data: cantonesDestino = [] } = useCantones(destinoProvId ?? null);
+  const { data: tipos = [] } = useTiposTransporte();
+  const { data: provincias = [] } = useProvincias();
+  const { data: empresas = [] } = useEmpresasPorTipo(catalogoId || null);
+  const { data: cantonesOrigen = [] } = useCantones(origenProv ?? null);
+  const { data: cantonesDestino = [] } = useCantones(destinoProv ?? null);
 
-  type Prov = { id: number; nombre: string };
-  type Cant = { id: number; nombre: string };
+  const provinciaOptions = opciones(provincias as Opcion[]);
+  const empresaOptions = opciones(empresas as EmpresaTransporte[]);
 
-  const provinciaOptions = (provincias as Prov[]).map((p) => ({
-    value: String(p.id),
-    label: p.nombre,
-  }));
-  const cantonOrigenOptions = (cantonesOrigen as Cant[]).map((c) => ({
-    value: String(c.id),
-    label: c.nombre,
-  }));
-  const cantonDestinoOptions = (cantonesDestino as Cant[]).map((c) => ({
-    value: String(c.id),
-    label: c.nombre,
-  }));
-  const tipoOptions = (tipos as CatalogoTransporte[]).map((t) => ({
-    value: String(t.id),
-    label: t.nombre ?? "",
-  }));
-  const empresaOptions = (empresas as EmpresaTransporte[]).map((e) => ({
-    value: String(e.id),
-    label: e.nombre ?? "",
-  }));
-
-  // Solo el primer tramo tiene que salir con el viático; los siguientes salen
-  // después, y el aviso les salía siempre.
-  const alertaSalida: "ok" | "error" | null =
-    esPrimerTramo && viatico && salidaTramo
-      ? (() => {
-          const sv = new Date(viatico.datetime_salida as string);
-          const st = new Date(salidaTramo);
-          if (isNaN(sv.getTime()) || isNaN(st.getTime())) return null;
-          return sv.getTime() === st.getTime() ? "ok" : "error";
-        })()
-      : null;
-
-  const alertaLlegada: "ok" | "error" | null =
-    viatico && llegadaTramo
-      ? (() => {
-          const lv = new Date(viatico.datetime_llegada as string);
-          const lt = new Date(llegadaTramo);
-          if (isNaN(lv.getTime()) || isNaN(lt.getTime())) return null;
-          return lt.getTime() > lv.getTime() ? "error" : "ok";
-        })()
-      : null;
+  // Solo el primer tramo tiene que salir con el viático; ninguno puede llegar
+  // después del regreso.
+  const salidaDistinta =
+    esPrimerTramo && !!viatico?.datetime_salida && !!salida &&
+    new Date(viatico.datetime_salida as string).getTime() !== new Date(salida).getTime();
+  const llegaTarde =
+    !!viatico?.datetime_llegada && !!llegada &&
+    new Date(llegada).getTime() > new Date(viatico.datetime_llegada as string).getTime();
 
   const crear = useMutation({
+    mutationKey: CREAR_TRAMO,
     mutationFn: (data: Parameters<typeof viaticoService.tramos.crear>[1]) =>
       viaticoService.tramos.crear(viaticoId, data),
     onSuccess: () => {
-      notificar.exito("Tramo agregado", "El tramo fue registrado al itinerario.");
+      notificar.exito("Tramo agregado", "El tramo quedó en el itinerario.");
       qc.invalidateQueries({ queryKey: ["tramos", viaticoId] });
       qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
       onSuccess();
@@ -212,196 +110,123 @@ export function TramoForm({
   });
 
   const onSubmit = (values: TramoFormData) => {
-    if (!esPrimerTramo && !tipoTramoEfectivo) {
-      setError("tipo_tramo", {
-        message: "Debes seleccionar el tipo de tramo",
-      });
+    if (!tipoEfectivo) {
+      setError("tipo_tramo", { message: "Elija qué es este tramo en el viaje" });
       return;
     }
-    const { catalogo_transporte_id: _cat, ...rest } = values;
-    crear.mutate({ ...rest, tipo_tramo: tipoTramoEfectivo ?? "destino" });
+    const { catalogo_transporte_id: _catalogo, ...resto } = values;
+    crear.mutate({ ...resto, tipo_tramo: tipoEfectivo });
   };
 
+  const limpiarLugar = (prefijo: "origen" | "destino") => () => {
+    setValue(`${prefijo}_provincia_id`, null);
+    setValue(`${prefijo}_canton_id`, null);
+    setValue(`${prefijo}_pais`, null);
+    setValue(`${prefijo}_ciudad`, "");
+  };
+
+  const fechaHora = (name: "datetime_salida" | "datetime_llegada", label: string) => (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => (
+        <DateTimePicker
+          label={label}
+          valueFormat="DD/MM/YYYY HH:mm"
+          {...contained}
+          value={field.value ? new Date(field.value) : null}
+          onChange={(v) => field.onChange(fromDateTimeValue(v))}
+          error={errors[name]?.message}
+        />
+      )}
+    />
+  );
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Stack gap="sm">
-        {/* Origen */}
-        <Divider label="Origen" labelPosition="left" />
-        <TramoLugarSelect
-          prefijo="origen"
-          label="Origen"
-          control={control}
-          errors={errors}
-          tipo={origenTipo as "nacional" | "internacional"}
-          provinciaOptions={provinciaOptions}
-          cantonOptions={cantonOrigenOptions}
-          paises={PAISES_COMUNES}
-          onTipoChange={() => {
-            setValue("origen_provincia_id", null);
-            setValue("origen_canton_id", null);
-            setValue("origen_pais", null);
-            setValue("origen_ciudad", "");
-          }}
-          onProvinciaChange={() => setValue("origen_canton_id", null)}
-          setValue={setValue}
-        />
-
-        {/* Destino */}
-        <Divider label="Destino" labelPosition="left" />
-        <TramoLugarSelect
-          prefijo="destino"
-          label="Destino"
-          control={control}
-          errors={errors}
-          tipo={destinoTipo as "nacional" | "internacional"}
-          provinciaOptions={provinciaOptions}
-          cantonOptions={cantonDestinoOptions}
-          paises={PAISES_COMUNES}
-          onTipoChange={() => {
-            setValue("destino_provincia_id", null);
-            setValue("destino_canton_id", null);
-            setValue("destino_pais", null);
-            setValue("destino_ciudad", "");
-          }}
-          onProvinciaChange={() => setValue("destino_canton_id", null)}
-          setValue={setValue}
-        />
-
-        {/* Transporte */}
-        <Divider label="Transporte" labelPosition="left" />
-        <Grid>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="catalogo_transporte_id"
+    <form id={TRAMO_FORM_ID} onSubmit={handleSubmit(onSubmit)} noValidate>
+      <Stack gap="md">
+        {(["origen", "destino"] as const).map((prefijo) => (
+          <Stack key={prefijo} gap="xs">
+            <Text size="sm" fw={600}>{prefijo === "origen" ? "Origen" : "Destino"}</Text>
+            <TramoLugarSelect
+              prefijo={prefijo}
+              label={prefijo === "origen" ? "Origen" : "Destino"}
               control={control}
-              render={({ field }) => (
-                <Select
-                  label="Tipo de transporte"
-                  data={tipoOptions}
-                  searchable
-                  {...contained}
-                  value={field.value ? String(field.value) : null}
-                  onChange={(v) => {
-                    field.onChange(v ? Number(v) : 0);
-                    setValue("empresa_transporte_id", 0);
-                  }}
-                  error={errors.catalogo_transporte_id?.message}
-                />
-              )}
+              errors={errors}
+              tipo={(prefijo === "origen" ? origenTipo : destinoTipo) as "nacional" | "internacional"}
+              provinciaOptions={provinciaOptions}
+              cantonOptions={opciones((prefijo === "origen" ? cantonesOrigen : cantonesDestino) as Opcion[])}
+              paises={PAISES_OPTIONS}
+              onTipoChange={limpiarLugar(prefijo)}
+              onProvinciaChange={() => setValue(`${prefijo}_canton_id`, null)}
+              setValue={setValue}
             />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="empresa_transporte_id"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Empresa de transporte"
-                  data={empresaOptions}
-                  searchable
-                  disabled={empresaOptions.length === 0}
-                  {...contained}
-                  value={field.value ? String(field.value) : null}
-                  onChange={(v) => field.onChange(v ? Number(v) : 0)}
-                  error={errors.empresa_transporte_id?.message}
-                />
-              )}
-            />
-          </Grid.Col>
-        </Grid>
-
-        {/* Fechas */}
-        <Divider label="Fechas" labelPosition="left" />
-        <Grid>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="datetime_salida"
-              control={control}
-              render={({ field }) => (
-                <DateTimePicker
-                  label="Fecha y hora de salida"
-                  valueFormat="DD/MM/YYYY HH:mm"
-                  {...contained}
-                  value={field.value ? new Date(field.value) : null}
-                  onChange={(v) => field.onChange(fromDateTime(v))}
-                  error={errors.datetime_salida?.message}
-                />
-              )}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="datetime_llegada"
-              control={control}
-              render={({ field }) => (
-                <DateTimePicker
-                  label="Fecha y hora de llegada"
-                  valueFormat="DD/MM/YYYY HH:mm"
-                  {...contained}
-                  value={field.value ? new Date(field.value) : null}
-                  onChange={(v) => field.onChange(fromDateTime(v))}
-                  error={errors.datetime_llegada?.message}
-                />
-              )}
-            />
-          </Grid.Col>
-        </Grid>
-
-        {/* Alertas de fechas */}
-        {viatico && (
-          <Stack gap="xs">
-            {alertaSalida === "ok" && (
-              <Alert color="emerald" variant="light" p="xs">
-                <Text size="xs">
-                  La salida del tramo coincide con el inicio del viático
-                </Text>
-              </Alert>
-            )}
-            {alertaSalida === "error" && (
-              <Alert color="amber" variant="light" p="xs">
-                <Text size="xs" fw={500}>
-                  El primer tramo debe salir exactamente el{" "}
-                  <strong>
-                    {formatFechaHora(viatico.datetime_salida as string)}
-                  </strong>
-                </Text>
-              </Alert>
-            )}
-            {alertaLlegada === "error" && (
-              <Alert color="red" variant="light" p="xs">
-                <Text size="xs" fw={500}>
-                  La llegada no puede superar la fecha de regreso del viático:{" "}
-                  <strong>
-                    {formatFechaHora(viatico.datetime_llegada as string)}
-                  </strong>
-                </Text>
-              </Alert>
-            )}
           </Stack>
-        )}
+        ))}
 
-        {/* Tipo de tramo */}
-        <Divider label="Tipo de tramo" labelPosition="left" />
-        <TramoTipoSelector
-          control={control}
-          errors={errors}
-          esPrimerTramo={esPrimerTramo}
-        />
+        <Stack gap="xs">
+          <Text size="sm" fw={600}>Transporte y horario</Text>
+          <Grid>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="catalogo_transporte_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Tipo de transporte"
+                    data={opciones(tipos as CatalogoTransporte[])}
+                    searchable
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) => {
+                      field.onChange(v ? Number(v) : 0);
+                      setValue("empresa_transporte_id", 0);
+                    }}
+                    error={errors.catalogo_transporte_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="empresa_transporte_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Empresa"
+                    data={empresaOptions}
+                    searchable
+                    disabled={empresaOptions.length === 0}
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) => field.onChange(v ? Number(v) : 0)}
+                    error={errors.empresa_transporte_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>{fechaHora("datetime_salida", "Salida")}</Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>{fechaHora("datetime_llegada", "Llegada")}</Grid.Col>
+          </Grid>
 
-        {/* Botones */}
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            variant="light"
-            loading={crear.isPending}
-          >
-            Agregar tramo
-          </Button>
-        </Group>
+          {salidaDistinta && (
+            <Alert color="amber" variant="light" p="xs">
+              El primer tramo sale con el viático: el{" "}
+              <strong>{formatFechaHora(viatico?.datetime_salida as string)}</strong>.
+            </Alert>
+          )}
+          {llegaTarde && (
+            <Alert color="red" variant="light" p="xs">
+              La llegada no puede pasar del regreso del viático:{" "}
+              <strong>{formatFechaHora(viatico?.datetime_llegada as string)}</strong>.
+            </Alert>
+          )}
+        </Stack>
+
+        <Stack gap="xs">
+          <Text size="sm" fw={600}>Qué es este tramo</Text>
+          <TramoTipoSelector control={control} errors={errors} esPrimerTramo={esPrimerTramo} />
+        </Stack>
       </Stack>
     </form>
   );

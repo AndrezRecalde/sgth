@@ -5,8 +5,8 @@ import { Button, Grid, Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlaneOff, IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { EmptyState, PageHeader, PageShell, SgthModal, StatusBadge } from "@/components/ui";
+import { useIsMutating, useQueryClient } from "@tanstack/react-query";
+import { EmptyState, ModalFooter, PageHeader, PageShell, SgthModal, StatusBadge } from "@/components/ui";
 import { useViatico, useTramos } from "../hooks/useViaticos";
 import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import { ESTADO_LABELS, TONO_VIATICO, ZONA_LABELS } from "../constants/viatico.constants";
@@ -20,7 +20,7 @@ import { ViaticoLiquidacionCard } from "./ViaticoLiquidacionCard";
 import { ViaticoFirmantesCard } from "./ViaticoFirmantesCard";
 import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
 import { ViaticoEditModal } from "./ViaticoEditModal";
-import { TramoForm } from "./TramoForm";
+import { CREAR_TRAMO, TRAMO_FORM_ID, TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
 
 /*
@@ -67,6 +67,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const [editando, { open: abrirEdicion, close: cerrarEdicion }] = useDisclosure(false);
   const [itinerario, { open: abrirItinerario, close: cerrarItinerario }] = useDisclosure(false);
   const [agregandoTramo, setAgregandoTramo] = useState(false);
+  const guardandoTramo = useIsMutating({ mutationKey: CREAR_TRAMO }) > 0;
 
   if (isLoading) return <ViaticoDetalleSkeleton />;
   if (!d)
@@ -161,7 +162,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
                   viatico={d}
                   tramosExistentes={tramos.length}
                   onSuccess={() => setAgregandoTramo(false)}
-                  onCancel={() => setAgregandoTramo(false)}
                 />
               </Paper>
             ) : (
@@ -170,6 +170,16 @@ export function ViaticoDetallePage({ identificador }: Props) {
               </Button>
             )}
           </Stack>
+          {agregandoTramo ? (
+            <ModalFooter
+              onCancel={() => setAgregandoTramo(false)}
+              form={TRAMO_FORM_ID}
+              submitLabel="Agregar tramo"
+              submitting={guardandoTramo}
+            />
+          ) : (
+            <ModalFooter onCancel={cerrarModalItinerario} cancelLabel="Cerrar" sinPrincipal />
+          )}
         </SgthModal>
       )}
     </PageShell>

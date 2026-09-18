@@ -74,7 +74,6 @@ export function TramoLugarSelect({
               render={({ field }) => (
                 <Select
                   label={`Provincia de ${label.toLowerCase()}`}
-                  placeholder="Seleccionar"
                   data={provinciaOptions}
                   searchable
                   {...contained}
@@ -98,7 +97,6 @@ export function TramoLugarSelect({
               render={({ field }) => (
                 <Select
                   label={`Cantón de ${label.toLowerCase()}`}
-                  placeholder="Seleccionar"
                   data={cantonOptions}
                   searchable
                   disabled={cantonOptions.length === 0}
@@ -157,7 +155,6 @@ export function TramoLugarSelect({
               render={({ field }) => (
                 <Select
                   label="País"
-                  placeholder="Seleccionar"
                   data={paises}
                   searchable
                   {...contained}

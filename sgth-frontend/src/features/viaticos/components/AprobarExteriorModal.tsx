@@ -1,29 +1,15 @@
 "use client";
 
-import {
-  Stack,
-  Text,
-  Group,
-  NumberInput,
-  TextInput,
-  Card,
-  Divider,
-} from "@mantine/core";
+import { Group, NumberInput, Paper, Select, Stack, Text } from "@mantine/core";
 import { FormModal } from "@/components/ui";
-import { useForm, Controller, useWatch } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
+import { PAISES_OPTIONS } from "../constants/viatico.constants";
+import { aprobarExteriorSchema, type AprobarExteriorFormData } from "../schemas/aprobacion.schema";
+import { dolares } from "../utils/monto";
 import type { ViaticoConRelaciones } from "@/types/api";
-
-const schema = z.object({
-  pais_destino: z.string().min(1, "Requerido"),
-  coeficiente_exterior: z.number().min(0.1, "Mínimo 0.1").max(5, "Máximo 5.0"),
-});
-
-type FormData = z.infer<typeof schema>;
 
 interface Props {
   opened: boolean;
@@ -31,83 +17,65 @@ interface Props {
   viatico: ViaticoConRelaciones;
 }
 
+/*
+| Aprobar un viaje al exterior: Financiero fija el coeficiente del país.
+|
+| La tarifa base y el nivel del servidor los resuelve el backend, que es quien
+| fija el monto al aprobar; aquí solo se multiplica por el coeficiente para
+| anticipar el resultado. El país se elige de la misma lista que en la
+| solicitud: antes se escribía a mano.
+*/
 export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
-  const qc = useQueryClient();
   const contained = useContainedInput();
   const { aprobar } = useViaticoMutations();
 
-  // La tarifa base del exterior y el nivel del servidor los resuelve el
-  // backend, que es quien fija el monto al aprobar: aquí solo se multiplica por
-  // el coeficiente para anticipar el resultado.
   const tarifaBase = Number(viatico.calculo?.tarifa_diaria ?? 0);
-
   const noches = Number(viatico.noches ?? 1);
 
   const {
     control,
-    register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    formState: { errors },
+  } = useForm<AprobarExteriorFormData>({
+    resolver: zodResolver(aprobarExteriorSchema),
     defaultValues: {
-      pais_destino: (viatico.pais_destino as string) ?? "",
-      coeficiente_exterior: 1.0,
+      pais_destino: (viatico.pais_destino as string | null) ?? "",
+      coeficiente_exterior: 1,
     },
   });
 
   const coef = useWatch({ control, name: "coeficiente_exterior" }) ?? 1;
-  const montoCalculado = Math.round(tarifaBase * coef * noches * 100) / 100;
+  const monto = Math.round(tarifaBase * coef * noches * 100) / 100;
 
-  const onSubmit = async (values: FormData) => {
-    try {
-      await aprobar.mutateAsync({
-        id: viatico.id,
-        data: {
-          coeficiente_exterior: values.coeficiente_exterior,
-          pais_destino: values.pais_destino,
-        },
-      });
-      // Invalidar explícitamente el query del viático
-      // por id numérico Y por codigo_viatico string
-      qc.invalidateQueries({ queryKey: ["viatico"] });
-      qc.invalidateQueries({ queryKey: ["viaticos"] });
-      onClose();
-    } catch {
-      // El hook de mutación ya notifica el error.
-    }
-  };
+  const onSubmit = (values: AprobarExteriorFormData) =>
+    aprobar.mutate({ id: viatico.id, data: values }, { onSuccess: onClose });
 
   return (
     <FormModal
       opened={opened}
       onClose={onClose}
-      title="Aprobar viático internacional"
+      title="Aprobar viaje al exterior"
       size="md"
       closeOnClickOutside={false}
       onSubmit={handleSubmit(onSubmit)}
       submitLabel="Aprobar viático"
-      submitting={isSubmitting || aprobar.isPending}
+      submitting={aprobar.isPending}
     >
-      <Stack gap="sm">
-        <Card withBorder radius="md" p="sm" bg="var(--sgth-surface-sunken)">
-          <Text size="xs" c="dimmed">
-            Tarifa base aplicable
-          </Text>
-          <Text size="sm" fw={700} c="ocean">
-            ${tarifaBase.toFixed(2)} por noche
-          </Text>
-          <Text size="xs" c="dimmed" mt={4}>
-            {noches} noche(s) de comisión
-          </Text>
-        </Card>
-
-        <TextInput
-          label="País de destino"
-          placeholder="Ej: Colombia"
-          {...contained}
-          {...register("pais_destino")}
-          error={errors.pais_destino?.message}
+      <Stack gap="md">
+        <Controller
+          name="pais_destino"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="País de destino"
+              data={PAISES_OPTIONS}
+              searchable
+              {...contained}
+              value={field.value || null}
+              onChange={(v) => field.onChange(v ?? "")}
+              error={errors.pais_destino?.message}
+            />
+          )}
         />
 
         <Controller
@@ -115,13 +83,12 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
           control={control}
           render={({ field }) => (
             <NumberInput
-              label="Coeficiente"
-              description="Factor multiplicador según el país (Ej: 1.5)"
-              placeholder="1.0"
+              label="Coeficiente del país"
+              description="Multiplica la tarifa base del exterior. Ej: 1.5"
               decimalScale={4}
               min={0.1}
               max={5}
-              step={0.1}
+              hideControls
               {...contained}
               value={field.value}
               onChange={(v) => field.onChange(typeof v === "number" ? v : 1)}
@@ -130,21 +97,15 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
           )}
         />
 
-        <Divider />
-
-        <Card withBorder radius="md" p="sm">
+        <Paper withBorder radius="md" p="md" bg="var(--sgth-surface-sunken)">
           <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              Monto calculado:
-            </Text>
-            <Text size="lg" fw={700} c="emerald">
-              ${montoCalculado.toFixed(2)}
-            </Text>
+            <Text size="sm" c="dimmed">Monto del viático</Text>
+            <Text size="lg" fw={700}>{dolares(monto)}</Text>
           </Group>
           <Text size="xs" c="dimmed" mt={4}>
-            ${tarifaBase.toFixed(2)} ×{coef.toFixed(4)} ×{noches} noches
+            {dolares(tarifaBase)} por noche × {coef.toFixed(4)} × {noches} {noches === 1 ? "noche" : "noches"}
           </Text>
-        </Card>
+        </Paper>
       </Stack>
     </FormModal>
   );
