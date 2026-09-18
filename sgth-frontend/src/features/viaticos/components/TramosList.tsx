@@ -16,6 +16,7 @@ import {
   IconShip,
   IconMapPin,
   IconTrash,
+  IconPencil,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
@@ -27,6 +28,8 @@ import { formatFechaHora } from "@/lib/fecha";
 interface Props {
   viaticoId: number;
   puedeEditar?: boolean;
+  /** Corregir un tramo sin borrarlo. Antes solo se podía borrar y volver a crear. */
+  onCorregir?: (tramo: TramoViatico) => void;
 }
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
@@ -67,7 +70,7 @@ function LugarText({
   return <Text size="sm">{[pais, ciudad].filter(Boolean).join(" / ")}</Text>;
 }
 
-export function TramosList({ viaticoId, puedeEditar }: Props) {
+export function TramosList({ viaticoId, puedeEditar, onCorregir }: Props) {
   const { data: tramos = [], isLoading } = useTramos(viaticoId);
   const qc = useQueryClient();
 
@@ -77,7 +80,8 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
     onSuccess: () => {
       notificar.exito("Tramo eliminado", "El tramo fue eliminado del itinerario.");
       qc.invalidateQueries({ queryKey: ["tramos", viaticoId] });
-      qc.invalidateQueries({ queryKey: ["viatico", viaticoId] });
+      // La ficha se consulta por código: con la clave corta se refresca.
+      qc.invalidateQueries({ queryKey: ["viatico"] });
     },
     onError: notificar.alFallar("No se pudo eliminar el tramo"),
   });
@@ -143,11 +147,20 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                     )}
                   </Group>
                   {puedeEditar && (
+                    <Group gap={4} wrap="nowrap">
+                    {onCorregir && (
+                      <Tooltip label="Corregir tramo">
+                        <ActionIcon size="sm" variant="subtle" aria-label="Corregir tramo" onClick={() => onCorregir(t)}>
+                          <IconPencil size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
                     <Tooltip label="Eliminar tramo">
                       <ActionIcon
-                        size="xs"
+                        size="sm"
                         color="red"
                         variant="subtle"
+                        aria-label="Eliminar tramo"
                         loading={eliminar.isPending}
                         onClick={() =>
                           confirmar({
@@ -159,9 +172,10 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                           })
                         }
                       >
-                        <IconTrash size={12} />
+                        <IconTrash size={14} />
                       </ActionIcon>
                     </Tooltip>
+                    </Group>
                   )}
                 </Group>
               }

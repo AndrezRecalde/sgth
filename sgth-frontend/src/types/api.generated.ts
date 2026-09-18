@@ -26780,7 +26780,6 @@ export interface operations {
                     datetime_salida: string;
                     /** Format: date-time */
                     datetime_llegada: string;
-                    orden?: number | null;
                     /** @enum {string|null} */
                     tipo_tramo?: "ida" | "destino" | "escala" | "regreso" | null;
                 };
@@ -26802,7 +26801,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -26838,9 +26836,8 @@ export interface operations {
                     datetime_salida?: string;
                     /** Format: date-time */
                     datetime_llegada?: string;
-                    orden?: number;
-                    /** @enum {string} */
-                    tipo_tramo?: "ida" | "destino" | "escala" | "regreso";
+                    /** @enum {string|null} */
+                    tipo_tramo?: "ida" | "destino" | "escala" | "regreso" | null;
                 };
             };
         };
@@ -26854,13 +26851,12 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Tramo actualizado.";
-                        datos: components["schemas"]["TramoViatico"] | null;
+                        datos: components["schemas"]["TramoViatico"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
@@ -26893,7 +26889,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
         };
     };

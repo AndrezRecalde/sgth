@@ -64,6 +64,7 @@ final class ViaticoEstadoService
         private readonly ViaticoServiceInterface $viaticos,
         private readonly CalculoViaticoService $calculo,
         private readonly FirmanteViaticoService $firmantes,
+        private readonly ItinerarioViaticoService $itinerario,
     ) {}
 
     // ── Transiciones ─────────────────────────────────────────────────
@@ -86,9 +87,12 @@ final class ViaticoEstadoService
         return $this->transicionar($viaticoId, $user, EstadoViatico::APROBADO, null, function (Viatico $viatico) use ($user, $datos) {
             $this->noSobreElPropio($viatico, $user, 'aprobar');
 
-            if (! $viatico->tramos()->exists()) {
+            // Itinerario completo: sale con el viático y vuelve con él. Sin tramo
+            // de regreso no se aprueba (decisión del usuario, 2026-09-18).
+            $faltas = $this->itinerario->problemas($viatico);
+            if ($faltas !== []) {
                 throw new ReglaNegocioException(
-                    'El viático no tiene itinerario: registre al menos un tramo antes de aprobarlo.'
+                    'Revise el itinerario antes de aprobar: '.implode(' ', $faltas)
                 );
             }
 
