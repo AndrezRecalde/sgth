@@ -79,7 +79,7 @@ export function ViaticoAnticipoCard({ viatico: d }: Props) {
                 Partida presupuestaria
               </Text>
               <Text size="xs" fw={600} ff="monospace">
-                {d.partida_presupuestaria ?? "—"}
+                {d.partida_presupuestaria?.codigo ?? "—"}
               </Text>
             </Group>
           </>

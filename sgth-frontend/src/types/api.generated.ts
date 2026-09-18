@@ -10525,7 +10525,6 @@ export interface components {
             monto_calculado: string;
             monto_anticipo: string;
             numero_resolucion: string | null;
-            partida_presupuestaria: string | null;
             created_by: number | null;
             updated_by: number | null;
             /** Format: date-time */
@@ -10546,6 +10545,7 @@ export interface components {
             noches: number;
             coeficiente_exterior: string | null;
             motivo_rechazo: string | null;
+            partida_presupuestaria_id: number | null;
         };
         /** VistoBueno */
         VistoBueno: {
@@ -28044,7 +28044,7 @@ export interface operations {
             content: {
                 "application/json": {
                     numero_resolucion: string;
-                    partida_presupuestaria: string;
+                    partida_presupuestaria_id: number;
                 };
             };
         };
@@ -28226,7 +28226,7 @@ export interface operations {
             content: {
                 "application/json": {
                     numero_resolucion?: string;
-                    partida_presupuestaria?: string;
+                    partida_presupuestaria_id?: number;
                 };
             };
         };

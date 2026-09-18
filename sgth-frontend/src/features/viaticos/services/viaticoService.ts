@@ -13,8 +13,9 @@ export type { CrearTramoData } from './tramoService'
 
 /** Lo que asigna Financiero para respaldar el pago. */
 export type RespaldoContable = {
-  numero_resolucion:      string
-  partida_presupuestaria: string
+  numero_resolucion:         string
+  /** Del catálogo de partidas de Estructura. */
+  partida_presupuestaria_id: number
 }
 
 export const viaticoService = {

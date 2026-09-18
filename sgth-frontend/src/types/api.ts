@@ -251,6 +251,8 @@ export type ViaticoFirmante = {
 
 export type ViaticoConRelaciones = Viatico & {
   coeficiente_exterior?: number | string | null;
+  /** La imputación del gasto, del catálogo de Estructura. */
+  partida_presupuestaria?: { id: number; codigo?: string; descripcion?: string } | null;
   calculo?: CalculoViatico
   servidor?: {
     id:              number

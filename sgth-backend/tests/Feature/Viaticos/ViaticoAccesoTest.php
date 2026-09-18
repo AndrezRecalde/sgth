@@ -290,7 +290,7 @@ it('el anticipo, la comisión y la liquidación pendiente los marca quien opera'
     ];
 
     // Entregar el anticipo pide además la resolución y la partida.
-    $respaldo = ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301'];
+    $respaldo = ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id];
 
     foreach ($pasos as $accion => $estado) {
         ($this->en)($estado);
@@ -312,7 +312,7 @@ it('devolver a corrección y contabilizar es de quien revisa la liquidación', f
     $url = "/api/v1/viaticos/{$this->viatico->id}/{$accion}";
 
     // Contabilizar un viático sin anticipo pide la resolución y la partida.
-    $motivo = ['motivo' => 'Falta la factura del hotel'] + ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301'];
+    $motivo = ['motivo' => 'Falta la factura del hotel'] + ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id];
 
     $this->actingAs($this->deTitular, 'sanctum')->postJson($url, $motivo)->assertForbidden();
     $this->actingAs($this->adminUath, 'sanctum')->postJson($url, $motivo)->assertForbidden();

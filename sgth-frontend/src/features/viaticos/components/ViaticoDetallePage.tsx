@@ -226,7 +226,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
             marcarPendienteLiquidacion.mutate(d.id)
           }
           onContabilizar={() =>
-            d.numero_resolucion && d.partida_presupuestaria
+            d.numero_resolucion && d.partida_presupuestaria_id
               ? contabilizar.mutate({ id: d.id })
               : setConRespaldo("contabilizar")
           }

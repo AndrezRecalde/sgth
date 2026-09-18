@@ -12,6 +12,7 @@ use App\Services\Viatico\CalculoViaticoService;
 use App\Services\Viatico\ComprobantesViaticoService;
 use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -101,6 +102,7 @@ class ViaticoController extends Controller
             'historial.usuario:id,usuario_ti,email,servidor_id',
             'historial.usuario.servidor:id,nombre,apellido',
             'firmantes',
+            'partidaPresupuestaria',
         ]);
 
         $viatico = is_numeric($identificador)
@@ -281,14 +283,12 @@ class ViaticoController extends Controller
         $this->authorize('operar', Viatico::findOrFail($id));
 
         // Financiero asigna la resolución y la partida al entregar el dinero
-        // (decidido con ellos): sin eso no hay con qué respaldar el pago.
+        // (decidido con ellos): sin eso no hay con qué respaldar el pago. La
+        // partida sale del catálogo de Estructura, no de un campo de texto.
         $datos = $request->validate([
-            'numero_resolucion'      => ['required', 'string', 'max:100'],
-            'partida_presupuestaria' => ['required', 'string', 'max:100'],
-        ], [
-            'numero_resolucion.required'      => 'Indique el número de resolución.',
-            'partida_presupuestaria.required' => 'Indique la partida presupuestaria.',
-        ]);
+            'numero_resolucion'         => ['required', 'string', 'max:100'],
+            'partida_presupuestaria_id' => ['required', 'integer', $this->partidaVigente()],
+        ], $this->mensajesDelRespaldo());
 
         $viatico = $this->estados->entregarAnticipo($id, $request->user(), $datos);
 
@@ -351,17 +351,14 @@ class ViaticoController extends Controller
 
         // En un viático sin anticipo no hubo entrega, así que la resolución y
         // la partida se piden aquí. El que ya las tiene no las vuelve a pedir.
-        $exigir = $viatico->numero_resolucion && $viatico->partida_presupuestaria
+        $exigir = $viatico->numero_resolucion && $viatico->partida_presupuestaria_id
             ? 'nullable'
             : 'required';
 
         $datos = $request->validate([
-            'numero_resolucion'      => [$exigir, 'string', 'max:100'],
-            'partida_presupuestaria' => [$exigir, 'string', 'max:100'],
-        ], [
-            'numero_resolucion.required'      => 'Indique el número de resolución.',
-            'partida_presupuestaria.required' => 'Indique la partida presupuestaria.',
-        ]);
+            'numero_resolucion'         => [$exigir, 'string', 'max:100'],
+            'partida_presupuestaria_id' => [$exigir, 'integer', $this->partidaVigente()],
+        ], $this->mensajesDelRespaldo());
 
         $liquidacion = $this->estados->contabilizar($id, $request->user(), array_filter($datos));
 
@@ -381,6 +378,22 @@ class ViaticoController extends Controller
         }
 
         return $datos;
+    }
+
+    /** Solo se imputa a una partida vigente del catálogo. */
+    private function partidaVigente(): \Illuminate\Validation\Rules\Exists
+    {
+        return Rule::exists('partidas_presupuestarias', 'id')->where('activo', true);
+    }
+
+    /** @return array<string, string> */
+    private function mensajesDelRespaldo(): array
+    {
+        return [
+            'numero_resolucion.required'         => 'Indique el número de resolución.',
+            'partida_presupuestaria_id.required' => 'Elija la partida presupuestaria.',
+            'partida_presupuestaria_id.exists'   => 'Esa partida presupuestaria no está vigente.',
+        ];
     }
 
     /** La zona como texto: el modelo la castea a enum. */

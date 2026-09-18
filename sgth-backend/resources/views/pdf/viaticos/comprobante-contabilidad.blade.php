@@ -325,7 +325,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
     <div class="benef-lbl">Resolución:</div>
     <div class="benef-val">{{ $viatico->numero_resolucion ?: '—' }}</div>
     <div class="benef-tipo">
-      PARTIDA: <span class="tipo-badge">{{ $viatico->partida_presupuestaria ?: '—' }}</span>
+      PARTIDA: <span class="tipo-badge">{{ $viatico->partidaPresupuestaria?->codigo ?: '—' }}</span>
     </div>
   </div>
 </div>

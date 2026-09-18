@@ -102,7 +102,7 @@ beforeEach(function () {
     $this->motivo = ['motivo' => 'La documentación no corresponde'];
 
     // Entregar el anticipo y contabilizar piden el respaldo contable.
-    $this->respaldo = ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301'];
+    $this->respaldo = ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id];
 });
 
 // ── Grafo de estados ─────────────────────────────────────────────────
@@ -358,7 +358,7 @@ it('sin resolución ni partida no se entrega el anticipo', function () {
         ->assertStatus(422)
         ->json('errores');
 
-    expect(array_keys($errores))->toBe(['numero_resolucion', 'partida_presupuestaria'])
+    expect(array_keys($errores))->toBe(['numero_resolucion', 'partida_presupuestaria_id'])
         ->and($viatico->fresh()->estado)->toBe(EstadoViatico::APROBADO);
 
     ($this->post)($this->financiero, $viatico, 'entregar-anticipo', $this->respaldo)->assertOk();
@@ -366,7 +366,7 @@ it('sin resolución ni partida no se entrega el anticipo', function () {
     expect($viatico->fresh())
         ->estado->toBe(EstadoViatico::CON_ANTICIPO)
         ->numero_resolucion->toBe('RES-2026-001')
-        ->partida_presupuestaria->toBe('530301');
+        ->partida_presupuestaria_id->toBe(partidaDeViatico()->id);
 });
 
 it('el viático sin anticipo las pide al contabilizar, y el que ya las tiene no', function () {
@@ -383,7 +383,7 @@ it('el viático sin anticipo las pide al contabilizar, y el que ya las tiene no'
 
     // Con el anticipo entregado ya vienen asignadas: no se vuelven a pedir.
     $conAnticipo = ($this->viaticoDe)($this->titular, EstadoViatico::LIQUIDADO, [
-        'numero_resolucion' => 'RES-2026-002', 'partida_presupuestaria' => '530302',
+        'numero_resolucion' => 'RES-2026-002', 'partida_presupuestaria_id' => partidaDeViatico()->id,
     ]);
     comprobanteAceptado(LiquidacionViatico::create([
         'viatico_id' => $conAnticipo->id, 'total_facturas' => 0,

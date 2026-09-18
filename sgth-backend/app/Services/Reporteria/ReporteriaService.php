@@ -404,6 +404,7 @@ class ReporteriaService implements ReporteriaServiceInterface
             $consulta = DB::table('viaticos')
                 ->join('servidores', 'viaticos.servidor_id', '=', 'servidores.id')
                 ->leftJoin('unidades_administrativas', 'servidores.unidad_administrativa_id', '=', 'unidades_administrativas.id')
+                ->leftJoin('partidas_presupuestarias', 'viaticos.partida_presupuestaria_id', '=', 'partidas_presupuestarias.id')
                 ->whereNull('viaticos.deleted_at')
                 ->whereNotIn('viaticos.estado', ['rechazado', 'cancelado']);
 
@@ -429,7 +430,7 @@ class ReporteriaService implements ReporteriaServiceInterface
                     'viaticos.noches',
                     'viaticos.monto_calculado',
                     'viaticos.monto_anticipo',
-                    'viaticos.partida_presupuestaria',
+                    'partidas_presupuestarias.codigo as partida_presupuestaria',
                 )
                 ->orderByDesc('viaticos.datetime_salida')
                 ->get();

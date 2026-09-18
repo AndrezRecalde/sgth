@@ -4,6 +4,19 @@ use App\Models\Viatico\CategoriaFactura;
 use App\Models\Viatico\FacturaViatico;
 use App\Models\Viatico\LiquidacionViatico;
 
+/** La partida a la que se imputan los viáticos del interior. */
+function partidaDeViatico(): \App\Models\Estructura\PartidaPresupuestaria
+{
+    return \App\Models\Estructura\PartidaPresupuestaria::firstOrCreate(
+        ['codigo' => '530303'],
+        [
+            'descripcion' => 'Viáticos y Subsistencias en el Interior',
+            'grupo_gasto' => 'Bienes y Servicios',
+            'activo'      => true,
+        ],
+    );
+}
+
 /**
  * Un comprobante de hospedaje ya aceptado por Financiero: lo mínimo para que
  * una liquidación se pueda contabilizar.
