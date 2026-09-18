@@ -35,6 +35,7 @@ import { TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
 import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
 import { RespaldoContableModal } from "./RespaldoContableModal";
+import { ViaticoFirmantesCard } from "./ViaticoFirmantesCard";
 import { resumenRevision } from "../utils/revisionComprobantes";
 
 interface Props {
@@ -221,6 +222,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
           </Grid.Col>
         )}
       </Grid>
+
+      <ViaticoFirmantesCard firmantes={d.firmantes ?? []} />
 
       <ViaticoHistorialCard historial={d.historial ?? []} />
 

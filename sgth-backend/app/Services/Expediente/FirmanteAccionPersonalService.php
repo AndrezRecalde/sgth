@@ -24,6 +24,10 @@ use App\Models\Expediente\Subrogacion;
  */
 class FirmanteAccionPersonalService
 {
+    public function __construct(
+        private readonly \App\Services\Estructura\FirmanteOrganigramaService $organigrama,
+    ) {}
+
     /**
      * Copia al movimiento los firmantes vigentes a la fecha de suscripción. Es
      * idempotente: si ya trae firmantes sellados no los pisa, para que una
@@ -53,28 +57,16 @@ class FirmanteAccionPersonalService
      */
     public function resolver(RolFirmaAccionPersonal $rol, string $fecha): array
     {
-        $unidad = $this->unidadDe($rol);
-        $puesto = $unidad?->puestos()
-            ->where('es_jefe', true)
-            ->with('cargo')
-            ->first();
-
-        if (!$puesto) {
-            return ['servidor' => null, 'cargo' => $rol->cargoPorDefecto(), 'subrogado' => false];
-        }
-
-        $cargo = $puesto->cargo?->nombre ?? $rol->cargoPorDefecto();
-
-        $subrogante = $this->subroganteDe($puesto->id, $fecha);
-
-        if ($subrogante) {
-            return ['servidor' => $subrogante, 'cargo' => $cargo, 'subrogado' => true];
-        }
+        $firma = $this->organigrama->jefeDeUnidadEn(
+            $this->unidadDe($rol),
+            $fecha,
+            $rol->cargoPorDefecto(),
+        );
 
         return [
-            'servidor'  => $this->titularDe($puesto->id),
-            'cargo'     => $cargo,
-            'subrogado' => false,
+            'servidor'  => $firma['servidor'],
+            'cargo'     => $firma['cargo'] ?? $rol->cargoPorDefecto(),
+            'subrogado' => $firma['subrogado'],
         ];
     }
 
@@ -87,34 +79,6 @@ class FirmanteAccionPersonalService
         };
 
         return UnidadAdministrativa::where($columna, true)->first();
-    }
-
-    /**
-     * Titular del puesto: el servidor con contrato vigente sobre él. Si el
-     * puesto está vacante devuelve null y el documento sale con el cargo pero
-     * sin nombre — es preferible a atribuirle la firma a alguien que no la dio.
-     */
-    private function titularDe(int $puestoId): ?Servidor
-    {
-        return Servidor::whereHas(
-            'contratos',
-            fn ($q) => $q->where('puesto_id', $puestoId)->where('estado', 'vigente')
-        )->first();
-    }
-
-    private function subroganteDe(int $puestoId, string $fecha): ?Servidor
-    {
-        $subrogacion = Subrogacion::with('subrogante')
-            ->where('puesto_subrogado_id', $puestoId)
-            ->where('estado', EstadoSubrogacion::ACTIVA->value)
-            ->whereDate('fecha_inicio', '<=', $fecha)
-            ->where(function ($q) use ($fecha) {
-                $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $fecha);
-            })
-            ->orderByDesc('fecha_inicio')
-            ->first();
-
-        return $subrogacion?->subrogante;
     }
 
     /** @param  array{servidor: ?Servidor, cargo: string, subrogado: bool}  $firma */
@@ -142,11 +106,6 @@ class FirmanteAccionPersonalService
 
     private function nombreCompleto(Servidor $servidor): string
     {
-        return trim(implode(' ', array_filter([
-            $servidor->apellido,
-            $servidor->segundo_apellido,
-            $servidor->nombre,
-            $servidor->segundo_nombre,
-        ])));
+        return $this->organigrama->nombreCompleto($servidor);
     }
 }

@@ -33,6 +33,7 @@ final class UpdateUnidadAdministrativaRequest extends FormRequest
             // UnidadAdministrativaController para no chocar con el índice único.
             'es_unidad_talento_humano' => ['boolean'],
             'es_maxima_autoridad'      => ['boolean'],
+            'es_unidad_financiera'     => ['boolean'],
         ];
     }
 

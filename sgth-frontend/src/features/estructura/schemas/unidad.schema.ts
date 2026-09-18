@@ -22,6 +22,7 @@ const base = {
   // backend desmarca la anterior al mover el anclaje.
   es_unidad_talento_humano: z.boolean().optional(),
   es_maxima_autoridad:      z.boolean().optional(),
+  es_unidad_financiera:     z.boolean().optional(),
 }
 
 export const unidadSchema = z.object(base)

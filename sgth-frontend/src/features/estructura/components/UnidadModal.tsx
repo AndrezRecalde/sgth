@@ -71,6 +71,7 @@ export function UnidadModal({ opened, onClose, unidad, padre }: Props) {
             estado:          unidad!.estado ?? true,
             es_unidad_talento_humano: unidad!.es_unidad_talento_humano ?? false,
             es_maxima_autoridad:      unidad!.es_maxima_autoridad      ?? false,
+            es_unidad_financiera:     unidad!.es_unidad_financiera     ?? false,
           } : { unidad_padre_id: padre ? Number(padre.id) : null }}
           onSubmit={handleSubmit}
           isPending={isPending}

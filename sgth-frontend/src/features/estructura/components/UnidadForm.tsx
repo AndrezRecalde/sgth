@@ -73,6 +73,7 @@ export function UnidadForm({ initialValues, onSubmit, unidadId }: Props) {
       estado:          initialValues?.estado          ?? true,
       es_unidad_talento_humano: initialValues?.es_unidad_talento_humano ?? false,
       es_maxima_autoridad:      initialValues?.es_maxima_autoridad      ?? false,
+      es_unidad_financiera:     initialValues?.es_unidad_financiera     ?? false,
     } satisfies DefaultValues<UnidadFormData>,
   })
 
@@ -322,7 +323,7 @@ export function UnidadForm({ initialValues, onSubmit, unidadId }: Props) {
         <Grid.Col span={12}>
           <Divider
             my="xs"
-            label="Firmas de Acciones de Personal"
+            label="Unidades que firman documentos"
             labelPosition="left"
           />
           <Text size="xs" c="dimmed" mb="xs">
@@ -355,6 +356,21 @@ export function UnidadForm({ initialValues, onSubmit, unidadId }: Props) {
               <Switch
                 label="Unidad de Talento Humano"
                 description="Su jefe firma como Responsable de Talento Humano."
+                checked={!!field.value}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
+              />
+            )}
+          />
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Controller
+            name="es_unidad_financiera"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Unidad de Gestión Financiera"
+                description="Su jefe firma los documentos de viáticos."
                 checked={!!field.value}
                 onChange={(e) => field.onChange(e.currentTarget.checked)}
               />

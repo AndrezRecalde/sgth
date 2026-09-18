@@ -234,6 +234,21 @@ export type CalculoViatico = {
   saldo:                      number
 }
 
+/** Quién firmó un documento del viático, sellado al emitirlo. */
+export type ViaticoFirmante = {
+  id:          number
+  documento:   'solicitud' | 'informe' | 'comprobante'
+  rol:         'maxima_autoridad' | 'jefe_unidad' | 'director_financiero'
+  servidor_id: number | null
+  nombre:      string | null
+  cedula:      string | null
+  cargo:       string
+  subrogado:   boolean
+  /** Lo que no cuadraba al sellar: vacaciones aprobadas sin subrogación. */
+  aviso:       string | null
+  sellado_en:  string
+}
+
 export type ViaticoConRelaciones = Viatico & {
   coeficiente_exterior?: number | string | null;
   calculo?: CalculoViatico
@@ -275,6 +290,7 @@ export type ViaticoConRelaciones = Viatico & {
   autorizaciones_vuelo?: AutorizacionVuelo[]
   motivo_rechazo?: string | null
   historial?: ViaticoHistorialEstado[]
+  firmantes?: ViaticoFirmante[]
 }
 
 // Actualiza EstadoViatico
@@ -485,6 +501,7 @@ export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | '
   // unidad marcada es quien firma. Solo una unidad lleva cada bandera.
   es_unidad_talento_humano?: boolean
   es_maxima_autoridad?: boolean
+  es_unidad_financiera?: boolean
   /** Quién ejerce hoy por subrogación o encargo en esta unidad. El organigrama
    *  muestra al titular del puesto; esto dice cuándo no es quien despacha. */
   subrogaciones_vigentes?: {

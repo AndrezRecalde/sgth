@@ -33,6 +33,7 @@ class UnidadAdministrativa extends Model
         // bandera (índices únicos parciales).
         'es_unidad_talento_humano',
         'es_maxima_autoridad',
+        'es_unidad_financiera',
     ];
 
     protected function casts(): array
@@ -43,6 +44,7 @@ class UnidadAdministrativa extends Model
             'tipo_unidad_id' => 'string',
             'es_unidad_talento_humano' => 'boolean',
             'es_maxima_autoridad'      => 'boolean',
+            'es_unidad_financiera'     => 'boolean',
         ];
     }
 

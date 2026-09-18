@@ -7,9 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class JefeFinancieroService
 {
-    // ID de la unidad Gestión Financiera
-    // Configurable desde .env o config
-    private const UNIDAD_FINANCIERA_ID = 32;
+
 
     /**
      * Retorna el user_id del jefe de Gestión Financiera
@@ -20,18 +18,21 @@ class JefeFinancieroService
     public function obtenerJefeFinanciero(): array
     {
         try {
-            $servidor = Servidor::whereHas('puesto', function ($q) {
-                $q->where('es_jefe', true)
-                  ->where(
-                      'unidad_administrativa_id',
-                      self::UNIDAD_FINANCIERA_ID
-                  );
-            })->with(['puesto.cargo', 'user'])->first();
+            // La unidad viene de la bandera `es_unidad_financiera`; antes
+            // estaba fija por número de registro, que cambia entre bases.
+            $unidadId = UnidadAdministrativa::where('es_unidad_financiera', true)->value('id');
+
+            $servidor = $unidadId
+                ? Servidor::whereHas('puesto', fn ($q) => $q
+                    ->where('es_jefe', true)
+                    ->where('unidad_administrativa_id', $unidadId))
+                    ->with(['puesto.cargo', 'user'])->first()
+                : null;
 
             if (!$servidor || !$servidor->user) {
                 Log::warning(
-                    'JefeFinancieroService: No se encontró ' .
-                    'el jefe de Gestión Financiera (unidad 32).'
+                    'JefeFinancieroService: no se encontró el jefe de la unidad ' .
+                    'marcada como Gestión Financiera.'
                 );
                 return ['user_id' => null, 'cargo' => null];
             }

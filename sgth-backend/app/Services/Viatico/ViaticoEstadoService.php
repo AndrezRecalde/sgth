@@ -65,6 +65,7 @@ final class ViaticoEstadoService
         private readonly JefeFinancieroService $jefeFinanciero,
         private readonly ViaticoServiceInterface $viaticos,
         private readonly CalculoViaticoService $calculo,
+        private readonly FirmanteViaticoService $firmantes,
     ) {}
 
     // ── Transiciones ─────────────────────────────────────────────────
@@ -107,6 +108,10 @@ final class ViaticoEstadoService
             }
 
             $this->aplicarTarifaExterior($viatico, $datos);
+
+            // La solicitud se emite al aprobarla: sus firmas quedan selladas
+            // con quien ejerce cada cargo hoy.
+            $this->firmantes->sellar($viatico, FirmanteViaticoService::SOLICITUD);
         }, 'Solo se aprueba un viático solicitado.');
     }
 
@@ -188,6 +193,8 @@ final class ViaticoEstadoService
             // La cuenta se cierra con lo que hay al presentarla, no con lo que
             // quedó guardado la última vez que se tocaron los comprobantes.
             $this->calculo->guardarEn($liquidacion, $viatico);
+
+            $this->firmantes->sellar($viatico, FirmanteViaticoService::INFORME);
         }, 'La liquidación solo se presenta con el viático pendiente de liquidación.');
     }
 
@@ -227,6 +234,8 @@ final class ViaticoEstadoService
             // resuelve aquí y no en el constructor: el servicio de comprobantes
             // ya depende de este.
             app(ComprobantesViaticoService::class)->asegurarTodoAceptado($liquidacion);
+
+            $this->firmantes->sellar($viatico, FirmanteViaticoService::COMPROBANTE);
 
             $jefe = $this->jefeFinanciero->obtenerJefeFinanciero();
 
