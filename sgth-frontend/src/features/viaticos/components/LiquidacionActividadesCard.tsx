@@ -1,120 +1,56 @@
-"use client";
+'use client'
 
-import {
-  Card,
-  Group,
-  Text,
-  Button,
-  Divider,
-  Stack,
-  Alert,
-  ThemeIcon,
-} from "@mantine/core";
-import {
-  IconClipboardList,
-  IconAlertCircle,
-  IconPencil,
-  IconCircleCheck,
-} from "@tabler/icons-react";
-import type { ActividadData } from "./ActividadesModal";
-import { StatusBadge } from "@/components/ui";
+import { Button, Group, Paper, Stack, Text } from '@mantine/core'
+import { IconClipboardList, IconPencil } from '@tabler/icons-react'
+import { CountBadge } from '@/components/ui'
+import { formatFecha } from '@/lib/fecha'
+import type { ActividadData } from './ActividadesModal'
 
 interface Props {
-  actividades: ActividadData[];
-  /** Sin estas dos, la tarjeta es de solo lectura. */
-  onRegistrar?: () => void;
-  onEditar?: () => void;
+  actividades: ActividadData[]
+  /** Sin estas dos, el bloque es de solo lectura. */
+  onRegistrar?: () => void
+  onEditar?: () => void
 }
 
-export function LiquidacionActividadesCard({
-  actividades,
-  onRegistrar,
-  onEditar,
-}: Props) {
+/** El informe de actividades: qué se hizo cada día de la comisión y dónde. */
+export function LiquidacionActividadesCard({ actividades, onRegistrar, onEditar }: Props) {
   return (
-    <Card withBorder radius="md" h="100%">
+    <Paper withBorder radius="md" p="md" h="100%">
       <Group justify="space-between" mb="sm">
-        <Group gap="xs">
-          <ThemeIcon variant="light" size="sm">
-            <IconClipboardList size={14} />
-          </ThemeIcon>
-          <Text fw={600} size="sm">
-            Informe de actividades
-          </Text>
-        </Group>
-        {actividades.length > 0 && (
-          <StatusBadge>
-            {actividades.length}{" "}
-            {actividades.length === 1 ? "actividad" : "actividades"}
-          </StatusBadge>
-        )}
+        <Text fw={600} size="sm">Informe de actividades</Text>
+        {actividades.length > 0 && <CountBadge>{actividades.length}</CountBadge>}
       </Group>
-      <Divider mb="sm" />
 
       {actividades.length === 0 ? (
-        <Stack gap="xs" align="center" py="md">
-          <Alert
-            icon={<IconAlertCircle size={14} />}
-            color="amber"
-            variant="light"
-            w="100%"
-          >
-            <Text size="xs">
-              Debe registrar las actividades realizadas durante la comisión.
-            </Text>
-          </Alert>
+        <Stack gap="sm">
+          <Text size="sm" c="dimmed">
+            Registre lo que hizo en cada día de la comisión.
+          </Text>
           {onRegistrar && (
-            <Button
-              variant="light"
-              size="sm"
-              leftSection={<IconClipboardList size={14} />}
-              onClick={onRegistrar}
-              fullWidth
-            >
+            <Button variant="light" leftSection={<IconClipboardList size={16} />} onClick={onRegistrar}>
               Registrar actividades
             </Button>
           )}
         </Stack>
       ) : (
-        <Stack gap="xs">
+        <Stack gap="sm">
           {actividades.map((a, i) => (
             <Stack key={i} gap={2}>
-              <Group gap="xs">
-                <IconCircleCheck
-                  size={14}
-                  color="var(--mantine-color-emerald-6)"
-                />
-                <Text size="xs" fw={500}>
-                  {a.fecha
-                    ? new Date(a.fecha).toLocaleDateString("es-EC", {
-                        timeZone: "UTC",
-                        day: "2-digit",
-                        month: "2-digit",
-                      })
-                    : "—"}
-                  {" — "}
-                  {a.lugar}
-                </Text>
-              </Group>
-              {a.descripcion && (
-                <Text size="xs" c="dimmed" ml={22}>
-                  {a.descripcion}
-                </Text>
-              )}
+              {/* `fecha` es una fecha sin hora: formatFecha la lee como tal. */}
+              <Text size="sm" fw={500}>
+                {formatFecha(a.fecha)} · {a.lugar}
+              </Text>
+              {a.descripcion && <Text size="xs" c="dimmed">{a.descripcion}</Text>}
             </Stack>
           ))}
           {onEditar && (
-            <Button
-              size="xs"
-              variant="subtle"
-              leftSection={<IconPencil size={12} />}
-              onClick={onEditar}
-            >
+            <Button variant="subtle" size="xs" leftSection={<IconPencil size={14} />} onClick={onEditar}>
               Editar actividades
             </Button>
           )}
         </Stack>
       )}
-    </Card>
-  );
+    </Paper>
+  )
 }

@@ -1,8 +1,8 @@
 'use client'
 
-import { Card, Divider, Group, Stack, Text, ThemeIcon, Timeline } from '@mantine/core'
-import { IconHistory } from '@tabler/icons-react'
+import { Stack, Text, Timeline } from '@mantine/core'
 import { ESTADO_LABELS, TONO_VIATICO } from '../constants/viatico.constants'
+import { SectionCard } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { formatFechaHora } from '@/lib/fecha'
 import type { ViaticoHistorialEstado } from '@/types/api'
@@ -21,17 +21,7 @@ export function ViaticoHistorialCard({ historial }: Props) {
   if (historial.length === 0) return null
 
   return (
-    <Card withBorder radius="md">
-      <Group gap="xs" mb="sm">
-        <ThemeIcon variant="default" size="sm">
-          <IconHistory size={14} />
-        </ThemeIcon>
-        <Text fw={600} size="sm">
-          Historial
-        </Text>
-      </Group>
-      <Divider mb="sm" />
-
+    <SectionCard title="Historial" description="Quién movió el viático, cuándo y por qué">
       <Timeline active={historial.length - 1} bulletSize={14} lineWidth={2}>
         {historial.map((paso) => (
           <Timeline.Item
@@ -57,6 +47,6 @@ export function ViaticoHistorialCard({ historial }: Props) {
           </Timeline.Item>
         ))}
       </Timeline>
-    </Card>
+    </SectionCard>
   )
 }

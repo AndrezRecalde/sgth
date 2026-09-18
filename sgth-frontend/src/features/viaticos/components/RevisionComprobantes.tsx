@@ -42,7 +42,7 @@ export function RevisionComprobantes({ viatico }: Props) {
   return (
     <Stack gap="xs">
       <Group justify="space-between">
-        <Text size="xs" fw={600} c="dimmed">COMPROBANTES</Text>
+        <Text size="sm" fw={600}>Comprobantes</Text>
         <Group gap={6}>
           <StatusBadge tone="success">{resumen.aceptadas} aceptado(s)</StatusBadge>
           {resumen.observadas > 0 && <StatusBadge tone="danger">{resumen.observadas} observado(s)</StatusBadge>}

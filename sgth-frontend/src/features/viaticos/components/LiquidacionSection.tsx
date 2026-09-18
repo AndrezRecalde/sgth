@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Stack, Grid, Alert, Button, Text } from "@mantine/core";
+import { Stack, Grid, Alert, Button, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconAlertCircle } from "@tabler/icons-react";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
@@ -30,8 +30,8 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
   const { data: categoriasData = [] } = useCategoriasFactura();
   const { data: liquidacionData } = useLiquidacion(viatico.id);
   const { confirmarLiquidacion } = useViaticoMutations();
-  // La presenta el titular o quien opera; Talento Humano y los acompañantes
-  // la ven sin poder tocarla.
+  // La presenta el titular o quien opera; Talento Humano la ve sin poder
+  // tocarla.
   const presenta = useAccionesViatico().liquidar(viatico);
 
   const [actModalAbierto, { open: abrirAct, close: cerrarAct }] =
@@ -112,24 +112,24 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
           variant="light"
         >
           <Text size="xs">
-            Para registrar la liquidación debe completar tanto el{" "}
-            <strong>informe de actividades</strong> como las{" "}
-            <strong>facturas de respaldo</strong>.
+            Para presentar la liquidación complete el{" "}
+            <strong>informe de actividades</strong> y registre los{" "}
+            <strong>comprobantes</strong>.
           </Text>
         </Alert>
       )}
 
       {presenta && (
-        <Button
-          size="md"
-          disabled={!puedeRegistrar}
-          loading={confirmarLiquidacion.isPending}
-          leftSection={<IconCheck size={16} />}
-          onClick={handleRegistrar}
-          fullWidth
-        >
-          Registrar liquidación
-        </Button>
+        <Group justify="flex-end">
+          <Button
+            disabled={!puedeRegistrar}
+            loading={confirmarLiquidacion.isPending}
+            leftSection={<IconCheck size={16} />}
+            onClick={handleRegistrar}
+          >
+            Presentar la liquidación
+          </Button>
+        </Group>
       )}
 
       <ActividadesModal

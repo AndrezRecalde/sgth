@@ -1,7 +1,8 @@
 'use client'
 
-import { Alert, Card, Divider, Group, Stack, Text } from '@mantine/core'
+import { Alert, Divider, Group, Paper, Stack, Text } from '@mantine/core'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { dolares } from '../utils/monto'
 import type { CalculoViatico } from '@/types/api'
 
 /*
@@ -13,7 +14,7 @@ import type { CalculoViatico } from '@/types/api'
 | todos hablaban de «devolver» aunque la institución tuviera que pagar.
 */
 
-const monto = (valor: number) => `$${Number(valor ?? 0).toFixed(2)}`
+const monto = dolares
 
 interface Props {
   calculo: CalculoViatico
@@ -37,7 +38,7 @@ function Fila({
       <Text size="xs" c={fuerte ? undefined : 'dimmed'} fw={fuerte ? 600 : undefined}>
         {label}
       </Text>
-      <Text size="xs" fw={fuerte ? 700 : 600} c={color} ff="monospace">
+      <Text size="xs" fw={fuerte ? 700 : 600} c={color}>
         {valor}
       </Text>
     </Group>
@@ -49,7 +50,7 @@ export function CalculoViaticoCard({ calculo: c, enCurso = false }: Props) {
   const aFavor = c.saldo >= 0
 
   return (
-    <Card withBorder radius="md" p="sm">
+    <Paper withBorder radius="md" p="md" bg="var(--sgth-surface-sunken)">
       <Stack gap={6}>
         <Fila
           label={`Viático por ${c.noches} ${c.noches === 1 ? 'noche' : 'noches'}`}
@@ -103,6 +104,6 @@ export function CalculoViaticoCard({ calculo: c, enCurso = false }: Props) {
           </Alert>
         )}
       </Stack>
-    </Card>
+    </Paper>
   )
 }

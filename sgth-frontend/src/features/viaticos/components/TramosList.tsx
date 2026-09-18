@@ -36,10 +36,10 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
 };
 
 const TIPO_TRAMO_LABELS: Record<string, string> = {
-  ida:     'IDA',
-  destino: 'DESTINO',
-  escala:  'PARADA/ESCALA',
-  regreso: 'REGRESO',
+  ida:     'Ida',
+  destino: 'Destino',
+  escala:  'Parada o escala',
+  regreso: 'Regreso',
 }
 
 function LugarText({
@@ -85,7 +85,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
   if (isLoading) {
     return (
       <Text size="sm" c="dimmed">
-        Cargando itinerario...
+        Cargando el itinerario…
       </Text>
     );
   }
@@ -95,7 +95,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
   if (lista.length === 0) {
     return (
       <Text size="sm" c="dimmed" ta="center" py="md">
-        Sin tramos registrados. Agrega el itinerario del viaje.
+        Todavía no hay tramos en el itinerario.
       </Text>
     );
   }
@@ -134,12 +134,11 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                         size="xs"
                         variant="dot"
                       >
-                        Auth. vuelo:{" "}
                         {estadoAuth === "aprobada"
-                          ? "aprobada"
+                          ? "Vuelo autorizado"
                           : estadoAuth === "rechazada"
-                            ? "rechazada"
-                            : "pendiente"}
+                            ? "Vuelo rechazado"
+                            : "Vuelo por autorizar"}
                       </StatusBadge>
                     )}
                   </Group>

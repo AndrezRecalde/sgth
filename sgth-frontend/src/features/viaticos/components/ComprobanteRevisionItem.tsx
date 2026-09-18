@@ -4,6 +4,7 @@ import { Button, Group, List, Paper, Stack, Text } from '@mantine/core'
 import { IconAlertTriangle, IconCheck, IconMessageExclamation } from '@tabler/icons-react'
 import { formatFecha } from '@/lib/fecha'
 import { REVISION_LABELS, TONO_REVISION, estadoRevision } from '../utils/revisionComprobantes'
+import { dolares } from '../utils/monto'
 import type { ComprobanteRevisado } from '@/types/api'
 import { StatusBadge } from '@/components/ui'
 
@@ -36,7 +37,7 @@ export function ComprobanteRevisionItem({ factura: f, onAceptar, onObservar, car
             </Text>
           </Stack>
           <Stack gap={4} align="flex-end">
-            <Text size="sm" fw={700} ff="monospace">${Number(f.monto ?? 0).toFixed(2)}</Text>
+            <Text size="sm" fw={700}>{dolares(f.monto)}</Text>
             <StatusBadge tone={TONO_REVISION[estado]}>{REVISION_LABELS[estado]}</StatusBadge>
           </Stack>
         </Group>
