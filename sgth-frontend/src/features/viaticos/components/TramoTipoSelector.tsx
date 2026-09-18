@@ -8,26 +8,42 @@ interface Props {
   control: Control<TramoFormData>;
   errors: FieldErrors<TramoFormData>;
   esPrimerTramo: boolean;
+  /** El tramo vuelve al lugar de donde salió la ida: es el regreso. */
+  esRegreso: boolean;
+  /** Adónde llega el tramo, para la pregunta. */
+  destino: string;
+  /** De donde salió el viaje. */
+  base: string;
 }
 
 const OPCIONES = [
-  { value: "destino", label: "Destino", description: "Aquí se hacen actividades de la comisión." },
-  { value: "escala", label: "Parada o escala", description: "Solo se pasa por aquí, sin actividades." },
-  { value: "regreso", label: "Regreso", description: "El último tramo, de vuelta a Esmeraldas." },
+  { value: "destino", label: "Sí", description: "Aquí realiza actividades de la comisión." },
+  { value: "escala", label: "No", description: "Solo pasa por aquí, sin actividades." },
 ];
 
 /*
-| Qué es el tramo en el viaje. El primero siempre es la ida.
+| Lo único que se pregunta sobre el tipo del tramo.
 |
-| Con `Radio.Card`: se elige con el teclado, se anuncia como opción y marca
-| la selección con el color del tema. Antes eran tarjetas con una casilla
-| dibujada a mano y una «V» como marca.
+| La ida (el primero) y el regreso (el último, si vuelve al lugar de salida)
+| los deduce el sistema. De los demás, en un viaje a varios lugares, solo
+| quien viaja sabe si trabajó ahí o solo pasó: eso decide qué lugares salen
+| como destino en la solicitud. Antes se elegía entre «destino», «parada o
+| escala» y «regreso», una distinción que se podía contradecir con el resto
+| del itinerario.
 */
-export function TramoTipoSelector({ control, errors, esPrimerTramo }: Props) {
+export function TramoTipoSelector({ control, errors, esPrimerTramo, esRegreso, destino, base }: Props) {
   if (esPrimerTramo) {
     return (
       <Alert color="ocean" variant="light" p="xs">
-        Es el primer tramo: se registra como la ida.
+        Es el primer tramo: la ida del viaje.
+      </Alert>
+    );
+  }
+
+  if (esRegreso) {
+    return (
+      <Alert color="ocean" variant="light" p="xs">
+        Vuelve a {base}: es el regreso del viaje.
       </Alert>
     );
   }
@@ -37,10 +53,15 @@ export function TramoTipoSelector({ control, errors, esPrimerTramo }: Props) {
       name="tipo_tramo"
       control={control}
       render={({ field }) => (
-        <Radio.Group value={field.value ?? null} onChange={field.onChange} error={errors.tipo_tramo?.message}>
-          <Grid>
+        <Radio.Group
+          label={destino ? `¿Realiza actividades en ${destino}?` : "¿Realiza actividades en este lugar?"}
+          value={field.value === "escala" ? "escala" : "destino"}
+          onChange={field.onChange}
+          error={errors.tipo_tramo?.message}
+        >
+          <Grid mt="xs">
             {OPCIONES.map((o) => (
-              <Grid.Col key={o.value} span={{ base: 12, sm: 4 }}>
+              <Grid.Col key={o.value} span={{ base: 12, sm: 6 }}>
                 <Radio.Card value={o.value} radius="md" p="sm" h="100%">
                   <Group wrap="nowrap" align="flex-start" gap="sm">
                     <Radio.Indicator />

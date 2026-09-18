@@ -99,11 +99,29 @@ it('un tramo no se cruza con otro, y llega después de salir', function () {
         ->assertStatus(422)->assertJsonValidationErrors(['datetime_llegada'], 'errores');
 });
 
-it('hay un solo regreso y es el último tramo', function () {
-    ($this->post)(($this->tramo)('Quito', 'Esmeraldas', '2026-10-08 10:00', '2026-10-08 18:00', ['tipo_tramo' => 'regreso']))->assertCreated();
+it('el regreso es el último tramo si vuelve al lugar de salida; pasar por él a mitad del viaje es un destino', function () {
+    // Esmeraldas → Quito → Esmeraldas → Atacames → Esmeraldas. Se escribe en
+    // minúsculas a propósito: es el mismo lugar.
+    ($this->post)(($this->tramo)('Esmeraldas', 'Quito', '2026-10-06 08:00', '2026-10-06 14:00'))->assertCreated();
+    ($this->post)(($this->tramo)('Quito', 'esmeraldas', '2026-10-07 06:00', '2026-10-07 12:00'))->assertCreated();
+    ($this->post)(($this->tramo)('Esmeraldas', 'Atacames', '2026-10-07 14:00', '2026-10-07 15:00'))->assertCreated();
 
-    ($this->post)(($this->tramo)('Quito', 'Esmeraldas', '2026-10-07 10:00', '2026-10-07 15:00', ['tipo_tramo' => 'regreso']))
-        ->assertStatus(422)->assertJsonValidationErrors(['tipo_tramo'], 'errores');
+    // Sin volver, el último no es regreso.
+    expect(($this->numeracion)())->toBe(['1:Quito:ida', '2:esmeraldas:destino', '3:Atacames:destino']);
+
+    ($this->post)(($this->tramo)('Atacames', 'Esmeraldas', '2026-10-08 16:00', '2026-10-08 18:00'))->assertCreated();
+
+    expect(($this->numeracion)())->toBe(['1:Quito:ida', '2:esmeraldas:destino', '3:Atacames:destino', '4:Esmeraldas:regreso'])
+        ->and(($this->problemas)())->toBe([]);
+});
+
+it('quien viaja solo dice si realiza actividades: la ida y el regreso los decide el sistema', function () {
+    // Pide «regreso» en un tramo que no vuelve, e «ida» en uno que no es el primero.
+    ($this->post)(($this->tramo)('Esmeraldas', 'Quito', '2026-10-06 08:00', '2026-10-06 14:00', ['tipo_tramo' => 'regreso']))->assertCreated();
+    ($this->post)(($this->tramo)('Quito', 'Latacunga', '2026-10-07 08:00', '2026-10-07 10:00', ['tipo_tramo' => 'escala']))->assertCreated();
+    ($this->post)(($this->tramo)('Latacunga', 'Ambato', '2026-10-07 11:00', '2026-10-07 12:00', ['tipo_tramo' => 'ida']))->assertCreated();
+
+    expect(($this->numeracion)())->toBe(['1:Quito:ida', '2:Latacunga:escala', '3:Ambato:destino']);
 });
 
 it('al borrar la ida el siguiente tramo pasa a serlo, sin saltos en la numeración', function () {
@@ -131,7 +149,7 @@ it('un tramo se corrige sin borrarlo', function () {
 
 it('sin regreso, o si cambian las fechas del viático, se avisa y no se aprueba', function () {
     ($this->post)(($this->tramo)('Esmeraldas', 'Quito', '2026-10-06 08:00', '2026-10-06 14:00'))->assertCreated();
-    expect(($this->problemas)())->toBe(['Falta el tramo de regreso.']);
+    expect(($this->problemas)())->toBe(['Falta el tramo de regreso: el último tramo tiene que volver a Esmeraldas.']);
 
     ($this->post)(($this->tramo)('Quito', 'Esmeraldas', '2026-10-08 10:00', '2026-10-08 18:00', ['tipo_tramo' => 'regreso']))->assertCreated();
     expect(($this->problemas)())->toBe([]);

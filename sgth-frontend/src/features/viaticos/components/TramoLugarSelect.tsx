@@ -19,6 +19,8 @@ interface Props {
   onTipoChange: (v: string) => void;
   onProvinciaChange: (v: string | null) => void;
   setValue: UseFormSetValue<TramoFormData>;
+  /** Viaje dentro del país: no se pregunta «nacional o internacional». */
+  soloNacional?: boolean;
 }
 
 export function TramoLugarSelect({
@@ -33,6 +35,7 @@ export function TramoLugarSelect({
   onTipoChange,
   onProvinciaChange,
   setValue,
+  soloNacional = false,
 }: Props) {
   const contained = useContainedInput();
 
@@ -44,25 +47,27 @@ export function TramoLugarSelect({
 
   return (
     <>
-      <Controller
-        name={tipoKey as keyof TramoFormData}
-        control={control}
-        render={({ field }) => (
-          <Select
-            label={`Tipo de ${label.toLowerCase()}`}
-            data={[
-              { value: "nacional", label: "Nacional" },
-              { value: "internacional", label: "Internacional" },
-            ]}
-            {...contained}
-            value={field.value as string}
-            onChange={(v) => {
-              field.onChange(v ?? "nacional");
-              onTipoChange(v ?? "nacional");
-            }}
-          />
-        )}
-      />
+      {!soloNacional && (
+        <Controller
+          name={tipoKey as keyof TramoFormData}
+          control={control}
+          render={({ field }) => (
+            <Select
+              label={`Tipo de ${label.toLowerCase()}`}
+              data={[
+                { value: "nacional", label: "Nacional" },
+                { value: "internacional", label: "Internacional" },
+              ]}
+              {...contained}
+              value={field.value as string}
+              onChange={(v) => {
+                field.onChange(v ?? "nacional");
+                onTipoChange(v ?? "nacional");
+              }}
+            />
+          )}
+        />
+      )}
 
       {tipo === "nacional" ? (
         <>

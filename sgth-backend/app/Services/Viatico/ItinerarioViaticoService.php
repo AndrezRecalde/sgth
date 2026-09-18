@@ -9,6 +9,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /*
@@ -21,12 +22,18 @@ use Illuminate\Validation\ValidationException;
 | Dos clases de reglas (decisión del usuario, 2026-09-18):
 |
 | - Al guardar un tramo se rechaza lo que no puede ser: llegar antes de
-|   salir, salirse de las fechas del viático, cruzarse con otro tramo, dos
-|   regresos o un tramo después del regreso. El error va al campo.
+|   salir, salirse de las fechas del viático o cruzarse con otro tramo. El
+|   error va al campo.
 |
 | - Lo que falta para que el itinerario esté completo —salir con el viático,
 |   volver con él— no bloquea cada cambio: si se cambian las fechas del
 |   viático, los tramos quedan desajustados y se avisa. Se exige al aprobar.
+|
+| El tipo de cada tramo lo deduce el sistema (2026-09-18): el primero es la
+| ida y el último, si vuelve al lugar de donde salió la ida, el regreso. De
+| los demás, quien viaja solo dice si realiza actividades ahí (destino) o
+| solo pasa (escala). Antes elegía entre ida, destino, escala y regreso, una
+| distinción que casi no servía y que se podía contradecir.
 */
 class ItinerarioViaticoService
 {
@@ -34,8 +41,7 @@ class ItinerarioViaticoService
     {
         return DB::transaction(function () use ($viatico, $datos) {
             $tramo = new TramoViatico(['viatico_id' => $viatico->id]);
-            // Sin tipo, un destino; `renumerar` marca como ida el primero.
-            $tramo->fill($this->conTransporte([...$datos, 'tipo_tramo' => $datos['tipo_tramo'] ?? 'destino']));
+            $tramo->fill($this->conTransporte([...$datos, 'tipo_tramo' => $this->respuesta($datos)]));
 
             $this->asegurarCoherente($viatico, $tramo);
             $tramo->save();
@@ -50,6 +56,9 @@ class ItinerarioViaticoService
         return DB::transaction(function () use ($tramo, $datos) {
             if (array_key_exists('catalogo_transporte_id', $datos) || array_key_exists('empresa_transporte_id', $datos)) {
                 $datos = $this->conTransporte($datos, $tramo);
+            }
+            if (array_key_exists('tipo_tramo', $datos)) {
+                $datos['tipo_tramo'] = $this->respuesta($datos);
             }
 
             $tramo->fill($datos);
@@ -95,7 +104,7 @@ class ItinerarioViaticoService
 
         $ultimo = $tramos->last();
         if ($ultimo->tipo_tramo !== 'regreso') {
-            $problemas[] = 'Falta el tramo de regreso.';
+            $problemas[] = "Falta el tramo de regreso: el último tramo tiene que volver a {$primero->origen_ciudad}.";
         } elseif (! $ultimo->datetime_llegada->eq($regreso)) {
             $problemas[] = "El regreso llega el {$this->fecha($ultimo->datetime_llegada)}; el viático regresa el {$this->fecha($regreso)}.";
         }
@@ -141,37 +150,61 @@ class ItinerarioViaticoService
         if ($cruce) {
             $this->error('datetime_salida', "Se cruza con el tramo {$cruce->orden} ({$this->fecha($cruce->datetime_salida)} – {$this->fecha($cruce->datetime_llegada)}).");
         }
-
-        $regreso = $otros->firstWhere('tipo_tramo', 'regreso');
-        if ($tramo->tipo_tramo === 'regreso' && $regreso) {
-            $this->error('tipo_tramo', "Ya hay un tramo de regreso (el {$regreso->orden}).");
-        }
-        if ($regreso && $sale->gte($regreso->datetime_llegada)) {
-            $this->error('datetime_salida', 'Después del regreso no puede haber otro tramo.');
-        }
-        if ($tramo->tipo_tramo === 'regreso' && $otros->contains(fn (TramoViatico $o) => $o->datetime_salida->gte($llega))) {
-            $this->error('tipo_tramo', 'El regreso tiene que ser el último tramo.');
-        }
     }
 
     /**
-     * Numera los tramos por su salida (1, 2, 3…) y marca el primero como la
-     * ida. Antes el orden era «el mayor más uno»: al borrar quedaban saltos, y
-     * al borrar la ida ningún tramo pasaba a serlo.
+     * Numera los tramos por su salida (1, 2, 3…) y deduce su tipo: el primero
+     * es la ida; el último, si vuelve al lugar de donde salió la ida, el
+     * regreso; los demás conservan lo que dijo quien viaja (destino o escala).
+     *
+     * Como se deduce sobre el itinerario entero, no importa en qué orden se
+     * registren los tramos. Si el viaje pasa por el lugar de partida a mitad
+     * de camino, ese tramo es un destino: el regreso es solo el último.
      */
     private function renumerar(Viatico $viatico): void
     {
-        $viatico->tramos()->reorder()->orderBy('datetime_salida')->orderBy('id')->get()
-            ->values()
-            ->each(function (TramoViatico $t, int $i) {
-                $tipo = $i === 0
-                    ? 'ida'
-                    : ($t->tipo_tramo === 'ida' ? 'destino' : $t->tipo_tramo);
+        $tramos = $viatico->tramos()->reorder()->orderBy('datetime_salida')->orderBy('id')->get()->values();
+        $base = $tramos->first();
+        $ultimo = $tramos->count() - 1;
 
-                if ($t->orden !== $i + 1 || $t->tipo_tramo !== $tipo) {
-                    $t->forceFill(['orden' => $i + 1, 'tipo_tramo' => $tipo])->saveQuietly();
-                }
-            });
+        $tramos->each(function (TramoViatico $t, int $i) use ($base, $ultimo) {
+            $tipo = match (true) {
+                $i === 0                                    => 'ida',
+                $i === $ultimo && $this->vuelveA($t, $base) => 'regreso',
+                in_array($t->tipo_tramo, ['destino', 'escala'], true) => $t->tipo_tramo,
+                default                                     => 'destino',
+            };
+
+            if ($t->orden !== $i + 1 || $t->tipo_tramo !== $tipo) {
+                $t->forceFill(['orden' => $i + 1, 'tipo_tramo' => $tipo])->saveQuietly();
+            }
+        });
+    }
+
+    /**
+     * Si el tramo llega al lugar de donde salió la ida. Por el cantón cuando
+     * los dos lo tienen; si no, por la ciudad escrita, sin mayúsculas ni
+     * tildes («Esmeraldas» y «esmeraldas» son el mismo lugar).
+     */
+    private function vuelveA(TramoViatico $tramo, TramoViatico $ida): bool
+    {
+        if ($tramo->destino_canton_id && $ida->origen_canton_id) {
+            return (int) $tramo->destino_canton_id === (int) $ida->origen_canton_id;
+        }
+
+        $lugar = fn (?string $ciudad) => Str::of((string) $ciudad)->ascii()->lower()->squish()->value();
+
+        return $lugar($tramo->destino_ciudad) !== '' && $lugar($tramo->destino_ciudad) === $lugar($ida->origen_ciudad);
+    }
+
+    /**
+     * Lo único que decide quien viaja sobre el tipo: si en ese lugar realiza
+     * actividades (destino) o solo pasa (escala). La ida y el regreso los
+     * deduce `renumerar`, aunque lleguen en la petición.
+     */
+    private function respuesta(array $datos): string
+    {
+        return ($datos['tipo_tramo'] ?? null) === 'escala' ? 'escala' : 'destino';
     }
 
     /**

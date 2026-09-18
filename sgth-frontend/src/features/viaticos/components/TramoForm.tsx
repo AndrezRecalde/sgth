@@ -14,7 +14,7 @@ import { TramoLugarSelect } from "./TramoLugarSelect";
 import { TramoTipoSelector } from "./TramoTipoSelector";
 import { TramoTransporteCampos } from "./TramoTransporteCampos";
 import { erroresDeCampo } from "@/lib/erroresDeCampo";
-import { fromDateTimeValue } from "@/lib/fecha";
+import { CIUDAD_BASE, TRAMO_VACIO, desdeTramo, mismoLugar, valoresNuevoTramo } from "../utils/itinerario";
 import type { TramoViatico, Viatico } from "@/types/api";
 
 /** El `id` del formulario: el botón de enviar vive en el pie del modal. */
@@ -25,57 +25,17 @@ export const CREAR_TRAMO = ["crear-tramo"];
 interface Props {
   viaticoId: number;
   viatico?: Viatico | null;
-  tramosExistentes?: number;
+  /** Los tramos que ya tiene el itinerario: de ellos sale lo que se prellena. */
+  tramos?: TramoViatico[];
   /** Con esto se corrige ese tramo; sin él, se agrega uno nuevo. */
   tramo?: TramoViatico | null;
   onSuccess: () => void;
-}
-
-/** Los valores de un tramo guardado, para corregirlo. */
-function desdeTramo(t: TramoViatico): TramoFormData {
-  return {
-    tipo_tramo: t.tipo_tramo ?? null,
-    origen_tipo: t.origen_tipo,
-    origen_provincia_id: t.origen_provincia_id ?? null,
-    origen_canton_id: t.origen_canton_id ?? null,
-    origen_pais: t.origen_pais ?? null,
-    origen_ciudad: t.origen_ciudad,
-    destino_tipo: t.destino_tipo,
-    destino_provincia_id: t.destino_provincia_id ?? null,
-    destino_canton_id: t.destino_canton_id ?? null,
-    destino_pais: t.destino_pais ?? null,
-    destino_ciudad: t.destino_ciudad,
-    catalogo_transporte_id: t.catalogo_transporte_id,
-    empresa_transporte_id: t.empresa_transporte_id ?? null,
-    // Un tramo con empresa es de un tipo que las tiene.
-    con_empresas: t.empresa_transporte_id != null,
-    datetime_salida: fromDateTimeValue(t.datetime_salida),
-    datetime_llegada: fromDateTimeValue(t.datetime_llegada),
-  };
 }
 
 type Opcion = { id: number; nombre?: string | null };
 const opciones = (lista: Opcion[]) =>
   lista.map((o) => ({ value: String(o.id), label: o.nombre ?? "" }));
 
-const VACIO: TramoFormData = {
-  tipo_tramo: null,
-  origen_tipo: "nacional",
-  origen_provincia_id: null,
-  origen_canton_id: null,
-  origen_pais: null,
-  origen_ciudad: "",
-  destino_tipo: "nacional",
-  destino_provincia_id: null,
-  destino_canton_id: null,
-  destino_pais: null,
-  destino_ciudad: "",
-  catalogo_transporte_id: 0,
-  empresa_transporte_id: null,
-  con_empresas: false,
-  datetime_salida: "",
-  datetime_llegada: "",
-};
 
 /*
 | Un tramo del itinerario, nuevo o para corregirlo: de dónde a dónde, en qué
@@ -85,22 +45,36 @@ const VACIO: TramoFormData = {
 | Antes el formulario traía su Cancelar y su Agregar debajo de los campos, y
 | con un error de validación quedaban fuera de la vista.
 */
-export function TramoForm({ viaticoId, viatico, tramosExistentes, tramo, onSuccess }: Props) {
+export function TramoForm({ viaticoId, viatico, tramos = [], tramo, onSuccess }: Props) {
   const qc = useQueryClient();
 
   const { control, handleSubmit, setValue, setError, formState: { errors } } =
     useForm<TramoFormData>({
       resolver: zodResolver(tramoSchema),
-      defaultValues: tramo ? desdeTramo(tramo) : VACIO,
+      defaultValues: tramo
+        ? desdeTramo(tramo)
+        : { ...TRAMO_VACIO, tipo_tramo: "destino", ...valoresNuevoTramo(viatico, tramos) },
     });
 
-  const [origenTipo, destinoTipo, origenProv, destinoProv, tipoTramo] = useWatch({
+  const [origenTipo, destinoTipo, origenProv, destinoProv, destinoCanton, destinoCiudad] = useWatch({
     control,
-    name: ["origen_tipo", "destino_tipo", "origen_provincia_id", "destino_provincia_id", "tipo_tramo"],
+    name: [
+      "origen_tipo", "destino_tipo", "origen_provincia_id", "destino_provincia_id",
+      "destino_canton_id", "destino_ciudad",
+    ],
   });
 
-  const esPrimerTramo = tramo ? tramo.orden === 1 : (tramosExistentes ?? 0) === 0;
-  const tipoEfectivo = esPrimerTramo ? "ida" : tipoTramo;
+  // La ida y el regreso los deduce el backend con la misma regla; aquí solo
+  // se anticipa para no preguntar lo que ya se sabe.
+  const ordenados = [...tramos].sort((a, b) => a.orden - b.orden);
+  const ida = ordenados[0];
+  const esPrimerTramo = tramo ? tramo.orden === 1 : ordenados.length === 0;
+  const esUltimo = !tramo || tramo.orden === ordenados.at(-1)?.orden;
+  const esRegreso =
+    !esPrimerTramo && esUltimo && !!ida &&
+    mismoLugar({ canton_id: destinoCanton, ciudad: destinoCiudad }, { canton_id: ida.origen_canton_id, ciudad: ida.origen_ciudad });
+  // Dentro o fuera de la provincia, todo el viaje es en el país.
+  const soloNacional = viatico?.zona !== "exterior";
 
   const { data: provincias = [] } = useProvincias();
   const { data: cantonesOrigen = [] } = useCantones(origenProv ?? null);
@@ -133,18 +107,15 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, tramo, onSucce
         return;
       }
       for (const [campo, mensaje] of Object.entries(campos)) {
-        if (campo in VACIO) setError(campo as keyof TramoFormData, { message: mensaje });
+        if (campo in TRAMO_VACIO) setError(campo as keyof TramoFormData, { message: mensaje });
       }
     },
   });
 
   const onSubmit = (values: TramoFormData) => {
-    if (!tipoEfectivo) {
-      setError("tipo_tramo", { message: "Elija qué es este tramo en el viaje" });
-      return;
-    }
     const { con_empresas: _conEmpresas, ...resto } = values;
-    guardar.mutate({ ...resto, tipo_tramo: tipoEfectivo });
+    // Solo se manda si realiza actividades (destino) o solo pasa (escala).
+    guardar.mutate({ ...resto, tipo_tramo: values.tipo_tramo === "escala" ? "escala" : "destino" });
   };
 
   const limpiarLugar = (prefijo: "origen" | "destino") => () => {
@@ -172,6 +143,7 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, tramo, onSucce
               onTipoChange={limpiarLugar(prefijo)}
               onProvinciaChange={() => setValue(`${prefijo}_canton_id`, null)}
               setValue={setValue}
+              soloNacional={soloNacional}
             />
           </Stack>
         ))}
@@ -188,8 +160,14 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, tramo, onSucce
         </Stack>
 
         <Stack gap="xs">
-          <Text size="sm" fw={600}>Qué es este tramo</Text>
-          <TramoTipoSelector control={control} errors={errors} esPrimerTramo={esPrimerTramo} />
+          <TramoTipoSelector
+            control={control}
+            errors={errors}
+            esPrimerTramo={esPrimerTramo}
+            esRegreso={esRegreso}
+            destino={destinoCiudad}
+            base={ida?.origen_ciudad ?? CIUDAD_BASE}
+          />
         </Stack>
       </Stack>
     </form>
