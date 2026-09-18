@@ -65,6 +65,7 @@ export function BandejaEtapaTabla({ etapa, filtros }: Props) {
           onPageChange={setPage}
           paginationText={PAGINACION_ES.paginationText}
           minHeight={200}
+          pinLastColumn
         />
       </DataState>
     </Stack>

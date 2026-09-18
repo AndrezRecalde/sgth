@@ -5,11 +5,9 @@ import { IconEye } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFechaHora } from '@/lib/fecha'
-import { ESTADO_LABELS, TONO_VIATICO } from '../../constants/viatico.constants'
+import { columnaCodigo, columnaEstado, columnaMonto, columnaPeriodo } from '../viatico.columns'
 import type { SemanticTone } from '@/config/design.tokens'
 import type { EtapaBandeja, ViaticoBandeja } from '@/types/api'
-
-const monto = (v: number | string) => `$${Number(v ?? 0).toFixed(2)}`
 
 /** Cuántos días hábiles quedan para liquidar, o si ya venció. */
 function Plazo({ plazo }: { plazo: ViaticoBandeja['plazo'] }) {
@@ -29,17 +27,13 @@ function Plazo({ plazo }: { plazo: ViaticoBandeja['plazo'] }) {
   )
 }
 
+/** Las columnas de una pestaña: las de todo viático, con quién viaja y, al liquidar, el plazo. */
 export function getBandejaColumns(
   etapa: EtapaBandeja,
   onVer: (v: ViaticoBandeja) => void,
 ): DataTableColumn<ViaticoBandeja>[] {
   return [
-    {
-      accessor: 'codigo_viatico',
-      title:    'Código',
-      width:    170,
-      render:   (v) => <Text size="sm" ff="monospace" fw={500}>{v.codigo_viatico ?? '—'}</Text>,
-    },
+    columnaCodigo(),
     {
       accessor: 'servidor',
       title:    'Servidor',
@@ -50,30 +44,8 @@ export function getBandejaColumns(
         </Stack>
       ),
     },
-    {
-      accessor: 'datetime_salida',
-      title:    'Salida – regreso',
-      width:    200,
-      render:   (v) => (
-        <Text size="xs" ff="monospace">
-          {formatFechaHora(v.datetime_salida, { conHora: false })} – {formatFechaHora(v.datetime_llegada, { conHora: false })}
-        </Text>
-      ),
-    },
-    {
-      accessor: 'monto_calculado',
-      title:    'Monto',
-      width:    110,
-      textAlign: 'right',
-      render:   (v) => (
-        <Stack gap={0} align="flex-end">
-          <Text size="sm" ff="monospace">{monto(v.monto_calculado)}</Text>
-          {Number(v.monto_anticipo) > 0 && (
-            <Text size="xs" c="dimmed" ff="monospace">Anticipo {monto(v.monto_anticipo)}</Text>
-          )}
-        </Stack>
-      ),
-    },
+    columnaPeriodo(),
+    columnaMonto(),
     etapa === 'por_liquidar'
       ? {
           accessor: 'plazo',
@@ -81,16 +53,7 @@ export function getBandejaColumns(
           width:    190,
           render:   (v) => <Plazo plazo={v.plazo} />,
         }
-      : {
-          accessor: 'estado',
-          title:    'Estado',
-          width:    170,
-          render:   (v) => (
-            <StatusBadge tone={TONO_VIATICO[v.estado] ?? 'neutral'}>
-              {ESTADO_LABELS[v.estado] ?? v.estado}
-            </StatusBadge>
-          ),
-        },
+      : columnaEstado(),
     {
       accessor: 'acciones',
       title:    '',

@@ -35,9 +35,9 @@ class ViaticoController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
-        // Sin alcance sobre todos, solo los viáticos en los que viaja: como
-        // titular o como acompañante. Antes el filtro `servidor_id` lo mandaba
-        // el cliente y, sin él, cualquiera veía los de todos.
+        // Sin alcance sobre todos, solo los suyos. Antes el filtro
+        // `servidor_id` lo mandaba el cliente y, sin él, cualquiera veía los
+        // de todos.
         // `propios` es «Mis viáticos»: quien opera también tiene los suyos, y
         // los de todos los ve en la bandeja.
         if ($request->boolean('propios') || ! $request->user()->can('veTodos', Viatico::class)) {
@@ -64,11 +64,12 @@ class ViaticoController extends Controller
             );
         }
 
-        // Búsqueda por código
+        // Búsqueda por código, sin distinguir mayúsculas: los códigos van en
+        // mayúsculas y quien escribía «gadpe-15» no encontraba nada.
         if ($request->filled('search')) {
             $query->where(
                 'codigo_viatico',
-                'like',
+                'ilike',
                 '%' . $request->input('search') . '%'
             );
         }
