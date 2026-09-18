@@ -22,6 +22,7 @@ import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
 import { ViaticoEditModal } from "./ViaticoEditModal";
 import { CREAR_TRAMO, TRAMO_FORM_ID, TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
+import type { TramoViatico } from "@/types/api";
 
 /*
 | La ficha del viático.
@@ -66,7 +67,8 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
   const [editando, { open: abrirEdicion, close: cerrarEdicion }] = useDisclosure(false);
   const [itinerario, { open: abrirItinerario, close: cerrarItinerario }] = useDisclosure(false);
-  const [agregandoTramo, setAgregandoTramo] = useState(false);
+  // El tramo del formulario: uno nuevo, uno que se corrige, o ninguno.
+  const [enForm, setEnForm] = useState<"nuevo" | TramoViatico | null>(null);
   const guardandoTramo = useIsMutating({ mutationKey: CREAR_TRAMO }) > 0;
 
   if (isLoading) return <ViaticoDetalleSkeleton />;
@@ -88,7 +90,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
   const conFirmas = (d.firmantes?.length ?? 0) > 0;
 
   const cerrarModalItinerario = () => {
-    setAgregandoTramo(false);
+    setEnForm(null);
     cerrarItinerario();
   };
 
@@ -151,30 +153,33 @@ export function ViaticoDetallePage({ identificador }: Props) {
       {itinerario && (
         <SgthModal opened onClose={cerrarModalItinerario} title="Editar itinerario" size="xl">
           <Stack gap="md">
-            <TramosList viaticoId={d.id} puedeEditar />
-            {agregandoTramo ? (
+            <TramosList viaticoId={d.id} puedeEditar onCorregir={setEnForm} />
+            {enForm ? (
               <Paper withBorder radius="md" p="md">
                 <Text size="sm" fw={600} mb="sm">
-                  Nuevo tramo
+                  {enForm === "nuevo" ? "Nuevo tramo" : `Corregir el tramo ${enForm.orden}`}
                 </Text>
                 <TramoForm
+                  // La clave vuelve a montar el formulario con los datos de cada tramo.
+                  key={enForm === "nuevo" ? "nuevo" : enForm.id}
                   viaticoId={d.id}
                   viatico={d}
                   tramosExistentes={tramos.length}
-                  onSuccess={() => setAgregandoTramo(false)}
+                  tramo={enForm === "nuevo" ? null : enForm}
+                  onSuccess={() => setEnForm(null)}
                 />
               </Paper>
             ) : (
-              <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => setAgregandoTramo(true)}>
+              <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => setEnForm("nuevo")}>
                 Agregar tramo
               </Button>
             )}
           </Stack>
-          {agregandoTramo ? (
+          {enForm ? (
             <ModalFooter
-              onCancel={() => setAgregandoTramo(false)}
+              onCancel={() => setEnForm(null)}
               form={TRAMO_FORM_ID}
-              submitLabel="Agregar tramo"
+              submitLabel={enForm === "nuevo" ? "Agregar tramo" : "Guardar cambios"}
               submitting={guardandoTramo}
             />
           ) : (

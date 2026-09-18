@@ -35910,13 +35910,6 @@
                                         "type": "string",
                                         "format": "date-time"
                                     },
-                                    "orden": {
-                                        "type": [
-                                            "integer",
-                                            "null"
-                                        ],
-                                        "minimum": 1
-                                    },
                                     "tipo_tramo": {
                                         "type": [
                                             "string",
@@ -35976,9 +35969,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -36094,12 +36084,11 @@
                                         "type": "string",
                                         "format": "date-time"
                                     },
-                                    "orden": {
-                                        "type": "integer",
-                                        "minimum": 1
-                                    },
                                     "tipo_tramo": {
-                                        "type": "string",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
                                         "enum": [
                                             "ida",
                                             "destino",
@@ -36128,14 +36117,7 @@
                                             "const": "Tramo actualizado."
                                         },
                                         "datos": {
-                                            "anyOf": [
-                                                {
-                                                    "$ref": "#/components/schemas/TramoViatico"
-                                                },
-                                                {
-                                                    "type": "null"
-                                                }
-                                            ]
+                                            "$ref": "#/components/schemas/TramoViatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -36151,14 +36133,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -36223,9 +36202,6 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"

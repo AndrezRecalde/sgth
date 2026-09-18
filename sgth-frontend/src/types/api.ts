@@ -262,6 +262,8 @@ export type ViaticoFirmante = {
 
 export type ViaticoConRelaciones = Viatico & {
   coeficiente_exterior?: number | string | null;
+  /** Lo que le falta al itinerario para aprobar; vacío si está completo. */
+  itinerario_problemas?: string[];
   /** La imputación del gasto, del catálogo de Estructura. */
   partida_presupuestaria?: { id: number; codigo?: string; descripcion?: string } | null;
   calculo?: CalculoViatico

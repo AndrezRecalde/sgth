@@ -94,18 +94,28 @@ beforeEach(function () {
         $this->viatico->update(['estado' => $estado]);
     };
 
-    // Aprobar exige al menos un tramo.
+    // Aprobar exige el itinerario completo: la ida y el regreso.
     $this->conItinerario = function () {
         $catalogo = CatalogoTransporte::firstOrCreate(['codigo' => 'BUS'], ['nombre' => 'Bus', 'tipo_vehiculo' => 'terrestre']);
         $empresa = EmpresaTransporte::firstOrCreate(['codigo' => 'TE'], ['catalogo_transporte_id' => $catalogo->id, 'nombre' => 'Trans Esmeraldas']);
 
-        return TramoViatico::create([
-            'viatico_id' => $this->viatico->id,
+        $ida = TramoViatico::create([
+            'viatico_id' => $this->viatico->id, 'orden' => 1, 'tipo_tramo' => 'ida',
             'origen_tipo' => 'nacional', 'origen_ciudad' => 'Esmeraldas',
             'destino_tipo' => 'nacional', 'destino_ciudad' => 'Quinindé',
             'empresa_transporte_id' => $empresa->id,
             'datetime_salida' => '2026-10-05 08:00:00', 'datetime_llegada' => '2026-10-05 11:00:00',
         ]);
+        // Sin tramo de regreso no se aprueba (2026-09-18).
+        TramoViatico::create([
+            'viatico_id' => $this->viatico->id, 'orden' => 2, 'tipo_tramo' => 'regreso',
+            'origen_tipo' => 'nacional', 'origen_ciudad' => 'Quinindé',
+            'destino_tipo' => 'nacional', 'destino_ciudad' => 'Esmeraldas',
+            'empresa_transporte_id' => $empresa->id,
+            'datetime_salida' => '2026-10-07 15:00:00', 'datetime_llegada' => '2026-10-07 18:00:00',
+        ]);
+
+        return $ida;
     };
 });
 

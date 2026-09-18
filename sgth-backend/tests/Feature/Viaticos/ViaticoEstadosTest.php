@@ -86,11 +86,19 @@ beforeEach(function () {
             'modalidad_anticipo' => 'total',
         ], $extra));
         TramoViatico::create([
-            'viatico_id' => $viatico->id,
+            'viatico_id' => $viatico->id, 'orden' => 1, 'tipo_tramo' => 'ida',
             'origen_tipo' => 'nacional', 'origen_ciudad' => 'Esmeraldas',
             'destino_tipo' => 'nacional', 'destino_ciudad' => 'Quinindé',
             'empresa_transporte_id' => $this->empresaBus->id,
             'datetime_salida' => '2026-10-05 08:00:00', 'datetime_llegada' => '2026-10-05 11:00:00',
+        ]);
+        // Sin tramo de regreso no se aprueba (2026-09-18).
+        TramoViatico::create([
+            'viatico_id' => $viatico->id, 'orden' => 2, 'tipo_tramo' => 'regreso',
+            'origen_tipo' => 'nacional', 'origen_ciudad' => 'Quinindé',
+            'destino_tipo' => 'nacional', 'destino_ciudad' => 'Esmeraldas',
+            'empresa_transporte_id' => $this->empresaBus->id,
+            'datetime_salida' => '2026-10-07 15:00:00', 'datetime_llegada' => '2026-10-07 18:00:00',
         ]);
 
         return $viatico;

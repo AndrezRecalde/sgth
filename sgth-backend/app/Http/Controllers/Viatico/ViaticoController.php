@@ -10,6 +10,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Viatico\Viatico;
 use App\Services\Viatico\CalculoViaticoService;
 use App\Services\Viatico\ComprobantesViaticoService;
+use App\Services\Viatico\ItinerarioViaticoService;
 use App\Services\Viatico\ViaticoEstadoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -22,6 +23,7 @@ class ViaticoController extends Controller
         private ViaticoServiceInterface $viaticoService,
         private ViaticoEstadoService $estados,
         private CalculoViaticoService $calculo,
+        private ItinerarioViaticoService $itinerario,
     ) {}
 
     public function index(
@@ -120,6 +122,11 @@ class ViaticoController extends Controller
         // presentado, el 30 % que se reconoce sin comprobante y el saldo. El
         // frontend la rehacía por su cuenta, con otra fórmula.
         $viatico->setAttribute('calculo', $this->calculo->resumen($viatico));
+
+        // Lo que le falta al itinerario para aprobar: la ficha lo avisa. Si se
+        // cambian las fechas del viático, los tramos quedan desajustados y no
+        // se bloquea el cambio (decisión del usuario, 2026-09-18).
+        $viatico->setAttribute('itinerario_problemas', $this->itinerario->problemas($viatico));
 
         return ApiResponse::ok(
             $viatico,
