@@ -13,7 +13,9 @@ export type CrearTramoData = {
   destino_canton_id?:    number | null
   destino_pais?:         string | null
   destino_ciudad:        string
-  empresa_transporte_id: number
+  // El tipo siempre; la empresa solo si el tipo las tiene (bus, avión).
+  catalogo_transporte_id: number
+  empresa_transporte_id:  number | null
   datetime_salida:       string
   datetime_llegada:      string
   orden?:                number

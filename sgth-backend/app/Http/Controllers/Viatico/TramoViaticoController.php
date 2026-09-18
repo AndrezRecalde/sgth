@@ -3,12 +3,15 @@ namespace App\Http\Controllers\Viatico;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\Viatico\EmpresaTransporte;
 use App\Models\Viatico\TramoViatico;
 use App\Models\Viatico\Viatico;
 use App\Services\Viatico\ViaticoEstadoService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class TramoViaticoController extends Controller
 {
@@ -19,7 +22,7 @@ class TramoViaticoController extends Controller
         $this->authorize('ver', Viatico::findOrFail($viaticoId));
 
         $tramos = TramoViatico::with([
-            'empresa.catalogo',
+            'catalogo', 'empresa.catalogo',
             'origenProvincia', 'origenCanton',
             'destinoProvincia', 'destinoCanton',
             'autorizacionVuelo',
@@ -54,12 +57,15 @@ class TramoViaticoController extends Controller
             'destino_canton_id'     => 'nullable|exists:cantones,id',
             'destino_pais'          => 'nullable|string|max:100',
             'destino_ciudad'        => 'required|string|max:150',
-            'empresa_transporte_id' => 'required|exists:empresas_transporte,id',
+            'catalogo_transporte_id' => ['nullable', Rule::exists('catalogo_transportes', 'id')->where('activo', true)],
+            'empresa_transporte_id'  => ['nullable', Rule::exists('empresas_transporte', 'id')->where('activo', true)],
             'datetime_salida'       => 'required|date',
             'datetime_llegada'      => 'required|date|after:datetime_salida',
             'orden'                 => 'nullable|integer|min:1',
             'tipo_tramo'            => 'nullable|in:ida,destino,escala,regreso',
         ]);
+
+        $data = $this->conTransporte($data);
 
         // Orden automático
         if (empty($data['orden'])) {
@@ -154,7 +160,7 @@ class TramoViaticoController extends Controller
 
         return ApiResponse::created(
             $tramo->load([
-                'empresa.catalogo',
+                'catalogo', 'empresa.catalogo',
                 'origenProvincia', 'destinoProvincia',
                 'autorizacionVuelo',
             ]),
@@ -186,12 +192,17 @@ class TramoViaticoController extends Controller
             'destino_canton_id'     => 'nullable|exists:cantones,id',
             'destino_pais'          => 'nullable|string|max:100',
             'destino_ciudad'        => 'sometimes|string|max:150',
-            'empresa_transporte_id' => 'sometimes|exists:empresas_transporte,id',
+            'catalogo_transporte_id' => ['sometimes', Rule::exists('catalogo_transportes', 'id')->where('activo', true)],
+            'empresa_transporte_id'  => ['sometimes', 'nullable', Rule::exists('empresas_transporte', 'id')->where('activo', true)],
             'datetime_salida'       => 'sometimes|date',
             'datetime_llegada'      => 'sometimes|date',
             'orden'                 => 'sometimes|integer|min:1',
             'tipo_tramo'            => 'sometimes|in:ida,destino,escala,regreso',
         ]);
+
+        if (array_key_exists('catalogo_transporte_id', $data) || array_key_exists('empresa_transporte_id', $data)) {
+            $data = $this->conTransporte($data, $tramo);
+        }
 
         $tramosExistentes = TramoViatico::where(
             'viatico_id', $viaticoId
@@ -253,7 +264,7 @@ class TramoViaticoController extends Controller
 
         return ApiResponse::ok(
             $tramo->fresh([
-                'empresa.catalogo',
+                'catalogo', 'empresa.catalogo',
                 'origenProvincia', 'destinoProvincia',
             ]),
             'Tramo actualizado.'
@@ -277,5 +288,65 @@ class TramoViaticoController extends Controller
         return ApiResponse::ok(
             null, 'Tramo eliminado.'
         );
+    }
+
+    /**
+     * El tipo de transporte y la empresa del tramo, coherentes entre sí.
+     *
+     * - El tipo es obligatorio. Si solo llega la empresa, se toma el suyo.
+     * - La empresa se exige solo si el tipo tiene empresas activas (bus,
+     *   avión). Un vehículo institucional, un taxi o una lancha no las
+     *   tienen, y antes no había forma de registrarlos.
+     * - Una empresa tiene que ser de ese tipo.
+     */
+    private function conTransporte(array $data, ?TramoViatico $tramo = null): array
+    {
+        $empresaId = array_key_exists('empresa_transporte_id', $data)
+            ? $data['empresa_transporte_id']
+            : $tramo?->empresa_transporte_id;
+
+        $catalogoId = $data['catalogo_transporte_id']
+            ?? ($empresaId !== null && array_key_exists('empresa_transporte_id', $data)
+                ? EmpresaTransporte::whereKey($empresaId)->value('catalogo_transporte_id')
+                : $tramo?->catalogo_transporte_id);
+
+        if ($catalogoId === null) {
+            throw ValidationException::withMessages([
+                'catalogo_transporte_id' => 'Elija el tipo de transporte.',
+            ]);
+        }
+
+        if ($empresaId !== null) {
+            $deEseTipo = EmpresaTransporte::whereKey($empresaId)
+                ->where('catalogo_transporte_id', $catalogoId)
+                ->exists();
+
+            if (! $deEseTipo) {
+                // Al cambiar solo el tipo, la empresa anterior ya no aplica.
+                if (! array_key_exists('empresa_transporte_id', $data)) {
+                    $empresaId = null;
+                } else {
+                    throw ValidationException::withMessages([
+                        'empresa_transporte_id' => 'La empresa no corresponde a ese tipo de transporte.',
+                    ]);
+                }
+            }
+        }
+
+        $conEmpresas = EmpresaTransporte::where('catalogo_transporte_id', $catalogoId)
+            ->where('activo', true)
+            ->exists();
+
+        if ($empresaId === null && $conEmpresas) {
+            throw ValidationException::withMessages([
+                'empresa_transporte_id' => 'Elija la empresa de transporte.',
+            ]);
+        }
+
+        return [
+            ...$data,
+            'catalogo_transporte_id' => (int) $catalogoId,
+            'empresa_transporte_id'  => $empresaId,
+        ];
     }
 }

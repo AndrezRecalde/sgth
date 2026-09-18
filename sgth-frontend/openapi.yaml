@@ -35890,8 +35890,17 @@
                                         "type": "string",
                                         "maxLength": 150
                                     },
+                                    "catalogo_transporte_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
                                     "empresa_transporte_id": {
-                                        "type": "integer"
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
                                     },
                                     "datetime_salida": {
                                         "type": "string",
@@ -35926,7 +35935,6 @@
                                     "origen_ciudad",
                                     "destino_tipo",
                                     "destino_ciudad",
-                                    "empresa_transporte_id",
                                     "datetime_salida",
                                     "datetime_llegada"
                                 ]
@@ -36069,8 +36077,14 @@
                                         "type": "string",
                                         "maxLength": 150
                                     },
-                                    "empresa_transporte_id": {
+                                    "catalogo_transporte_id": {
                                         "type": "integer"
+                                    },
+                                    "empresa_transporte_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
                                     },
                                     "datetime_salida": {
                                         "type": "string",
@@ -53855,7 +53869,10 @@
                         "type": "string"
                     },
                     "empresa_transporte_id": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "datetime_salida": {
                         "type": "string",
@@ -53884,6 +53901,9 @@
                     },
                     "tipo_tramo": {
                         "type": "string"
+                    },
+                    "catalogo_transporte_id": {
+                        "type": "integer"
                     }
                 },
                 "required": [
@@ -53905,7 +53925,8 @@
                     "orden",
                     "created_at",
                     "updated_at",
-                    "tipo_tramo"
+                    "tipo_tramo",
+                    "catalogo_transporte_id"
                 ],
                 "title": "TramoViatico"
             },

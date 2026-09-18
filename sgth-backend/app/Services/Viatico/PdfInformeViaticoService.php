@@ -131,7 +131,7 @@ class PdfInformeViaticoService
                 $q->where('es_principal_viatico', true)
                   ->with('entidadFinanciera')
                   ->limit(1),
-            'tramos.empresa.catalogo',
+            'tramos.catalogo', 'tramos.empresa.catalogo',
             'tramos.origenProvincia',
             'tramos.origenCanton',
             'tramos.destinoProvincia',

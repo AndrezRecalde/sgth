@@ -13,7 +13,10 @@ class CatalogoViaticoController extends Controller
 {
     public function tiposTransporte(): JsonResponse
     {
+        // `con_empresas`: el formulario de tramo pide la empresa solo si las
+        // hay. Un vehículo institucional o un taxi no tienen.
         $tipos = CatalogoTransporte::where('activo', true)
+            ->withExists(['empresas as con_empresas' => fn ($q) => $q->where('activo', true)])
             ->orderBy('orden')
             ->get();
         return ApiResponse::ok($tipos, 'Tipos de transporte.');

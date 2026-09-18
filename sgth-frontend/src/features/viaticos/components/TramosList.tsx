@@ -104,10 +104,10 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
     <Stack gap="xs">
       <Timeline active={lista.length} bulletSize={24} lineWidth={2}>
         {lista.map((t) => {
-          const tipoVehiculo =
-            t.empresa?.catalogo?.tipo_vehiculo ?? "terrestre";
-          const requiereAuth =
-            t.empresa?.catalogo?.requiere_autorizacion ?? false;
+          // El tipo es del tramo: un vehículo institucional no tiene empresa.
+          const tipo = t.catalogo ?? t.empresa?.catalogo;
+          const tipoVehiculo = tipo?.tipo_vehiculo ?? "terrestre";
+          const requiereAuth = tipo?.requiere_autorizacion ?? false;
           const estadoAuth = t.autorizacion_vuelo?.estado;
 
           return (
@@ -121,7 +121,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                       Tramo {t.orden}
                     </Text>
                     <StatusBadge size="xs">
-                      {t.empresa?.nombre ?? "—"}
+                      {t.empresa?.nombre ?? tipo?.nombre ?? "—"}
                     </StatusBadge>
                     {t.tipo_tramo && (
                       <StatusBadge size="xs">

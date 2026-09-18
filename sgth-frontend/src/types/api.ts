@@ -123,7 +123,16 @@ export type TramoViatico = {
   destino_canton_id?:    number | null
   destino_pais?:         string | null
   destino_ciudad:        string
-  empresa_transporte_id: number
+  catalogo_transporte_id: number
+  /** El tipo de transporte: lo tiene todo tramo, tenga o no empresa. */
+  catalogo?: {
+    id:                     number
+    nombre:                 string
+    tipo_vehiculo:          string
+    requiere_autorizacion:  boolean
+  } | null
+  /** Opcional: un vehículo institucional o un taxi no tienen empresa. */
+  empresa_transporte_id: number | null
   empresa?: {
     id:      number
     nombre:  string
@@ -155,6 +164,8 @@ export type CatalogoTransporte = {
   requiere_autorizacion: boolean
   activo:                boolean
   orden:                 number
+  /** Si tiene empresas activas: sin ellas, el tramo no pide empresa. */
+  con_empresas?:         boolean
 }
 
 export type EmpresaTransporte = {

@@ -19,7 +19,7 @@ class TramoViatico extends Model
         'origen_pais', 'origen_ciudad',
         'destino_tipo', 'destino_provincia_id', 'destino_canton_id',
         'destino_pais', 'destino_ciudad',
-        'empresa_transporte_id',
+        'catalogo_transporte_id', 'empresa_transporte_id',
         'datetime_salida', 'datetime_llegada',
         'orden', 'tipo_tramo',
     ];
@@ -34,6 +34,13 @@ class TramoViatico extends Model
     {
         return $this->belongsTo(Viatico::class);
     }
+    /** El tipo de transporte: lo tiene todo tramo, tenga o no empresa. */
+    public function catalogo(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoTransporte::class, 'catalogo_transporte_id');
+    }
+
+    /** Opcional: un vehículo institucional o un taxi no tienen empresa. */
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(EmpresaTransporte::class,
