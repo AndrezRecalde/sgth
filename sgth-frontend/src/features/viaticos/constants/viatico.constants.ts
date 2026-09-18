@@ -7,7 +7,7 @@ export const ZONA_OPTIONS = [
 ];
 
 export const MODALIDAD_OPTIONS = [
-  { value: "total", label: "Anticipo (70% del monto calculado)" },
+  { value: "total", label: "Con anticipo del 70 %" },
   { value: "sin_anticipo", label: "Sin anticipo" },
 ];
 
@@ -23,23 +23,15 @@ export const TIPO_VIAJE_OPTIONS = [
   { value: "asistencia_humanitaria", label: "Asistencia humanitaria" },
 ];
 
+// Una sola lista para la solicitud, la aprobación y los tramos: antes había
+// dos, con países distintos, y la aprobación pedía el país en texto libre.
 export const PAISES_OPTIONS = [
-  "Colombia",
-  "Perú",
-  "Bolivia",
-  "Chile",
-  "Argentina",
-  "Brasil",
-  "Venezuela",
-  "México",
-  "España",
-  "Estados Unidos",
-  "Canadá",
-  "Francia",
-  "Alemania",
-  "Italia",
-  "China",
-  "Japón",
+  "Alemania", "Argentina", "Australia", "Austria", "Bélgica", "Bolivia",
+  "Brasil", "Canadá", "Chile", "China", "Colombia", "Corea del Sur",
+  "Costa Rica", "Cuba", "Ecuador", "El Salvador", "España", "Estados Unidos",
+  "Francia", "Guatemala", "Honduras", "India", "Israel", "Italia", "Japón",
+  "México", "Nicaragua", "Países Bajos", "Panamá", "Paraguay", "Perú",
+  "Reino Unido", "República Dominicana", "Suiza", "Uruguay", "Venezuela",
   "Otro",
 ].map((p) => ({ value: p, label: p }));
 

@@ -1,148 +1,102 @@
 'use client'
 
-import {
-  Card, Grid, Textarea, ActionIcon,
-  Group, Text, TextInput,
-} from '@mantine/core'
+import { Grid, Paper, Textarea, TextInput } from '@mantine/core'
 import { DatePickerInput, TimeInput } from '@mantine/dates'
-import { IconTrash } from '@tabler/icons-react'
 import {
   Controller,
   type Control,
-  type UseFormRegister,
   type FieldErrors,
+  type UseFormRegister,
 } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { CountBadge } from '@/components/ui'
-
-type ActividadFormData = {
-  actividades: {
-    fecha:       string
-    hora_inicio: string
-    hora_fin:    string
-    descripcion: string
-    lugar:       string
-  }[]
-}
+import { fromDateValue, toDateValue } from '@/lib/fecha'
+import type { ActividadesFormData } from '../schemas/liquidacion.schema'
+import { ItemCabecera } from './ItemCabecera'
 
 interface Props {
-  index:         number
-  control:       Control<ActividadFormData>
-  register:      UseFormRegister<ActividadFormData>
-  errors:        FieldErrors<ActividadFormData>
-  minFecha?:     Date
-  maxFecha?:     Date
-  onEliminar:    () => void
-  puedeEliminar: boolean
+  index:       number
+  control:     Control<ActividadesFormData>
+  register:    UseFormRegister<ActividadesFormData>
+  errors:      FieldErrors<ActividadesFormData>
+  minFecha?:   Date
+  maxFecha?:   Date
+  /** Sin esto no se puede quitar: queda al menos una. */
+  onEliminar?: () => void
 }
 
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.slice(0, 10).split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-const safeFormatDate = (v: Date | string | null | undefined): string => {
-  if (!v) return ''
-  const d = new Date(v)
-  if (isNaN(d.getTime())) return ''
-  if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) {
-    return d.toISOString().slice(0, 10)
-  }
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
+/** Una actividad: el día, el horario, el lugar y qué se hizo. */
 export function ActividadItemForm({
-  index, control, register, errors,
-  minFecha, maxFecha, onEliminar, puedeEliminar,
+  index, control, register, errors, minFecha, maxFecha, onEliminar,
 }: Props) {
-  const contained    = useContainedInput()
-  const errActividad = errors.actividades?.[index]
+  const contained = useContainedInput()
+  const err = errors.actividades?.[index]
 
   return (
-    <Card withBorder radius="md" p="sm">
-      <Group justify="space-between" mb="xs">
-        <Group gap="xs">
-          <CountBadge>
-            {index + 1}
-          </CountBadge>
-          <Text size="sm" fw={600}>
-            Actividad {index + 1}
-          </Text>
-        </Group>
-        {puedeEliminar && (
-          <ActionIcon
-            size="sm" color="red" variant="subtle"
-            onClick={onEliminar}
-          >
-            <IconTrash size={13} />
-          </ActionIcon>
-        )}
-      </Group>
+    <Paper withBorder radius="md" p="md">
+      <ItemCabecera
+        titulo={`Actividad ${index + 1}`}
+        onEliminar={onEliminar}
+        etiquetaEliminar="Quitar esta actividad"
+      />
 
       <Grid>
         <Grid.Col span={{ base: 12, sm: 4 }}>
           <Controller
             name={`actividades.${index}.fecha`}
             control={control}
-            render={({ field: f }) => (
+            render={({ field }) => (
               <DatePickerInput
-                label="Fecha de la actividad"
-                placeholder="Seleccionar"
+                label="Fecha"
                 valueFormat="DD/MM/YYYY"
                 minDate={minFecha}
                 maxDate={maxFecha}
-                popoverProps={{ withinPortal: true }}
                 {...contained}
-                value={toDate(f.value)}
-                onChange={(v) => f.onChange(safeFormatDate(v))}
-                error={errActividad?.fecha?.message}
+                value={toDateValue(field.value)}
+                onChange={(v) => field.onChange(fromDateValue(v))}
+                error={err?.fecha?.message}
               />
             )}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 4 }}>
           <TimeInput
-            label="Hora inicio"
+            label="Desde"
             {...contained}
             {...register(`actividades.${index}.hora_inicio`)}
-            error={errActividad?.hora_inicio?.message}
+            error={err?.hora_inicio?.message}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 4 }}>
           <TimeInput
-            label="Hora fin"
+            label="Hasta"
             {...contained}
             {...register(`actividades.${index}.hora_fin`)}
-            error={errActividad?.hora_fin?.message}
+            error={err?.hora_fin?.message}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
+        {/* A lo ancho: a media fila dejaba un hueco a su lado. */}
+        <Grid.Col span={12}>
           <TextInput
             label="Lugar"
-            placeholder="Ej: Ministerio de Trabajo — Quito"
+            placeholder="Ej: Ministerio de Trabajo, Quito"
             {...contained}
             {...register(`actividades.${index}.lugar`)}
-            error={errActividad?.lugar?.message}
+            error={err?.lugar?.message}
+          />
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Textarea
+            label="Qué se hizo"
+            placeholder="Las actividades de ese día"
+            autosize
+            minRows={2}
+            maxRows={4}
+            {...contained}
+            {...register(`actividades.${index}.descripcion`)}
+            error={err?.descripcion?.message}
           />
         </Grid.Col>
       </Grid>
-
-      <Textarea
-        label="Descripción de la actividad"
-        placeholder="Describa las actividades realizadas en este día"
-        autosize
-        minRows={2}
-        maxRows={4}
-        mt="xs"
-        {...contained}
-        {...register(`actividades.${index}.descripcion`)}
-        error={errActividad?.descripcion?.message}
-      />
-    </Card>
+    </Paper>
   )
 }

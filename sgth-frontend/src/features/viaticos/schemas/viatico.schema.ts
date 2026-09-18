@@ -1,7 +1,7 @@
 import { z } from 'zod/v4'
 
-/** Días de calendario entre dos fechas, sin mirar la hora. */
-const nochesEntre = (salida: string, llegada: string): number => {
+/** Noches de pernocte: días de calendario entre dos fechas, sin mirar la hora. */
+export const nochesEntre = (salida: string, llegada: string): number => {
   const s = new Date(salida)
   const l = new Date(llegada)
   if (isNaN(s.getTime()) || isNaN(l.getTime())) return 0
@@ -15,8 +15,8 @@ export const viaticoSchema = z.object({
     'fuera_provincia',
     'exterior',
   ]),
-  datetime_salida:  z.string().min(1, 'Requerido'),
-  datetime_llegada: z.string().min(1, 'Requerido'),
+  datetime_salida:  z.string().min(1, 'Indique la fecha y hora de salida'),
+  datetime_llegada: z.string().min(1, 'Indique la fecha y hora de regreso'),
   tipo_viaje:        z.string().optional().nullable(),
   pais_destino:      z.string().optional().nullable(),
   justificacion:     z.string().min(10, 'Mínimo 10 caracteres'),
@@ -35,6 +35,16 @@ export const viaticoSchema = z.object({
       path: ['datetime_llegada'],
     },
   )
+  // Igual que el backend: al exterior se pide el motivo y el país. Sin esto,
+  // el error solo llegaba como notificación.
+  .refine((v) => v.zona !== 'exterior' || !!v.tipo_viaje, {
+    message: 'El motivo es obligatorio en un viaje al exterior.',
+    path: ['tipo_viaje'],
+  })
+  .refine((v) => v.zona !== 'exterior' || !!v.pais_destino, {
+    message: 'El país de destino es obligatorio en un viaje al exterior.',
+    path: ['pais_destino'],
+  })
 
 export type ViaticoFormData = z.infer<typeof viaticoSchema>
 
@@ -43,18 +53,18 @@ export const tramoSchema = z.object({
   origen_provincia_id:   z.number().optional().nullable(),
   origen_canton_id:      z.number().optional().nullable(),
   origen_pais:           z.string().optional().nullable(),
-  origen_ciudad:         z.string().min(1, 'Requerido'),
+  origen_ciudad:         z.string().min(1, 'Indique la ciudad de origen'),
   destino_tipo:          z.enum(['nacional', 'internacional']),
   destino_provincia_id:  z.number().optional().nullable(),
   destino_canton_id:     z.number().optional().nullable(),
   destino_pais:          z.string().optional().nullable(),
-  destino_ciudad:        z.string().min(1, 'Requerido'),
+  destino_ciudad:        z.string().min(1, 'Indique la ciudad de destino'),
   catalogo_transporte_id: z.number()
     .min(1, 'Seleccione el tipo de transporte'),
   empresa_transporte_id: z.number()
     .min(1, 'Seleccione la empresa de transporte'),
-  datetime_salida:  z.string().min(1, 'Requerido'),
-  datetime_llegada: z.string().min(1, 'Requerido'),
+  datetime_salida:  z.string().min(1, 'Indique la salida del tramo'),
+  datetime_llegada: z.string().min(1, 'Indique la llegada del tramo'),
   tipo_tramo: z.enum([
     'ida', 'destino', 'escala', 'regreso'
   ]).optional().nullable(),

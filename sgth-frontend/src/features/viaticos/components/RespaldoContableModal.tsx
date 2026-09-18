@@ -5,10 +5,10 @@ import { Alert, Stack, TextInput } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
 import { FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
+import { respaldoContableSchema } from '../schemas/aprobacion.schema'
 import type { RespaldoContable } from '../services/viaticoService'
 
 /** Las partidas del gasto de viáticos, confirmadas con Gestión Financiera. */
@@ -22,20 +22,6 @@ const PARTIDAS_DE_VIATICO = ['530303', '530304']
 | Las dos columnas existían desde el principio y ningún formulario las pedía:
 | el comprobante contable salía sin respaldo.
 */
-
-const schema = z.object({
-  numero_resolucion: z
-    .string()
-    .trim()
-    .min(1, 'Indique el número de resolución')
-    .max(100, 'Máximo 100 caracteres'),
-  // Del catálogo de Estructura, el mismo que usan Puestos y las acciones de
-  // personal: la partida se elige, no se escribe.
-  partida_presupuestaria_id: z
-    .number({ error: 'Elija la partida presupuestaria' })
-    .int()
-    .positive('Elija la partida presupuestaria'),
-})
 
 interface Props {
   opened: boolean
@@ -65,7 +51,7 @@ export function RespaldoContableModal({
     reset,
     formState: { errors },
   } = useForm<RespaldoContable>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(respaldoContableSchema),
     defaultValues: { numero_resolucion: '', partida_presupuestaria_id: undefined },
   })
 

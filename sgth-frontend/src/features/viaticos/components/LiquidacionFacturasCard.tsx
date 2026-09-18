@@ -5,7 +5,7 @@ import { IconFileInvoice, IconPencil } from '@tabler/icons-react'
 import { CountBadge, StatusBadge } from '@/components/ui'
 import { REVISION_LABELS, TONO_REVISION } from '../utils/revisionComprobantes'
 import { dolares } from '../utils/monto'
-import type { FacturaData } from './FacturasModal'
+import type { FacturaData } from '../schemas/liquidacion.schema'
 import type { CategoriaFactura } from '@/types/api'
 
 interface Props {

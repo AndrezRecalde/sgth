@@ -4,7 +4,7 @@ import { Button, Group, Paper, Stack, Text } from '@mantine/core'
 import { IconClipboardList, IconPencil } from '@tabler/icons-react'
 import { CountBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
-import type { ActividadData } from './ActividadesModal'
+import type { ActividadData } from '../schemas/liquidacion.schema'
 
 interface Props {
   actividades: ActividadData[]

@@ -55,6 +55,20 @@ export function fromDateValueOrNull(d: Date | string | null): string | null {
 }
 
 /**
+ * `Date` de un selector de fecha y hora a `YYYY-MM-DDTHH:mm`, en la hora
+ * local, que es como lo espera el backend. Sin fecha, cadena vacía.
+ *
+ * Viáticos tenía tres copias de esta función, una por formulario.
+ */
+export function fromDateTimeValue(d: Date | string | null): string {
+  if (!d) return ''
+  const dt = typeof d === 'string' ? new Date(d) : d
+  if (isNaN(dt.getTime())) return ''
+  const dos = (n: number) => String(n).padStart(2, '0')
+  return `${dt.getFullYear()}-${dos(dt.getMonth() + 1)}-${dos(dt.getDate())}T${dos(dt.getHours())}:${dos(dt.getMinutes())}`
+}
+
+/**
  * Fecha y hora del backend a `DD/MM/AAAA HH:MM`, en la hora local.
  *
  * Para columnas `datetime`: el backend las serializa en ISO con zona

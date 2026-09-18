@@ -4,8 +4,7 @@ import type {
   LiquidacionViatico, FacturaViatico,
   ActividadLiquidacion, ComprobanteRevisado, CalculoViatico,
 } from '@/types/api'
-import type { ActividadData } from '../components/ActividadesModal'
-import type { FacturaData }   from '../components/FacturasModal'
+import type { ActividadData, FacturaData } from '../schemas/liquidacion.schema'
 
 export const liquidacionService = {
   obtener: (viaticoId: number) =>
