@@ -66,8 +66,7 @@ export function ViaticoAcciones({
 
   // A quien aprueba o contabiliza pero viaja en este viático se le dice por
   // qué no tiene el botón, en vez de solo ocultárselo.
-  const apruebaOtro =
-    estadoActual === 'solicitado' && puede.rechazar(d) && !puede.aprobar(d)
+  const apruebaOtro = puede.apruebaPeroViaja(d)
   const contabilizaOtro = puede.revisarLiquidacion(d) && !puede.contabilizar(d)
   const revision = resumenRevision(d.liquidacion?.detalles_factura)
 
@@ -167,7 +166,7 @@ export function ViaticoAcciones({
       {(apruebaOtro || contabilizaOtro) && (
         <Alert color="slate" variant="light">
           <Text size="xs">
-            Viaja en este viático: {apruebaOtro ? 'aprobarlo' : 'contabilizarlo'} le
+            Viaja en este viático: {apruebaOtro ? 'aprobarlo o rechazarlo' : 'contabilizarlo'} le
             corresponde a otra persona de Financiero.
           </Text>
         </Alert>

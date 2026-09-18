@@ -151,13 +151,15 @@ export function FacturaItemForm({
 
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <TextInput
+            // El asterisco lo pone `withAsterisk`; escrito también en la
+            // etiqueta salía dos veces.
             label={
               ["factura", "recibo"].includes(tipoComp)
-                ? "RUC del proveedor *"
+                ? "RUC del proveedor"
                 : "RUC / Identificación (opcional)"
             }
             placeholder="0000000000001"
-            required={["factura", "recibo"].includes(tipoComp)}
+            withAsterisk={["factura", "recibo"].includes(tipoComp)}
             {...contained}
             {...register(`facturas.${index}.ruc_proveedor`)}
             error={errFactura?.ruc_proveedor?.message}

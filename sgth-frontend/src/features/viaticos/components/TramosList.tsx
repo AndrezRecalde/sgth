@@ -22,6 +22,7 @@ import React from "react";
 import { useTramos } from "../hooks/useViaticos";
 import { viaticoService } from "../services/viaticoService";
 import type { TramoViatico } from "@/types/api";
+import { formatFechaHora } from "@/lib/fecha";
 
 interface Props {
   viaticoId: number;
@@ -39,18 +40,6 @@ const TIPO_TRAMO_LABELS: Record<string, string> = {
   destino: 'DESTINO',
   escala:  'PARADA/ESCALA',
   regreso: 'REGRESO',
-}
-
-function formatDateTime(dt?: string | null): string {
-  if (!dt) return "—";
-  return new Date(dt).toLocaleString("es-EC", {
-    timeZone: "UTC",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function LugarText({
@@ -195,7 +184,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                       ciudad={t.origen_ciudad}
                     />
                     <Text size="xs" c="dimmed" mt={2}>
-                      {formatDateTime(t.datetime_salida)}
+                      {formatFechaHora(t.datetime_salida)}
                     </Text>
                   </div>
                   <div>
@@ -213,7 +202,7 @@ export function TramosList({ viaticoId, puedeEditar }: Props) {
                       ciudad={t.destino_ciudad}
                     />
                     <Text size="xs" c="dimmed" mt={2}>
-                      {formatDateTime(t.datetime_llegada)}
+                      {formatFechaHora(t.datetime_llegada)}
                     </Text>
                   </div>
                 </Group>

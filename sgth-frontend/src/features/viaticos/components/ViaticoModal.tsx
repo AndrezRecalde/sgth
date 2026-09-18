@@ -17,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IconInfoCircle,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { ViaticoServidorCard } from "./ViaticoServidorCard";
@@ -29,7 +29,6 @@ import {
 } from "../constants/viatico.constants";
 import { viaticoSchema, type ViaticoFormData } from "../schemas/viatico.schema";
 import type { Viatico } from "@/types/api";
-import api from "@/lib/axios";
 
 function fromDateTime(d: Date | null | string): string {
   if (!d) return "";
@@ -55,35 +54,14 @@ interface Props {
   onCreated: (viatico: Viatico) => void;
 }
 
-type MiPerfil = {
-  id: number;
-  name: string;
-  servidor?: {
-    id: number;
-    nombre?: string | null;
-    segundo_nombre?: string | null;
-    apellido?: string | null;
-    segundo_apellido?: string | null;
-    puesto?: {
-      cargo?: { nombre?: string } | null;
-      unidad_administrativa?: { nombre?: string } | null;
-    } | null;
-  } | null;
-};
-
 export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   const contained = useContainedInput();
   const { solicitar } = useViaticoMutations();
 
-  const { data: miPerfil } = useQuery({
-    queryKey: ["mi-perfil"],
-    queryFn: () =>
-      api.get<{ datos: MiPerfil }>("/auth/perfil").then((r) => r.data.datos),
-    enabled: opened,
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const servidor = miPerfil?.servidor;
+  // El usuario con sesión ya trae el cargo y la unidad (`auth/perfil`). Antes
+  // se pedía otra vez y se leía con otra forma: salía «Sin cargo asignado».
+  const { usuario } = useAuth();
+  const servidor = usuario?.servidor;
 
   const {
     control,
@@ -151,8 +129,12 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
       <Stack gap="md">
         {servidor && (
           <ViaticoServidorCard
-            servidor={servidor}
-            nombreDisplay={miPerfil?.name}
+            nombre={
+              [servidor.nombre, servidor.apellido].filter(Boolean).join(" ") ||
+              (usuario?.nombre_completo ?? "")
+            }
+            cargo={servidor.puesto?.nombre}
+            unidad={servidor.unidad_administrativa?.nombre}
           />
         )}
 

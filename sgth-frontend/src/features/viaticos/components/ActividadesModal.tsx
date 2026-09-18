@@ -52,10 +52,13 @@ interface Props {
   valorInicial?:  ActividadData[]
 }
 
+/**
+ * La salida y el regreso son fecha y hora: van en la hora de Ecuador. Con
+ * `timeZone: 'UTC'` un regreso a las 21:00 del 11 se leía como el 12.
+ */
 function formatFechaRango(f?: string | null): string {
   if (!f) return '—'
   return new Date(f).toLocaleDateString('es-EC', {
-    timeZone: 'UTC',
     day: '2-digit', month: 'long', year: 'numeric',
   })
 }

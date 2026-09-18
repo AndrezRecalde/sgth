@@ -15,7 +15,7 @@ import type { Viatico, ViaticoConRelaciones } from '@/types/api'
  *   cualquier viático hasta que se liquida.
  * - `liquidar-viatico`: devuelve la liquidación a corrección o la contabiliza.
  * - `ver-viaticos-todos`: consulta (Talento Humano).
- * - Nadie aprueba, entrega el anticipo, contabiliza ni autoriza los vuelos de
+ * - Nadie aprueba, rechaza, entrega el anticipo, contabiliza ni autoriza los vuelos de
  *   un viático en el que viaja. Como Financiero tampoco lo corrige: para él
  *   rige lo mismo que para el titular.
  *
@@ -65,7 +65,10 @@ export function useAccionesViatico() {
     aprobar: (v: ViaticoAcciones) =>
       aprueba && !viajaEn(v) && estado(v) === 'solicitado',
     rechazar: (v: ViaticoAcciones) =>
-      aprueba && ['solicitado', 'aprobado'].includes(estado(v)),
+      aprueba && !viajaEn(v) && ['solicitado', 'aprobado'].includes(estado(v)),
+    /** Tiene el permiso de aprobar pero viaja en este: le toca a otra persona. */
+    apruebaPeroViaja: (v: ViaticoAcciones) =>
+      aprueba && viajaEn(v) && estado(v) === 'solicitado',
     entregarAnticipo: (v: ViaticoAcciones) =>
       gestiona && !viajaEn(v) && estado(v) === 'aprobado' &&
       String(v.modalidad_anticipo) !== 'sin_anticipo',

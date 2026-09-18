@@ -340,9 +340,20 @@ it('las autorizaciones de vuelo las decide quien aprueba viáticos', function ()
         ->assertForbidden();
 
     $this->actingAs($this->financiero, 'sanctum')->getJson('/api/v1/viaticos/vuelos')->assertOk()->assertJsonCount(1, 'datos');
-    $this->actingAs($this->financiero, 'sanctum')->postJson("/api/v1/viaticos/vuelos/{$autorizacion->id}/rechazar")->assertOk();
+    // Sin el motivo no se rechaza.
+    $this->actingAs($this->financiero, 'sanctum')
+        ->postJson("/api/v1/viaticos/vuelos/{$autorizacion->id}/rechazar")
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['observacion'], 'errores');
+    expect($autorizacion->fresh()->estado)->toBe('pendiente');
 
-    expect($autorizacion->fresh()->estado)->toBe('rechazada');
+    $this->actingAs($this->financiero, 'sanctum')
+        ->postJson("/api/v1/viaticos/vuelos/{$autorizacion->id}/rechazar", ['observacion' => 'El vuelo sale antes que la comisión.'])
+        ->assertOk();
+
+    expect($autorizacion->fresh())
+        ->estado->toBe('rechazada')
+        ->observacion_aprobador->toBe('El vuelo sale antes que la comisión.');
 });
 
 it('las rutas viejas de facturas por liquidación ya no existen', function () {

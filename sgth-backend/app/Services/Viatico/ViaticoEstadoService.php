@@ -115,7 +115,10 @@ final class ViaticoEstadoService
 
     public function rechazar(int $viaticoId, User $user, string $motivo): Viatico
     {
-        return $this->transicionar($viaticoId, $user, EstadoViatico::RECHAZADO, $motivo, function (Viatico $viatico) use ($motivo) {
+        return $this->transicionar($viaticoId, $user, EstadoViatico::RECHAZADO, $motivo, function (Viatico $viatico) use ($user, $motivo) {
+            // Igual que aprobar: quien viaja no decide sobre su viático. Si ya
+            // no quiere hacerlo, lo cancela.
+            $this->noSobreElPropio($viatico, $user, 'rechazar');
             $viatico->motivo_rechazo = $motivo;
         }, 'Solo se rechaza un viático solicitado o aprobado, antes de entregar el anticipo.');
     }

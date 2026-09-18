@@ -63,8 +63,16 @@ class AutorizacionVueloController extends Controller
     {
         $this->authorize('autorizarVuelos', Viatico::class);
 
+        // El rechazo dice por qué: la pantalla mandaba siempre el mismo texto
+        // fijo y el servidor no sabía qué cambiar del vuelo.
+        $datos = $request->validate([
+            'observacion' => ['required', 'string', 'max:1000'],
+        ], [
+            'observacion.required' => 'Indique por qué se rechaza el vuelo.',
+        ]);
+
         $autorizacion = $this->estados->decidirVuelo(
-            (int) $id, $request->user(), 'rechazada', $request->input('observacion'),
+            (int) $id, $request->user(), 'rechazada', $datos['observacion'],
         );
 
         return ApiResponse::ok(new AutorizacionVueloResource($autorizacion));
