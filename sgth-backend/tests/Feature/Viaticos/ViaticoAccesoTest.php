@@ -7,8 +7,8 @@
 | viáticos de todos, cambiaba el monto de uno ajeno, lo creaba a nombre de otro,
 | lo cancelaba, lo liquidaba, aprobaba vuelos y descargaba los PDF.
 |
-| La regla, decidida con el usuario: el servidor gestiona lo suyo (y ve aquello
-| en lo que va de acompañante); Financiero opera; Talento Humano consulta.
+| La regla, decidida con el usuario: el servidor gestiona lo suyo —un viático
+| es de un solo servidor—; Financiero opera; Talento Humano consulta.
 |
 | Ningún usuario de estos tests es admin-ti: su `Gate::before` se salta la
 | policy y no probaría nada.
@@ -24,7 +24,6 @@ use App\Models\Viatico\EmpresaTransporte;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\TramoViatico;
 use App\Models\Viatico\Viatico;
-use App\Models\Viatico\ViaticoServidor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -58,10 +57,8 @@ beforeEach(function () {
     };
 
     $this->titular = ($this->servidor)();
-    $this->acompanante = ($this->servidor)();
 
     $this->deTitular = ($this->usuario)('servidor', $this->titular);
-    $this->deAcompanante = ($this->usuario)('servidor', $this->acompanante);
     $this->ajeno = ($this->usuario)('servidor');
     $this->financiero = ($this->usuario)('financiero');
     $this->adminUath = ($this->usuario)('admin-uath');
@@ -84,8 +81,6 @@ beforeEach(function () {
         'monto_anticipo'     => 0,
         'modalidad_anticipo' => 'total',
     ]);
-    ViaticoServidor::create(['viatico_id' => $this->viatico->id, 'servidor_id' => $this->titular->id, 'es_titular' => true]);
-    ViaticoServidor::create(['viatico_id' => $this->viatico->id, 'servidor_id' => $this->acompanante->id, 'es_titular' => false]);
 
     $this->solicitud = [
         'zona'               => 'dentro_provincia',
@@ -116,7 +111,7 @@ beforeEach(function () {
 
 // ── Ver ──────────────────────────────────────────────────────────────
 
-it('el servidor lista solo los viáticos en los que viaja', function () {
+it('el servidor lista solo sus propios viáticos', function () {
     Viatico::create(array_merge($this->viatico->only([
         'zona', 'datetime_salida', 'datetime_llegada', 'justificacion', 'estado',
     ]), ['servidor_id' => $this->ajeno->servidor_id]));
@@ -126,7 +121,6 @@ it('el servidor lista solo los viáticos en los que viaja', function () {
     )->pluck('id');
 
     expect($ids($this->deTitular))->toEqual(collect([$this->viatico->id]))
-        ->and($ids($this->deAcompanante))->toEqual(collect([$this->viatico->id]))
         ->and($ids($this->ajeno))->toHaveCount(1)->not->toContain($this->viatico->id)
         ->and($ids($this->financiero))->toHaveCount(2)
         ->and($ids($this->adminUath))->toHaveCount(2);
@@ -139,7 +133,7 @@ it('el filtro servidor_id no abre los viáticos de otro', function () {
         ->assertJsonCount(0, 'datos.data');
 });
 
-it('el detalle, los tramos y el PDF solo los ve quien viaja o consulta', function (string $quien, int $estado) {
+it('el detalle, los tramos y el PDF solo los ve el titular o quien consulta', function (string $quien, int $estado) {
     $usuario = $this->{$quien};
 
     $this->actingAs($usuario, 'sanctum')->getJson("/api/v1/viaticos/{$this->viatico->codigo_viatico}")->assertStatus($estado);
@@ -147,7 +141,6 @@ it('el detalle, los tramos y el PDF solo los ve quien viaja o consulta', functio
     $this->actingAs($usuario, 'sanctum')->get("/api/v1/viaticos/{$this->viatico->codigo_viatico}/solicitud/generar-enlace")->assertStatus($estado);
 })->with([
     'titular'     => ['deTitular', 200],
-    'acompañante' => ['deAcompanante', 200],
     'Financiero'  => ['financiero', 200],
     'Talento Humano' => ['adminUath', 200],
     'otro servidor'  => ['ajeno', 403],
@@ -185,14 +178,13 @@ it('el servidor no fija el monto al solicitar', function () {
 
 // ── Editar ───────────────────────────────────────────────────────────
 
-it('los datos los edita el titular o quien opera, no el acompañante ni otro', function (string $quien, int $estado) {
+it('los datos los edita el titular o quien opera, no otro servidor', function (string $quien, int $estado) {
     $this->actingAs($this->{$quien}, 'sanctum')
         ->patchJson("/api/v1/viaticos/{$this->viatico->id}", ['justificacion' => 'Supervisión de obras y reunión técnica'])
         ->assertStatus($estado);
 })->with([
     'titular'        => ['deTitular', 200],
     'Financiero'     => ['financiero', 200],
-    'acompañante'    => ['deAcompanante', 403],
     'otro servidor'  => ['ajeno', 403],
     'Talento Humano' => ['adminUath', 403],
 ]);
@@ -233,7 +225,7 @@ it('el itinerario de otro no se toca', function () {
     $creado = $this->actingAs($this->deTitular, 'sanctum')->postJson($url, $tramo)->assertCreated()->json('datos.id');
 
     $this->actingAs($this->ajeno, 'sanctum')->putJson("{$url}/{$creado}", ['destino_ciudad' => 'Atacames'])->assertForbidden();
-    $this->actingAs($this->deAcompanante, 'sanctum')->deleteJson("{$url}/{$creado}")->assertForbidden();
+    $this->actingAs($this->ajeno, 'sanctum')->deleteJson("{$url}/{$creado}")->assertForbidden();
     expect(TramoViatico::find($creado))->not->toBeNull();
 });
 
@@ -241,7 +233,6 @@ it('la solicitud la cancela el titular o quien opera', function () {
     $url = "/api/v1/viaticos/{$this->viatico->id}/cancelar";
 
     $this->actingAs($this->ajeno, 'sanctum')->postJson($url)->assertForbidden();
-    $this->actingAs($this->deAcompanante, 'sanctum')->postJson($url)->assertForbidden();
     $this->actingAs($this->deTitular, 'sanctum')->postJson($url)->assertOk();
 
     expect($this->viatico->fresh()->estado)->toBe(EstadoViatico::CANCELADO);
@@ -259,7 +250,6 @@ it('la liquidación de otro no se lee ni se llena ni se confirma', function () {
     $this->actingAs($this->ajeno, 'sanctum')->postJson("{$base}/actividades", ['actividades' => []])->assertForbidden();
     $this->actingAs($this->ajeno, 'sanctum')->postJson("{$base}/facturas", ['facturas' => []])->assertForbidden();
     $this->actingAs($this->ajeno, 'sanctum')->postJson("{$base}/confirmar")->assertForbidden();
-    $this->actingAs($this->deAcompanante, 'sanctum')->postJson("{$base}/confirmar")->assertForbidden();
     $this->actingAs($this->ajeno, 'sanctum')
         ->postJson("/api/v1/viaticos/{$this->viatico->id}/liquidar", ['facturas' => [['monto' => 'x']]])
         ->assertForbidden();
@@ -394,4 +384,23 @@ it('la migración crea el rol financiero y deja a Talento Humano en consulta', f
     $this->seed(\Database\Seeders\RolPermisoSeeder::class);
 
     expect($deLaMigracion)->toEqual($permisos());
+});
+
+// ── Un viático, un servidor ──────────────────────────────────────────
+
+it('los acompañantes ya no existen: quien viaje pide su propio viático', function () {
+    expect(\Illuminate\Support\Facades\Schema::hasTable('viatico_servidores'))->toBeFalse();
+
+    // Una solicitud que todavía mande acompañantes los ignora, no falla.
+    $creado = $this->actingAs($this->deTitular, 'sanctum')
+        ->postJson('/api/v1/viaticos', array_merge($this->solicitud, [
+            'servidores_acompanantes' => [$this->ajeno->servidor_id],
+        ]))
+        ->assertCreated()
+        ->json('datos.codigo_viatico');
+
+    // Y el otro servidor no lo ve: no viaja en él.
+    $this->actingAs($this->ajeno, 'sanctum')
+        ->getJson("/api/v1/viaticos/{$creado}")
+        ->assertForbidden();
 });

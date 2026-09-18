@@ -24,7 +24,7 @@ import type { Viatico, ViaticoConRelaciones } from '@/types/api'
  */
 
 type ViaticoAcciones = Pick<Viatico, 'servidor_id'> &
-  Pick<ViaticoConRelaciones, 'estado' | 'modalidad_anticipo' | 'todos_servidores'>
+  Pick<ViaticoConRelaciones, 'estado' | 'modalidad_anticipo'>
 
 const EDITABLES_POR_QUIEN_OPERA = [
   'solicitado', 'aprobado', 'con_anticipo', 'en_comision', 'pendiente_liquidacion',
@@ -41,11 +41,8 @@ export function useAccionesViatico() {
   const esTitular = (v: Pick<Viatico, 'servidor_id'>) =>
     miServidor !== null && miServidor === v.servidor_id
 
-  /** Titular o acompañante. En el listado solo se conoce al titular. */
-  const viajaEn = (v: ViaticoAcciones) =>
-    esTitular(v) ||
-    (miServidor !== null &&
-      (v.todos_servidores ?? []).some(s => s.servidor?.id === miServidor))
+  /** Un viático es de un solo servidor: su titular. */
+  const viajaEn = (v: ViaticoAcciones) => esTitular(v)
 
   const estado = (v: ViaticoAcciones) => String(v.estado ?? '')
 
@@ -82,8 +79,8 @@ export function useAccionesViatico() {
       revisaLiquidacion && !viajaEn(v) && estado(v) === 'liquidado',
     autorizarVuelos: aprueba,
     /** Decidir un vuelo: nunca el de un viático en el que se viaja. */
-    decidirVuelo: (servidoresIds: number[]) =>
-      aprueba && (miServidor === null || !servidoresIds.includes(miServidor)),
+    decidirVuelo: (servidorId: number | null) =>
+      aprueba && (miServidor === null || servidorId !== miServidor),
   }
 }
 

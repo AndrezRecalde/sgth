@@ -24,13 +24,11 @@ import { useAccionesViatico } from "../hooks/useAccionesViatico";
 
 import { ViaticoInfoCard } from "./ViaticoInfoCard";
 import { ViaticoAnticipoCard } from "./ViaticoAnticipoCard";
-import { ViaticoServidoresCard } from "./ViaticoServidoresCard";
 import { ViaticoItinerarioCard } from "./ViaticoItinerarioCard";
 import { ViaticoLiquidacionCard } from "./ViaticoLiquidacionCard";
 import { ViaticoAcciones } from "./ViaticoAcciones";
 import { AprobarExteriorModal } from "./AprobarExteriorModal";
 import { ViaticoEditModal } from "./ViaticoEditModal";
-import { ServidoresModal } from "./ServidoresModal";
 import { TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
 import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
@@ -88,10 +86,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
     useDisclosure(false);
   const [tramosAbierto, { open: abrirTramos, close: cerrarTramos }] =
     useDisclosure(false);
-  const [
-    servidoresModalAbierto,
-    { open: abrirServidores, close: cerrarServidores },
-  ] = useDisclosure(false);
   const [exteriorModalAbierto, { open: abrirExterior, close: cerrarExterior }] =
     useDisclosure(false);
 
@@ -200,14 +194,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
         <Grid.Col span={{ base: 12, md: 6 }}>
           <ViaticoAnticipoCard viatico={d} />
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <ViaticoServidoresCard
-            viatico={d}
-            puedeEditar={puedeEditarDatos}
-            onEditar={abrirServidores}
-          />
         </Grid.Col>
 
         {["pendiente_liquidacion", "liquidado", "contabilizado"].includes(
@@ -334,14 +320,6 @@ export function ViaticoDetallePage({ identificador }: Props) {
           onClose={cerrarEdit}
           viatico={d}
           onSuccess={cerrarEdit}
-        />
-      )}
-
-      {servidoresModalAbierto && (
-        <ServidoresModal
-          opened={servidoresModalAbierto}
-          onClose={cerrarServidores}
-          viatico={d}
         />
       )}
 

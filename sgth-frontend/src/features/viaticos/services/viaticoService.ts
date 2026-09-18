@@ -37,7 +37,6 @@ export const viaticoService = {
     justificacion:           string
     modalidad_anticipo:      'sin_anticipo' | 'total'
     monto_calculado?:        number | null
-    servidores_acompanantes?: number[]
   }) =>
     api.post<ApiResponse<Viatico>>(
       '/viaticos', data
@@ -52,7 +51,6 @@ export const viaticoService = {
     monto_calculado?:         number | null
     tipo_viaje?:              string | null
     pais_destino?:            string | null
-    servidores_acompanantes?: number[]
   }) =>
     api.patch<ApiResponse<Viatico>>(
       `/viaticos/${id}`, data

@@ -138,7 +138,6 @@ class PdfInformeViaticoService
             'tramos.destinoCanton',
             'liquidacion.actividades',
             'liquidacion.detallesFactura.categoria',
-            'todosServidores.servidor.puesto.cargo',
         ]);
 
         return is_numeric($identificador)

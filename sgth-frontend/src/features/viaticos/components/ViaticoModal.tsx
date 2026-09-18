@@ -5,13 +5,10 @@ import {
   Grid,
   Select,
   Textarea,
-  Group,
   Divider,
   Alert,
   Text,
   Card,
-  ThemeIcon,
-  MultiSelect,
 } from "@mantine/core";
 import { FormModal } from "@/components/ui";
 import { DateTimePicker } from "@mantine/dates";
@@ -19,11 +16,9 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IconInfoCircle,
-  IconUsers,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useContainedInput } from "@/hooks/useContainedInput";
-import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { ViaticoServidorCard } from "./ViaticoServidorCard";
 import {
@@ -90,18 +85,6 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
 
   const servidor = miPerfil?.servidor;
 
-  const { data: servidoresData } = useServidores({ per_page: 200 });
-
-  const servidoresOptions = (servidoresData?.data ?? [])
-    .filter((s) => {
-      const miId = miPerfil?.servidor?.id;
-      return miId ? s.id !== miId : true;
-    })
-    .map((s) => ({
-      value: String(s.id),
-      label: [s.apellido, s.nombre].filter(Boolean).join(" "),
-    }));
-
   const {
     control,
     handleSubmit,
@@ -118,7 +101,6 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
       justificacion: "",
       modalidad_anticipo: "total",
       monto_calculado: null,
-      servidores_acompanantes: [],
     },
   });
 
@@ -347,54 +329,6 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
             </Alert>
           </>
         )}
-
-        <Divider
-          label="¿Viajan más servidores en esta comisión?"
-          labelPosition="left"
-        />
-
-        {servidor && (
-          <Card withBorder radius="md" p="xs" bg="var(--sgth-surface-sunken)">
-            <Group gap="xs">
-              <ThemeIcon
-                variant="light"
-                size="sm"
-                radius="xl"
-              >
-                <IconUsers size={12} />
-              </ThemeIcon>
-              <div>
-                <Text size="xs" fw={600}>
-                  {[servidor.nombre, servidor.apellido]
-                    .filter(Boolean)
-                    .join(" ") || miPerfil?.name}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  Servidor titular — se agrega automáticamente
-                </Text>
-              </div>
-            </Group>
-          </Card>
-        )}
-
-        <Controller
-          name="servidores_acompanantes"
-          control={control}
-          render={({ field }) => (
-            <MultiSelect
-              label="Servidores acompañantes (opcional)"
-              description="Seleccione los servidores que también
-                participan en esta comisión"
-              placeholder="Buscar servidor..."
-              data={servidoresOptions}
-              searchable
-              clearable
-              {...contained}
-              value={(field.value ?? []).map(String)}
-              onChange={(v) => field.onChange(v.map(Number))}
-            />
-          )}
-        />
 
         <Divider label="¿Por qué realiza este viaje?" labelPosition="left" />
 

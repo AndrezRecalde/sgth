@@ -6479,10 +6479,10 @@ export interface components {
                 id: number;
                 codigo_viatico: string | null;
                 /**
-                 * @description Quiénes viajan: la pantalla no ofrece decidir sobre el vuelo
-                 *     de un viático en el que va quien la mira.
+                 * @description Quién viaja: la pantalla no ofrece decidir sobre el vuelo
+                 *     de un viático propio.
                  */
-                servidores_ids: number[];
+                servidor_id: number;
                 servidor: {
                     nombre: string;
                     apellido: string;
@@ -8729,7 +8729,6 @@ export interface components {
             tipo_viaje?: string | null;
             pais_destino?: string | null;
             monto_calculado?: number | null;
-            servidores_acompanantes?: number[] | null;
         };
         /** SolicitudCertificacionMedica */
         SolicitudCertificacionMedica: {
@@ -27945,7 +27944,6 @@ export interface operations {
                     monto_calculado?: number | null;
                     tipo_viaje?: string | null;
                     pais_destino?: string | null;
-                    servidores_acompanantes?: number[] | null;
                 };
             };
         };

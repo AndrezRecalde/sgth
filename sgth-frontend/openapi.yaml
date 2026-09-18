@@ -38504,15 +38504,6 @@
                                             "null"
                                         ],
                                         "maxLength": 100
-                                    },
-                                    "servidores_acompanantes": {
-                                        "type": [
-                                            "array",
-                                            "null"
-                                        ],
-                                        "items": {
-                                            "type": "integer"
-                                        }
                                     }
                                 }
                             }
@@ -40731,12 +40722,9 @@
                                     "null"
                                 ]
                             },
-                            "servidores_ids": {
-                                "type": "array",
-                                "description": "Qui\u00e9nes viajan: la pantalla no ofrece decidir sobre el vuelo\nde un vi\u00e1tico en el que va quien la mira.",
-                                "items": {
-                                    "type": "integer"
-                                }
+                            "servidor_id": {
+                                "type": "integer",
+                                "description": "Qui\u00e9n viaja: la pantalla no ofrece decidir sobre el vuelo\nde un vi\u00e1tico propio."
                             },
                             "servidor": {
                                 "type": [
@@ -40783,7 +40771,7 @@
                         "required": [
                             "id",
                             "codigo_viatico",
-                            "servidores_ids",
+                            "servidor_id",
                             "servidor"
                         ]
                     },
@@ -49700,15 +49688,6 @@
                             "null"
                         ],
                         "minimum": 0
-                    },
-                    "servidores_acompanantes": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
-                        "items": {
-                            "type": "integer"
-                        }
                     }
                 },
                 "required": [

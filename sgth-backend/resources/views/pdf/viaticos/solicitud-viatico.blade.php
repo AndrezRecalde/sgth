@@ -466,39 +466,6 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </tr>
 </table>
 
-{{-- ══ SERVIDORES ══ --}}
-<div class="sec-hdr-alt">Servidores que Integran la Comisión</div>
-<table class="gt">
-  <thead>
-    <tr>
-      <th style="width:8%">N°</th>
-      <th class="tl">Apellidos y Nombres</th>
-      <th class="tl">Cargo</th>
-      <th style="width:15%">Condición</th>
-    </tr>
-  </thead>
-  <tbody>
-    @forelse($viatico->todosServidores as $vs)
-    <tr>
-      <td>{{ $loop->iteration }}</td>
-      <td class="tl">
-        {{ collect([
-            $vs->servidor?->apellido,
-            $vs->servidor?->segundo_apellido,
-            $vs->servidor?->nombre,
-          ])->filter()->join(' ') ?: '—' }}
-      </td>
-      <td class="tl">{{ $vs->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
-      <td><strong>{{ $vs->es_titular ? 'Titular' : 'Acompañante' }}</strong></td>
-    </tr>
-    @empty
-    <tr>
-      <td colspan="4" style="color:#718096">Sin servidores registrados.</td>
-    </tr>
-    @endforelse
-  </tbody>
-</table>
-
 {{-- ══ JUSTIFICACIÓN ══ --}}
 <div class="sec-hdr">Descripción de las Actividades a Realizarse</div>
 <div class="jbox">{{ $viatico->justificacion ?? '—' }}</div>

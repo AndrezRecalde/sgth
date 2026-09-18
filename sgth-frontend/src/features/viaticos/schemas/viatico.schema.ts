@@ -24,7 +24,6 @@ export const viaticoSchema = z.object({
     'sin_anticipo', 'total',
   ]),
   monto_calculado:   z.number().optional().nullable(),
-  servidores_acompanantes: z.array(z.number()).optional(),
 })
   // El viático se paga por noches de pernocte: una comisión que empieza y
   // termina el mismo día no genera ninguna, y el backend la rechaza.

@@ -320,34 +320,6 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </tr>
 </table>
 
-{{-- ══ SERVIDORES ══ --}}
-<div class="sec-hdr-alt">Servidores que Integran la Comisión</div>
-<table class="gt">
-  <thead>
-    <tr>
-      <th style="width:8%">Cód.</th>
-      <th class="tl">Apellidos y Nombres</th>
-      <th class="tl">Cargo</th>
-    </tr>
-  </thead>
-  <tbody>
-    @forelse($viatico->todosServidores as $vs)
-    <tr>
-      <td>{{ $vs->servidor_id }}</td>
-      <td class="tl">
-        {{ collect([
-            $vs->servidor?->apellido,
-            $vs->servidor?->nombre,
-          ])->filter()->join(' ') ?: '—' }}
-      </td>
-      <td class="tl">{{ $vs->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
-    </tr>
-    @empty
-    <tr><td colspan="3" style="color:#718096">—</td></tr>
-    @endforelse
-  </tbody>
-</table>
-
 {{-- ══ ACTIVIDADES ══ --}}
 <div class="sec-hdr">Informe de Actividades o Productos Alcanzados</div>
 @if($viatico->liquidacion?->actividades?->count() > 0)
