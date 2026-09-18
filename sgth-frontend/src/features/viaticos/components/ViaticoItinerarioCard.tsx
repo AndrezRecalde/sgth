@@ -1,61 +1,35 @@
-"use client";
+'use client'
 
-import {
-  Card,
-  Group,
-  Text,
-  Button,
-  Divider,
-  Alert,
-  ThemeIcon,
-} from "@mantine/core";
-import { IconRoute, IconAlertCircle } from "@tabler/icons-react";
-import { TramosList } from "./TramosList";
-import type { ViaticoConRelaciones } from "@/types/api";
+import { Button } from '@mantine/core'
+import { IconRoute } from '@tabler/icons-react'
+import { SectionCard } from '@/components/ui'
+import { TramosList } from './TramosList'
+import type { ViaticoConRelaciones } from '@/types/api'
 
 interface Props {
-  viatico: ViaticoConRelaciones;
-  puedeEditar: boolean;
-  onGestionar: () => void;
+  viatico: ViaticoConRelaciones
+  puedeEditar: boolean
+  onGestionar: () => void
 }
 
-export function ViaticoItinerarioCard({
-  viatico: d,
-  puedeEditar,
-  onGestionar,
-}: Props) {
+/**
+ * Los tramos del viaje. Sin tramos se ve un solo mensaje: antes salían dos a
+ * la vez, el de la lista y un aviso ámbar que repetía lo mismo.
+ */
+export function ViaticoItinerarioCard({ viatico: d, puedeEditar, onGestionar }: Props) {
   return (
-    <Card withBorder radius="md" h="100%">
-      <Group justify="space-between" mb="sm">
-        <Group gap="xs">
-          <ThemeIcon variant="default" size="sm">
-            <IconRoute size={14} />
-          </ThemeIcon>
-          <Text fw={600} size="sm">
-            Itinerario del viaje
-          </Text>
-        </Group>
-        {puedeEditar && (
-          <Button size="xs" variant="light" onClick={onGestionar}>
-            Gestionar
+    <SectionCard
+      title="Itinerario"
+      description="Cada tramo del viaje, de ida y de regreso"
+      actions={
+        puedeEditar && (
+          <Button variant="subtle" size="xs" leftSection={<IconRoute size={14} />} onClick={onGestionar}>
+            Editar itinerario
           </Button>
-        )}
-      </Group>
-      <Divider mb="sm" />
+        )
+      }
+    >
       <TramosList viaticoId={d.id} puedeEditar={false} />
-      {!d.datetime_salida && (
-        <Alert
-          icon={<IconAlertCircle size={14} />}
-          color="amber"
-          variant="light"
-          mt="sm"
-        >
-          <Text size="xs">
-            Aun no hay tramos registrados. Pulse <strong>Gestionar</strong> para
-            agregar el itinerario.
-          </Text>
-        </Alert>
-      )}
-    </Card>
-  );
+    </SectionCard>
+  )
 }

@@ -1,9 +1,9 @@
 'use client'
 
-import { Alert, Card, Divider, Group, Stack, Text, ThemeIcon } from '@mantine/core'
-import { IconSignature, IconAlertTriangle } from '@tabler/icons-react'
+import { Alert, Group, Stack, Text } from '@mantine/core'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
-import { StatusBadge } from '@/components/ui'
+import { SectionCard, StatusBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import type { ViaticoFirmante } from '@/types/api'
 
@@ -43,23 +43,16 @@ export function ViaticoFirmantesCard({ firmantes }: Props) {
     .filter((grupo) => grupo.firmas.length > 0)
 
   return (
-    <Card withBorder radius="md">
-      <Group gap="xs" mb="sm">
-        <ThemeIcon variant="default" size="sm">
-          <IconSignature size={14} />
-        </ThemeIcon>
-        <Text fw={600} size="sm">
-          Firmas de los documentos
-        </Text>
-      </Group>
-      <Divider mb="sm" />
-
+    <SectionCard
+      title="Firmas"
+      description="Quién firma cada documento, tal como quedó al emitirlo"
+    >
       <Stack gap="md">
         {porDocumento.map(({ documento, firmas }) => (
           <Stack key={documento} gap={6}>
             <Group gap="xs">
-              <Text size="xs" fw={700} c="dimmed">
-                {DOCUMENTOS[documento].toUpperCase()}
+              <Text size="sm" fw={600}>
+                {DOCUMENTOS[documento]}
               </Text>
               <Text size="xs" c="dimmed">
                 sellado el {formatFecha(firmas[0].sellado_en)}
@@ -97,6 +90,6 @@ export function ViaticoFirmantesCard({ firmantes }: Props) {
           </Stack>
         ))}
       </Stack>
-    </Card>
+    </SectionCard>
   )
 }

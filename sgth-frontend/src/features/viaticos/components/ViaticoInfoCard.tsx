@@ -1,138 +1,63 @@
-"use client";
+'use client'
 
-import { StatusBadge } from "@/components/ui";
-import {
-  Card,
-  Group,
-  Text,
-  Button,
-  Divider,
-  Stack,
-  ThemeIcon,
-} from "@mantine/core";
-import { IconClipboardList, IconPencil } from "@tabler/icons-react";
-import type { ViaticoConRelaciones } from "@/types/api";
-import { formatFechaHora as fmt } from "@/lib/fecha";
+import { Button } from '@mantine/core'
+import { IconPencil } from '@tabler/icons-react'
+import { DetailList, SectionCard, type DetailItem } from '@/components/ui'
+import { formatFechaHora } from '@/lib/fecha'
+import { ZONA_LABELS } from '../constants/viatico.constants'
+import type { ViaticoConRelaciones } from '@/types/api'
 
 interface Props {
-  viatico: ViaticoConRelaciones;
-  puedeEditar: boolean;
-  onEditar: () => void;
+  viatico: ViaticoConRelaciones
+  puedeEditar: boolean
+  onEditar: () => void
 }
 
-import { ZONA_LABELS } from "../constants/viatico.constants";
-
+/*
+| Quién viaja, a dónde, cuándo y para qué.
+|
+| Con `DetailList` la etiqueta va sobre el valor. Antes iban en una fila
+| etiqueta-valor y un cargo largo bajaba a la línea siguiente, debajo de la
+| etiqueta que venía después.
+*/
 export function ViaticoInfoCard({ viatico: d, puedeEditar, onEditar }: Props) {
-  const servidor = d.servidor;
-  const nombreCompleto = [servidor?.nombre, servidor?.apellido]
-    .filter(Boolean)
-    .join(" ");
+  const s = d.servidor
+  const noches = Number(d.noches ?? 0)
+
+  const items: DetailItem[] = [
+    { label: 'Servidor', value: [s?.nombre, s?.apellido].filter(Boolean).join(' ') },
+    { label: 'Cargo', value: s?.puesto?.cargo?.nombre },
+    { label: 'Unidad', value: s?.puesto?.unidad_administrativa?.nombre, ancho: true },
+    { label: 'Zona', value: ZONA_LABELS[d.zona ?? ''] ?? d.zona },
+    { label: 'Noches', value: `${noches} ${noches === 1 ? 'noche' : 'noches'}` },
+    { label: 'Salida', value: formatFechaHora(d.datetime_salida) },
+    { label: 'Regreso', value: formatFechaHora(d.datetime_llegada) },
+  ]
+
+  if (d.zona === 'exterior') {
+    items.push(
+      { label: 'País de destino', value: d.pais_destino as string | null },
+      {
+        label: 'Coeficiente',
+        value: d.coeficiente_exterior ? Number(d.coeficiente_exterior).toFixed(4) : 'Lo fija Financiero al aprobar',
+      },
+    )
+  }
+
+  items.push({ label: 'Justificación', value: d.justificacion, ancho: true })
 
   return (
-    <Card withBorder radius="md" h="100%">
-      <Group justify="space-between" mb="sm">
-        <Group gap="xs">
-          <ThemeIcon variant="default" size="sm">
-            <IconClipboardList size={14} />
-          </ThemeIcon>
-          <Text fw={600} size="sm">
-            Información general
-          </Text>
-        </Group>
-        {puedeEditar && (
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconPencil size={12} />}
-            onClick={onEditar}
-          >
-            Gestionar
+    <SectionCard
+      title="Datos del viaje"
+      actions={
+        puedeEditar && (
+          <Button variant="subtle" size="xs" leftSection={<IconPencil size={14} />} onClick={onEditar}>
+            Editar datos
           </Button>
-        )}
-      </Group>
-      <Divider mb="sm" />
-      <Stack gap="xs">
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Servidor
-          </Text>
-          <Text size="sm" fw={500}>
-            {nombreCompleto || "—"}
-          </Text>
-        </Group>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Cargo
-          </Text>
-          <Text size="sm">{servidor?.puesto?.cargo?.nombre ?? "—"}</Text>
-        </Group>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Unidad
-          </Text>
-          <Text size="sm">
-            {servidor?.puesto?.unidad_administrativa?.nombre ?? "—"}
-          </Text>
-        </Group>
-        <Divider />
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Zona
-          </Text>
-          <Text size="sm" fw={500}>
-            {ZONA_LABELS[d.zona ?? ""] ?? d.zona}
-          </Text>
-        </Group>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Salida
-          </Text>
-          <Text size="sm">{fmt(d.datetime_salida)}</Text>
-        </Group>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Regreso
-          </Text>
-          <Text size="sm">{fmt(d.datetime_llegada)}</Text>
-        </Group>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Noches
-          </Text>
-          <StatusBadge>
-            {Number(d.noches ?? 0)} noche(s)
-          </StatusBadge>
-        </Group>
-        <Stack gap={2}>
-          <Text size="xs" c="dimmed">
-            Justificación
-          </Text>
-          <Text size="sm" lineClamp={4}>
-            {d.justificacion ?? "—"}
-          </Text>
-        </Stack>
-        {d.zona === "exterior" && d.pais_destino && (
-          <>
-            <Divider />
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                País destino
-              </Text>
-              <Text size="sm">{d.pais_destino as string}</Text>
-            </Group>
-            {d.coeficiente_exterior && (
-              <Group justify="space-between">
-                <Text size="xs" c="dimmed">
-                  Coeficiente
-                </Text>
-                <Text size="sm">
-                  {Number(d.coeficiente_exterior).toFixed(4)}
-                </Text>
-              </Group>
-            )}
-          </>
-        )}
-      </Stack>
-    </Card>
-  );
+        )
+      }
+    >
+      <DetailList items={items} />
+    </SectionCard>
+  )
 }

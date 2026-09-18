@@ -73,19 +73,8 @@ export const ESTADO_LABELS: Record<string, string> = {
   rechazado: "Rechazado",
 };
 
-export const PASO_STEPPER: Record<string, number> = {
-  solicitado: 0,
-  aprobado: 1,
-  con_anticipo: 2,
-  en_comision: 3,
-  pendiente_liquidacion: 4,
-  liquidado: 5,
-  contabilizado: 6,
-  cancelado: 0,
-  rechazado: 0,
-};
-
 export const MODALIDAD_LABELS: Record<string, string> = {
-  total: "Anticipo total",
+  // El anticipo es siempre el 70 % del monto (Gestión Financiera).
+  total: "Con anticipo del 70 %",
   sin_anticipo: "Sin anticipo",
 };
