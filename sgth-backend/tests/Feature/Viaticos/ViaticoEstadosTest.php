@@ -102,6 +102,9 @@ beforeEach(function () {
         $this->actingAs($quien, 'sanctum')->postJson("/api/v1/viaticos/{$viatico->id}/{$accion}", $datos);
 
     $this->motivo = ['motivo' => 'La documentación no corresponde'];
+
+    // Entregar el anticipo y contabilizar piden el respaldo contable.
+    $this->respaldo = ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301'];
 });
 
 // ── Grafo de estados ─────────────────────────────────────────────────
@@ -109,7 +112,7 @@ beforeEach(function () {
 it('cada acción solo sale del estado que le corresponde', function (string $accion, EstadoViatico $estado) {
     $viatico = ($this->viaticoDe)($this->titular, $estado);
 
-    ($this->post)($this->financiero, $viatico, $accion, $this->motivo)->assertStatus(422);
+    ($this->post)($this->financiero, $viatico, $accion, $this->motivo + $this->respaldo)->assertStatus(422);
 
     expect($viatico->fresh()->estado)->toBe($estado);
 })->with([
@@ -136,7 +139,7 @@ it('el recorrido completo deja cada paso en el historial', function () {
     ]));
 
     foreach (['aprobar', 'entregar-anticipo', 'marcar-en-comision', 'marcar-pendiente-liquidacion'] as $accion) {
-        ($this->post)($this->financiero, $viatico, $accion)->assertOk();
+        ($this->post)($this->financiero, $viatico, $accion, $this->respaldo)->assertOk();
     }
     $viatico->update(['estado' => EstadoViatico::LIQUIDADO]);
     ($this->post)($this->financiero, $viatico, 'devolver-correccion', ['motivo' => 'Falta la factura del hotel'])->assertOk();
@@ -273,12 +276,12 @@ it('Financiero no decide sobre un viático en el que viaja', function (string $a
         'fecha_liquidacion' => now()->toDateString(),
     ]));
 
-    ($this->post)($this->financiero, $viatico, $accion)
+    ($this->post)($this->financiero, $viatico, $accion, $this->respaldo)
         ->assertStatus(422)
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'en el que viaja'));
 
     // Otra persona de Financiero sí puede.
-    ($this->post)($this->otroFinanciero, $viatico, $accion)->assertOk();
+    ($this->post)($this->otroFinanciero, $viatico, $accion, $this->respaldo)->assertOk();
 })->with([
     'aprobar'           => ['aprobar', EstadoViatico::SOLICITADO],
     'entregar anticipo' => ['entregar-anticipo', EstadoViatico::APROBADO],
@@ -358,8 +361,60 @@ it('no se aprueba a quien tiene liquidaciones vencidas', function () {
 it('un viático sin anticipo no recibe anticipo', function () {
     $viatico = ($this->viaticoDe)($this->titular, EstadoViatico::APROBADO, ['modalidad_anticipo' => 'sin_anticipo']);
 
-    ($this->post)($this->financiero, $viatico, 'entregar-anticipo')->assertStatus(422);
+    ($this->post)($this->financiero, $viatico, 'entregar-anticipo', $this->respaldo)->assertStatus(422);
     ($this->post)($this->financiero, $viatico, 'marcar-en-comision')->assertOk();
 
     expect((float) $viatico->fresh()->monto_anticipo)->toBe(0.0);
+});
+
+// ── Respaldo contable ────────────────────────────────────────────────
+
+/*
+| Gestión Financiera asigna el número de resolución y la partida al entregar el
+| anticipo (2026-09-15). Las dos columnas existían desde el principio y nadie
+| las llenaba nunca.
+*/
+
+it('sin resolución ni partida no se entrega el anticipo', function () {
+    $viatico = ($this->viaticoDe)($this->titular, EstadoViatico::APROBADO);
+
+    $errores = ($this->post)($this->financiero, $viatico, 'entregar-anticipo')
+        ->assertStatus(422)
+        ->json('errores');
+
+    expect(array_keys($errores))->toBe(['numero_resolucion', 'partida_presupuestaria'])
+        ->and($viatico->fresh()->estado)->toBe(EstadoViatico::APROBADO);
+
+    ($this->post)($this->financiero, $viatico, 'entregar-anticipo', $this->respaldo)->assertOk();
+
+    expect($viatico->fresh())
+        ->estado->toBe(EstadoViatico::CON_ANTICIPO)
+        ->numero_resolucion->toBe('RES-2026-001')
+        ->partida_presupuestaria->toBe('530301');
+});
+
+it('el viático sin anticipo las pide al contabilizar, y el que ya las tiene no', function () {
+    $sinAnticipo = ($this->viaticoDe)($this->titular, EstadoViatico::LIQUIDADO, ['modalidad_anticipo' => 'sin_anticipo']);
+    comprobanteAceptado(LiquidacionViatico::create([
+        'viatico_id' => $sinAnticipo->id, 'total_facturas' => 0,
+        'fecha_liquidacion' => now()->toDateString(),
+    ]));
+
+    ($this->post)($this->financiero, $sinAnticipo, 'contabilizar')->assertStatus(422);
+    ($this->post)($this->financiero, $sinAnticipo, 'contabilizar', $this->respaldo)->assertOk();
+
+    expect($sinAnticipo->fresh()->numero_resolucion)->toBe('RES-2026-001');
+
+    // Con el anticipo entregado ya vienen asignadas: no se vuelven a pedir.
+    $conAnticipo = ($this->viaticoDe)($this->titular, EstadoViatico::LIQUIDADO, [
+        'numero_resolucion' => 'RES-2026-002', 'partida_presupuestaria' => '530302',
+    ]);
+    comprobanteAceptado(LiquidacionViatico::create([
+        'viatico_id' => $conAnticipo->id, 'total_facturas' => 0,
+        'fecha_liquidacion' => now()->toDateString(),
+    ]));
+
+    ($this->post)($this->financiero, $conAnticipo, 'contabilizar')->assertOk();
+
+    expect($conAnticipo->fresh()->numero_resolucion)->toBe('RES-2026-002');
 });

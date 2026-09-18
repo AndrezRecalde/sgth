@@ -135,7 +135,11 @@ it('solo se contabiliza con todos los comprobantes aceptados', function () {
     $viatico = ($this->viatico)(EstadoViatico::LIQUIDADO);
     $uno = ($this->comprobante)($viatico);
     $dos = ($this->comprobante)($viatico, ['numero_factura' => '001-001-000000456']);
-    $contabilizar = fn () => $this->actingAs($this->financiero, 'sanctum')->postJson("/api/v1/viaticos/{$viatico->id}/contabilizar");
+    // Sin anticipo entregado, contabilizar pide también el respaldo contable.
+    $contabilizar = fn () => $this->actingAs($this->financiero, 'sanctum')
+        ->postJson("/api/v1/viaticos/{$viatico->id}/contabilizar", [
+            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301',
+        ]);
 
     $contabilizar()->assertStatus(422)->assertJsonPath('mensaje', 'Faltan 2 comprobante(s) por revisar antes de contabilizar.');
 
@@ -152,8 +156,11 @@ it('sin comprobantes no se contabiliza', function () {
     $viatico = ($this->viatico)(EstadoViatico::LIQUIDADO);
 
     $this->actingAs($this->financiero, 'sanctum')
-        ->postJson("/api/v1/viaticos/{$viatico->id}/contabilizar")
-        ->assertStatus(422);
+        ->postJson("/api/v1/viaticos/{$viatico->id}/contabilizar", [
+            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', 'La liquidación no tiene comprobantes que contabilizar.');
 });
 
 // ── Reenvío tras la corrección ───────────────────────────────────────

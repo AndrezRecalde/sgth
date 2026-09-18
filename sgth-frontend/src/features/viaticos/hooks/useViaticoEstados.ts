@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { viaticoService }              from '../services/viaticoService'
+import type { RespaldoContable }       from '../services/viaticoService'
 import { notificar } from '@/components/ui'
 
 type ConMotivo = { id: number; motivo: string }
@@ -80,7 +81,8 @@ export function useViaticoEstados() {
   ))
 
   const entregarAnticipo = useMutation(crearMutacionEstado(
-    viaticoService.entregarAnticipo,
+    ({ id, datos }: { id: number; datos: RespaldoContable }) =>
+      viaticoService.entregarAnticipo(id, datos),
     'Anticipo entregado',
     'El anticipo fue registrado como entregado.',
     'No se pudo registrar la entrega del anticipo',
@@ -101,7 +103,8 @@ export function useViaticoEstados() {
   ))
 
   const contabilizar = useMutation(crearMutacionEstado(
-    viaticoService.contabilizar,
+    ({ id, datos }: { id: number; datos?: RespaldoContable }) =>
+      viaticoService.contabilizar(id, datos),
     'Viático contabilizado',
     'La liquidación fue contabilizada correctamente.',
     'No se pudo contabilizar el viático',

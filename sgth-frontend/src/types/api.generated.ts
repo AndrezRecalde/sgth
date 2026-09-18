@@ -28038,7 +28038,14 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    numero_resolucion: string;
+                    partida_presupuestaria: string;
+                };
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -28056,6 +28063,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "viatico.marcarEnComision": {
@@ -28212,7 +28220,14 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    numero_resolucion?: string;
+                    partida_presupuestaria?: string;
+                };
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -28230,6 +28245,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "viatico.liquidar": {

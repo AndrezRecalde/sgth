@@ -34,6 +34,7 @@ import { ServidoresModal } from "./ServidoresModal";
 import { TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
 import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
+import { RespaldoContableModal } from "./RespaldoContableModal";
 import { resumenRevision } from "../utils/revisionComprobantes";
 
 interface Props {
@@ -94,6 +95,10 @@ export function ViaticoDetallePage({ identificador }: Props) {
     useDisclosure(false);
 
   const [mostrarTramoForm, setMostrarTramoForm] = useState(false);
+  // Resolución y partida: al entregar el anticipo, y al contabilizar un
+  // viático que se tramitó sin anticipo y todavía no las tiene.
+  const [conRespaldo, setConRespaldo] = useState<"anticipo" | "contabilizar" | null>(null);
+
   const [conMotivo, setConMotivo] = useState<"rechazar" | "devolver" | null>(
     null,
   );
@@ -226,12 +231,16 @@ export function ViaticoDetallePage({ identificador }: Props) {
           estadoActual={estadoActual}
           puede={puede}
           onAprobar={handleAprobar}
-          onEntregar={() => entregarAnticipo.mutate(d.id)}
+          onEntregar={() => setConRespaldo("anticipo")}
           onComision={() => marcarEnComision.mutate(d.id)}
           onPendiente={() =>
             marcarPendienteLiquidacion.mutate(d.id)
           }
-          onContabilizar={() => contabilizar.mutate(d.id)}
+          onContabilizar={() =>
+            d.numero_resolucion && d.partida_presupuestaria
+              ? contabilizar.mutate({ id: d.id })
+              : setConRespaldo("contabilizar")
+          }
           onDevolverCorreccion={() => setConMotivo('devolver')}
           onCancelar={() => confirmar({
             title:   'Cancelar solicitud',
@@ -268,6 +277,27 @@ export function ViaticoDetallePage({ identificador }: Props) {
       </Card>
 
       {/* Modales */}
+      <RespaldoContableModal
+        opened={conRespaldo !== null}
+        onClose={() => setConRespaldo(null)}
+        title={conRespaldo === "anticipo" ? "Entregar anticipo" : "Contabilizar viático"}
+        confirmLabel={conRespaldo === "anticipo" ? "Entregar anticipo" : "Contabilizar"}
+        cargando={entregarAnticipo.isPending || contabilizar.isPending}
+        descripcion={
+          conRespaldo === "anticipo"
+            ? `Con qué se respalda el anticipo de ${d.codigo_viatico}. Los dos datos se imprimen en el comprobante contable.`
+            : `${d.codigo_viatico} se tramitó sin anticipo: asigne el respaldo antes de contabilizarlo.`
+        }
+        onConfirm={(datos) => {
+          const cerrar = { onSuccess: () => setConRespaldo(null) };
+          if (conRespaldo === "anticipo") {
+            entregarAnticipo.mutate({ id: d.id, datos }, cerrar);
+          } else {
+            contabilizar.mutate({ id: d.id, datos }, cerrar);
+          }
+        }}
+      />
+
       <MotivoModal
         opened={conMotivo !== null}
         onClose={() => setConMotivo(null)}

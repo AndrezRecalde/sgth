@@ -125,10 +125,15 @@ final class ViaticoEstadoService
         );
     }
 
-    public function entregarAnticipo(int $viaticoId, User $user): Viatico
+    /**
+     * @param array{numero_resolucion?: string, partida_presupuestaria?: string} $datos
+     */
+    public function entregarAnticipo(int $viaticoId, User $user, array $datos = []): Viatico
     {
-        return $this->transicionar($viaticoId, $user, EstadoViatico::CON_ANTICIPO, null, function (Viatico $viatico) use ($user) {
+        return $this->transicionar($viaticoId, $user, EstadoViatico::CON_ANTICIPO, null, function (Viatico $viatico) use ($user, $datos) {
             $this->noSobreElPropio($viatico, $user, 'entregarle el anticipo a');
+
+            $this->anotarRespaldo($viatico, $datos);
 
             if ($this->valor($viatico->modalidad_anticipo) === 'sin_anticipo') {
                 throw new ReglaNegocioException(
@@ -195,10 +200,22 @@ final class ViaticoEstadoService
         );
     }
 
-    public function contabilizar(int $viaticoId, User $user): LiquidacionViatico
+    /**
+     * @param array{numero_resolucion?: string, partida_presupuestaria?: string} $datos
+     */
+    public function contabilizar(int $viaticoId, User $user, array $datos = []): LiquidacionViatico
     {
-        $viatico = $this->transicionar($viaticoId, $user, EstadoViatico::CONTABILIZADO, null, function (Viatico $viatico) use ($user) {
+        $viatico = $this->transicionar($viaticoId, $user, EstadoViatico::CONTABILIZADO, null, function (Viatico $viatico) use ($user, $datos) {
             $this->noSobreElPropio($viatico, $user, 'contabilizar');
+
+            $this->anotarRespaldo($viatico, $datos);
+
+            if (! $viatico->numero_resolucion || ! $viatico->partida_presupuestaria) {
+                throw new ReglaNegocioException(
+                    'El viático no tiene número de resolución ni partida presupuestaria: '
+                        .'asígnelos antes de contabilizarlo.'
+                );
+            }
 
             $liquidacion = LiquidacionViatico::where('viatico_id', $viatico->id)->first();
 
@@ -460,6 +477,21 @@ final class ViaticoEstadoService
 
             return $viatico->fresh();
         });
+    }
+
+    /**
+     * Anota la resolución y la partida que asigna Financiero. Se guardan con el
+     * cambio de estado, dentro de la misma transacción.
+     *
+     * @param array{numero_resolucion?: string, partida_presupuestaria?: string} $datos
+     */
+    private function anotarRespaldo(Viatico $viatico, array $datos): void
+    {
+        foreach (['numero_resolucion', 'partida_presupuestaria'] as $campo) {
+            if (! empty($datos[$campo])) {
+                $viatico->{$campo} = trim($datos[$campo]);
+            }
+        }
     }
 
     private function noSobreElPropio(Viatico $viatico, User $user, string $accion): void
