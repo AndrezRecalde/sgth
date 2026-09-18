@@ -41,6 +41,13 @@ export function SgthTable<T>(props: DataTableProps<T>) {
  * TypeScript resolver la variante. La alternativa habría sido una aserción de tipo forzada,
  * que está prohibida.
  *
+ * Lleva solo `paginationText`. Tenía también `recordsPerPageLabel`, que
+ * pertenece a la variante que además exige `recordsPerPageOptions` y
+ * `onRecordsPerPageChange`: con él, esparcir el objeto no compilaba en
+ * ninguna tabla, y las nueve pantallas paginadas acabaron pasando
+ * `PAGINACION_ES.paginationText` a mano. Si una tabla llega a ofrecer
+ * «registros por página», su etiqueta va en esa tabla, no aquí.
+ *
  *   <SgthTable
  *     {...PAGINACION_ES}
  *     records={data}
@@ -51,7 +58,6 @@ export function SgthTable<T>(props: DataTableProps<T>) {
  *   />
  */
 export const PAGINACION_ES = {
-  recordsPerPageLabel: 'Registros por página',
   paginationText: ({
     from,
     to,

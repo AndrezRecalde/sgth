@@ -158,11 +158,7 @@ export function PermisosTab() {
         }}
       >
         <SgthTable
-          // Solo `paginationText`, no el objeto entero: `recordsPerPageLabel`
-          // pertenece a la variante de mantine-datatable que además exige
-          // `recordsPerPageOptions` y `onRecordsPerPageChange`, y sin ellas no
-          // compila. De ahí que ninguna pantalla use `PAGINACION_ES` completo.
-          paginationText={PAGINACION_ES.paginationText}
+          {...PAGINACION_ES}
           records={lista}
           columns={columns}
           totalRecords={data?.total ?? lista.length}
