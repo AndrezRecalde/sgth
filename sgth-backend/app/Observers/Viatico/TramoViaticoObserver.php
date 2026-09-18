@@ -2,11 +2,27 @@
 namespace App\Observers\Viatico;
 
 use App\Models\Viatico\AutorizacionVuelo;
+use App\Models\Viatico\EmpresaTransporte;
 use App\Models\Viatico\TramoViatico;
 use Illuminate\Support\Facades\Log;
 
 class TramoViaticoObserver
 {
+    /**
+     * Sin tipo de transporte, el tramo toma el de su empresa.
+     *
+     * Antes de 2026-09-18 el tramo solo guardaba la empresa. Quien todavía
+     * manda solo la empresa —y los tramos que se crean fuera del formulario—
+     * sigue funcionando.
+     */
+    public function saving(TramoViatico $tramo): void
+    {
+        if ($tramo->catalogo_transporte_id === null && $tramo->empresa_transporte_id !== null) {
+            $tramo->catalogo_transporte_id = EmpresaTransporte::whereKey($tramo->empresa_transporte_id)
+                ->value('catalogo_transporte_id');
+        }
+    }
+
     public function created(TramoViatico $tramo): void
     {
         $this->generarAutorizacionSiAplica($tramo);
@@ -14,21 +30,16 @@ class TramoViaticoObserver
 
     public function updated(TramoViatico $tramo): void
     {
-        // Si cambió la empresa: sin autorización requerida se retira la
-        // pendiente; con ella, se crea. Antes solo se retiraba, así que pasar
-        // un tramo de bus a avión dejaba el vuelo sin autorizar.
-        if ($tramo->wasChanged('empresa_transporte_id')) {
-            $tramo->unsetRelation('empresa');
+        // Si cambió el tipo de transporte: sin autorización requerida se
+        // retira la pendiente; con ella, se crea. Antes solo se retiraba, así
+        // que pasar un tramo de bus a avión dejaba el vuelo sin autorizar.
+        if ($tramo->wasChanged('catalogo_transporte_id')) {
+            $tramo->unsetRelation('catalogo');
 
-            $requiere = $tramo->empresa
-                ?->catalogo
-                ?->requiere_autorizacion ?? false;
-
-            if (!$requiere) {
-                AutorizacionVuelo::where(
-                    'tramo_viatico_id', $tramo->id
-                )->where('estado', 'pendiente')
-                 ->delete();
+            if (! $this->requiereAutorizacion($tramo)) {
+                AutorizacionVuelo::where('tramo_viatico_id', $tramo->id)
+                    ->where('estado', 'pendiente')
+                    ->delete();
 
                 return;
             }
@@ -45,14 +56,16 @@ class TramoViaticoObserver
         )->delete();
     }
 
+    /** Lo decide el tipo del tramo, no la empresa: puede no tenerla. */
+    private function requiereAutorizacion(TramoViatico $tramo): bool
+    {
+        return (bool) ($tramo->catalogo?->requiere_autorizacion ?? false);
+    }
+
     private function generarAutorizacionSiAplica(
         TramoViatico $tramo
     ): void {
-        $requiere = $tramo->empresa
-            ?->catalogo
-            ?->requiere_autorizacion ?? false;
-
-        if (!$requiere) return;
+        if (! $this->requiereAutorizacion($tramo)) return;
 
         AutorizacionVuelo::firstOrCreate(
             ['tramo_viatico_id' => $tramo->id],

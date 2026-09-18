@@ -9799,7 +9799,7 @@ export interface components {
             destino_canton_id: number | null;
             destino_pais: string | null;
             destino_ciudad: string;
-            empresa_transporte_id: number;
+            empresa_transporte_id: number | null;
             /** Format: date-time */
             datetime_salida: string;
             /** Format: date-time */
@@ -9810,6 +9810,7 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
             tipo_tramo: string;
+            catalogo_transporte_id: number;
         };
         /** TransicionarMovimientoRequest */
         TransicionarMovimientoRequest: {
@@ -26773,7 +26774,8 @@ export interface operations {
                     destino_canton_id?: number | null;
                     destino_pais?: string | null;
                     destino_ciudad: string;
-                    empresa_transporte_id: number;
+                    catalogo_transporte_id?: number | null;
+                    empresa_transporte_id?: number | null;
                     /** Format: date-time */
                     datetime_salida: string;
                     /** Format: date-time */
@@ -26830,7 +26832,8 @@ export interface operations {
                     destino_canton_id?: number | null;
                     destino_pais?: string | null;
                     destino_ciudad?: string;
-                    empresa_transporte_id?: number;
+                    catalogo_transporte_id?: number;
+                    empresa_transporte_id?: number | null;
                     /** Format: date-time */
                     datetime_salida?: string;
                     /** Format: date-time */

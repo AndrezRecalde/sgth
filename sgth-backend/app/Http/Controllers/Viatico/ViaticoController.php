@@ -89,7 +89,7 @@ class ViaticoController extends Controller
         $query = Viatico::with([
             'servidor.puesto.cargo',
             'servidor.puesto.unidadAdministrativa',
-            'tramos.empresa.catalogo',
+            'tramos.catalogo', 'tramos.empresa.catalogo',
             'tramos.origenProvincia',
             'tramos.origenCanton',
             'tramos.destinoProvincia',

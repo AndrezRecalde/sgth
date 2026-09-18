@@ -61,13 +61,21 @@ export const tramoSchema = z.object({
   destino_ciudad:        z.string().min(1, 'Indique la ciudad de destino'),
   catalogo_transporte_id: z.number()
     .min(1, 'Seleccione el tipo de transporte'),
-  empresa_transporte_id: z.number()
-    .min(1, 'Seleccione la empresa de transporte'),
+  empresa_transporte_id: z.number().nullable(),
+  /** Si el tipo elegido tiene empresas. Lo fija el formulario; no se envía. */
+  con_empresas:     z.boolean(),
   datetime_salida:  z.string().min(1, 'Indique la salida del tramo'),
   datetime_llegada: z.string().min(1, 'Indique la llegada del tramo'),
   tipo_tramo: z.enum([
     'ida', 'destino', 'escala', 'regreso'
   ]).optional().nullable(),
 })
+  // La empresa, solo si el tipo las tiene. Un vehículo institucional, un taxi
+  // o una lancha no tienen, y antes el formulario la exigía siempre: con esos
+  // tipos no había forma de agregar el tramo.
+  .refine((t) => !t.con_empresas || !!t.empresa_transporte_id, {
+    message: 'Seleccione la empresa de transporte',
+    path: ['empresa_transporte_id'],
+  })
 
 export type TramoFormData = z.infer<typeof tramoSchema>

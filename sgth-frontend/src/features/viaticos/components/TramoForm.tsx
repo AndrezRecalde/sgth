@@ -44,7 +44,8 @@ const VACIO: TramoFormData = {
   destino_pais: null,
   destino_ciudad: "",
   catalogo_transporte_id: 0,
-  empresa_transporte_id: 0,
+  empresa_transporte_id: null,
+  con_empresas: false,
   datetime_salida: "",
   datetime_llegada: "",
 };
@@ -94,7 +95,7 @@ export function TramoForm({ viaticoId, viatico, tramosExistentes, onSuccess }: P
       setError("tipo_tramo", { message: "Elija qué es este tramo en el viaje" });
       return;
     }
-    const { catalogo_transporte_id: _catalogo, ...resto } = values;
+    const { con_empresas: _conEmpresas, ...resto } = values;
     crear.mutate({ ...resto, tipo_tramo: tipoEfectivo });
   };
 

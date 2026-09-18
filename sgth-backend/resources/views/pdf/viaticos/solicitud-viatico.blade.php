@@ -501,8 +501,9 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
         : collect([$tramo->destino_pais, $tramo->destino_ciudad])->filter()->join(' / ');
     @endphp
     <tr>
-      <td>{{ strtoupper($tramo->empresa?->catalogo?->tipo_vehiculo ?? 'TERRESTRE') }}</td>
-      <td class="tl">{{ $tramo->empresa?->nombre ?? '—' }}</td>
+      <td>{{ strtoupper($tramo->catalogo?->tipo_vehiculo ?? $tramo->empresa?->catalogo?->tipo_vehiculo ?? 'TERRESTRE') }}</td>
+      {{-- Sin empresa (vehículo institucional, taxi…), el tipo de transporte. --}}
+      <td class="tl">{{ $tramo->empresa?->nombre ?? $tramo->catalogo?->nombre ?? '—' }}</td>
       <td class="tl"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
       <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('d/m/Y') : '—' }}</td>
       <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('H:i') : '—' }}</td>

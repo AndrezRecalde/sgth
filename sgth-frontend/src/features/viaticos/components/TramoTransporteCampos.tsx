@@ -26,9 +26,9 @@ const opciones = (lista: { id: number; nombre?: string | null }[]) =>
  */
 export function TramoTransporteCampos({ control, errors, setValue, viatico, esPrimerTramo }: Props) {
   const contained = useContainedInput()
-  const [catalogoId, salida, llegada] = useWatch({
+  const [catalogoId, conEmpresas, salida, llegada] = useWatch({
     control,
-    name: ['catalogo_transporte_id', 'datetime_salida', 'datetime_llegada'],
+    name: ['catalogo_transporte_id', 'con_empresas', 'datetime_salida', 'datetime_llegada'],
   })
 
   const { data: tipos = [] } = useTiposTransporte()
@@ -77,7 +77,10 @@ export function TramoTransporteCampos({ control, errors, setValue, viatico, esPr
                 value={field.value ? String(field.value) : null}
                 onChange={(v) => {
                   field.onChange(v ? Number(v) : 0)
-                  setValue('empresa_transporte_id', 0)
+                  // Sin empresas (vehículo institucional, taxi…) no se pide empresa.
+                  const tipo = (tipos as CatalogoTransporte[]).find((t) => String(t.id) === v)
+                  setValue('con_empresas', tipo?.con_empresas ?? true)
+                  setValue('empresa_transporte_id', null)
                 }}
                 error={errors.catalogo_transporte_id?.message}
               />
@@ -93,10 +96,11 @@ export function TramoTransporteCampos({ control, errors, setValue, viatico, esPr
                 label="Empresa"
                 data={empresaOptions}
                 searchable
-                disabled={empresaOptions.length === 0}
+                disabled={!catalogoId || !conEmpresas}
+                placeholder={catalogoId && !conEmpresas ? 'No aplica' : undefined}
                 {...contained}
                 value={field.value ? String(field.value) : null}
-                onChange={(v) => field.onChange(v ? Number(v) : 0)}
+                onChange={(v) => field.onChange(v ? Number(v) : null)}
                 error={errors.empresa_transporte_id?.message}
               />
             )}
@@ -106,16 +110,17 @@ export function TramoTransporteCampos({ control, errors, setValue, viatico, esPr
         <Grid.Col span={{ base: 12, sm: 6 }}>{fechaHora('datetime_llegada', 'Llegada')}</Grid.Col>
       </Grid>
 
+      {/* Sin punto final: la hora ya termina en «a. m.» y salía «a. m..». */}
       {salidaDistinta && (
         <Alert color="amber" variant="light" p="xs">
           El primer tramo sale con el viático: el{' '}
-          <strong>{formatFechaHora(viatico?.datetime_salida as string)}</strong>.
+          <strong>{formatFechaHora(viatico?.datetime_salida as string)}</strong>
         </Alert>
       )}
       {llegaTarde && (
         <Alert color="red" variant="light" p="xs">
           La llegada no puede pasar del regreso del viático:{' '}
-          <strong>{formatFechaHora(viatico?.datetime_llegada as string)}</strong>.
+          <strong>{formatFechaHora(viatico?.datetime_llegada as string)}</strong>
         </Alert>
       )}
     </Stack>
