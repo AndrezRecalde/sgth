@@ -64,6 +64,7 @@ final class ViaticoEstadoService
     public function __construct(
         private readonly JefeFinancieroService $jefeFinanciero,
         private readonly ViaticoServiceInterface $viaticos,
+        private readonly CalculoViaticoService $calculo,
     ) {}
 
     // ── Transiciones ─────────────────────────────────────────────────
@@ -134,7 +135,10 @@ final class ViaticoEstadoService
                 );
             }
 
-            $viatico->monto_anticipo = round((float) $viatico->monto_calculado * 0.70, 2);
+            $viatico->monto_anticipo = round(
+                (float) $viatico->monto_calculado * CalculoViaticoService::PORCENTAJE_JUSTIFICABLE,
+                2
+            );
         }, 'Solo se entrega el anticipo de un viático aprobado.');
     }
 
@@ -174,6 +178,10 @@ final class ViaticoEstadoService
                 'fecha_liquidacion' => now()->toDateString(),
                 'updated_by'        => $user->id,
             ]);
+
+            // La cuenta se cierra con lo que hay al presentarla, no con lo que
+            // quedó guardado la última vez que se tocaron los comprobantes.
+            $this->calculo->guardarEn($liquidacion, $viatico);
         }, 'La liquidación solo se presenta con el viático pendiente de liquidación.');
     }
 
@@ -468,8 +476,9 @@ final class ViaticoEstadoService
     }
 
     /**
-     * Para el exterior el monto se fija al aprobar, con el coeficiente del
-     * país sobre la tarifa base.
+     * Para el exterior el monto se fija al aprobar: la tarifa base del
+     * catálogo, por el coeficiente del país que ingresa Financiero, por las
+     * noches de la comisión.
      */
     private function aplicarTarifaExterior(Viatico $viatico, array $datos): void
     {
@@ -481,10 +490,13 @@ final class ViaticoEstadoService
         }
 
         $coeficiente = (float) $datos['coeficiente_exterior'];
-        $rolPuesto   = $viatico->servidor?->puesto?->rol_puesto;
-        $tarifaBase  = $this->valor($rolPuesto) === 'dignatario' ? 220.00 : 185.00;
 
-        $viatico->monto_calculado      = round($tarifaBase * $coeficiente * (float) $viatico->total_dias, 2);
+        $viatico->monto_calculado = $this->calculo->derecho(
+            $viatico->servidor,
+            'exterior',
+            (int) $viatico->noches,
+            $coeficiente
+        );
         $viatico->coeficiente_exterior = $coeficiente;
         $viatico->pais_destino         = $datos['pais_destino'] ?? $viatico->pais_destino;
     }

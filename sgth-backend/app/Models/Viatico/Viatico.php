@@ -29,7 +29,7 @@ class Viatico extends Model
         'fecha_solicitud',
         'datetime_salida',
         'datetime_llegada',
-        'total_dias',
+        'noches',
         'coeficiente_exterior',
         'motivo_rechazo',
         'justificacion',
@@ -52,6 +52,7 @@ class Viatico extends Model
             'estado'           => EstadoViatico::class,
             'datetime_salida'  => 'datetime',
             'datetime_llegada' => 'datetime',
+            'noches'           => 'integer',
             'monto_calculado'  => 'decimal:2',
             'monto_anticipo'   => 'decimal:2',
         ];

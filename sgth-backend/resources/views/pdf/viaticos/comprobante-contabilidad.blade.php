@@ -294,7 +294,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
           : now()->locale('es')->isoFormat('MMMM D, YYYY') }}
     </div>
     <div class="hdr-bar-r">
-      TOTAL: $ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}
+      TOTAL: $ {{ number_format($calculo['reconocido'], 2) }}
     </div>
   </div>
 </div>
@@ -353,15 +353,15 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   @endphp
 
   Por
-  <strong>{{ number_format($viatico->total_dias ?? 0, 0) }}</strong>
-  día(s) de viáticos a favor del señor(ra)
+  <strong>{{ $calculo['noches'] }}</strong>
+  noche(s) de viáticos a favor del señor(ra)
   <strong>{{ $servidor }}</strong>,
   quién se trasladó a la ciudad de
   <strong>{{ $destino ?: '—' }}</strong>
   del
   {{ $salida ? $salida->format('d') : '—' }}
   al
-  {{ $llegada ? $llegada->format('d \d\e F \d\e\l Y') : '—' }},
+  {{ $llegada ? $llegada->locale('es')->isoFormat('D [de] MMMM [del] YYYY') : '—' }},
   para <strong>{{ strtoupper($viatico->justificacion ?? '—') }}</strong>
 </div>
 
@@ -370,16 +370,16 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 <table class="ft">
   <tr>
     <td class="lbl">
-      {{ number_format($viatico->total_dias ?? 0, 0) }} día(s) de viático(s)
+      {{ $calculo['noches'] }} noche(s) de viático(s)
     </td>
     <td class="val">
-      $ {{ number_format($viatico->monto_calculado ?? 0, 2) }}
+      $ {{ number_format($calculo['derecho'], 2) }}
     </td>
   </tr>
   <tr class="total-row">
     <td class="lbl">TOTAL:</td>
     <td class="val">
-      $ {{ number_format($viatico->monto_calculado ?? 0, 2) }}
+      $ {{ number_format($calculo['derecho'], 2) }}
     </td>
   </tr>
 </table>
@@ -387,11 +387,6 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 {{-- ══ VALORES A JUSTIFICAR ══ --}}
 <div class="sec-hdr">Valores a Justificar</div>
 @php
-  $montoAsignado = (float) ($viatico->monto_calculado ?? 0);
-  $anticipo      = (float) ($viatico->monto_anticipo ?? 0);
-  $devengado     = round($montoAsignado * 0.30, 2);
-  $aJustificar   = round($montoAsignado * 0.70, 2);
-
   // Separar facturas por grupo
   $hospedaje         = 0;
   $alimentacion      = 0;
@@ -420,26 +415,15 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
       }
   }
 
-  $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
-      ? $viatico->modalidad_anticipo->value
-      : (string) $viatico->modalidad_anticipo;
-
-  $diferenciaDevolver = ($modalidad === 'sin_anticipo')
-      ? 0
-      : (($totalHospAli >= $anticipo)
-          ? 0
-          : round($anticipo - $totalHospAli, 2));
-
-  $valorMostrar = $diferenciaDevolver;
 @endphp
 <table class="ft">
   <tr>
-    <td class="lbl">Valor devengado (30%)</td>
-    <td class="val">$ {{ number_format($devengado, 2) }} (a)</td>
+    <td class="lbl">Valor reconocido sin comprobante (30%)</td>
+    <td class="val">$ {{ number_format($calculo['reconocido_sin_comprobante'], 2) }} (a)</td>
   </tr>
   <tr>
     <td class="lbl">Valor a justificar (70%)</td>
-    <td class="val">$ {{ number_format($aJustificar, 2) }}</td>
+    <td class="val">$ {{ number_format($calculo['tope_justificable'], 2) }}</td>
   </tr>
 </table>
 
@@ -457,19 +441,15 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
     <td class="val">$ {{ number_format($alimentacion, 2) }}</td>
   </tr>
   <tr class="total-row">
-    <td class="lbl">
-      TOTAL H&A ({{ $aJustificar > 0
-        ? round(($totalHospAli/$aJustificar)*100, 1)
-        : 0 }}% del 70%):
-    </td>
+    <td class="lbl">TOTAL H&A:</td>
     <td class="val">
-      $ {{ number_format($totalHospAli, 2) }} (c)
+      $ {{ number_format($totalHospAli, 2) }}
     </td>
   </tr>
 </table>
 
 <div class="sec-hdr-alt">
-  Movilización (rubro independiente)
+  Movilización
 </div>
 <table class="ft">
   <tr>
@@ -491,7 +471,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   <tr class="total-row">
     <td class="lbl">TOTAL MOVILIZACIÓN:</td>
     <td class="val">
-      $ {{ number_format($totalMovilizacion, 2) }} (b)
+      $ {{ number_format($totalMovilizacion, 2) }}
     </td>
   </tr>
 </table>
@@ -509,7 +489,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
       {{ $mod === 'sin_anticipo' ? 'Sin anticipo' : 'Anticipo entregado' }}
     </td>
     <td class="val">
-      $ {{ number_format($viatico->monto_anticipo ?? 0, 2) }} (d)
+      $ {{ number_format($calculo['anticipo'], 2) }} (c)
     </td>
   </tr>
 </table>
@@ -518,38 +498,37 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 <div class="sec-hdr">Liquidación</div>
 <div class="formula-box">
   <div class="formula-row">
-    <div class="f-lbl">(a) Devengado 30%:</div>
-    <div class="f-val">$ {{ number_format($devengado, 2) }}</div>
-  </div>
-  <div class="formula-row">
-    <div class="f-lbl">(b) Total movilización:</div>
+    <div class="f-lbl">(a) Reconocido sin comprobante (30%):</div>
     <div class="f-val">
-      $ {{ number_format($totalMovilizacion, 2) }}
+      $ {{ number_format($calculo['reconocido_sin_comprobante'], 2) }}
     </div>
   </div>
   <div class="formula-row">
-    <div class="f-lbl">(c) Total H&A justificado:</div>
+    <div class="f-lbl">(b) Justificado con comprobantes, hasta el 70%:</div>
     <div class="f-val">
-      $ {{ number_format($totalHospAli, 2) }}
+      $ {{ number_format($calculo['justificado'], 2) }}
     </div>
   </div>
   <div class="formula-row">
-    <div class="f-lbl">(d) Anticipo entregado:</div>
-    <div class="f-val">$ {{ number_format($anticipo, 2) }}</div>
+    <div class="f-lbl">(c) Anticipo entregado:</div>
+    <div class="f-val">$ {{ number_format($calculo['anticipo'], 2) }}</div>
   </div>
   <div class="formula-row" style="border-top:1px solid #cbd5e0;padding-top:4px;margin-top:4px;">
     <div class="f-lbl">
-      <strong>A devolver: (d) - (c):</strong>
+      <strong>
+        {{ $calculo['saldo'] < 0 ? 'A devolver' : 'A pagar al servidor' }}:
+        (a) + (b) - (c):
+      </strong>
     </div>
     <div class="f-val">
-      <strong>$ {{ number_format($diferenciaDevolver, 2) }}</strong>
+      <strong>$ {{ number_format(abs($calculo['saldo']), 2) }}</strong>
     </div>
   </div>
 </div>
 <div class="formula-total">
-  <div class="ft-lbl">VALOR TOTAL DEL VIÁTICO:</div>
+  <div class="ft-lbl">VALOR LIQUIDADO: (a) + (b)</div>
   <div class="ft-val">
-    $ {{ number_format($montoAsignado, 2) }}
+    $ {{ number_format($calculo['reconocido'], 2) }}
   </div>
 </div>
 

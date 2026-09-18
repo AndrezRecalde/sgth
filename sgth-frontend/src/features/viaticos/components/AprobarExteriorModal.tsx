@@ -28,25 +28,20 @@ type FormData = z.infer<typeof schema>;
 interface Props {
   opened: boolean;
   onClose: () => void;
-  // Lee `servidor.puesto.rol_puesto` para elegir la tarifa.
   viatico: ViaticoConRelaciones;
 }
-
-const TARIFA_DIGNATARIO = 220.0;
-const TARIFA_SERVIDOR = 185.0;
 
 export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
   const qc = useQueryClient();
   const contained = useContainedInput();
   const { aprobar } = useViaticoMutations();
 
-  // El puesto cuelga del servidor: el viático no tiene relación `puesto`.
-  const esDignatario =
-    viatico.servidor?.puesto?.rol_puesto === 'dignatario'
+  // La tarifa base del exterior y el nivel del servidor los resuelve el
+  // backend, que es quien fija el monto al aprobar: aquí solo se multiplica por
+  // el coeficiente para anticipar el resultado.
+  const tarifaBase = Number(viatico.calculo?.tarifa_diaria ?? 0);
 
-  const tarifaBase = esDignatario ? TARIFA_DIGNATARIO : TARIFA_SERVIDOR;
-
-  const totalDias = Number(viatico.total_dias ?? 1);
+  const noches = Number(viatico.noches ?? 1);
 
   const {
     control,
@@ -62,7 +57,7 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
   });
 
   const coef = useWatch({ control, name: "coeficiente_exterior" }) ?? 1;
-  const montoCalculado = Math.round(tarifaBase * coef * totalDias * 100) / 100;
+  const montoCalculado = Math.round(tarifaBase * coef * noches * 100) / 100;
 
   const onSubmit = async (values: FormData) => {
     try {
@@ -100,11 +95,10 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
             Tarifa base aplicable
           </Text>
           <Text size="sm" fw={700} c="ocean">
-            {esDignatario ? "Dignatario" : "Servidor"}: $
-            {tarifaBase.toFixed(2)}/día
+            ${tarifaBase.toFixed(2)} por noche
           </Text>
           <Text size="xs" c="dimmed" mt={4}>
-            {totalDias} día(s) de comisión
+            {noches} noche(s) de comisión
           </Text>
         </Card>
 
@@ -148,7 +142,7 @@ export function AprobarExteriorModal({ opened, onClose, viatico }: Props) {
             </Text>
           </Group>
           <Text size="xs" c="dimmed" mt={4}>
-            ${tarifaBase.toFixed(2)} ×{coef.toFixed(4)} ×{totalDias} días
+            ${tarifaBase.toFixed(2)} ×{coef.toFixed(4)} ×{noches} noches
           </Text>
         </Card>
       </Stack>

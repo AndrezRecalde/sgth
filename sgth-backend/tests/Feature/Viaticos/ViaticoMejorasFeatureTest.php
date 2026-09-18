@@ -111,7 +111,7 @@ function facturaDe(CategoriaFactura $categoria, float $monto): array
     ];
 }
 
-it('no_hay_que_devolver_cuando_hospedaje_y_alimentacion_cubren_el_anticipo', function () {
+it('justificar_de_mas_no_paga_mas_que_el_70_por_ciento', function () {
     $this->viatico->update([
         'estado'          => EstadoViatico::PENDIENTE_LIQUIDACION,
         'monto_calculado' => 300.00,
@@ -128,15 +128,19 @@ it('no_hay_que_devolver_cuando_hospedaje_y_alimentacion_cubren_el_anticipo', fun
 
     $response->assertOk();
 
-    // 230 de hospedaje y alimentación superan los 210 anticipados.
+    // 230 presentados, pero el tope es 210: los 20 de más corren por cuenta
+    // del servidor. Se le reconocen esos 210 más el 30 % (90) y, como ya
+    // recibió 210 de anticipo, la institución le paga los 90.
     $this->assertDatabaseHas('liquidaciones_viatico', [
-        'viatico_id'          => $this->viatico->id,
-        'total_facturas'      => 230.00,
-        'diferencia_devolver' => 0,
+        'viatico_id'        => $this->viatico->id,
+        'total_facturas'    => 230.00,
+        'total_justificado' => 210.00,
+        'monto_reconocido'  => 300.00,
+        'saldo'             => 90.00,
     ]);
 });
 
-it('devuelve_lo_no_justificado_y_el_transporte_no_descarga_el_anticipo', function () {
+it('la_movilizacion_tambien_justifica_y_lo_que_falte_se_devuelve', function () {
     $this->viatico->update([
         'estado'          => EstadoViatico::PENDIENTE_LIQUIDACION,
         'monto_calculado' => 300.00,
@@ -147,18 +151,22 @@ it('devuelve_lo_no_justificado_y_el_transporte_no_descarga_el_anticipo', functio
         'fecha_retorno' => now()->toDateString(),
         'facturas' => [
             facturaDe(categoriaViatico('Hospedaje'), 60.00),
-            // El pasaje suma al total pero no justifica el viático: es
-            // justamente lo que distingue al grupo `viatico` del resto.
+            // El pasaje cuenta dentro del 70 %, igual que el hospedaje:
+            // Financiero confirmó que la movilización no va aparte.
             facturaDe(categoriaFueraDelViatico('Transporte'), 120.00),
         ],
     ]);
 
     $response->assertOk();
 
+    // 180 justificados de los 210 posibles, más el 30 % (90), son 270
+    // reconocidos: recibió 210, así que le pagan 60.
     $this->assertDatabaseHas('liquidaciones_viatico', [
-        'viatico_id'          => $this->viatico->id,
-        'total_facturas'      => 180.00,
-        'diferencia_devolver' => 150.00, // 210 anticipados − 60 justificados
+        'viatico_id'        => $this->viatico->id,
+        'total_facturas'    => 180.00,
+        'total_justificado' => 180.00,
+        'monto_reconocido'  => 270.00,
+        'saldo'             => 60.00,
     ]);
 });
 

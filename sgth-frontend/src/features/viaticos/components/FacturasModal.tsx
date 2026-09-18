@@ -18,8 +18,14 @@ import { z } from "zod/v4";
 import { useCategoriasFactura } from "../hooks/useViaticos";
 import { useViaticoMutations } from "../hooks/useViaticoMutations";
 import { FacturaItemForm } from "./FacturaItemForm";
-import { FacturasResumen } from "./FacturasResumen";
-import type { Viatico, CategoriaFactura, EstadoRevisionComprobante } from "@/types/api";
+import { CalculoViaticoCard } from "./CalculoViaticoCard";
+import { proyectarCalculo } from "../utils/calculoViatico";
+import type {
+  Viatico,
+  CalculoViatico,
+  CategoriaFactura,
+  EstadoRevisionComprobante,
+} from "@/types/api";
 
 export interface FacturaData {
   categoria_factura_id: number;
@@ -71,6 +77,8 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   viatico: Viatico;
+  /** La cuenta del viático, para ver al momento cuánto queda por justificar. */
+  calculo?: CalculoViatico;
   onGuardar?: (facturas: FacturaData[]) => void;
   valorInicial?: FacturaData[];
 }
@@ -91,6 +99,7 @@ export function FacturasModal({
   opened,
   onClose,
   viatico,
+  calculo,
   onGuardar,
   valorInicial = [],
 }: Props) {
@@ -107,7 +116,7 @@ export function FacturasModal({
 
   const categoriaOptions = [
     ...(viaticoItems.length > 0
-      ? [{ group: "Viático (H&A — justifica 70%)", items: viaticoItems }]
+      ? [{ group: "Viático (hospedaje y alimentación)", items: viaticoItems }]
       : []),
     ...(movilizacionItems.length > 0
       ? [{ group: "Movilización", items: movilizacionItems }]
@@ -198,7 +207,12 @@ export function FacturasModal({
       submitting={guardarFacturas.isPending}
     >
       <Stack gap="md">
-        <FacturasResumen viatico={viatico} totalFacturas={totalFacturas} />
+        {calculo && (
+          <CalculoViaticoCard
+            calculo={proyectarCalculo(calculo, totalFacturas)}
+            enCurso
+          />
+        )}
 
         <Alert
           icon={<IconInfoCircle size={14} />}

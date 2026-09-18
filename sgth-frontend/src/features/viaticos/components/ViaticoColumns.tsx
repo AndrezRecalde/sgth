@@ -66,7 +66,7 @@ export function getViaticoColumns(
       accessor: 'datetime_salida',
       title:    'Período',
       width:    160,
-      render: ({ datetime_salida, datetime_llegada, total_dias }) => {
+      render: ({ datetime_salida, datetime_llegada, noches }) => {
         if (!datetime_salida) {
           return (
             <StatusBadge tone="warning" variant="dot">
@@ -82,7 +82,7 @@ export function getViaticoColumns(
               {fmt(datetime_llegada as string)}
             </Text>
             <Text size="xs" c="dimmed">
-              {Number(total_dias ?? 0).toFixed(1)} días
+              {Number(noches ?? 0)} noche(s)
             </Text>
           </Stack>
         )

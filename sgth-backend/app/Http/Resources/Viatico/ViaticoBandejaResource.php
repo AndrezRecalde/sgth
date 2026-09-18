@@ -23,7 +23,7 @@ class ViaticoBandejaResource extends JsonResource
             'modalidad_anticipo' => $this->modalidad_anticipo,
             'datetime_salida'    => $this->datetime_salida,
             'datetime_llegada'   => $this->datetime_llegada,
-            'total_dias'         => $this->total_dias,
+            'noches'             => $this->noches,
             'monto_calculado'    => $this->monto_calculado,
             'monto_anticipo'     => $this->monto_anticipo,
             'servidor_id'        => $this->servidor_id,

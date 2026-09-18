@@ -209,8 +209,34 @@ export type ComprobanteRevisado = FacturaViatico & {
   categoria?:            { id?: number; nombre?: string } | null
 }
 
+/**
+ * La cuenta del viático, resuelta por el backend (`CalculoViaticoService`).
+ * Viaja con el detalle y con la liquidación: es la única fórmula, y el
+ * frontend solo la muestra.
+ */
+export type CalculoViatico = {
+  noches:                     number
+  /** Tarifa base por noche, del catálogo. */
+  tarifa_diaria:              number | null
+  /** Lo que le corresponde por las noches de pernocte. */
+  derecho:                    number
+  /** El 70 % que hay que justificar con comprobantes. */
+  tope_justificable:          number
+  /** El 30 % que se reconoce sin factura. */
+  reconocido_sin_comprobante: number
+  total_comprobantes:         number
+  justificado:                number
+  /** Lo presentado por encima del tope: corre por cuenta del servidor. */
+  excedente:                  number
+  reconocido:                 number
+  anticipo:                   number
+  /** Positivo, se le paga; negativo, devuelve. */
+  saldo:                      number
+}
+
 export type ViaticoConRelaciones = Viatico & {
   coeficiente_exterior?: number | string | null;
+  calculo?: CalculoViatico
   servidor?: {
     id:              number
     cedula?:         string
@@ -232,6 +258,7 @@ export type ViaticoConRelaciones = Viatico & {
   liquidacion?: LiquidacionViatico & {
     actividades?:     ActividadLiquidacion[]
     detalles_factura?: ComprobanteRevisado[]
+    calculo?:         CalculoViatico
   }
   todos_servidores?: {
     id:          number
@@ -304,7 +331,7 @@ export type ViaticoBandeja = {
   modalidad_anticipo: string
   datetime_salida:    string
   datetime_llegada:   string
-  total_dias:         number | string
+  noches:             number
   monto_calculado:    number | string
   monto_anticipo:     number | string
   servidor_id:        number

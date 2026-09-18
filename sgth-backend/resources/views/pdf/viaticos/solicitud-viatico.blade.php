@@ -431,8 +431,8 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
             : '—';
       @endphp
     </td>
-    <th>Total Días</th>
-    <td><strong>{{ number_format($viatico->total_dias ?? 0, 0) }}</strong> día(s)</td>
+    <th>Noches</th>
+    <td><strong>{{ $calculo["noches"] }}</strong> noche(s)</td>
   </tr>
   <tr>
     <th>Fecha / Hora de Salida</th>

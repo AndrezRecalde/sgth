@@ -11,7 +11,7 @@ import { ActividadesModal } from "./ActividadesModal";
 import { FacturasModal } from "./FacturasModal";
 import { LiquidacionActividadesCard } from "./LiquidacionActividadesCard";
 import { LiquidacionFacturasCard } from "./LiquidacionFacturasCard";
-import { LiquidacionResumenHA } from "./LiquidacionResumenHA";
+import { CalculoViaticoCard } from "./CalculoViaticoCard";
 import type { ActividadData } from "./ActividadesModal";
 import type { FacturaData } from "./FacturasModal";
 import type {
@@ -69,37 +69,8 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
     }));
   }, [liquidacionData]);
 
-  // Cálculos H&A
-  const montoAsignado = Number(viatico.monto_calculado ?? 0);
-  const montoAnticipo = Number(viatico.monto_anticipo ?? 0);
-  const monto70 = Math.round(montoAsignado * 0.7 * 100) / 100;
-  const monto30 = Math.round(montoAsignado * 0.3 * 100) / 100;
-  const modalidad = (viatico.modalidad_anticipo as string) ?? "sin_anticipo";
-
-  const idsViatico = (categoriasData as CategoriaFactura[])
-    .filter((c) => c.grupo === "viatico")
-    .map((c) => Number(c.id));
-
-  const totalHospAli = facturas
-    .filter((f) => idsViatico.includes(Number(f.categoria_factura_id)))
-    .reduce((sum, f) => sum + (Number(f.monto) || 0), 0);
-
-  const totalMovilizacion = facturas
-    .filter((f) => !idsViatico.includes(Number(f.categoria_factura_id)))
-    .reduce((sum, f) => sum + (Number(f.monto) || 0), 0);
-
-  const porcentajeHA =
-    monto70 > 0 ? Math.min(Math.round((totalHospAli / monto70) * 100), 100) : 0;
-
-  const justificadoCompleto = totalHospAli >= monto70;
-
-  const diferenciaDevolver =
-    modalidad === "sin_anticipo"
-      ? 0
-      : totalHospAli >= montoAnticipo ||
-          totalHospAli + totalMovilizacion >= montoAsignado
-        ? 0
-        : Math.round((montoAnticipo - totalHospAli) * 100) / 100;
+  // La cuenta llega resuelta del backend: aquí solo se muestra.
+  const calculo = liquidacionData?.calculo;
 
   const puedeRegistrar = actividades.length > 0 && facturas.length > 0;
 
@@ -114,18 +85,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
 
   return (
     <Stack gap="md">
-      <LiquidacionResumenHA
-        montoAsignado={montoAsignado}
-        montoAnticipo={montoAnticipo}
-        monto70={monto70}
-        monto30={monto30}
-        totalHospAli={totalHospAli}
-        totalMovilizacion={totalMovilizacion}
-        porcentajeHA={porcentajeHA}
-        justificadoCompleto={justificadoCompleto}
-        diferenciaDevolver={diferenciaDevolver}
-        modalidad={modalidad}
-      />
+      {calculo && <CalculoViaticoCard calculo={calculo} enCurso />}
 
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -184,6 +144,7 @@ export function LiquidacionSection({ viatico, onSuccess }: Props) {
         opened={factModalAbierto}
         onClose={cerrarFact}
         viatico={viatico}
+        calculo={calculo}
         onGuardar={() => {}}
         valorInicial={facturas}
       />

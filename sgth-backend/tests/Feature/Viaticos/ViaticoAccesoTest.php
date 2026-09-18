@@ -77,7 +77,7 @@ beforeEach(function () {
         'zona'               => 'dentro_provincia',
         'datetime_salida'    => '2026-10-05 08:00:00',
         'datetime_llegada'   => '2026-10-07 18:00:00',
-        'total_dias'         => 3,
+        'noches'             => 3,
         'justificacion'      => 'Supervisión de obras viales',
         'estado'             => EstadoViatico::SOLICITADO,
         'monto_calculado'    => 240,

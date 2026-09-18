@@ -44,7 +44,7 @@ beforeEach(function () {
         'zona'             => 'dentro_provincia',
         'datetime_salida'  => now()->subDays(3),
         'datetime_llegada' => now()->subDays(1),
-        'total_dias'       => 2,
+        'noches'           => 2,
         'justificacion'    => 'Reunión de trabajo en Quito',
         'estado'           => 'pendiente_liquidacion',
         'monto_calculado'  => 100,

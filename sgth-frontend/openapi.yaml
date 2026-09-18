@@ -3774,6 +3774,52 @@
                 }
             }
         },
+        "/v1/autoservicio/companeros-de-unidad": {
+            "get": {
+                "operationId": "autoservicio.companerosDeUnidad",
+                "summary": "Los compa\u00f1eros de unidad, para elegir al jefe inmediato de un permiso\npropio. Ver `AutoservicioService::obtenerCompanerosDeUnidad()`",
+                "tags": [
+                    "Autoservicio"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Compa\u00f1eros de unidad obtenidos."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/autoservicio/mis-vacaciones": {
             "get": {
                 "operationId": "autoservicio.misVacaciones",
@@ -44220,6 +44266,28 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "estado_revision": {
+                        "type": "string"
+                    },
+                    "observacion_revision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "revisado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "revisado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -44237,7 +44305,11 @@
                     "categoria_factura_id",
                     "fecha_factura",
                     "tipo_comprobante",
-                    "numero_ticket"
+                    "numero_ticket",
+                    "estado_revision",
+                    "observacion_revision",
+                    "revisado_por",
+                    "revisado_en"
                 ],
                 "title": "FacturaViatico"
             },
@@ -45238,9 +45310,6 @@
                     "total_facturas": {
                         "type": "string"
                     },
-                    "diferencia_devolver": {
-                        "type": "string"
-                    },
                     "fecha_retorno": {
                         "type": [
                             "string",
@@ -45317,13 +45386,21 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "total_justificado": {
+                        "type": "string"
+                    },
+                    "monto_reconocido": {
+                        "type": "string"
+                    },
+                    "saldo": {
+                        "type": "string"
                     }
                 },
                 "required": [
                     "id",
                     "viatico_id",
                     "total_facturas",
-                    "diferencia_devolver",
                     "fecha_retorno",
                     "fecha_liquidacion",
                     "observaciones",
@@ -45335,7 +45412,10 @@
                     "jefe_financiero_id",
                     "cargo_jefe_financiero",
                     "contabilizado_por",
-                    "fecha_contabilizacion"
+                    "fecha_contabilizacion",
+                    "total_justificado",
+                    "monto_reconocido",
+                    "saldo"
                 ],
                 "title": "LiquidacionViatico"
             },
@@ -52034,7 +52114,8 @@
                         "type": [
                             "integer",
                             "null"
-                        ]
+                        ],
+                        "description": "Alguien tiene que firmar: el jefe inmediato elegido o, con la\nopci\u00f3n activa, el jefe de Talento Humano que resuelve el servicio.\nSin ninguno de los dos, el permiso quedaba sin firmante."
                     },
                     "dirigido_a_talento_humano": {
                         "type": "boolean",
@@ -56661,8 +56742,8 @@
                         "type": "string",
                         "format": "date-time"
                     },
-                    "total_dias": {
-                        "type": "string"
+                    "noches": {
+                        "type": "integer"
                     },
                     "coeficiente_exterior": {
                         "type": [
@@ -56699,7 +56780,7 @@
                     "fecha_solicitud",
                     "datetime_salida",
                     "datetime_llegada",
-                    "total_dias",
+                    "noches",
                     "coeficiente_exterior",
                     "motivo_rechazo"
                 ],

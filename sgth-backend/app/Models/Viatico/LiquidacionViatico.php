@@ -18,7 +18,9 @@ class LiquidacionViatico extends Model
     protected $fillable = [
         'viatico_id',
         'total_facturas',
-        'diferencia_devolver',
+        'total_justificado',
+        'monto_reconocido',
+        'saldo',
         'fecha_retorno',
         'fecha_liquidacion',
         'observaciones',
@@ -34,7 +36,9 @@ class LiquidacionViatico extends Model
     {
         return [
             'total_facturas'      => 'decimal:2',
-            'diferencia_devolver' => 'decimal:2',
+            'total_justificado'   => 'decimal:2',
+            'monto_reconocido'    => 'decimal:2',
+            'saldo'               => 'decimal:2',
             'fecha_retorno'       => 'date',
             'fecha_liquidacion'   => 'date',
         ];

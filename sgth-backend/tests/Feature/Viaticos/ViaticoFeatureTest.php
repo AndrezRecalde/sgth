@@ -58,7 +58,7 @@ test('servidor_con_liquidacion_pendiente_no_puede_solicitar', function () {
         'monto_calculado' => 80,
     ]);
 
-    $service = new ViaticoService();
+    $service = app(ViaticoService::class);
     
     expect(function () use ($service) {
         $service->solicitar($this->servidor->id, [
@@ -70,8 +70,7 @@ test('servidor_con_liquidacion_pendiente_no_puede_solicitar', function () {
     })->toThrow(\App\Exceptions\ReglaNegocioException::class, 'El servidor tiene bloqueada la solicitud de nuevos viáticos');
 });
 
-test('viatico_menos_10_horas_aplica_subsistencia', function () {
-    // 1. Tarifa completa con pernocte: $80
+test('una_comision_del_mismo_dia_no_genera_viatico', function () {
     TarifaViatico::create([
         'zona' => 'dentro_provincia',
         'nivel' => 'servidor',
@@ -79,26 +78,17 @@ test('viatico_menos_10_horas_aplica_subsistencia', function () {
         'valor_diario' => 80.00,
     ]);
 
-    // 2. Tarifa específica de subsistencia (menos de 10 horas sin pernocte): $40
-    TarifaViatico::create([
-        'zona' => 'dentro_provincia',
-        'nivel' => 'servidor',
-        'tipo_tarifa' => 'subsistencia',
-        'valor_diario' => 40.00,
-    ]);
+    $service = app(ViaticoService::class);
 
-    $service = new ViaticoService();
-
-    // Comisión de 8 horas: de 08:00 a 16:00
-    $viatico = $service->solicitar($this->servidor->id, [
+    // Ida y vuelta el mismo día: no hay noche que pagar y no existe la
+    // subsistencia. Antes se cobraba como si hubiera dormido fuera.
+    expect(fn () => $service->solicitar($this->servidor->id, [
         'zona' => 'dentro_provincia',
         'datetime_salida' => now()->setTime(8, 0)->format('Y-m-d H:i:s'),
         'datetime_llegada' => now()->setTime(16, 0)->format('Y-m-d H:i:s'),
         'justificacion' => 'Reunión rápida',
-    ], $this->servidorUser->id);
-
-    // Debe aplicar la tarifa de subsistencia ($40) porque es menor a 10 horas y no tiene pernocte
-    expect((float)$viatico->monto_calculado)->toBe(40.00);
+    ], $this->servidorUser->id))
+        ->toThrow(\App\Exceptions\ReglaNegocioException::class, 'al menos una noche fuera');
 });
 
 test('liquidacion_vence_a_los_5_dias_habiles', function () {
@@ -117,7 +107,7 @@ test('liquidacion_vence_a_los_5_dias_habiles', function () {
         'monto_calculado' => 160.00,
     ]);
 
-    $service = new ViaticoService();
+    $service = app(ViaticoService::class);
 
     // 5 días hábiles a partir de fecha_fin = 1 junio
     // Dia 1 habil = 2 junio (martes)

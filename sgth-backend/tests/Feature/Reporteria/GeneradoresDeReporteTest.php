@@ -166,7 +166,7 @@ test('el_reporte_de_viaticos_suma_montos_y_deja_fuera_los_rechazados', function 
             'codigo_viatico' => 'VIA-' . $i, 'servidor_id' => $this->servidor->id,
             'zona' => 'dentro_provincia', 'justificacion' => 'Comisión',
             'estado' => $estado, 'monto_calculado' => $monto,
-            'monto_anticipo' => 0, 'total_dias' => 2,
+            'monto_anticipo' => 0, 'noches' => 2,
             'datetime_salida' => now()->subDays(3),
             'datetime_llegada' => now()->subDay(),
             'fecha_solicitud' => now()->subDays(5),

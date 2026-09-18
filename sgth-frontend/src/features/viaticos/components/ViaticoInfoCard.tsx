@@ -97,10 +97,10 @@ export function ViaticoInfoCard({ viatico: d, puedeEditar, onEditar }: Props) {
         </Group>
         <Group justify="space-between">
           <Text size="xs" c="dimmed">
-            Total días
+            Noches
           </Text>
           <StatusBadge>
-            {Number(d.total_dias ?? 0).toFixed(1)} días
+            {Number(d.noches ?? 0)} noche(s)
           </StatusBadge>
         </Group>
         <Stack gap={2}>
