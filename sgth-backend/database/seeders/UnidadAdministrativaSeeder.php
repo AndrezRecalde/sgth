@@ -2,6 +2,7 @@
 namespace Database\Seeders;
 
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Services\Estructura\EstructuraService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -262,25 +263,42 @@ class UnidadAdministrativaSeeder extends Seeder
         ]);
     }
 
+    /**
+     * Crea la unidad si no existe; si ya existe, la deja como está.
+     *
+     * Antes era un `updateOrCreate` que en cada corrida le ponía un código
+     * nuevo con sufijo aleatorio (`GESTION-DE-TALE-88`) y pisaba nivel y
+     * descripción: volver a sembrar una base con datos borraba los códigos
+     * jerárquicos (`GADPE-01-03`), que son el prefijo de los códigos de
+     * viático, y deshacía lo editado desde Estructura.
+     *
+     * Una unidad nueva recibe su código como si se creara desde la pantalla
+     * (`EstructuraService::sugerirCodigo`), y su nivel es el del padre más uno.
+     */
     private function crear(array $datos): UnidadAdministrativa
     {
-        $unidadPadreId = $datos['unidad_padre_id'] ?? null;
-        
-        $nivel = 1;
-        if ($unidadPadreId == 1) {
-            $nivel = 2;
-        } elseif ($unidadPadreId != null && $unidadPadreId != 1) {
-            $nivel = 3;
+        $existente = UnidadAdministrativa::withTrashed()->where('nombre', $datos['nombre'])->first();
+        if ($existente) {
+            return $existente;
         }
 
-        return UnidadAdministrativa::updateOrCreate(
-            ['nombre' => $datos['nombre']],
-            array_merge($datos, [
-                'codigo'          => strtoupper(substr(\Illuminate\Support\Str::slug($datos['nombre']), 0, 15)) . '-' . rand(10, 99),
-                'nivel'           => $nivel,
-                'descripcion'     => $datos['descripcion'] ?? null,
-                'unidad_padre_id' => $unidadPadreId,
-            ])
-        );
+        $padre = isset($datos['unidad_padre_id'])
+            ? UnidadAdministrativa::findOrFail($datos['unidad_padre_id'])
+            : null;
+
+        return UnidadAdministrativa::create(array_merge($datos, [
+            'codigo'          => $padre
+                ? app(EstructuraService::class)->sugerirCodigo($padre->id)
+                : $this->codigoRaiz($datos),
+            'nivel'           => $padre ? $padre->nivel + 1 : 1,
+            'descripcion'     => $datos['descripcion'] ?? null,
+            'unidad_padre_id' => $padre?->id,
+        ]));
+    }
+
+    /** La institución: su acrónimo o su nombre, en mayúsculas (`GADPE`). */
+    private function codigoRaiz(array $datos): string
+    {
+        return Str::limit(Str::upper(Str::slug($datos['acronimo'] ?? $datos['nombre'], '')), 10, '') ?: 'INST';
     }
 }
