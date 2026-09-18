@@ -5,7 +5,7 @@
 |
 | «En comisión» y «pendiente de liquidación» dependían de un botón. Si
 | Financiero no lo pulsaba, el viático seguía «aprobado» después de volver y el
-| plazo de 5 días hábiles para liquidar nunca empezaba.
+| plazo de 4 días hábiles para liquidar nunca empezaba.
 |
 | Decidido con el usuario:
 | - llegada la salida, lo aprobado y lo que tiene anticipo pasa a en comisión;
@@ -148,7 +148,11 @@ it('con la tarea, el plazo de liquidación empieza a correr solo', function () {
     ($this->correr)();
     expect($servicio->verificarBloqueo($this->servidor->id))->toBeFalse();
 
-    // Cinco días hábiles después del regreso ya está fuera de plazo.
-    Carbon::setTestNow('2026-10-13 10:00:00');
+    // Volvió el lunes 5 a las 18:00: el viernes 9 a esa hora vence el plazo
+    // de 4 días hábiles, y el lunes 12 ya está fuera.
+    Carbon::setTestNow('2026-10-09 17:00:00');
+    expect($servicio->verificarBloqueo($this->servidor->id))->toBeFalse();
+
+    Carbon::setTestNow('2026-10-12 10:00:00');
     expect($servicio->verificarBloqueo($this->servidor->id))->toBeTrue();
 });

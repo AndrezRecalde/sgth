@@ -38,7 +38,7 @@ class LiquidarViaticoRequest extends FormRequest
             'facturas.*.numero_factura'          => ['nullable', 'string', 'max:50'],
             'facturas.*.numero_ticket'           => ['nullable', 'string', 'max:50'],
             'facturas.*.ruc_proveedor'           => ['nullable', 'string', 'max:20'],
-            'facturas.*.fecha_factura'           => ['nullable', 'date'],
+            'facturas.*.fecha_factura'           => ['required_with:facturas', 'date'],
             'facturas.*.detalle'                 => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -53,6 +53,7 @@ class LiquidarViaticoRequest extends FormRequest
             'facturas.*.nombre_proveedor.required_with'     => 'El nombre del proveedor es obligatorio.',
             'facturas.*.monto.required_with'                => 'El monto del comprobante es obligatorio.',
             'facturas.*.tipo_comprobante.required_with'     => 'El tipo de comprobante es obligatorio.',
+            'facturas.*.fecha_factura.required_with'        => 'Indique la fecha del comprobante.',
         ];
     }
 

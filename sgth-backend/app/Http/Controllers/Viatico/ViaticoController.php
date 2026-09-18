@@ -272,6 +272,13 @@ class ViaticoController extends Controller
 
     public function liquidar(int $viaticoId, LiquidarViaticoRequest $request): JsonResponse
     {
+        // La misma regla que al guardar los comprobantes por pasos: fuera de
+        // las fechas del viaje no se reciben.
+        app(ComprobantesViaticoService::class)->asegurarFechasDelViaje(
+            Viatico::findOrFail($viaticoId),
+            $request->validated('facturas', [])
+        );
+
         $liquidacion = $this->viaticoService->liquidar(
             $viaticoId,
             $request->validated(),

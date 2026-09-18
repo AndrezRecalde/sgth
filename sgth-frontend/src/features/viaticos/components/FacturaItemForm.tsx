@@ -24,7 +24,7 @@ import { useContainedInput } from "@/hooks/useContainedInput";
 type FacturaFormData = {
   facturas: {
     categoria_factura_id: number;
-    fecha_factura?: string | null;
+    fecha_factura: string | null;
     tipo_comprobante: "factura" | "ticket" | "recibo" | "otro";
     numero_factura?: string | null;
     numero_ticket?: string | null;
@@ -203,6 +203,7 @@ export function FacturaItemForm({
             render={({ field }) => (
               <DatePickerInput
                 label="Fecha"
+                withAsterisk
                 valueFormat="DD/MM/YYYY"
                 {...contained}
                 minDate={minFecha}

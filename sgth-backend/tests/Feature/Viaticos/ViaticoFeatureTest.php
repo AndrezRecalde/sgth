@@ -91,7 +91,7 @@ test('una_comision_del_mismo_dia_no_genera_viatico', function () {
         ->toThrow(\App\Exceptions\ReglaNegocioException::class, 'al menos una noche fuera');
 });
 
-test('liquidacion_vence_a_los_5_dias_habiles', function () {
+test('liquidacion_vence_a_los_4_dias_habiles', function () {
     // Configuramos el tiempo para el lunes 1 de Junio de 2026
     Carbon::setTestNow('2026-06-01 10:00:00');
     
@@ -109,20 +109,18 @@ test('liquidacion_vence_a_los_5_dias_habiles', function () {
 
     $service = app(ViaticoService::class);
 
-    // 5 días hábiles a partir de fecha_fin = 1 junio
+    // 4 días hábiles a partir del regreso, el lunes 1 de junio (Gestión
+    // Financiera, 2026-09-15; antes eran 5):
     // Dia 1 habil = 2 junio (martes)
     // Dia 2 habil = 3 junio (miercoles)
     // Dia 3 habil = 4 junio (jueves)
-    // Dia 4 habil = 5 junio (viernes)
+    // Dia 4 habil = 5 junio (viernes) -> Este es el ULTIMO dia permitido
     // Fin de semana: sabado 6, domingo 7
-    // Dia 5 habil = 8 junio (lunes) -> Este es el ULTIMO dia permitido
-    // Dia 6 habil = 9 junio (martes) -> Vencido
+    // Lunes 8 de junio -> Vencido
 
-    // Probamos el dia 5 habil (Lunes 8 de Junio) - No deberia estar vencido
-    Carbon::setTestNow('2026-06-08 10:00:00');
+    Carbon::setTestNow('2026-06-05 10:00:00');
     expect($service->verificarBloqueo($this->servidor->id))->toBeFalse();
 
-    // Probamos el dia 6 habil (Martes 9 de Junio) - Deberia estar vencido (bloqueado)
-    Carbon::setTestNow('2026-06-09 10:00:00');
+    Carbon::setTestNow('2026-06-08 10:00:00');
     expect($service->verificarBloqueo($this->servidor->id))->toBeTrue();
 });

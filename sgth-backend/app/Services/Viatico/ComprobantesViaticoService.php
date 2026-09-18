@@ -9,8 +9,11 @@ use App\Models\Viatico\FacturaViatico;
 use App\Models\Viatico\LiquidacionViatico;
 use App\Models\Viatico\Viatico;
 use App\Support\RucEcuador;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * La revisión de Financiero sobre cada comprobante de la liquidación.
@@ -25,18 +28,19 @@ use Illuminate\Support\Facades\DB;
  *   todos aceptados; con alguno observado, se devuelve a corrección.
  * - Al volver a guardar los comprobantes, los que no cambiaron conservan su
  *   revisión; los nuevos o modificados vuelven a pendientes.
- * - Los controles automáticos (RUC, fecha, duplicados) avisan a Financiero,
- *   no impiden guardar: un ticket de peaje o un proveedor extranjero no tienen
- *   por qué cumplirlos.
+ * - Los controles de RUC y duplicados avisan a Financiero, no impiden guardar:
+ *   un ticket de peaje o un proveedor extranjero no tienen por qué cumplirlos.
+ *
+ * La fecha, en cambio, se exige: un comprobante solo vale si está fechado
+ * dentro de las fechas del viaje, y fuera de ellas se rechaza (Gestión
+ * Financiera, 2026-09-15). Antes se admitían hasta 5 días después del regreso
+ * y solo se avisaba.
  */
 final class ComprobantesViaticoService
 {
     public const PENDIENTE = 'pendiente';
     public const ACEPTADA  = 'aceptada';
     public const OBSERVADA = 'observada';
-
-    /** Días calendario tras el regreso en que un comprobante sigue siendo válido. */
-    public const DIAS_TRAS_EL_REGRESO = 5;
 
     /** Lo que identifica a un comprobante al compararlo con su versión anterior. */
     private const CAMPOS_IDENTIDAD = [
@@ -70,6 +74,15 @@ final class ComprobantesViaticoService
 
             $factura = FacturaViatico::whereHas('liquidacion', fn ($q) => $q->where('viatico_id', $viatico->id))
                 ->findOrFail($facturaId);
+
+            // Al guardar ya no entra un comprobante fuera de fecha, pero puede
+            // quedar alguno de antes de la regla: tampoco se acepta.
+            if ($decision === self::ACEPTADA && ! $this->fechaDentroDelViaje($factura->fecha_factura, $viatico)) {
+                throw new ReglaNegocioException(
+                    'El comprobante no está fechado dentro de las fechas del viaje '
+                        .'('.$this->periodo($viatico).'): obsérvelo para que el servidor lo corrija.'
+                );
+            }
 
             $factura->update([
                 'estado_revision'      => $decision,
@@ -111,6 +124,56 @@ final class ComprobantesViaticoService
                 "Faltan {$pendientes} comprobante(s) por revisar antes de contabilizar."
             );
         }
+    }
+
+    /**
+     * Rechaza los comprobantes sin fecha o fechados fuera del viaje, con un
+     * error por comprobante para que el formulario lo marque en su campo.
+     *
+     * @param list<array<string, mixed>> $facturas lo que llega en la petición
+     *
+     * @throws ValidationException
+     */
+    public function asegurarFechasDelViaje(Viatico $viatico, array $facturas, string $prefijo = 'facturas'): void
+    {
+        $errores = [];
+
+        foreach ($facturas as $i => $factura) {
+            $campo = "{$prefijo}.{$i}.fecha_factura";
+            $fecha = $factura['fecha_factura'] ?? null;
+
+            if (! $fecha) {
+                $errores[$campo] = 'Indique la fecha del comprobante.';
+            } elseif (! $this->fechaDentroDelViaje(Carbon::parse($fecha), $viatico)) {
+                $errores[$campo] = 'La fecha debe estar dentro del viaje ('.$this->periodo($viatico).').';
+            }
+        }
+
+        if ($errores !== []) {
+            throw ValidationException::withMessages($errores);
+        }
+    }
+
+    /**
+     * Del día de salida al día de regreso, ambos incluidos. Solo cuenta la
+     * fecha: la factura del hotel del último día vale aunque se emita después
+     * de la hora de llegada.
+     */
+    private function fechaDentroDelViaje(?CarbonInterface $fecha, Viatico $viatico): bool
+    {
+        if (! $fecha || ! $viatico->datetime_salida || ! $viatico->datetime_llegada) {
+            return false;
+        }
+
+        $dia = $fecha->toDateString();
+
+        return $dia >= $viatico->datetime_salida->toDateString()
+            && $dia <= $viatico->datetime_llegada->toDateString();
+    }
+
+    private function periodo(Viatico $viatico): string
+    {
+        return $viatico->datetime_salida?->format('d/m/Y').' – '.$viatico->datetime_llegada?->format('d/m/Y');
     }
 
     /**
@@ -170,24 +233,17 @@ final class ComprobantesViaticoService
             $alertas[] = ['codigo' => 'ruc', 'mensaje' => "El RUC «{$f->ruc_proveedor}» no es un RUC ecuatoriano válido."];
         }
 
+        // Al guardar se rechaza, así que solo lo traen comprobantes registrados
+        // antes de la regla: el aviso le dice a Financiero por qué no podrá
+        // aceptarlo.
         if (! $f->fecha_factura) {
             $alertas[] = ['codigo' => 'fecha', 'mensaje' => 'El comprobante no tiene fecha.'];
-        } elseif ($viatico->datetime_salida && $viatico->datetime_llegada) {
-            // Desde la salida hasta 5 días calendario después del regreso: el
-            // mismo período que admite el formulario de comprobantes, porque
-            // hay facturas —el hotel, un peaje de vuelta— que se emiten al
-            // regresar o en los días siguientes. Decidido con el usuario.
-            $desde = $viatico->datetime_salida->copy()->startOfDay();
-            $hasta = $viatico->datetime_llegada->copy()->startOfDay()->addDays(self::DIAS_TRAS_EL_REGRESO);
-
-            if ($f->fecha_factura->lt($desde) || $f->fecha_factura->gt($hasta)) {
-                $alertas[] = [
-                    'codigo'  => 'fecha',
-                    'mensaje' => "La fecha {$f->fecha_factura->format('d/m/Y')} está fuera del período válido "
-                        . "({$desde->format('d/m/Y')} – {$hasta->format('d/m/Y')}, hasta "
-                        . self::DIAS_TRAS_EL_REGRESO . ' días después del regreso).',
-                ];
-            }
+        } elseif (! $this->fechaDentroDelViaje($f->fecha_factura, $viatico)) {
+            $alertas[] = [
+                'codigo'  => 'fecha',
+                'mensaje' => "La fecha {$f->fecha_factura->format('d/m/Y')} está fuera de las fechas del viaje "
+                    ."({$this->periodo($viatico)}).",
+            ];
         }
 
         $clave = $this->claveDuplicado($f);

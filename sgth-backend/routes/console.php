@@ -71,7 +71,7 @@ Schedule::command('sanctum:prune-expired --hours=24')
     ->onOneServer();
 
 // Viáticos: llegada la salida pasan a «en comisión»; llegado el regreso, a
-// «pendiente de liquidación», que es cuando empieza el plazo de 5 días hábiles
+// «pendiente de liquidación», que es cuando empieza el plazo de 4 días hábiles
 // para liquidar. Dependía de un botón que nadie estaba obligado a pulsar. Cada
 // hora, porque el viaje empieza y termina a una hora concreta y el servidor
 // debe ver su liquidación abierta el mismo día que vuelve.
