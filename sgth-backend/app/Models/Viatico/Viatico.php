@@ -40,7 +40,7 @@ class Viatico extends Model
         'tipo_viaje',
         'pais_destino',
         'numero_resolucion',
-        'partida_presupuestaria',
+        'partida_presupuestaria_id',
         'created_by',
         'updated_by',
     ];
@@ -94,6 +94,12 @@ class Viatico extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /** La imputación del gasto, del catálogo de Estructura. */
+    public function partidaPresupuestaria(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Estructura\PartidaPresupuestaria::class, 'partida_presupuestaria_id');
     }
 
     /** Quién firma cada documento, sellado al emitirlo. */

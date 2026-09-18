@@ -129,7 +129,7 @@ final class ViaticoEstadoService
     }
 
     /**
-     * @param array{numero_resolucion?: string, partida_presupuestaria?: string} $datos
+     * @param array{numero_resolucion?: string, partida_presupuestaria_id?: int} $datos
      */
     public function entregarAnticipo(int $viaticoId, User $user, array $datos = []): Viatico
     {
@@ -206,7 +206,7 @@ final class ViaticoEstadoService
     }
 
     /**
-     * @param array{numero_resolucion?: string, partida_presupuestaria?: string} $datos
+     * @param array{numero_resolucion?: string, partida_presupuestaria_id?: int} $datos
      */
     public function contabilizar(int $viaticoId, User $user, array $datos = []): LiquidacionViatico
     {
@@ -215,7 +215,7 @@ final class ViaticoEstadoService
 
             $this->anotarRespaldo($viatico, $datos);
 
-            if (! $viatico->numero_resolucion || ! $viatico->partida_presupuestaria) {
+            if (! $viatico->numero_resolucion || ! $viatico->partida_presupuestaria_id) {
                 throw new ReglaNegocioException(
                     'El viático no tiene número de resolución ni partida presupuestaria: '
                         .'asígnelos antes de contabilizarlo.'
@@ -487,14 +487,16 @@ final class ViaticoEstadoService
      * Anota la resolución y la partida que asigna Financiero. Se guardan con el
      * cambio de estado, dentro de la misma transacción.
      *
-     * @param array{numero_resolucion?: string, partida_presupuestaria?: string} $datos
+     * @param array{numero_resolucion?: string, partida_presupuestaria_id?: int} $datos
      */
     private function anotarRespaldo(Viatico $viatico, array $datos): void
     {
-        foreach (['numero_resolucion', 'partida_presupuestaria'] as $campo) {
-            if (! empty($datos[$campo])) {
-                $viatico->{$campo} = trim($datos[$campo]);
-            }
+        if (! empty($datos['numero_resolucion'])) {
+            $viatico->numero_resolucion = trim($datos['numero_resolucion']);
+        }
+
+        if (! empty($datos['partida_presupuestaria_id'])) {
+            $viatico->partida_presupuestaria_id = (int) $datos['partida_presupuestaria_id'];
         }
     }
 

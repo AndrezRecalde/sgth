@@ -34,6 +34,13 @@ interface Props {
    * catálogo completo.
    */
   modalidad?: string | null
+  /**
+   * Limita el listado a estos códigos. Para gastos con una imputación conocida
+   * —los viáticos van a 530303 y 530304—, donde el resto del catálogo solo
+   * estorba. Si ninguno está en el catálogo se muestran todas, igual que con
+   * la modalidad: una lista vacía sería peor.
+   */
+  codigos?: string[]
 }
 
 /**
@@ -52,6 +59,7 @@ export function SelectPartidaPresupuestaria({
   disabled,
   soloDisponibles = false,
   modalidad = null,
+  codigos: codigosFijos,
 }: Props) {
   const contained = useContainedInput()
 
@@ -60,7 +68,7 @@ export function SelectPartidaPresupuestaria({
     ...(soloDisponibles ? { disponible: true } : {}),
   })
 
-  const codigos = codigosDePartida(modalidad)
+  const codigos = codigosFijos ?? codigosDePartida(modalidad)
 
   // Se filtra solo si la modalidad tiene correspondencia y esas partidas están
   // en el catálogo: si no, mostrar una lista vacía sería peor que mostrarlas

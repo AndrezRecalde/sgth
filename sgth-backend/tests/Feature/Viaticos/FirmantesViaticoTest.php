@@ -202,7 +202,7 @@ it('las transiciones sellan el documento que emiten', function () {
 
     $this->actingAs($this->financieroUser, 'sanctum')
         ->postJson("/api/v1/viaticos/{$viatico->id}/contabilizar", [
-            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301',
+            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id,
         ])
         ->assertOk();
 

@@ -38712,14 +38712,13 @@
                                         "type": "string",
                                         "maxLength": 100
                                     },
-                                    "partida_presupuestaria": {
-                                        "type": "string",
-                                        "maxLength": 100
+                                    "partida_presupuestaria_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "required": [
                                     "numero_resolucion",
-                                    "partida_presupuestaria"
+                                    "partida_presupuestaria_id"
                                 ]
                             }
                         }
@@ -39080,9 +39079,8 @@
                                         "type": "string",
                                         "maxLength": 100
                                     },
-                                    "partida_presupuestaria": {
-                                        "type": "string",
-                                        "maxLength": 100
+                                    "partida_presupuestaria_id": {
+                                        "type": "integer"
                                     }
                                 }
                             }
@@ -56720,12 +56718,6 @@
                             "null"
                         ]
                     },
-                    "partida_presupuestaria": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
                     "created_by": {
                         "type": [
                             "integer",
@@ -56805,6 +56797,12 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "partida_presupuestaria_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -56816,7 +56814,6 @@
                     "monto_calculado",
                     "monto_anticipo",
                     "numero_resolucion",
-                    "partida_presupuestaria",
                     "created_by",
                     "updated_by",
                     "created_at",
@@ -56831,7 +56828,8 @@
                     "datetime_llegada",
                     "noches",
                     "coeficiente_exterior",
-                    "motivo_rechazo"
+                    "motivo_rechazo",
+                    "partida_presupuestaria_id"
                 ],
                 "title": "Viatico"
             },

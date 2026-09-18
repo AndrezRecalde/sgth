@@ -138,7 +138,7 @@ it('solo se contabiliza con todos los comprobantes aceptados', function () {
     // Sin anticipo entregado, contabilizar pide también el respaldo contable.
     $contabilizar = fn () => $this->actingAs($this->financiero, 'sanctum')
         ->postJson("/api/v1/viaticos/{$viatico->id}/contabilizar", [
-            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301',
+            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id,
         ]);
 
     $contabilizar()->assertStatus(422)->assertJsonPath('mensaje', 'Faltan 2 comprobante(s) por revisar antes de contabilizar.');
@@ -157,7 +157,7 @@ it('sin comprobantes no se contabiliza', function () {
 
     $this->actingAs($this->financiero, 'sanctum')
         ->postJson("/api/v1/viaticos/{$viatico->id}/contabilizar", [
-            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria' => '530301',
+            'numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id,
         ])
         ->assertStatus(422)
         ->assertJsonPath('mensaje', 'La liquidación no tiene comprobantes que contabilizar.');
