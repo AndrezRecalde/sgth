@@ -126,15 +126,17 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
   const salidaWatch = useWatch({ control, name: "datetime_salida" });
   const llegadaWatch = useWatch({ control, name: "datetime_llegada" });
 
-  const calcularDias = (): string => {
+  // Noches de pernocte: es lo que se paga. Antes contaba los días de
+  // calendario, el de regreso incluido.
+  const calcularNoches = (): string => {
     if (!salidaWatch || !llegadaWatch) return "—";
     const s = new Date(salidaWatch);
     const l = new Date(llegadaWatch);
     if (isNaN(s.getTime()) || isNaN(l.getTime())) return "—";
     const fs = new Date(s.getFullYear(), s.getMonth(), s.getDate());
     const fl = new Date(l.getFullYear(), l.getMonth(), l.getDate());
-    const diff = Math.round((fl.getTime() - fs.getTime()) / 86400000);
-    return diff < 0 ? "—" : diff + 1 + " días";
+    const noches = Math.round((fl.getTime() - fs.getTime()) / 86400000);
+    return noches < 1 ? "—" : noches + (noches === 1 ? " noche" : " noches");
   };
 
   const handleClose = () => {
@@ -261,7 +263,7 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
           <Grid.Col span={{ base: 12, sm: 2 }}>
             <div>
               <Text size="xs" c="dimmed" mb={4}>
-                Total días
+                Noches
               </Text>
               <Card
                 withBorder
@@ -272,9 +274,9 @@ export function ViaticoModal({ opened, onClose, onCreated }: Props) {
                 <Text
                   fw={700}
                   size="lg"
-                  c={calcularDias() === "—" ? "dimmed" : "emerald"}
+                  c={calcularNoches() === "—" ? "dimmed" : "emerald"}
                 >
-                  {calcularDias()}
+                  {calcularNoches()}
                 </Text>
               </Card>
             </div>

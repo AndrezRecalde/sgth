@@ -1,5 +1,14 @@
 import { z } from 'zod/v4'
 
+/** Días de calendario entre dos fechas, sin mirar la hora. */
+const nochesEntre = (salida: string, llegada: string): number => {
+  const s = new Date(salida)
+  const l = new Date(llegada)
+  if (isNaN(s.getTime()) || isNaN(l.getTime())) return 0
+  const dia = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  return Math.round((dia(l) - dia(s)) / 86400000)
+}
+
 export const viaticoSchema = z.object({
   zona: z.enum([
     'dentro_provincia',
@@ -17,6 +26,16 @@ export const viaticoSchema = z.object({
   monto_calculado:   z.number().optional().nullable(),
   servidores_acompanantes: z.array(z.number()).optional(),
 })
+  // El viático se paga por noches de pernocte: una comisión que empieza y
+  // termina el mismo día no genera ninguna, y el backend la rechaza.
+  .refine(
+    (v) => !v.datetime_salida || !v.datetime_llegada
+      || nochesEntre(v.datetime_salida, v.datetime_llegada) >= 1,
+    {
+      message: 'La comisión debe incluir al menos una noche fuera: el regreso no puede ser el mismo día de la salida.',
+      path: ['datetime_llegada'],
+    },
+  )
 
 export type ViaticoFormData = z.infer<typeof viaticoSchema>
 
