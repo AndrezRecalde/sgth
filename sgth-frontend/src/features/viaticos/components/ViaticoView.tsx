@@ -114,7 +114,7 @@ export function ViaticoView() {
           recordsPerPage={15}
           page={page}
           onPageChange={setPage}
-          paginationText={PAGINACION_ES.paginationText}
+          {...PAGINACION_ES}
         />
       </DataState>
 

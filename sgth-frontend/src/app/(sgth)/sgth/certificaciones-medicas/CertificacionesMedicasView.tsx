@@ -117,10 +117,7 @@ export function CertificacionesMedicasView() {
         }}
       >
         <SgthTable
-          // Solo `paginationText`: el objeto entero no compila, porque
-          // `recordsPerPageLabel` exige `recordsPerPageOptions` y
-          // `onRecordsPerPageChange`.
-          paginationText={PAGINACION_ES.paginationText}
+          {...PAGINACION_ES}
           records={solicitudes}
           columns={columns}
           totalRecords={data?.total ?? solicitudes.length}

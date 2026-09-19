@@ -137,12 +137,7 @@ export function VacacionesTab() {
         }}
       >
         <SgthTable
-          // Solo `paginationText`: `recordsPerPageLabel` pertenece a la
-          // variante de mantine-datatable que además exige
-          // `recordsPerPageOptions` y `onRecordsPerPageChange`, y sin ellas no
-          // compila. Es la misma razón por la que `PermisosTab` no usa
-          // `PAGINACION_ES` entero.
-          paginationText={PAGINACION_ES.paginationText}
+          {...PAGINACION_ES}
           records={lista}
           columns={columns}
           totalRecords={data?.total ?? lista.length}

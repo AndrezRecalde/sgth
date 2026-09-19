@@ -87,10 +87,18 @@ mil servidores al navegador para paginar en memoria hace lenta la pantalla y
 castiga a quien la abre desde una conexión de la Prefectura.
 
 Los textos en español van en `PAGINACION_ES`, que se esparce en las tablas
-paginadas. Está aparte de `SgthTable` porque `mantine-datatable` tipa la
-paginación como una unión discriminada y fijar `paginationText` dentro del
-envoltorio genérico impide a TypeScript resolver la variante. La alternativa
-habría sido una aserción de tipo, que está prohibida.
+paginadas (`{...PAGINACION_ES}`). Está aparte de `SgthTable` porque
+`mantine-datatable` tipa la paginación como una unión discriminada y fijar
+`paginationText` dentro del envoltorio genérico impide a TypeScript resolver la
+variante. La alternativa habría sido una aserción de tipo, que está prohibida.
+
+`PAGINACION_ES` lleva solo `paginationText`. Hasta el 2026-09-18 llevaba
+también `recordsPerPageLabel`, que pertenece a la variante con selector de
+«registros por página» y exige `recordsPerPageOptions` y
+`onRecordsPerPageChange`: con él esta regla no compilaba, y las nueve tablas
+paginadas pasaban `PAGINACION_ES.paginationText` a mano. No se le agregan
+props de otra variante; si una tabla ofrece ese selector, su etiqueta va en la
+tabla.
 
 ### Acciones de fila
 

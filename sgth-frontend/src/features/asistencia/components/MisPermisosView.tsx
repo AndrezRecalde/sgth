@@ -98,9 +98,7 @@ export function MisPermisosView() {
         }}
       >
         <SgthTable
-          // Solo `paginationText`: el objeto entero exige además las opciones
-          // de registros por página, que esta tabla no ofrece.
-          paginationText={PAGINACION_ES.paginationText}
+          {...PAGINACION_ES}
           records={lista}
           columns={columns}
           totalRecords={data?.total ?? lista.length}
