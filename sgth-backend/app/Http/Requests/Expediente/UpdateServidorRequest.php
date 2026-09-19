@@ -4,6 +4,7 @@ namespace App\Http\Requests\Expediente;
 
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoDiscapacidad;
+use App\Models\Expediente\Servidor;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,39 @@ class UpdateServidorRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Lo que el titular puede cambiar de su propia ficha. ServidorPolicy le
+     * deja actualizarla y delega aquí qué campos: hasta el 2026-09-19 esta
+     * lista no existía y un servidor podía cambiarse la cédula, el régimen o
+     * la fecha de ingreso —y con ella sus días de vacaciones—.
+     */
+    private const CAMPOS_DEL_TITULAR = [
+        'telefono_celular',
+        'telefono_convencional',
+        'correo_personal',
+        'direccion_domicilio',
+    ];
+
     public function rules(): array
+    {
+        $reglas = $this->reglas();
+
+        // Quien puede crear fichas (Talento Humano) edita todo; el titular,
+        // solo su contacto.
+        if ($this->user()->can('crear', Servidor::class)) {
+            return $reglas;
+        }
+
+        foreach (array_keys($reglas) as $campo) {
+            if (! in_array($campo, self::CAMPOS_DEL_TITULAR, true)) {
+                $reglas[$campo] = ['prohibited'];
+            }
+        }
+
+        return $reglas;
+    }
+
+    private function reglas(): array
     {
         $servidorId = $this->route('servidore') ?? $this->route('servidor'); // Dependiendo de la definición de la ruta
 
@@ -98,6 +131,7 @@ class UpdateServidorRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'prohibited' => 'Este dato solo lo puede cambiar Talento Humano.',
             'provincia_nacimiento_id.required_if' => 'La provincia de nacimiento es obligatoria si el servidor no es extranjero.',
             'provincia_nacimiento_id.exists'      => 'La provincia de nacimiento seleccionada no existe en el catálogo.',
             'canton_nacimiento_id.required_if'    => 'El cantón de nacimiento es obligatorio si el servidor no es extranjero.',

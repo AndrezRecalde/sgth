@@ -1,6 +1,7 @@
 'use client'
 
 import { confirmar, StatusBadge } from '@/components/ui'
+import { formatFecha } from '@/lib/fecha'
 import { Stack, Group, Text, Button,
          ActionIcon, Tooltip, Divider } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -131,13 +132,13 @@ export function DocumentosTab({ servidorId }: Props) {
                     {doc.subido_por?.usuario_ti
                       ? ` · ${doc.subido_por.usuario_ti}`
                       : ''}
-                    {doc.created_at ? ` · ${doc.created_at}` : ''}
+                    {doc.created_at ? ` · ${formatFecha(doc.created_at.slice(0, 10))}` : ''}
                   </Text>
                 </Stack>
                 <Group gap="xs">
                   {doc.fecha_vencimiento && (
                     <StatusBadge tone="warning" size="xs">
-                      Vence: {doc.fecha_vencimiento}
+                      Vence: {formatFecha(doc.fecha_vencimiento)}
                     </StatusBadge>
                   )}
                   <Tooltip label="Descargar" withArrow>

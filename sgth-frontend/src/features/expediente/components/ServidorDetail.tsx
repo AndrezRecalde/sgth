@@ -58,7 +58,7 @@ export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
     <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title="Expediente — Datos personales"
+      title="Expediente del servidor"
       ancho="lg"
     >
       <Stack gap="md">

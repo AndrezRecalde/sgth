@@ -71,7 +71,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                   {(c.es_principal_sueldo || c.es_principal_viatico) && (
                     <IconStarFilled
                       size={14}
-                      color={c.es_principal_sueldo ? 'var(--mantine-color-emerald-6)' : 'var(--mantine-color-ocean-6)'}
+                      color="var(--sgth-accent)"
                     />
                   )}
                   <Text size="sm" fw={600}>
@@ -117,7 +117,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                       <Menu.Label>Establecer principal para:</Menu.Label>
                       {!c.es_principal_sueldo && (
                         <Menu.Item
-                          leftSection={<IconStarFilled size={14} color="var(--mantine-color-emerald-6)" />}
+                          leftSection={<IconStarFilled size={14} />}
                           onClick={() => setPrincipal.mutate({ id: Number(c.id), proposito: 'sueldo' })}
                         >
                           Nómina / Sueldo
@@ -125,7 +125,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                       )}
                       {!c.es_principal_viatico && (
                         <Menu.Item
-                          leftSection={<IconStarFilled size={14} color="var(--mantine-color-ocean-6)" />}
+                          leftSection={<IconStarFilled size={14} />}
                           onClick={() => setPrincipal.mutate({ id: Number(c.id), proposito: 'viatico' })}
                         >
                           Viáticos

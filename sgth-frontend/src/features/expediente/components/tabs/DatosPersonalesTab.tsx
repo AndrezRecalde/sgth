@@ -18,11 +18,6 @@ const ESTADO_CIVIL_LABELS: Record<string, string> = {
   viudo: "Viudo/a",
 };
 
-/* const REGIMEN_LABELS: Record<string, string> = {
-  losep:          'LOSEP',
-  codigo_trabajo: 'Código del Trabajo',
-} */
-
 interface Props {
   servidor: ServidorConRelaciones;
 }

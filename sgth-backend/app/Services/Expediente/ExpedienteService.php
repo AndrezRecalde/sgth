@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ExpedienteService implements ExpedienteServiceInterface
 {
+    private const MAXIMO_POR_PAGINA = 500;
+
     /**
      * Crea la ficha personal del servidor. Nada más.
      *
@@ -251,8 +253,11 @@ class ExpedienteService implements ExpedienteServiceInterface
             $filtros
         );
 
+        // Con tope: sin él, per_page=100000 devolvía la institución entera en
+        // una respuesta. 500 porque el selector de subrogaciones todavía pide
+        // esa cantidad para listar a todos.
         $perPage = isset($filtros['per_page'])
-            ? (int) $filtros['per_page'] : 15;
+            ? min(max((int) $filtros['per_page'], 1), self::MAXIMO_POR_PAGINA) : 15;
 
         return $query->orderBy('apellido')->orderBy('nombre')
                      ->paginate($perPage);
@@ -294,9 +299,13 @@ class ExpedienteService implements ExpedienteServiceInterface
             });
         }
 
-        // Servidor "en funciones": activo y con contrato vigente.
-        if (!empty($filtros['en_funciones'])) {
-            $query->where('estado', true)->whereHas('contratoVigente');
+        // Servidor "en funciones": activo y con contrato vigente. 'false' pide
+        // lo contrario —el filtro «Inactivos»—, y con empty() se leía como
+        // verdadero: la pantalla de inactivos listaba a los que trabajan.
+        if (isset($filtros['en_funciones']) && $filtros['en_funciones'] !== '') {
+            filter_var($filtros['en_funciones'], FILTER_VALIDATE_BOOLEAN)
+                ? $query->where('estado', true)->whereHas('contratoVigente')
+                : $query->where(fn ($q) => $q->where('estado', false)->orWhereDoesntHave('contratoVigente'));
         }
 
         // Fichas creadas a las que todavía no se les registró el vínculo.

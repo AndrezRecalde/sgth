@@ -28,6 +28,7 @@ import { useCargaFamiliarMutations } from "../../hooks/useCargaFamiliarMutations
 import { CargaFamiliarModal } from "../CargaFamiliarModal";
 import { DiscapacidadCargaFamiliarModal } from "../DiscapacidadCargaFamiliarModal";
 import { EnfermedadCargaFamiliarModal } from "../EnfermedadCargaFamiliarModal";
+import { TIPO_DISCAPACIDAD_LABELS } from "../../utils/discapacidad";
 import { expedienteService } from "../../services/expedienteService";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
@@ -46,15 +47,6 @@ const PARENTESCO_LABELS: Record<string, string> = {
   madre: "Madre",
   hermano: "Hermano/a",
   otro: "Otro",
-};
-
-const TIPO_DISCAPACIDAD_LABELS: Record<string, string> = {
-  fisica: "Física",
-  sensorial: "Sensorial",
-  intelectual: "Intelectual",
-  psicosocial: "Psicosocial",
-  visceral: "Visceral",
-  multiple: "Múltiple",
 };
 
 interface CargaRowProps {
@@ -182,7 +174,9 @@ function CargaRow({
             label={carga.estado ? 'Desactivar' : 'Activar'}
             withArrow
           >
+            {/* Sin etiqueta, nada decía qué activaba este interruptor. */}
             <Switch
+              label={carga.estado ? "Activa" : "Inactiva"}
               checked={carga.estado}
               onChange={() => onToggleEstado(Number(carga.id))}
               disabled={togglePending}
