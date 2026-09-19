@@ -2,6 +2,7 @@
 
 namespace App\Services\Viatico;
 
+use App\Enums\ZonaViatico;
 use App\Models\Viatico\EmpresaTransporte;
 use App\Models\Viatico\TramoViatico;
 use App\Models\Viatico\Viatico;
@@ -114,6 +115,20 @@ class ItinerarioViaticoService
             if ($t->datetime_salida->lt($salida) || $t->datetime_llegada->gt($regreso)) {
                 $problemas[] = "El tramo {$t->orden} queda fuera de las fechas del viático.";
             }
+        }
+
+        // La zona decide la tarifa de todas las noches. Si el viaje tiene un
+        // destino en el exterior, todas se pagan como exterior, aunque haya
+        // noches en el país (Gestión Financiera, 2026-09-18). Sin esto, un
+        // viático «fuera de la provincia» con un tramo a Bogotá se pagaba a
+        // tarifa nacional.
+        $alExterior = $tramos->contains(fn (TramoViatico $t) => $t->destino_tipo === 'internacional');
+        $esExterior = $viatico->zona === ZonaViatico::EXTERIOR;
+
+        if ($alExterior && ! $esExterior) {
+            $problemas[] = 'El itinerario incluye un destino en el exterior: el viático tiene que ser de zona Exterior.';
+        } elseif ($esExterior && ! $alExterior) {
+            $problemas[] = 'El viático es al exterior, pero ningún tramo llega al exterior.';
         }
 
         return $problemas;
