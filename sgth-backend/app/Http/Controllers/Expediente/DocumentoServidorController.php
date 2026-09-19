@@ -70,6 +70,11 @@ class DocumentoServidorController extends Controller
 
     public function descargar(int $servidorId, int $documentoId): mixed
     {
+        // La misma regla que para listarlos. Sin ella bastaba cambiar el
+        // número en la URL para bajar la cédula o el certificado médico de
+        // cualquier otro servidor.
+        $this->authorize('ver', Servidor::findOrFail($servidorId));
+
         $documento = DocumentoServidor::where('servidor_id', $servidorId)
             ->findOrFail($documentoId);
 

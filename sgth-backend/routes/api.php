@@ -286,25 +286,22 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         [ServidorController::class, 'storeBasico'])
         ->name('servidores.storeBasico');
 
-    Route::post(
-        'expediente/cargas-familiares/{cargaId}/discapacidades',
-        [DiscapacidadCargaFamiliarController::class, 'store']
-    )->name('carga.discapacidades.store');
-
-    Route::delete(
-        'expediente/cargas-familiares/{cargaId}/discapacidades/{id}',
-        [DiscapacidadCargaFamiliarController::class, 'destroy']
-    )->name('carga.discapacidades.destroy');
-
-    Route::post(
-        'expediente/cargas-familiares/{cargaId}/enfermedades',
-        [EnfermedadCargaFamiliarController::class, 'store']
-    )->name('carga.enfermedades.store');
-
-    Route::delete(
-        'expediente/cargas-familiares/{cargaId}/enfermedades/{id}',
-        [EnfermedadCargaFamiliarController::class, 'destroy']
-    )->name('carga.enfermedades.destroy');
+    // Condiciones de salud de una carga familiar. Las mismas manos que
+    // gestionan la carga (ver el grupo de historiales, más abajo): hasta el
+    // 2026-09-19 no pedían rol y cualquier usuario autenticado podía
+    // agregarlas o borrarlas en el expediente de otro.
+    Route::prefix('expediente/cargas-familiares/{cargaId}')
+        ->middleware('role:admin-uath|asistente-uath')
+        ->group(function () {
+            Route::post('discapacidades', [DiscapacidadCargaFamiliarController::class, 'store'])
+                ->name('carga.discapacidades.store');
+            Route::delete('discapacidades/{id}', [DiscapacidadCargaFamiliarController::class, 'destroy'])
+                ->name('carga.discapacidades.destroy');
+            Route::post('enfermedades', [EnfermedadCargaFamiliarController::class, 'store'])
+                ->name('carga.enfermedades.store');
+            Route::delete('enfermedades/{id}', [EnfermedadCargaFamiliarController::class, 'destroy'])
+                ->name('carga.enfermedades.destroy');
+        });
 
     Route::prefix('expediente')->group(function () {
         Route::get('servidores-export/excel', [ExportServidoresController::class, 'excel']);
@@ -313,7 +310,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // (puesto/unidad/tipo_nombramiento requeridos al crear) contradice
         // la materialización tardía vía creaVinculo(). La creación real
         // pasa por 'basico' + un MovimientoPersonal de ingreso.
-        Route::apiResource('servidores', ServidorController::class)->except(['store']);
+        // 'destroy' tampoco: el controlador nunca lo implementó y la ruta
+        // respondía 500. Una ficha no se borra; el servidor que sale queda
+        // inactivo con su vínculo cerrado.
+        Route::apiResource('servidores', ServidorController::class)->except(['store', 'destroy']);
 
         Route::prefix('servidores/{servidorId}')->group(function () {
             Route::get('documentos',
@@ -422,14 +422,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
             });
 
-        // Cuentas bancarias
-        Route::prefix('servidores/{id}/cuentas-bancarias')->group(function () {
-            Route::get('/', [CuentaBancariaServidorController::class, 'index']);
-            Route::post('/', [CuentaBancariaServidorController::class, 'store']);
-            Route::put('{cuenta}', [CuentaBancariaServidorController::class, 'update']);
-            Route::delete('{cuenta}', [CuentaBancariaServidorController::class, 'destroy']);
-            Route::post('{cuenta}/set-principal', [CuentaBancariaServidorController::class, 'setPrincipal']);
-        });
+        // Cuentas bancarias. Deciden a dónde va el sueldo: hasta el 2026-09-19
+        // no pedían rol y cualquier usuario autenticado podía listar, crear o
+        // marcar como principal una cuenta en el expediente de otro.
+        Route::prefix('servidores/{id}/cuentas-bancarias')
+            ->middleware('role:admin-uath|asistente-uath')
+            ->group(function () {
+                Route::get('/', [CuentaBancariaServidorController::class, 'index']);
+                Route::post('/', [CuentaBancariaServidorController::class, 'store']);
+                Route::put('{cuenta}', [CuentaBancariaServidorController::class, 'update']);
+                Route::delete('{cuenta}', [CuentaBancariaServidorController::class, 'destroy']);
+                Route::post('{cuenta}/set-principal', [CuentaBancariaServidorController::class, 'setPrincipal']);
+            });
 
         Route::prefix('subrogaciones')->group(function () {
             Route::get('activas', [SubrogacionController::class, 'listarActivas']);
