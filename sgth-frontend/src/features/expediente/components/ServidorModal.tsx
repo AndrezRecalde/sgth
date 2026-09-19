@@ -1,11 +1,12 @@
 'use client'
 
 import { Stepper, Button } from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
-import { useForm, FormProvider } from 'react-hook-form'
+import { ModalFooter, SgthModal, notificar } from '@/components/ui'
+import { useForm, FormProvider, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconUser, IconPhone, IconBriefcase } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { useServidorMutations } from '../hooks/useServidorMutations'
 import { ServidorFormPersonal } from './ServidorFormPersonal'
 import { ServidorFormContacto } from './ServidorFormContacto'
@@ -18,6 +19,13 @@ import {
   servidorLaboralSchema,
   type ServidorLaboralFormData,
 } from '../schemas/servidorLaboral.schema'
+import {
+  BLANK_FORM_VALUES,
+  CAMPOS_POR_PASO,
+  mapServidorToFormValues,
+  mapServidorToLaboralValues,
+  pasoConError,
+} from '../utils/servidorFormValues'
 import type { ServidorConRelaciones } from '@/types/api'
 
 interface Props {
@@ -32,89 +40,13 @@ interface Props {
   onCreado?: (servidor: ServidorConRelaciones) => void
 }
 
-const BLANK_FORM_VALUES: ServidorBasicoFormData = {
-  nombre:           '',
-  segundo_nombre:   '',
-  apellido:         '',
-  segundo_apellido: '',
-  cedula:           '',
-  fecha_nacimiento: '',
-  genero:           'masculino',
-  estado_civil:     'soltero',
-  tipo_sangre:             null,
-  es_extranjero:           false,
-  provincia_nacimiento_id: null,
-  canton_nacimiento_id:    null,
-  nacionalidad:            '',
-  pais_origen:             '',
-  numero_papeleta_votacion: '',
-  pasaporte_numero:        '',
-  tiene_discapacidad:            false,
-  tiene_enfermedad_catastrofica: false,
-  telefono_celular:      '',
-  telefono_convencional: '',
-  correo_personal:       '',
-  codigo_medico:         '',
-  direccion_domicilio:   '',
-}
+const esCampoBasico = (c: string): c is keyof ServidorBasicoFormData =>
+  c in BLANK_FORM_VALUES
+const esCampoLaboral = (c: string): c is keyof ServidorLaboralFormData =>
+  c in mapServidorToLaboralValues(null)
 
-const BLANK_LABORAL_VALUES: ServidorLaboralFormData = {
-  fecha_ingreso_institucion:    '',
-  fecha_ingreso_sector_publico: null,
-  fecha_nombramiento:           null,
-  numero_contrato:              null,
-}
-
-function mapServidorToFormValues(servidor: ServidorConRelaciones): ServidorBasicoFormData {
-  return {
-    nombre:           servidor.nombre  ?? '',
-    segundo_nombre:   servidor.segundo_nombre  ?? '',
-    apellido:         servidor.apellido ?? '',
-    segundo_apellido: servidor.segundo_apellido ?? '',
-    cedula:           servidor.cedula ?? '',
-    fecha_nacimiento: servidor.fecha_nacimiento
-      ? servidor.fecha_nacimiento.split('T')[0] : '',
-    genero:           (servidor.genero as ServidorBasicoFormData['genero'])
-      ?? 'masculino',
-    estado_civil: (servidor.estado_civil as ServidorBasicoFormData['estado_civil'])
-      ?? 'soltero',
-    tipo_sangre:             (servidor.tipo_sangre as ServidorBasicoFormData['tipo_sangre']) ?? null,
-    es_extranjero:           servidor.es_extranjero ?? false,
-    provincia_nacimiento_id: servidor.provincia_nacimiento_id ?? null,
-    canton_nacimiento_id:    servidor.canton_nacimiento_id ?? null,
-    nacionalidad:            servidor.nacionalidad ?? '',
-    pais_origen:             servidor.pais_origen ?? '',
-    numero_papeleta_votacion: servidor.numero_papeleta_votacion ?? '',
-    pasaporte_numero:        servidor.pasaporte_numero ?? '',
-    tiene_discapacidad:            servidor.tiene_discapacidad ?? false,
-    tiene_enfermedad_catastrofica: servidor.tiene_enfermedad_catastrofica ?? false,
-    telefono_celular:      servidor.telefono_celular ?? '',
-    telefono_convencional: servidor.telefono_convencional ?? '',
-    correo_personal:       servidor.correo_personal ?? '',
-    codigo_medico:         servidor.codigo_medico ?? '',
-    direccion_domicilio:   servidor.direccion_domicilio ?? '',
-  }
-}
-
-const PERSONAL_FIELDS = [
-  'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido', 'cedula',
-  'fecha_nacimiento', 'genero', 'estado_civil', 'tipo_sangre', 'es_extranjero',
-  'provincia_nacimiento_id', 'canton_nacimiento_id', 'nacionalidad', 'pais_origen',
-  'tiene_discapacidad', 'tiene_enfermedad_catastrofica',
-] as const satisfies readonly (keyof ServidorBasicoFormData)[]
-
-function mapServidorToLaboralValues(servidor: ServidorConRelaciones): ServidorLaboralFormData {
-  return {
-    fecha_ingreso_institucion: servidor.fecha_ingreso_institucion
-      ? servidor.fecha_ingreso_institucion.split('T')[0] : '',
-    fecha_ingreso_sector_publico: servidor.fecha_ingreso_sector_publico
-      ? servidor.fecha_ingreso_sector_publico.split('T')[0] : null,
-    fecha_nombramiento: servidor.fecha_nombramiento
-      ? servidor.fecha_nombramiento.split('T')[0] : null,
-    numero_contrato: servidor.numero_contrato ?? null,
-  }
-}
-
+// El padre lo monta con `key` por servidor: los valores iniciales bastan y no
+// hace falta reiniciar el formulario cuando cambia la prop.
 export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
   const { crear, editar } = useServidorMutations()
   const isEditing         = !!servidor
@@ -129,59 +61,65 @@ export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
 
   const laboralForm = useForm<ServidorLaboralFormData>({
     resolver: zodResolver(servidorLaboralSchema),
-    defaultValues: servidor ? mapServidorToLaboralValues(servidor) : BLANK_LABORAL_VALUES,
+    defaultValues: mapServidorToLaboralValues(servidor),
   })
-
-  useEffect(() => {
-    if (servidor) {
-      form.reset(mapServidorToFormValues(servidor))
-      laboralForm.reset(mapServidorToLaboralValues(servidor))
-    } else {
-      form.reset(BLANK_FORM_VALUES)
-      laboralForm.reset(BLANK_LABORAL_VALUES)
-    }
-  }, [servidor, form, laboralForm])
 
   const handleClose = () => {
     form.reset(BLANK_FORM_VALUES)
-    laboralForm.reset(BLANK_LABORAL_VALUES)
+    laboralForm.reset(mapServidorToLaboralValues(null))
     setStep(0)
     onClose()
   }
 
   const handleNext = async () => {
-    const valid = await form.trigger(PERSONAL_FIELDS)
-    if (valid) setStep((s) => Math.min(s + 1, totalSteps - 1))
+    const campos = CAMPOS_POR_PASO[step].filter(esCampoBasico)
+    if (await form.trigger(campos)) setStep((s) => Math.min(s + 1, totalSteps - 1))
   }
 
   const handleBack = () => setStep((s) => Math.max(s - 1, 0))
 
+  /** Un campo inválido puede estar en otro paso: se vuelve a él para que se vea. */
+  const irAlError = (errors: FieldErrors) => {
+    const paso = pasoConError(Object.keys(errors))
+    if (paso !== null) setStep(paso)
+  }
+
+  /** Los errores de validación del backend (cédula duplicada…) caen en su campo. */
+  const mostrarErroresDelServidor = (error: unknown) => {
+    const campos = erroresDeCampo(error)
+    if (!campos) return // el hook ya lo notificó
+    const sinCampo: string[] = []
+    for (const [campo, mensaje] of Object.entries(campos)) {
+      if (esCampoBasico(campo)) form.setError(campo, { message: mensaje })
+      else if (esCampoLaboral(campo)) laboralForm.setError(campo, { message: mensaje })
+      else sinCampo.push(mensaje)
+    }
+    if (sinCampo.length) notificar.error('No se pudo guardar el expediente', sinCampo.join(' '))
+    const paso = pasoConError(Object.keys(campos))
+    if (paso !== null) setStep(paso)
+  }
+
   const onSubmit = async (values: ServidorBasicoFormData) => {
     try {
       if (isEditing) {
+        if (!(await laboralForm.trigger())) return setStep(2)
+        // Un solo envío con la ficha y lo laboral. Antes eran dos PUT: dos
+        // notificaciones, un guardado a medias si fallaba el segundo, y lo
+        // laboral solo se enviaba si había fecha de ingreso al GAD.
         await editar.mutateAsync({
-          id: Number(servidor!.id),
-          data: values as never,
+          id: Number(servidor.id),
+          data: { ...values, ...laboralForm.getValues() },
         })
-        // Guardar datos laborales si hay fecha ingreso
-        const laboralValues = laboralForm.getValues()
-        if (laboralValues.fecha_ingreso_institucion) {
-          await editar.mutateAsync({
-            id: Number(servidor!.id),
-            data: laboralValues as never,
-          })
-        }
-      } else {
-        const creado = await crear.mutateAsync(values as never)
         handleClose()
-        // El vínculo se registra aparte: se ofrece continuar ahí mismo en vez
-        // de dejar la ficha a medias esperando que alguien la encuentre.
-        if (creado) onCreado?.(creado)
         return
       }
+      const creado = await crear.mutateAsync(values)
       handleClose()
-    } catch {
-      // error manejado por el hook
+      // El vínculo se registra aparte: se ofrece continuar ahí mismo en vez
+      // de dejar la ficha a medias esperando que alguien la encuentre.
+      if (creado) onCreado?.(creado)
+    } catch (error) {
+      mostrarErroresDelServidor(error)
     }
   }
 
@@ -203,13 +141,14 @@ export function ServidorModal({ opened, onClose, servidor, onCreado }: Props) {
         )}
       </Stepper>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit, irAlError)} noValidate>
         {step === 0 && <ServidorFormPersonal form={form} />}
         {step === 1 && <ServidorFormContacto form={form} />}
         {step === 2 && isEditing && (
           <FormProvider {...laboralForm}>
             <ServidorFormLaboral
-              tipoNombramiento={servidor?.contrato_vigente?.tipo_nombramiento}
+              tipoNombramiento={servidor.contrato_vigente?.tipo_nombramiento}
+              fechaIngresoInstitucion={servidor.fecha_ingreso_institucion}
             />
           </FormProvider>
         )}

@@ -1,6 +1,8 @@
 'use client'
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, notificar, StatusBadge } from '@/components/ui'
+import { guardarArchivo } from '@/lib/archivo'
+import { getApiErrorMessage } from '@/types/api'
 import { formatFecha } from '@/lib/fecha'
 import { Stack, Group, Text, Button,
          ActionIcon, Tooltip, Divider } from '@mantine/core'
@@ -71,14 +73,11 @@ export function DocumentosTab({ servidorId }: Props) {
       const blob = await expedienteService.descargarDocumento(
         servidorId, doc.id
       )
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = doc.nombre_archivo
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      // error manejado por el interceptor de axios
+      guardarArchivo(blob, doc.nombre_archivo)
+    } catch (error) {
+      // El interceptor de axios solo atiende el 401: sin esto, un fallo
+      // (archivo borrado del disco, sin permiso) no decía nada.
+      notificar.error('No se pudo descargar el documento', getApiErrorMessage(error))
     }
   }
 

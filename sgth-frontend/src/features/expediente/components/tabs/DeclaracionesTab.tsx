@@ -1,6 +1,10 @@
 "use client";
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, notificar, StatusBadge } from '@/components/ui'
+import { abrirArchivo } from "@/lib/archivo";
+import { getApiErrorMessage } from "@/types/api";
+import { declaracionService } from "../../services/declaracionService";
+import { ExportarDeclaracionesModal } from "../ExportarDeclaracionesModal";
 import { useState } from "react";
 import { Stack, Group, Text, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -34,7 +38,16 @@ export function DeclaracionesTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false);
   const [editItem, setEditItem] = useState<DeclaracionJuramentada | null>(null);
   const { data: declaraciones = [], isLoading } = useDeclaraciones(servidorId);
-  const { eliminar, exportar } = useDeclaracionMutations(servidorId);
+  const { eliminar } = useDeclaracionMutations(servidorId);
+  const [exportarOpened, { open: abrirExportar, close: cerrarExportar }] = useDisclosure(false);
+
+  const verDocumento = (id: number) =>
+    declaracionService
+      .documento(servidorId, id)
+      .then(abrirArchivo)
+      .catch((error) =>
+        notificar.error("No se pudo abrir el documento", getApiErrorMessage(error)),
+      );
 
   const columns: DataTableColumn<DeclaracionJuramentada>[] = [
     {
@@ -81,9 +94,11 @@ export function DeclaracionesTab({ servidorId }: Props) {
         <TableActions
           actions={[
             {
-              label: "Descargar documento",
+              // Antes este botón no hacía nada. Solo aparece si hay un PDF.
+              label: "Ver documento",
               icon: <IconDownload size={14} />,
-              onClick: () => {},
+              hidden: !item.documento_ruta,
+              onClick: () => verDocumento(item.id),
             },
             {
               label: "Editar",
@@ -119,9 +134,9 @@ export function DeclaracionesTab({ servidorId }: Props) {
           size="xs"
           variant="light"
           leftSection={<IconDownload size={14} />}
-          onClick={exportar}
+          onClick={abrirExportar}
         >
-          Exportar todas
+          Exportar
         </Button>
         <Button
           size="xs"
@@ -149,6 +164,7 @@ export function DeclaracionesTab({ servidorId }: Props) {
         />
       )}
       <DeclaracionModal
+        key={editItem?.id ?? "nueva"}
         opened={opened}
         onClose={() => {
           setEditItem(null);
@@ -156,6 +172,11 @@ export function DeclaracionesTab({ servidorId }: Props) {
         }}
         servidorId={servidorId}
         initialValues={editItem}
+      />
+      <ExportarDeclaracionesModal
+        opened={exportarOpened}
+        onClose={cerrarExportar}
+        servidorId={servidorId}
       />
     </Stack>
   );
