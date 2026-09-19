@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { expedienteService } from '../services/expedienteService'
-import type {} from '../schemas/servidor.schema'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import { notificar } from '@/components/ui'
 

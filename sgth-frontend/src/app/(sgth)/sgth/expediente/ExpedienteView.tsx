@@ -186,9 +186,11 @@ export function ExpedienteView() {
               Existen en el sistema pero no están contratadas: no aparecen en
               nómina ni en asistencia hasta que se registre su Ingreso y Vinculación.
             </Text>
+            {/* Sin flexShrink el grupo lo encogía y el texto se cortaba («Ver quiéne»). */}
             <Button
               size="xs"
               variant="light"
+              style={{ flexShrink: 0 }}
               onClick={() => { setPendienteVinculacion(true); setPage(1) }}
             >
               Ver quiénes

@@ -7,11 +7,6 @@ import type { HistorialAcademicoFormData } from '../schemas/historialAcademico.s
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
 
 /**
- * Campos editables mientras la acción de personal está en borrador. Excluye
- * 'tipo_movimiento' y 'subtipo_movimiento' a propósito: cambiar la naturaleza
- * del acto no es editarlo — el backend tampoco los acepta.
- */
-/**
  * Payload de una transición. Los datos del vínculo solo aplican al pasar un
  * ingreso a 'registrada': se completan en el acto de aprobar, porque una
  * acción suscrita ya no se edita.
@@ -27,6 +22,11 @@ export type TransicionarData = {
   fecha_fin_propuesta?: string | null
 }
 
+/**
+ * Campos editables mientras la acción de personal está en borrador. Excluye
+ * 'tipo_movimiento' y 'subtipo_movimiento' a propósito: cambiar la naturaleza
+ * del acto no es editarlo — el backend tampoco los acepta.
+ */
 export type ActualizarBorradorData = {
   descripcion?: string
   fecha_efectiva?: string

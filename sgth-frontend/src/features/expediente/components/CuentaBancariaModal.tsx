@@ -158,7 +158,7 @@ export function CuentaBancariaModal({
       title={initialValues ? "Editar cuenta bancaria" : "Nueva cuenta bancaria"}
       size="md"
       onSubmit={handleSubmit(onSubmit)}
-      submitLabel="Registrar cuenta"
+      submitLabel={isEditing ? "Guardar cambios" : "Registrar cuenta"}
       submitting={crear.isPending}
     >
       <Stack gap="sm">
@@ -249,7 +249,6 @@ export function CuentaBancariaModal({
                   description="Pago de viáticos y comisiones"
                   checked={field.value ?? false}
                   onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  color="ocean"
                 />
               )}
             />

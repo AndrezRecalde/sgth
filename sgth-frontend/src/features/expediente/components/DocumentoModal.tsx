@@ -165,19 +165,17 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
             setArchivo(files[0]);
             setArchivoError("");
           }}
-          onReject={() => setArchivoError("Archivo no válido")}
+          onReject={() =>
+            setArchivoError("Solo se aceptan archivos PDF, JPG o PNG de hasta 5 MB")
+          }
           maxSize={5 * 1024 * 1024}
-          accept={[
-            "application/pdf",
-            "image/jpeg",
-            "image/png",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          ]}
+          // Los mismos formatos que valida el backend (StoreDocumentoServidorRequest):
+          // aceptaba Word aquí y el servidor lo rechazaba después de subirlo.
+          accept={["application/pdf", "image/jpeg", "image/png"]}
         >
           <Group justify="center" gap="xl" mih={80}>
             <Dropzone.Accept>
-              <IconUpload size={28} color="var(--mantine-color-emerald-6)" />
+              <IconUpload size={28} color="var(--sgth-accent)" />
             </Dropzone.Accept>
             <Dropzone.Reject>
               <IconX size={28} color="var(--mantine-color-red-6)" />
@@ -187,7 +185,7 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
             </Dropzone.Idle>
             <div>
               {archivo ? (
-                <Text size="sm" fw={500} c="emerald">
+                <Text size="sm" fw={500}>
                   {archivo.name}
                 </Text>
               ) : (

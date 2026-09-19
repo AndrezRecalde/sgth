@@ -39,6 +39,9 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
   });
   const solicitudes = data?.data ?? [];
   const { descargarFemo, loading: descargando } = usePdfFemo();
+  // El hook tiene un solo `loading`: sin saber qué fila lo pidió, giraban
+  // todos los botones de PDF a la vez.
+  const [descargandoId, setDescargandoId] = useState<number | null>(null);
 
   const getLabelTipo = (tipo: string) =>
     TIPO_EVENTO_OPTIONS.find((o) => o.value === tipo)?.label ?? tipo;
@@ -94,13 +97,15 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
             size="xs"
             variant="light"
             leftSection={<IconDownload size={13} />}
-            loading={descargando}
-            onClick={() =>
+            loading={descargando && descargandoId === s.id}
+            disabled={descargando && descargandoId !== s.id}
+            onClick={() => {
+              setDescargandoId(s.id);
               descargarFemo(
                 s.ficha_femo_id!,
                 `femo-${s.cedula_paciente}-${s.id}.pdf`
-              )
-            }
+              );
+            }}
           >
             PDF
           </Button>

@@ -26,6 +26,7 @@ import { useEnfermedades } from "../../hooks/useEnfermedades";
 import { DiscapacidadModal } from "../DiscapacidadModal";
 import { EnfermedadModal } from "../EnfermedadModal";
 import { expedienteService } from "../../services/expedienteService";
+import { TIPO_DISCAPACIDAD_LABELS } from "../../utils/discapacidad";
 import type {
   DiscapacidadServidor,
   EnfermedadCatastroficaServidor,
@@ -80,7 +81,11 @@ export function CondicionTab({ servidorId }: Props) {
       accessor: "tipo_discapacidad",
       title: "Tipo",
       render: ({ tipo_discapacidad }) => (
-        <Text size="sm">{tipo_discapacidad ?? "-"}</Text>
+        <Text size="sm">
+          {tipo_discapacidad
+            ? TIPO_DISCAPACIDAD_LABELS[tipo_discapacidad] ?? tipo_discapacidad
+            : "-"}
+        </Text>
       ),
     },
     {
