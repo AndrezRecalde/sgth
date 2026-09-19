@@ -140,6 +140,8 @@ class UpdateServidorRequest extends FormRequest
             'pais_origen.required_if'             => 'El país de origen es obligatorio para servidores extranjeros.',
             
             'cedula.regex'                     => 'La cédula debe contener exactamente 10 dígitos numéricos.',
+            // Sin él llegaba «validation.unique»: no hay traducciones en lang/.
+            'cedula.unique'                    => 'Esta cédula ya está registrada en otro expediente.',
 
             'puesto_id.prohibited'                => 'El puesto no se edita aquí: registre un movimiento de traslado, ascenso, traspaso o cambio administrativo.',
             'unidad_administrativa_id.prohibited'  => 'La unidad administrativa no se edita aquí: registre un movimiento de traslado, ascenso, traspaso o cambio administrativo.',

@@ -177,6 +177,15 @@ test('talento humano sigue editando toda la ficha', function () {
     expect($this->propio->fresh()->cedula)->toBe('3333333333');
 });
 
+test('una cédula repetida se explica en español, no como validation.unique', function () {
+    $this->actingAs($this->uath, 'sanctum');
+
+    $this->putJson("/api/v1/expediente/servidores/{$this->propio->id}", [
+        'cedula' => $this->ajeno->cedula,
+    ])->assertUnprocessable()
+        ->assertJsonPath('errores.cedula.0', 'Esta cédula ya está registrada en otro expediente.');
+});
+
 test('el filtro de inactivos lista a los que no están en funciones', function () {
     // El propio está en funciones: activo y con vínculo vigente.
     ContratoServidor::create([

@@ -1,24 +1,19 @@
 "use client";
 
-import {
-  Stack,
-  TextInput,
-  Select,
-  Textarea,
-} from "@mantine/core";
-import { FormModal, notificar } from "@/components/ui";
+import { useState } from "react";
+import { FileInput, Stack, TextInput, Select } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FormModal } from "@/components/ui";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { fromDateValue, toDateValue } from "@/lib/fecha";
 import { useDeclaracionMutations } from "../hooks/useDeclaracionMutations";
 import {
   declaracionSchema,
   type DeclaracionFormData,
 } from "../schemas/declaracion.schema";
-import { DatePickerInput } from "@mantine/dates";
-import { useQueryClient } from "@tanstack/react-query";
-import React, { useEffect } from "react";
-import { expedienteService } from "../services/expedienteService";
+import type { DeclaracionJuramentada } from "@/types/api";
 
 const TIPO_OPTIONS = [
   { value: "inicio_gestion", label: "Inicio de gestión" },
@@ -26,39 +21,25 @@ const TIPO_OPTIONS = [
   { value: "fin_gestion",    label: "Fin de gestión" },
 ];
 
+const VACIO: DeclaracionFormData = {
+  tipo_declaracion: "inicio_gestion",
+  fecha_declaracion: "",
+  codigo_barras: "",
+};
+
 interface Props {
   opened: boolean;
   onClose: () => void;
   servidorId: number;
-  initialValues?: {
-    id:               number;
-    tipo_declaracion: string;
-    fecha_declaracion: string;
-    codigo_barras:     string;
-    observaciones?:   string | null;
-  } | null;
+  initialValues?: DeclaracionJuramentada | null;
 }
 
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null;
-  const datePart = v.split("T")[0];
-  const [year, month, day] = datePart.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null;
-  const date = typeof d === "string" ? toDate(d) : d;
-  if (!date || isNaN(date.getTime())) return null;
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
+// El padre lo monta con `key` por declaración: los valores iniciales bastan.
 export function DeclaracionModal({ opened, onClose, servidorId, initialValues }: Props) {
   const contained = useContainedInput();
-  const { crear } = useDeclaracionMutations(servidorId);
-  const qc = useQueryClient();
+  const { crear, editar } = useDeclaracionMutations(servidorId);
+  const [documento, setDocumento] = useState<File | null>(null);
+  const isEditing = !!initialValues;
 
   const {
     register,
@@ -68,70 +49,37 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
     formState: { errors },
   } = useForm<DeclaracionFormData>({
     resolver: zodResolver(declaracionSchema),
-    defaultValues: {
-      tipo_declaracion: "inicio_gestion",
-      fecha_declaracion: "",
-      codigo_barras: "",
-      observaciones: "",
-    },
+    defaultValues: initialValues
+      ? {
+          tipo_declaracion: initialValues.tipo_declaracion,
+          fecha_declaracion: initialValues.fecha_declaracion?.split("T")[0] ?? "",
+          codigo_barras: initialValues.codigo_barras ?? "",
+        }
+      : VACIO,
   });
 
-  useEffect(() => {
-    if (initialValues) {
-      reset({
-        tipo_declaracion:  initialValues.tipo_declaracion as DeclaracionFormData["tipo_declaracion"],
-        fecha_declaracion: initialValues.fecha_declaracion
-          ? initialValues.fecha_declaracion.split("T")[0] : "",
-        codigo_barras:     initialValues.codigo_barras ?? "",
-        observaciones:     initialValues.observaciones ?? "",
-      });
-    } else {
-      reset({
-        tipo_declaracion:  "inicio_gestion",
-        fecha_declaracion: "",
-        codigo_barras:     "",
-        observaciones:     "",
-      });
-    }
-  }, [initialValues, reset]);
-
   const handleClose = () => {
-    reset();
+    reset(VACIO);
+    setDocumento(null);
     onClose();
   };
 
-  const isEditing = !!initialValues;
-
-  const onSubmit = (values: DeclaracionFormData) => {
-    const mutation = isEditing
-      ? expedienteService.editarDeclaracion(
-          servidorId, initialValues!.id,
-          values
-        ).then(() => {
-          qc.invalidateQueries({
-            queryKey: ["declaraciones", servidorId]
-          });
-          notificar.exito(
-            "Declaración actualizada",
-            "La declaración fue actualizada correctamente.",
-          );
-          handleClose();
-        })
-      : crear.mutateAsync(values)
-          .then(() => { reset(); onClose(); });
-
-    mutation.catch(() => {});
+  const onSubmit = (data: DeclaracionFormData) => {
+    const guardado = initialValues
+      ? editar.mutateAsync({ id: initialValues.id, data, documento })
+      : crear.mutateAsync({ data, documento });
+    guardado.then(handleClose).catch(() => {}); // el hook ya notificó
   };
 
   return (
     <FormModal
       opened={opened}
       onClose={handleClose}
-      title={initialValues ? "Editar declaración" : "Registrar declaración juramentada"}
+      title={isEditing ? "Editar declaración" : "Registrar declaración juramentada"}
       size="md"
       onSubmit={handleSubmit(onSubmit)}
-      submitLabel={initialValues ? "Actualizar" : "Registrar declaración"}
-      submitting={crear.isPending}
+      submitLabel={isEditing ? "Guardar cambios" : "Registrar declaración"}
+      submitting={crear.isPending || editar.isPending}
     >
       <Stack gap="sm">
         <Controller
@@ -155,11 +103,11 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
             <DatePickerInput
               label="Fecha de declaración"
               placeholder="Seleccionar fecha"
-              valueFormat="YYYY-MM-DD"
+              valueFormat="DD/MM/YYYY"
               clearable
               {...contained}
-              value={toDate(field.value)}
-              onChange={(d) => field.onChange(fromDate(d))}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValue(d))}
               error={errors.fecha_declaracion?.message}
             />
           )}
@@ -171,17 +119,18 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
           {...register("codigo_barras")}
           error={errors.codigo_barras?.message}
         />
-        <Textarea
-          label="Observaciones"
-          placeholder="Opcional"
-          rows={3}
+        <FileInput
+          label={initialValues?.documento_nombre_archivo
+            ? "Reemplazar documento (PDF)"
+            : "Documento escaneado (PDF)"}
+          placeholder={initialValues?.documento_nombre_archivo ?? "Opcional, hasta 10 MB"}
+          accept="application/pdf"
+          clearable
           {...contained}
-          {...register("observaciones")}
-          error={errors.observaciones?.message}
+          value={documento}
+          onChange={setDocumento}
         />
       </Stack>
     </FormModal>
   );
 }
-
-

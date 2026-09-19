@@ -9,5 +9,14 @@ export const cuentaBancariaSchema = z.object({
   es_principal_viatico:  z.boolean().optional(),
   estado:                z.boolean().optional(),
 })
+  // Una cuenta solo es la principal de lo que paga.
+  .refine((d) => !d.es_principal_sueldo || d.proposito !== 'viaticos', {
+    path: ['es_principal_sueldo'],
+    message: 'Una cuenta solo de viáticos no puede ser la principal de nómina',
+  })
+  .refine((d) => !d.es_principal_viatico || d.proposito !== 'sueldo', {
+    path: ['es_principal_viatico'],
+    message: 'Una cuenta solo de nómina no puede ser la principal de viáticos',
+  })
 
 export type CuentaBancariaFormData = z.infer<typeof cuentaBancariaSchema>

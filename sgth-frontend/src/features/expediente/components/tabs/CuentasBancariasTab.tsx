@@ -15,10 +15,15 @@ import type { CuentaBancariaConRelaciones } from '@/types/api'
 
 interface Props { servidorId: number }
 
+function puedeSerPrincipal(c: CuentaBancariaConRelaciones, de: 'sueldo' | 'viatico'): boolean {
+  return de === 'sueldo'
+    ? !c.es_principal_sueldo && c.proposito !== 'viaticos'
+    : !c.es_principal_viatico && c.proposito !== 'sueldo'
+}
+
 export function CuentasBancariasTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
   const [editCuenta, setEditCuenta] = useState<CuentaBancariaConRelaciones | null>(null)
-  const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false)
 
   const { data: cuentas = [], isLoading } = useCuentasBancarias(servidorId)
   const { setPrincipal, eliminar } = useCuentaBancariaMutations(servidorId)
@@ -104,7 +109,8 @@ export function CuentasBancariasTab({ servidorId }: Props) {
               </Stack>
 
               <Group gap="xs">
-                {!(c.es_principal_sueldo && c.es_principal_viatico) && (
+                {/* Solo se ofrece ser principal de lo que la cuenta paga. */}
+                {(puedeSerPrincipal(c, 'sueldo') || puedeSerPrincipal(c, 'viatico')) && (
                   <Menu position="bottom-end" shadow="md" width={200}>
                     <Menu.Target>
                       <Tooltip label="Establecer como principal" withArrow>
@@ -115,7 +121,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                     </Menu.Target>
                     <Menu.Dropdown>
                       <Menu.Label>Establecer principal para:</Menu.Label>
-                      {!c.es_principal_sueldo && (
+                      {puedeSerPrincipal(c, 'sueldo') && (
                         <Menu.Item
                           leftSection={<IconStarFilled size={14} />}
                           onClick={() => setPrincipal.mutate({ id: Number(c.id), proposito: 'sueldo' })}
@@ -123,7 +129,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                           Nómina / Sueldo
                         </Menu.Item>
                       )}
-                      {!c.es_principal_viatico && (
+                      {puedeSerPrincipal(c, 'viatico') && (
                         <Menu.Item
                           leftSection={<IconStarFilled size={14} />}
                           onClick={() => setPrincipal.mutate({ id: Number(c.id), proposito: 'viatico' })}
@@ -137,7 +143,7 @@ export function CuentasBancariasTab({ servidorId }: Props) {
                 <Tooltip label="Editar cuenta" withArrow>
                   <ActionIcon
                     variant="subtle" size="sm"
-                    onClick={() => { setEditCuenta(c); openEdit() }}
+                    onClick={() => { setEditCuenta(c); open() }}
                   >
                     <IconEdit size={14} />
                   </ActionIcon>
@@ -164,13 +170,9 @@ export function CuentasBancariasTab({ servidorId }: Props) {
       )}
 
       <CuentaBancariaModal
+        key={editCuenta?.id ?? 'nueva'}
         opened={opened}
-        onClose={close}
-        servidorId={servidorId}
-      />
-      <CuentaBancariaModal
-        opened={editOpened}
-        onClose={() => { setEditCuenta(null); closeEdit() }}
+        onClose={() => { setEditCuenta(null); close() }}
         servidorId={servidorId}
         initialValues={editCuenta}
       />

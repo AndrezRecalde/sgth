@@ -21,6 +21,7 @@ import { DeclaracionesTab } from "./tabs/DeclaracionesTab";
 import { CondicionTab } from "./tabs/CondicionTab";
 import { SaludOcupacionalTab } from "./tabs/SaludOcupacionalTab";
 import type { ServidorConRelaciones } from "@/types/api";
+import { useServidor } from "../hooks/useServidor";
 import { REGIMEN_LABELS } from '@/lib/regimen'
 import { SgthDrawer, StatusBadge } from '@/components/ui';
 
@@ -31,7 +32,12 @@ interface Props {
   onEdit?: (s: ServidorConRelaciones) => void;
 }
 
-export function ServidorDetail({ opened, onClose, servidor, onEdit }: Props) {
+export function ServidorDetail({ opened, onClose, servidor: fila, onEdit }: Props) {
+  // La fila del listado es una foto: tras editar, el panel seguía mostrando
+  // los datos viejos y la pestaña Condición no se habilitaba hasta cerrarlo y
+  // volver a abrirlo. La ficha se consulta por su id; editar la invalida.
+  const { data: ficha } = useServidor(fila ? Number(fila.id) : null);
+  const servidor = ficha ?? fila;
 
   if (!servidor) return null;
 
