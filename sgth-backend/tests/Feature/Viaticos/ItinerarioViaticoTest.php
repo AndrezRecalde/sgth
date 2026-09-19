@@ -124,6 +124,34 @@ it('quien viaja solo dice si realiza actividades: la ida y el regreso los decide
     expect(($this->numeracion)())->toBe(['1:Quito:ida', '2:Latacunga:escala', '3:Ambato:destino']);
 });
 
+it('con un destino en el exterior el viático tiene que ser de zona Exterior', function () {
+    // Todas las noches se pagan como exterior si el viaje tiene un destino
+    // fuera del país (Gestión Financiera, 2026-09-18). El viático está
+    // «fuera de la provincia»: pagaría a tarifa nacional.
+    ($this->post)(($this->tramo)('Esmeraldas', 'Quito', '2026-10-06 08:00', '2026-10-06 14:00'))->assertCreated();
+    ($this->post)(($this->tramo)('Quito', 'Bogotá', '2026-10-07 08:00', '2026-10-07 10:00', [
+        'destino_tipo' => 'internacional', 'destino_pais' => 'Colombia',
+    ]))->assertCreated();
+    ($this->post)(($this->tramo)('Bogotá', 'Esmeraldas', '2026-10-08 12:00', '2026-10-08 18:00', [
+        'origen_tipo' => 'internacional', 'origen_pais' => 'Colombia',
+    ]))->assertCreated();
+
+    expect(($this->problemas)())
+        ->toBe(['El itinerario incluye un destino en el exterior: el viático tiene que ser de zona Exterior.']);
+
+    $this->viatico->update(['zona' => 'exterior']);
+
+    expect(($this->problemas)())->toBe([]);
+});
+
+it('un viático al exterior necesita un tramo que llegue al exterior', function () {
+    $this->viatico->update(['zona' => 'exterior']);
+    ($this->post)(($this->tramo)('Esmeraldas', 'Quito', '2026-10-06 08:00', '2026-10-06 14:00'))->assertCreated();
+    ($this->post)(($this->tramo)('Quito', 'Esmeraldas', '2026-10-08 12:00', '2026-10-08 18:00'))->assertCreated();
+
+    expect(($this->problemas)())->toBe(['El viático es al exterior, pero ningún tramo llega al exterior.']);
+});
+
 it('al borrar la ida el siguiente tramo pasa a serlo, sin saltos en la numeración', function () {
     ($this->post)(($this->tramo)('Esmeraldas', 'Quito', '2026-10-06 08:00', '2026-10-06 14:00'))->assertCreated();
     ($this->post)(($this->tramo)('Quito', 'Ambato', '2026-10-07 09:00', '2026-10-07 12:00'))->assertCreated();
