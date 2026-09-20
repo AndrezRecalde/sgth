@@ -19,6 +19,18 @@ export function useCuentaBancariaMutations(servidorId: number) {
     onError: notificar.alFallar('No se pudo registrar la cuenta'),
   })
 
+  // Antes la edición llamaba al servicio directo desde el modal: un fallo se
+  // tragaba sin aviso y el botón no mostraba que estaba guardando.
+  const editar = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CuentaBancariaFormData }) =>
+      cuentaBancariaService.editar(servidorId, id, data),
+    onSuccess: () => {
+      notificar.exito('Cuenta actualizada', 'La cuenta bancaria fue actualizada.')
+      invalidar()
+    },
+    onError: notificar.alFallar('No se pudo actualizar la cuenta'),
+  })
+
   const setPrincipal = useMutation({
     mutationFn: ({ id, proposito }: { id: number; proposito: 'sueldo' | 'viatico' }) =>
       cuentaBancariaService.setPrincipal(servidorId, id, proposito),
@@ -42,5 +54,5 @@ export function useCuentaBancariaMutations(servidorId: number) {
     onError: notificar.alFallar('No se pudo eliminar la cuenta'),
   })
 
-  return { crear, setPrincipal, eliminar }
+  return { crear, editar, setPrincipal, eliminar }
 }

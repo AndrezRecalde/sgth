@@ -66,6 +66,12 @@ export function ModalFooter({
         </Button>
         {!sinPrincipal && (
           <Button
+            // Dos elementos distintos, no uno que cambia de `type`. En un
+            // asistente, el clic en «Siguiente» avanza al último paso y React
+            // volvía `submit` ese mismo botón antes de que el navegador
+            // terminara de procesar el clic: el formulario se enviaba sin
+            // haber visto el último paso.
+            key={onSubmit ? 'avanzar' : 'enviar'}
             type={onSubmit ? 'button' : 'submit'}
             form={form}
             onClick={onSubmit}

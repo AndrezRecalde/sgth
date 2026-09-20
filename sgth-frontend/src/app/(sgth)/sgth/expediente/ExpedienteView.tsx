@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Alert, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle, IconAlertTriangle } from '@tabler/icons-react'
+import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle, IconAlertTriangle, IconFilterOff } from '@tabler/icons-react'
 import { ServidorToolbar } from '@/features/expediente/components/ServidorToolbar'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
 import { ServidorModal } from '@/features/expediente/components/ServidorModal'
@@ -15,24 +15,23 @@ import { usePuedeVincularInicial } from '@/features/expediente/hooks/useVinculac
 import { usePendientesVinculacion } from '@/features/expediente/hooks/usePendientesVinculacion'
 import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
 import { useServidores } from '@/features/expediente/hooks/useServidores'
+import { useFiltrosServidores } from '@/features/expediente/hooks/useFiltrosServidores'
 import { expedienteService } from '@/features/expediente/services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
+import { guardarArchivo } from '@/lib/archivo'
 import { useAuth } from '@/hooks/useAuth'
-import type { ServidorConRelaciones, EstadoContrato, TipoNombramiento } from '@/types/api'
-import { EmptyState, PageHeader, PageShell, notificar } from '@/components/ui'
+import type { ServidorConRelaciones } from '@/types/api'
+import { DataState, PageHeader, PageShell, notificar } from '@/components/ui'
 
 export function ExpedienteView() {
   const { hasPermiso } = useAuth()
   const puedeVincularInicial = usePuedeVincularInicial()
   const [vinculacionOpened, { open: abrirVinculacion, close: cerrarVinculacion }] = useDisclosure(false)
-  const [page, setPage]     = useState(1)
-  const [search, setSearch] = useState('')
-  const [contratoEstado, setContratoEstado] = useState<string | null>(null)
-  const [enFunciones, setEnFunciones]       = useState<boolean | null>(null)
-  const [unidadId, setUnidadId]             = useState<number | null>(null)
-  const [tipoNombramiento, setTipoNombramiento] = useState<string | null>(null)
-  const [anioIngreso, setAnioIngreso]       = useState<number | null>(null)
-  const [pendienteVinculacion, setPendienteVinculacion] = useState<boolean | null>(null)
+  const {
+    page, setPage, filtros, hayFiltros, pendienteVinculacion,
+    setSearch, setContratoEstado, setEnFunciones, setUnidadId,
+    setTipoNombramiento, setAnioIngreso, setPendienteVinculacion,
+  } = useFiltrosServidores()
   const [exportando, setExportando]         = useState<'excel' | 'pdf' | null>(null)
   const [selectedRecords, setSelectedRecords] =
     useState<ServidorConRelaciones[]>([])
@@ -56,23 +55,13 @@ export function ExpedienteView() {
 
   const { data: pendientes } = usePendientesVinculacion()
 
-  const filtros = {
-    search:            search || undefined,
-    contrato_estado:   (contratoEstado as EstadoContrato) || undefined,
-    en_funciones:      enFunciones ?? undefined,
-    unidad_administrativa_id: unidadId ?? undefined,
-    tipo_nombramiento: (tipoNombramiento as TipoNombramiento) || undefined,
-    anio_ingreso:      anioIngreso ?? undefined,
-    pendiente_vinculacion: pendienteVinculacion ?? undefined,
-  }
-
-  const { data, isLoading } = useServidores({
+  const { data, isLoading, error } = useServidores({
     page,
     per_page: 15,
     ...filtros,
   })
 
-  const servidores = (data?.data ?? []) as ServidorConRelaciones[]
+  const servidores = data?.data ?? []
 
   const handleExportar = async (tipo: 'excel' | 'pdf') => {
     setExportando(tipo)
@@ -80,12 +69,7 @@ export function ExpedienteView() {
       const blob = tipo === 'excel'
         ? await expedienteService.exportarExcel(filtros)
         : await expedienteService.exportarPdf(filtros)
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `nomina_servidores.${tipo === 'excel' ? 'xlsx' : 'pdf'}`
-      link.click()
-      URL.revokeObjectURL(url)
+      guardarArchivo(blob, `nomina_servidores.${tipo === 'excel' ? 'xlsx' : 'pdf'}`)
     } catch (error) {
       notificar.error(
         `No se pudo exportar el listado a ${tipo === 'excel' ? 'Excel' : 'PDF'}`,
@@ -191,7 +175,7 @@ export function ExpedienteView() {
               size="xs"
               variant="light"
               style={{ flexShrink: 0 }}
-              onClick={() => { setPendienteVinculacion(true); setPage(1) }}
+              onClick={() => setPendienteVinculacion(true)}
             >
               Ver quiénes
             </Button>
@@ -206,24 +190,34 @@ export function ExpedienteView() {
         onUnidadChange={setUnidadId}
         onTipoNombramientoChange={setTipoNombramiento}
         onAnioIngresoChange={setAnioIngreso}
-        onPendienteVinculacionChange={(v) => { setPendienteVinculacion(v); setPage(1) }}
+        onPendienteVinculacionChange={setPendienteVinculacion}
         pendienteVinculacion={pendienteVinculacion}
       />
 
-      {!isLoading && servidores.length === 0 ? (
-        <EmptyState
-          icon={IconFolder}
-          title="No hay servidores registrados"
-          description="Comience registrando la ficha del primer servidor. El vínculo laboral se registra después, con su Acción de Personal de Ingreso."
-          action={
+      {/* Con filtros, un listado vacío no significa que falten servidores:
+          antes una búsqueda sin resultados invitaba a registrar «el primero»,
+          y un fallo de red se veía igual. */}
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={servidores.length === 0}
+        emptyProps={hayFiltros ? {
+          icon: IconFilterOff,
+          title: 'Ningún servidor coincide con los filtros',
+          description: 'Cambie la búsqueda o quite alguno de los filtros.',
+        } : {
+          icon: IconFolder,
+          title: 'No hay servidores registrados',
+          description: 'Comience registrando la ficha del primer servidor. El vínculo laboral se registra después, con su Acción de Personal de Ingreso.',
+          action: (
             <Button variant="light"
               leftSection={<IconUserPlus size={14} />}
               onClick={handleNuevo}>
               Registrar ficha
             </Button>
-          }
-        />
-      ) : (
+          ),
+        }}
+      >
         <ServidorTable
           data={servidores}
           isLoading={isLoading}
@@ -236,7 +230,7 @@ export function ExpedienteView() {
           selectedRecords={selectedRecords}
           onSelectedRecordsChange={setSelectedRecords}
         />
-      )}
+      </DataState>
 
       <ServidorModal
         key={editServidor?.id ?? 'nuevo'}

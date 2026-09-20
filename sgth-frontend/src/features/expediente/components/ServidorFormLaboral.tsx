@@ -27,9 +27,11 @@ const fromDate = (d: Date | string | null): string | null => {
 interface Props {
   /** Tipo de nombramiento del contrato vigente del servidor, si existe. */
   tipoNombramiento?: string | null
+  /** Del servidor; se muestra sin poder editarla. */
+  fechaIngresoInstitucion?: string | null
 }
 
-export function ServidorFormLaboral({ tipoNombramiento }: Props) {
+export function ServidorFormLaboral({ tipoNombramiento, fechaIngresoInstitucion }: Props) {
   const contained = useContainedInput()
   const { control, formState: { errors } } =
     useFormContext<ServidorLaboralFormData>()
@@ -55,22 +57,14 @@ export function ServidorFormLaboral({ tipoNombramiento }: Props) {
       </Grid.Col>
 
       <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Controller
-          name="fecha_ingreso_institucion"
-          control={control}
-          render={({ field }) => (
-            <DatePickerInput
-              label="Fecha de ingreso al GAD"
-              placeholder="Se sincroniza con el contrato vigente"
-              valueFormat="YYYY-MM-DD"
-              maxDate={new Date()}
-              disabled
-              {...contained}
-              value={toDate(field.value)}
-              onChange={(d) => field.onChange(fromDate(d) ?? '')}
-              error={errors.fecha_ingreso_institucion?.message}
-            />
-          )}
+        {/* Solo lectura: la escribe el contrato vigente, no este formulario. */}
+        <DatePickerInput
+          label="Fecha de ingreso al GAD"
+          placeholder="Se sincroniza con el contrato vigente"
+          valueFormat="YYYY-MM-DD"
+          disabled
+          {...contained}
+          value={toDate(fechaIngresoInstitucion)}
         />
       </Grid.Col>
 

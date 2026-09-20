@@ -1,6 +1,5 @@
 import api from "@/lib/axios";
 import type { CargaFamiliarFormData } from '../schemas/cargaFamiliar.schema'
-import type { DeclaracionFormData } from '../schemas/declaracion.schema'
 import type { DiscapacidadFormData } from '../schemas/discapacidad.schema'
 import type { EnfermedadFormData } from '../schemas/enfermedad.schema'
 import type { HistorialAcademicoFormData } from '../schemas/historialAcademico.schema'
@@ -54,7 +53,6 @@ import type {
   ServidorParams,
   HistorialAcademicoServidor,
   CargaFamiliar,
-  DeclaracionJuramentada,
   DiscapacidadServidor,
   EnfermedadCatastroficaServidor,
   DocumentoServidor,
@@ -63,7 +61,7 @@ import type {
   EnfermedadCatastroficaCargaFamiliar,
   MovimientoPersonal,
 } from "@/types/api";
-import type { ServidorFormData } from "../schemas/servidor.schema";
+import type { ServidorLaboralFormData } from "../schemas/servidorLaboral.schema";
 import type { ServidorBasicoFormData } from "../schemas/servidorBasico.schema";
 
 export const expedienteService = {
@@ -103,7 +101,7 @@ export const expedienteService = {
 
   editar: (
     id: number,
-    data: Partial<ServidorBasicoFormData> | Partial<ServidorFormData>,
+    data: Partial<ServidorBasicoFormData & ServidorLaboralFormData>,
   ) =>
     api
       .put<ApiResponse<Servidor>>(`/expediente/servidores/${id}`, data)
@@ -199,46 +197,7 @@ export const expedienteService = {
       )
       .then((r) => r.data.datos),
 
-  // ── Declaraciones juramentadas ──────────────────
-  listarDeclaraciones: (servidorId: number) =>
-    api
-      .get<
-        ApiResponse<DeclaracionJuramentada[]>
-      >(`/expediente/servidores/${servidorId}/declaraciones-juramentadas`)
-      .then((r) => r.data.datos ?? []),
-
-  crearDeclaracion: (servidorId: number, data: DeclaracionFormData) =>
-    api
-      .post<
-        ApiResponse<DeclaracionJuramentada>
-      >(`/expediente/servidores/${servidorId}/declaraciones-juramentadas`, data)
-      .then((r) => r.data.datos),
-
-  editarDeclaracion: (
-    servidorId: number,
-    id: number,
-    data: DeclaracionFormData,
-  ) =>
-    api
-      .put<
-        ApiResponse<DeclaracionJuramentada>
-      >(`/expediente/servidores/${servidorId}/declaraciones-juramentadas/${id}`, data)
-      .then((r) => r.data.datos),
-
-  eliminarDeclaracion: (servidorId: number, id: number) =>
-    api
-      .delete<
-        ApiResponse<void>
-      >(`/expediente/servidores/${servidorId}/declaraciones-juramentadas/${id}`)
-      .then((r) => r.data),
-
-  exportarDeclaraciones: (servidorId: number) =>
-    api
-      .get(
-        `/expediente/servidores/${servidorId}/declaraciones-juramentadas/exportar`,
-        { responseType: "blob" },
-      )
-      .then((r) => r.data),
+  // Las declaraciones juramentadas viven en declaracionService.
 
   // ── Discapacidades ──────────────────────────────
   listarDiscapacidades: (servidorId: number) =>
