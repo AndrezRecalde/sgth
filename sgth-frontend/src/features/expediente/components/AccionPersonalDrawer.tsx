@@ -1,11 +1,12 @@
 "use client";
 
 import { SgthDrawer } from "@/components/ui";
-import { Tabs, Avatar, Group, Stack, Text } from "@mantine/core";
+import { Tabs, Stack } from "@mantine/core";
 import { IconHistory, IconBriefcase } from "@tabler/icons-react";
 import { MovimientosTab } from "./tabs/MovimientosTab";
 import { LaboralTab } from "./tabs/LaboralTab";
 import type { ServidorConRelaciones } from "@/types/api";
+import { ServidorEncabezado, nombreCompletoDe } from "./ServidorEncabezado";
 
 interface Props {
   opened: boolean;
@@ -18,49 +19,17 @@ export function AccionPersonalDrawer({ opened, onClose, servidor }: Props) {
   if (!servidor) return null;
 
   const servidorId = Number(servidor.id);
-  const nombreCompleto = [
-    servidor.apellido,
-    servidor.segundo_apellido,
-    servidor.nombre,
-    servidor.segundo_nombre,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const initials =
-    [servidor.nombre?.charAt(0), servidor.apellido?.charAt(0)]
-      .filter(Boolean)
-      .join("")
-      .toUpperCase() || "?";
 
   return (
     <SgthDrawer
       opened={opened}
       onClose={onClose}
       title="Acción de personal"
+      description={nombreCompletoDe(servidor)}
       ancho="lg"
     >
       <Stack gap="md">
-        <Group
-          p="md"
-          style={{
-            borderRadius: 12,
-            border: "1px solid var(--mantine-color-default-border)",
-            background: "var(--sgth-accent-light)",
-          }}
-        >
-          <Avatar size={52} radius="xl" fw={700}>
-            {initials}
-          </Avatar>
-          <Stack gap={2} style={{ flex: 1 }}>
-            <Text fw={700} size="md">
-              {nombreCompleto}
-            </Text>
-            <Text size="sm" c="dimmed" ff="monospace">
-              CI: {servidor.cedula ?? "-"}
-            </Text>
-          </Stack>
-        </Group>
+        <ServidorEncabezado servidor={servidor} />
 
         <Tabs defaultValue="movimientos">
           <Tabs.List>

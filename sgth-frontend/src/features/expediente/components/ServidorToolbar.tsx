@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useDebouncedValue } from '@mantine/hooks'
-import { TextInput, Select, Group, Stack } from '@mantine/core'
+import { TextInput, Select } from '@mantine/core'
+import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import type { UnidadConRelaciones } from '@/types/api'
 
@@ -58,8 +58,9 @@ export function ServidorToolbar({
   onUnidadChange, onTipoNombramientoChange, onAnioIngresoChange,
   onPendienteVinculacionChange, pendienteVinculacion,
 }: Props) {
-  const contained    = useContainedInput()
-  const { isMobile } = useMobileBreakpoint()
+  // Variante compacta: dentro de la barra los filtros conviven con los
+  // botones, no son un formulario de captura.
+  const contained = useContainedInput('sm')
 
   const [localSearch, setLocalSearch] = useState('')
   const [debounced] = useDebouncedValue(localSearch, 400)
@@ -72,15 +73,17 @@ export function ServidorToolbar({
     onSearch(debounced)
   }, [debounced, onSearch])
 
-  const fields = (
-    <>
+  return (
+    <Toolbar>
       <TextInput
         label="Buscar servidor"
         placeholder="Nombre completo o cédula"
         value={localSearch}
         onChange={(e) => setLocalSearch(e.currentTarget.value)}
         {...contained}
-        style={{ flex: 1 }}
+        // El buscador se queda con el espacio que sobra: es el filtro que
+        // más se usa y era el campo más estrecho de la barra.
+        style={{ flex: 1, minWidth: 220 }}
       />
       {onEnFuncionesChange && (
         <Select
@@ -152,10 +155,6 @@ export function ServidorToolbar({
           style={{ minWidth: 150 }}
         />
       )}
-    </>
+    </Toolbar>
   )
-
-  return isMobile
-    ? <Stack gap="sm" mb="md">{fields}</Stack>
-    : <Group gap="sm" mb="md">{fields}</Group>
 }

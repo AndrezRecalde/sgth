@@ -24,18 +24,12 @@ import {
 } from '../utils/taxonomiaAccionPersonal'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import type { EstadoAccionPersonal } from '@/types/api'
+import { formatFecha } from '@/lib/fecha'
 
 interface Props {
   opened: boolean
   onClose: () => void
   movimientoId: number | null
-}
-
-function fecha(f?: string | null): string {
-  if (!f) return '—'
-  return new Date(f).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
 }
 
 function dinero(v?: string | number | null): string {
@@ -172,7 +166,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
               />
             </Grid.Col>
             <Grid.Col span={6}><Dato etiqueta="Cédula" valor={mv.servidor?.cedula} /></Grid.Col>
-            <Grid.Col span={6}><Dato etiqueta="Rige desde" valor={fecha(m.fecha_efectiva)} /></Grid.Col>
+            <Grid.Col span={6}><Dato etiqueta="Rige desde" valor={formatFecha(m.fecha_efectiva)} /></Grid.Col>
             <Grid.Col span={6}><Dato etiqueta="Código" valor={m.codigo_registro} /></Grid.Col>
           </Grid>
         </Paper>
@@ -265,8 +259,8 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
               <Paper withBorder p="sm" radius="md" h="100%">
                 <Text size="sm" fw={700} mb="xs">PERÍODO DE LA AUSENCIA</Text>
                 <Stack gap="xs">
-                  <Dato etiqueta="Desde" valor={fecha(m.fecha_inicio)} />
-                  <Dato etiqueta="Hasta" valor={m.fecha_fin ? fecha(m.fecha_fin) : 'Sin fecha de fin'} />
+                  <Dato etiqueta="Desde" valor={formatFecha(m.fecha_inicio)} />
+                  <Dato etiqueta="Hasta" valor={m.fecha_fin ? formatFecha(m.fecha_fin) : 'Sin fecha de fin'} />
                   <Dato etiqueta="Destino" valor={mv.unidad_destino?.nombre} />
                   <Text size="xs" c="dimmed" mt={4}>
                     El servidor conserva su puesto y su plaza; regresa al vencer
@@ -319,7 +313,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             {m.caucionado && (
               <>
                 <Grid.Col span={6}><Dato etiqueta="Caución N.º" valor={m.caucion_numero} /></Grid.Col>
-                <Grid.Col span={6}><Dato etiqueta="Fecha de caución" valor={fecha(m.caucion_fecha)} /></Grid.Col>
+                <Grid.Col span={6}><Dato etiqueta="Fecha de caución" valor={formatFecha(m.caucion_fecha)} /></Grid.Col>
               </>
             )}
           </Grid>
@@ -347,7 +341,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                 .filter(Boolean).join(' ') || 'un servidor'}
             </strong>
             {mv.cubre_movimiento.fecha_fin
-              ? `, que regresa el ${fecha(mv.cubre_movimiento.fecha_fin)}.`
+              ? `, que regresa el ${formatFecha(mv.cubre_movimiento.fecha_fin)}.`
               : '.'}{' '}
             No consume plaza: la sigue ocupando el titular.
           </Alert>

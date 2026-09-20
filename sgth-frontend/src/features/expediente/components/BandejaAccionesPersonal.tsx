@@ -14,6 +14,7 @@ import {
 } from '../utils/estadoAccionPersonal'
 import { SUBTIPO_LABELS, etiquetaTipoMovimiento } from '../utils/taxonomiaAccionPersonal'
 import type { EstadoAccionPersonal, MovimientoPersonal } from '@/types/api'
+import { formatFecha } from '@/lib/fecha'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_LABELS) as EstadoAccionPersonal[])
   .map((e) => ({ value: e, label: ESTADO_LABELS[e] }))
@@ -23,14 +24,6 @@ function nombreServidor(s?: MovimientoPersonal['servidor']): string {
 
   return [s.apellido, s.segundo_apellido, s.nombre, s.segundo_nombre]
     .filter(Boolean).join(' ') || '—'
-}
-
-function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
 }
 
 /**

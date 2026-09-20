@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Alert, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconFolder, IconUserPlus, IconStethoscope, IconFileSpreadsheet, IconFileTypePdf, IconHistoryToggle, IconAlertTriangle, IconFilterOff } from '@tabler/icons-react'
+import { IconFolder, IconUserPlus, IconAlertTriangle, IconFilterOff } from '@tabler/icons-react'
 import { ServidorToolbar } from '@/features/expediente/components/ServidorToolbar'
+import { ExpedienteAcciones } from '@/features/expediente/components/ExpedienteAcciones'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
 import { ServidorModal } from '@/features/expediente/components/ServidorModal'
 import { ServidorDetail } from '@/features/expediente/components/ServidorDetail'
@@ -105,56 +106,19 @@ export function ExpedienteView() {
       <PageHeader
         title="Expediente Digital"
         description="Gestión de servidores públicos del GAD Provincial de Esmeraldas"
+        actions={
+          <ExpedienteAcciones
+            seleccionados={selectedRecords.length}
+            puedeSolicitarCertificacion={hasPermiso('solicitar-certificacion-medica')}
+            puedeVincularInicial={puedeVincularInicial}
+            exportando={exportando}
+            onSolicitarCertificacion={openLote}
+            onExportar={handleExportar}
+            onVinculacionInicial={abrirVinculacion}
+            onRegistrarFicha={handleNuevo}
+          />
+        }
       />
-
-      <Group justify="flex-end" mb="md">
-        {hasPermiso('solicitar-certificacion-medica') &&
-          selectedRecords.length > 0 && (
-          <Button
-            variant="light"
-            leftSection={<IconStethoscope size={16} />}
-            onClick={openLote}
-          >
-            Solicitar certificación médica ({selectedRecords.length})
-          </Button>
-        )}
-        <Button
-          variant="light"
-          leftSection={<IconFileSpreadsheet size={16} />}
-          loading={exportando === 'excel'}
-          onClick={() => handleExportar('excel')}
-        >
-          Exportar Excel
-        </Button>
-        <Button
-          variant="light"
-          leftSection={<IconFileTypePdf size={16} />}
-          loading={exportando === 'pdf'}
-          onClick={() => handleExportar('pdf')}
-        >
-          Exportar PDF
-        </Button>
-        {/* Carga inicial: solo aparece mientras dure la migración, para quien
-            tenga el permiso. Al revocarlo el botón desaparece solo. */}
-        {puedeVincularInicial && (
-          <Button
-            variant="light"
-            leftSection={<IconHistoryToggle size={16} />}
-            onClick={abrirVinculacion}
-          >
-            Vinculación inicial
-          </Button>
-        )}
-        {/* "Registrar ficha" y no "Nuevo servidor": esto crea a la persona,
-            no la contrata. El vínculo se registra en el paso siguiente. */}
-        <Button
-          variant="light"
-          leftSection={<IconUserPlus size={16} />}
-          onClick={handleNuevo}
-        >
-          Registrar ficha
-        </Button>
-      </Group>
 
       {/* Nadie debería quedar a medio registrar sin que se note. */}
       {(pendientes ?? 0) > 0 && pendienteVinculacion !== true && (

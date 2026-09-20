@@ -1,0 +1,5 @@
+.encabezado {
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--sgth-accent-light);
+}
