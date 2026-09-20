@@ -76,7 +76,7 @@ export function ServidorToolbar({
     <>
       <TextInput
         label="Buscar servidor"
-        placeholder="Nombre o cédula"
+        placeholder="Nombre completo o cédula"
         value={localSearch}
         onChange={(e) => setLocalSearch(e.currentTarget.value)}
         {...contained}
@@ -108,7 +108,7 @@ export function ServidorToolbar({
         />
       )}
       <Select
-        label="Estado contrato"
+        label="Vínculo actual"
         placeholder="Todos"
         data={CONTRATO_ESTADO_OPTIONS}
         onChange={onContratoEstadoChange}

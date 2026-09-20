@@ -5,6 +5,7 @@ namespace App\Services\Expediente;
 use App\Contracts\Expediente\ExpedienteServiceInterface;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\DocumentoServidor;
 use App\Models\Expediente\MovimientoPersonal;
@@ -17,6 +18,42 @@ use Illuminate\Support\Facades\Storage;
 class ExpedienteService implements ExpedienteServiceInterface
 {
     private const MAXIMO_POR_PAGINA = 500;
+
+    /** Dónde se busca el texto del buscador del listado. */
+    private const COLUMNAS_BUSQUEDA = [
+        'cedula', 'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido',
+    ];
+
+    /**
+     * La unidad pedida y todo lo que cuelga de ella. El organigrama tiene tres
+     * niveles y unas decenas de filas, así que se recorre en memoria con una
+     * sola consulta en vez de una recursiva por nivel.
+     *
+     * @return list<int>
+     */
+    private function unidadConDescendientes(int $unidadId): array
+    {
+        $porPadre = UnidadAdministrativa::query()
+            ->select('id', 'unidad_padre_id')
+            ->get()
+            ->groupBy('unidad_padre_id');
+
+        $ids = [];
+        $pendientes = [$unidadId];
+
+        while ($pendientes) {
+            $actual = array_pop($pendientes);
+            if (in_array($actual, $ids, true)) {
+                continue;
+            }
+            $ids[] = $actual;
+            foreach ($porPadre->get($actual, collect()) as $hija) {
+                $pendientes[] = (int) $hija->id;
+            }
+        }
+
+        return $ids;
+    }
 
     /**
      * Crea la ficha personal del servidor. Nada más.
@@ -98,15 +135,12 @@ class ExpedienteService implements ExpedienteServiceInterface
             // cargarlo aquí, ServidorResource lo resolvería con una consulta
             // suelta por cada servidor.
             'puesto.grupoOcupacional',
-            'documentos',
             'contratoVigente.puesto.cargo',
             'contratoVigente.puesto.partidaPresupuestaria',
             'contratoVigente.unidadAdministrativa',
-            'movimientos' => function($q) {
-                // Mismo desempate que el listado del drawer: sin él, dos
-                // acciones de la misma fecha salen en orden arbitrario.
-                $q->orderBy('fecha_efectiva', 'desc')->orderByDesc('id');
-            }
+            // Sin 'documentos' ni 'movimientos': nadie los lee de aquí —las
+            // pestañas del expediente y la bandeja tienen sus propios
+            // endpoints— y este detalle se pide cada vez que se abre la ficha.
         ])->findOrFail($servidorId);
     }
 
@@ -270,21 +304,31 @@ class ExpedienteService implements ExpedienteServiceInterface
      */
     private function filtrarServidores($query, array $filtros)
     {
-        // Búsqueda por nombre o cédula
+        // Búsqueda por nombre o cédula. Cada palabra tiene que aparecer en
+        // alguna de las columnas: así «Juan Pérez» encuentra a quien se llama
+        // Juan y se apellida Pérez. Antes cada columna se comparaba con la
+        // frase entera, y buscar por nombre completo no devolvía a nadie.
         if (!empty($filtros['search'])) {
-            $search = $filtros['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('cedula', 'ilike', "%{$search}%")
-                  ->orWhere('nombre', 'ilike', "%{$search}%")
-                  ->orWhere('apellido', 'ilike', "%{$search}%")
-                  ->orWhere('segundo_nombre', 'ilike', "%{$search}%")
-                  ->orWhere('segundo_apellido', 'ilike', "%{$search}%");
-            });
+            foreach (preg_split('/\s+/', trim($filtros['search'])) as $palabra) {
+                if ($palabra === '') {
+                    continue;
+                }
+                $query->where(function ($q) use ($palabra) {
+                    foreach (self::COLUMNAS_BUSQUEDA as $columna) {
+                        $q->orWhere($columna, 'ilike', "%{$palabra}%");
+                    }
+                });
+            }
         }
 
+        // Una dirección incluye a sus jefaturas y subprocesos: filtrando por
+        // «Gestión Administrativa» deben salir también los servidores de las
+        // unidades que cuelgan de ella, no solo los asignados a ella misma.
         if (!empty($filtros['unidad_administrativa_id'])) {
-            $query->where('unidad_administrativa_id',
-                $filtros['unidad_administrativa_id']);
+            $query->whereIn(
+                'unidad_administrativa_id',
+                $this->unidadConDescendientes((int) $filtros['unidad_administrativa_id']),
+            );
         }
 
         // Estado propio del servidor (activo/inactivo), no confundir con el
@@ -293,9 +337,21 @@ class ExpedienteService implements ExpedienteServiceInterface
             $query->where('estado', filter_var($filtros['estado'], FILTER_VALIDATE_BOOLEAN));
         }
 
+        // El estado del vínculo ACTUAL, no de cualquiera que haya tenido:
+        // «Terminado» devolvía también a quien hoy trabaja, porque en algún
+        // momento cerró un contrato anterior.
         if (!empty($filtros['contrato_estado'])) {
             $query->whereHas('contratos', function ($q) use ($filtros) {
-                $q->where('estado', $filtros['contrato_estado']);
+                $q->where('estado', $filtros['contrato_estado'])
+                  ->whereRaw(
+                      'contratos_servidor.id = (
+                          select ultimo.id from contratos_servidor ultimo
+                          where ultimo.servidor_id = contratos_servidor.servidor_id
+                            and ultimo.deleted_at is null
+                          order by ultimo.fecha_inicio desc, ultimo.id desc
+                          limit 1
+                      )'
+                  );
             });
         }
 
@@ -354,6 +410,8 @@ class ExpedienteService implements ExpedienteServiceInterface
                 'puesto.cargo',
                 'puesto.grupoOcupacional',
                 'contratoVigente',
+                // Para la fecha de salida de quien ya no está en funciones.
+                'contratos',
                 'usuario',
                 'discapacidades',
                 'historialAcademico',
@@ -391,7 +449,15 @@ class ExpedienteService implements ExpedienteServiceInterface
                     'GESTIÓN'                => $servidor->unidadAdministrativa?->nombre,
                     'FORMACIÓN'              => $formacion?->titulo_capacitacion,
                     'FECHA DE INGRESO'       => $servidor->fecha_ingreso_institucion?->format('Y-m-d'),
-                    'FECHA DE SALIDA'        => $enFunciones ? 'EN FUNCIONES' : $servidor->contratoVigente?->fecha_fin?->format('Y-m-d'),
+                    // Quien ya salió no tiene contrato vigente, así que la
+                    // fecha se lee del último vínculo cerrado. Leyéndola del
+                    // vigente, la columna salía vacía justo para ellos.
+                    'FECHA DE SALIDA'        => $enFunciones
+                        ? 'EN FUNCIONES'
+                        : $servidor->contratos
+                            ->filter(fn (ContratoServidor $c) => $c->fecha_fin)
+                            ->sortByDesc('fecha_fin')
+                            ->first()?->fecha_fin?->format('Y-m-d'),
                     'FECHA DE NACIMIENTO'    => $servidor->fecha_nacimiento?->format('Y-m-d'),
                     'EDAD'                   => $servidor->fecha_nacimiento?->age,
                     'DIRECCIÓN'              => $servidor->direccion_domicilio,
