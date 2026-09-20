@@ -1,119 +1,63 @@
-"use client";
+'use client'
 
-import { Tabs, Avatar, Group, Stack, Text, Button, Tooltip } from "@mantine/core";
+import { Button, Stack, Tabs, Tooltip } from '@mantine/core'
 import {
-  IconUser,
-  IconSchool,
-  IconUsers,
   IconCreditCard,
-  IconPaperclip,
+  IconEdit,
   IconFileDescription,
   IconHeart,
+  IconPaperclip,
+  IconSchool,
   IconStethoscope,
-  IconEdit,
-} from "@tabler/icons-react";
-import { DatosPersonalesTab } from "./tabs/DatosPersonalesTab";
-import { AcademicoTab } from "./tabs/AcademicoTab";
-import { FamiliaTab } from "./tabs/FamiliaTab";
-import { CuentasBancariasTab } from "./tabs/CuentasBancariasTab";
-import { DocumentosTab } from "./tabs/DocumentosTab";
-import { DeclaracionesTab } from "./tabs/DeclaracionesTab";
-import { CondicionTab } from "./tabs/CondicionTab";
-import { SaludOcupacionalTab } from "./tabs/SaludOcupacionalTab";
-import type { ServidorConRelaciones } from "@/types/api";
-import { useServidor } from "../hooks/useServidor";
-import { REGIMEN_LABELS } from '@/lib/regimen'
-import { SgthDrawer, StatusBadge } from '@/components/ui';
+  IconUser,
+  IconUsers,
+} from '@tabler/icons-react'
+import { SgthDrawer } from '@/components/ui'
+import { useServidor } from '../hooks/useServidor'
+import { ServidorEncabezado, nombreCompletoDe } from './ServidorEncabezado'
+import { AcademicoTab } from './tabs/AcademicoTab'
+import { CondicionTab } from './tabs/CondicionTab'
+import { CuentasBancariasTab } from './tabs/CuentasBancariasTab'
+import { DatosPersonalesTab } from './tabs/DatosPersonalesTab'
+import { DeclaracionesTab } from './tabs/DeclaracionesTab'
+import { DocumentosTab } from './tabs/DocumentosTab'
+import { FamiliaTab } from './tabs/FamiliaTab'
+import { SaludOcupacionalTab } from './tabs/SaludOcupacionalTab'
+import type { ServidorConRelaciones } from '@/types/api'
 
 interface Props {
-  opened: boolean;
-  onClose: () => void;
-  servidor: ServidorConRelaciones | null;
-  onEdit?: (s: ServidorConRelaciones) => void;
+  opened: boolean
+  onClose: () => void
+  servidor: ServidorConRelaciones | null
+  onEdit?: (s: ServidorConRelaciones) => void
 }
 
 export function ServidorDetail({ opened, onClose, servidor: fila, onEdit }: Props) {
   // La fila del listado es una foto: tras editar, el panel seguía mostrando
   // los datos viejos y la pestaña Condición no se habilitaba hasta cerrarlo y
   // volver a abrirlo. La ficha se consulta por su id; editar la invalida.
-  const { data: ficha } = useServidor(fila ? Number(fila.id) : null);
-  const servidor = ficha ?? fila;
+  const { data: ficha } = useServidor(fila ? Number(fila.id) : null)
+  const servidor = ficha ?? fila
 
-  if (!servidor) return null;
+  if (!servidor) return null
 
-  const servidorId = Number(servidor.id);
-  const nombreCompleto = [
-    servidor.apellido,
-    servidor.segundo_apellido,
-    servidor.nombre,
-    servidor.segundo_nombre,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const initials =
-    [servidor.nombre?.charAt(0), servidor.apellido?.charAt(0)]
-      .filter(Boolean)
-      .join("")
-      .toUpperCase() || "?";
-
-  const condicionDeshabilitada =
-    !servidor.tiene_discapacidad && !servidor.tiene_enfermedad_catastrofica;
+  const servidorId = Number(servidor.id)
+  const sinCondiciones =
+    !servidor.tiene_discapacidad && !servidor.tiene_enfermedad_catastrofica
 
   return (
     <SgthDrawer
       opened={opened}
       onClose={onClose}
       title="Expediente del servidor"
+      description={nombreCompletoDe(servidor)}
       ancho="lg"
     >
       <Stack gap="md">
-        {/* Header del servidor */}
-        <Group
-          p="md"
-          style={{
-            borderRadius: 12,
-            border: "1px solid var(--mantine-color-default-border)",
-            background: "var(--sgth-accent-light)",
-          }}
-        >
-          <Avatar size={52} radius="xl" fw={700}>
-            {initials}
-          </Avatar>
-          <Stack gap={2} style={{ flex: 1 }}>
-            <Text fw={700} size="md">
-              {nombreCompleto}
-            </Text>
-            <Text size="sm" c="dimmed" ff="monospace">
-              CI: {servidor.cedula ?? "-"}
-            </Text>
-            <Group gap="xs">
-              {servidor.regimen_laboral && (
-                <StatusBadge size="xs">
-                  {REGIMEN_LABELS[servidor.regimen_laboral] ??
-                    servidor.regimen_laboral}
-                </StatusBadge>
-              )}
-              {servidor.anios_servicio != null && (
-                <StatusBadge size="xs">
-                  {servidor.anios_servicio}{" "}
-                  {servidor.anios_servicio === 1
-                    ? "año de servicio"
-                    : "años de servicio"}
-                </StatusBadge>
-              )}
-              {servidor.contrato_vigente?.estado && (
-                <StatusBadge
-                  tone={servidor.contrato_vigente.estado === 'vigente' ? 'success' : 'neutral'}
-                  variant="dot"
-                  size="xs"
-                >
-                  {servidor.contrato_vigente.estado}
-                </StatusBadge>
-              )}
-            </Group>
-          </Stack>
-          {onEdit && (
+        <ServidorEncabezado
+          servidor={servidor}
+          conSituacion
+          actions={onEdit && (
             <Button
               size="xs"
               variant="light"
@@ -123,59 +67,43 @@ export function ServidorDetail({ opened, onClose, servidor: fila, onEdit }: Prop
               Editar
             </Button>
           )}
-        </Group>
+        />
 
-        {/* Tabs del expediente */}
         <Tabs defaultValue="personal">
           <Tabs.List>
-            <Tabs.Tab value="personal" leftSection={<IconUser size={13} />}>
+            <Tabs.Tab value="personal" leftSection={<IconUser size={14} />}>
               Personal
             </Tabs.Tab>
-            <Tabs.Tab
-              value="academico"
-              leftSection={<IconSchool size={13} />}
-            >
+            <Tabs.Tab value="academico" leftSection={<IconSchool size={14} />}>
               Académico
             </Tabs.Tab>
-            <Tabs.Tab value="familia" leftSection={<IconUsers size={13} />}>
+            <Tabs.Tab value="familia" leftSection={<IconUsers size={14} />}>
               Familia
             </Tabs.Tab>
-            <Tabs.Tab
-              value="cuentas"
-              leftSection={<IconCreditCard size={13} />}
-            >
+            <Tabs.Tab value="cuentas" leftSection={<IconCreditCard size={14} />}>
               Cuentas
             </Tabs.Tab>
-            <Tabs.Tab
-              value="documentos"
-              leftSection={<IconPaperclip size={13} />}
-            >
+            <Tabs.Tab value="documentos" leftSection={<IconPaperclip size={14} />}>
               Documentos
             </Tabs.Tab>
-            <Tabs.Tab
-              value="declaraciones"
-              leftSection={<IconFileDescription size={13} />}
-            >
+            <Tabs.Tab value="declaraciones" leftSection={<IconFileDescription size={14} />}>
               Declaraciones
             </Tabs.Tab>
             <Tooltip
               label="Active el switch de discapacidad o enfermedad catastrófica en Datos Personales para habilitar esta sección"
-              disabled={!condicionDeshabilitada}
+              disabled={!sinCondiciones}
               multiline
               w={220}
             >
               <Tabs.Tab
                 value="condicion"
-                leftSection={<IconHeart size={13} />}
-                disabled={condicionDeshabilitada}
+                leftSection={<IconHeart size={14} />}
+                disabled={sinCondiciones}
               >
                 Condición
               </Tabs.Tab>
             </Tooltip>
-            <Tabs.Tab
-              value="salud"
-              leftSection={<IconStethoscope size={13} />}
-            >
+            <Tabs.Tab value="salud" leftSection={<IconStethoscope size={14} />}>
               Salud
             </Tabs.Tab>
           </Tabs.List>
@@ -207,5 +135,5 @@ export function ServidorDetail({ opened, onClose, servidor: fila, onEdit }: Prop
         </Tabs>
       </Stack>
     </SgthDrawer>
-  );
+  )
 }

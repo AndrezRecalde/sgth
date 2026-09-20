@@ -1,299 +1,106 @@
-"use client";
+'use client'
 
-import { confirmar, StatusBadge, notificar } from '@/components/ui'
 import { useState } from 'react'
+import { Button, Stack } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import { IconHeart, IconPlus } from '@tabler/icons-react'
+import { DataState, SectionCard, SgthTable } from '@/components/ui'
+import { useDiscapacidades } from '../../hooks/useDiscapacidades'
+import { useEnfermedades } from '../../hooks/useEnfermedades'
+import { useCondicionMutations } from '../../hooks/useCondicionMutations'
 import {
-  Stack,
-  Group,
-  Text,
-  Button,
-  Divider,
-  Skeleton,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  IconPlus,
-  IconTrash,
-  IconHeart,
-  IconEdit,
-} from "@tabler/icons-react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { SgthTable } from "@/components/ui/SgthTable";
-import { TableActions } from "@/components/ui/TableActions";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { useDiscapacidades } from "../../hooks/useDiscapacidades";
-import { useEnfermedades } from "../../hooks/useEnfermedades";
-import { DiscapacidadModal } from "../DiscapacidadModal";
-import { EnfermedadModal } from "../EnfermedadModal";
-import { expedienteService } from "../../services/expedienteService";
-import { TIPO_DISCAPACIDAD_LABELS } from "../../utils/discapacidad";
+  getDiscapacidadesColumns,
+  getEnfermedadesColumns,
+} from '../condicion.columns'
+import { DiscapacidadModal } from '../DiscapacidadModal'
+import { EnfermedadModal } from '../EnfermedadModal'
 import type {
   DiscapacidadServidor,
   EnfermedadCatastroficaServidor,
-  ApiResponse,
-} from "@/types/api";
-import type { DataTableColumn } from "mantine-datatable";
+} from '@/types/api'
 
-interface Props {
-  servidorId: number;
-}
+interface Props { servidorId: number }
+
+const botonRegistrar = (onClick: () => void) => (
+  <Button size="xs" variant="light" leftSection={<IconPlus size={14} />} onClick={onClick}>
+    Registrar
+  </Button>
+)
 
 export function CondicionTab({ servidorId }: Props) {
-  const [discOpened, { open: openDisc, close: closeDisc }] =
-    useDisclosure(false);
-  const [enfOpened, { open: openEnf, close: closeEnf }] = useDisclosure(false);
-
+  const [discOpened, { open: openDisc, close: closeDisc }] = useDisclosure(false)
+  const [enfOpened, { open: openEnf, close: closeEnf }] = useDisclosure(false)
   const [editDisc, setEditDisc] = useState<DiscapacidadServidor | null>(null)
-  const [editEnf,  setEditEnf]  = useState<EnfermedadCatastroficaServidor | null>(null)
+  const [editEnf, setEditEnf] = useState<EnfermedadCatastroficaServidor | null>(null)
 
-  const qc = useQueryClient();
-
-  const { data: discapacidades = [], isLoading: ldDisc } =
-    useDiscapacidades(servidorId);
-  const { data: enfermedades = [], isLoading: ldEnf } =
-    useEnfermedades(servidorId);
-
-  const delDisc = useMutation<ApiResponse<void>, Error, number>({
-    mutationFn: (id: number) =>
-      expedienteService.eliminarDiscapacidad(servidorId, id),
-    onSuccess: () => {
-      notificar.exito("Registro eliminado", "La discapacidad fue eliminada del expediente.");
-      qc.invalidateQueries({ queryKey: ["discapacidades", servidorId] });
-    },
-    onError: notificar.alFallar("No se pudo eliminar la discapacidad"),
-  });
-
-  const delEnf = useMutation<ApiResponse<void>, Error, number>({
-    mutationFn: (id: number) =>
-      expedienteService.eliminarEnfermedad(servidorId, id),
-    onSuccess: () => {
-      notificar.exito(
-        "Registro eliminado",
-        "La enfermedad catastrófica fue eliminada del expediente.",
-      );
-      qc.invalidateQueries({ queryKey: ["enfermedades", servidorId] });
-    },
-    onError: notificar.alFallar("No se pudo eliminar la enfermedad"),
-  });
-
-  const discColumns: DataTableColumn<DiscapacidadServidor>[] = [
-    {
-      accessor: "tipo_discapacidad",
-      title: "Tipo",
-      render: ({ tipo_discapacidad }) => (
-        <Text size="sm">
-          {tipo_discapacidad
-            ? TIPO_DISCAPACIDAD_LABELS[tipo_discapacidad] ?? tipo_discapacidad
-            : "-"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "porcentaje",
-      title: "%",
-      width: 80,
-      render: ({ porcentaje }) => (
-        <StatusBadge>
-          {porcentaje ?? "-"}%
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: "numero_carnet_conadis",
-      title: "Carnet CONADIS",
-      render: ({ numero_carnet_conadis }) => (
-        <Text size="sm" ff="monospace">
-          {numero_carnet_conadis ?? "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "acciones",
-      title: "",
-      width: 50,
-      render: (item) => (
-        <TableActions
-          actions={[
-            {
-              label: "Editar",
-              icon: <IconEdit size={14} />,
-              onClick: () => {
-                setEditDisc(item);
-                openDisc();
-              },
-            },
-            {
-              label: "Eliminar",
-              icon: <IconTrash size={14} />,
-              color: "red",
-              onClick: () =>
-                confirmar({
-                  title: "Eliminar discapacidad",
-                  message:
-                    "Se eliminará este registro de discapacidad. No se puede deshacer.",
-                  destructiva: true,
-                  onConfirm: () => delDisc.mutate(Number(item.id)),
-                }),
-            },
-          ]}
-        />
-      ),
-    },
-  ];
-
-  const enfColumns: DataTableColumn<EnfermedadCatastroficaServidor>[] = [
-    {
-      accessor: "tipo_enfermedad",
-      title: "Enfermedad",
-      render: ({ tipo_enfermedad }) => (
-        <Text size="sm" fw={500}>
-          {tipo_enfermedad ?? "-"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "codigo_cie10",
-      title: "CIE-10",
-      width: 90,
-      render: ({ codigo_cie10 }) => (
-        <Text size="sm" ff="monospace">
-          {codigo_cie10 ?? "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "fecha_diagnostico",
-      title: "Diagnóstico",
-      width: 110,
-      render: ({ fecha_diagnostico }) => (
-        <Text size="sm">
-          {fecha_diagnostico
-            ? new Date(fecha_diagnostico).toLocaleDateString("es-EC", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                timeZone: "UTC",
-              })
-            : "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "acciones",
-      title: "",
-      width: 50,
-      render: (item) => (
-        <TableActions
-          actions={[
-            {
-              label: "Editar",
-              icon: <IconEdit size={14} />,
-              onClick: () => {
-                setEditEnf(item);
-                openEnf();
-              },
-            },
-            {
-              label: "Eliminar",
-              icon: <IconTrash size={14} />,
-              color: "red",
-              onClick: () =>
-                confirmar({
-                  title: "Eliminar enfermedad catastrófica",
-                  message:
-                    "Se eliminará este registro de enfermedad catastrófica. No se puede deshacer.",
-                  destructiva: true,
-                  onConfirm: () => delEnf.mutate(Number(item.id)),
-                }),
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const { data: discapacidades = [], isLoading: cargandoDisc, error: errorDisc } =
+    useDiscapacidades(servidorId)
+  const { data: enfermedades = [], isLoading: cargandoEnf, error: errorEnf } =
+    useEnfermedades(servidorId)
+  const { eliminarDiscapacidad, eliminarEnfermedad } = useCondicionMutations(servidorId)
 
   return (
     <Stack gap="lg">
-      <div>
-        <Group justify="space-between" mb="xs">
-          <Divider
-            label={
-              <Text size="sm" fw={600}>
-                Discapacidades
-              </Text>
-            }
-            labelPosition="left"
-            style={{ flex: 1 }}
-          />
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconPlus size={14} />}
-            onClick={openDisc}
-          >
-            Registrar
-          </Button>
-        </Group>
-        {ldDisc ? (
-          <Skeleton height={80} radius="md" />
-        ) : Array.isArray(discapacidades) && discapacidades.length > 0 ? (
+      <SectionCard title="Discapacidades" actions={botonRegistrar(openDisc)}>
+        <DataState
+          loading={cargandoDisc}
+          error={errorDisc}
+          empty={discapacidades.length === 0}
+          skeletonRows={2}
+          emptyProps={{
+            icon: IconHeart,
+            title: 'Sin discapacidades registradas',
+            description: 'Registra el carnet del CONADIS y el porcentaje reconocido.',
+          }}
+        >
           <SgthTable
-            records={discapacidades as DiscapacidadServidor[]}
-            columns={discColumns}
-            fetching={false}
+            records={discapacidades}
+            columns={getDiscapacidadesColumns({
+              onEdit: (item) => { setEditDisc(item); openDisc() },
+              onDelete: (id) => eliminarDiscapacidad.mutate(id),
+            })}
             minHeight={80}
           />
-        ) : (
-          <EmptyState icon={IconHeart} title="Sin discapacidades registradas" />
-        )}
-      </div>
+        </DataState>
+      </SectionCard>
 
-      <div>
-        <Group justify="space-between" mb="xs">
-          <Divider
-            label={
-              <Text size="sm" fw={600}>
-                Enfermedades catastróficas
-              </Text>
-            }
-            labelPosition="left"
-            style={{ flex: 1 }}
-          />
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconPlus size={14} />}
-            onClick={openEnf}
-          >
-            Registrar
-          </Button>
-        </Group>
-        {ldEnf ? (
-          <Skeleton height={80} radius="md" />
-        ) : Array.isArray(enfermedades) && enfermedades.length > 0 ? (
+      <SectionCard title="Enfermedades catastróficas" actions={botonRegistrar(openEnf)}>
+        <DataState
+          loading={cargandoEnf}
+          error={errorEnf}
+          empty={enfermedades.length === 0}
+          skeletonRows={2}
+          emptyProps={{
+            icon: IconHeart,
+            title: 'Sin enfermedades registradas',
+            description: 'Registra el diagnóstico y su código CIE-10.',
+          }}
+        >
           <SgthTable
-            records={enfermedades as EnfermedadCatastroficaServidor[]}
-            columns={enfColumns}
-            fetching={false}
+            records={enfermedades}
+            columns={getEnfermedadesColumns({
+              onEdit: (item) => { setEditEnf(item); openEnf() },
+              onDelete: (id) => eliminarEnfermedad.mutate(id),
+            })}
             minHeight={80}
           />
-        ) : (
-          <EmptyState icon={IconHeart} title="Sin enfermedades registradas" />
-        )}
-      </div>
+        </DataState>
+      </SectionCard>
 
       <DiscapacidadModal
+        key={editDisc?.id ?? 'nueva'}
         opened={discOpened}
-        onClose={() => { setEditDisc(null); closeDisc(); }}
+        onClose={() => { setEditDisc(null); closeDisc() }}
         servidorId={servidorId}
         initialValues={editDisc}
       />
       <EnfermedadModal
+        key={editEnf?.id ?? 'nueva'}
         opened={enfOpened}
-        onClose={() => { setEditEnf(null); closeEnf(); }}
+        onClose={() => { setEditEnf(null); closeEnf() }}
         servidorId={servidorId}
         initialValues={editEnf}
       />
     </Stack>
-  );
+  )
 }

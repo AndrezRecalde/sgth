@@ -20,6 +20,7 @@ import {
   subrogacionSchema, type SubrogacionFormData,
 } from '../schemas/subrogacion.schema'
 import type { UnidadConRelaciones, PuestoConRelaciones, ServidorConRelaciones } from '@/types/api'
+import { toDateValue, fromDateValue } from '@/lib/fecha'
 
 const TIPO_OPTIONS = [
   { value: 'subrogacion', label: 'Subrogación' },
@@ -135,18 +136,6 @@ export function SubrogacionModal({ opened, onClose }: Props) {
   const handleClose = () => {
     reset(BLANK_VALUES)
     onClose()
-  }
-
-  const toDate = (v?: string | null): Date | null => {
-    if (!v) return null
-    const [year, month, day] = v.split('T')[0].split('-').map(Number)
-    return new Date(year, month - 1, day)
-  }
-  const fromDate = (d: Date | string | null): string | null => {
-    if (!d) return null
-    const date = typeof d === 'string' ? toDate(d) : d
-    if (!date || isNaN(date.getTime())) return null
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   }
 
   const onSubmit = (values: SubrogacionFormData) => {
@@ -335,8 +324,8 @@ export function SubrogacionModal({ opened, onClose }: Props) {
                 placeholder="Seleccionar fecha"
                 valueFormat="YYYY-MM-DD"
                 {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d) ?? '')}
+                value={toDateValue(field.value)}
+                onChange={(d) => field.onChange(fromDateValue(d))}
                 error={errors.fecha_inicio?.message}
               />
             )}
@@ -350,8 +339,8 @@ export function SubrogacionModal({ opened, onClose }: Props) {
                 placeholder="Seleccionar fecha"
                 valueFormat="YYYY-MM-DD"
                 {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d) ?? '')}
+                value={toDateValue(field.value)}
+                onChange={(d) => field.onChange(fromDateValue(d))}
                 error={errors.fecha_fin?.message}
               />
             )}

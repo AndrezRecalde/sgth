@@ -12,6 +12,7 @@ import { SelectPartidaPresupuestaria } from '@/features/estructura/components/Se
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { MovimientoPersonal } from '@/types/api'
+import { formatFecha } from '@/lib/fecha'
 
 /** Nombramientos cuyo vínculo lleva plazo pactado. */
 const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
@@ -32,13 +33,6 @@ interface Props {
   movimiento: MovimientoPersonal | null
   /** Se dispara solo cuando el guardado tuvo éxito, no al cancelar. */
   onSaved?: () => void
-}
-
-function fechaLegible(f?: string | null): string {
-  if (!f) return '—'
-  return new Date(f).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
 }
 
 export function CompletarVinculoModal({ opened, onClose, movimiento, onSaved }: Props) {
@@ -173,7 +167,7 @@ function Formulario({
           <TextInput
             label="Fecha de inicio"
             description="Es la fecha en que rige la acción; para cambiarla se anula y se registra otra."
-            value={fechaLegible(movimiento.fecha_efectiva)}
+            value={formatFecha(movimiento.fecha_efectiva)}
             readOnly
             {...contained}
           />

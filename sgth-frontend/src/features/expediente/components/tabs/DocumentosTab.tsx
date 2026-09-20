@@ -1,105 +1,42 @@
 'use client'
 
-import { confirmar, notificar, StatusBadge } from '@/components/ui'
+import { Button, Group, Stack } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import { IconPaperclip, IconPlus } from '@tabler/icons-react'
+import { DataState, SgthTable, notificar } from '@/components/ui'
 import { guardarArchivo } from '@/lib/archivo'
 import { getApiErrorMessage } from '@/types/api'
-import { formatFecha } from '@/lib/fecha'
-import { Stack, Group, Text, Button,
-         ActionIcon, Tooltip, Divider } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconDownload, IconTrash,
-         IconPaperclip } from '@tabler/icons-react'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { useDocumentos } from '../../hooks/useDocumentos'
 import { useDocumentoMutations } from '../../hooks/useDocumentoMutations'
-import { DocumentoModal } from '../DocumentoModal'
 import { expedienteService } from '../../services/expedienteService'
+import { getDocumentosColumns } from '../documentos.columns'
+import { DocumentoModal } from '../DocumentoModal'
 import type { DocumentoServidor } from '@/types/api'
-
-const TIPO_LABELS: Record<string, string> = {
-  cedula_identidad:                  'Cédula de identidad',
-  papeleta_votacion:                 'Papeleta de votación',
-  carnet_conadis:                    'Carnet CONADIS',
-  titulo_tercer_nivel:               'Título de tercer nivel',
-  titulo_cuarto_nivel:               'Título de cuarto nivel',
-  certificado_trabajo_anterior:      'Certificado trabajo anterior',
-  contrato_laboral:                  'Contrato laboral',
-  nombramiento:                      'Nombramiento',
-  certificado_medico:                'Certificado médico',
-  certificado_enfermedad_catastrofica: 'Certificado enfermedad catastrófica',
-  otro:                              'Otro documento',
-}
-
-const GRUPOS: Record<string, string[]> = {
-  'Identificación': [
-    'cedula_identidad',
-    'papeleta_votacion',
-    'carnet_conadis',
-  ],
-  'Académico': [
-    'titulo_tercer_nivel',
-    'titulo_cuarto_nivel',
-  ],
-  'Laboral': [
-    'contrato_laboral',
-    'nombramiento',
-    'certificado_trabajo_anterior',
-  ],
-  'Médico': [
-    'certificado_medico',
-    'certificado_enfermedad_catastrofica',
-  ],
-  'Otros': ['otro'],
-}
-
-function formatBytes(bytes?: number): string {
-  if (!bytes) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 interface Props { servidorId: number }
 
 export function DocumentosTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
-  const { data: documentos = [], isLoading } = useDocumentos(servidorId)
+  const { data: documentos = [], isLoading, error } = useDocumentos(servidorId)
   const { eliminar } = useDocumentoMutations(servidorId)
 
-  const docs = documentos as DocumentoServidor[]
-
-  const handleDescargar = async (doc: DocumentoServidor) => {
+  const descargar = async (doc: DocumentoServidor) => {
     try {
-      const blob = await expedienteService.descargarDocumento(
-        servidorId, doc.id
+      guardarArchivo(
+        await expedienteService.descargarDocumento(servidorId, doc.id),
+        doc.nombre_archivo,
       )
-      guardarArchivo(blob, doc.nombre_archivo)
-    } catch (error) {
+    } catch (e) {
       // El interceptor de axios solo atiende el 401: sin esto, un fallo
       // (archivo borrado del disco, sin permiso) no decía nada.
-      notificar.error('No se pudo descargar el documento', getApiErrorMessage(error))
+      notificar.error('No se pudo descargar el documento', getApiErrorMessage(e))
     }
   }
 
-  if (!isLoading && docs.length === 0) {
-    return (
-      <Stack gap="md">
-        <Group justify="flex-end">
-          <Button size="xs" variant="light"
-            leftSection={<IconPlus size={14} />} onClick={open}>
-            Subir documento
-          </Button>
-        </Group>
-        <EmptyState
-          icon={IconPaperclip}
-          title="Sin documentos"
-          description="Sube los documentos del expediente del servidor."
-        />
-        <DocumentoModal
-          opened={opened} onClose={close} servidorId={servidorId} />
-      </Stack>
-    )
-  }
+  const columns = getDocumentosColumns({
+    onDescargar: descargar,
+    onDelete: (id) => eliminar.mutate(id),
+  })
 
   return (
     <Stack gap="md">
@@ -110,62 +47,21 @@ export function DocumentosTab({ servidorId }: Props) {
         </Button>
       </Group>
 
-      {Object.entries(GRUPOS).map(([grupo, tipos]) => {
-        const items = docs.filter(d => tipos.includes(d.tipo_documento))
-        if (items.length === 0) return null
-        return (
-          <Stack key={grupo} gap="xs">
-            <Divider label={grupo} labelPosition="left" />
-            {items.map(doc => (
-              <Group key={doc.id} justify="space-between"
-                p="xs" style={{
-                  borderRadius: 8,
-                  border: '1px solid var(--mantine-color-default-border)',
-                }}>
-                <Stack gap={2}>
-                  <Text size="sm" fw={500}>
-                    {TIPO_LABELS[doc.tipo_documento] ?? doc.tipo_documento}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {doc.nombre_archivo} · {formatBytes(doc.tamanio_bytes)}
-                    {doc.subido_por?.usuario_ti
-                      ? ` · ${doc.subido_por.usuario_ti}`
-                      : ''}
-                    {doc.created_at ? ` · ${formatFecha(doc.created_at.slice(0, 10))}` : ''}
-                  </Text>
-                </Stack>
-                <Group gap="xs">
-                  {doc.fecha_vencimiento && (
-                    <StatusBadge tone="warning" size="xs">
-                      Vence: {formatFecha(doc.fecha_vencimiento)}
-                    </StatusBadge>
-                  )}
-                  <Tooltip label="Descargar" withArrow>
-                    <ActionIcon variant="subtle"
-                      onClick={() => handleDescargar(doc)}>
-                      <IconDownload size={14} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="Eliminar" withArrow>
-                    <ActionIcon variant="subtle" color="red"
-                      onClick={() => confirmar({
-                        title:   'Eliminar documento',
-                        message: <>Se eliminará el documento <b>{doc.nombre_archivo}</b>. No se puede deshacer.</>,
-                        destructiva: true,
-                        onConfirm: () => eliminar.mutate(doc.id),
-                      })}>
-                      <IconTrash size={14} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              </Group>
-            ))}
-          </Stack>
-        )
-      })}
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={documentos.length === 0}
+        skeletonRows={3}
+        emptyProps={{
+          icon: IconPaperclip,
+          title: 'Sin documentos',
+          description: 'Sube los documentos del expediente del servidor.',
+        }}
+      >
+        <SgthTable records={documentos} columns={columns} minHeight={100} />
+      </DataState>
 
-      <DocumentoModal
-        opened={opened} onClose={close} servidorId={servidorId} />
+      <DocumentoModal opened={opened} onClose={close} servidorId={servidorId} />
     </Stack>
   )
 }

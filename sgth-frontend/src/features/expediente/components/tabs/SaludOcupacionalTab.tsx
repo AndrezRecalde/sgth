@@ -1,140 +1,58 @@
-"use client";
+'use client'
 
-import {
-  Stack,
-  Group,
-  Text,
-  Button,
-  Skeleton,
-} from "@mantine/core";
-import { useState } from "react";
-import { IconDownload, IconStethoscope } from "@tabler/icons-react";
-import { EmptyState, PAGINACION_ES, SgthTable, StatusBadge } from "@/components/ui";
-import { useSolicitudesCertificacion } from "@/features/dispensario/hooks/useSolicitudCertificacion";
-import { usePdfFemo } from "@/features/dispensario/hooks/usePdfFemo";
-import {
-  TIPO_EVENTO_OPTIONS,
-  TONO_ESTADO_SOLICITUD,
-  TONO_DICTAMEN,
-  DICTAMEN_LABELS,
-  ESTADO_SOLICITUD_LABELS,
-} from "@/features/dispensario/services/solicitudCertificacionService";
-import type { SolicitudCertificacion } from "@/features/dispensario/services/solicitudCertificacionService";
-import type { DataTableColumn } from "mantine-datatable";
+import { useState } from 'react'
+import { Stack, Text } from '@mantine/core'
+import { IconStethoscope } from '@tabler/icons-react'
+import { DataState, PAGINACION_ES, SgthTable } from '@/components/ui'
+import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
+import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
+import { getSaludOcupacionalColumns } from '../saludOcupacional.columns'
 
-interface Props {
-  servidorId: number;
-}
+interface Props { servidorId: number }
 
 /** El mismo tamaño de página que el resto de los listados del sistema. */
-const POR_PAGINA = 15;
+const POR_PAGINA = 15
 
 export function SaludOcupacionalTab({ servidorId }: Props) {
-  const [page, setPage] = useState(1);
-
-  const { data, isLoading } = useSolicitudesCertificacion({
+  const [page, setPage] = useState(1)
+  const { data, isLoading, error } = useSolicitudesCertificacion({
     page,
     per_page: POR_PAGINA,
     servidor_id: servidorId,
-  });
-  const solicitudes = data?.data ?? [];
-  const { descargarFemo, loading: descargando } = usePdfFemo();
+  })
+  const solicitudes = data?.data ?? []
+
+  const { descargarFemo, loading: descargando } = usePdfFemo()
   // El hook tiene un solo `loading`: sin saber qué fila lo pidió, giraban
   // todos los botones de PDF a la vez.
-  const [descargandoId, setDescargandoId] = useState<number | null>(null);
+  const [descargandoId, setDescargandoId] = useState<number | null>(null)
 
-  const getLabelTipo = (tipo: string) =>
-    TIPO_EVENTO_OPTIONS.find((o) => o.value === tipo)?.label ?? tipo;
-
-  const columns: DataTableColumn<SolicitudCertificacion>[] = [
-    {
-      accessor: "tipo_evento",
-      title: "Tipo de evaluación",
-      render: (s) => (
-        <StatusBadge>
-          {getLabelTipo(s.tipo_evento)}
-        </StatusBadge>
-      ),
+  const columns = getSaludOcupacionalColumns({
+    descargandoId: descargando ? descargandoId : null,
+    onDescargar: (s) => {
+      setDescargandoId(s.id)
+      descargarFemo(s.ficha_femo_id!, `femo-${s.cedula_paciente}-${s.id}.pdf`)
     },
-    {
-      accessor: "created_at",
-      title: "Fecha de solicitud",
-      width: 130,
-      render: (s) => (
-        <Text size="sm">
-          {new Date(s.created_at).toLocaleDateString("es-EC", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
-        </Text>
-      ),
-    },
-    {
-      accessor: "estado",
-      title: "Estado",
-      width: 140,
-      render: (s) => (
-        <Stack gap={4}>
-          <StatusBadge tone={TONO_ESTADO_SOLICITUD[s.estado] ?? "neutral"}>
-            {ESTADO_SOLICITUD_LABELS[s.estado] ?? s.estado}
-          </StatusBadge>
-          {s.dictamen && (
-            <StatusBadge size="xs" tone={TONO_DICTAMEN[s.dictamen] ?? "neutral"}>
-              {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
-            </StatusBadge>
-          )}
-        </Stack>
-      ),
-    },
-    {
-      accessor: "acciones",
-      title: "",
-      width: 90,
-      render: (s) =>
-        s.ficha_femo_id ? (
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconDownload size={13} />}
-            loading={descargando && descargandoId === s.id}
-            disabled={descargando && descargandoId !== s.id}
-            onClick={() => {
-              setDescargandoId(s.id);
-              descargarFemo(
-                s.ficha_femo_id!,
-                `femo-${s.cedula_paciente}-${s.id}.pdf`
-              );
-            }}
-          >
-            PDF
-          </Button>
-        ) : (
-          <Text size="xs" c="dimmed">
-            —
-          </Text>
-        ),
-    },
-  ];
+  })
 
   return (
     <Stack gap="md">
-      <Group gap="xs">
-        <Text size="sm" c="dimmed">
-          Historial de certificaciones médicas ocupacionales (FEMO)
-          solicitadas para este servidor.
-        </Text>
-      </Group>
+      <Text size="sm" c="dimmed">
+        Historial de certificaciones médicas ocupacionales (FEMO) solicitadas
+        para este servidor.
+      </Text>
 
-      {isLoading ? (
-        <Skeleton height={100} radius="md" />
-      ) : solicitudes.length === 0 ? (
-        <EmptyState
-          icon={IconStethoscope}
-          title="Sin certificaciones registradas"
-          description="Este servidor no tiene solicitudes de certificación médica."
-        />
-      ) : (
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={solicitudes.length === 0}
+        skeletonRows={3}
+        emptyProps={{
+          icon: IconStethoscope,
+          title: 'Sin certificaciones registradas',
+          description: 'Este servidor no tiene solicitudes de certificación médica.',
+        }}
+      >
         <SgthTable
           {...PAGINACION_ES}
           records={solicitudes}
@@ -143,10 +61,9 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
           recordsPerPage={POR_PAGINA}
           page={page}
           onPageChange={setPage}
-          fetching={isLoading}
           minHeight={100}
         />
-      )}
+      </DataState>
     </Stack>
-  );
+  )
 }

@@ -1,14 +1,17 @@
 import api from '@/lib/axios'
 import type {
   ApiResponse,
+  CuentaBancariaConRelaciones,
   CuentaBancariaServidor,
   EntidadFinanciera,
 } from '@/types/api'
 import type { CuentaBancariaFormData } from '../schemas/cuentaBancaria.schema'
 
 export const cuentaBancariaService = {
+  // El controlador carga la entidad financiera y el tipo generado no lo dice:
+  // `CuentaBancariaConRelaciones` es el que describe lo que llega de verdad.
   listar: (servidorId: number) =>
-    api.get<ApiResponse<CuentaBancariaServidor[]>>(
+    api.get<ApiResponse<CuentaBancariaConRelaciones[]>>(
       `/expediente/servidores/${servidorId}/cuentas-bancarias`
     ).then(r => r.data.datos ?? []),
 

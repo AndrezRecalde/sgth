@@ -11,6 +11,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient } from '@tanstack/react-query'
 import { expedienteService } from '../services/expedienteService'
 import React from 'react'
+import { toDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
 const schema = z.object({
   tipo_enfermedad:   z.string().min(2, 'Mínimo 2 caracteres'),
@@ -19,15 +20,6 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
-
-const toDate = (v?: string | null): Date | null =>
-  v ? new Date(v) : null
-
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null
-  const date = new Date(d)
-  return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
-}
 
 interface Props {
   opened:     boolean
@@ -115,8 +107,8 @@ export function EnfermedadCargaFamiliarModal({
               clearable
               maxDate={new Date()}
               {...contained}
-              value={toDate(field.value)}
-              onChange={(d) => field.onChange(fromDate(d))}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValueOrNull(d))}
               error={errors.fecha_diagnostico?.message}
             />
           )}

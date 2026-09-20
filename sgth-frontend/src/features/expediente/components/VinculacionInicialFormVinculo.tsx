@@ -11,21 +11,9 @@ import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
 import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { VinculacionInicialFormData } from '../schemas/vinculacionInicial.schema'
 import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
+import { toDateValue, fromDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
 const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
-
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.split('T')[0].split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
 
 /**
  * Contrato vigente del servidor que se está migrando. Es el paso que distingue
@@ -169,8 +157,8 @@ export function VinculacionInicialFormVinculo() {
               description="La del contrato o nombramiento actual, no la del primer ingreso."
               valueFormat="DD/MM/YYYY"
               maxDate={new Date()}
-              value={toDate(field.value)}
-              onChange={(d) => field.onChange(fromDate(d as Date | null) ?? '')}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValue(d))}
               error={errVinculo?.fecha_inicio?.message}
               {...contained}
             />
@@ -189,8 +177,8 @@ export function VinculacionInicialFormVinculo() {
                 description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
                 valueFormat="DD/MM/YYYY"
                 clearable
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d as Date | null))}
+                value={toDateValue(field.value)}
+                onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                 error={errVinculo?.fecha_fin?.message}
                 {...contained}
               />

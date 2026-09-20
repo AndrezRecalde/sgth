@@ -8,6 +8,7 @@ import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useContratoMutations } from '../hooks/useContratoMutations'
 import type { ContratoConRelaciones } from '@/types/api'
+import { formatFecha, toDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
 /**
  * Mueve la fecha de vencimiento de un vínculo vigente.
@@ -32,25 +33,8 @@ interface Props {
 
 const SIN_PLAZO_PROHIBIDO = 'servicios_profesionales'
 
-function toDate(v?: string | null): Date | null {
-  if (!v) return null
-  const [y, m, d] = v.split('T')[0].split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
-
-function legible(f?: string | null): string {
-  if (!f) return 'sin plazo'
-  return new Date(f).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
-}
+/** Como formatFecha, pero un contrato sin fecha de fin no tiene plazo. */
+const legible = (f?: string | null): string => (f ? formatFecha(f) : 'sin plazo')
 
 export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }: Props) {
   const contained = useContainedInput()
@@ -70,8 +54,8 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
   if (!contrato) return null
 
   const exigePlazo = contrato.tipo_nombramiento === SIN_PLAZO_PROHIBIDO
-  const inicio = toDate(contrato.fecha_inicio)
-  const nueva = fromDate(fechaFin)
+  const inicio = toDateValue(contrato.fecha_inicio)
+  const nueva = fromDateValueOrNull(fechaFin)
 
   const guardar = () => {
     const nuevos: typeof errores = {}
@@ -134,7 +118,7 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
           {...contained}
           value={fechaFin}
           onChange={(d) => {
-            setFechaFin(typeof d === 'string' ? toDate(d) : d)
+            setFechaFin(toDateValue(typeof d === 'string' ? d : fromDateValueOrNull(d)))
             setErrores((e) => ({ ...e, fecha: undefined }))
           }}
           error={errores.fecha}

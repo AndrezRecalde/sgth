@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { enfermedadSchema, type EnfermedadFormData }
   from '../schemas/enfermedad.schema'
 import { DatePickerInput } from '@mantine/dates'
+import { toDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened:     boolean
@@ -23,22 +24,6 @@ interface Props {
     codigo_cie10?:       string | null
     fecha_diagnostico?:  string | null
   } | null
-}
-
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const datePart = v.split('T')[0]
-  const [year, month, day] = datePart.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: Props) {
@@ -139,8 +124,8 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
               valueFormat="YYYY-MM-DD"
               clearable
               {...contained}
-              value={toDate(field.value)}
-              onChange={(d) => field.onChange(fromDate(d))}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValueOrNull(d))}
               error={errors.fecha_diagnostico?.message}
             />
           )}

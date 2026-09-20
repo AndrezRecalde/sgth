@@ -10,6 +10,7 @@ import { useProvincias } from '../hooks/useProvincias'
 import { useCantones } from '../hooks/useCantones'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { Provincia, Canton } from '@/types/api'
+import { toDateValue, fromDateValue } from '@/lib/fecha'
 
 const GENERO_OPTIONS = [
   { value: 'masculino', label: 'Masculino' },
@@ -54,23 +55,6 @@ export function ServidorFormPersonal({ form }: Props) {
     value: String(c.id),
     label: (c as Canton & { nombre?: string }).nombre ?? `Cantón ${c.id}`,
   }))
-
-  const toDate = (v?: string | null): Date | null => {
-    if (!v) return null
-    const datePart = v.split('T')[0]
-    const [year, month, day] = datePart.split('-').map(Number)
-    return new Date(year, month - 1, day)
-  }
-
-  const fromDate = (d: Date | string | null): string | null => {
-    if (!d) return null
-    const date = typeof d === 'string' ? toDate(d) : d
-    if (!date || isNaN(date.getTime())) return null
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
 
   return (
     <Grid>
@@ -172,8 +156,8 @@ export function ServidorFormPersonal({ form }: Props) {
               maxDate={new Date()}
               valueFormat="YYYY-MM-DD"
               {...contained}
-              value={toDate(field.value)}
-              onChange={(date) => field.onChange(fromDate(date) ?? '')}
+              value={toDateValue(field.value)}
+              onChange={(date) => field.onChange(fromDateValue(date))}
               error={errors.fecha_nacimiento?.message}
             />
           )}

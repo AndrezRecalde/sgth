@@ -15,6 +15,7 @@ import { useVinculacionInicial } from '../hooks/useVinculacionInicial'
 import {
   vinculacionInicialSchema, type VinculacionInicialFormData,
 } from '../schemas/vinculacionInicial.schema'
+import { toDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened: boolean
@@ -60,18 +61,6 @@ const PASO_PERSONAL = [
   'nacionalidad', 'pais_origen',
   'tiene_discapacidad', 'tiene_enfermedad_catastrofica',
 ] as const
-
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.split('T')[0].split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
 
 /**
  * Carga inicial de un servidor que ya estaba vinculado antes del sistema:
@@ -152,8 +141,8 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
                       valueFormat="DD/MM/YYYY"
                       maxDate={new Date()}
                       clearable
-                      value={toDate(field.value)}
-                      onChange={(d) => field.onChange(fromDate(d as Date | null))}
+                      value={toDateValue(field.value)}
+                      onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                       error={form.formState.errors.fecha_ingreso_institucion?.message}
                       {...contained}
                     />
@@ -169,8 +158,8 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
                       valueFormat="DD/MM/YYYY"
                       maxDate={new Date()}
                       clearable
-                      value={toDate(field.value)}
-                      onChange={(d) => field.onChange(fromDate(d as Date | null))}
+                      value={toDateValue(field.value)}
+                      onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                       {...contained}
                     />
                   )}

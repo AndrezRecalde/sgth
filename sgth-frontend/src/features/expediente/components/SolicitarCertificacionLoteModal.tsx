@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCrearSolicitudLote } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import type { ServidorConRelaciones } from '@/types/api'
+import { fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened:    boolean
@@ -22,15 +23,6 @@ const TIPO_EVENTO_LOTE_OPTIONS = [
   { value: 'reintegro',  label: 'Reintegro'  },
   { value: 'retiro',     label: 'Retiro'     },
 ]
-
-function fromDate(d: Date | null): string | null {
-  if (!d) return null
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
 
 function fechaLimitePorDefecto(): Date {
   const d = new Date()
@@ -61,7 +53,7 @@ export function SolicitarCertificacionLoteModal({
       {
         servidor_ids:   servidores.map(s => s.id),
         tipo_evento:    tipoEvento as 'periodica' | 'reintegro' | 'retiro',
-        fecha_limite:   fromDate(fechaLimite),
+        fecha_limite:   fromDateValueOrNull(fechaLimite),
         observaciones:  observaciones || null,
       },
       {

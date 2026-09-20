@@ -29,6 +29,7 @@ import {
   type AccionSubtipo, type AccionTipo,
 } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal, UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
+import { formatFecha, toDateValue, fromDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened: boolean
@@ -80,25 +81,8 @@ const BLANK: Partial<MovimientoFormData> = {
  */
 const NOMBRAMIENTOS_DE_REEMPLAZO = ['servicios_ocasionales', 'servicios_profesionales']
 
-function fechaCorta(f?: string | null): string {
-  if (!f) return 'sin fin'
-  return new Date(f).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
-}
-
-const toDate = (v?: string | null): Date | null => {
-  if (!v) return null
-  const [y, m, d] = v.split('T')[0].split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-const fromDate = (d: Date | string | null): string | null => {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
+/** Como formatFecha, pero un plazo sin fin se dice con palabras. */
+const fechaCorta = (f?: string | null): string => (f ? formatFecha(f) : 'sin fin')
 
 export function MovimientoModal({
   opened, onClose, servidorId, tipoNombramiento, movimiento = null,
@@ -605,8 +589,8 @@ function FormularioAccion({
                                     description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
                                     valueFormat="DD/MM/YYYY"
                                     clearable
-                                    value={toDate(field.value)}
-                                    onChange={(d) => field.onChange(fromDate(d as Date | null))}
+                                    value={toDateValue(field.value)}
+                                    onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                                     {...contained}
                                   />
                                 )}
@@ -659,8 +643,8 @@ function FormularioAccion({
                       label="Rige a partir de"
                       placeholder="Seleccionar fecha"
                       valueFormat="DD/MM/YYYY"
-                      value={toDate(field.value)}
-                      onChange={(d) => field.onChange(fromDate(d as Date | null) ?? '')}
+                      value={toDateValue(field.value)}
+                      onChange={(d) => field.onChange(fromDateValue(d))}
                       error={errors.fecha_efectiva?.message}
                       {...contained}
                     />
@@ -681,8 +665,8 @@ function FormularioAccion({
                           <DatePickerInput
                             label="Desde"
                             valueFormat="DD/MM/YYYY"
-                            value={toDate(field.value)}
-                            onChange={(d) => field.onChange(fromDate(d as Date | null))}
+                            value={toDateValue(field.value)}
+                            onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                             error={errors.fecha_inicio?.message}
                             {...contained}
                           />
@@ -695,8 +679,8 @@ function FormularioAccion({
                           <DatePickerInput
                             label="Hasta"
                             valueFormat="DD/MM/YYYY"
-                            value={toDate(field.value)}
-                            onChange={(d) => field.onChange(fromDate(d as Date | null))}
+                            value={toDateValue(field.value)}
+                            onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                             error={errors.fecha_fin?.message}
                             {...contained}
                           />
@@ -762,8 +746,8 @@ function FormularioAccion({
                         <DatePickerInput
                           label="Fecha"
                           valueFormat="DD/MM/YYYY"
-                          value={toDate(field.value)}
-                          onChange={(d) => field.onChange(fromDate(d as Date | null))}
+                          value={toDateValue(field.value)}
+                          onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                           {...contained}
                         />
                       )}

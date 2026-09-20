@@ -10,18 +10,12 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAusenciasTemporales } from '../hooks/useAusenciasTemporales'
 import type { AusenciaTemporal } from '../services/ausenciaTemporalService'
 import { StatusBadge } from '@/components/ui'
+import { formatFecha } from '@/lib/fecha'
 
 const COBERTURA_OPTIONS = [
   { value: 'pendientes', label: 'Sin cubrir' },
   { value: 'cubiertas', label: 'Ya cubiertas' },
 ]
-
-function fecha(f?: string | null): string {
-  if (!f) return '—'
-  return new Date(f).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
-}
 
 /** El plazo que resta, con el matiz de que una ausencia puede no tener fin. */
 function Restante({ dias }: { dias: number | null }) {
@@ -91,7 +85,7 @@ export function AusenciasTemporalesPanel() {
       width: 190,
       render: (a) => (
         <div>
-          <Text size="sm">{fecha(a.desde)} – {a.hasta ? fecha(a.hasta) : 'sin fin'}</Text>
+          <Text size="sm">{formatFecha(a.desde)} – {a.hasta ? formatFecha(a.hasta) : 'sin fin'}</Text>
           <Restante dias={a.dias_restantes} />
         </div>
       ),
