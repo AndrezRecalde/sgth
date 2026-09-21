@@ -3,15 +3,12 @@
 import { Avatar, Group, Stack, Text } from '@mantine/core'
 import { StatusBadge } from '@/components/ui'
 import { REGIMEN_LABELS } from '@/lib/regimen'
+import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import type { ServidorConRelaciones } from '@/types/api'
 import classes from './ServidorEncabezado.module.css'
 
 interface Props {
   servidor: ServidorConRelaciones
-  /** Régimen, antigüedad y estado del vínculo. Solo en el expediente. */
-  conSituacion?: boolean
-  /** Acciones a la derecha: el botón de editar del expediente. */
-  actions?: React.ReactNode
 }
 
 export function nombreCompletoDe(servidor: ServidorConRelaciones): string {
@@ -28,11 +25,13 @@ const iniciales = (servidor: ServidorConRelaciones): string =>
     .filter(Boolean).join('').toUpperCase() || '?'
 
 /**
- * Quién es la persona que se está mirando. Encabeza los dos paneles del
- * expediente —la ficha y sus acciones de personal—, que lo dibujaban cada uno
- * por su cuenta.
+ * Dónde trabaja la persona y bajo qué figura.
+ *
+ * El nombre, la cédula y la situación viven en el título de la página, así
+ * que aquí no se repiten: esto responde lo siguiente que pregunta Talento
+ * Humano —qué puesto ocupa, en qué unidad y con qué vínculo—.
  */
-export function ServidorEncabezado({ servidor, conSituacion = false, actions }: Props) {
+export function ServidorEncabezado({ servidor }: Props) {
   const anios = servidor.anios_servicio
   const cargo = servidor.contrato_vigente?.puesto?.cargo?.nombre
     ?? servidor.puesto?.cargo?.nombre
@@ -40,44 +39,35 @@ export function ServidorEncabezado({ servidor, conSituacion = false, actions }: 
     ?? servidor.unidad_administrativa?.nombre
 
   return (
-    <Group p="md" className={classes.encabezado}>
+    <Group p="md" className={classes.encabezado} wrap="nowrap">
       <Avatar size={52} radius="xl" fw={700}>{iniciales(servidor)}</Avatar>
 
-      <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-        <Text fw={700} size="md">{nombreCompletoDe(servidor)}</Text>
-        <Text size="sm" c="dimmed" ff="monospace">CI: {servidor.cedula ?? '-'}</Text>
-        {/* Cargo y unidad: lo primero que Talento Humano necesita ubicar, y
-            no estaba en ninguno de los dos paneles. */}
+      <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+        <Text fw={600}>
+          {cargo ?? 'Sin puesto asignado'}
+        </Text>
         <Text size="sm" c="dimmed">
-          {[cargo, unidad].filter(Boolean).join(' · ') || 'Sin vínculo laboral registrado'}
+          {unidad ?? 'Sin unidad administrativa'}
         </Text>
 
-        {conSituacion && (
-          <Group gap="xs" mt={4}>
-            {servidor.regimen_laboral && (
-              <StatusBadge size="xs">
-                {REGIMEN_LABELS[servidor.regimen_laboral] ?? servidor.regimen_laboral}
-              </StatusBadge>
-            )}
-            {anios != null && (
-              <StatusBadge size="xs">
-                {anios} {anios === 1 ? 'año de servicio' : 'años de servicio'}
-              </StatusBadge>
-            )}
-            {servidor.contrato_vigente?.estado && (
-              <StatusBadge
-                tone={servidor.contrato_vigente.estado === 'vigente' ? 'success' : 'neutral'}
-                variant="dot"
-                size="xs"
-              >
-                {servidor.contrato_vigente.estado === 'vigente' ? 'Vínculo vigente' : 'Sin vínculo vigente'}
-              </StatusBadge>
-            )}
-          </Group>
-        )}
+        <Group gap="xs" mt={4}>
+          {servidor.regimen_laboral && (
+            <StatusBadge size="xs">
+              {REGIMEN_LABELS[servidor.regimen_laboral] ?? servidor.regimen_laboral}
+            </StatusBadge>
+          )}
+          {etiquetaNombramiento(servidor.contrato_vigente?.tipo_nombramiento) && (
+            <StatusBadge size="xs">
+              {etiquetaNombramiento(servidor.contrato_vigente?.tipo_nombramiento)}
+            </StatusBadge>
+          )}
+          {anios != null && (
+            <StatusBadge size="xs" variant="dot">
+              {anios} {anios === 1 ? 'año de servicio' : 'años de servicio'}
+            </StatusBadge>
+          )}
+        </Group>
       </Stack>
-
-      {actions}
     </Group>
   )
 }

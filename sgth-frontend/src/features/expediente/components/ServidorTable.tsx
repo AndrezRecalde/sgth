@@ -10,9 +10,8 @@ interface Props {
   total: number
   page: number
   onPageChange: (page: number) => void
+  /** Abrir el expediente del servidor. */
   onView: (servidor: ServidorConRelaciones) => void
-  onEdit: (servidor: ServidorConRelaciones) => void
-  onAccionPersonal: (servidor: ServidorConRelaciones) => void
   /** La selección solo se ofrece a quien puede pedir certificaciones médicas. */
   seleccionable?: boolean
   selectedRecords?: ServidorConRelaciones[]
@@ -21,14 +20,14 @@ interface Props {
 
 export function ServidorTable({
   data, isLoading, total, page,
-  onPageChange, onView, onEdit, onAccionPersonal,
+  onPageChange, onView,
   seleccionable = false, selectedRecords, onSelectedRecordsChange,
 }: Props) {
   return (
     <SgthTable
       {...PAGINACION_ES}
       records={data}
-      columns={getServidorColumns({ onView, onEdit, onAccionPersonal })}
+      columns={getServidorColumns({ onView })}
       fetching={isLoading}
       totalRecords={total || data.length || 0}
       recordsPerPage={15}

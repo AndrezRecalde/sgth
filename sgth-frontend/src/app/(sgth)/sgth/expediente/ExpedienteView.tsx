@@ -8,9 +8,6 @@ import { ServidorToolbar } from '@/features/expediente/components/ServidorToolba
 import { ExpedienteAcciones } from '@/features/expediente/components/ExpedienteAcciones'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
 import { ServidorModal } from '@/features/expediente/components/ServidorModal'
-import { ServidorEditarModal } from '@/features/expediente/components/ServidorEditarModal'
-import { ServidorDetail } from '@/features/expediente/components/ServidorDetail'
-import { AccionPersonalDrawer } from '@/features/expediente/components/AccionPersonalDrawer'
 import { SolicitarCertificacionLoteModal } from '@/features/expediente/components/SolicitarCertificacionLoteModal'
 import { VinculacionInicialModal } from '@/features/expediente/components/VinculacionInicialModal'
 import { usePuedeVincularInicial } from '@/features/expediente/hooks/useVinculacionInicial'
@@ -22,11 +19,14 @@ import { expedienteService } from '@/features/expediente/services/expedienteServ
 import { getApiErrorMessage } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
 import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/navigation'
+import { ROUTES } from '@/config/routes'
 import type { ServidorConRelaciones } from '@/types/api'
 import { DataState, PageHeader, PageShell, notificar } from '@/components/ui'
 
 export function ExpedienteView() {
   const { hasPermiso } = useAuth()
+  const router = useRouter()
   const puedeVincularInicial = usePuedeVincularInicial()
   const [vinculacionOpened, { open: abrirVinculacion, close: cerrarVinculacion }] = useDisclosure(false)
   const {
@@ -39,17 +39,8 @@ export function ExpedienteView() {
     useState<ServidorConRelaciones[]>([])
 
   const [modalOpened,        { open: openModal,        close: closeModal        }] = useDisclosure(false)
-  const [detailOpened,       { open: openDetail,       close: closeDetail       }] = useDisclosure(false)
-  const [accionPersonalOpened, { open: openAccionPersonal, close: closeAccionPersonal }] = useDisclosure(false)
   const [loteOpened,         { open: openLote,         close: closeLote         }] = useDisclosure(false)
-  const [editarOpened,       { open: abrirEditar,      close: cerrarEditar      }] = useDisclosure(false)
 
-  const [editServidor, setEditServidor] =
-    useState<ServidorConRelaciones | null>(null)
-  const [viewServidor, setViewServidor] =
-    useState<ServidorConRelaciones | null>(null)
-  const [accionPersonalServidor, setAccionPersonalServidor] =
-    useState<ServidorConRelaciones | null>(null)
 
   // Ficha recién creada, para encadenar su Ingreso y Vinculación.
   const [servidorReciente, setServidorReciente] =
@@ -83,20 +74,9 @@ export function ExpedienteView() {
     }
   }
 
-  const handleView = (s: ServidorConRelaciones) => {
-    setViewServidor(s)
-    openDetail()
-  }
-
-  const handleEdit = (s: ServidorConRelaciones) => {
-    setEditServidor(s)
-    abrirEditar()
-  }
-
-  const handleAccionPersonal = (s: ServidorConRelaciones) => {
-    setAccionPersonalServidor(s)
-    openAccionPersonal()
-  }
+  // Todo lo del servidor —ficha, vínculo y acciones— vive en su página.
+  const irAlExpediente = (s: ServidorConRelaciones) =>
+    router.push(ROUTES.SGTH.EXPEDIENTE_SERVIDOR(s.id))
 
   const handleNuevo = openModal
 
@@ -187,9 +167,7 @@ export function ExpedienteView() {
           total={data?.total ?? 0}
           page={page}
           onPageChange={setPage}
-          onView={handleView}
-          onEdit={handleEdit}
-          onAccionPersonal={handleAccionPersonal}
+          onView={irAlExpediente}
           seleccionable={hasPermiso('solicitar-certificacion-medica')}
           selectedRecords={selectedRecords}
           onSelectedRecordsChange={setSelectedRecords}
@@ -202,15 +180,6 @@ export function ExpedienteView() {
         onCreado={(creado) => { setServidorReciente(creado); abrirIngreso() }}
       />
 
-      {editServidor && (
-        <ServidorEditarModal
-          key={editServidor.id}
-          opened={editarOpened}
-          onClose={() => { setEditServidor(null); cerrarEditar() }}
-          servidor={editServidor}
-        />
-      )}
-
       {/* Segundo paso del alta ordinaria: el vínculo con su Acción de
           Personal. Se abre encadenado para no dejar la ficha a medias. */}
       {servidorReciente && (
@@ -222,17 +191,6 @@ export function ExpedienteView() {
           titulo={`Ingreso y Vinculación — ${[servidorReciente.apellido, servidorReciente.nombre].filter(Boolean).join(' ')}`}
         />
       )}
-      <ServidorDetail
-        opened={detailOpened}
-        onClose={closeDetail}
-        servidor={viewServidor}
-        onEdit={handleEdit}
-      />
-      <AccionPersonalDrawer
-        opened={accionPersonalOpened}
-        onClose={() => { setAccionPersonalServidor(null); closeAccionPersonal() }}
-        servidor={accionPersonalServidor}
-      />
       <SolicitarCertificacionLoteModal
         opened={loteOpened}
         onClose={() => { setSelectedRecords([]); closeLote() }}
