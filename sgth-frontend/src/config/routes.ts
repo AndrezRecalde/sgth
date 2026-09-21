@@ -21,6 +21,10 @@ export const ROUTES = {
     ESTRUCTURA_PARTIDAS:   '/sgth/estructura/partidas',
     ESTRUCTURA_PLANTILLA:  '/sgth/estructura/plantilla',
     EXPEDIENTE:       '/sgth/expediente',
+    // El id y no la cédula: la cédula se corrige cuando trae una errata, así
+    // que un enlace guardado dejaría de funcionar, y es un dato personal que
+    // quedaría en el historial del navegador y en los registros del servidor.
+    EXPEDIENTE_SERVIDOR: (id: string | number) => `/sgth/expediente/${id}`,
     SUBROGACIONES:    '/sgth/expediente/subrogaciones',
     ACCIONES_PERSONAL: '/sgth/expediente/acciones-personal',
     NOMINA:           '/sgth/nomina',

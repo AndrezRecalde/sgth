@@ -1,14 +1,13 @@
 import { Text } from '@mantine/core'
-import { IconEdit, IconEye, IconHistory } from '@tabler/icons-react'
+import { IconEye } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { REGIMEN_LABELS } from '@/lib/regimen'
+import { situacionDe } from '../utils/situacion'
 import type { ServidorConRelaciones } from '@/types/api'
 
 type Handlers = {
   onView: (servidor: ServidorConRelaciones) => void
-  onEdit: (servidor: ServidorConRelaciones) => void
-  onAccionPersonal: (servidor: ServidorConRelaciones) => void
 }
 
 export function nombreCompleto(row: ServidorConRelaciones): string {
@@ -16,22 +15,7 @@ export function nombreCompleto(row: ServidorConRelaciones): string {
     .filter(Boolean).join(' ')
 }
 
-/**
- * En qué situación está la persona, en una sola columna.
- *
- * Antes había dos: «Vínculo» (interno/externo, que repetía lo que ya dice el
- * régimen) y «Estado», que mostraba ACTIVO incluso a quien nunca fue
- * contratado, porque leía la columna `estado` de la ficha y no el vínculo.
- */
-function situacion(row: ServidorConRelaciones) {
-  if (!row.estado) return { texto: 'Inactivo', tone: 'neutral' as const }
-  if (row.pendiente_vinculacion) return { texto: 'Sin vínculo', tone: 'warning' as const }
-  return { texto: 'En funciones', tone: 'success' as const }
-}
-
-export const getServidorColumns = (
-  { onView, onEdit, onAccionPersonal }: Handlers,
-): DataTableColumn<ServidorConRelaciones>[] => [
+export const getServidorColumns = ({ onView }: Handlers): DataTableColumn<ServidorConRelaciones>[] => [
   {
     accessor: 'cedula',
     title: 'Cédula',
@@ -88,7 +72,7 @@ export const getServidorColumns = (
     title: 'Situación',
     width: 120,
     render: (row) => {
-      const { texto, tone } = situacion(row)
+      const { texto, tone } = situacionDe(row)
       return <StatusBadge tone={tone}>{texto}</StatusBadge>
     },
   },
@@ -97,21 +81,13 @@ export const getServidorColumns = (
     title: '',
     width: 50,
     render: (servidor) => (
+      // Editar y las acciones de personal viven dentro del expediente, que
+      // es a donde lleva la fila: el menú solo repetía ese camino.
       <TableActions actions={[
         {
-          label: 'Ver expediente',
+          label: 'Abrir expediente',
           icon: <IconEye size={14} />,
           onClick: () => onView(servidor),
-        },
-        {
-          label: 'Acción de Personal',
-          icon: <IconHistory size={14} />,
-          onClick: () => onAccionPersonal(servidor),
-        },
-        {
-          label: 'Editar datos',
-          icon: <IconEdit size={14} />,
-          onClick: () => onEdit(servidor),
         },
       ]} />
     ),
