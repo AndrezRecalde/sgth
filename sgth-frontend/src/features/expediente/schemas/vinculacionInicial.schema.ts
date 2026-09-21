@@ -46,8 +46,8 @@ export const vinculacionInicialSchema = z.object({
   numero_papeleta_votacion: z.string().optional(),
   pasaporte_numero:        z.string().optional(),
 
-  tiene_discapacidad:            z.boolean(),
-  tiene_enfermedad_catastrofica: z.boolean(),
+  // Sin las marcas de salud: se derivan de los registros de la pestaña
+  // Condición y el backend las rechaza aquí.
 
   telefono_celular:      z.string().optional(),
   telefono_convencional: z.string().optional(),

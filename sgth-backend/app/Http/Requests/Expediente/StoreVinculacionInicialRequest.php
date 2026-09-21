@@ -42,8 +42,10 @@ class StoreVinculacionInicialRequest extends FormRequest
             'pais_origen'             => ['required_if:es_extranjero,true', 'nullable', 'string', 'max:100'],
             'numero_papeleta_votacion' => 'nullable|string|max:20',
             'pasaporte_numero'         => 'nullable|string|max:50',
-            'tiene_discapacidad'            => 'required|boolean',
-            'tiene_enfermedad_catastrofica' => 'required|boolean',
+            // Se derivan de los registros de la pestaña Condición: la carga
+            // inicial solo trae la identidad y el vínculo.
+            'tiene_discapacidad'            => ['prohibited'],
+            'tiene_enfermedad_catastrofica' => ['prohibited'],
             'telefono_celular'      => 'nullable|string|max:20',
             'telefono_convencional' => 'nullable|string|max:20',
             'correo_personal'       => 'nullable|email|max:150',

@@ -8,6 +8,7 @@ import { ServidorToolbar } from '@/features/expediente/components/ServidorToolba
 import { ExpedienteAcciones } from '@/features/expediente/components/ExpedienteAcciones'
 import { ServidorTable } from '@/features/expediente/components/ServidorTable'
 import { ServidorModal } from '@/features/expediente/components/ServidorModal'
+import { ServidorEditarModal } from '@/features/expediente/components/ServidorEditarModal'
 import { ServidorDetail } from '@/features/expediente/components/ServidorDetail'
 import { AccionPersonalDrawer } from '@/features/expediente/components/AccionPersonalDrawer'
 import { SolicitarCertificacionLoteModal } from '@/features/expediente/components/SolicitarCertificacionLoteModal'
@@ -29,9 +30,9 @@ export function ExpedienteView() {
   const puedeVincularInicial = usePuedeVincularInicial()
   const [vinculacionOpened, { open: abrirVinculacion, close: cerrarVinculacion }] = useDisclosure(false)
   const {
-    page, setPage, filtros, hayFiltros, pendienteVinculacion,
-    setSearch, setContratoEstado, setEnFunciones, setUnidadId,
-    setTipoNombramiento, setAnioIngreso, setPendienteVinculacion,
+    page, setPage, filtros, hayFiltros, filtrosSecundarios, situacion,
+    setSearch, setSituacion, setContratoEstado, setUnidadId,
+    setTipoNombramiento, setAnioIngreso,
   } = useFiltrosServidores()
   const [exportando, setExportando]         = useState<'excel' | 'pdf' | null>(null)
   const [selectedRecords, setSelectedRecords] =
@@ -41,6 +42,7 @@ export function ExpedienteView() {
   const [detailOpened,       { open: openDetail,       close: closeDetail       }] = useDisclosure(false)
   const [accionPersonalOpened, { open: openAccionPersonal, close: closeAccionPersonal }] = useDisclosure(false)
   const [loteOpened,         { open: openLote,         close: closeLote         }] = useDisclosure(false)
+  const [editarOpened,       { open: abrirEditar,      close: cerrarEditar      }] = useDisclosure(false)
 
   const [editServidor, setEditServidor] =
     useState<ServidorConRelaciones | null>(null)
@@ -88,7 +90,7 @@ export function ExpedienteView() {
 
   const handleEdit = (s: ServidorConRelaciones) => {
     setEditServidor(s)
-    openModal()
+    abrirEditar()
   }
 
   const handleAccionPersonal = (s: ServidorConRelaciones) => {
@@ -96,10 +98,7 @@ export function ExpedienteView() {
     openAccionPersonal()
   }
 
-  const handleNuevo = () => {
-    setEditServidor(null)
-    openModal()
-  }
+  const handleNuevo = openModal
 
   return (
     <PageShell>
@@ -121,7 +120,7 @@ export function ExpedienteView() {
       />
 
       {/* Nadie debería quedar a medio registrar sin que se note. */}
-      {(pendientes ?? 0) > 0 && pendienteVinculacion !== true && (
+      {(pendientes ?? 0) > 0 && situacion !== 'sin_vinculo' && (
         <Alert
           variant="light"
           color="amber"
@@ -139,7 +138,7 @@ export function ExpedienteView() {
               size="xs"
               variant="light"
               style={{ flexShrink: 0 }}
-              onClick={() => setPendienteVinculacion(true)}
+              onClick={() => setSituacion('sin_vinculo')}
             >
               Ver quiénes
             </Button>
@@ -149,13 +148,13 @@ export function ExpedienteView() {
 
       <ServidorToolbar
         onSearch={setSearch}
+        situacion={situacion}
+        onSituacionChange={setSituacion}
         onContratoEstadoChange={setContratoEstado}
-        onEnFuncionesChange={setEnFunciones}
         onUnidadChange={setUnidadId}
         onTipoNombramientoChange={setTipoNombramiento}
         onAnioIngresoChange={setAnioIngreso}
-        onPendienteVinculacionChange={setPendienteVinculacion}
-        pendienteVinculacion={pendienteVinculacion}
+        secundariosActivos={filtrosSecundarios}
       />
 
       {/* Con filtros, un listado vacío no significa que falten servidores:
@@ -191,18 +190,26 @@ export function ExpedienteView() {
           onView={handleView}
           onEdit={handleEdit}
           onAccionPersonal={handleAccionPersonal}
+          seleccionable={hasPermiso('solicitar-certificacion-medica')}
           selectedRecords={selectedRecords}
           onSelectedRecordsChange={setSelectedRecords}
         />
       </DataState>
 
       <ServidorModal
-        key={editServidor?.id ?? 'nuevo'}
         opened={modalOpened}
-        onClose={() => { setEditServidor(null); closeModal() }}
-        servidor={editServidor}
+        onClose={closeModal}
         onCreado={(creado) => { setServidorReciente(creado); abrirIngreso() }}
       />
+
+      {editServidor && (
+        <ServidorEditarModal
+          key={editServidor.id}
+          opened={editarOpened}
+          onClose={() => { setEditServidor(null); cerrarEditar() }}
+          servidor={editServidor}
+        />
+      )}
 
       {/* Segundo paso del alta ordinaria: el vínculo con su Acción de
           Personal. Se abre encadenado para no dejar la ficha a medias. */}

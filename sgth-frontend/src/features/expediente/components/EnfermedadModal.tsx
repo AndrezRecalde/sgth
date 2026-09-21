@@ -2,13 +2,11 @@
 
 import React, { useEffect } from 'react'
 import { Stack, TextInput } from '@mantine/core'
-import { FormModal, notificar } from '@/components/ui'
-import { getApiErrorMessage } from '@/types/api'
+import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { expedienteService } from '../services/expedienteService'
-import { useQueryClient } from '@tanstack/react-query'
+import { useCondicionMutations } from '../hooks/useCondicionMutations'
 import { enfermedadSchema, type EnfermedadFormData }
   from '../schemas/enfermedad.schema'
 import { DatePickerInput } from '@mantine/dates'
@@ -28,9 +26,9 @@ interface Props {
 
 export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: Props) {
   const contained = useContainedInput()
-  const qc = useQueryClient()
+  const { crearEnfermedad, editarEnfermedad } = useCondicionMutations(servidorId)
 
-  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, control, formState: { errors } } =
     useForm<EnfermedadFormData>({
       resolver: zodResolver(enfermedadSchema),
       defaultValues: {
@@ -62,7 +60,6 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
     onClose()
   }
 
-  const isEditing = !!initialValues
 
   const onSubmit = async (values: EnfermedadFormData) => {
     const payload = {
@@ -70,29 +67,10 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
       codigo_cie10: values.codigo_cie10 || null,
       fecha_diagnostico: values.fecha_diagnostico || null,
     }
-    try {
-      if (isEditing) {
-        await expedienteService.editarEnfermedad(
-          servidorId, initialValues!.id,
-          payload
-        )
-      } else {
-        await expedienteService.crearEnfermedad(
-          servidorId, payload
-        )
-      }
-      qc.invalidateQueries({ queryKey: ['enfermedades', servidorId] })
-      notificar.exito(
-        isEditing ? 'Enfermedad actualizada' : 'Enfermedad registrada',
-        'El registro fue procesado correctamente.',
-      )
-      handleClose()
-    } catch (error) {
-      notificar.error(
-        isEditing ? 'No se pudo actualizar la enfermedad' : 'No se pudo registrar la enfermedad',
-        getApiErrorMessage(error),
-      )
-    }
+    const guardado = initialValues
+      ? editarEnfermedad.mutateAsync({ id: initialValues.id, data: payload })
+      : crearEnfermedad.mutateAsync(payload)
+    guardado.then(handleClose).catch(() => {}) // el hook ya notificó
   }
 
   return (
@@ -103,7 +81,7 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
       size="sm"
       onSubmit={handleSubmit(onSubmit)}
       submitLabel={initialValues ? 'Actualizar' : 'Registrar enfermedad'}
-      submitting={isSubmitting}
+      submitting={crearEnfermedad.isPending || editarEnfermedad.isPending}
     >
       <Stack gap="sm">
         <TextInput label="Nombre/Tipo de la enfermedad"

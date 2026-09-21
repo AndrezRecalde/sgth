@@ -2,16 +2,13 @@
 
 import { TextInput, Grid, Divider } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import type { UseFormReturn } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 
-interface Props {
-  form: UseFormReturn<ServidorBasicoFormData>
-}
-
-export function ServidorFormContacto({ form }: Props) {
+/** Contacto y documentos adicionales. Lee del contexto, como el de datos personales. */
+export function ServidorFormContacto() {
   const contained = useContainedInput()
-  const { register, formState: { errors } } = form
+  const { register, formState: { errors } } = useFormContext<ServidorBasicoFormData>()
 
   return (
     <Grid>

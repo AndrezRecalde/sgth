@@ -1,18 +1,16 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Stack, TextInput,
          NumberInput, Select } from '@mantine/core'
-import { FormModal, notificar } from '@/components/ui'
+import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { expedienteService } from '../services/expedienteService'
-import { useQueryClient } from '@tanstack/react-query'
+import { useCondicionMutations } from '../hooks/useCondicionMutations'
 import { discapacidadSchema, type DiscapacidadFormData }
   from '../schemas/discapacidad.schema'
 
-import { getApiErrorMessage } from '@/types/api'
 const TIPO_OPTIONS = [
   { value: 'fisica',       label: 'Física' },
   { value: 'sensorial',    label: 'Sensorial (Visual / Auditiva)' },
@@ -36,9 +34,9 @@ interface Props {
 
 export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }: Props) {
   const contained = useContainedInput()
-  const qc = useQueryClient()
+  const { crearDiscapacidad, editarDiscapacidad } = useCondicionMutations(servidorId)
 
-  const { register, control, handleSubmit, reset, formState: { errors, isSubmitting } } =
+  const { register, control, handleSubmit, reset, formState: { errors } } =
     useForm<DiscapacidadFormData>({
       resolver: zodResolver(discapacidadSchema),
       defaultValues: {
@@ -69,34 +67,12 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
     onClose()
   }
 
-  const isEditing = !!initialValues
 
-  const onSubmit = async (values: DiscapacidadFormData) => {
-    try {
-      if (isEditing) {
-        await expedienteService.editarDiscapacidad(
-          servidorId, initialValues!.id,
-          values
-        )
-      } else {
-        await expedienteService.crearDiscapacidad(
-          servidorId, values
-        )
-      }
-      qc.invalidateQueries({ queryKey: ['discapacidades', servidorId] })
-      notificar.exito(
-        isEditing ? 'Discapacidad actualizada' : 'Discapacidad registrada',
-        isEditing
-          ? 'El registro fue actualizado correctamente.'
-          : 'La discapacidad fue registrada correctamente.',
-      )
-      handleClose()
-    } catch (error) {
-      notificar.error(
-        isEditing ? 'No se pudo actualizar la discapacidad' : 'No se pudo registrar la discapacidad',
-        getApiErrorMessage(error),
-      )
-    }
+  const onSubmit = (values: DiscapacidadFormData) => {
+    const guardado = initialValues
+      ? editarDiscapacidad.mutateAsync({ id: initialValues.id, data: values })
+      : crearDiscapacidad.mutateAsync(values)
+    guardado.then(handleClose).catch(() => {}) // el hook ya notificó
   }
 
   return (
@@ -107,7 +83,7 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
       size="sm"
       onSubmit={handleSubmit(onSubmit)}
       submitLabel={initialValues ? 'Actualizar' : 'Registrar discapacidad'}
-      submitting={isSubmitting}
+      submitting={crearDiscapacidad.isPending || editarDiscapacidad.isPending}
     >
       <Stack gap="sm">
         <Controller name="tipo_discapacidad" control={control}

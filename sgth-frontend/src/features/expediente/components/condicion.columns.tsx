@@ -32,7 +32,10 @@ export const getDiscapacidadesColumns = (
     accessor: 'porcentaje',
     title: '%',
     width: 80,
-    render: ({ porcentaje }) => <StatusBadge>{porcentaje ?? '-'}%</StatusBadge>,
+    // Llega como decimal («1.00»): en pantalla se lee «1%».
+    render: ({ porcentaje }) => (
+      <StatusBadge>{porcentaje != null ? `${Number(porcentaje)}%` : '—'}</StatusBadge>
+    ),
   },
   {
     accessor: 'numero_carnet_conadis',
