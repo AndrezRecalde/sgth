@@ -52,8 +52,10 @@ class StoreServidorBasicoRequest extends FormRequest
             ],
             'numero_papeleta_votacion' => 'nullable|string|max:20',
             'pasaporte_numero'         => 'nullable|string|max:50',
-            'tiene_discapacidad'           => 'required|boolean',
-            'tiene_enfermedad_catastrofica' => 'required|boolean',
+            // Se derivan de los registros de la pestaña Condición: una ficha
+            // nueva nace sin ninguno.
+            'tiene_discapacidad'            => ['prohibited'],
+            'tiene_enfermedad_catastrofica' => ['prohibited'],
             // Contacto opcional
             'telefono_celular'      => 'nullable|string|max:20',
             'telefono_convencional' => 'nullable|string|max:20',

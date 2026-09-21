@@ -88,14 +88,14 @@ export function CondicionTab({ servidorId }: Props) {
       </SectionCard>
 
       <DiscapacidadModal
-        key={editDisc?.id ?? 'nueva'}
+        key={`disc-${editDisc?.id ?? 'nueva'}`}
         opened={discOpened}
         onClose={() => { setEditDisc(null); closeDisc() }}
         servidorId={servidorId}
         initialValues={editDisc}
       />
       <EnfermedadModal
-        key={editEnf?.id ?? 'nueva'}
+        key={`enf-${editEnf?.id ?? 'nueva'}`}
         opened={enfOpened}
         onClose={() => { setEditEnf(null); closeEnf() }}
         servidorId={servidorId}

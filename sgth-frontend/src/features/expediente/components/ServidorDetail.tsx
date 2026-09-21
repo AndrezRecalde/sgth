@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Stack, Tabs, Tooltip } from '@mantine/core'
+import { Button, Stack, Tabs } from '@mantine/core'
 import {
   IconCreditCard,
   IconEdit,
@@ -42,8 +42,6 @@ export function ServidorDetail({ opened, onClose, servidor: fila, onEdit }: Prop
   if (!servidor) return null
 
   const servidorId = Number(servidor.id)
-  const sinCondiciones =
-    !servidor.tiene_discapacidad && !servidor.tiene_enfermedad_catastrofica
 
   return (
     <SgthDrawer
@@ -89,20 +87,12 @@ export function ServidorDetail({ opened, onClose, servidor: fila, onEdit }: Prop
             <Tabs.Tab value="declaraciones" leftSection={<IconFileDescription size={14} />}>
               Declaraciones
             </Tabs.Tab>
-            <Tooltip
-              label="Active el switch de discapacidad o enfermedad catastrófica en Datos Personales para habilitar esta sección"
-              disabled={!sinCondiciones}
-              multiline
-              w={220}
-            >
-              <Tabs.Tab
-                value="condicion"
-                leftSection={<IconHeart size={14} />}
-                disabled={sinCondiciones}
-              >
-                Condición
-              </Tabs.Tab>
-            </Tooltip>
+            {/* Siempre habilitada: la marca del servidor se deriva de lo que
+                se registre aquí, así que bloquearla impedía registrar el
+                primer caso. */}
+            <Tabs.Tab value="condicion" leftSection={<IconHeart size={14} />}>
+              Condición
+            </Tabs.Tab>
             <Tabs.Tab value="salud" leftSection={<IconStethoscope size={14} />}>
               Salud
             </Tabs.Tab>

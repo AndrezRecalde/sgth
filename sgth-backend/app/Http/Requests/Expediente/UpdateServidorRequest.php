@@ -105,11 +105,11 @@ class UpdateServidorRequest extends FormRequest
             'codigo_medico'         => 'nullable|string|max:30',
             'direccion_domicilio'   => 'nullable|string|max:255',
 
-            // Sección D
-            'tiene_discapacidad'      => 'sometimes|required|boolean',
-            
-            // Sección E
-            'tiene_enfermedad_catastrofica' => 'sometimes|required|boolean',
+            // Secciones D y E: las dos marcas se derivan de los registros de
+            // discapacidad y enfermedad del expediente (pestaña Condición),
+            // así que aquí no se escriben.
+            'tiene_discapacidad'            => ['prohibited'],
+            'tiene_enfermedad_catastrofica' => ['prohibited'],
 
             // Sección F
             // tipo_nombramiento tampoco se edita aquí, mismo razonamiento
@@ -145,6 +145,9 @@ class UpdateServidorRequest extends FormRequest
 
             'puesto_id.prohibited'                => 'El puesto no se edita aquí: registre un movimiento de traslado, ascenso, traspaso o cambio administrativo.',
             'unidad_administrativa_id.prohibited'  => 'La unidad administrativa no se edita aquí: registre un movimiento de traslado, ascenso, traspaso o cambio administrativo.',
+            'tiene_discapacidad.prohibited' => 'La discapacidad se registra en la pestaña Condición del expediente.',
+            'tiene_enfermedad_catastrofica.prohibited' => 'La enfermedad catastrófica se registra en la pestaña Condición del expediente.',
+
             'tipo_nombramiento.prohibited'         => 'El tipo de nombramiento no se edita aquí: registre el movimiento de personal correspondiente (ingreso, traslado, ascenso, traspaso o cambio administrativo).',
 
             'fecha_fin_ultimo_contrato.after'  => 'La fecha de fin del contrato debe ser posterior a la fecha de inicio del mismo.',

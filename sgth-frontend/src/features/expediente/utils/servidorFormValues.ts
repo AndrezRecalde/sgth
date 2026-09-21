@@ -21,8 +21,6 @@ export const BLANK_FORM_VALUES: ServidorBasicoFormData = {
   pais_origen:             '',
   numero_papeleta_votacion: '',
   pasaporte_numero:        '',
-  tiene_discapacidad:            false,
-  tiene_enfermedad_catastrofica: false,
   telefono_celular:      '',
   telefono_convencional: '',
   correo_personal:       '',
@@ -52,13 +50,19 @@ export function mapServidorToFormValues(servidor: ServidorConRelaciones): Servid
     pais_origen:             servidor.pais_origen ?? '',
     numero_papeleta_votacion: servidor.numero_papeleta_votacion ?? '',
     pasaporte_numero:        servidor.pasaporte_numero ?? '',
-    tiene_discapacidad:            servidor.tiene_discapacidad ?? false,
-    tiene_enfermedad_catastrofica: servidor.tiene_enfermedad_catastrofica ?? false,
     telefono_celular:      servidor.telefono_celular ?? '',
     telefono_convencional: servidor.telefono_convencional ?? '',
     correo_personal:       servidor.correo_personal ?? '',
     codigo_medico:         servidor.codigo_medico ?? '',
     direccion_domicilio:   servidor.direccion_domicilio ?? '',
+  }
+}
+
+/** Valores del formulario de edición: la ficha más lo editable de antigüedad. */
+export function valoresDeEdicion(servidor: ServidorConRelaciones) {
+  return {
+    ...mapServidorToFormValues(servidor),
+    ...mapServidorToLaboralValues(servidor),
   }
 }
 
@@ -80,7 +84,6 @@ export const CAMPOS_POR_PASO = [
     'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido', 'cedula',
     'fecha_nacimiento', 'genero', 'estado_civil', 'tipo_sangre', 'es_extranjero',
     'provincia_nacimiento_id', 'canton_nacimiento_id', 'nacionalidad', 'pais_origen',
-    'tiene_discapacidad', 'tiene_enfermedad_catastrofica',
   ],
   [
     'telefono_celular', 'telefono_convencional', 'correo_personal', 'codigo_medico',

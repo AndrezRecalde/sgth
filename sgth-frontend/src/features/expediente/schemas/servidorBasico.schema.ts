@@ -29,9 +29,8 @@ export const servidorBasicoSchema = z.object({
   numero_papeleta_votacion: z.string().optional(),
   pasaporte_numero:        z.string().optional(),
 
-  // Condiciones
-  tiene_discapacidad:            z.boolean(),
-  tiene_enfermedad_catastrofica: z.boolean(),
+  // Las condiciones de salud no están aquí: se derivan de los registros de
+  // la pestaña Condición, y el backend rechaza escribirlas desde la ficha.
 
   // Contacto — opcionales en el registro básico
   telefono_celular:      z.string().optional(),

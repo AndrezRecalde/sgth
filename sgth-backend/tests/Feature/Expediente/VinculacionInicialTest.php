@@ -79,8 +79,8 @@ beforeEach(function () {
             'es_extranjero'    => false,
             'provincia_nacimiento_id' => $this->provincia,
             'canton_nacimiento_id'    => $this->canton,
-            'tiene_discapacidad'            => false,
-            'tiene_enfermedad_catastrofica' => false,
+            // Las marcas de salud ya no viajan aquí: se derivan de los
+            // registros de la pestaña Condición (CondicionDerivadaTest).
             ...$extra,
             'vinculo' => [
                 'tipo_nombramiento'        => TipoNombramiento::PERMANENTE->value,

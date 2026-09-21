@@ -1,8 +1,8 @@
 'use client'
 
-import { Button, Group, Stack } from '@mantine/core'
+import { Alert, Button, Group, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPaperclip, IconPlus } from '@tabler/icons-react'
+import { IconAlertTriangle, IconPaperclip, IconPlus } from '@tabler/icons-react'
 import { DataState, SgthTable, notificar } from '@/components/ui'
 import { guardarArchivo } from '@/lib/archivo'
 import { getApiErrorMessage } from '@/types/api'
@@ -10,6 +10,7 @@ import { useDocumentos } from '../../hooks/useDocumentos'
 import { useDocumentoMutations } from '../../hooks/useDocumentoMutations'
 import { expedienteService } from '../../services/expedienteService'
 import { getDocumentosColumns } from '../documentos.columns'
+import { documentosQueFaltan } from '../../utils/documentosBasicos'
 import { DocumentoModal } from '../DocumentoModal'
 import type { DocumentoServidor } from '@/types/api'
 
@@ -38,6 +39,8 @@ export function DocumentosTab({ servidorId }: Props) {
     onDelete: (id) => eliminar.mutate(id),
   })
 
+  const faltan = documentosQueFaltan(documentos)
+
   return (
     <Stack gap="md">
       <Group justify="flex-end">
@@ -46,6 +49,19 @@ export function DocumentosTab({ servidorId }: Props) {
           Subir documento
         </Button>
       </Group>
+
+      {/* Qué falta por anexar: revisarlo a ojo obligaba a conocer de memoria
+          la lista de documentos básicos del expediente. */}
+      {!isLoading && faltan.length > 0 && (
+        <Alert
+          variant="light"
+          color="amber"
+          icon={<IconAlertTriangle size={16} />}
+          title={`Faltan ${faltan.length} de los documentos básicos`}
+        >
+          Sin anexar: {faltan.join(', ')}.
+        </Alert>
+      )}
 
       <DataState
         loading={isLoading}

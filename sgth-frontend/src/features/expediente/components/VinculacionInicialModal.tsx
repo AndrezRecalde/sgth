@@ -38,8 +38,6 @@ const BLANCO: DefaultValues<VinculacionInicialFormData> = {
   canton_nacimiento_id: null,
   nacionalidad: '', pais_origen: '',
   numero_papeleta_votacion: '', pasaporte_numero: '',
-  tiene_discapacidad: false,
-  tiene_enfermedad_catastrofica: false,
   telefono_celular: '', telefono_convencional: '',
   correo_personal: '', direccion_domicilio: '',
   fecha_ingreso_institucion: null,
@@ -59,7 +57,6 @@ const PASO_PERSONAL = [
   'nombre', 'apellido', 'cedula', 'fecha_nacimiento', 'genero', 'estado_civil',
   'es_extranjero', 'provincia_nacimiento_id', 'canton_nacimiento_id',
   'nacionalidad', 'pais_origen',
-  'tiene_discapacidad', 'tiene_enfermedad_catastrofica',
 ] as const
 
 /**
@@ -112,11 +109,11 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
 
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(enviar)} noValidate>
-          {paso === 0 && <ServidorFormPersonal form={form as never} />}
+          {paso === 0 && <ServidorFormPersonal />}
 
           {paso === 1 && (
             <>
-              <ServidorFormContacto form={form as never} />
+              <ServidorFormContacto />
 
               <Alert
                 variant="light"

@@ -4,7 +4,7 @@ import {
   TextInput, Select, Grid, Switch, Divider,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { Controller, type UseFormReturn } from 'react-hook-form'
+import { Controller, useFormContext } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useProvincias } from '../hooks/useProvincias'
 import { useCantones } from '../hooks/useCantones'
@@ -30,12 +30,14 @@ const TIPO_SANGRE_OPTIONS = [
   'A+','A-','B+','B-','AB+','AB-','O+','O-',
 ].map(v => ({ value: v, label: v }))
 
-interface Props {
-  form: UseFormReturn<ServidorBasicoFormData>
-}
-
-export function ServidorFormPersonal({ form }: Props) {
+/**
+ * Los campos personales de la ficha. Se lee del contexto del formulario para
+ * poder servir al alta, a la carga inicial y a la edición, que validan con
+ * esquemas distintos sobre los mismos campos.
+ */
+export function ServidorFormPersonal() {
   const contained = useContainedInput()
+  const form = useFormContext<ServidorBasicoFormData>()
   const { register, setValue, watch, formState: { errors } } = form
 
   const esExtranjero = watch('es_extranjero')
@@ -271,37 +273,6 @@ export function ServidorFormPersonal({ form }: Props) {
         </>
       )}
 
-      <Grid.Col span={12}>
-        <Divider label="Condición de salud" labelPosition="left" mb="xs" mt="xs" />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Controller
-          name="tiene_discapacidad"
-          control={form.control}
-          render={({ field }) => (
-            <Switch
-              label="¿Tiene discapacidad?"
-              checked={field.value}
-              onChange={(e) => field.onChange(e.currentTarget.checked)}
-              mt="xs"
-            />
-          )}
-        />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
-        <Controller
-          name="tiene_enfermedad_catastrofica"
-          control={form.control}
-          render={({ field }) => (
-            <Switch
-              label="¿Tiene enfermedad catastrófica?"
-              checked={field.value}
-              onChange={(e) => field.onChange(e.currentTarget.checked)}
-              mt="xs"
-            />
-          )}
-        />
-      </Grid.Col>
     </Grid>
   )
 }

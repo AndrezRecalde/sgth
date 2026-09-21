@@ -1,37 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useDebouncedValue } from '@mantine/hooks'
-import { TextInput, Select } from '@mantine/core'
+import { useEffect, useState } from 'react'
+import { Button, Collapse, Select, Stack, TextInput } from '@mantine/core'
+import { useDebouncedValue, useDisclosure } from '@mantine/hooks'
+import { IconAdjustmentsHorizontal } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
+import { SITUACION_OPTIONS, type Situacion } from '../hooks/useFiltrosServidores'
+import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
 import type { UnidadConRelaciones } from '@/types/api'
 
 const CONTRATO_ESTADO_OPTIONS = [
   { value: 'vigente',   label: 'Vigente' },
   { value: 'terminado', label: 'Terminado' },
   { value: 'cancelado', label: 'Cancelado' },
-]
-
-const EN_FUNCIONES_OPTIONS = [
-  { value: 'si', label: 'En funciones' },
-  { value: 'no', label: 'Inactivos' },
-]
-
-const VINCULO_OPTIONS = [
-  { value: 'con', label: 'Con vínculo registrado' },
-  { value: 'sin', label: 'Pendientes de vinculación' },
-]
-
-const TIPO_NOMBRAMIENTO_OPTIONS = [
-  { value: 'nombramiento_permanente',      label: 'Nombramiento Permanente' },
-  { value: 'nombramiento_provisional',     label: 'Nombramiento Provisional' },
-  { value: 'servicios_ocasionales',        label: 'Servicios Ocasionales' },
-  { value: 'libre_nombramiento_remocion',  label: 'Libre Nombramiento y Remoción' },
-  { value: 'codigo_trabajo',               label: 'Código del Trabajo' },
-  { value: 'servicios_profesionales',      label: 'Servicios Profesionales' },
-  { value: 'eleccion_popular',             label: 'Elección Popular' },
 ]
 
 const ANIO_ACTUAL = new Date().getFullYear()
@@ -41,120 +24,126 @@ const ANIO_OPTIONS = Array.from({ length: ANIO_ACTUAL - 1979 }, (_, i) => {
 })
 
 interface Props {
-  onSearch:               (v: string) => void
+  onSearch: (v: string) => void
+  situacion: Situacion | null
+  onSituacionChange: (v: Situacion | null) => void
   onContratoEstadoChange: (v: string | null) => void
-  onEnFuncionesChange?:   (v: boolean | null) => void
-  onUnidadChange?:        (v: number | null) => void
-  onTipoNombramientoChange?: (v: string | null) => void
-  onAnioIngresoChange?:   (v: number | null) => void
-  /** Fichas sin vínculo laboral registrado. */
-  onPendienteVinculacionChange?: (v: boolean | null) => void
-  /** Se controla desde fuera para que el contador pueda activar el filtro. */
-  pendienteVinculacion?: boolean | null
+  onUnidadChange: (v: number | null) => void
+  onTipoNombramientoChange: (v: string | null) => void
+  onAnioIngresoChange: (v: number | null) => void
+  /** Cuántos filtros hay puestos dentro del desplegable. */
+  secundariosActivos: number
 }
 
+/**
+ * Los filtros del listado. El buscador y la situación —lo que se usa a
+ * diario— quedan a la vista; los otros cuatro se despliegan.
+ *
+ * Antes eran siete campos en fila: en un teléfono empujaban la tabla fuera de
+ * la primera pantalla, y tres de ellos preguntaban variantes de lo mismo.
+ */
 export function ServidorToolbar({
-  onSearch, onContratoEstadoChange, onEnFuncionesChange,
+  onSearch, situacion, onSituacionChange, onContratoEstadoChange,
   onUnidadChange, onTipoNombramientoChange, onAnioIngresoChange,
-  onPendienteVinculacionChange, pendienteVinculacion,
+  secundariosActivos,
 }: Props) {
-  // Variante compacta: dentro de la barra los filtros conviven con los
-  // botones, no son un formulario de captura.
   const contained = useContainedInput('sm')
+  const [abierto, { toggle }] = useDisclosure(false)
 
   const [localSearch, setLocalSearch] = useState('')
   const [debounced] = useDebouncedValue(localSearch, 400)
 
   const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 })
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
-  const unidadOptions = unidades.map((u) => ({ value: String(u.id), label: u.nombre ?? `Unidad ${u.id}` }))
+  const unidadOptions = unidades.map((u) => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
+  }))
 
   useEffect(() => {
     onSearch(debounced)
   }, [debounced, onSearch])
 
   return (
-    <Toolbar>
-      <TextInput
-        label="Buscar servidor"
-        placeholder="Nombre completo o cédula"
-        value={localSearch}
-        onChange={(e) => setLocalSearch(e.currentTarget.value)}
-        {...contained}
-        // El buscador se queda con el espacio que sobra: es el filtro que
-        // más se usa y era el campo más estrecho de la barra.
-        style={{ flex: 1, minWidth: 220 }}
-      />
-      {onEnFuncionesChange && (
+    <Stack gap="sm">
+      <Toolbar
+        actions={
+          <Button
+            variant={secundariosActivos > 0 ? 'light' : 'default'}
+            leftSection={<IconAdjustmentsHorizontal size={16} />}
+            onClick={toggle}
+          >
+            {secundariosActivos > 0 ? `Filtros (${secundariosActivos})` : 'Filtros'}
+          </Button>
+        }
+      >
+        <TextInput
+          label="Buscar servidor"
+          placeholder="Nombre completo o cédula"
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.currentTarget.value)}
+          {...contained}
+          // El buscador se queda con el espacio que sobra: es el filtro que
+          // más se usa y era el campo más estrecho de la barra.
+          style={{ flex: 1, minWidth: 240 }}
+        />
         <Select
-          label="Estado del servidor"
+          label="Situación"
           placeholder="Todos"
-          data={EN_FUNCIONES_OPTIONS}
-          onChange={(v) => onEnFuncionesChange(v === null ? null : v === 'si')}
+          data={SITUACION_OPTIONS}
+          value={situacion}
+          onChange={(v) => onSituacionChange(v as Situacion | null)}
           clearable
           {...contained}
-          style={{ minWidth: 180 }}
+          style={{ minWidth: 210 }}
         />
-      )}
-      {onPendienteVinculacionChange && (
-        <Select
-          label="Vínculo laboral"
-          placeholder="Todos"
-          data={VINCULO_OPTIONS}
-          value={pendienteVinculacion === null || pendienteVinculacion === undefined
-            ? null
-            : (pendienteVinculacion ? 'sin' : 'con')}
-          onChange={(v) => onPendienteVinculacionChange(v === null ? null : v === 'sin')}
-          clearable
-          {...contained}
-          style={{ minWidth: 200 }}
-        />
-      )}
-      <Select
-        label="Vínculo actual"
-        placeholder="Todos"
-        data={CONTRATO_ESTADO_OPTIONS}
-        onChange={onContratoEstadoChange}
-        clearable
-        {...contained}
-        style={{ minWidth: 180 }}
-      />
-      {onUnidadChange && (
-        <Select
-          label="Unidad administrativa"
-          placeholder="Todas"
-          data={unidadOptions}
-          searchable
-          clearable
-          onChange={(v) => onUnidadChange(v ? Number(v) : null)}
-          {...contained}
-          style={{ minWidth: 220 }}
-        />
-      )}
-      {onTipoNombramientoChange && (
-        <Select
-          label="Tipo de nombramiento"
-          placeholder="Todos"
-          data={TIPO_NOMBRAMIENTO_OPTIONS}
-          searchable
-          clearable
-          onChange={onTipoNombramientoChange}
-          {...contained}
-          style={{ minWidth: 220 }}
-        />
-      )}
-      {onAnioIngresoChange && (
-        <Select
-          label="Año de ingreso"
-          placeholder="Todos"
-          data={ANIO_OPTIONS}
-          searchable
-          clearable
-          onChange={(v) => onAnioIngresoChange(v ? Number(v) : null)}
-          {...contained}
-          style={{ minWidth: 150 }}
-        />
-      )}
-    </Toolbar>
+      </Toolbar>
+
+      <Collapse expanded={abierto}>
+        <Toolbar>
+          <Select
+            // La descripción de Mantine se dibuja encima del control y en el
+            // patrón contained queda despegada del campo: va en la etiqueta.
+            label="Unidad (incluye jefaturas)"
+            placeholder="Todas"
+            data={unidadOptions}
+            searchable
+            clearable
+            onChange={(v) => onUnidadChange(v ? Number(v) : null)}
+            {...contained}
+            style={{ minWidth: 240 }}
+          />
+          <Select
+            label="Tipo de nombramiento"
+            placeholder="Todos"
+            data={TIPO_NOMBRAMIENTO_OPTIONS}
+            searchable
+            clearable
+            onChange={onTipoNombramientoChange}
+            {...contained}
+            style={{ minWidth: 240 }}
+          />
+          <Select
+            label="Vínculo actual"
+            placeholder="Todos"
+            data={CONTRATO_ESTADO_OPTIONS}
+            clearable
+            onChange={onContratoEstadoChange}
+            {...contained}
+            style={{ minWidth: 180 }}
+          />
+          <Select
+            label="Año de ingreso"
+            placeholder="Todos"
+            data={ANIO_OPTIONS}
+            searchable
+            clearable
+            onChange={(v) => onAnioIngresoChange(v ? Number(v) : null)}
+            {...contained}
+            style={{ minWidth: 150 }}
+          />
+        </Toolbar>
+      </Collapse>
+    </Stack>
   )
 }

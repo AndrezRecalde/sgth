@@ -1,6 +1,6 @@
 'use client'
 
-import { SgthTable } from '@/components/ui/SgthTable'
+import { PAGINACION_ES, SgthTable } from '@/components/ui'
 import { getServidorColumns } from './servidor.columns'
 import type { ServidorConRelaciones } from '@/types/api'
 
@@ -13,6 +13,8 @@ interface Props {
   onView: (servidor: ServidorConRelaciones) => void
   onEdit: (servidor: ServidorConRelaciones) => void
   onAccionPersonal: (servidor: ServidorConRelaciones) => void
+  /** La selección solo se ofrece a quien puede pedir certificaciones médicas. */
+  seleccionable?: boolean
   selectedRecords?: ServidorConRelaciones[]
   onSelectedRecordsChange?: (records: ServidorConRelaciones[]) => void
 }
@@ -20,10 +22,11 @@ interface Props {
 export function ServidorTable({
   data, isLoading, total, page,
   onPageChange, onView, onEdit, onAccionPersonal,
-  selectedRecords, onSelectedRecordsChange,
+  seleccionable = false, selectedRecords, onSelectedRecordsChange,
 }: Props) {
   return (
     <SgthTable
+      {...PAGINACION_ES}
       records={data}
       columns={getServidorColumns({ onView, onEdit, onAccionPersonal })}
       fetching={isLoading}
@@ -32,8 +35,11 @@ export function ServidorTable({
       page={page}
       onPageChange={onPageChange}
       minHeight={200}
-      selectedRecords={selectedRecords}
-      onSelectedRecordsChange={onSelectedRecordsChange}
+      // Abrir el expediente es lo que se hace en nueve de cada diez visitas:
+      // no debería exigir pasar por el menú de la fila.
+      onRowClick={({ record }) => onView(record)}
+      selectedRecords={seleccionable ? selectedRecords : undefined}
+      onSelectedRecordsChange={seleccionable ? onSelectedRecordsChange : undefined}
     />
   )
 }
