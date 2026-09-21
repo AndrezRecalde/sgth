@@ -38,6 +38,14 @@ export function ServidorEncabezado({ servidor }: Props) {
   const unidad = servidor.contrato_vigente?.unidad_administrativa?.nombre
     ?? servidor.unidad_administrativa?.nombre
 
+  const regimen = servidor.regimen_laboral
+    ? REGIMEN_LABELS[servidor.regimen_laboral] ?? servidor.regimen_laboral
+    : null
+  // «Servicios Profesionales» y «Código del Trabajo» son a la vez régimen y
+  // tipo de nombramiento, así que la misma palabra salía dos veces seguidas.
+  const nombramientoCrudo = etiquetaNombramiento(servidor.contrato_vigente?.tipo_nombramiento)
+  const nombramiento = nombramientoCrudo === regimen ? null : nombramientoCrudo
+
   return (
     <Group p="md" className={classes.encabezado} wrap="nowrap">
       <Avatar size={52} radius="xl" fw={700}>{iniciales(servidor)}</Avatar>
@@ -51,16 +59,8 @@ export function ServidorEncabezado({ servidor }: Props) {
         </Text>
 
         <Group gap="xs" mt={4}>
-          {servidor.regimen_laboral && (
-            <StatusBadge size="xs">
-              {REGIMEN_LABELS[servidor.regimen_laboral] ?? servidor.regimen_laboral}
-            </StatusBadge>
-          )}
-          {etiquetaNombramiento(servidor.contrato_vigente?.tipo_nombramiento) && (
-            <StatusBadge size="xs">
-              {etiquetaNombramiento(servidor.contrato_vigente?.tipo_nombramiento)}
-            </StatusBadge>
-          )}
+          {regimen && <StatusBadge size="xs">{regimen}</StatusBadge>}
+          {nombramiento && <StatusBadge size="xs">{nombramiento}</StatusBadge>}
           {anios != null && (
             <StatusBadge size="xs" variant="dot">
               {anios} {anios === 1 ? 'año de servicio' : 'años de servicio'}
