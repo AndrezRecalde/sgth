@@ -74,7 +74,7 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
   };
 
   return (
-    <Card shadow="md" padding="xl" withBorder>
+    <Card padding="xl" withBorder>
       <Stack gap="lg">
         <Center>
           <Stack gap={4} align="center">
