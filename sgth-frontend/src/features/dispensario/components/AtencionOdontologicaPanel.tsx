@@ -1,6 +1,6 @@
 'use client'
 
-import { TONO_TURNO } from '../constants/turnos'
+import { TONO_TURNO, ESTADO_TURNO_LABELS } from '../constants/turnos'
 import {
   Grid, Card, Tabs, Group, Text, Button, Stack, Avatar, ScrollArea,
 } from '@mantine/core'
@@ -82,7 +82,7 @@ export function AtencionOdontologicaPanel({
                   {nombrePaciente.trim() || '—'}
                 </Text>
                 <StatusBadge tone={TONO_TURNO[turno.estado] ?? 'neutral'} size="xs">
-                  {turno.estado.replace('_', ' ')}
+                  {ESTADO_TURNO_LABELS[turno.estado] ?? turno.estado}
                 </StatusBadge>
               </Group>
               <Text size="xs" c="dimmed" ff="monospace">
