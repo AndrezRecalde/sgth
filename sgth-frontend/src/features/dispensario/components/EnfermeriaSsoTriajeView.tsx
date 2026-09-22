@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Container } from '@mantine/core'
+import { Box } from '@mantine/core'
 
 import { SolicitudesPendientesTriajeList } from './SolicitudesPendientesTriajeList'
 import { SolicitudSignosVitalesForm } from './SolicitudSignosVitalesForm'
@@ -17,12 +17,14 @@ export function EnfermeriaSsoTriajeView() {
   }
 
   return (
-    <Container size="sm" px={0}>
+    // Mismo ancho de lectura que tenía el `Container`, alineado a la izquierda
+    // como el título de la página. La lista de arriba sí ocupa todo el ancho.
+    <Box maw={720}>
       <SolicitudSignosVitalesForm
         solicitud={solicitudSel}
         onCreado={() => setSolicitudSel(null)}
         onCancelar={() => setSolicitudSel(null)}
       />
-    </Container>
+    </Box>
   )
 }

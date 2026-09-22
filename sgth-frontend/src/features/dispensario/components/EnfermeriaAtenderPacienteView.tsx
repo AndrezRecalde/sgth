@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Card, Alert, Text, Container } from '@mantine/core'
+import { Stack, Card, Alert, Text, Button, Box } from '@mantine/core'
 import {
   FlujoStepper,
   type PasoStepper,
@@ -70,7 +70,10 @@ export function EnfermeriaAtenderPacienteView() {
   }
 
   return (
-    <Container size="sm" px={0}>
+    // El mismo ancho de lectura que tenía el `Container` (720px), pero
+    // alineado a la izquierda: así el formulario arranca donde arranca el
+    // título de la página, como en el resto del sistema.
+    <Box maw={720}>
       <FlujoStepper pasoActual={mapearPasoVisual(paso)} />
 
       {paso === 'buscar' && (
@@ -141,18 +144,16 @@ export function EnfermeriaAtenderPacienteView() {
                 {mensajeFinal}
               </Text>
             </Alert>
-            <Card.Section
-              p="sm"
-              onClick={handleReiniciar}
-              style={{ cursor: 'pointer', textAlign: 'center' }}
-            >
-              <Text size="sm" c="primario" fw={600}>
-                Atender otro paciente
-              </Text>
-            </Card.Section>
+            {/* Era un `Card.Section` con `onClick` y `cursor: pointer`: se
+                veía como un enlace pero no recibía el foco del teclado ni se
+                anunciaba como algo pulsable. Una acción terciaria dentro de
+                una tarjeta es `Button variant="subtle"` (regla 06). */}
+            <Button variant="subtle" onClick={handleReiniciar}>
+              Atender otro paciente
+            </Button>
           </Stack>
         </Card>
       )}
-    </Container>
+    </Box>
   )
 }

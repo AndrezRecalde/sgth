@@ -43,10 +43,15 @@ export function getTurnosColumns(
           : `${turno.carga_familiar?.nombres ?? ''} ${turno.carga_familiar?.apellidos ?? ''}`
 
         return (
+          // Servidor y familiar son una categoría: ni mejor ni peor, así que
+          // el icono va en el color del texto y no en emerald y ocean, que
+          // significan «éxito» e «informativo» en el resto del sistema
+          // (reglas 03 y 06). El `title` le pone nombre a la figura, que antes
+          // no tenía ninguno para quien usa lector de pantalla.
           <Group gap="xs" wrap="nowrap">
             {esServidor
-              ? <IconUser size={14} color="var(--mantine-color-emerald-6)" />
-              : <IconUsers size={14} color="var(--mantine-color-ocean-6)" />}
+              ? <IconUser size={14} title="Servidor" />
+              : <IconUsers size={14} title="Familiar" />}
             <Text size="sm">{nombre.trim() || '—'}</Text>
           </Group>
         )
