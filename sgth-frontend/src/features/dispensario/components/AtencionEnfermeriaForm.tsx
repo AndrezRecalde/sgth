@@ -3,13 +3,20 @@
 import {
   Stack, Group, Select, Button,
   Textarea, Text, Card, Avatar, } from '@mantine/core'
-import { useForm, Controller } from 'react-hook-form'
+import {
+  useForm, Controller, type DefaultValues,
+} from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck, IconUser, IconUsers } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useCatalogoServicios,
   useRegistrarAtencionEnfermeria,
 } from '../hooks/useAtencionEnfermeria'
+import {
+  atencionEnfermeriaSchema,
+  type AtencionEnfermeriaFormData,
+} from '../schemas/atencionEnfermeria.schema'
 import type { PacienteEncontrado } from '../services/pacienteService'
 import type { AtencionEnfermeria } from '../services/atencionEnfermeriaService'
 import { StatusBadge } from '@/components/ui'
@@ -20,9 +27,13 @@ interface Props {
   onCancelar: () => void
 }
 
-type FormData = {
-  catalogo_servicio_id: number | undefined
-  descripcion: string
+/**
+ * El servicio se omite: no hay ninguno por defecto, lo elige quien atiende.
+ * El esquema lo declara `number`, así que darle `undefined` pediría una
+ * aserción de tipo (ver regla 09).
+ */
+const VALORES_INICIALES: DefaultValues<AtencionEnfermeriaFormData> = {
+  descripcion: '',
 }
 
 export function AtencionEnfermeriaForm({
@@ -35,11 +46,9 @@ export function AtencionEnfermeriaForm({
   const {
     control, handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: {
-      catalogo_servicio_id: undefined,
-      descripcion: '',
-    },
+  } = useForm<AtencionEnfermeriaFormData>({
+    resolver: zodResolver(atencionEnfermeriaSchema),
+    defaultValues: VALORES_INICIALES,
   })
 
   const catalogoOptions = catalogo.map(c => ({
@@ -47,9 +56,7 @@ export function AtencionEnfermeriaForm({
     label: c.nombre,
   }))
 
-  const onSubmit = (values: FormData) => {
-    if (!values.catalogo_servicio_id) return
-
+  const onSubmit = (values: AtencionEnfermeriaFormData) => {
     registrar.mutate(
       {
         catalogo_servicio_id: values.catalogo_servicio_id,
@@ -91,7 +98,6 @@ export function AtencionEnfermeriaForm({
         <Controller
           name="catalogo_servicio_id"
           control={control}
-          rules={{ required: 'Seleccione el servicio' }}
           render={({ field }) => (
             <Select
               label="Servicio realizado"
@@ -116,7 +122,7 @@ export function AtencionEnfermeriaForm({
               autosize
               minRows={2}
               {...contained}
-              value={field.value}
+              value={field.value ?? ''}
               onChange={(e) => field.onChange(e.currentTarget.value)}
             />
           )}
