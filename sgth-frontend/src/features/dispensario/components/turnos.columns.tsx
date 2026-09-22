@@ -1,6 +1,8 @@
 'use client'
 
-import { TONO_TURNO } from '../constants/turnos'
+import {
+  TONO_TURNO, ESTADO_TURNO_LABELS, turnoCerrado,
+} from '../constants/turnos'
 import { Text, Group, Stack } from '@mantine/core'
 import {
   IconUser, IconUsers, IconX, IconClipboardCheck,
@@ -11,13 +13,6 @@ import { NIVEL_ALERTA } from '../constants/signosVitales'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { AgendaMedica } from '../services/agendaService'
 import { StatusBadge } from '@/components/ui'
-
-const ESTADO_LABELS: Record<string, string> = {
-  en_espera:  'En espera',
-  en_sala:    'En sala / Triaje',
-  atendida:   'Atendido',
-  cancelada:  'Cancelado',
-}
 
 interface ColumnActions {
   onCancelar?:    (id: number) => void
@@ -123,7 +118,7 @@ export function getTurnosColumns(
         return (
           <Stack gap={4}>
             <StatusBadge tone={TONO_TURNO[turno.estado] ?? 'neutral'}>
-              {ESTADO_LABELS[turno.estado] ?? turno.estado}
+              {ESTADO_TURNO_LABELS[turno.estado] ?? turno.estado}
             </StatusBadge>
             {destacar && (
               <StatusBadge
@@ -158,8 +153,7 @@ export function getTurnosColumns(
               label:    tieneTriaje ? 'Rehacer triaje' : 'Tomar triaje',
               icon:     <IconClipboardCheck size={14} />,
               onClick:  () => actions.onTomarTriaje?.(turno),
-              disabled: turno.estado === 'atendido'
-                || turno.estado === 'cancelado',
+              disabled: turnoCerrado(turno.estado),
               hidden:   !actions.onTomarTriaje
                 || !turno.requiere_triaje,
             },
