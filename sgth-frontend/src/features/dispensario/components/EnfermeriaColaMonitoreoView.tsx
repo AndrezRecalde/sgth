@@ -1,14 +1,15 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, Toolbar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Container, Chip,
-  Group, ActionIcon,
+  Group, Button,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconVaccine } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import { TriajeForm } from '@/features/dispensario/components/TriajeForm'
 import { AtencionesEnfermeriaDrawer } from '@/features/dispensario/components/AtencionesEnfermeriaDrawer'
 import { ColaTurnosTable } from '@/features/dispensario/components/ColaTurnosTable'
@@ -30,6 +31,7 @@ function formatFechaLocal(d: Date): string {
 type VistaMonitoreo = 'todos' | 'pendientes_triaje'
 
 export function EnfermeriaColaMonitoreoView() {
+  const contained = useContainedInput('sm')
   const [fecha, setFecha] = useState<Date | null>(new Date())
   const [vista, setVista] = useState<VistaMonitoreo>('todos')
   const [turnoTriaje, setTurnoTriaje] = useState<AgendaMedica | null>(null)
@@ -71,12 +73,25 @@ export function EnfermeriaColaMonitoreoView() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" wrap="wrap">
+      <Toolbar
+        actions={
+          <Button
+            variant="light"
+            leftSection={<IconVaccine size={16} />}
+            onClick={abrirDrawer}
+          >
+            Servicios de enfermería
+          </Button>
+        }
+      >
+        {/* Los tres chips salen del principal del subsistema: son el mismo
+            gesto —recortar la lista— y el color no distingue un filtro de
+            otro. Lo que está fuera de rango ya se ve en la columna «Estado»,
+            en rojo y con su icono. */}
         <Group gap="xs">
           <Chip
             checked={vista === 'todos'}
             onChange={() => setVista('todos')}
-            color="ocean"
             size="sm"
           >
             Todos los turnos
@@ -84,7 +99,6 @@ export function EnfermeriaColaMonitoreoView() {
           <Chip
             checked={vista === 'pendientes_triaje'}
             onChange={() => setVista('pendientes_triaje')}
-            color="amber"
             size="sm"
           >
             Pendientes de triaje
@@ -94,25 +108,17 @@ export function EnfermeriaColaMonitoreoView() {
             <Chip
               checked={soloAlertas}
               onChange={() => setSoloAlertas((v) => !v)}
-              color="red"
               size="sm"
             >
               Con alerta ({conAlerta.length})
             </Chip>
           )}
         </Group>
-        <ActionIcon
-          size="xl"
-          variant="light"
-          onClick={abrirDrawer}
-          title="Servicios de enfermería"
-        >
-          <IconVaccine size={14} />
-        </ActionIcon>
 
         {vista === 'todos' && (
           <DatePickerInput
             label="Fecha"
+            {...contained}
             value={fecha}
             onChange={(v) => {
               if (!v) {
@@ -127,7 +133,7 @@ export function EnfermeriaColaMonitoreoView() {
             maw={200}
           />
         )}
-      </Group>
+      </Toolbar>
 
       {vista === 'todos' && (
         <ColaTurnosTable

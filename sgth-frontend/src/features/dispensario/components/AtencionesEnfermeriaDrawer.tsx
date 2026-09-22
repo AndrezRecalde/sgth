@@ -4,6 +4,7 @@ import { SgthDrawer } from '@/components/ui'
 import { useState } from 'react'
 import { Stack } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import { AtencionesEnfermeriaTable } from './AtencionesEnfermeriaTable'
 
 interface Props {
@@ -21,6 +22,7 @@ function formatFechaLocal(d: Date): string {
 export function AtencionesEnfermeriaDrawer({
   opened, onClose,
 }: Props) {
+  const contained = useContainedInput('sm')
   const [fecha, setFecha] = useState<Date | null>(new Date())
 
   const fechaStr = formatFechaLocal(fecha ?? new Date())
@@ -34,6 +36,7 @@ export function AtencionesEnfermeriaDrawer({
       <Stack gap="md">
         <DatePickerInput
           label="Fecha"
+          {...contained}
           value={fecha}
           onChange={(v) => {
             if (!v) { setFecha(new Date()); return }
