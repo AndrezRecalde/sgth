@@ -235,7 +235,7 @@ export const NAV_SGTH: NavGroup[] = [
           },
           {
             label: 'Nueva convocatoria',
-            href:  ROUTES.SGTH.CONVOCATORIAS + '/nueva',
+            href:  ROUTES.SGTH.CONVOCATORIA_NUEVA,
             icon:  'IconPlus',
           },
         ],
@@ -291,12 +291,12 @@ export const NAV_SALUD: NavGroup[] = [
           },
           {
             label: 'Cola y monitoreo',
-            href:  ROUTES.SALUD.ENFERMERIA + '/cola',
+            href:  ROUTES.SALUD.ENFERMERIA_COLA,
             icon:  'IconList',
           },
           {
             label: 'Atención SSO',
-            href:  ROUTES.SALUD.ENFERMERIA + '/sso',
+            href:  ROUTES.SALUD.ENFERMERIA_SSO,
             icon:  'IconShieldCheck',
           },
         ],
@@ -313,7 +313,7 @@ export const NAV_SALUD: NavGroup[] = [
           },
           {
             label: 'Adquisiciones',
-            href:  ROUTES.SALUD.FARMACIA + '/adquisiciones',
+            href:  ROUTES.SALUD.FARMACIA_ADQUISICIONES,
             icon:  'IconShoppingCart',
             // El backend reserva todo el módulo a admin-dispensario, así que
             // ofrecerlo al resto solo lleva a una pantalla que responde 403.
@@ -321,7 +321,7 @@ export const NAV_SALUD: NavGroup[] = [
           },
           {
             label: 'Despacho',
-            href:  ROUTES.SALUD.FARMACIA + '/despacho',
+            href:  ROUTES.SALUD.FARMACIA_DESPACHO,
             icon:  'IconTruck',
           },
         ],
