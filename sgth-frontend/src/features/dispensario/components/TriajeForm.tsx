@@ -2,10 +2,12 @@
 
 import { useMemo } from 'react'
 import {
-  Stack, Group, NumberInput, Button,
-  Textarea, Text, Card, Avatar, Divider, Alert, 
+  Stack, Group, NumberInput, Button, SimpleGrid,
+  Textarea, Text, Card, Avatar, Divider, Alert,
 } from '@mantine/core'
-import { useForm, Controller, useWatch } from 'react-hook-form'
+import {
+  useForm, Controller, useWatch, type DefaultValues,
+} from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   IconCheck, IconUser, IconUsers, IconScale, IconAlertTriangle,
@@ -25,6 +27,16 @@ interface Props {
   turno:      AgendaMedica
   onCreado:   (triaje: Triaje) => void
   onCancelar: () => void
+}
+
+/**
+ * Ninguna constante vital arranca con un valor: se teclean todas. Las claves
+ * se omiten en vez de escribirlas `undefined`, que es lo que antes obligaba a
+ * una aserción de tipo — el esquema las declara `number`, no `number |
+ * undefined` (ver regla 09).
+ */
+const VALORES_INICIALES: DefaultValues<TriajeFormData> = {
+  observaciones_enfermera: '',
 }
 
 function calcularImc(pesoKg?: number, tallaCm?: number): number | null {
@@ -58,18 +70,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
     formState: { errors },
   } = useForm<TriajeFormData>({
     resolver: zodResolver(triajeSchema),
-    defaultValues: {
-      peso_kg:                 undefined,
-      talla_cm:                undefined,
-      temperatura_c:           undefined,
-      presion_sistolica:       undefined,
-      presion_diastolica:      undefined,
-      frecuencia_cardiaca:     undefined,
-      frecuencia_respiratoria: undefined,
-      saturacion_oxigeno:      undefined,
-      glucosa:                 undefined,
-      observaciones_enfermera: '',
-    } as never,
+    defaultValues: VALORES_INICIALES,
   })
 
   const peso  = useWatch({ control, name: 'peso_kg' })
@@ -146,7 +147,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
             labelPosition="left"
           />
 
-          <Group grow align="flex-start">
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <Controller
               name="peso_kg"
               control={control}
@@ -154,6 +155,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 <NumberInput
                   label="Peso (kg)"
                   decimalScale={2}
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -168,6 +170,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 <NumberInput
                   label="Talla (cm)"
                   decimalScale={1}
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -175,7 +178,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 />
               )}
             />
-          </Group>
+          </SimpleGrid>
 
           {imc !== null && (
             <Alert
@@ -206,7 +209,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
             labelPosition="left"
           />
 
-          <Group grow align="flex-start">
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <Controller
               name="presion_sistolica"
               control={control}
@@ -214,6 +217,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 <NumberInput
                   label="P. sistólica"
                   description="Normal: 90–120 mmHg"
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -228,6 +232,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 <NumberInput
                   label="P. diastólica"
                   description="Normal: 60–80 mmHg"
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -235,9 +240,9 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 />
               )}
             />
-          </Group>
+          </SimpleGrid>
 
-          <Group grow align="flex-start">
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <Controller
               name="frecuencia_cardiaca"
               control={control}
@@ -245,6 +250,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 <NumberInput
                   label="Frec. cardíaca"
                   description="Normal: 60–100 lpm"
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -259,6 +265,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 <NumberInput
                   label="Frec. respiratoria"
                   description="Normal: 12–20 rpm"
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -266,9 +273,9 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 />
               )}
             />
-          </Group>
+          </SimpleGrid>
 
-          <Group grow align="flex-start">
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <Controller
               name="temperatura_c"
               control={control}
@@ -277,6 +284,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                   label="Temperatura (°C)"
                   decimalScale={1}
                   description="Normal: 36.1–37.2 °C"
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -292,6 +300,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                   label="Sat. oxígeno (%)"
                   decimalScale={1}
                   description="Normal: 95–100 %"
+                  hideControls
                   {...contained}
                   value={field.value}
                   onChange={(v) => field.onChange(Number(v) || undefined)}
@@ -299,7 +308,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 />
               )}
             />
-          </Group>
+          </SimpleGrid>
 
           <Controller
             name="glucosa"
@@ -309,6 +318,7 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
                 label="Glucosa (opcional)"
                 decimalScale={1}
                 description="Normal en ayunas: 70–100 mg/dL"
+                hideControls
                 {...contained}
                 value={field.value ?? undefined}
                 onChange={(v) => field.onChange(v ? Number(v) : null)}

@@ -6,7 +6,9 @@ import {
   Textarea, Switch, Text, Card,
   Avatar, Alert,
 } from '@mantine/core'
-import { useForm, Controller, useWatch } from 'react-hook-form'
+import {
+  useForm, Controller, useWatch, type DefaultValues,
+} from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   IconCheck, IconUser, IconUsers, IconInfoCircle,
@@ -29,6 +31,17 @@ const TIPO_ATENCION_OPTIONS = [
   { value: 'odontologia',      label: 'Odontología'      },
 ]
 
+/**
+ * `medico_id` se omite en vez de escribirse `undefined`: el esquema lo declara
+ * `number`, y darle `undefined` era lo que obligaba a una aserción de tipo
+ * (ver regla 09). Quien abre el formulario elige el profesional.
+ */
+const VALORES_INICIALES: DefaultValues<AgendaFormData> = {
+  tipo_atencion:    'medicina_general',
+  motivo_solicitud: '',
+  requiere_triaje:  true,
+}
+
 export function CrearTurnoForm({
   paciente, onCreado, onCancelar,
 }: Props) {
@@ -36,16 +49,11 @@ export function CrearTurnoForm({
   const crearTurno = useCrearTurno()
 
   const {
-    control, handleSubmit, setValue,
+    control, handleSubmit, setValue, resetField,
     formState: { errors },
   } = useForm<AgendaFormData>({
     resolver: zodResolver(agendaSchema),
-    defaultValues: {
-      medico_id:        undefined,
-      tipo_atencion:    'medicina_general',
-      motivo_solicitud: '',
-      requiere_triaje:  true,
-    } as never,
+    defaultValues: VALORES_INICIALES,
   })
 
   const tipoAtencion = useWatch({ control, name: 'tipo_atencion' })
@@ -56,11 +64,13 @@ export function CrearTurnoForm({
   const personal       = resultadoPersonal?.personal ?? []
   const hayDisponibles = resultadoPersonal?.hayDisponibles ?? true
 
-  // Odontología no requiere triaje, Medicina General sí
+  // Odontología no requiere triaje, Medicina General sí. Al cambiar de
+  // especialidad el profesional elegido deja de valer, así que el campo vuelve
+  // a su estado inicial: `resetField` lo vacía sin inventarle un valor.
   useEffect(() => {
     setValue('requiere_triaje', tipoAtencion === 'medicina_general')
-    setValue('medico_id', undefined as never)
-  }, [tipoAtencion, setValue])
+    resetField('medico_id')
+  }, [tipoAtencion, setValue, resetField])
 
   const personalOptions = personal.map(p => ({
     value: String(p.id),
