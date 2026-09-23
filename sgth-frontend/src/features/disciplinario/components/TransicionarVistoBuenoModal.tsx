@@ -15,6 +15,7 @@ import {
   nombreServidor,
 } from '../utils/etiquetas'
 import type { EstadoVistoBueno, VistoBueno } from '@/types/api'
+import { fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened: boolean
@@ -55,7 +56,10 @@ function FormularioTransicion({
 
   const [destino, setDestino] = useState<EstadoVistoBueno | null>(null)
   const [resolucion, setResolucion] = useState('')
-  const [fecha, setFecha] = useState<Date | null>(new Date())
+  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
+  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
+  // dos formas, que es lo que `fromDateValue` sabe leer.
+  const [fecha, setFecha] = useState<Date | string | null>(new Date())
   const [numeroTramite, setNumeroTramite] = useState(tramite.numero_tramite_mdt ?? '')
   const [inspector, setInspector] = useState(tramite.inspector_nombre ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -67,9 +71,6 @@ function FormularioTransicion({
 
   const esResolucion = destino === 'concedido' || destino === 'negado'
   const esNotificacion = destino === 'notificado'
-
-  const toIso = (d: Date | null) =>
-    d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : null
 
   const submit = () => {
     if (!destino) return setError('Seleccione el nuevo estado del trámite.')
@@ -85,8 +86,8 @@ function FormularioTransicion({
         data: {
           estado: destino,
           resolucion_detalle: esResolucion ? resolucion.trim() : null,
-          fecha_resolucion: esResolucion ? toIso(fecha) : null,
-          fecha_notificacion: esNotificacion ? toIso(fecha) : null,
+          fecha_resolucion: esResolucion ? fromDateValueOrNull(fecha) : null,
+          fecha_notificacion: esNotificacion ? fromDateValueOrNull(fecha) : null,
           numero_tramite_mdt: numeroTramite.trim() || null,
           inspector_nombre: inspector.trim() || null,
         },
@@ -121,7 +122,7 @@ function FormularioTransicion({
             <DatePickerInput
               label={esResolucion ? 'Fecha de la resolución' : 'Fecha de notificación'}
               value={fecha}
-              onChange={(v) => setFecha(v as Date | null)}
+              onChange={(v) => setFecha(v)}
               valueFormat="DD/MM/YYYY"
               {...contained}
             />

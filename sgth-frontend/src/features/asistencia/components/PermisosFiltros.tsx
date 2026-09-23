@@ -7,7 +7,7 @@ import { Toolbar } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useUnidades } from '@/features/estructura/hooks/useUnidades'
-import { fromDate, toDate } from '../utils/fechas'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { ESTADO_LABELS, FILTROS_ESTADO, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
 import type { UnidadConRelaciones } from '@/types/api'
 
@@ -129,8 +129,8 @@ export function PermisosFiltros({ filtros, onCambiar, onNuevo }: Props) {
           valueFormat="YYYY-MM-DD"
           clearable
           {...contained}
-          value={toDate(filtros.fechaDesde)}
-          onChange={(d) => onCambiar({ fechaDesde: fromDate(d ?? null) })}
+          value={toDateValue(filtros.fechaDesde)}
+          onChange={(d) => onCambiar({ fechaDesde: fromDateValueOrNull(d ?? null) })}
           style={{ minWidth: 150 }}
         />
 
@@ -139,10 +139,10 @@ export function PermisosFiltros({ filtros, onCambiar, onNuevo }: Props) {
           placeholder="Sin límite"
           valueFormat="YYYY-MM-DD"
           clearable
-          minDate={toDate(filtros.fechaDesde) ?? undefined}
+          minDate={toDateValue(filtros.fechaDesde) ?? undefined}
           {...contained}
-          value={toDate(filtros.fechaHasta)}
-          onChange={(d) => onCambiar({ fechaHasta: fromDate(d ?? null) })}
+          value={toDateValue(filtros.fechaHasta)}
+          onChange={(d) => onCambiar({ fechaHasta: fromDateValueOrNull(d ?? null) })}
           style={{ minWidth: 150 }}
         />
       </Group>

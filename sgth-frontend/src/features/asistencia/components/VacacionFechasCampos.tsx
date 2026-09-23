@@ -4,7 +4,7 @@ import { Divider, Grid, NumberInput, Select, Stack, Text, Textarea } from '@mant
 import { DatePickerInput } from '@mantine/dates'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { fromDate, toDate } from '../utils/fechas'
+import { fromDateValue, toDateValue } from '@/lib/fecha'
 import type { VacacionFormData } from './vacacion.schema'
 import classes from './VacacionFechasCampos.module.css'
 
@@ -44,8 +44,8 @@ export function VacacionFechasCampos({ form }: Props) {
                   placeholder="Seleccionar"
                   valueFormat="YYYY-MM-DD"
                   {...contained}
-                  value={toDate(field.value)}
-                  onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')}
+                  value={toDateValue(field.value)}
+                  onChange={(d) => field.onChange(fromDateValue(d ?? null))}
                   error={errors[name]?.message}
                 />
               )}

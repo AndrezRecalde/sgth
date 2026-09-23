@@ -21,6 +21,7 @@ import { TIPO_CONVOCATORIA_OPTIONS } from
   '@/features/seleccion/services/convocatoriaService'
 import type { CrearConvocatoriaData } from
   '@/features/seleccion/services/convocatoriaService'
+import { fromDateValue, toDateValue } from '@/lib/fecha'
 
 const schema = z.object({
   puesto_id:    z.number({ error: 'Seleccione el puesto a convocar' }),
@@ -49,22 +50,6 @@ const TIPO_DESCRIPTIONS: Record<string, string> = {
   interna: 'Solo pueden postular servidores activos del GADPE',
   externa: 'Abierta al público en general',
   mixta:   'Abierta a servidores del GADPE y al público en general',
-}
-
-function fromDate(d: Date | string | null): string {
-  if (!d) return ''
-  if (typeof d === 'string') return d.slice(0, 10)
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
-function toDate(s: string | null | undefined): Date | null {
-  if (!s) return null
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
 }
 
 /**
@@ -272,9 +257,9 @@ export function NuevaConvocatoriaView() {
                         valueFormat="DD/MM/YYYY"
                         required
                         {...contained}
-                        value={toDate(field.value)}
+                        value={toDateValue(field.value)}
                         onChange={(d) =>
-                          field.onChange(fromDate(d as Date | null))
+                          field.onChange(fromDateValue(d))
                         }
                         error={errors.fecha_inicio?.message}
                       />
@@ -292,9 +277,9 @@ export function NuevaConvocatoriaView() {
                         valueFormat="DD/MM/YYYY"
                         required
                         {...contained}
-                        value={toDate(field.value)}
+                        value={toDateValue(field.value)}
                         onChange={(d) =>
-                          field.onChange(fromDate(d as Date | null))
+                          field.onChange(fromDateValue(d))
                         }
                         error={errors.fecha_fin?.message}
                       />
