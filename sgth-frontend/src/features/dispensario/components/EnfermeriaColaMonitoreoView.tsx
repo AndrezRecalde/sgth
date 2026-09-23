@@ -20,13 +20,7 @@ import {
 } from '@/features/dispensario/hooks/useAgenda'
 import { useTriajesPendientes } from '@/features/dispensario/hooks/useTriaje'
 import type { AgendaMedica } from '@/features/dispensario/services/agendaService'
-
-function formatFechaLocal(d: Date): string {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+import { fromDateValue } from '@/lib/fecha'
 
 type VistaMonitoreo = 'todos' | 'pendientes_triaje'
 
@@ -39,7 +33,7 @@ export function EnfermeriaColaMonitoreoView() {
   const [drawerOpened, { open: abrirDrawer, close: cerrarDrawer }] =
     useDisclosure(false)
 
-  const fechaStr = formatFechaLocal(fecha ?? new Date())
+  const fechaStr = fromDateValue(fecha ?? new Date())
 
   const { data, isLoading } = useColaTurnos({ fecha: fechaStr })
   const { data: pendientesTriaje = [] } = useTriajesPendientes()

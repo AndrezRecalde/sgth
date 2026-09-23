@@ -18,6 +18,7 @@ import { TableActions } from '@/components/ui/TableActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { AgendaMedica, EstadoAgenda } from '../services/agendaService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { fromDateValueOrUndefined } from '@/lib/fecha'
 
 interface Props {
   onAtender:     (turno: AgendaMedica) => void
@@ -43,17 +44,6 @@ function getNombrePaciente(turno: AgendaMedica): string {
   return '—'
 }
 
-function fromDate(d: Date | string | null): string | undefined {
-  if (!d) return undefined
-  if (typeof d === 'string') return d.slice(0, 10)
-  if (!(d instanceof Date) || isNaN(d.getTime())) return undefined
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
 export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
   const [rango, setRango] = useState<[Date | null, Date | null]>([null, null])
   const [filtroActivo, setFiltroActivo] =
@@ -70,11 +60,11 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
 
   const handleFiltrar = () => {
     const [inicio, fin] = rango
-    const desde = fromDate(inicio as Date | string | null)
+    const desde = fromDateValueOrUndefined(inicio as Date | string | null)
     if (desde) {
       setFiltroActivo({
         fecha_desde: desde,
-        fecha_hasta: fromDate((fin ?? inicio) as Date | string | null)
+        fecha_hasta: fromDateValueOrUndefined((fin ?? inicio) as Date | string | null)
           ?? desde,
       })
     }

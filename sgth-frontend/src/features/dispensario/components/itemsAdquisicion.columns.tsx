@@ -6,6 +6,7 @@ import { IconTrash } from '@tabler/icons-react'
 import { Controller, type Control, type FieldArrayWithId } from 'react-hook-form'
 import type { DataTableColumn } from 'mantine-datatable'
 import { TableActions } from '@/components/ui'
+import { fromDateValueOrNull } from '@/lib/fecha'
 import type { useContainedInput } from '@/hooks/useContainedInput'
 import type { AdquisicionFormData } from '../schemas/adquisicion.schema'
 import type { ItemAdquisicion } from '../services/adquisicionService'
@@ -21,17 +22,6 @@ function toDate(v?: string | null): Date | null {
   if (!v) return null
   const [y, m, d] = v.slice(0, 10).split('-').map(Number)
   return new Date(y, m - 1, d)
-}
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, '0'),
-    String(date.getDate()).padStart(2, '0'),
-  ].join('-')
 }
 
 /** Los medicamentos de una adquisición ya registrada, en su detalle. */
@@ -153,7 +143,7 @@ export function getColumnasCapturaItems(
               clearable
               {...contained}
               value={toDate(field.value)}
-              onChange={(d) => field.onChange(fromDate(d))}
+              onChange={(d) => field.onChange(fromDateValueOrNull(d))}
             />
           )}
         />

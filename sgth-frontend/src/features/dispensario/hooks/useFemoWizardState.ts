@@ -6,15 +6,7 @@ import type {
   ExamenFisicoItemForm, AntecedenteReproductivoForm, ConsumoSustanciaForm,
 } from '../schemas/femo.schema'
 import type { CrearFemoData, FichaSaludOcupacional } from '../services/femoService'
-
-function fromDateNow(): string {
-  const d = new Date()
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
+import { hoyIso } from '@/lib/fecha'
 
 export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
   const [active, setActive] = useState(0)
@@ -25,7 +17,7 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
       aptitud:            'apto',
       grupo_embarazada:   false,
       grupo_discapacidad: false,
-      fecha_evaluacion:   fromDateNow(),
+      fecha_evaluacion:   hoyIso(),
     }
   )
 

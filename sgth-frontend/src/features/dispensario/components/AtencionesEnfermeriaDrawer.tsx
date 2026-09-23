@@ -6,17 +6,11 @@ import { Stack } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { AtencionesEnfermeriaTable } from './AtencionesEnfermeriaTable'
+import { fromDateValue } from '@/lib/fecha'
 
 interface Props {
   opened:  boolean
   onClose: () => void
-}
-
-function formatFechaLocal(d: Date): string {
-  const year  = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day   = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 export function AtencionesEnfermeriaDrawer({
@@ -25,7 +19,7 @@ export function AtencionesEnfermeriaDrawer({
   const contained = useContainedInput('sm')
   const [fecha, setFecha] = useState<Date | null>(new Date())
 
-  const fechaStr = formatFechaLocal(fecha ?? new Date())
+  const fechaStr = fromDateValue(fecha ?? new Date())
 
   return (
     <SgthDrawer

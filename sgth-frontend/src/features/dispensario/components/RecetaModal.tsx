@@ -18,6 +18,7 @@ import { BuscarMedicinaSelect } from "./BuscarMedicinaSelect";
 import { ItemRecetaRow } from "./ItemRecetaRow";
 import { recetaSchema, type RecetaFormData } from "../schemas/receta.schema";
 import { inventarioMedicinaService } from "../services/inventarioMedicinaService";
+import { hoyIso } from "@/lib/fecha";
 import type { AgendaMedica } from "../services/agendaService";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 
@@ -115,17 +116,10 @@ export function RecetaModal({
   const onSubmit = (values: RecetaFormData) => {
     if (!consulta) return;
 
-    const ahora = new Date();
-    const fecha = [
-      ahora.getFullYear(),
-      String(ahora.getMonth() + 1).padStart(2, "0"),
-      String(ahora.getDate()).padStart(2, "0"),
-    ].join("-");
-
     emitir.mutate(
       {
         consulta_medica_id: consulta.id,
-        fecha_emision: fecha,
+        fecha_emision: hoyIso(),
         indicaciones_generales: values.indicaciones_generales || null,
         omitir_alergias: values.omitir_alergias,
         items: values.items.map((item) => ({

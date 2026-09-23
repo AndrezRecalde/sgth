@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { DataState } from "@/components/ui";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 import { StatusBadge } from "@/components/ui";
+import { fromDateValueOrUndefined } from "@/lib/fecha";
 
 interface Props {
   historiaClinicaId: number;
@@ -100,18 +101,6 @@ function ConsultaItem({
   );
 }
 
-/** `Date` → 'YYYY-MM-DD' sin pasar por UTC, que restaría un día. */
-function aIso(d: Date | string | null): string | undefined {
-  if (!d) return undefined;
-  if (typeof d === "string") return d.slice(0, 10);
-  if (isNaN(d.getTime())) return undefined;
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
 export function TabHistorial({ historiaClinicaId }: Props) {
   const [consultaSelId, setConsultaSelId] = useState<number | null>(null);
   const [drawerOpened, { open: abrirDrawer, close: cerrarDrawer }] =
@@ -122,8 +111,8 @@ export function TabHistorial({ historiaClinicaId }: Props) {
 
   const filtros = {
     page,
-    fecha_desde: aIso(rango[0]),
-    fecha_hasta: aIso(rango[1]),
+    fecha_desde: fromDateValueOrUndefined(rango[0]),
+    fecha_hasta: fromDateValueOrUndefined(rango[1]),
   };
 
   const { data, isLoading, isError, error, refetch } = useQuery({
