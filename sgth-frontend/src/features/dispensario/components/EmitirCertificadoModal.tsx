@@ -9,6 +9,7 @@ import { DatePickerInput } from '@mantine/dates'
 import { useState } from 'react'
 import { IconAlertCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { fromDateValue } from '@/lib/fecha'
 import { useEmitirCertificado } from '../hooks/useCertificado'
 import { BuscarCie10Input } from './BuscarCie10Input'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
@@ -22,15 +23,6 @@ interface Props {
 }
 
 const DIAS_MAX = 3
-
-function fromDate(d: Date | null): string {
-  if (!d) return ''
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
 
 function calcularDias(
   inicio: Date | null,
@@ -95,8 +87,8 @@ export function EmitirCertificadoModal({
       {
         consulta_medica_id:   consulta.id,
         dias_reposo:          dias,
-        fecha_inicio:         fromDate(fechaInicio),
-        fecha_fin:            fromDate(fechaFin),
+        fecha_inicio:         fromDateValue(fechaInicio),
+        fecha_fin:            fromDateValue(fechaFin),
         diagnostico_cie10_id: cie10Sel?.id ?? null,
         observaciones:        observaciones || null,
       },

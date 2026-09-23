@@ -22,6 +22,7 @@ import type { RecetaMedica } from
 import {
   DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar,
 } from '@/components/ui'
+import { fromDateValueOrUndefined } from '@/lib/fecha'
 
 const POR_PAGINA = 15
 
@@ -33,18 +34,6 @@ const ESTADO_OPTIONS = [
   // Todo lo recetado se adquiere fuera: la farmacia no entrega nada.
   { value: 'externa',             label: 'Externa'    },
 ]
-
-/** `Date` de Mantine → 'YYYY-MM-DD' sin pasar por UTC, que restaría un día. */
-function aIso(d: Date | string | null): string | undefined {
-  if (!d) return undefined
-  if (typeof d === 'string') return d.slice(0, 10)
-  if (isNaN(d.getTime())) return undefined
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
 
 function rangoHoy(): [Date, Date] {
   const hoy = new Date()
@@ -89,8 +78,8 @@ export function DespachoView() {
 
   const { data, isLoading, error } = useRecetasFarmacia({
     medico_id:   medicoId ? Number(medicoId) : undefined,
-    fecha_desde: aIso(rango[0]),
-    fecha_hasta: aIso(rango[1]),
+    fecha_desde: fromDateValueOrUndefined(rango[0]),
+    fecha_hasta: fromDateValueOrUndefined(rango[1]),
     estado:      estado ?? undefined,
     page,
     per_page:    POR_PAGINA,

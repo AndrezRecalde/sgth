@@ -37,20 +37,13 @@ import type { AgendaMedica } from "../services/agendaService";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 import type { DiagnosticoCie10 } from "../services/cie10Service";
 import { StatusBadge } from "@/components/ui";
+import { fromDateValue } from "@/lib/fecha";
 
 interface Props {
   turno: AgendaMedica;
   historiaClinicaId: number;
   consultaPrevia?: ConsultaMedica | null;
   onGuardada: (consulta: ConsultaMedica) => void;
-}
-
-function formatFechaLocal(d: Date): string {
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0"),
-  ].join("-");
 }
 
 /**
@@ -361,7 +354,7 @@ export function TabConsulta({
         {
           historia_clinica_id: historiaClinicaId,
           agenda_medica_id: turno.id,
-          fecha_consulta: formatFechaLocal(ahora),
+          fecha_consulta: fromDateValue(ahora),
           hora_consulta: ahora.toTimeString().slice(0, 5),
           tipo_atencion: values.tipo_atencion,
           tipo_diagnostico: values.tipo_diagnostico,

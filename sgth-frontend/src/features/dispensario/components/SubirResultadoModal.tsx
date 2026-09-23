@@ -11,6 +11,7 @@ import { ModalFooter, SgthModal } from "@/components/ui";
 import { DatePickerInput } from "@mantine/dates";
 import { useState } from "react";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { fromDateValue } from "@/lib/fecha";
 import { useSubirResultado } from "../hooks/useResultadoMedico";
 import { TIPO_RESULTADO_OPTIONS } from "../services/resultadoMedicoService";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
@@ -20,16 +21,6 @@ interface Props {
   onClose: () => void;
   consulta: ConsultaMedica;
   historiaClinicaId: number;
-}
-
-function fromDate(d: Date | string | null): string {
-  if (!d) return "";
-  if (typeof d === "string") return d.slice(0, 10);
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0"),
-  ].join("-");
 }
 
 export function SubirResultadoModal({
@@ -79,7 +70,7 @@ export function SubirResultadoModal({
     fd.append("consulta_medica_id", String(consulta.id));
     fd.append("tipo", tipo);
     fd.append("descripcion", descripcion.trim());
-    fd.append("fecha_resultado", fromDate(fecha));
+    fd.append("fecha_resultado", fromDateValue(fecha));
     fd.append("archivo", archivo);
 
     subir.mutate(fd, {

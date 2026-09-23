@@ -55,6 +55,30 @@ export function fromDateValueOrNull(d: Date | string | null): string | null {
 }
 
 /**
+ * Igual, pero `undefined` cuando no hay fecha.
+ *
+ * Para los filtros que viajan como parámetro de consulta: axios omite del
+ * `params` las claves `undefined`, mientras que `null` llega al backend como
+ * un valor vacío y pasa por el validador. «Sin filtro» y «filtro vacío» no
+ * son lo mismo.
+ */
+export function fromDateValueOrUndefined(
+  d: Date | string | null,
+): string | undefined {
+  return fromDateValue(d) || undefined
+}
+
+/**
+ * Hoy en `YYYY-MM-DD`, hora local.
+ *
+ * Es `fromDateValue(new Date())`, pero se repetía escrito a mano para poner la
+ * fecha por defecto de un formulario o comparar contra el día de hoy.
+ */
+export function hoyIso(): string {
+  return fromDateValue(new Date())
+}
+
+/**
  * `Date` de un selector de fecha y hora a `YYYY-MM-DDTHH:mm`, en la hora
  * local, que es como lo espera el backend. Sin fecha, cadena vacía.
  *

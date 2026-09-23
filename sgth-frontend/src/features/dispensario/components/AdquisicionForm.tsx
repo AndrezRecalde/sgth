@@ -21,6 +21,7 @@ import {
   adquisicionSchema, type AdquisicionFormData,
 } from '../schemas/adquisicion.schema'
 import type { Adquisicion } from '../services/adquisicionService'
+import { fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   onCreada: (adquisicion: Adquisicion) => void
@@ -35,17 +36,6 @@ function toDate(v?: string | null): Date | null {
   if (!v) return null
   const [y, m, d] = v.slice(0, 10).split('-').map(Number)
   return new Date(y, m - 1, d)
-}
-
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  const date = typeof d === 'string' ? toDate(d) : d
-  if (!date || isNaN(date.getTime())) return null
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, '0'),
-    String(date.getDate()).padStart(2, '0'),
-  ].join('-')
 }
 
 export function AdquisicionForm({ onCreada }: Props) {
@@ -129,7 +119,7 @@ export function AdquisicionForm({ onCreada }: Props) {
                     valueFormat="DD/MM/YYYY"
                     {...contained}
                     value={toDate(field.value)}
-                    onChange={(d) => field.onChange(fromDate(d))}
+                    onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                     error={errors.fecha_adquisicion?.message}
                   />
                 )}
