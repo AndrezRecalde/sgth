@@ -1,8 +1,9 @@
 'use client'
 
-import { Alert, Skeleton, Stack } from '@mantine/core'
-import { IconAlertTriangle } from '@tabler/icons-react'
+import { Alert, Button, Skeleton, Stack, Text } from '@mantine/core'
+import { IconAlertTriangle, IconRefresh } from '@tabler/icons-react'
 import type { Icon } from '@tabler/icons-react'
+import { getApiErrorMessage } from '@/types/api'
 import { EmptyState } from './EmptyState'
 
 interface Props {
@@ -17,17 +18,28 @@ interface Props {
     description?: string
     action?: React.ReactNode
   }
+  /**
+   * Título del error. Por defecto, «No se pudo cargar la información».
+   * Conviene concretarlo cuando lo que falla tiene nombre: «No se pudo cargar
+   * el historial».
+   */
+  errorTitle?: string
+  /**
+   * Se añade detrás del mensaje del servidor, para decir qué **no** significa
+   * el fallo. En una pantalla clínica esa frase es la diferencia entre «no se
+   * pudo consultar» y «el paciente no tiene nada».
+   */
+  errorHint?: React.ReactNode
+  /** Con esto, el error ofrece un botón de reintentar. Normalmente `refetch`. */
+  onRetry?: () => void
   /** Filas de esqueleto mientras carga. Aproximar al tamaño real de la lista. */
   skeletonRows?: number
-  children: React.ReactNode
-}
-
-/** Mensaje legible a partir de un error de axios o de una excepción cualquiera. */
-function mensajeDeError(error: unknown): string {
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String((error as { message: unknown }).message)
-  }
-  return 'Ocurrió un error inesperado al cargar la información.'
+  /**
+   * Opcional porque también se usa como compuerta: un panel que hace `return`
+   * temprano mientras carga o falla lo monta sin hijos, y el contenido va
+   * después. Sin hijos y sin error, no pinta nada.
+   */
+  children?: React.ReactNode
 }
 
 /**
@@ -46,14 +58,23 @@ function mensajeDeError(error: unknown): string {
  *   >
  *     <SgthTable records={servidores} columns={columnas} />
  *   </DataState>
+ *
+ * El caso que más daño hace es no pasarle `error`: la consulta falla, `data`
+ * se queda en su valor por defecto y la pantalla afirma que no hay nada. En
+ * una historia clínica eso es decir que el paciente no tiene alergias cuando
+ * lo que pasa es que no se pudieron consultar. Para eso están `errorTitle`,
+ * `errorHint` y `onRetry`.
  */
 export function DataState({
   loading,
   error,
   empty,
   emptyProps,
+  errorTitle = 'No se pudo cargar la información',
+  errorHint,
+  onRetry,
   skeletonRows = 6,
-  children,
+  children = null,
 }: Props) {
   if (loading) {
     return (
@@ -72,9 +93,26 @@ export function DataState({
         variant="light"
         radius="lg"
         icon={<IconAlertTriangle size={18} />}
-        title="No se pudo cargar la información"
+        title={errorTitle}
       >
-        {mensajeDeError(error)}
+        <Stack gap="xs" align="flex-start">
+          <Text size="sm">
+            {/* El mensaje del backend, no el de axios: `error.message` a secas
+                dejaba «Request failed with status code 500» en pantalla. */}
+            {getApiErrorMessage(error, 'Ocurrió un error inesperado al cargar la información.')}
+            {errorHint && <> {errorHint}</>}
+          </Text>
+          {onRetry && (
+            <Button
+              size="compact-xs"
+              variant="light"
+              leftSection={<IconRefresh size={13} />}
+              onClick={onRetry}
+            >
+              Reintentar
+            </Button>
+          )}
+        </Stack>
       </Alert>
     )
   }

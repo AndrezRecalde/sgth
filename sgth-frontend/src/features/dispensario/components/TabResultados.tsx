@@ -1,8 +1,8 @@
 'use client'
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, StatusBadge } from '@/components/ui'
 import {
-  Stack, Text, Button, Group, Card, ThemeIcon, Skeleton, Anchor,
+  Stack, Text, Button, Group, Card, ThemeIcon, Anchor,
   ActionIcon, Tooltip,
 } from '@mantine/core'
 import {
@@ -12,7 +12,6 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { getIcon } from '@/lib/tablerIcons'
 import { SubirResultadoModal } from './SubirResultadoModal'
-import { EmptyState } from '@/components/ui/EmptyState'
 import {
   useResultadosPorConsulta,
   useEliminarResultado,
@@ -50,7 +49,7 @@ export function TabResultados({
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
 
-  const { data: resultados = [], isLoading } =
+  const { data: resultados = [], isLoading, error, refetch } =
     useResultadosPorConsulta(historiaClinicaId, consulta.id)
 
   const eliminar = useEliminarResultado(consulta.id)
@@ -75,19 +74,20 @@ export function TabResultados({
         </Button>
       </Group>
 
-      {isLoading ? (
-        <Stack gap="sm">
-          <Skeleton height={70} radius="md" />
-          <Skeleton height={70} radius="md" />
-        </Stack>
-      ) : resultados.length === 0 ? (
-        <EmptyState
-          icon={IconFileText}
-          title="Sin resultados"
-          description="No se han subido resultados médicos
-            para esta consulta."
-        />
-      ) : (
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudieron cargar los resultados"
+        errorHint="No quiere decir que no se hayan subido: no se pudieron consultar."
+        onRetry={() => refetch()}
+        empty={!resultados.length}
+        emptyProps={{
+          icon: IconFileText,
+          title: 'Sin resultados',
+          description: 'No se han subido resultados médicos para esta consulta.',
+        }}
+        skeletonRows={2}
+      >
         <Stack gap="sm">
           {resultados.map((r) => (
             <Card key={r.id} withBorder radius="md" p="sm">
@@ -152,7 +152,7 @@ export function TabResultados({
             </Card>
           ))}
         </Stack>
-      )}
+      </DataState>
 
       <SubirResultadoModal
         opened={modalOpened}

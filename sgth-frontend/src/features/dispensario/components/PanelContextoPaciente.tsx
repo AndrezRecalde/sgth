@@ -24,7 +24,7 @@ import { AnularRegistroModal } from './AnularRegistroModal'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
-import { StatusBadge } from '@/components/ui'
+import { DataState, StatusBadge } from '@/components/ui'
 
 interface Props {
   turno:             AgendaMedica
@@ -51,7 +51,7 @@ export function PanelContextoPaciente({
   turno, historiaClinicaId,
 }: Props) {
   const contained = useContainedInput()
-  const { data: contexto, isLoading } = useContextoConsulta(
+  const { data: contexto, isLoading, error, refetch } = useContextoConsulta(
     historiaClinicaId, turno.id
   )
   const [notasAbiertas, setNotasAbiertas] = useState(false)
@@ -88,6 +88,23 @@ export function PanelContextoPaciente({
     return (
       <Card withBorder radius="lg" p="md" h="100%">
         <Skeleton height={300} radius="md" />
+      </Card>
+    )
+  }
+
+  // Sin esto, un fallo dejaba `contexto` en `undefined` y el panel se pintaba
+  // entero y vacío: «Ninguna alergia registrada», «Ningún antecedente». Sobre
+  // un paciente alérgico, delante del médico, es la peor frase de la pantalla.
+  if (error) {
+    return (
+      <Card withBorder radius="lg" p="md" h="100%">
+        <DataState
+          loading={false}
+          error={error}
+          errorTitle="No se pudo cargar el contexto del paciente"
+          errorHint="No quiere decir que no tenga alergias ni antecedentes: no se pudieron consultar."
+          onRetry={() => refetch()}
+        />
       </Card>
     )
   }

@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Stack, Text, Button, Group, Card, ThemeIcon, Skeleton,
+  Stack, Text, Button, Group, Card, ThemeIcon,
 } from '@mantine/core'
 import {
   IconCertificate, IconPlus,
@@ -17,7 +17,7 @@ import { EmitirCertificadoModal } from './EmitirCertificadoModal'
 import {
   AnularRegistroModal, MOTIVOS_ANULAR_CERTIFICADO,
 } from './AnularRegistroModal'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { DataState } from '@/components/ui'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { CertificadoMedico } from '../services/certificadoService'
@@ -38,7 +38,7 @@ export function TabCertificado({ turno, consulta }: Props) {
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
 
-  const { data: certificados = [], isLoading } =
+  const { data: certificados = [], isLoading, error, refetch } =
     useCertificadosPorConsulta(consulta.id)
   const anular = useAnularCertificado(consulta.id)
   const { descargar, descargando } = useDescargarCertificado()
@@ -66,16 +66,20 @@ export function TabCertificado({ turno, consulta }: Props) {
         </Button>
       </Group>
 
-      {isLoading ? (
-        <Skeleton height={80} radius="md" />
-      ) : certificados.length === 0 ? (
-        <EmptyState
-          icon={IconCertificate}
-          title="Sin certificados"
-          description="No se han emitido certificados
-            para esta consulta."
-        />
-      ) : (
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudieron cargar los certificados"
+        errorHint="No quiere decir que esta consulta no tenga certificados emitidos: no se pudieron consultar."
+        onRetry={() => refetch()}
+        empty={!certificados.length}
+        emptyProps={{
+          icon: IconCertificate,
+          title: 'Sin certificados',
+          description: 'No se han emitido certificados para esta consulta.',
+        }}
+        skeletonRows={2}
+      >
         <Stack gap="sm">
           {certificados.map((cert) => {
             const anulado = !!cert.anulado_en
@@ -194,7 +198,7 @@ export function TabCertificado({ turno, consulta }: Props) {
             )
           })}
         </Stack>
-      )}
+      </DataState>
 
       <EmitirCertificadoModal
         opened={modalOpened}
