@@ -124,7 +124,7 @@ export function FarmaciaView() {
           <Group gap="xs">
             <Button
               component={Link}
-              href="/salud/farmacia/adquisiciones"
+              href={ROUTES.SALUD.FARMACIA_ADQUISICIONES}
               variant="light"
               leftSection={<IconShoppingCart size={14} />}
             >
@@ -291,3 +291,4 @@ export function FarmaciaView() {
 }
 
 import { PageShell , confirmar } from '@/components/ui'
+import { ROUTES } from '@/config/routes'

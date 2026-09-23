@@ -20,6 +20,7 @@ import {
   TIPO_CONTRATO_PLANTILLA_OPTIONS,
 } from '@/features/seleccion/services/plantillaService'
 import { confirmar, EmptyState, FormModal, PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 export function PlantillasView() {
   const router   = useRouter()
@@ -57,7 +58,7 @@ export function PlantillasView() {
           reset()
           close()
           router.push(
-            `/sgth/reclutamiento/plantillas/${p.id}`
+            ROUTES.SGTH.PLANTILLA(p.id)
           )
         },
       }
@@ -123,7 +124,7 @@ export function PlantillasView() {
                     variant="light"
                     onClick={() =>
                       router.push(
-                        `/sgth/reclutamiento/plantillas/${p.id}`
+                        ROUTES.SGTH.PLANTILLA(p.id)
                       )
                     }
                   >

@@ -23,6 +23,7 @@ import type { Convocatoria } from
   '@/features/seleccion/services/convocatoriaService'
 import type { DataTableColumn } from 'mantine-datatable'
 import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 export function ConvocatoriasView() {
   const router   = useRouter()
@@ -119,7 +120,7 @@ export function ConvocatoriasView() {
             label:   'Ver detalle',
             icon:    <IconEye size={14} />,
             onClick: () => router.push(
-              `/sgth/reclutamiento/convocatorias/${c.id}`
+              ROUTES.SGTH.CONVOCATORIA(c.id)
             ),
           },
           ...(c.estado === 'borrador' ? [{
@@ -141,7 +142,7 @@ export function ConvocatoriasView() {
             label:   'Editar',
             icon:    <IconEdit size={14} />,
             onClick: () => router.push(
-              `/sgth/reclutamiento/convocatorias/${c.id}/editar`
+              ROUTES.SGTH.CONVOCATORIA_EDITAR(c.id)
             ),
           },
           ...(c.estado === 'borrador' ? [{
@@ -169,7 +170,7 @@ export function ConvocatoriasView() {
           <Button
             leftSection={<IconPlus size={14} />}
             onClick={() =>
-              router.push('/sgth/reclutamiento/convocatorias/nueva')
+              router.push(ROUTES.SGTH.CONVOCATORIA_NUEVA)
             }
           >
             Nueva convocatoria

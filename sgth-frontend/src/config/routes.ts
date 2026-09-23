@@ -58,8 +58,25 @@ export const ROUTES = {
     RECLUTAMIENTO:    '/sgth/reclutamiento',
     CONVOCATORIAS:    '/sgth/reclutamiento/convocatorias',
     CONVOCATORIA_NUEVA: '/sgth/reclutamiento/convocatorias/nueva',
+    CONVOCATORIA: (id: string | number) =>
+      `/sgth/reclutamiento/convocatorias/${id}`,
+
+    // ⚠ Estas dos apuntan a páginas que NO EXISTEN todavía: no hay
+    // `[id]/editar/page.tsx` ni `[id]/postulantes/[postulanteId]/page.tsx`.
+    // Estaban escritas a mano en la lista de convocatorias y en el detalle, y
+    // al traerlas aquí se vio que la acción «Editar» y el enlace al postulante
+    // llevan a un 404. Se dejan declaradas para no volver a escribir la URL
+    // suelta; lo que falta es la pantalla, o quitar la acción.
+    CONVOCATORIA_EDITAR: (id: string | number) =>
+      `/sgth/reclutamiento/convocatorias/${id}/editar`,
+    CONVOCATORIA_POSTULANTE: (
+      convocatoriaId: string | number,
+      postulanteId: string | number,
+    ) =>
+      `/sgth/reclutamiento/convocatorias/${convocatoriaId}/postulantes/${postulanteId}`,
     RECLUTAMIENTO_EXPRESS: '/sgth/reclutamiento/express',
     PLANTILLAS:       '/sgth/reclutamiento/plantillas',
+    PLANTILLA: (id: string | number) => `/sgth/reclutamiento/plantillas/${id}`,
   },
 
   // ── DISPENSARIO MÉDICO ────────────────
@@ -67,6 +84,13 @@ export const ROUTES = {
     HOME:         '/salud',
     CONSULTAS:    '/salud/consultas',
     ODONTOLOGIA:  '/salud/odontologia',
+    // La ficha de atención se abre por folio, que es lo que el personal lee en
+    // pantalla y en el papel del turno. Va codificado como el del permiso: un
+    // folio es un dato del backend y no se asume que venga limpio.
+    CONSULTA_TURNO: (folio: string) =>
+      `/salud/consultas/${encodeURIComponent(folio)}`,
+    ODONTOLOGIA_TURNO: (folio: string) =>
+      `/salud/odontologia/${encodeURIComponent(folio)}`,
     ENFERMERIA:      '/salud/enfermeria',
     ENFERMERIA_COLA: '/salud/enfermeria/cola',
     ENFERMERIA_SSO:  '/salud/enfermeria/sso',
@@ -75,6 +99,10 @@ export const ROUTES = {
     FARMACIA_DESPACHO:      '/salud/farmacia/despacho',
     SSO:          '/salud/sso',
     FEMO:         '/salud/sso/femo',
+    FEMO_DETALLE: (id: string | number) => `/salud/sso/femo/${id}`,
+    /** La ficha nueva cuelga de la solicitud que la origina. */
+    FEMO_NUEVA:   (solicitudId: string | number) =>
+      `/salud/sso/femo/nueva/${solicitudId}`,
     REPORTES:     '/salud/reportes',
   },
 

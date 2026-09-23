@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
+import { ROUTES } from '@/config/routes'
 
 // Toda ficha FEMO nace de una solicitud de Talento Humano; sin un
 // identificador de solicitud en la ruta no hay nada válido que mostrar.
 export default function NuevaFemoSinSolicitudPage() {
-  redirect('/salud/sso')
+  redirect(ROUTES.SALUD.SSO)
 }

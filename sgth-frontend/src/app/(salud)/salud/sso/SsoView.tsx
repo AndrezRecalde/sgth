@@ -17,6 +17,7 @@ import {
   DataState, PageHeader, PageShell, PAGINACION_ES, SgthTable, StatusBadge,
   Toolbar,
 } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 /** El mismo tamaño de página que el resto de los listados del sistema. */
 const POR_PAGINA = 15
@@ -59,9 +60,9 @@ export function SsoView() {
     puedeConfirmarIncorporacion: hasPermiso('gestionar-onboarding'),
     onIniciar: (id) =>
       iniciar.mutate(id, {
-        onSuccess: () => router.push(`/salud/sso/femo/nueva/${id}`),
+        onSuccess: () => router.push(ROUTES.SALUD.FEMO_NUEVA(id)),
       }),
-    onContinuar: (id) => router.push(`/salud/sso/femo/nueva/${id}`),
+    onContinuar: (id) => router.push(ROUTES.SALUD.FEMO_NUEVA(id)),
     onDescargarFemo: (fichaId, nombre) => descargarFemo(fichaId, nombre),
     onConfirmarIncorporacion: (id) => incorporar.mutate(id),
   })
