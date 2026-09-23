@@ -18,6 +18,7 @@ del módulo.
 | `PageHeader` | Título, descripción, acciones | Sin icono. `backHref` u `onBack` y `estado` en detalles |
 | `Toolbar` | Filtros sobre un listado | Campos con `useContainedInput('sm')` |
 | `SectionCard` | Bloque con título dentro de una página | Sustituye al `Divider` con etiqueta |
+| `SectionHeading` | Título de sección en un panel o un cajón | El hermano compacto: mismo `h3`, sin tarjeta |
 | `StatCard` | Indicador numérico de un tablero | `tone` solo si el número es bueno o malo |
 | `StatusBadge` | Toda etiqueta: estado, señal o categoría | Recibe un tono, no un color; sin tono es neutra |
 | `CountBadge` | Una cifra suelta en una pastilla | `destacado` si pide acción |
@@ -109,6 +110,25 @@ compitiendo con los datos.
 - `hidden` para lo que el usuario no puede hacer por permisos.
 - `disabled` para lo que no puede hacer por el estado del registro.
 - `color: 'red'` solo en acciones destructivas.
+
+## Títulos de sección
+
+**Un título de sección no se escribe dentro de un `<Divider label={...}>`.** El
+`Divider` de Mantine es un `role="separator"`: el nombre de la sección se
+anuncia como el texto de una línea divisoria, no como un encabezado, y nada
+dice dónde empieza el bloque. Peor si la etiqueta lleva dentro un botón, porque
+ese botón queda dentro del separador.
+
+```tsx
+<SectionCard title="Datos del servidor">…</SectionCard>   // en una página
+<SectionHeading title="Alergias" action={<ActionIcon …/>} />  // en un panel
+```
+
+Los dos pintan un `h3`. `SectionCard` delimita el bloque con una tarjeta y va
+en el cuerpo de una página; `SectionHeading` es la versión sin tarjeta, para
+donde no cabe anidar una —una barra lateral estrecha, un cajón de detalle—.
+
+El `Divider` sin etiqueta sigue estando bien: separar es justo lo suyo.
 
 ## Estados de una pantalla
 

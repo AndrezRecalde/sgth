@@ -1,10 +1,10 @@
 'use client'
 
-import { Stack, Group, Text, Divider, Skeleton } from '@mantine/core'
+import { Stack, Group, Text, Skeleton } from '@mantine/core'
 import { IconPill } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 import { consultaMedicaService } from '../services/consultaMedicaService'
-import { SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
+import { SectionHeading, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
 import { columnasItemsReceta } from './itemsReceta.columns'
 
 interface Props {
@@ -116,19 +116,18 @@ export function DetalleConsultaDrawer({
             valor={consulta.notas_medico}
           />
 
-          {(consulta.recetas_medicas?.length ?? 0) > 0 && (
+          {/* El título de «Recetas» se pintaba dos veces, una por rama de la
+              misma condición. Ahora va una sola vez y solo cambia lo de
+              debajo: las recetas o la frase de que no hay ninguna. */}
+          <SectionHeading
+            title={(consulta.recetas_medicas?.length ?? 0) > 0
+              ? `Recetas (${consulta.recetas_medicas?.length})`
+              : 'Recetas'}
+            icon={<IconPill size={12} />}
+          />
+
+          {(consulta.recetas_medicas?.length ?? 0) > 0 ? (
             <>
-              <Divider
-                label={
-                  <Group gap={4}>
-                    <IconPill size={12} />
-                    <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-                      Recetas ({consulta.recetas_medicas?.length})
-                    </Text>
-                  </Group>
-                }
-                labelPosition="left"
-              />
               {consulta.recetas_medicas?.map((receta) => (
                 <Stack key={receta.id} gap="xs">
                   <Group justify="space-between">
@@ -158,22 +157,10 @@ export function DetalleConsultaDrawer({
                 </Stack>
               ))}
             </>
-          )}
-
-          {(consulta.recetas_medicas?.length ?? 0) === 0 && (
-            <>
-              <Divider
-                label={
-                  <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-                    Recetas
-                  </Text>
-                }
-                labelPosition="left"
-              />
-              <Text size="xs" c="dimmed">
-                Ninguna receta emitida en esta consulta.
-              </Text>
-            </>
+          ) : (
+            <Text size="xs" c="dimmed">
+              Ninguna receta emitida en esta consulta.
+            </Text>
           )}
         </Stack>
       ) : null}

@@ -3,7 +3,7 @@
 import type { SemanticTone } from '@/config/design.tokens'
 import {
   Card, Stack, Group, Text, Avatar,
-  Divider, Skeleton, 
+  Skeleton,
   ActionIcon, Textarea, 
   Collapse,
 } from '@mantine/core'
@@ -24,7 +24,7 @@ import { AnularRegistroModal } from './AnularRegistroModal'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
-import { DataState, StatusBadge } from '@/components/ui'
+import { DataState, SectionHeading, StatusBadge } from '@/components/ui'
 
 interface Props {
   turno:             AgendaMedica
@@ -166,10 +166,7 @@ export function PanelContextoPaciente({
 
         {triaje && (
           <>
-            <Divider
-              label={<Text size="xs" fw={600} tt="uppercase" c="dimmed">Triaje</Text>}
-              labelPosition="left"
-            />
+            <SectionHeading title="Triaje" />
             <Stack gap={0}>
               <CampoTriaje label="Peso"          valor={triaje.peso_kg ? `${triaje.peso_kg} kg` : null} />
               <CampoTriaje label="Talla"         valor={triaje.talla_cm ? `${triaje.talla_cm} cm` : null} />
@@ -183,20 +180,18 @@ export function PanelContextoPaciente({
           </>
         )}
 
-        <Divider
-          label={
-            <Group gap={4}>
-              <Text size="xs" fw={600} tt="uppercase" c="dimmed">Alergias</Text>
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                onClick={abrirAlergia}
-              >
-                <IconPlus size={10} />
-              </ActionIcon>
-            </Group>
+        <SectionHeading
+          title="Alergias"
+          action={
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              aria-label="Agregar alergia"
+              onClick={abrirAlergia}
+            >
+              <IconPlus size={10} />
+            </ActionIcon>
           }
-          labelPosition="left"
         />
         {alergias.length === 0 ? (
           <Text size="xs" c="dimmed">Ninguna registrada</Text>
@@ -215,6 +210,7 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
+                  aria-label={`Anular alergia: ${a.descripcion}`}
                   onClick={() => {
                     setRegistroAnular({
                       id: a.id, tipo: 'alergia',
@@ -230,20 +226,18 @@ export function PanelContextoPaciente({
           </Stack>
         )}
 
-        <Divider
-          label={
-            <Group gap={4}>
-              <Text size="xs" fw={600} tt="uppercase" c="dimmed">Antecedentes personales</Text>
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                onClick={abrirAntecedentePersonal}
-              >
-                <IconPlus size={10} />
-              </ActionIcon>
-            </Group>
+        <SectionHeading
+          title="Antecedentes personales"
+          action={
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              aria-label="Agregar antecedente personal"
+              onClick={abrirAntecedentePersonal}
+            >
+              <IconPlus size={10} />
+            </ActionIcon>
           }
-          labelPosition="left"
         />
         {antecedentesPersonales.length === 0 ? (
           <Text size="xs" c="dimmed">Ninguno registrado</Text>
@@ -260,6 +254,7 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
+                  aria-label={`Anular antecedente: ${a.descripcion}`}
                   onClick={() => {
                     setRegistroAnular({
                       id: a.id, tipo: 'antecedente',
@@ -275,20 +270,18 @@ export function PanelContextoPaciente({
           </Stack>
         )}
 
-        <Divider
-          label={
-            <Group gap={4}>
-              <Text size="xs" fw={600} tt="uppercase" c="dimmed">Antecedentes familiares</Text>
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                onClick={abrirAntecedenteFamiliar}
-              >
-                <IconPlus size={10} />
-              </ActionIcon>
-            </Group>
+        <SectionHeading
+          title="Antecedentes familiares"
+          action={
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              aria-label="Agregar antecedente familiar"
+              onClick={abrirAntecedenteFamiliar}
+            >
+              <IconPlus size={10} />
+            </ActionIcon>
           }
-          labelPosition="left"
         />
         {antecedentesFamiliares.length === 0 ? (
           <Text size="xs" c="dimmed">Ninguno registrado</Text>
@@ -304,6 +297,7 @@ export function PanelContextoPaciente({
                 <ActionIcon
                   size="xs"
                   variant="subtle"
+                  aria-label={`Anular antecedente: ${a.descripcion}`}
                   onClick={() => {
                     setRegistroAnular({
                       id: a.id, tipo: 'antecedente',
@@ -319,20 +313,26 @@ export function PanelContextoPaciente({
           </Stack>
         )}
 
-        <Divider
-          label={
-            <Group gap={4} style={{ cursor: 'pointer' }}
+        {/* El desplegable era un `div` con `cursor: pointer` y un `onClick`:
+            con el ratón funcionaba y con el teclado no existía, porque nada
+            en la página podía recibir el foco para abrirlo. */}
+        <SectionHeading
+          title="Notas del médico"
+          action={
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              aria-expanded={notasAbiertas}
+              aria-label={notasAbiertas
+                ? 'Ocultar notas del médico'
+                : 'Mostrar notas del médico'}
               onClick={() => setNotasAbiertas(v => !v)}
             >
-              <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-                Notas del médico
-              </Text>
               {notasAbiertas
                 ? <IconChevronUp size={10} />
                 : <IconChevronDown size={10} />}
-            </Group>
+            </ActionIcon>
           }
-          labelPosition="left"
         />
         <Collapse expanded={notasAbiertas}>
           <Textarea
