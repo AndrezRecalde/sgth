@@ -63,12 +63,20 @@ export function SeleccionarAccionPaciente({
         ¿Qué necesita este paciente?
       </Text>
 
+      {/* Eran dos `Card` con `onClick` y `cursor: pointer`: se comportaban como
+          botones pero no lo eran, así que no recibían el foco del teclado, no
+          respondían a Enter ni Espacio y un lector de pantalla no las
+          anunciaba como algo pulsable. Con `component="button"` la tarjeta
+          conserva su aspecto y recupera todo eso. */}
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         <Card
+          component="button"
+          type="button"
+          className="mantine-focus-auto"
           withBorder
           radius="lg"
           p="lg"
-          style={{ cursor: 'pointer' }}
+          w="100%"
           onClick={() => onElegir('turno')}
         >
           <Stack gap="sm" align="center">
@@ -89,10 +97,13 @@ export function SeleccionarAccionPaciente({
         </Card>
 
         <Card
+          component="button"
+          type="button"
+          className="mantine-focus-auto"
           withBorder
           radius="lg"
           p="lg"
-          style={{ cursor: 'pointer' }}
+          w="100%"
           onClick={() => onElegir('servicio_enfermeria')}
         >
           <Stack gap="sm" align="center">

@@ -3,7 +3,7 @@
 import { confirmar, Toolbar } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Container, Chip,
+  Stack, Box, Chip,
   Group, Button,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
@@ -61,13 +61,15 @@ export function EnfermeriaColaMonitoreoView() {
   // desde la lista de pendientes
   if (turnoTriaje) {
     return (
-      <Container size="sm" px={0}>
+      // Mismo ancho de lectura que tenía el `Container`, alineado a la
+      // izquierda como el título. La cola sí ocupa todo el ancho.
+      <Box maw={720}>
         <TriajeForm
           turno={turnoTriaje}
           onCreado={() => setTurnoTriaje(null)}
           onCancelar={() => setTurnoTriaje(null)}
         />
-      </Container>
+      </Box>
     )
   }
 
