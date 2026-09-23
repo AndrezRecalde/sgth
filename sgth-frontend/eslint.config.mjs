@@ -106,6 +106,28 @@ const SINTAXIS_TS = [
     selector: 'TSAsExpression[typeAnnotation.type="TSNeverKeyword"]',
     message: "Nunca `as never`: si son los valores iniciales de un formulario, use `DefaultValues<T>` omitiendo la clave y `resetField()` (regla 09).",
   },
+  // El tercero de la familia, y el único que llegó a romper pantallas: afirmar
+  // que el valor de un selector de fecha es un `Date`.
+  //
+  // En Mantine v9 no lo es. `DateValue = string | Date | null`, y el selector
+  // entrega la CADENA `YYYY-MM-DD` en cuanto alguien elige una fecha; solo el
+  // valor inicial que uno le pasa es un `Date`. Con la aserción, el compilador
+  // callaba y `d.getFullYear()` lanzaba en ejecución: cuatro modales —abrir
+  // sumario, registrar visto bueno, transicionarlo y completar vínculo— no se
+  // enviaban si tocabas el calendario, y sí funcionaban si no lo tocabas.
+  //
+  // Lo correcto es guardar `Date | string | null` y pasarlo por `fromDateValue`
+  // (o su pariente `OrNull`/`OrUndefined`) de `@/lib/fecha`, que lee las dos
+  // formas. Ensanchar hacia la verdad —`as Date | string | null`— sigue
+  // permitido: eso no afirma de más.
+  {
+    selector: 'TSAsExpression > TSTypeReference > Identifier[name="Date"]',
+    message: "Nunca `as Date`: el selector de Mantine v9 devuelve una cadena en cuanto se elige fecha. Guarde `Date | string | null` y convierta con `fromDateValue` de '@/lib/fecha' (regla 09).",
+  },
+  {
+    selector: 'TSAsExpression > TSUnionType:not(:has(TSStringKeyword)) > TSTypeReference > Identifier[name="Date"]',
+    message: "Nunca `as Date | null`: el selector de Mantine v9 devuelve una cadena en cuanto se elige fecha. Guarde `Date | string | null` y convierta con `fromDateValue` de '@/lib/fecha' (regla 09).",
+  },
   {
     selector: 'CallExpression[callee.name="fetch"]',
     message: "Nunca fetch nativo: use axios desde '@/lib/axios' (regla 08).",
