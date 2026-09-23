@@ -9,6 +9,7 @@ import { useTurnosDelDia } from '../hooks/useAgenda'
 import { AtencionMedicaPanel } from './AtencionMedicaPanel'
 import { AtencionOdontologicaPanel } from './AtencionOdontologicaPanel'
 import { DataState, PageHeader, PageShell } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 type Especialidad = 'medica' | 'odontologica'
 
@@ -28,8 +29,8 @@ const TITULO: Record<Especialidad, string> = {
 }
 
 const RUTA_VUELTA: Record<Especialidad, string> = {
-  medica: '/salud/consultas',
-  odontologica: '/salud/odontologia',
+  medica: ROUTES.SALUD.CONSULTAS,
+  odontologica: ROUTES.SALUD.ODONTOLOGIA,
 }
 
 /**

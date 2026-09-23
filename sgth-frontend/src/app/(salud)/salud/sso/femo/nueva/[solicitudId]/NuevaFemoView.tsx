@@ -29,6 +29,7 @@ import type { FichaBaseForm } from '@/features/dispensario/schemas/femo.schema'
 import api from '@/lib/axios'
 import { fromDateValue } from '@/lib/fecha'
 import { PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 interface Props {
   solicitudId: string
@@ -87,7 +88,7 @@ export function NuevaFemoView({ solicitudId }: Props) {
       solicitudError ||
       (solicitudDetalleFetched && solicitudDetalle && !solicitudDetalle.constantes_vitales)
     ) {
-      router.replace('/salud/sso')
+      router.replace(ROUTES.SALUD.SSO)
     }
   }, [solicitudIdNum, solicitudError, solicitudDetalleFetched, solicitudDetalle, router])
 
@@ -342,7 +343,7 @@ export function NuevaFemoView({ solicitudId }: Props) {
           leftSection={<IconArrowLeft size={14} />}
           onClick={() => {
             if (active === 0) {
-              router.push('/salud/sso')
+              router.push(ROUTES.SALUD.SSO)
             } else {
               setActive(a => a - 1)
             }
@@ -383,7 +384,7 @@ export function NuevaFemoView({ solicitudId }: Props) {
         opened={dictamenOpened}
         onClose={() => {
           cerrarDictamen()
-          router.push('/salud/sso')
+          router.push(ROUTES.SALUD.SSO)
         }}
         solicitud={solicitudDetalle}
         fichaFemoId={fichaGuardadaId}

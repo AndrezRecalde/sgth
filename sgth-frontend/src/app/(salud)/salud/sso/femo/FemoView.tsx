@@ -17,6 +17,7 @@ import type { FichaSaludOcupacional } from
   '@/features/dispensario/services/femoService'
 import type { DataTableColumn } from 'mantine-datatable'
 import { EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 export function FemoView() {
   const router = useRouter()
@@ -110,7 +111,7 @@ export function FemoView() {
             label:   'Ver detalle',
             icon:    <IconEye size={14} />,
             onClick: () => router.push(
-              `/salud/sso/femo/${f.id}`
+              ROUTES.SALUD.FEMO_DETALLE(f.id)
             ),
           },
         ]} />

@@ -6,6 +6,7 @@ import { destinoSeguro } from '@/lib/destino'
 import type { AxiosError } from 'axios'
 import type { ApiResponse, LoginResponse } from '@/types/api'
 import { notificar } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
 
 export function useLogin() {
   const router = useRouter()
@@ -27,7 +28,7 @@ export function useLogin() {
       new URLSearchParams(window.location.search).get('next')
     )
 
-    return destino === '/' ? '/portal' : destino
+    return destino === '/' ? ROUTES.PORTAL.HOME : destino
   }
 
   const setCookie = (name: string, value: string, days = 1) => {

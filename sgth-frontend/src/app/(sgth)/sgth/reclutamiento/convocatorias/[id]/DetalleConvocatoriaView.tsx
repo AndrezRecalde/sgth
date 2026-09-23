@@ -146,7 +146,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
             label:   'Ver perfil',
             icon:    <IconUsers size={14} />,
             onClick: () => router.push(
-              `/sgth/reclutamiento/convocatorias/${convocatoriaId}/postulantes/${p.id}`
+              ROUTES.SGTH.CONVOCATORIA_POSTULANTE(convocatoriaId, p.id)
             ),
           },
         ]} />
