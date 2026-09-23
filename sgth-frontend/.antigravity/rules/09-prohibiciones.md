@@ -8,7 +8,7 @@ Las que se pueden verificar leyendo el código están en `eslint.config.mjs`
 como error, y `npm run lint` falla si alguien las rompe. No hace falta
 recordarlas:
 
-- `any` y `as unknown as`
+- `any`, `as unknown as` y `as never`
 - `Modal`, `Drawer`, `Badge`, `Table` de Mantine, `DataTable` y `<table>` fuera de `src/components/`
 - `@mantine/form`, `@mantine/charts` e importar desde `zod` a secas
 - `fetch` nativo y el `confirm()` del navegador
@@ -48,9 +48,29 @@ data as unknown as PuestoConRelaciones[]
 servidor.id
 ```
 
-**No queda ninguno en el repositorio** (los 17 que había se eliminaron el
-2026-08-27). Es una invariante, no una meta: `grep -rn "as unknown as" src`
-debe salir vacío.
+**Nunca `as never`.**
+El mismo gesto por otra puerta. Donde aparecía era en los valores iniciales de
+un formulario: el esquema Zod declara `number`, el campo arranca vacío, y
+`undefined` no compila. Se resuelve con `DefaultValues<T>` **omitiendo la
+clave** —el valor en tiempo de ejecución es el mismo `undefined`— y con
+`resetField()` en vez de `setValue(campo, undefined)`.
+
+```ts
+// no
+defaultValues: { medico_id: undefined, tipo: 'medicina_general' } as never
+setValue('medico_id', undefined as never)
+
+// sí
+const VALORES_INICIALES: DefaultValues<AgendaFormData> = {
+  tipo: 'medicina_general',          // medico_id se omite: lo elige quien abre
+}
+resetField('medico_id')
+```
+
+**No queda ninguno de los dos en el repositorio** (los 17 `as unknown as` se
+eliminaron el 2026-08-27; los 4 `as never` que quedaban, todos en el
+Dispensario, el 2026-09-22). Es una invariante, no una meta:
+`grep -rn "as unknown as\|as never" src` debe salir vacío.
 
 Lo que apareció debajo de aquellos 17, por si el patrón se repite:
 

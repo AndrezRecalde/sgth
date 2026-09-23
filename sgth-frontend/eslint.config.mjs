@@ -97,6 +97,15 @@ const SINTAXIS_TS = [
     selector: 'TSAsExpression[expression.type="TSAsExpression"][expression.typeAnnotation.type="TSUnknownKeyword"]',
     message: "Nunca `as unknown as`: el problema real es que types/api.ts no coincide con el backend. Corríjalo ahí (regla 09).",
   },
+  // Hermano de `as unknown as` y por la misma puerta: apagar el compilador
+  // justo donde hace falta. Aparecía en los valores iniciales de un formulario
+  // —el esquema Zod declara `number` y el campo arranca vacío— y se resuelve
+  // con `DefaultValues<T>` omitiendo la clave, más `resetField()` en vez de
+  // `setValue(campo, undefined)`.
+  {
+    selector: 'TSAsExpression[typeAnnotation.type="TSNeverKeyword"]',
+    message: "Nunca `as never`: si son los valores iniciales de un formulario, use `DefaultValues<T>` omitiendo la clave y `resetField()` (regla 09).",
+  },
   {
     selector: 'CallExpression[callee.name="fetch"]',
     message: "Nunca fetch nativo: use axios desde '@/lib/axios' (regla 08).",
