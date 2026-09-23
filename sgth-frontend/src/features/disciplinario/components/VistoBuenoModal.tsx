@@ -12,6 +12,7 @@ import { BuscarServidorSelect } from '@/features/expediente/components/BuscarSer
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
 import { CAUSAL_LABELS, CAUSAL_NUMERAL } from '../utils/etiquetas'
 import type { CausalVistoBueno } from '@/types/api'
+import { fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened: boolean
@@ -29,7 +30,10 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
   const [servidorId, setServidorId] = useState<number | null>(null)
   const [causal, setCausal] = useState<CausalVistoBueno | null>(null)
   const [hechos, setHechos] = useState('')
-  const [fechaSolicitud, setFechaSolicitud] = useState<Date | null>(new Date())
+  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
+  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
+  // dos formas, que es lo que `fromDateValue` sabe leer.
+  const [fechaSolicitud, setFechaSolicitud] = useState<Date | string | null>(new Date())
   const [numeroTramite, setNumeroTramite] = useState('')
   const [inspectoria, setInspectoria] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -49,9 +53,6 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
     onClose()
   }
 
-  const toIso = (d: Date | null) =>
-    d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : null
-
   const submit = () => {
     if (!servidorId) return setError('Seleccione al trabajador.')
     if (!causal) return setError('Indique la causal del Art. 172.')
@@ -65,7 +66,7 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
         servidor_id: servidorId,
         causal,
         hechos: hechos.trim(),
-        fecha_solicitud: toIso(fechaSolicitud)!,
+        fecha_solicitud: fromDateValueOrNull(fechaSolicitud)!,
         numero_tramite_mdt: numeroTramite.trim() || null,
         inspectoria: inspectoria.trim() || null,
       })
@@ -116,7 +117,7 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
         <DatePickerInput
           label="Fecha de presentación de la solicitud"
           value={fechaSolicitud}
-          onChange={(v) => setFechaSolicitud(v as Date | null)}
+          onChange={(v) => setFechaSolicitud(v)}
           valueFormat="DD/MM/YYYY"
           {...contained}
         />

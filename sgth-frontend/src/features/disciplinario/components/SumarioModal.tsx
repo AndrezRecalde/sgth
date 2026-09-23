@@ -10,6 +10,7 @@ import { IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
+import { fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened: boolean
@@ -22,7 +23,10 @@ export function SumarioModal({ opened, onClose }: Props) {
 
   const [servidorId, setServidorId] = useState<number | null>(null)
   const [motivo, setMotivo] = useState('')
-  const [fechaApertura, setFechaApertura] = useState<Date | null>(new Date())
+  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
+  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
+  // dos formas, que es lo que `fromDateValue` sabe leer.
+  const [fechaApertura, setFechaApertura] = useState<Date | string | null>(new Date())
   const [error, setError] = useState<string | null>(null)
 
   const limpiar = () => {
@@ -37,9 +41,6 @@ export function SumarioModal({ opened, onClose }: Props) {
     onClose()
   }
 
-  const toIso = (d: Date | null) =>
-    d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : null
-
   const submit = () => {
     if (!servidorId) return setError('Seleccione el servidor sumariado.')
     if (motivo.trim().length < 5) return setError('Describa el motivo del sumario.')
@@ -50,7 +51,7 @@ export function SumarioModal({ opened, onClose }: Props) {
       .mutateAsync({
         servidor_id: servidorId,
         motivo: motivo.trim(),
-        fecha_apertura: toIso(fechaApertura),
+        fecha_apertura: fromDateValueOrNull(fechaApertura),
       })
       .then(handleClose)
       .catch(() => {})
@@ -80,7 +81,7 @@ export function SumarioModal({ opened, onClose }: Props) {
         <DatePickerInput
           label="Fecha de apertura"
           value={fechaApertura}
-          onChange={(v) => setFechaApertura(v as Date | null)}
+          onChange={(v) => setFechaApertura(v)}
           valueFormat="DD/MM/YYYY"
           {...contained}
         />

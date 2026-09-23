@@ -17,6 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useInscribirPostulante } from '../hooks/useConvocatoria'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 interface Props {
   opened:         boolean
@@ -71,22 +72,6 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-function fromDate(d: Date | string | null): string | null {
-  if (!d) return null
-  if (typeof d === 'string') return d.slice(0, 10)
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-}
-
-function toDate(s: string | null | undefined): Date | null {
-  if (!s) return null
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
 export function InscribirPostulanteModal({
   opened, onClose, convocatoriaId, requierePuesto = false,
 }: Props) {
@@ -94,7 +79,10 @@ export function InscribirPostulanteModal({
   const inscribir = useInscribirPostulante(convocatoriaId)
 
   const [puestoId, setPuestoId] = useState<number | null>(null)
-  const [fechaInscripcion, setFechaInscripcion] = useState<Date | null>(new Date())
+  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
+  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
+  // dos formas, que es lo que `fromDateValue` sabe leer.
+  const [fechaInscripcion, setFechaInscripcion] = useState<Date | string | null>(new Date())
   const [errorPuesto, setErrorPuesto] = useState<string | null>(null)
 
   const {
@@ -141,7 +129,7 @@ export function InscribirPostulanteModal({
         ? {
           ...values,
           puesto_id: puestoId,
-          fecha_inscripcion: fromDate(fechaInscripcion),
+          fecha_inscripcion: fromDateValueOrNull(fechaInscripcion),
         }
         : values,
       { onSuccess: handleClose },
@@ -192,7 +180,7 @@ export function InscribirPostulanteModal({
                   label="Fecha de inscripción"
                   description="Define el año en que se contabiliza."
                   value={fechaInscripcion}
-                  onChange={(v) => setFechaInscripcion(v as Date | null)}
+                  onChange={(v) => setFechaInscripcion(v)}
                   valueFormat="DD/MM/YYYY"
                   {...contained}
                 />
@@ -355,9 +343,9 @@ export function InscribirPostulanteModal({
                     clearable
                     maxDate={new Date()}
                     {...contained}
-                    value={toDate(field.value)}
+                    value={toDateValue(field.value)}
                     onChange={(d) =>
-                      field.onChange(fromDate(d as Date | null))
+                      field.onChange(fromDateValueOrNull(d))
                     }
                   />
                 )}

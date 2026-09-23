@@ -20,12 +20,7 @@ import { IconSearch, IconClock } from "@tabler/icons-react";
 import type { MarcacionBiometrica, ServidorConRelaciones } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
 import { StatusBadge } from "@/components/ui";
-
-const fromDate = (d: Date | string | null): string => {
-  if (!d) return "";
-  if (typeof d === "string") return d.substring(0, 10);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+import { fromDateValue } from "@/lib/fecha";
 
 function formatHora(h?: string | null): string {
   if (!h) return "—";
@@ -58,14 +53,14 @@ export function MarcacionesTab() {
     queryKey: [
       "marcaciones",
       servidorSel,
-      fromDate(fechaInicio),
-      fromDate(fechaFin),
+      fromDateValue(fechaInicio),
+      fromDateValue(fechaFin),
     ],
     queryFn: () =>
       asistenciaService.marcaciones.listar({
         cedula: servidorSel!,
-        fecha_inicio: fromDate(fechaInicio),
-        fecha_fin: fromDate(fechaFin),
+        fecha_inicio: fromDateValue(fechaInicio),
+        fecha_fin: fromDateValue(fechaFin),
       }),
     enabled: buscar && !!servidorSel && !!fechaInicio && !!fechaFin,
     staleTime: 0,

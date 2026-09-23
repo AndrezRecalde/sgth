@@ -5,7 +5,7 @@ import { DatePickerInput } from '@mantine/dates'
 import { IconSearch } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { fromDate, toDate } from '../utils/fechas'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 const TIPO_OPTIONS = [
   { value: 'personal',   label: 'Personal' },
@@ -61,18 +61,18 @@ export function ConsolidadoFiltros({
           placeholder="Desde"
           valueFormat="YYYY-MM-DD"
           {...contained}
-          value={toDate(filtros.fechaInicio)}
-          onChange={(d) => onCambiar({ fechaInicio: fromDate(d ?? null) })}
+          value={toDateValue(filtros.fechaInicio)}
+          onChange={(d) => onCambiar({ fechaInicio: fromDateValueOrNull(d ?? null) })}
           style={{ minWidth: 150 }}
         />
         <DatePickerInput
           label="Fecha fin"
           placeholder="Hasta"
           valueFormat="YYYY-MM-DD"
-          minDate={toDate(filtros.fechaInicio) ?? undefined}
+          minDate={toDateValue(filtros.fechaInicio) ?? undefined}
           {...contained}
-          value={toDate(filtros.fechaFin)}
-          onChange={(d) => onCambiar({ fechaFin: fromDate(d ?? null) })}
+          value={toDateValue(filtros.fechaFin)}
+          onChange={(d) => onCambiar({ fechaFin: fromDateValueOrNull(d ?? null) })}
           style={{ minWidth: 150 }}
         />
       </Group>

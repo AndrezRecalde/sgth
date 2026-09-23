@@ -6,7 +6,7 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { fromDate, toDate } from '../utils/fechas'
+import { fromDateValue, toDateValue } from '@/lib/fecha'
 import { duracion, minutosEntre } from '../utils/horarioPermiso'
 import {
   esTipoRetroactivo,
@@ -110,12 +110,12 @@ export function PermisoDatosCampos({ form }: Props) {
                 // conoce.
                 excludeDate={
                   tipo === 'personal'
-                    ? (d) => [0, 6].includes(toDate(d)?.getDay() ?? -1)
+                    ? (d) => [0, 6].includes(toDateValue(d)?.getDay() ?? -1)
                     : undefined
                 }
                 {...contained}
-                value={toDate(field.value)}
-                onChange={(d) => field.onChange(fromDate(d ?? null) ?? '')}
+                value={toDateValue(field.value)}
+                onChange={(d) => field.onChange(fromDateValue(d ?? null))}
                 error={errors.fecha?.message}
               />
             )}

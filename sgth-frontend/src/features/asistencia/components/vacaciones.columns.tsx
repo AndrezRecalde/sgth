@@ -3,6 +3,7 @@
 import { Text } from '@mantine/core'
 import { IconBan, IconCheck, IconPrinter, IconX } from '@tabler/icons-react'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
+import { hoyIso } from '@/lib/fecha'
 import { ESTADO_LABELS, MOTIVO_LABELS, TONO_ESTADO } from './vacaciones.constants'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Vacacion } from '@/types/api'
@@ -29,19 +30,13 @@ function fecha(valor: string | null | undefined): string {
   })
 }
 
-/** Hoy como `YYYY-MM-DD` en la hora local, para compararlo con una fecha `date`. */
-function hoy(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 /**
  * La misma regla que el backend: una pendiente siempre, una aprobada solo si
  * todavía no comenzó.
  */
 function sePuedeAnular(v: Vacacion): boolean {
   if (v.estado === 'pendiente') return true
-  return v.estado === 'aprobada' && v.fecha_inicio.substring(0, 10) >= hoy()
+  return v.estado === 'aprobada' && v.fecha_inicio.substring(0, 10) >= hoyIso()
 }
 
 export function getVacacionesColumns(

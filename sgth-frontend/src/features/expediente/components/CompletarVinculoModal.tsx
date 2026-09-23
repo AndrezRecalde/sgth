@@ -12,7 +12,7 @@ import { SelectPartidaPresupuestaria } from '@/features/estructura/components/Se
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { MovimientoPersonal } from '@/types/api'
-import { formatFecha } from '@/lib/fecha'
+import { formatFecha, fromDateValueOrNull } from '@/lib/fecha'
 
 /** Nombramientos cuyo vínculo lleva plazo pactado. */
 const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
@@ -96,13 +96,13 @@ function Formulario({
       ?? null,
   )
   const [puedeMarcar, setPuedeMarcar] = useState<boolean>(movimiento.puede_marcar ?? false)
-  const [fechaFin, setFechaFin] = useState<Date | null>(
+  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
+  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
+  // dos formas, que es lo que `fromDateValue` sabe leer.
+  const [fechaFin, setFechaFin] = useState<Date | string | null>(
     movimiento.fecha_fin_propuesta ? new Date(movimiento.fecha_fin_propuesta) : null,
   )
   const [error, setError] = useState<string | null>(null)
-
-  const toIso = (d: Date | null) =>
-    d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : null
 
   const datos = () => ({
     numero_contrato: numeroContrato.trim() || null,
@@ -110,7 +110,7 @@ function Formulario({
     resolucion_numero: resolucion.trim() || null,
     partida_presupuestaria_id: partidaId,
     puede_marcar: puedeMarcar,
-    fecha_fin_propuesta: llevaPlazo ? toIso(fechaFin) : null,
+    fecha_fin_propuesta: llevaPlazo ? fromDateValueOrNull(fechaFin) : null,
   })
 
   const submit = () => {
@@ -178,7 +178,7 @@ function Formulario({
               label="Fecha de término"
               description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
               value={fechaFin}
-              onChange={(v) => setFechaFin(v as Date | null)}
+              onChange={(v) => setFechaFin(v)}
               valueFormat="DD/MM/YYYY"
               clearable
               {...contained}
