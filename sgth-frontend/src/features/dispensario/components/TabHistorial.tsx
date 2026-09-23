@@ -8,13 +8,12 @@ import {
   Skeleton,
   Button,
   ThemeIcon,
-  Alert,
   Center,
   Pagination,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import {
-  IconStethoscope, IconAlertTriangle, IconRefresh, IconDental,
+  IconStethoscope, IconDental,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
@@ -22,7 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { consultaMedicaService } from "../services/consultaMedicaService";
 import { DetalleConsultaDrawer } from "./DetalleConsultaDrawer";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { getApiErrorMessage } from "@/types/api";
+import { DataState } from "@/components/ui";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 import { StatusBadge } from "@/components/ui";
 
@@ -156,30 +155,20 @@ export function TabHistorial({ historiaClinicaId }: Props) {
   // El fallo se dice, no se disfraza de historial vacío. Antes cualquier error
   // dejaba la lista en cero y la pantalla afirmaba que el paciente no tenía
   // consultas previas, que en una historia clínica es lo peor que puede decir.
+  //
+  // Esto se resolvía aquí a mano y en ningún otro tab del panel. Ahora el
+  // bloque vive en `DataState`, así que Receta, Certificado, Resultados y el
+  // contexto del paciente dicen lo mismo con el mismo aspecto.
   if (isError) {
     return (
       <Stack p="md">
-        <Alert
-          icon={<IconAlertTriangle size={16} />}
-          color="red"
-          variant="light"
-          title="No se pudo cargar el historial"
-        >
-          <Stack gap="xs" align="flex-start">
-            <Text size="xs">
-              {getApiErrorMessage(error)} No quiere decir que el paciente no
-              tenga consultas previas: no se pudieron consultar.
-            </Text>
-            <Button
-              size="compact-xs"
-              variant="light"
-              leftSection={<IconRefresh size={13} />}
-              onClick={() => refetch()}
-            >
-              Reintentar
-            </Button>
-          </Stack>
-        </Alert>
+        <DataState
+          loading={false}
+          error={error}
+          errorTitle="No se pudo cargar el historial"
+          errorHint="No quiere decir que el paciente no tenga consultas previas: no se pudieron consultar."
+          onRetry={() => refetch()}
+        />
       </Stack>
     );
   }

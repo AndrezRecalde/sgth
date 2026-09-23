@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, StatusBadge } from '@/components/ui'
 import {
   Stack, Text, Button, Group,
   Card, ThemeIcon,
@@ -14,7 +14,6 @@ import { RecetaModal } from './RecetaModal'
 import { EditarItemRecetaModal } from './EditarItemRecetaModal'
 import { SgthTable } from '@/components/ui/SgthTable'
 import { TableActions } from '@/components/ui/TableActions'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { useEmitirReceta, useAccionesItem, useRecetaPdf } from '../hooks/useReceta'
 import { useAuthStore } from '@/store/auth.store'
 import type { AgendaMedica } from '../services/agendaService'
@@ -187,7 +186,7 @@ export function TabReceta({ turno, consulta }: Props) {
   const emitir = useEmitirReceta(consulta.id)
   const { abrir: abrirPdf, abriendo } = useRecetaPdf()
 
-  const { data: recetas = [], isLoading } = useQuery({
+  const { data: recetas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['recetas', 'consulta', consulta.id],
     queryFn:  () => recetaService.listarPorConsulta(consulta.id),
     staleTime: 1000 * 30,
@@ -214,15 +213,20 @@ export function TabReceta({ turno, consulta }: Props) {
         </Button>
       </Group>
 
-      {isLoading ? (
-        <Text size="sm" c="dimmed">Cargando recetas...</Text>
-      ) : recetas.length === 0 ? (
-        <EmptyState
-          icon={IconPill}
-          title="Sin recetas"
-          description="No se han emitido recetas para esta consulta."
-        />
-      ) : (
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudieron cargar las recetas"
+        errorHint="No quiere decir que esta consulta no tenga recetas emitidas: no se pudieron consultar."
+        onRetry={() => refetch()}
+        empty={!recetas.length}
+        emptyProps={{
+          icon: IconPill,
+          title: 'Sin recetas',
+          description: 'No se han emitido recetas para esta consulta.',
+        }}
+        skeletonRows={2}
+      >
         <Stack gap="sm">
           {recetas.map((receta) => {
             const estadoConfig = ESTADO_RECETA[receta.estado]
@@ -277,7 +281,7 @@ export function TabReceta({ turno, consulta }: Props) {
             )
           })}
         </Stack>
-      )}
+      </DataState>
 
       <RecetaModal
         opened={modalOpened}
