@@ -1,0 +1,35 @@
+/**
+ * La consulta ya registrada, en modo lectura.
+ *
+ * Estaba resuelta con `style` en línea dentro del JSX: el mismo
+ * `letterSpacing` copiado tres veces y bordes de `0.5px`, que el navegador
+ * redondea de forma distinta según el zoom y la densidad de pantalla —a veces
+ * a 0 y la separación desaparecía—. Aquí el borde es el estándar del sistema.
+ */
+
+.seccion {
+  border-top: 1px solid var(--sgth-border);
+}
+
+.etiqueta {
+  letter-spacing: 0.05em;
+}
+
+/* El contenido del editor: lo que guardó el médico con sus párrafos y listas. */
+.contenido {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.6;
+  color: var(--sgth-text);
+}
+
+.cabecera {
+  border-bottom: 1px solid var(--sgth-border);
+}
+
+/* El diagnóstico principal destaca sobre el resto: es lo que se busca al
+   abrir una consulta antigua. */
+.diagnostico {
+  border-top: 1px solid var(--sgth-border);
+  background-color: var(--sgth-accent-light);
+  border-radius: var(--mantine-radius-md);
+}
