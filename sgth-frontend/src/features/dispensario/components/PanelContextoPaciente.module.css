@@ -1,0 +1,31 @@
+/**
+ * La columna con el contexto del paciente —triaje, alergias, antecedentes—
+ * acompaña al formulario mientras el médico lo rellena.
+ *
+ * Antes era un `ScrollArea` con `h: calc(100vh - 240px)`. El 240 era una
+ * estimación de lo que ocupan la cabecera de la aplicación más la del turno, y
+ * al ser un alto FIJO y no un máximo, el panel recortaba su contenido en
+ * cuanto la ventana era baja: medido a 1440×620, metía 430px de contenido en
+ * 380px y sacaba su propia barra mientras la página seguía desplazándose. Dos
+ * barras, y la de dentro cortando justo las alergias.
+ *
+ * `max-height` en vez de `height` hace que la barra aparezca solo si de verdad
+ * no cabe, y `position: sticky` es lo que se buscaba con aquel alto fijo: que
+ * las alergias sigan a la vista al bajar por el formulario. La cabecera del
+ * turno no sirve para eso — es `position: relative` y se va con el desplazamiento.
+ */
+
+.contexto {
+  /* En móvil el panel va arriba del todo y se desplaza con la página. */
+  position: static;
+}
+
+@media (min-width: $mantine-breakpoint-md) {
+  .contexto {
+    position: sticky;
+    top: var(--mantine-spacing-md);
+    /* El alto lo pone la ventana, no una resta a ojo de la cabecera. */
+    max-height: calc(100dvh - var(--mantine-spacing-md) * 2);
+    overflow-y: auto;
+  }
+}

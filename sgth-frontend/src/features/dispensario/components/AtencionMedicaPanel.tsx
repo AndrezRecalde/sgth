@@ -2,8 +2,9 @@
 
 import { TONO_TURNO, ESTADO_TURNO_LABELS } from '../constants/turnos'
 import {
-  Grid, Card, Tabs, Group, Text, Button, Stack, Avatar, ScrollArea,
+  Grid, Card, Tabs, Group, Text, Button, Stack, Avatar, Box,
 } from '@mantine/core'
+import classes from './PanelContextoPaciente.module.css'
 import {
   IconStethoscope, IconPill,
   IconCertificate, IconHistory,
@@ -110,15 +111,12 @@ export function AtencionMedicaPanel({
 
         <Grid>
           <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
-            <ScrollArea
-              h={{ base: 'auto', md: 'calc(100vh - 240px)' }}
-              type="auto"
-            >
+            <Box className={classes.contexto}>
               <PanelContextoPaciente
                 turno={turno}
                 historiaClinicaId={historiaClinicaId}
               />
-            </ScrollArea>
+            </Box>
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
