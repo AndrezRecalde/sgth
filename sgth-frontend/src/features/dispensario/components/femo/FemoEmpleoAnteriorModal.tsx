@@ -99,7 +99,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
               {...contained}
               value={toDateValue(fechaInicio)}
               onChange={(d) =>
-                empleoForm.setValue('fecha_inicio', fromDateValueOrNull(d as Date | null))
+                empleoForm.setValue('fecha_inicio', fromDateValueOrNull(d))
               }
             />
           </Grid.Col>
@@ -111,7 +111,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
               {...contained}
               value={toDateValue(fechaFin)}
               onChange={(d) =>
-                empleoForm.setValue('fecha_fin', fromDateValueOrNull(d as Date | null))
+                empleoForm.setValue('fecha_fin', fromDateValueOrNull(d))
               }
             />
           </Grid.Col>
@@ -154,7 +154,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
                 {...contained}
                 value={toDateValue(fechaEvento)}
                 onChange={(d) =>
-                  empleoForm.setValue('fecha_evento', fromDateValueOrNull(d as Date | null))
+                  empleoForm.setValue('fecha_evento', fromDateValueOrNull(d))
                 }
               />
             </Group>

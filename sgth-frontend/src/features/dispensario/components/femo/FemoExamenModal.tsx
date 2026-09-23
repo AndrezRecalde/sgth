@@ -91,7 +91,7 @@ export function FemoExamenModal({ opened, onClose, onAgregar }: Props) {
           {...contained}
           value={toDateValue(fechaExamen)}
           onChange={(d) =>
-            examenForm.setValue('fecha_examen', fromDateValueOrNull(d as Date | null))
+            examenForm.setValue('fecha_examen', fromDateValueOrNull(d))
           }
         />
       </Stack>

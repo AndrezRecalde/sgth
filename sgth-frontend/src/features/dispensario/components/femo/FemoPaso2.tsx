@@ -142,7 +142,7 @@ export function FemoPaso2({
               {...contained}
               value={toDateValue(fichaData.actividad_extralaboral_fecha)}
               onChange={(d) => onFichaChange({
-                ...fichaData, actividad_extralaboral_fecha: fromDateValueOrNull(d as Date | null),
+                ...fichaData, actividad_extralaboral_fecha: fromDateValueOrNull(d),
               })}
             />
           </Grid.Col>

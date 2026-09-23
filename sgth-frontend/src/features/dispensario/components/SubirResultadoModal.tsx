@@ -34,7 +34,9 @@ export function SubirResultadoModal({
 
   const [tipo, setTipo] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [fecha, setFecha] = useState<Date | null>(new Date());
+  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
+  // elige una fecha; solo el valor inicial es un `Date`.
+  const [fecha, setFecha] = useState<Date | string | null>(new Date());
   const [archivo, setArchivo] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,7 +119,7 @@ export function SubirResultadoModal({
           valueFormat="DD/MM/YYYY"
           {...contained}
           value={fecha}
-          onChange={(v) => setFecha(v as Date | null)}
+          onChange={(v) => setFecha(v)}
         />
 
         <FileInput

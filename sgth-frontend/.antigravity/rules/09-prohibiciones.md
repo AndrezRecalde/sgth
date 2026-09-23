@@ -8,7 +8,7 @@ Las que se pueden verificar leyendo el código están en `eslint.config.mjs`
 como error, y `npm run lint` falla si alguien las rompe. No hace falta
 recordarlas:
 
-- `any`, `as unknown as` y `as never`
+- `any`, `as unknown as`, `as never` y `as Date` / `as Date | null`
 - `Modal`, `Drawer`, `Badge`, `Table` de Mantine, `DataTable` y `<table>` fuera de `src/components/`
 - `@mantine/form`, `@mantine/charts` e importar desde `zod` a secas
 - `fetch` nativo y el `confirm()` del navegador
@@ -67,10 +67,39 @@ const VALORES_INICIALES: DefaultValues<AgendaFormData> = {
 resetField('medico_id')
 ```
 
-**No queda ninguno de los dos en el repositorio** (los 17 `as unknown as` se
-eliminaron el 2026-08-27; los 4 `as never` que quedaban, todos en el
-Dispensario, el 2026-09-22). Es una invariante, no una meta:
-`grep -rn "as unknown as\|as never" src` debe salir vacío.
+**Nunca `as Date` ni `as Date | null`.**
+El tercero de la familia, y el único que llegó a romper pantallas. En Mantine v9
+el valor de un selector de fecha es `DateValue = string | Date | null`: entrega
+la **cadena** `YYYY-MM-DD` en cuanto alguien elige una fecha, y solo el valor
+inicial que uno le pasa es un `Date`. Con la aserción el compilador callaba, y
+`d.getFullYear()` lanzaba en ejecución.
+
+Cuatro modales —abrir sumario, registrar visto bueno, transicionarlo y completar
+vínculo— no se enviaban si tocabas el calendario, y **sí** funcionaban si no lo
+tocabas, que es por lo que nadie lo vio.
+
+```tsx
+// no
+const [fecha, setFecha] = useState<Date | null>(new Date())
+onChange={(v) => setFecha(v as Date | null)}
+…
+fecha.getFullYear()
+
+// sí
+const [fecha, setFecha] = useState<Date | string | null>(new Date())
+onChange={setFecha}
+…
+fromDateValue(fecha)          // de '@/lib/fecha'; lee las dos formas
+```
+
+Ensanchar **hacia** la verdad sigue permitido, porque no afirma de más:
+`as Date | string | null` no salta.
+
+**No queda ninguno de los tres en el repositorio** (los 17 `as unknown as` se
+eliminaron el 2026-08-27; los 4 `as never`, todos en el Dispensario, el
+2026-09-22; los 14 `as Date | null` el 2026-09-23). Es una invariante, no una
+meta: `grep -rn "as unknown as\|as never" src` debe salir vacío, y de `as Date`
+solo deben quedar los que ensanchan a `Date | string | null`.
 
 Lo que apareció debajo de aquellos 17, por si el patrón se repite:
 
