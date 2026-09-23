@@ -79,6 +79,40 @@ export function hallazgos(
   })
 }
 
+/** IMC a partir del peso y la talla, a dos decimales. `null` si falta alguno. */
+export function calcularImc(
+  pesoKg?: number,
+  tallaCm?: number,
+): number | null {
+  if (!pesoKg || !tallaCm) return null
+  const tallaMetros = tallaCm / 100
+  if (tallaMetros <= 0) return null
+  return Math.round((pesoKg / (tallaMetros ** 2)) * 100) / 100
+}
+
+/**
+ * Clasificación del IMC, con el tono que le corresponde.
+ *
+ * Devuelve un `SemanticTone` y no un nombre de color: el significado y el color
+ * se deciden en un solo sitio (regla 06), y quien lo pinta lo resuelve con
+ * `SEMANTIC_COLOR`. Estaba duplicada palabra por palabra en `TriajeForm` y en
+ * `SolicitudSignosVitalesForm`, devolviendo `{ color: string }`.
+ *
+ * Los tonos son los mismos que se venían mostrando: «Bajo peso» sigue en
+ * `info`. Si el Dispensario decide que merece `warning` —como el sobrepeso—,
+ * se cambia aquí y cambia en las dos pantallas.
+ */
+export function clasificacionImc(imc: number | null): {
+  texto: string
+  tono:  SemanticTone
+} {
+  if (imc === null) return { texto: '—',          tono: 'neutral' }
+  if (imc < 18.5)   return { texto: 'Bajo peso',  tono: 'info'    }
+  if (imc < 25)     return { texto: 'Normal',     tono: 'success' }
+  if (imc < 30)     return { texto: 'Sobrepeso',  tono: 'warning' }
+  return { texto: 'Obesidad', tono: 'danger' }
+}
+
 const ETIQUETAS: Record<string, string> = {
   presion_sistolica:       'Presión sistólica',
   presion_diastolica:      'Presión diastólica',
