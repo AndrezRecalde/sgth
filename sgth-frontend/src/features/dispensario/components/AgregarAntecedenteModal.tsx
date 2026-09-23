@@ -2,12 +2,18 @@
 
 import {
   Stack, Select, Textarea,
-  NumberInput, 
+  NumberInput,
 } from '@mantine/core'
 import { FormModal } from '@/components/ui'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, type DefaultValues } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAgregarAntecedente } from '../hooks/useHistoriaClinica'
+import {
+  antecedenteSchema,
+  TIPO_ANTECEDENTE_OPTIONS,
+  type AntecedenteFormData,
+} from '../schemas/historiaClinica.schema'
 
 interface Props {
   opened:      boolean
@@ -17,53 +23,50 @@ interface Props {
   tipo:        'personal' | 'familiar'
 }
 
-const TIPO_PERSONAL_OPTIONS = [
-  { value: 'quirurgico',  label: 'Quirúrgico'  },
-  { value: 'patologico',  label: 'Patológico'  },
-  { value: 'traumatico',  label: 'Traumático'  },
-  { value: 'ginecologico',label: 'Ginecológico'},
-  { value: 'otro',        label: 'Otro'         },
-]
-
-type FormData = {
-  tipo:              string
-  descripcion:       string
-  fecha_aproximada:  number | null
-}
-
 export function AgregarAntecedenteModal({
   opened, onClose, historiaId, agendaId, tipo,
 }: Props) {
-  const contained = useContainedInput()
-  const agregar   = useAgregarAntecedente(historiaId, agendaId)
+  const contained  = useContainedInput()
+  const agregar    = useAgregarAntecedente(historiaId, agendaId)
   const esFamiliar = tipo === 'familiar'
+
+  // El familiar no elige tipo: el modal ya viene abierto para eso. El personal
+  // sí, y no hay uno por defecto, así que va omitido —igual que en el modal de
+  // alergias—.
+  const valoresIniciales: DefaultValues<AntecedenteFormData> = {
+    ...(esFamiliar ? { tipo: 'familiar' as const } : {}),
+    descripcion:      '',
+    fecha_aproximada: null,
+  }
 
   const {
     control, register, handleSubmit, reset,
     formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: {
-      tipo:             esFamiliar ? 'familiar' : '',
-      descripcion:      '',
-      fecha_aproximada: null,
-    },
+  } = useForm<AntecedenteFormData>({
+    resolver: zodResolver(antecedenteSchema),
+    defaultValues: valoresIniciales,
   })
 
-  const onSubmit = (values: FormData) => {
+  const cerrar = () => {
+    reset(valoresIniciales)
+    onClose()
+  }
+
+  const onSubmit = (values: AntecedenteFormData) => {
     agregar.mutate(
       {
         tipo:             values.tipo,
         descripcion:      values.descripcion,
-        fecha_aproximada: values.fecha_aproximada || null,
+        fecha_aproximada: values.fecha_aproximada,
       },
-      { onSuccess: () => { reset(); onClose() } }
+      { onSuccess: cerrar }
     )
   }
 
   return (
     <FormModal
       opened={opened}
-      onClose={() => { reset(); onClose() }}
+      onClose={cerrar}
       title={esFamiliar
         ? 'Agregar antecedente familiar'
         : 'Agregar antecedente personal'}
@@ -77,16 +80,15 @@ export function AgregarAntecedenteModal({
           <Controller
             name="tipo"
             control={control}
-            rules={{ required: 'Seleccione el tipo de antecedente' }}
             render={({ field }) => (
               <Select
                 label="Tipo de antecedente"
                 required
-                data={TIPO_PERSONAL_OPTIONS}
+                data={TIPO_ANTECEDENTE_OPTIONS}
                 placeholder="Seleccione"
                 {...contained}
-                value={field.value}
-                onChange={(v) => field.onChange(v ?? '')}
+                value={field.value ?? null}
+                onChange={field.onChange}
                 error={errors.tipo?.message}
               />
             )}
@@ -102,13 +104,7 @@ export function AgregarAntecedenteModal({
           minRows={3}
           {...contained}
           required
-          {...register('descripcion', {
-            required: 'Describa el antecedente',
-            minLength: {
-              value: 5,
-              message: 'Mínimo 5 caracteres',
-            },
-          })}
+          {...register('descripcion')}
           error={errors.descripcion?.message}
         />
 
@@ -119,11 +115,11 @@ export function AgregarAntecedenteModal({
             <NumberInput
               label="Año aproximado (opcional)"
               placeholder="Ej: 2018"
-              min={1900}
-              max={new Date().getFullYear()}
+              hideControls
               {...contained}
-              value={field.value ?? undefined}
-              onChange={(v) => field.onChange(v ? Number(v) : null)}
+              value={field.value ?? ''}
+              onChange={(v) => field.onChange(v === '' ? null : Number(v))}
+              error={errors.fecha_aproximada?.message}
             />
           )}
         />

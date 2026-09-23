@@ -2,12 +2,19 @@
 
 import {
   Stack, Select, TextInput,
-  Textarea, 
+  Textarea,
 } from '@mantine/core'
 import { FormModal } from '@/components/ui'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, type DefaultValues } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAgregarAlergia } from '../hooks/useHistoriaClinica'
+import {
+  alergiaSchema,
+  SEVERIDAD_OPTIONS,
+  TIPO_ALERGIA_OPTIONS,
+  type AlergiaFormData,
+} from '../schemas/historiaClinica.schema'
 
 interface Props {
   opened:      boolean
@@ -16,24 +23,15 @@ interface Props {
   agendaId:    number
 }
 
-const TIPO_OPTIONS = [
-  { value: 'medicamento', label: 'Medicamento' },
-  { value: 'alimento',    label: 'Alimento'    },
-  { value: 'ambiental',   label: 'Ambiental'   },
-  { value: 'otro',        label: 'Otro'         },
-]
-
-const SEVERIDAD_OPTIONS = [
-  { value: 'leve',     label: 'Leve'     },
-  { value: 'moderada', label: 'Moderada' },
-  { value: 'grave',    label: 'Grave'    },
-]
-
-type FormData = {
-  tipo:        string
-  descripcion: string
-  severidad:   string
-  observacion: string
+/**
+ * Ni el tipo ni la severidad tienen un valor por defecto razonable: los elige
+ * quien registra. Van omitidos, que es como el repositorio resuelve un campo
+ * de enumeración sin valor inicial —darles la cadena vacía obligaría a mentir
+ * sobre el tipo (ver regla 09)—.
+ */
+const VALORES_INICIALES: DefaultValues<AlergiaFormData> = {
+  descripcion: '',
+  observacion: '',
 }
 
 export function AgregarAlergiaModal({
@@ -45,14 +43,17 @@ export function AgregarAlergiaModal({
   const {
     control, register, handleSubmit, reset,
     formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: {
-      tipo: '', descripcion: '',
-      severidad: '', observacion: '',
-    },
+  } = useForm<AlergiaFormData>({
+    resolver: zodResolver(alergiaSchema),
+    defaultValues: VALORES_INICIALES,
   })
 
-  const onSubmit = (values: FormData) => {
+  const cerrar = () => {
+    reset(VALORES_INICIALES)
+    onClose()
+  }
+
+  const onSubmit = (values: AlergiaFormData) => {
     agregar.mutate(
       {
         tipo:        values.tipo,
@@ -60,14 +61,14 @@ export function AgregarAlergiaModal({
         severidad:   values.severidad,
         observacion: values.observacion || null,
       },
-      { onSuccess: () => { reset(); onClose() } }
+      { onSuccess: cerrar }
     )
   }
 
   return (
     <FormModal
       opened={opened}
-      onClose={() => { reset(); onClose() }}
+      onClose={cerrar}
       title="Agregar alergia"
       size="sm"
       onSubmit={handleSubmit(onSubmit)}
@@ -78,16 +79,15 @@ export function AgregarAlergiaModal({
         <Controller
           name="tipo"
           control={control}
-          rules={{ required: 'Seleccione el tipo de alergia' }}
           render={({ field }) => (
             <Select
               label="Tipo de alergia"
               required
-              data={TIPO_OPTIONS}
+              data={TIPO_ALERGIA_OPTIONS}
               placeholder="Seleccione"
               {...contained}
-              value={field.value}
-              onChange={(v) => field.onChange(v ?? '')}
+              value={field.value ?? null}
+              onChange={field.onChange}
               error={errors.tipo?.message}
             />
           )}
@@ -97,15 +97,12 @@ export function AgregarAlergiaModal({
           placeholder="Ej: Penicilina, Mariscos, Polen..."
           {...contained}
           required
-          {...register('descripcion', {
-            required: 'Describa la alergia',
-          })}
+          {...register('descripcion')}
           error={errors.descripcion?.message}
         />
         <Controller
           name="severidad"
           control={control}
-          rules={{ required: 'Seleccione la severidad' }}
           render={({ field }) => (
             <Select
               label="Severidad"
@@ -113,8 +110,8 @@ export function AgregarAlergiaModal({
               data={SEVERIDAD_OPTIONS}
               placeholder="Seleccione"
               {...contained}
-              value={field.value}
-              onChange={(v) => field.onChange(v ?? '')}
+              value={field.value ?? null}
+              onChange={field.onChange}
               error={errors.severidad?.message}
             />
           )}
@@ -126,6 +123,7 @@ export function AgregarAlergiaModal({
           minRows={2}
           {...contained}
           {...register('observacion')}
+          error={errors.observacion?.message}
         />
       </Stack>
     </FormModal>
