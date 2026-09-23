@@ -1,0 +1,14 @@
+/* El `h3` trae margen y tamaño de encabezado del navegador: aquí manda el
+   `Text` que lo envuelve, que es quien fija la escala del panel. */
+.titulo {
+  margin: 0;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* La línea que llega hasta el borde. Es decoración: quien no la ve ya tiene el
+   encabezado para saber dónde empieza la sección. */
+.linea {
+  flex: 1;
+  border-top: 1px solid var(--sgth-border);
+}
