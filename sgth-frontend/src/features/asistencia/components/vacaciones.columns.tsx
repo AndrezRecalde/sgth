@@ -3,7 +3,7 @@
 import { Text } from '@mantine/core'
 import { IconBan, IconCheck, IconPrinter, IconX } from '@tabler/icons-react'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
-import { hoyIso } from '@/lib/fecha'
+import { formatFecha, hoyIso } from '@/lib/fecha'
 import { ESTADO_LABELS, MOTIVO_LABELS, TONO_ESTADO } from './vacaciones.constants'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Vacacion } from '@/types/api'
@@ -16,18 +16,6 @@ interface ColumnActions {
   onAprobar:     (id: number) => void
   onRechazar:    (id: number) => void
   onAnular:      (vacacion: Vacacion) => void
-}
-
-/** Las fechas vienen como `date` sin hora: se leen en UTC o se corren un día. */
-function fecha(valor: string | null | undefined): string {
-  if (!valor) return '—'
-
-  return new Date(valor).toLocaleDateString('es-EC', {
-    timeZone: 'UTC',
-    day:      '2-digit',
-    month:    '2-digit',
-    year:     'numeric',
-  })
 }
 
 /**
@@ -74,13 +62,13 @@ export function getVacacionesColumns(
       accessor: 'fecha_inicio',
       title: 'Desde',
       width: 110,
-      render: ({ fecha_inicio }) => <Text size="sm">{fecha(fecha_inicio)}</Text>,
+      render: ({ fecha_inicio }) => <Text size="sm">{formatFecha(fecha_inicio)}</Text>,
     },
     {
       accessor: 'fecha_fin',
       title: 'Hasta',
       width: 110,
-      render: ({ fecha_fin }) => <Text size="sm">{fecha(fecha_fin)}</Text>,
+      render: ({ fecha_fin }) => <Text size="sm">{formatFecha(fecha_fin)}</Text>,
     },
     {
       accessor: 'dias_solicitados',

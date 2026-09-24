@@ -24,6 +24,7 @@ import type { Convocatoria } from
 import type { DataTableColumn } from 'mantine-datatable'
 import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { formatFechaMes } from '@/lib/fecha'
 
 export function ConvocatoriasView() {
   const router   = useRouter()
@@ -90,13 +91,9 @@ export function ConvocatoriasView() {
       width:    160,
       render: (c) => (
         <Text size="xs">
-          {new Date(c.fecha_inicio).toLocaleDateString('es-EC', {
-            day: '2-digit', month: 'short', year: 'numeric',
-          })}
+          {formatFechaMes(c.fecha_inicio)}
           {' — '}
-          {new Date(c.fecha_fin).toLocaleDateString('es-EC', {
-            day: '2-digit', month: 'short', year: 'numeric',
-          })}
+          {formatFechaMes(c.fecha_fin)}
         </Text>
       ),
     },

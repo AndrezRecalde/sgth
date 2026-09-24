@@ -14,6 +14,7 @@ import {
 } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { formatFechaMes } from '@/lib/fecha'
 
 /*
 | Las columnas de las solicitudes de certificación médica.
@@ -106,7 +107,7 @@ const fechaLimite: Columna = {
 
     return (
       <Text size="sm" c={urgente ? 'red' : undefined} fw={urgente ? 600 : undefined}>
-        {fecha.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
+        {formatFechaMes(fecha.toISOString())}
       </Text>
     )
   },

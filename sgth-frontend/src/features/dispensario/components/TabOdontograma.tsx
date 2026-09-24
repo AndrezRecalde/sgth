@@ -19,6 +19,7 @@ import type {
 } from '../services/odontogramaService'
 import type { DataTableColumn } from 'mantine-datatable'
 import { SectionHeading, StatusBadge } from '@/components/ui'
+import { formatFecha } from '@/lib/fecha'
 
 interface Props {
   historiaClinicaId: number
@@ -167,9 +168,7 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
       accessor: 'fecha',
       title: 'Fecha',
       width: 110,
-      render: (item) => new Date(item.fecha).toLocaleDateString('es-EC', {
-        day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-      }),
+      render: (item) => formatFecha(item.fecha),
     },
     {
       accessor: 'realizado_por',

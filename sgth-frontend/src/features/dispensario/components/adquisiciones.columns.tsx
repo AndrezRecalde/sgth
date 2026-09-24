@@ -8,18 +8,13 @@ import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Adquisicion } from '../services/adquisicionService'
 import { CountBadge, StatusBadge } from '@/components/ui'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface ColumnActions {
   onVerDetalle:     (a: Adquisicion) => void
   onDescargarDocumento:   (a: Adquisicion) => void
   onSubirDocumento: (a: Adquisicion) => void
   onAnular:         (a: Adquisicion) => void
-}
-
-function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
 }
 
 export function getAdquisicionesColumns(
@@ -76,7 +71,7 @@ export function getAdquisicionesColumns(
       title:    'Fecha',
       width:    120,
       render: (a) => (
-        <Text size="sm">{formatFecha(a.fecha_adquisicion)}</Text>
+        <Text size="sm">{formatFechaMes(a.fecha_adquisicion)}</Text>
       ),
     },
     {

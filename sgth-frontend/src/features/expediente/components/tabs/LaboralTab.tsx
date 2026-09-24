@@ -15,6 +15,7 @@ import type {
 } from '../../services/actividadLaboralService'
 import type { ContratoConRelaciones, EstadoContrato } from '@/types/api'
 import { StatusBadge } from '@/components/ui'
+import { formatFecha, formatFechaHora } from '@/lib/fecha'
 
 const TONO_CONTRATO: Record<EstadoContrato, SemanticTone> = {
   vigente: 'success',
@@ -38,22 +39,6 @@ const NOMBRAMIENTO_LABELS: Record<string, string> = {
   eleccion_popular: 'Elección Popular',
 }
 
-function fecha(f?: string | null): string {
-  if (!f) return '—'
-  return new Date(f).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
-}
-
-/** Cuándo se hizo el cambio: aquí sí importa la hora, no solo el día. */
-function fechaHora(f?: string | null): string {
-  if (!f) return '—'
-  return new Date(f).toLocaleString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
-
 function dinero(v?: string | number | null): string {
   return v != null ? `$ ${Number(v).toFixed(2)}` : '—'
 }
@@ -73,7 +58,7 @@ function cambio(a: AccionSobreVinculo): string | null {
     return `${a.unidad_origen ?? 'Sin unidad'} → ${a.unidad_destino}`
   }
   if (a.fecha_inicio) {
-    return `${fecha(a.fecha_inicio)} – ${a.fecha_fin ? fecha(a.fecha_fin) : 'sin fecha de fin'}`
+    return `${formatFecha(a.fecha_inicio)} – ${a.fecha_fin ? formatFecha(a.fecha_fin) : 'sin fecha de fin'}`
   }
   return null
 }
@@ -89,7 +74,7 @@ function FilaAccion({ accion }: { accion: AccionSobreVinculo }) {
           {detalle && <Text size="xs" c="dimmed">{detalle}</Text>}
         </div>
         <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-          <Text size="xs">{fecha(accion.fecha_efectiva)}</Text>
+          <Text size="xs">{formatFecha(accion.fecha_efectiva)}</Text>
           {accion.codigo_registro && (
             <Text size="xs" c="dimmed" ff="monospace">{accion.codigo_registro}</Text>
           )}
@@ -140,7 +125,7 @@ function Vinculo({
             {vinculo.situacion && (
               <StatusBadge tone="info">
                 {vinculo.situacion.etiqueta}
-                {vinculo.situacion.hasta ? ` hasta ${fecha(vinculo.situacion.hasta)}` : ''}
+                {vinculo.situacion.hasta ? ` hasta ${formatFecha(vinculo.situacion.hasta)}` : ''}
               </StatusBadge>
             )}
             {vinculo.reemplaza_a && (
@@ -158,18 +143,18 @@ function Vinculo({
               {vinculo.reemplaza_a.etiqueta?.toLowerCase() ?? 'ausencia'} de{' '}
               <strong>{vinculo.reemplaza_a.servidor}</strong>
               {vinculo.reemplaza_a.hasta
-                ? `, hasta el ${fecha(vinculo.reemplaza_a.hasta)}.`
+                ? `, hasta el ${formatFecha(vinculo.reemplaza_a.hasta)}.`
                 : '.'}
             </Alert>
           )}
 
           <Grid>
             <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Dato etiqueta="Desde" valor={fecha(c.fecha_inicio)} />
+              <Dato etiqueta="Desde" valor={formatFecha(c.fecha_inicio)} />
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <Group gap={4} align="flex-start" wrap="nowrap">
-                <Dato etiqueta="Hasta" valor={c.fecha_fin ? fecha(c.fecha_fin) : 'Sin plazo'} />
+                <Dato etiqueta="Hasta" valor={c.fecha_fin ? formatFecha(c.fecha_fin) : 'Sin plazo'} />
                 {/* El plazo es lo único editable de un vínculo ya creado, y
                     solo mientras siga vigente: en uno terminado la fecha de
                     fin ya es un hecho histórico. */}
@@ -222,10 +207,10 @@ function Vinculo({
                   <Paper key={r.id} withBorder p="xs" radius="sm">
                     <Group gap="xs" wrap="nowrap" align="baseline">
                       <Text size="sm" fw={500}>
-                        {fecha(r.fecha_fin_anterior)} → {fecha(r.fecha_fin_nueva)}
+                        {formatFecha(r.fecha_fin_anterior)} → {formatFecha(r.fecha_fin_nueva)}
                       </Text>
                       <Text size="xs" c="dimmed">
-                        {fechaHora(r.fecha)}
+                        {formatFechaHora(r.fecha)}
                         {r.por ? ` · ${r.por}` : ''}
                       </Text>
                     </Group>

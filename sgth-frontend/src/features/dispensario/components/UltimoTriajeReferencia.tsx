@@ -6,16 +6,10 @@ import {
 } from '@mantine/core'
 import { IconHistory, IconInfoCircle } from '@tabler/icons-react'
 import { useUltimoTriaje } from '../hooks/useTriaje'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   agendaId: number
-}
-
-function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
 }
 
 export function UltimoTriajeReferencia({ agendaId }: Props) {
@@ -55,7 +49,7 @@ export function UltimoTriajeReferencia({ agendaId }: Props) {
           <IconHistory size={13} />
         </ThemeIcon>
         <Text size="xs" fw={600} c="ocean">
-          Último triaje registrado — {formatFecha(triaje.registrado_en)}
+          Último triaje registrado — {formatFechaMes(triaje.registrado_en)}
         </Text>
       </Group>
 

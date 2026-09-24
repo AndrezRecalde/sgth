@@ -22,16 +22,11 @@ import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { CertificadoMedico } from '../services/certificadoService'
 import { StatusBadge } from '@/components/ui'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   turno:    AgendaMedica
   consulta: ConsultaMedica
-}
-
-function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
 }
 
 export function TabCertificado({ turno, consulta }: Props) {
@@ -123,8 +118,8 @@ export function TabCertificado({ turno, consulta }: Props) {
                 <Group gap="xs">
                   <IconCalendar size={13} color="var(--mantine-color-slate-6)" />
                   <Text size="xs" c="dimmed">
-                    {formatFecha(cert.fecha_inicio)} →{' '}
-                    {formatFecha(cert.fecha_fin)}
+                    {formatFechaMes(cert.fecha_inicio)} →{' '}
+                    {formatFechaMes(cert.fecha_fin)}
                   </Text>
                 </Group>
 

@@ -20,6 +20,7 @@ import type { SemanticTone } from '@/config/design.tokens'
 import type {
   AspiranteExpress, FiltroAnios, TarjetaExpress,
 } from '../services/expressService'
+import { formatFecha } from '@/lib/fecha'
 
 const ESTADO_LABELS: Record<string, string> = {
   inscrito:          'Inscrito',
@@ -46,13 +47,6 @@ const ESTADO_TONO: Record<string, SemanticTone> = {
   no_seleccionado:   'neutral',
   lista_espera:      'warning',
   incorporado:       'success',
-}
-
-function formatFecha(f?: string | null): string {
-  if (!f) return '—'
-  return new Date(f).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
 }
 
 function nombreCompleto(a: AspiranteExpress): string {

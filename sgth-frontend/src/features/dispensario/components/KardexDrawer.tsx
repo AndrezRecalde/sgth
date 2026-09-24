@@ -10,18 +10,12 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { getApiErrorMessage } from '@/types/api'
 import type { InventarioMedicina } from '../services/inventarioMedicinaService'
 import { SgthDrawer, StatusBadge } from '@/components/ui'
+import { formatFechaMesHora } from '@/lib/fecha'
 
 interface Props {
   opened:   boolean
   onClose:  () => void
   medicina: InventarioMedicina | null
-}
-
-function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
 }
 
 export function KardexDrawer({ opened, onClose, medicina }: Props) {
@@ -108,7 +102,7 @@ export function KardexDrawer({ opened, onClose, medicina }: Props) {
                         llevan, y no se les inventa: el kardex es inmutable. */}
                     <Group gap={6} wrap="wrap">
                       <Text size="xs" c="dimmed">
-                        {formatFecha(m.created_at)} —{' '}
+                        {formatFechaMesHora(m.created_at)} —{' '}
                         {m.registrador?.nombre_completo
                           ?? m.registrador?.usuario_ti ?? '—'}
                       </Text>

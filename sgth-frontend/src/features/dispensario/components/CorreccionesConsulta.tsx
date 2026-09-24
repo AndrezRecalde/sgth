@@ -5,19 +5,10 @@ import { Alert, Button, Card, Group, Stack, Text } from "@mantine/core";
 import { IconHistory } from "@tabler/icons-react";
 import { useVersionesConsulta } from "../hooks/useConsultaMedica";
 import type { VersionConsulta } from "../services/consultaMedicaService";
+import { formatFechaMesHora } from '@/lib/fecha';
 
 interface Props {
   consultaId: number;
-}
-
-function fechaHora(valor: string): string {
-  return new Date(valor).toLocaleString("es-EC", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function Campo({ label, valor }: { label: string; valor?: string | null }) {
@@ -90,7 +81,7 @@ export function CorreccionesConsulta({ consultaId }: Props) {
                 <Stack gap={6}>
                   <Group gap={6} wrap="wrap">
                     <Text size="xs" c="dimmed" ff="monospace">
-                      {fechaHora(version.created_at)}
+                      {formatFechaMesHora(version.created_at)}
                     </Text>
                     <Text size="xs" c="dimmed">
                       — reemplazada por{" "}

@@ -24,18 +24,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { DataState } from "@/components/ui";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 import { StatusBadge } from "@/components/ui";
-import { fromDateValueOrUndefined } from "@/lib/fecha";
+import { formatFechaMes, fromDateValueOrUndefined } from '@/lib/fecha'
 
 interface Props {
   historiaClinicaId: number;
-}
-
-function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleDateString("es-EC", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 function ConsultaItem({
@@ -63,7 +55,7 @@ function ConsultaItem({
                 : <IconStethoscope size={12} />}
             </ThemeIcon>
             <Text size="sm" fw={500}>
-              {formatFecha(consulta.fecha_consulta)}
+              {formatFechaMes(consulta.fecha_consulta)}
             </Text>
             {consulta.especialidad && (
               <StatusBadge size="xs">

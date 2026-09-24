@@ -11,6 +11,7 @@ import {
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
 import type { AccionesPermiso } from '../hooks/useAccionesPermiso'
+import { formatFecha } from '@/lib/fecha'
 
 interface ColumnActions {
   exportandoId: number | null
@@ -75,9 +76,7 @@ export function getPermisosColumns(
       render: ({ fecha }) => (
         <Text size="sm">
           {fecha
-            ? new Date(fecha).toLocaleDateString('es-EC', {
-                timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric',
-              })
+            ? formatFecha(fecha)
             : '—'}
         </Text>
       ),

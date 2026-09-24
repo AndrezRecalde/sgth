@@ -15,6 +15,7 @@ import { TableActions } from "@/components/ui/TableActions";
 import type { DataTableColumn } from "mantine-datatable";
 import type { InventarioMedicina } from "../services/inventarioMedicinaService";
 import { StatusBadge } from "@/components/ui";
+import { formatFechaMes } from '@/lib/fecha';
 
 interface ColumnActions {
   onEditar: (m: InventarioMedicina) => void;
@@ -146,11 +147,7 @@ export function getMedicinasColumns(
           label = `${dias}d`;
         } else {
           tone = "success";
-          label = caduca.toLocaleDateString("es-EC", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          });
+          label = formatFechaMes(proxima);
         }
 
         return (

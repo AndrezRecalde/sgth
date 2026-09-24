@@ -21,6 +21,7 @@ import {
   TIPO_RESULTADO_ICONS,
 } from '../services/resultadoMedicoService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   consulta:          ConsultaMedica
@@ -35,12 +36,6 @@ function getArchivoUrl(ruta: string): string {
   const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://sgth.test/api/v1')
     .replace('/api/v1', '')
   return `${base}/storage/${ruta}`
-}
-
-function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
 }
 
 export function TabResultados({
@@ -104,7 +99,7 @@ export function TabResultados({
                         {getLabelTipo(r.tipo)}
                       </StatusBadge>
                       <Text size="xs" c="dimmed">
-                        {formatFecha(r.fecha_resultado)}
+                        {formatFechaMes(r.fecha_resultado)}
                       </Text>
                     </Group>
                     <Text size="sm">{r.descripcion}</Text>

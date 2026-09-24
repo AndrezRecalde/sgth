@@ -6,18 +6,12 @@ import { useQuery } from '@tanstack/react-query'
 import { consultaMedicaService } from '../services/consultaMedicaService'
 import { SectionHeading, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
 import { columnasItemsReceta } from './itemsReceta.columns'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   opened:     boolean
   onClose:    () => void
   consultaId: number | null
-}
-
-function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
 }
 
 function Campo({
@@ -64,7 +58,7 @@ export function DetalleConsultaDrawer({
       opened={opened}
       onClose={onClose}
       title="Detalle de consulta"
-      description={consulta ? formatFecha(consulta.fecha_consulta) : undefined}
+      description={consulta ? formatFechaMes(consulta.fecha_consulta) : undefined}
     >
       {isLoading ? (
         <Stack gap="sm">
@@ -132,7 +126,7 @@ export function DetalleConsultaDrawer({
                 <Stack key={receta.id} gap="xs">
                   <Group justify="space-between">
                     <Text size="xs" c="dimmed">
-                      Emitida: {formatFecha(receta.fecha_emision)}
+                      Emitida: {formatFechaMes(receta.fecha_emision)}
                     </Text>
                     <StatusBadge
                       tone={receta.estado === 'despachada_completa' ? 'success' : receta.estado === 'despachada_parcial' ? 'warning' : 'neutral'}

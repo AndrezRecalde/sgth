@@ -6,6 +6,7 @@ import { StatusBadge, TableActions } from '@/components/ui'
 import type { SemanticTone } from '@/config/design.tokens'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { RecetaMedica } from '../services/recetaService'
+import { formatFechaMes } from '@/lib/fecha'
 
 const TONO_ESTADO: Record<string, SemanticTone> = {
   pendiente:           'warning',
@@ -74,9 +75,7 @@ export function getRecetasColumns(
       width:    130,
       render: (r) => (
         <Text size="sm">
-          {new Date(r.fecha_emision).toLocaleDateString('es-EC', {
-            day: '2-digit', month: 'short', year: 'numeric',
-          })}
+          {formatFechaMes(r.fecha_emision)}
         </Text>
       ),
     },

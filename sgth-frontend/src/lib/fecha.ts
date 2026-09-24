@@ -115,3 +115,52 @@ export function formatFechaHora(
     ...(conHora ? { hour: '2-digit', minute: '2-digit' } : {}),
   })
 }
+
+/**
+ * Fecha del backend a `DD mmm AAAA` (`31 ago 2026`). Sin dato, un guion.
+ *
+ * El sistema usa dos formatos de fecha a la vista, y los dos son deliberados:
+ * `formatFecha` —numérico— para tablas densas y formularios, donde lo que se
+ * hace es comparar y alinear en columna; este —con el mes en letras— para
+ * tarjetas, cajones de detalle y encabezados, donde se lee una sola fecha y
+ * `05/09` frente a `09/05` es una ambigüedad que no hace falta correr.
+ *
+ * Estaba escrito a mano en 19 sitios, ninguno de ellos con `timeZone`. Aquí
+ * lo lleva, igual que `formatFecha`: los campos que llegan son `date`, que
+ * Laravel serializa como la medianoche local convertida a UTC
+ * (`2026-08-31T05:00:00.000000Z`), y leerlos en UTC da el mismo día en
+ * cualquier parte. Sin `timeZone` el día depende del reloj de quien mira: en
+ * Ecuador sale bien, pero un navegador al oeste de UTC-5 enseñaba el anterior.
+ */
+export function formatFechaMes(value?: string | null): string {
+  if (!value) return '—'
+  const dt = new Date(value)
+  if (isNaN(dt.getTime())) return '—'
+  return dt.toLocaleDateString('es-EC', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+/**
+ * Fecha y hora a `DD mmm AAAA HH:mm` (`31 ago 2026, 08:00 a. m.`).
+ *
+ * El pariente de `formatFechaMes` para lo que sí lleva hora: un movimiento de
+ * kardex, la corrección de una consulta. Aquí **no** va `timeZone`, y es a
+ * propósito: lo que se pinta es un instante real, y un instante se lee en la
+ * hora de quien lo mira, no en UTC.
+ */
+export function formatFechaMesHora(value?: string | null): string {
+  if (!value) return '—'
+  const dt = new Date(value)
+  if (isNaN(dt.getTime())) return '—'
+  return dt.toLocaleString('es-EC', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}

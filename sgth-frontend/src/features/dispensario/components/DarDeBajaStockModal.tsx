@@ -15,6 +15,7 @@ import {
 import type {
   InventarioMedicina, LoteMedicina,
 } from '../services/inventarioMedicinaService'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   opened:   boolean
@@ -53,9 +54,7 @@ function loteCaducado(lote: LoteMedicina): boolean {
 function etiquetaDeLote(lote: LoteMedicina): string {
   const nombre = lote.codigo_lote ?? 'Sin identificar'
   const caduca = lote.fecha_caducidad
-    ? new Date(lote.fecha_caducidad).toLocaleDateString('es-EC', {
-        day: '2-digit', month: 'short', year: 'numeric',
-      })
+    ? formatFechaMes(lote.fecha_caducidad)
     : 'sin fecha'
 
   return `${nombre} · ${caduca} · ${lote.stock_actual} unid.`

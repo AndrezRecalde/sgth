@@ -22,6 +22,7 @@ import { FemoAptitudSelector } from './FemoAptitudSelector'
 import { FemoRetiroSection } from './FemoRetiroSection'
 import { FemoSeccion } from './FemoSeccion'
 import { StatusBadge } from '@/components/ui'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   fichaData:        Partial<FichaBaseForm>
@@ -90,7 +91,7 @@ export function FemoPaso3({
                     )}
                     {ex.fecha_examen && (
                       <Text size="xs" c="dimmed">
-                        {new Date(ex.fecha_examen).toLocaleDateString('es-EC')}
+                        {formatFechaMes(ex.fecha_examen)}
                       </Text>
                     )}
                   </Stack>
