@@ -96,6 +96,7 @@ export function MisPermisosView() {
             : 'Los permisos que registre Talento Humano a tu nombre aparecerán aquí. ' +
               'Prueba con otro año o con otro estado.',
         }}
+        page={page}
       >
         <SgthTable
           {...PAGINACION_ES}

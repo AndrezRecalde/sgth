@@ -104,7 +104,14 @@ export function PuestosTab() {
           {...contained}
           style={{ minWidth: 300 }}
           value={unidadIds[0] ?? ""}
-          onChange={(v) => setUnidadIds(v ? [v] : [])}
+          onChange={(v) => {
+            // Volver a la primera página: filtrar sin hacerlo pedía esa misma
+            // página del resultado ya recortado —casi siempre inexistente— y
+            // la pantalla decía «esta gestión no tiene puestos registrados»
+            // sobre una gestión que sí los tiene.
+            setUnidadIds(v ? [v] : [])
+            setPage(1)
+          }}
         />
       </Toolbar>
 
@@ -119,6 +126,7 @@ export function PuestosTab() {
             ? "Esta gestión no tiene puestos registrados."
             : "Aún no hay puestos en la plantilla institucional.",
         }}
+        page={page}
       >
         <SgthTable
           records={records}

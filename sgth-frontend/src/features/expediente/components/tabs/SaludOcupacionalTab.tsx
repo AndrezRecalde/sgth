@@ -52,6 +52,7 @@ export function SaludOcupacionalTab({ servidorId }: Props) {
           title: 'Sin certificaciones registradas',
           description: 'Este servidor no tiene solicitudes de certificación médica.',
         }}
+        page={page}
       >
         <SgthTable
           {...PAGINACION_ES}

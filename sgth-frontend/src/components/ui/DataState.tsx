@@ -11,6 +11,21 @@ interface Props {
   error?: unknown
   /** `true` cuando la consulta terminó y no hay nada que mostrar. */
   empty?: boolean
+  /**
+   * La página actual, en una lista paginada. Solo sirve para una cosa: que el
+   * estado vacío no se coma la tabla cuando se está fuera de rango.
+   *
+   * `empty` se calcula casi siempre como `!lista.length`, que en la página 1
+   * significa «no hay nada» y en la 2 puede significar «no hay nada AQUÍ». Si
+   * el resultado encoge —se filtra, o alguien borra mientras miras— la página
+   * en la que estabas se queda sin filas, y entonces el estado vacío sustituye
+   * a la tabla ENTERA, paginador incluido: la pantalla afirma que no hay nada
+   * y encima no deja volver a la página 1.
+   *
+   * Pasando `page`, a partir de la segunda se pinta la tabla vacía con su
+   * paginador, que es lo que permite salir.
+   */
+  page?: number
   /** Configuración del estado vacío. Obligatoria si se usa `empty`. */
   emptyProps?: {
     icon: Icon
@@ -69,6 +84,7 @@ export function DataState({
   loading,
   error,
   empty,
+  page,
   emptyProps,
   errorTitle = 'No se pudo cargar la información',
   errorHint,
@@ -117,7 +133,9 @@ export function DataState({
     )
   }
 
-  if (empty && emptyProps) {
+  // Fuera de la primera página, una lista sin filas no quiere decir que no
+  // haya nada: quiere decir que no hay nada aquí. Ver `page` en los props.
+  if (empty && emptyProps && (page ?? 1) === 1) {
     return <EmptyState {...emptyProps} />
   }
 

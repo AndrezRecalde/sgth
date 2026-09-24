@@ -115,6 +115,7 @@ export function EquiposProteccionTab() {
           title: 'Sin equipos de protección',
           description: 'Aún no hay equipos registrados en el catálogo.',
         }}
+        page={page}
       >
         <SgthTable
           records={records}

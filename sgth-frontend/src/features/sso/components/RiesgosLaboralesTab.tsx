@@ -127,6 +127,7 @@ export function RiesgosLaboralesTab() {
           title: 'Sin riesgos laborales',
           description: 'Aún no se han identificado riesgos en los puestos.',
         }}
+        page={page}
       >
         <SgthTable
           records={records}

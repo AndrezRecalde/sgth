@@ -127,6 +127,7 @@ export function AccidentesTrabajoTab() {
           title: 'Sin accidentes registrados',
           description: 'No se han registrado accidentes ni incidentes de trabajo.',
         }}
+        page={page}
       >
         <SgthTable
           records={records}

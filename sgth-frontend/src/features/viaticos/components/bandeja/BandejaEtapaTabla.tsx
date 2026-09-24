@@ -54,6 +54,7 @@ export function BandejaEtapaTabla({ etapa, filtros }: Props) {
         error={error}
         empty={filas.length === 0}
         emptyProps={{ icon: IconInbox, title: 'Nada en esta etapa', description: VACIO[etapa] }}
+        page={page}
       >
         <SgthTable
           records={filas}

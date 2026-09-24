@@ -115,6 +115,7 @@ export function CertificacionesMedicasView() {
           title: 'Sin solicitudes',
           description: 'No se han enviado solicitudes de certificación médica.',
         }}
+        page={page}
       >
         <SgthTable
           {...PAGINACION_ES}

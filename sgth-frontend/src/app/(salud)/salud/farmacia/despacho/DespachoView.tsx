@@ -205,6 +205,7 @@ export function DespachoView() {
             ? 'Ninguna receta coincide con los filtros aplicados.'
             : 'Aún no se han emitido recetas desde el Dispensario.',
         }}
+        page={page}
       >
         <SgthTable
           records={recetas}
