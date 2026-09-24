@@ -6,17 +6,10 @@ import { IconTrash } from '@tabler/icons-react'
 import { Controller, type Control, type FieldArrayWithId } from 'react-hook-form'
 import type { DataTableColumn } from 'mantine-datatable'
 import { TableActions } from '@/components/ui'
-import { fromDateValueOrNull } from '@/lib/fecha'
+import { formatFechaMes, fromDateValueOrNull } from '@/lib/fecha'
 import type { useContainedInput } from '@/hooks/useContainedInput'
 import type { AdquisicionFormData } from '../schemas/adquisicion.schema'
 import type { ItemAdquisicion } from '../services/adquisicionService'
-
-function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
-}
 
 function toDate(v?: string | null): Date | null {
   if (!v) return null
@@ -47,7 +40,7 @@ export const columnasItemsAdquisicion: DataTableColumn<ItemAdquisicion>[] = [
     accessor: 'fecha_caducidad',
     title: 'Caduca',
     width: 120,
-    render: (item) => <Text size="xs">{formatFecha(item.fecha_caducidad)}</Text>,
+    render: (item) => <Text size="xs">{formatFechaMes(item.fecha_caducidad)}</Text>,
   },
   {
     accessor: 'precio_unitario',

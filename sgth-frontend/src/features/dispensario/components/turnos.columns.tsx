@@ -100,6 +100,10 @@ export function getTurnosColumns(
                 hour: '2-digit', minute: '2-digit',
               })}
             </Text>
+            {/* Aquí NO va `formatFechaMes`: esa lee en UTC, que es lo correcto
+                para un campo `date`, pero `registrado_en` es un instante y se
+                pinta junto a su propia hora. Un turno de las 20:00 saldría con
+                la fecha del día siguiente al lado de «08:00 p. m.». */}
             <Text size="xs" c="dimmed">
               {fecha.toLocaleDateString('es-EC', {
                 day: '2-digit', month: 'short', year: 'numeric',

@@ -5,6 +5,7 @@ import { IconEye, IconLock } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { Nomina, EstadoNomina } from '@/types/api'
 import { StatusBadge } from '@/components/ui'
+import { formatFecha } from '@/lib/fecha'
 
 const ESTADO_LABELS: Record<EstadoNomina, string> = {
   borrador:       'Borrador',
@@ -44,10 +45,7 @@ export const getNominaColumns = (
     render: ({ fecha_inicio }) => (
       <Text size="sm">
         {fecha_inicio
-          ? new Date(fecha_inicio).toLocaleDateString('es-EC', {
-              timeZone: 'UTC',
-              day: '2-digit', month: '2-digit', year: 'numeric',
-            })
+          ? formatFecha(fecha_inicio)
           : '—'}
       </Text>
     ),
@@ -59,10 +57,7 @@ export const getNominaColumns = (
     render: ({ fecha_fin }) => (
       <Text size="sm">
         {fecha_fin
-          ? new Date(fecha_fin).toLocaleDateString('es-EC', {
-              timeZone: 'UTC',
-              day: '2-digit', month: '2-digit', year: 'numeric',
-            })
+          ? formatFecha(fecha_fin)
           : '—'}
       </Text>
     ),

@@ -18,6 +18,7 @@ import type { FichaSaludOcupacional } from
 import type { DataTableColumn } from 'mantine-datatable'
 import { EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { formatFechaMes } from '@/lib/fecha'
 
 export function FemoView() {
   const router = useRouter()
@@ -37,9 +38,7 @@ export function FemoView() {
       width:    120,
       render: (f) => (
         <Text size="sm">
-          {new Date(f.fecha_evaluacion).toLocaleDateString('es-EC', {
-            day: '2-digit', month: 'short', year: 'numeric',
-          })}
+          {formatFechaMes(f.fecha_evaluacion)}
         </Text>
       ),
     },

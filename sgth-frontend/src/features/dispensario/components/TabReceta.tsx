@@ -23,16 +23,11 @@ import type { ItemReceta, RecetaMedica } from '../services/recetaService'
 import {
   IconEdit, IconTrash,
 } from '@tabler/icons-react'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   turno:    AgendaMedica
   consulta: ConsultaMedica
-}
-
-function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
 }
 
 const ESTADO_RECETA: Record<string, { label: string; tone: SemanticTone }> = {
@@ -242,7 +237,7 @@ export function TabReceta({ turno, consulta }: Props) {
                         <IconPill size={12} />
                       </ThemeIcon>
                       <Text size="sm" fw={500}>
-                        {formatFecha(receta.fecha_emision)}
+                        {formatFechaMes(receta.fecha_emision)}
                       </Text>
                     </Group>
                     <Group gap="xs">

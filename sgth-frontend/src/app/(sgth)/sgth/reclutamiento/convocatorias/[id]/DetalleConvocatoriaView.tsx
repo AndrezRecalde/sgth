@@ -37,6 +37,7 @@ import { CalificarPostulanteModal } from
 import { IconStar, IconClipboardList, IconEdit } from '@tabler/icons-react'
 import { TabCriterios } from
   '@/features/seleccion/components/TabCriterios'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   id: string
@@ -267,19 +268,9 @@ export function DetalleConvocatoriaView({ id }: Props) {
                         <IconCalendar size={12} />
                       </ThemeIcon>
                       <Text size="sm">
-                        {new Date(convocatoria.fecha_inicio)
-                          .toLocaleDateString('es-EC', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
+                        {formatFechaMes(convocatoria.fecha_inicio)}
                         {' — '}
-                        {new Date(convocatoria.fecha_fin)
-                          .toLocaleDateString('es-EC', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
+                        {formatFechaMes(convocatoria.fecha_fin)}
                       </Text>
                     </Group>
                   </Stack>

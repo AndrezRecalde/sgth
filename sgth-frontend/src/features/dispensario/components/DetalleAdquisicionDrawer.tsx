@@ -6,18 +6,12 @@ import { useDescargarDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
 import { DetailList, SectionHeading, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
 import { columnasItemsAdquisicion } from './itemsAdquisicion.columns'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   opened:      boolean
   onClose:     () => void
   adquisicion: Adquisicion | null
-}
-
-function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
 }
 
 export function DetalleAdquisicionDrawer({
@@ -47,7 +41,7 @@ export function DetalleAdquisicionDrawer({
                 {adquisicion.anulador?.nombre_completo
                   ?? adquisicion.anulador?.usuario_ti ?? '—'}
                 {', '}
-                {formatFecha(adquisicion.anulado_en)}
+                {formatFechaMes(adquisicion.anulado_en)}
               </Text>
               <Text size="xs" mt={4} c="dimmed">
                 Lo que aportó se devolvió al inventario con su contrapartida en
@@ -62,7 +56,7 @@ export function DetalleAdquisicionDrawer({
               { label: 'Tipo', value: <StatusBadge>{adquisicion.tipo === 'donacion' ? 'Donación' : 'Compra'}</StatusBadge> },
               { label: 'N.° de documento', value: <Text size="sm" ff="monospace">{adquisicion.numero_documento}</Text> },
               { label: 'Proveedor / donante', value: adquisicion.proveedor_o_donante },
-              { label: 'Fecha', value: formatFecha(adquisicion.fecha_adquisicion) },
+              { label: 'Fecha', value: formatFechaMes(adquisicion.fecha_adquisicion) },
               {
                 label: 'Registrado por',
                 value: adquisicion.registrador?.nombre_completo ?? adquisicion.registrador?.usuario_ti,

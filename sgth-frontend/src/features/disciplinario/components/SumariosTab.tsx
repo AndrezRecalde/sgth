@@ -15,9 +15,9 @@ import {
   ESTADO_SUMARIO_LABELS,
   SIGUIENTE_HITO_SUMARIO,
   TIPO_SANCION_LABELS,
-  formatFecha,
   nombreServidor,
 } from '../utils/etiquetas'
+import { formatFecha } from '@/lib/fecha'
 import type { EstadoSumario, Sumario } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_SUMARIO_LABELS) as EstadoSumario[])

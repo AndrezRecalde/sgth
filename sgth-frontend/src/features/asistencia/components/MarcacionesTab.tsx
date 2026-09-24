@@ -20,7 +20,7 @@ import { IconSearch, IconClock } from "@tabler/icons-react";
 import type { MarcacionBiometrica, ServidorConRelaciones } from "@/types/api";
 import type { DataTableColumn } from "mantine-datatable";
 import { StatusBadge } from "@/components/ui";
-import { fromDateValue } from "@/lib/fecha";
+import { formatFecha, fromDateValue } from '@/lib/fecha'
 
 function formatHora(h?: string | null): string {
   if (!h) return "—";
@@ -73,12 +73,7 @@ export function MarcacionesTab() {
       width: 110,
       render: ({ Fecha }) => (
         <Text size="sm">
-          {new Date(Fecha).toLocaleDateString("es-EC", {
-            timeZone: "UTC",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
+          {formatFecha(Fecha)}
         </Text>
       ),
     },

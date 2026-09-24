@@ -6,6 +6,7 @@ import {
 import { StatusBadge, TableActions } from '@/components/ui'
 import { admiteSubunidades, etiquetaNivel } from '../utils/jerarquia'
 import type { UnidadConRelaciones } from '@/types/api'
+import { formatFecha } from '@/lib/fecha'
 
 interface OrganigramaNodeProps {
   unidad: UnidadConRelaciones
@@ -24,12 +25,6 @@ const NIVEL_COLORS = [
   'var(--mantine-color-primario-2)',
   'var(--sgth-border-strong)',
 ]
-
-function formatFecha(fecha: string): string {
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
-}
 
 export function OrganigramaNode({
   unidad, nivel, expanded, onToggle,

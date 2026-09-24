@@ -109,10 +109,3 @@ export function nombreServidor(s?: ServidorResumen | null): string {
     .join(' ') || '—'
 }
 
-export function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
-}

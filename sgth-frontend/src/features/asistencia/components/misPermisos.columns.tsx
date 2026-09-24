@@ -5,7 +5,8 @@ import { IconPrinter } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
-import { diasParaVencer, duracion, fechaPermiso } from '../utils/horarioPermiso'
+import { diasParaVencer, duracion } from '../utils/horarioPermiso'
+import { formatFecha } from '@/lib/fecha'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
 
@@ -59,7 +60,7 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
       accessor: 'fecha',
       title: 'Fecha',
       width: 110,
-      render: ({ fecha }) => <Text size="sm">{fecha ? fechaPermiso(fecha) : '—'}</Text>,
+      render: ({ fecha }) => <Text size="sm">{fecha ? formatFecha(fecha) : '—'}</Text>,
     },
     {
       accessor: 'hora_inicio',

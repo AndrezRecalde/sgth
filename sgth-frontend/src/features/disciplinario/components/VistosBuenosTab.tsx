@@ -15,10 +15,10 @@ import {
   TONO_VISTO_BUENO,
   ESTADO_VISTO_BUENO_LABELS,
   TRANSICIONES_VISTO_BUENO,
-  formatFecha,
   nombreServidor,
   referenciaLegal,
 } from '../utils/etiquetas'
+import { formatFecha } from '@/lib/fecha'
 import type { EstadoVistoBueno, VistoBueno } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_VISTO_BUENO_LABELS) as EstadoVistoBueno[])

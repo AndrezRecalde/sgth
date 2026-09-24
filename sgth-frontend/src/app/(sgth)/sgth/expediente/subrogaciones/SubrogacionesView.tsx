@@ -13,6 +13,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import type { Subrogacion, TipoSubrogacion, UnidadConRelaciones } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 import { confirmar, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions, Toolbar } from '@/components/ui'
+import { formatFecha } from '@/lib/fecha'
 
 const TIPO_LABELS: Record<TipoSubrogacion, string> = {
   subrogacion: 'Subrogación',
@@ -26,13 +27,6 @@ const MOTIVO_LABELS: Record<string, string> = {
   licencia: 'Licencia',
   encargo_vacante: 'Encargo por Vacante',
   otro: 'Otro',
-}
-
-function formatFecha(fecha?: string | null): string {
-  if (!fecha) return '—'
-  return new Date(fecha).toLocaleDateString('es-EC', {
-    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC',
-  })
 }
 
 function nombreServidor(s?: { nombre?: string; apellido?: string } | null): string {

@@ -14,6 +14,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDespacharReceta } from '../hooks/useReceta'
 import { esItemExterno, nombreDeItem } from '../services/recetaService'
 import type { RecetaMedica, ItemReceta } from '../services/recetaService'
+import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   opened:  boolean
@@ -134,9 +135,7 @@ export function DespacharRecetaModal({
               <Text size="sm" fw={600}>{nombrePaciente}</Text>
               <Text size="xs" c="dimmed" ff="monospace">
                 Receta emitida:{' '}
-                {new Date(receta.fecha_emision).toLocaleDateString('es-EC', {
-                  day: '2-digit', month: 'short', year: 'numeric',
-                })}
+                {formatFechaMes(receta.fecha_emision)}
               </Text>
             </Stack>
             <StatusBadge tone={receta.estado === 'pendiente' ? 'warning' : 'info'}>
