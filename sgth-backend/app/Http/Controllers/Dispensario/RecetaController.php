@@ -49,12 +49,16 @@ final class RecetaController extends Controller
             'consultaMedica.medico:id,usuario_ti,email,servidor_id',
             'consultaMedica.medico.servidor:id,nombre,apellido',
         ])
-            ->orderBy('created_at', 'desc')
-            // El desempate no es cosmético: `created_at` es `timestamp(0)` y las
-            // recetas de una misma consulta caen en el mismo segundo. Con el
-            // orden empatado, Postgres resuelve cada página como le conviene y
-            // no tienen por qué coincidir entre sí: la segunda repetía filas de
-            // la primera, y las que desplazaba no salían en ninguna.
+            // Por la fecha que la pantalla enseña. Ordenar por `created_at`
+            // dejaba el listado desordenado a la vista: una receta emitida el
+            // 28 de agosto y registrada el 5 de septiembre salía por encima de
+            // otra emitida el 31, sin que nada en la fila lo explicara.
+            ->orderBy('fecha_emision', 'desc')
+            // El desempate no es cosmético: `fecha_emision` es una fecha sin
+            // hora, así que todas las de un mismo día empatan. Con el orden
+            // empatado, Postgres resuelve cada página como le conviene y no
+            // tienen por qué coincidir entre sí: la segunda repetía filas de la
+            // primera, y las que desplazaba no salían en ninguna.
             ->orderBy('id', 'desc');
 
         $this->aplicarFiltros($query, $request);
@@ -152,12 +156,16 @@ final class RecetaController extends Controller
             $query->whereIn('estado', (array) $request->input('estados'));
         }
 
+        // Por `fecha_emision` y no por `created_at`: la columna que el
+        // despacho enseña es la de emisión, y filtrar por otra escondía
+        // recetas sin decirlo. Una emitida el 28 de agosto y registrada el 5
+        // de septiembre no salía al filtrar agosto, y el mes parecía vacío.
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
+            $query->whereDate('fecha_emision', '>=', $request->input('fecha_desde'));
         }
 
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
+            $query->whereDate('fecha_emision', '<=', $request->input('fecha_hasta'));
         }
 
         if ($request->filled('medico_id')) {

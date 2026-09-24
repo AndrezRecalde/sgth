@@ -166,3 +166,64 @@ test('los_contadores_de_la_cabecera_cuentan_todas_las_recetas_no_solo_la_página
             'pendiente' => 12,
         ]);
 });
+
+/**
+ * El despacho enseña la fecha de EMISIÓN, así que por ahí filtra y por ahí
+ * ordena. Antes lo hacía por `created_at`, que es cuándo se registró: una
+ * receta emitida el 28 de agosto y registrada el 5 de septiembre no salía al
+ * filtrar agosto —el mes parecía vacío— y en el listado se colaba por encima
+ * de otra emitida tres días después.
+ */
+function recetaEmitidaYRegistrada(string $emision, string $registro): RecetaMedica
+{
+    $receta = RecetaMedica::create([
+        'consulta_medica_id' => test()->consulta->id,
+        'fecha_emision'      => $emision,
+        'estado'             => 'pendiente',
+    ]);
+
+    // `created_at` lo pone Eloquent; para separarlo de la emisión hay que
+    // escribirlo después, sin tocar `updated_at`.
+    RecetaMedica::withoutTimestamps(
+        fn () => $receta->forceFill(['created_at' => $registro])->save()
+    );
+
+    return $receta->refresh();
+}
+
+test('el_filtro_de_fechas_va_por_la_emisión_y_no_por_cuándo_se_registró', function () {
+    $tardia = recetaEmitidaYRegistrada('2026-08-28', '2026-09-05 10:00:00');
+    recetaEmitidaYRegistrada('2026-09-05', '2026-09-05 11:00:00');
+
+    $agosto = collect(
+        $this->getJson('/api/v1/dispensario/recetas?fecha_desde=2026-08-01&fecha_hasta=2026-08-31')
+            ->assertOk()->json('datos.data')
+    )->pluck('id');
+
+    expect($agosto)->toContain($tardia->id)
+        ->and($agosto)->toHaveCount(1);
+});
+
+test('la_registrada_tarde_no_aparece_en_el_mes_en_que_se_registró', function () {
+    $tardia = recetaEmitidaYRegistrada('2026-08-28', '2026-09-05 10:00:00');
+
+    $septiembre = collect(
+        $this->getJson('/api/v1/dispensario/recetas?fecha_desde=2026-09-01&fecha_hasta=2026-09-30')
+            ->assertOk()->json('datos.data')
+    )->pluck('id');
+
+    expect($septiembre)->not->toContain($tardia->id);
+});
+
+test('el_listado_se_ordena_por_la_fecha_que_enseña', function () {
+    $agosto     = recetaEmitidaYRegistrada('2026-08-28', '2026-09-05 10:00:00');
+    $septiembre = recetaEmitidaYRegistrada('2026-09-02', '2026-09-03 09:00:00');
+
+    $orden = collect(
+        $this->getJson('/api/v1/dispensario/recetas')->assertOk()->json('datos.data')
+    )->pluck('id');
+
+    // La de septiembre va primero aunque se registrara ANTES que la otra.
+    expect($orden->search($septiembre->id))
+        ->toBeLessThan($orden->search($agosto->id));
+});
