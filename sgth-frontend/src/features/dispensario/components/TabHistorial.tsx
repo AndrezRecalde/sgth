@@ -1,96 +1,20 @@
 "use client";
 
-import {
-  Stack,
-  Text,
-  Card,
-  Group,
-  Skeleton,
-  Button,
-  ThemeIcon,
-  Center,
-  Pagination,
-} from "@mantine/core";
+import { Center, Pagination, Skeleton, Stack, Text } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import {
-  IconStethoscope, IconDental,
-} from "@tabler/icons-react";
+import { IconStethoscope } from "@tabler/icons-react";
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { consultaMedicaService } from "../services/consultaMedicaService";
 import { DetalleConsultaDrawer } from "./DetalleConsultaDrawer";
+import { ConsultaItem } from "./ConsultaItem";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DataState } from "@/components/ui";
-import type { ConsultaMedica } from "../services/consultaMedicaService";
-import { StatusBadge } from "@/components/ui";
-import { formatFechaMes, fromDateValueOrUndefined } from '@/lib/fecha'
+import { fromDateValueOrUndefined } from '@/lib/fecha'
 
 interface Props {
   historiaClinicaId: number;
-}
-
-function ConsultaItem({
-  consulta,
-  onVerDetalle,
-}: {
-  consulta: ConsultaMedica;
-  onVerDetalle: (id: number) => void;
-}) {
-  const esOdontologia = consulta.especialidad === "odontologia";
-
-  return (
-    <Card withBorder radius="md" p="sm">
-      <Stack gap="xs">
-        <Group justify="space-between" wrap="nowrap">
-          <Group gap="xs">
-            {/* El historial mezcla las dos especialidades; hasta ahora no
-                había forma de distinguirlas de un vistazo. */}
-            <ThemeIcon
-              size="sm"
-              variant="light"
-            >
-              {esOdontologia
-                ? <IconDental size={12} />
-                : <IconStethoscope size={12} />}
-            </ThemeIcon>
-            <Text size="sm" fw={500}>
-              {formatFechaMes(consulta.fecha_consulta)}
-            </Text>
-            {consulta.especialidad && (
-              <StatusBadge size="xs">
-                {esOdontologia ? "Odontología" : "Medicina general"}
-              </StatusBadge>
-            )}
-            {consulta.tipo_atencion && (
-              <StatusBadge size="xs">
-                {consulta.tipo_atencion.replace("_", " ")}
-              </StatusBadge>
-            )}
-            {consulta.tipo_diagnostico && (
-              <StatusBadge
-                tone={consulta.tipo_diagnostico === 'definitivo' ? 'success' : 'warning'}
-                size="xs"
-              >
-                {consulta.tipo_diagnostico}
-              </StatusBadge>
-            )}
-          </Group>
-          <Button
-            size="compact-xs"
-            variant="subtle"
-            onClick={() => onVerDetalle(consulta.id)}
-          >
-            Ver detalle
-          </Button>
-        </Group>
-
-        <Text size="xs" c="dimmed">
-          Dr. {consulta.medico?.nombre_completo ?? "—"}
-        </Text>
-      </Stack>
-    </Card>
-  );
 }
 
 export function TabHistorial({ historiaClinicaId }: Props) {

@@ -1,83 +1,56 @@
 'use client'
 
-import type { SemanticTone } from '@/config/design.tokens'
 import {
-  Card, Stack, Group, Text, Avatar,
-  Skeleton,
-  ActionIcon, Textarea, 
-  Collapse,
+  ActionIcon, Avatar, Card, Collapse, Group, Skeleton, Stack, Text, Textarea,
 } from '@mantine/core'
-import {
-  IconUser, IconUsers, IconAlertTriangle,
-  IconPlus, IconChevronDown, IconChevronUp,
-  IconTrash,
-} from '@tabler/icons-react'
+import { IconChevronDown, IconChevronUp, IconUser, IconUsers } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDisclosure } from '@mantine/hooks'
+import { DataState, SectionHeading } from '@/components/ui'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import { AgregarAlergiaModal } from './AgregarAlergiaModal'
 import { AgregarAntecedenteModal } from './AgregarAntecedenteModal'
-import { useContextoConsulta } from '../hooks/useContextoConsulta'
-import {
-  useAnularAlergia, useAnularAntecedente,
-} from '../hooks/useHistoriaClinica'
 import { AnularRegistroModal } from './AnularRegistroModal'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { AvisoAlergiaGrave, SeccionAlergias } from './SeccionAlergias'
+import { BloqueTriaje } from './BloqueTriaje'
+import { SeccionAntecedentes } from './SeccionAntecedentes'
+import { useContextoConsulta } from '../hooks/useContextoConsulta'
+import { useAnularAlergia, useAnularAntecedente } from '../hooks/useHistoriaClinica'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
-import { DataState, SectionHeading, StatusBadge } from '@/components/ui'
 
 interface Props {
   turno:             AgendaMedica
   historiaClinicaId: number
 }
 
-const TONO_SEVERIDAD: Record<string, SemanticTone> = {
-  leve:     'info',
-  moderada: 'warning',
-  grave:    'danger',
+/** Lo que se está anulando, mientras el modal pide el motivo. */
+type RegistroAAnular = {
+  id:   number
+  tipo: 'alergia' | 'antecedente'
+  desc: string
 }
 
-function CampoTriaje({ label, valor }: { label: string; valor?: string | number | null }) {
-  if (!valor && valor !== 0) return null
-  return (
-    <Group justify="space-between" py={1}>
-      <Text size="xs" c="dimmed">{label}</Text>
-      <Text size="xs" fw={500}>{valor}</Text>
-    </Group>
-  )
-}
-
-export function PanelContextoPaciente({
-  turno, historiaClinicaId,
-}: Props) {
+export function PanelContextoPaciente({ turno, historiaClinicaId }: Props) {
   const contained = useContainedInput()
   const { data: contexto, isLoading, error, refetch } = useContextoConsulta(
     historiaClinicaId, turno.id
   )
   const [notasAbiertas, setNotasAbiertas] = useState(false)
-  const [alergiaOpened,
-    { open: abrirAlergia, close: cerrarAlergia }] =
-    useDisclosure(false)
-  const [antecedentePersonalOpened,
-    { open: abrirAntecedentePersonal,
-      close: cerrarAntecedentePersonal }] =
-    useDisclosure(false)
-  const [antecedenteFamiliarOpened,
-    { open: abrirAntecedenteFamiliar,
-      close: cerrarAntecedenteFamiliar }] =
-    useDisclosure(false)
+
+  const [alergiaOpened, alergiaModal]   = useDisclosure(false)
+  const [personalOpened, personalModal] = useDisclosure(false)
+  const [familiarOpened, familiarModal] = useDisclosure(false)
+  const [anularOpened, anularModal]     = useDisclosure(false)
 
   const anularAlergia     = useAnularAlergia(historiaClinicaId, turno.id)
   const anularAntecedente = useAnularAntecedente(historiaClinicaId, turno.id)
+  const [registroAnular, setRegistroAnular] = useState<RegistroAAnular | null>(null)
 
-  const [registroAnular, setRegistroAnular] = useState<{
-    id:   number
-    tipo: 'alergia' | 'antecedente'
-    desc: string
-  } | null>(null)
-
-  const [anularOpened,
-    { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
+  const pedirAnulacion = (registro: RegistroAAnular) => {
+    setRegistroAnular(registro)
+    anularModal.open()
+  }
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
@@ -109,22 +82,17 @@ export function PanelContextoPaciente({
     )
   }
 
-  const triaje    = contexto?.triaje_actual as Triaje | null | undefined
-  const alergias  = contexto?.historia_clinica.alergias ?? []
-  const antecedentesPersonales = (contexto?.historia_clinica.antecedentes ?? [])
-    .filter(a => a.tipo !== 'familiar')
-  const antecedentesFamiliares = (contexto?.historia_clinica.antecedentes ?? [])
-    .filter(a => a.tipo === 'familiar')
-  const hayAlergiaGrave = alergias.some(a => a.severidad === 'grave')
+  const triaje   = contexto?.triaje_actual as Triaje | null | undefined
+  const alergias = contexto?.historia_clinica.alergias ?? []
+  const antecedentes = contexto?.historia_clinica.antecedentes ?? []
+  const personales = antecedentes.filter(a => a.tipo !== 'familiar')
+  const familiares = antecedentes.filter(a => a.tipo === 'familiar')
 
   return (
     <Card withBorder radius="lg" p="md" h="100%">
       <Stack gap="sm">
         <Group gap="xs" wrap="nowrap">
-          <Avatar
-            radius="xl"
-            size="sm"
-          >
+          <Avatar radius="xl" size="sm">
             {esServidor ? <IconUser size={14} /> : <IconUsers size={14} />}
           </Avatar>
           <Stack gap={0}>
@@ -137,181 +105,38 @@ export function PanelContextoPaciente({
           </Stack>
         </Group>
 
-        {hayAlergiaGrave && (
-          <Card
-            withBorder
-            radius="sm"
-            p="xs"
-            style={{
-              borderColor: 'var(--mantine-color-red-6)',
-              backgroundColor: 'var(--mantine-color-red-light)',
-            }}
-          >
-            <Group gap="xs">
-              <IconAlertTriangle
-                size={14}
-                color="var(--mantine-color-red-6)"
-              />
-              <Text size="xs" fw={600} c="red">
-                Alergia grave detectada
-              </Text>
-            </Group>
-            {alergias.filter(a => a.severidad === 'grave').map(a => (
-              <Text key={a.id} size="xs" c="red" ml="xs">
-                · {a.descripcion}
-              </Text>
-            ))}
-          </Card>
-        )}
+        <AvisoAlergiaGrave alergias={alergias} />
 
-        {triaje && (
-          <>
-            <SectionHeading title="Triaje" />
-            <Stack gap={0}>
-              <CampoTriaje label="Peso"          valor={triaje.peso_kg ? `${triaje.peso_kg} kg` : null} />
-              <CampoTriaje label="Talla"         valor={triaje.talla_cm ? `${triaje.talla_cm} cm` : null} />
-              <CampoTriaje label="IMC"           valor={triaje.imc} />
-              <CampoTriaje label="P. arterial"   valor={triaje.presion_sistolica ? `${triaje.presion_sistolica}/${triaje.presion_diastolica}` : null} />
-              <CampoTriaje label="F. cardíaca"   valor={triaje.frecuencia_cardiaca ? `${triaje.frecuencia_cardiaca} bpm` : null} />
-              <CampoTriaje label="F. respiratoria" valor={triaje.frecuencia_respiratoria ? `${triaje.frecuencia_respiratoria} rpm` : null} />
-              <CampoTriaje label="Temperatura"   valor={triaje.temperatura_c ? `${triaje.temperatura_c} °C` : null} />
-              <CampoTriaje label="Sat. O2"       valor={triaje.saturacion_oxigeno ? `${triaje.saturacion_oxigeno}%` : null} />
-            </Stack>
-          </>
-        )}
+        <BloqueTriaje triaje={triaje} />
 
-        <SectionHeading
-          title="Alergias"
-          action={
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              aria-label="Agregar alergia"
-              onClick={abrirAlergia}
-            >
-              <IconPlus size={10} />
-            </ActionIcon>
-          }
+        <SeccionAlergias
+          alergias={alergias}
+          onAgregar={alergiaModal.open}
+          onAnular={(a) => pedirAnulacion({
+            id: a.id, tipo: 'alergia', desc: a.descripcion,
+          })}
         />
-        {alergias.length === 0 ? (
-          <Text size="xs" c="dimmed">Ninguna registrada</Text>
-        ) : (
-          <Stack gap={3}>
-            {alergias.map((a) => (
-              <Group key={a.id} gap={5} wrap="nowrap"
-                justify="space-between"
-              >
-                <Group gap={5} wrap="nowrap" style={{ flex: 1 }}>
-                  <StatusBadge tone={TONO_SEVERIDAD[a.severidad] ?? 'neutral'} size="xs">
-                    {a.severidad}
-                  </StatusBadge>
-                  <Text size="xs" lineClamp={1}>{a.descripcion}</Text>
-                </Group>
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  aria-label={`Anular alergia: ${a.descripcion}`}
-                  onClick={() => {
-                    setRegistroAnular({
-                      id: a.id, tipo: 'alergia',
-                      desc: a.descripcion,
-                    })
-                    abrirAnular()
-                  }}
-                >
-                  <IconTrash size={10} />
-                </ActionIcon>
-              </Group>
-            ))}
-          </Stack>
-        )}
 
-        <SectionHeading
-          title="Antecedentes personales"
-          action={
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              aria-label="Agregar antecedente personal"
-              onClick={abrirAntecedentePersonal}
-            >
-              <IconPlus size={10} />
-            </ActionIcon>
-          }
+        <SeccionAntecedentes
+          titulo="Antecedentes personales"
+          antecedentes={personales}
+          conTipo
+          vacio="Ninguno registrado"
+          onAgregar={personalModal.open}
+          onAnular={(a) => pedirAnulacion({
+            id: a.id, tipo: 'antecedente', desc: a.descripcion,
+          })}
         />
-        {antecedentesPersonales.length === 0 ? (
-          <Text size="xs" c="dimmed">Ninguno registrado</Text>
-        ) : (
-          <Stack gap={3}>
-            {antecedentesPersonales.map((a) => (
-              <Group key={a.id} justify="space-between"
-                wrap="nowrap" align="flex-start"
-              >
-                <Text size="xs" style={{ flex: 1 }}>
-                  <Text span fw={500} c="dimmed">{a.tipo}: </Text>
-                  {a.descripcion}
-                </Text>
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  aria-label={`Anular antecedente: ${a.descripcion}`}
-                  onClick={() => {
-                    setRegistroAnular({
-                      id: a.id, tipo: 'antecedente',
-                      desc: a.descripcion,
-                    })
-                    abrirAnular()
-                  }}
-                >
-                  <IconTrash size={10} />
-                </ActionIcon>
-              </Group>
-            ))}
-          </Stack>
-        )}
 
-        <SectionHeading
-          title="Antecedentes familiares"
-          action={
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              aria-label="Agregar antecedente familiar"
-              onClick={abrirAntecedenteFamiliar}
-            >
-              <IconPlus size={10} />
-            </ActionIcon>
-          }
+        <SeccionAntecedentes
+          titulo="Antecedentes familiares"
+          antecedentes={familiares}
+          vacio="Ninguno registrado"
+          onAgregar={familiarModal.open}
+          onAnular={(a) => pedirAnulacion({
+            id: a.id, tipo: 'antecedente', desc: a.descripcion,
+          })}
         />
-        {antecedentesFamiliares.length === 0 ? (
-          <Text size="xs" c="dimmed">Ninguno registrado</Text>
-        ) : (
-          <Stack gap={3}>
-            {antecedentesFamiliares.map((a) => (
-              <Group key={a.id} justify="space-between"
-                wrap="nowrap" align="flex-start"
-              >
-                <Text size="xs" style={{ flex: 1 }}>
-                  {a.descripcion}
-                </Text>
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  aria-label={`Anular antecedente: ${a.descripcion}`}
-                  onClick={() => {
-                    setRegistroAnular({
-                      id: a.id, tipo: 'antecedente',
-                      desc: a.descripcion,
-                    })
-                    abrirAnular()
-                  }}
-                >
-                  <IconTrash size={10} />
-                </ActionIcon>
-              </Group>
-            ))}
-          </Stack>
-        )}
 
         {/* El desplegable era un `div` con `cursor: pointer` y un `onClick`:
             con el ratón funcionaba y con el teclado no existía, porque nada
@@ -344,9 +169,10 @@ export function PanelContextoPaciente({
           />
         </Collapse>
       </Stack>
+
       <AnularRegistroModal
         opened={anularOpened}
-        onClose={() => { setRegistroAnular(null); cerrarAnular() }}
+        onClose={() => { setRegistroAnular(null); anularModal.close() }}
         titulo={registroAnular?.tipo === 'alergia'
           ? 'Anular alergia'
           : 'Anular antecedente'}
@@ -361,7 +187,7 @@ export function PanelContextoPaciente({
             { id: registroAnular.id, motivo },
             { onSuccess: () => {
               setRegistroAnular(null)
-              cerrarAnular()
+              anularModal.close()
             }}
           )
         }}
@@ -369,20 +195,20 @@ export function PanelContextoPaciente({
 
       <AgregarAlergiaModal
         opened={alergiaOpened}
-        onClose={cerrarAlergia}
+        onClose={alergiaModal.close}
         historiaId={historiaClinicaId}
         agendaId={turno.id}
       />
       <AgregarAntecedenteModal
-        opened={antecedentePersonalOpened}
-        onClose={cerrarAntecedentePersonal}
+        opened={personalOpened}
+        onClose={personalModal.close}
         historiaId={historiaClinicaId}
         agendaId={turno.id}
         tipo="personal"
       />
       <AgregarAntecedenteModal
-        opened={antecedenteFamiliarOpened}
-        onClose={cerrarAntecedenteFamiliar}
+        opened={familiarOpened}
+        onClose={familiarModal.close}
         historiaId={historiaClinicaId}
         agendaId={turno.id}
         tipo="familiar"

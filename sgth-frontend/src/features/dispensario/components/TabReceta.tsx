@@ -1,28 +1,20 @@
 'use client'
 
-import { confirmar, DataState, StatusBadge } from '@/components/ui'
+import { DataState, StatusBadge } from '@/components/ui'
 import {
   Stack, Text, Button, Group,
   Card, ThemeIcon,
 } from '@mantine/core'
 import { IconPill, IconPlus, IconPrinter } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { esItemExterno, nombreDeItem, recetaService } from '../services/recetaService'
+import { recetaService } from '../services/recetaService'
 import { RecetaModal } from './RecetaModal'
-import { EditarItemRecetaModal } from './EditarItemRecetaModal'
-import { SgthTable } from '@/components/ui/SgthTable'
-import { TableActions } from '@/components/ui/TableActions'
-import { useEmitirReceta, useAccionesItem, useRecetaPdf } from '../hooks/useReceta'
-import { useAuthStore } from '@/store/auth.store'
+import { ItemsRecetaTable } from './ItemsRecetaTable'
+import { useEmitirReceta, useRecetaPdf } from '../hooks/useReceta'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { SemanticTone } from '@/config/design.tokens'
-import type { ItemReceta, RecetaMedica } from '../services/recetaService'
-import {
-  IconEdit, IconTrash,
-} from '@tabler/icons-react'
 import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
@@ -38,141 +30,6 @@ const ESTADO_RECETA: Record<string, { label: string; tone: SemanticTone }> = {
   // No es un problema ni un logro: la farmacia no tiene nada que hacer con
   // ella, y con eso queda cerrada.
   externa:             { label: 'Externa',    tone: 'neutral' },
-}
-
-/**
- * Estados en los que la receta todavía se puede retocar, los mismos que acepta
- * el servidor. `externa` es terminal para la farmacia, no para el médico: que
- * nada se entregue aquí no impide corregir la dosis de lo recetado.
- */
-const EDITABLES = ['pendiente', 'externa']
-
-function ItemsRecetaTable({
-  receta,
-  consulta,
-}: {
-  receta:   RecetaMedica
-  consulta: ConsultaMedica
-}) {
-  const [itemSel, setItemSel] = useState<ItemReceta | null>(null)
-  const [editOpened,
-    { open: abrirEdit, close: cerrarEdit }] = useDisclosure(false)
-  const { quitarItem } = useAccionesItem(consulta.id)
-  const { usuario } = useAuthStore()
-
-  // Retocar la receta es cosa de quien la firmó, y el servidor lo rechaza con
-  // un 403 aunque se llame a la API a mano. Aquí solo decide si se ofrecen los
-  // botones: enseñar un «Editar» que siempre va a fallar es peor que no
-  // enseñarlo.
-  const puedeRetocar = EDITABLES.includes(receta.estado)
-    && (usuario?.id === undefined || consulta.medico_id === usuario.id)
-
-  const columns = [
-    {
-      accessor: 'medicina',
-      title:    'Medicina',
-      render: (item: ItemReceta) => (
-        // La insignia va debajo del nombre y no a su lado: esta columna se
-        // estrecha con el ancho de la pantalla, y en línea quedaba cortada por
-        // el borde justo en el aviso que hay que leer.
-        <Stack gap={2} align="flex-start">
-          <Text size="sm" fw={500}>{nombreDeItem(item)}</Text>
-          {esItemExterno(item) ? (
-            <>
-              <StatusBadge tone="warning" size="xs">
-                Fuera de farmacia
-              </StatusBadge>
-              <Text size="xs" c="dimmed">
-                El paciente lo adquiere fuera del dispensario.
-              </Text>
-            </>
-          ) : item.inventario?.concentracion ? (
-            <Text size="xs" c="dimmed">
-              {item.inventario.concentracion}
-            </Text>
-          ) : null}
-        </Stack>
-      ),
-    },
-    {
-      accessor: 'cantidad_prescrita',
-      title:    'Cant.',
-      width:    70,
-      render: (item: ItemReceta) => (
-        <Text size="sm" ta="center">{item.cantidad_prescrita}</Text>
-      ),
-    },
-    {
-      accessor: 'dosis',
-      title:    'Dosis',
-      width:    110,
-      render: (item: ItemReceta) => (
-        <Text size="sm">{item.dosis}</Text>
-      ),
-    },
-    {
-      accessor: 'frecuencia',
-      title:    'Frecuencia',
-      width:    130,
-      render: (item: ItemReceta) => (
-        <Text size="sm">{item.frecuencia}</Text>
-      ),
-    },
-    {
-      accessor: 'duracion',
-      title:    'Duración',
-      width:    100,
-      render: (item: ItemReceta) => (
-        <Text size="sm">{item.duracion}</Text>
-      ),
-    },
-    ...(puedeRetocar ? [{
-      accessor: 'acciones',
-      title:    '',
-      width:    50,
-      render: (item: ItemReceta) => (
-        <TableActions actions={[
-          {
-            label:   'Editar',
-            icon:    <IconEdit size={14} />,
-            onClick: () => { setItemSel(item); abrirEdit() },
-          },
-          {
-            label:   'Quitar',
-            icon:    <IconTrash size={14} />,
-            color:   'red',
-            onClick: () => confirmar({
-              title:   'Quitar medicamento',
-              message: 'Se quitará este medicamento de la receta.',
-              destructiva: true,
-              confirmLabel: 'Quitar',
-              onConfirm: () => quitarItem.mutate({
-                recetaId: receta.id,
-                itemId:   item.id!,
-              }),
-            }),
-          },
-        ]} />
-      ),
-    }] : []),
-  ]
-
-  return (
-    <>
-      <SgthTable
-        records={receta.items}
-        columns={columns}
-        minHeight={60}
-      />
-      <EditarItemRecetaModal
-        opened={editOpened}
-        onClose={() => { setItemSel(null); cerrarEdit() }}
-        item={itemSel}
-        recetaId={receta.id}
-        consultaId={consulta.id}
-      />
-    </>
-  )
 }
 
 export function TabReceta({ turno, consulta }: Props) {
