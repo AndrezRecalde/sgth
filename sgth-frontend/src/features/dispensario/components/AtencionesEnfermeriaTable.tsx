@@ -46,6 +46,7 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
         loading={isLoading}
         error={error}
         empty={!atenciones.length}
+        page={page}
         skeletonRows={3}
         emptyProps={{
           icon: IconVaccine,
