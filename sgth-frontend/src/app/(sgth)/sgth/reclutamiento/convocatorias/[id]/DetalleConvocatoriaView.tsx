@@ -39,6 +39,9 @@ import { TabCriterios } from
   '@/features/seleccion/components/TabCriterios'
 import { formatFechaMes } from '@/lib/fecha'
 
+import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
+
 interface Props {
   id: string
 }
@@ -427,6 +430,3 @@ export function DetalleConvocatoriaView({ id }: Props) {
     </PageShell>
   )
 }
-
-import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
-import { ROUTES } from '@/config/routes'

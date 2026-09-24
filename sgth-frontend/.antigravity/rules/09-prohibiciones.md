@@ -21,6 +21,8 @@ recordarlas:
 - títulos de notificación genéricos: «Error», «Éxito», «Eliminado», «Error al …»,
   «No se pudo <verbo>» sin decir qué (ver [08](08-datos-y-estado.md))
 - `<form>` sin `noValidate` y `'use client'` en un `page.tsx`
+- un `import` fuera de la cabecera del archivo (`import/first`, se autoarregla
+  con `npx eslint src --fix`)
 - en las hojas CSS (`scripts/lint-css.mjs`, que corre dentro de `npm run lint`):
   hexadecimales, `rgb()`/`hsl()`, colores con nombre y escalas fuera de la paleta
 - una página del área autenticada que no pinta dentro de `PageShell` en todos sus

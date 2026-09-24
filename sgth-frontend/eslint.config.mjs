@@ -204,6 +204,20 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
+      // Todos los `import` al principio del archivo.
+      //
+      // Cuatro archivos los tenían pegados DEBAJO del componente. No rompía
+      // nada —los `import` se elevan, así que el módulo se comporta igual—,
+      // pero no era descuido de nadie: es residuo de migraciones con script
+      // que añadieron la línea al final en vez de insertarla (el PageShell en
+      // todas las páginas, y las rutas fuera de nav.ts).
+      //
+      // Y de ahí el motivo real para prohibirlo: cada vez que la siguiente
+      // automatización busca «el último import» para insertar el suyo, lo
+      // encuentra al final del archivo y mete la línea en mitad del código.
+      // Pasó dos veces seguidas. La regla se autoarregla con `--fix`.
+      "import/first": "error",
+
       // Un identificador que empieza por `_` declara que no se usa a
       // propósito: parámetros que hay que mantener por la firma, elementos
       // descartados al desestructurar, errores capturados que no se inspeccionan.

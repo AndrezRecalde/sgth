@@ -32,6 +32,9 @@ import { KardexDrawer } from "@/features/dispensario/components/KardexDrawer";
 import { getMedicinasColumns } from "@/features/dispensario/components/medicinas.columns";
 import type { InventarioMedicina } from "@/features/dispensario/services/inventarioMedicinaService";
 
+import { PageShell , confirmar } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
+
 export function FarmaciaView() {
   const contained = useContainedInput("sm");
   const [page, setPage] = useState(1);
@@ -290,6 +293,3 @@ export function FarmaciaView() {
     </PageShell>
   );
 }
-
-import { PageShell , confirmar } from '@/components/ui'
-import { ROUTES } from '@/config/routes'
