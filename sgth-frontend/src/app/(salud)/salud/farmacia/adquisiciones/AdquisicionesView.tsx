@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Tabs, Card, Alert, Text } from '@mantine/core'
+import { Alert, Button, Card, Stack, Tabs, Text } from '@mantine/core'
 import {
-  IconShoppingCart, IconList, IconCheck,
+  IconShoppingCart, IconList, IconCheck, IconPlus,
 } from '@tabler/icons-react'
 import { AdquisicionForm } from
   '@/features/dispensario/components/AdquisicionForm'
@@ -46,15 +46,17 @@ function NuevaAdquisicion({
               Adquisición {creada.folio} registrada exitosamente
             </Text>
           </Alert>
-          <Card.Section
-            p="sm"
+          {/* Un botón y no un `Card.Section` con `cursor: pointer`: aquello
+              se pulsaba con el ratón y con el teclado no existía, porque nada
+              podía recibir el foco para accionarlo. Es además la única salida
+              hacia delante de esta pantalla. */}
+          <Button
+            variant="light"
+            leftSection={<IconPlus size={14} />}
             onClick={() => setCreada(null)}
-            style={{ cursor: 'pointer', textAlign: 'center' }}
           >
-            <Text size="sm" c="primario" fw={600}>
-              Registrar otra adquisición
-            </Text>
-          </Card.Section>
+            Registrar otra adquisición
+          </Button>
         </Stack>
       </Card>
     )
