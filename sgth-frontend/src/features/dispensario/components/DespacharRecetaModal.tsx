@@ -290,6 +290,9 @@ export function DespacharRecetaModal({
                       <Grid.Col span={{ base: 12, sm: 4 }}>
                         <NumberInput
                           label="Cantidad a despachar"
+                          // Unidades entregadas: enteras, como las exige el
+                          // servidor. Mantine deja decimales por defecto.
+                          allowDecimal={false}
                           size="xs"
                           min={0}
                           max={tope}

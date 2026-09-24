@@ -88,6 +88,9 @@ export function getColumnasCapturaItems(
           render={({ field }) => (
             <NumberInput
               aria-label="Cantidad"
+              // Unidades ingresadas: enteras. El precio de al lado NO lleva
+              // esta prop: ahí los centavos son legítimos.
+              allowDecimal={false}
               size="xs"
               min={1}
               {...contained}

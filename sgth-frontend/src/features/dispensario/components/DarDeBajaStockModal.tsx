@@ -7,6 +7,7 @@ import {
 import { FormModal, StatusBadge } from '@/components/ui'
 import { useEffect } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
@@ -15,6 +16,10 @@ import {
 import type {
   InventarioMedicina, LoteMedicina,
 } from '../services/inventarioMedicinaService'
+import {
+  bajaStockSchema, motivoDeBaja, CAUSAS_BAJA,
+  type BajaStockFormData,
+} from '../schemas/inventarioMovimiento.schema'
 import { estaCaducado } from '../utils/caducidad'
 import { formatFechaMes } from '@/lib/fecha'
 
@@ -24,23 +29,8 @@ interface Props {
   medicina: InventarioMedicina | null
 }
 
-type FormData = {
-  lote_id:  string
-  cantidad: number
-  causa:    string
-  detalle:  string
-}
-
 /** Referencia estable para cuando la consulta de lotes aún no ha respondido. */
 const SIN_LOTES: LoteMedicina[] = []
-
-const CAUSAS = [
-  { value: 'Caducidad',     label: 'Caducidad'                  },
-  { value: 'Merma',         label: 'Merma'                      },
-  { value: 'Rotura',        label: 'Rotura o envase dañado'     },
-  { value: 'Contaminación', label: 'Contaminación'              },
-  { value: 'Otra',          label: 'Otra'                       },
-]
 
 /** ¿Caducó ya este lote? La regla vive en `utils/caducidad`, con el resto. */
 const loteCaducado = (lote: LoteMedicina): boolean =>
@@ -70,8 +60,11 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
   const {
     control, register, handleSubmit, reset, setValue,
     formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: { lote_id: '', cantidad: 0, causa: '', detalle: '' },
+  } = useForm<BajaStockFormData>({
+    resolver: zodResolver(bajaStockSchema),
+    // `causa` se omite: no hay una por defecto, y darle la cadena vacía
+    // obligaría a mentir sobre el tipo del enum (regla 09).
+    defaultValues: { lote_id: '', cantidad: 0, detalle: '' },
   })
 
   // Se propone el primero en salir por FEFO, que con lo vencido delante es
@@ -85,7 +78,9 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
     reset({
       lote_id:  primero ? String(primero.id) : '',
       cantidad: vencido ? primero!.stock_actual : 0,
-      causa:    vencido ? 'Caducidad' : '',
+      // Se propone «Caducidad» solo si el lote lo está; si no, la causa se
+      // omite en vez de ir vacía, que el enum ya no admite.
+      ...(vencido ? { causa: 'Caducidad' as const } : {}),
       detalle:  '',
     })
   }, [opened, medicina, lotes, reset])
@@ -96,11 +91,9 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
   const loteElegido = lotes.find(l => String(l.id) === loteId) ?? null
   const tope = loteElegido?.stock_actual ?? medicina?.stock_actual ?? 0
 
-  const onSubmit = (values: FormData) => {
+  const onSubmit = (values: BajaStockFormData) => {
     if (!medicina) return
-    const motivo = values.detalle.trim()
-      ? `${values.causa} — ${values.detalle.trim()}`
-      : values.causa
+    const motivo = motivoDeBaja(values.causa, values.detalle)
 
     registrarBaja.mutateAsync({
       id: medicina.id,
@@ -154,7 +147,6 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
         <Controller
           name="lote_id"
           control={control}
-          rules={{ required: 'Indique de qué lote salen' }}
           render={({ field }) => (
             <Select
               label="Lote"
@@ -193,19 +185,12 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
         <Controller
           name="cantidad"
           control={control}
-          rules={{
-            required: 'Indique cuántas unidades salen',
-            min: { value: 1, message: 'Debe ser al menos 1' },
-            max: {
-              value: tope,
-              message: `El lote tiene ${tope} unidades`,
-            },
-          }}
           render={({ field }) => (
             <NumberInput
               label="Unidades a dar de baja"
               min={1}
               max={tope}
+              allowDecimal={false}
               required
               {...contained}
               value={field.value}
@@ -225,12 +210,11 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
         <Controller
           name="causa"
           control={control}
-          rules={{ required: 'Seleccione la causa' }}
           render={({ field }) => (
             <Select
               label="Causa"
               placeholder="Seleccione"
-              data={CAUSAS}
+              data={CAUSAS_BAJA}
               required
               {...contained}
               value={field.value}
@@ -247,6 +231,10 @@ export function DarDeBajaStockModal({ opened, onClose, medicina }: Props) {
           minRows={2}
           {...contained}
           {...register('detalle')}
+          // El tope del motivo se comprueba sobre causa + detalle, y el aviso
+          // sale aquí: sin este `error` la validación bloqueaba el envío en
+          // silencio, que es peor que dejar pasar el 422.
+          error={errors.detalle?.message}
         />
       </Stack>
     </FormModal>

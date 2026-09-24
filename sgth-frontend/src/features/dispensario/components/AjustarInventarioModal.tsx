@@ -7,20 +7,19 @@ import {
 import { FormModal, StatusBadge } from '@/components/ui'
 import { useEffect } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useInventarioMutations } from '../hooks/useInventarioMedicina'
 import type { InventarioMedicina } from '../services/inventarioMedicinaService'
+import {
+  ajusteInventarioSchema, type AjusteInventarioFormData,
+} from '../schemas/inventarioMovimiento.schema'
 
 interface Props {
   opened:   boolean
   onClose:  () => void
   medicina: InventarioMedicina | null
-}
-
-type FormData = {
-  nuevo_stock: number
-  motivo:      string
 }
 
 export function AjustarInventarioModal({
@@ -32,7 +31,8 @@ export function AjustarInventarioModal({
   const {
     control, register, handleSubmit, reset,
     formState: { errors },
-  } = useForm<FormData>({
+  } = useForm<AjusteInventarioFormData>({
+    resolver: zodResolver(ajusteInventarioSchema),
     defaultValues: { nuevo_stock: 0, motivo: '' },
   })
 
@@ -47,7 +47,7 @@ export function AjustarInventarioModal({
 
   const nuevoStock = useWatch({ control, name: 'nuevo_stock' })
 
-  const onSubmit = (values: FormData) => {
+  const onSubmit = (values: AjusteInventarioFormData) => {
     if (!medicina) return
     ajustarInventario.mutateAsync({
       id: medicina.id,
@@ -97,14 +97,13 @@ export function AjustarInventarioModal({
         <Controller
           name="nuevo_stock"
           control={control}
-          rules={{
-            required: 'Indique el stock contado',
-            min: { value: 0, message: 'No puede ser negativo' },
-          }}
           render={({ field }) => (
             <NumberInput
               label="Stock real (conteo físico)"
               min={0}
+              // Un conteo físico es de unidades enteras, y así lo exige el
+              // servidor. Mantine deja decimales por defecto.
+              allowDecimal={false}
               required
               {...contained}
               value={field.value}
@@ -133,9 +132,7 @@ export function AjustarInventarioModal({
           minRows={2}
           {...contained}
           required
-          {...register('motivo', {
-            required: 'Indique el motivo del ajuste',
-          })}
+          {...register('motivo')}
           error={errors.motivo?.message}
         />
       </Stack>

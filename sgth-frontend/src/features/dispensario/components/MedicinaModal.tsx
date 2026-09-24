@@ -190,6 +190,9 @@ export function MedicinaModal({
           render={({ field }) => (
             <NumberInput
               label="Stock mínimo"
+              // Unidades: el servidor las exige enteras y Mantine deja
+              // decimales por defecto.
+              allowDecimal={false}
               description="Alerta cuando baje de este nivel"
               {...contained}
               value={field.value}
