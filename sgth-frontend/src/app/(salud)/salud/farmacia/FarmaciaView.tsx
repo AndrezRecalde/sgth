@@ -239,6 +239,7 @@ export function FarmaciaView() {
             ? "Ninguna medicina coincide con los filtros aplicados."
             : "Aún no hay medicinas registradas en el inventario.",
         }}
+        page={page}
       >
       <SgthTable
         records={medicinas}

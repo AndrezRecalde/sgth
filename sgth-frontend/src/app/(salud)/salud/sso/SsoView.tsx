@@ -110,6 +110,7 @@ export function SsoView() {
             ? 'No hay solicitudes de certificación pendientes de Talento Humano.'
             : 'No hay solicitudes en este estado.',
         }}
+        page={page}
       >
         <SgthTable
           {...PAGINACION_ES}

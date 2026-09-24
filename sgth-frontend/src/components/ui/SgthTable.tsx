@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { DataTable, type DataTableProps } from 'mantine-datatable'
 import classes from './SgthTable.module.css'
 
@@ -16,6 +17,26 @@ import classes from './SgthTable.module.css'
  * pantalla y castiga a quien la abre desde una conexión de la Prefectura.
  */
 export function SgthTable<T>(props: DataTableProps<T>) {
+  // Si el resultado encoge por debajo de la página en la que se estaba —se
+  // filtra, o alguien borra mientras miras—, la tabla se queda sin filas y sin
+  // salida: con una sola página, `mantine-datatable` esconde el paginador, así
+  // que no hay ni un «1» que pulsar. Aquí se vuelve sola a la última página que
+  // existe.
+  //
+  // `in` y no una aserción: los props de paginación son una unión discriminada
+  // y solo existen en la variante paginada (regla 09).
+  const paginada = 'page' in props ? props : null
+  const page = paginada?.page
+  const total = paginada?.totalRecords
+  const porPagina = paginada?.recordsPerPage
+  const onPageChange = paginada?.onPageChange
+
+  useEffect(() => {
+    if (page === undefined || total === undefined || !porPagina) return
+    const ultima = Math.max(1, Math.ceil(total / porPagina))
+    if (page > ultima) onPageChange?.(ultima)
+  }, [page, total, porPagina, onPageChange])
+
   return (
     <DataTable
       withTableBorder

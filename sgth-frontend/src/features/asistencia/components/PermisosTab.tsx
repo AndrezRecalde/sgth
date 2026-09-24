@@ -156,6 +156,7 @@ export function PermisosTab() {
             ? `No se encontraron permisos con folio «${folioConRetardo}»`
             : "No hay permisos que coincidan con los filtros.",
         }}
+        page={page}
       >
         <SgthTable
           {...PAGINACION_ES}

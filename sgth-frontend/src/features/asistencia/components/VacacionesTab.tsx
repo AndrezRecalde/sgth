@@ -135,6 +135,7 @@ export function VacacionesTab() {
             ? `No se encontraron solicitudes con folio «${folioConRetardo}»`
             : "No hay solicitudes que coincidan con los filtros.",
         }}
+        page={page}
       >
         <SgthTable
           {...PAGINACION_ES}

@@ -102,6 +102,7 @@ export function ViaticoView() {
                 action: nuevaSolicitud || undefined,
               }
         }
+        page={page}
       >
         <SgthTable
           records={lista}
