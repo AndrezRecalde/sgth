@@ -12,11 +12,11 @@
 // npm run types:generate
 // ============================================
 
-export type { components, paths, operations } from './api.generated'
-
 import type { components } from './api.generated'
 import type { RegimenServidor } from '@/lib/regimen'
 import type { UsuarioAuth } from '@/store/auth.store'
+
+export type { components, paths, operations } from './api.generated'
 
 // ── Respuesta estándar del API ───────────────
 export type ApiResponse<T = unknown, M = unknown> = {

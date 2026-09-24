@@ -23,6 +23,8 @@ import { useDisclosure } from '@mantine/hooks'
 import type { Adquisicion } from
   '@/features/dispensario/services/adquisicionService'
 
+import { PageHeader, PageShell, SgthTable } from '@/components/ui'
+
 function NuevaAdquisicion({
   onCreada,
 }: {
@@ -177,5 +179,3 @@ export function AdquisicionesView() {
     </PageShell>
   )
 }
-
-import { PageHeader, PageShell, SgthTable } from '@/components/ui'

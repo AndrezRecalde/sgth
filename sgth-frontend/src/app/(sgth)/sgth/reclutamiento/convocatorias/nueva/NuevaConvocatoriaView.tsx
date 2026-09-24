@@ -23,6 +23,8 @@ import type { CrearConvocatoriaData } from
   '@/features/seleccion/services/convocatoriaService'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
 
+import { PageHeader, PageShell, SectionHeading } from '@/components/ui'
+
 const schema = z.object({
   puesto_id:    z.number({ error: 'Seleccione el puesto a convocar' }),
   titulo:       z.string().min(5, 'Mínimo 5 caracteres'),
@@ -311,5 +313,3 @@ export function NuevaConvocatoriaView() {
     </PageShell>
   )
 }
-
-import { PageHeader, PageShell, SectionHeading } from '@/components/ui'

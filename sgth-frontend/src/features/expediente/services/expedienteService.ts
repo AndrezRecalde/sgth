@@ -4,6 +4,22 @@ import type { DiscapacidadFormData } from '../schemas/discapacidad.schema'
 import type { EnfermedadFormData } from '../schemas/enfermedad.schema'
 import type { HistorialAcademicoFormData } from '../schemas/historialAcademico.schema'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
+import type {
+  ApiResponse,
+  Servidor,
+  ServidorParams,
+  HistorialAcademicoServidor,
+  CargaFamiliar,
+  DiscapacidadServidor,
+  EnfermedadCatastroficaServidor,
+  DocumentoServidor,
+  ServidorConRelaciones,
+  DiscapacidadCargaFamiliar,
+  EnfermedadCatastroficaCargaFamiliar,
+  MovimientoPersonal,
+} from "@/types/api";
+import type { ServidorLaboralFormData } from "../schemas/servidorLaboral.schema";
+import type { ServidorBasicoFormData } from "../schemas/servidorBasico.schema";
 
 /**
  * Payload de una transición. Los datos del vínculo solo aplican al pasar un
@@ -47,22 +63,6 @@ export type ActualizarBorradorData = {
   caucion_numero?: string | null
   caucion_fecha?: string | null
 }
-import type {
-  ApiResponse,
-  Servidor,
-  ServidorParams,
-  HistorialAcademicoServidor,
-  CargaFamiliar,
-  DiscapacidadServidor,
-  EnfermedadCatastroficaServidor,
-  DocumentoServidor,
-  ServidorConRelaciones,
-  DiscapacidadCargaFamiliar,
-  EnfermedadCatastroficaCargaFamiliar,
-  MovimientoPersonal,
-} from "@/types/api";
-import type { ServidorLaboralFormData } from "../schemas/servidorLaboral.schema";
-import type { ServidorBasicoFormData } from "../schemas/servidorBasico.schema";
 
 export const expedienteService = {
   // ── Servidores ──────────────────────────────────
