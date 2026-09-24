@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import { TableroDispensario } from '@/features/dispensario/components/TableroDispensario'
-import { PageHeader, PageShell } from '@/components/ui'
+import { SaludHomeView } from './SaludHomeView'
 
 export const metadata: Metadata = {
   title: 'Dispensario Médico',
@@ -8,13 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function SaludHomePage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Dispensario Médico"
-        description="Sistema de Salud Ambulatoria — GADPE"
-      />
-      <TableroDispensario />
-    </PageShell>
-  )
+  return <SaludHomeView />
 }
