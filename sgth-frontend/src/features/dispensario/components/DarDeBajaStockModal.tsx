@@ -15,6 +15,7 @@ import {
 import type {
   InventarioMedicina, LoteMedicina,
 } from '../services/inventarioMedicinaService'
+import { estaCaducado } from '../utils/caducidad'
 import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
@@ -41,15 +42,9 @@ const CAUSAS = [
   { value: 'Otra',          label: 'Otra'                       },
 ]
 
-/** ¿Caducó ya este lote? El día impreso en el envase todavía es válido. */
-function loteCaducado(lote: LoteMedicina): boolean {
-  if (!lote.fecha_caducidad) return false
-  const [y, m, d] = lote.fecha_caducidad.slice(0, 10).split('-').map(Number)
-  const caduca = new Date(y, m - 1, d)
-  const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
-  return caduca < hoy
-}
+/** ¿Caducó ya este lote? La regla vive en `utils/caducidad`, con el resto. */
+const loteCaducado = (lote: LoteMedicina): boolean =>
+  estaCaducado(lote.fecha_caducidad)
 
 function etiquetaDeLote(lote: LoteMedicina): string {
   const nombre = lote.codigo_lote ?? 'Sin identificar'

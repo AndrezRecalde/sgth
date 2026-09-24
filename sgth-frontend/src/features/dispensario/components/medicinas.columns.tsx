@@ -15,6 +15,7 @@ import { TableActions } from "@/components/ui/TableActions";
 import type { DataTableColumn } from "mantine-datatable";
 import type { InventarioMedicina } from "../services/inventarioMedicinaService";
 import { StatusBadge } from "@/components/ui";
+import { diasParaCaducar } from '../utils/caducidad';
 import { formatFechaMes } from '@/lib/fecha';
 
 interface ColumnActions {
@@ -127,18 +128,25 @@ export function getMedicinasColumns(
           );
         }
 
-        const hoy = new Date();
-        const caduca = new Date(proxima);
-        const dias = Math.floor(
-          (caduca.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24),
-        );
+        // El día impreso en el envase todavía es válido: la cuenta la lleva
+        // `diasParaCaducar`, que es la misma que usan el modal de baja y el
+        // backend. Antes se restaba contra `new Date()` con la hora puesta, y
+        // por la tarde un lote que caducaba HOY salía como «Vencido».
+        const dias = diasParaCaducar(proxima);
 
         let tone: SemanticTone = "success";
         let label = "OK";
 
-        if (dias < 0) {
+        if (dias === null) {
+          tone = "neutral";
+          label = "—";
+        } else if (dias < 0) {
           tone = "danger";
           label = "Vencido";
+        } else if (dias === 0) {
+          // «0d» se leía como «ya no sirve». Caduca hoy, y hoy todavía se usa.
+          tone = "danger";
+          label = "Caduca hoy";
         } else if (dias <= 30) {
           tone = "danger";
           label = `${dias}d`;
