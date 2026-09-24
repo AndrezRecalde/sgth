@@ -16,6 +16,9 @@ export function useAtencionesEnfermeria(filtros?: {
   enfermera_id?: number
   /** 1 para dejar fuera las anuladas; por defecto vienen todas, marcadas. */
   solo_vigentes?: 1
+  /** El endpoint pagina siempre; sin estos dos solo llegaba la primera página. */
+  page?: number
+  per_page?: number
 }) {
   return useQuery({
     queryKey: ['atenciones-enfermeria', filtros],
