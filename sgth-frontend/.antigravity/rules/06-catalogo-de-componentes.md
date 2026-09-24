@@ -130,6 +130,11 @@ donde no cabe anidar una —una barra lateral estrecha, un cajón de detalle—.
 
 El `Divider` sin etiqueta sigue estando bien: separar es justo lo suyo.
 
+**ESLint lo comprueba**, así que no hace falta recordarlo. La única excepción
+del sistema es el «O continuar con» del login, que no titula nada: es un
+separador de verdad con una conjunción dentro, y lleva su `eslint-disable` con
+el motivo encima.
+
 ## Estados de una pantalla
 
 `DataState` envuelve el contenido y resuelve carga, error y vacío. Para una

@@ -10,6 +10,8 @@ recordarlas:
 
 - `any`, `as unknown as`, `as never` y `as Date` / `as Date | null`
 - `Modal`, `Drawer`, `Badge`, `Table` de Mantine, `DataTable` y `<table>` fuera de `src/components/`
+- `<Divider label={...}>` —el título de sección va en `SectionCard` o
+  `SectionHeading`; el `Divider` sin etiqueta sigue valiendo
 - `@mantine/form`, `@mantine/charts` e importar desde `zod` a secas
 - `fetch` nativo y el `confirm()` del navegador
 - colores en hexadecimal en TS/TSX, salvo `design.tokens.ts`,
