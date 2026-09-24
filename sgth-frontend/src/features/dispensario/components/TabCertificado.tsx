@@ -1,12 +1,7 @@
 'use client'
 
-import {
-  Stack, Text, Button, Group, Card, ThemeIcon,
-} from '@mantine/core'
-import {
-  IconCertificate, IconPlus,
-  IconCalendar, IconUser, IconDownload, IconBan,
-} from '@tabler/icons-react'
+import { Button, Group, Stack, Text } from '@mantine/core'
+import { IconCertificate, IconPlus } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDisclosure } from '@mantine/hooks'
 import {
@@ -14,6 +9,7 @@ import {
   useDescargarCertificado,
 } from '../hooks/useCertificado'
 import { EmitirCertificadoModal } from './EmitirCertificadoModal'
+import { CertificadoItem } from './CertificadoItem'
 import {
   AnularRegistroModal, MOTIVOS_ANULAR_CERTIFICADO,
 } from './AnularRegistroModal'
@@ -21,8 +17,6 @@ import { DataState } from '@/components/ui'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { CertificadoMedico } from '../services/certificadoService'
-import { StatusBadge } from '@/components/ui'
-import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
   turno:    AgendaMedica
@@ -76,122 +70,15 @@ export function TabCertificado({ turno, consulta }: Props) {
         skeletonRows={2}
       >
         <Stack gap="sm">
-          {certificados.map((cert) => {
-            const anulado = !!cert.anulado_en
-            return (
-            <Card
+          {certificados.map((cert) => (
+            <CertificadoItem
               key={cert.id}
-              withBorder
-              radius="md"
-              p="sm"
-              style={{ opacity: anulado ? 0.65 : 1 }}
-            >
-              <Stack gap="xs">
-                <Group justify="space-between">
-                  <Group gap="xs">
-                    <ThemeIcon
-                      size="sm"
-                      variant="light"
-                    >
-                      <IconCertificate size={12} />
-                    </ThemeIcon>
-                    <Text
-                      size="sm"
-                      fw={500}
-                      ff="monospace"
-                      td={anulado ? 'line-through' : undefined}
-                    >
-                      {cert.folio}
-                    </Text>
-                    {anulado && (
-                      <StatusBadge tone="danger" size="xs">
-                        Anulado
-                      </StatusBadge>
-                    )}
-                  </Group>
-                  <StatusBadge>
-                    {cert.dias_reposo} día{cert.dias_reposo !== 1
-                      ? 's' : ''} de reposo
-                  </StatusBadge>
-                </Group>
-
-                <Group gap="xs">
-                  <IconCalendar size={13} color="var(--mantine-color-slate-6)" />
-                  <Text size="xs" c="dimmed">
-                    {formatFechaMes(cert.fecha_inicio)} →{' '}
-                    {formatFechaMes(cert.fecha_fin)}
-                  </Text>
-                </Group>
-
-                {cert.diagnostico_cie10 && (
-                  <Group gap="xs">
-                    <StatusBadge size="xs" variant="outline" ff="monospace">
-                      {cert.diagnostico_cie10.codigo}
-                    </StatusBadge>
-                    <Text size="xs" c="dimmed">
-                      {cert.diagnostico_cie10.descripcion}
-                    </Text>
-                  </Group>
-                )}
-
-                {cert.observaciones && (
-                  <Text size="xs" c="dimmed">
-                    {cert.observaciones}
-                  </Text>
-                )}
-
-                {cert.permiso_servidor && (
-                  <Group gap="xs">
-                    <IconUser size={13} color="var(--mantine-color-slate-6)" />
-                    <Text size="xs" c="dimmed">
-                      Permiso generado:{' '}
-                      <Text span ff="monospace">
-                        {cert.permiso_servidor.folio}
-                      </Text>
-                      {anulado && ' — anulado con el certificado'}
-                    </Text>
-                  </Group>
-                )}
-
-                {anulado && cert.motivo_anulacion && (
-                  <Text size="xs" c="dimmed" fs="italic">
-                    Motivo: {cert.motivo_anulacion}
-                    {cert.anulador && (
-                      <> — {cert.anulador.nombre_completo
-                        ?? cert.anulador.usuario_ti}</>
-                    )}
-                  </Text>
-                )}
-
-                <Group gap="xs" mt={4}>
-                  {/* El PDF se descarga también si está anulado: lleva la
-                      marca «ANULADO» y hace falta poder enseñar qué se
-                      anuló. */}
-                  <Button
-                    size="compact-xs"
-                    variant="light"
-                    leftSection={<IconDownload size={13} />}
-                    loading={descargando === cert.id}
-                    onClick={() => descargar(cert.id, cert.folio)}
-                  >
-                    Descargar PDF
-                  </Button>
-
-                  {!anulado && (
-                    <Button
-                      size="compact-xs"
-                      variant="subtle"
-                      leftSection={<IconBan size={13} />}
-                      onClick={() => setAAnular(cert)}
-                    >
-                      Anular
-                    </Button>
-                  )}
-                </Group>
-              </Stack>
-            </Card>
-            )
-          })}
+              certificado={cert}
+              descargando={descargando === cert.id}
+              onDescargar={() => descargar(cert.id, cert.folio)}
+              onAnular={() => setAAnular(cert)}
+            />
+          ))}
         </Stack>
       </DataState>
 

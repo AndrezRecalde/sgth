@@ -1,33 +1,41 @@
 'use client'
 
-import { TONO_TURNO, ESTADO_TURNO_LABELS } from '../constants/turnos'
-import {
-  Grid, Card, Tabs, Group, Text, Button, Stack, Avatar, Box,
-} from '@mantine/core'
+import { Box, Card, Grid, Stack, Tabs, Text } from '@mantine/core'
 import classes from './PanelContextoPaciente.module.css'
 import {
-  IconStethoscope, IconPill,
-  IconCertificate, IconHistory,
-  IconUser, IconUsers, IconArrowRight,
+  IconCertificate, IconHistory, IconMicroscope, IconPill, IconStethoscope,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
+import { CabeceraPacienteAtencion } from './CabeceraPacienteAtencion'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
 import { TabReceta } from './TabReceta'
 import { TabCertificado } from './TabCertificado'
 import { TabHistorial } from './TabHistorial'
 import { TabResultados } from './TabResultados'
-import { IconMicroscope } from '@tabler/icons-react'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
-import { StatusBadge } from '@/components/ui'
 
 interface Props {
   turno:             AgendaMedica
   historiaClinicaId: number
   totalEnEspera:     number
   onFinalizar:       () => void
+}
+
+/**
+ * Las tres pestañas que dependen de la consulta enseñaban este mismo aviso,
+ * escrito tres veces con la única diferencia de la última palabra.
+ */
+function RequiereConsulta({ para }: { para: string }) {
+  return (
+    <Stack gap="sm" p="md">
+      <Text size="sm" c="dimmed">
+        Guarda la consulta primero para poder {para}.
+      </Text>
+    </Stack>
+  )
 }
 
 export function AtencionMedicaPanel({
@@ -51,12 +59,6 @@ export function AtencionMedicaPanel({
   // estuviera en «Receta» o «Resultados» era devuelto a «Consulta» sin tocar
   // nada. La pestaña ya arranca en 'consulta' por el useState de arriba.
 
-  const esServidor = !!turno.servidor_id
-  const nombrePaciente = esServidor
-    ? `${turno.servidor?.nombre ?? ''} ${turno.servidor?.apellido ?? ''}`
-    : `${turno.carga_familiar?.nombres ?? ''} ${turno.carga_familiar?.apellidos ?? ''}`
-
-
   const handleGuardada = (consulta: ConsultaMedica) => {
     setConsultaGuardada(consulta)
     setActiveTab('receta')
@@ -65,49 +67,11 @@ export function AtencionMedicaPanel({
   return (
     <>
       <Stack gap="sm">
-        <Card withBorder radius="lg" p="sm">
-          <Group justify="space-between" wrap="nowrap">
-            <Group gap="sm" wrap="nowrap">
-              <Avatar
-                radius="xl"
-                size="md"
-              >
-                {esServidor
-                  ? <IconUser size={16} />
-                  : <IconUsers size={16} />}
-              </Avatar>
-              <Stack gap={0}>
-                <Group gap="xs">
-                  <Text size="sm" fw={700}>
-                    {nombrePaciente.trim() || '—'}
-                  </Text>
-                  <StatusBadge tone={TONO_TURNO[turno.estado] ?? 'neutral'} size="xs">
-                    {ESTADO_TURNO_LABELS[turno.estado] ?? turno.estado}
-                  </StatusBadge>
-                </Group>
-                <Text size="xs" c="dimmed" ff="monospace">
-                  {turno.folio} · {esServidor ? 'Servidor' : 'Familiar'}
-                </Text>
-              </Stack>
-            </Group>
-
-            <Group gap="xs" wrap="nowrap">
-              {totalEnEspera > 0 && (
-                <StatusBadge>
-                  {totalEnEspera} en espera
-                </StatusBadge>
-              )}
-              <Button
-                size="xs"
-                variant="light"
-                rightSection={<IconArrowRight size={13} />}
-                onClick={onFinalizar}
-              >
-                Finalizar
-              </Button>
-            </Group>
-          </Group>
-        </Card>
+        <CabeceraPacienteAtencion
+          turno={turno}
+          totalEnEspera={totalEnEspera}
+          onFinalizar={onFinalizar}
+        />
 
         <Grid>
           <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
@@ -176,14 +140,7 @@ export function AtencionMedicaPanel({
                       turno={turno}
                       consulta={consultaActiva}
                     />
-                  ) : (
-                    <Stack gap="sm" p="md">
-                      <Text size="sm" c="dimmed">
-                        Guarda la consulta primero para
-                        poder emitir recetas.
-                      </Text>
-                    </Stack>
-                  )}
+                  ) : <RequiereConsulta para="emitir recetas" />}
                 </Tabs.Panel>
 
                 <Tabs.Panel value="historial">
@@ -198,14 +155,7 @@ export function AtencionMedicaPanel({
                       turno={turno}
                       consulta={consultaActiva}
                     />
-                  ) : (
-                    <Stack gap="sm" p="md">
-                      <Text size="sm" c="dimmed">
-                        Guarda la consulta primero para
-                        poder emitir certificados.
-                      </Text>
-                    </Stack>
-                  )}
+                  ) : <RequiereConsulta para="emitir certificados" />}
                 </Tabs.Panel>
 
                 <Tabs.Panel value="resultados">
@@ -214,14 +164,7 @@ export function AtencionMedicaPanel({
                       consulta={consultaActiva}
                       historiaClinicaId={historiaClinicaId}
                     />
-                  ) : (
-                    <Stack gap="sm" p="md">
-                      <Text size="sm" c="dimmed">
-                        Guarda la consulta primero para
-                        poder subir resultados.
-                      </Text>
-                    </Stack>
-                  )}
+                  ) : <RequiereConsulta para="subir resultados" />}
                 </Tabs.Panel>
               </Tabs>
             </Card>
