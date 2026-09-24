@@ -1,11 +1,10 @@
 'use client'
 
-import { confirmar, SgthModal } from '@/components/ui'
+import { SectionHeading, SgthModal, confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Group, Select, NumberInput, Button,
-  ActionIcon, Divider,
-} from '@mantine/core'
+  ActionIcon, } from '@mantine/core'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SgthTable } from '@/components/ui/SgthTable'
@@ -105,7 +104,7 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
 
         {puestoId && (
           <>
-            <Divider label="Agregar equipo requerido" labelPosition="left" />
+            <SectionHeading title="Agregar equipo requerido" />
             <Group align="flex-end" wrap="nowrap">
               <Select
                 label="Equipo"

@@ -4,12 +4,11 @@ import { TONO_NOMINA } from "../constants/estadoNomina";
 import {
   Stack,
   Text,
-  Divider,
   Skeleton,
   Card,
   Grid,
 } from "@mantine/core";
-import { SgthModal, SgthTable, StatusBadge } from "@/components/ui";
+import { SectionHeading, SgthModal, SgthTable, StatusBadge } from "@/components/ui";
 import { columnasRolesPago, formatMonto } from "./rolesPago.columns";
 import { useQuery } from "@tanstack/react-query";
 import { nominaService } from "../services/nominaService";
@@ -91,7 +90,7 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
             </Grid.Col>
           </Grid>
 
-          <Divider label="Roles de pago" labelPosition="left" />
+          <SectionHeading title="Roles de pago" />
 
           {roles.length === 0 ? (
             <Text size="sm" c="dimmed" ta="center">

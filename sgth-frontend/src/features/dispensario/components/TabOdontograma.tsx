@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Skeleton, Divider, Grid, Text, Button, Group } from '@mantine/core'
+import { Stack, Skeleton, Grid, Text, Button, Group } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useState } from 'react'
 import { IconDental, IconBan } from '@tabler/icons-react'
@@ -18,7 +18,7 @@ import type {
   OdontogramaPieza, OdontogramaProcedimientoDetalle,
 } from '../services/odontogramaService'
 import type { DataTableColumn } from 'mantine-datatable'
-import { StatusBadge } from '@/components/ui'
+import { SectionHeading, StatusBadge } from '@/components/ui'
 
 interface Props {
   historiaClinicaId: number
@@ -189,7 +189,7 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
         onSeleccionarPieza={handleSeleccionarPieza}
       />
 
-      <Divider label="Historial reciente" labelPosition="left" />
+      <SectionHeading title="Historial reciente" />
 
       {historial.length === 0 ? (
         <EmptyState

@@ -1,4 +1,4 @@
-import { Group, Text } from '@mantine/core'
+import { Group, Text, type MantineSpacing } from '@mantine/core'
 import classes from './SectionHeading.module.css'
 
 interface Props {
@@ -11,6 +11,12 @@ interface Props {
    * encabezado: un botón dentro de un título no se puede etiquetar aparte.
    */
   action?: React.ReactNode
+  /**
+   * Aire por encima y por debajo. Solo hacen falta dentro de un `Grid`, donde
+   * no hay `gap` que separe la sección de sus campos; en un `Stack` sobra.
+   */
+  mt?: MantineSpacing
+  mb?: MantineSpacing
 }
 
 /**
@@ -29,9 +35,9 @@ interface Props {
  * separador. Aquí el encabezado es un encabezado, el botón queda al lado, y
  * la línea es decoración declarada como tal.
  */
-export function SectionHeading({ title, icon, action }: Props) {
+export function SectionHeading({ title, icon, action, mt, mb }: Props) {
   return (
-    <Group gap={6} wrap="nowrap" align="center">
+    <Group gap={6} wrap="nowrap" align="center" mt={mt} mb={mb}>
       {icon}
       <Text
         component="h3"

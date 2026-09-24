@@ -1,8 +1,7 @@
 'use client'
 
 import {
-  TextInput, Select, Grid, Switch, Divider,
-} from '@mantine/core'
+  TextInput, Select, Grid, Switch, } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { Controller, useFormContext } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -11,6 +10,7 @@ import { useCantones } from '../hooks/useCantones'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { Provincia, Canton } from '@/types/api'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
+import { SectionHeading } from '@/components/ui'
 
 const GENERO_OPTIONS = [
   { value: 'masculino', label: 'Masculino' },
@@ -61,7 +61,7 @@ export function ServidorFormPersonal() {
   return (
     <Grid>
       <Grid.Col span={12}>
-        <Divider label="Identificación" labelPosition="left" mb="xs" />
+        <SectionHeading title="Identificación" mb="xs" />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
@@ -111,7 +111,7 @@ export function ServidorFormPersonal() {
       </Grid.Col>
 
       <Grid.Col span={12}>
-        <Divider label="Datos demográficos" labelPosition="left" mb="xs" mt="xs" />
+        <SectionHeading title="Datos demográficos" mt="xs" mb="xs" />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 4 }}>
         <Controller
@@ -185,7 +185,7 @@ export function ServidorFormPersonal() {
       </Grid.Col>
 
       <Grid.Col span={12}>
-        <Divider label="Origen" labelPosition="left" mb="xs" mt="xs" />
+        <SectionHeading title="Origen" mt="xs" mb="xs" />
       </Grid.Col>
       <Grid.Col span={12}>
         <Controller

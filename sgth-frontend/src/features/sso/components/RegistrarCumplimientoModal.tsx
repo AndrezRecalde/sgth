@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Button, Group, Stack, Select, Textarea, Text, Divider,
-} from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+  Button, Group, Stack, Select, Textarea, Text, } from '@mantine/core'
+import { ModalFooter, SectionHeading, SgthModal } from '@/components/ui'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -116,7 +115,7 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
             </Button>
           </Group>
 
-          <Divider label="Evidencia" labelPosition="center" />
+          <SectionHeading title="Evidencia" />
           <DocumentosSsoPanel tipo="cumplimiento_normativa" documentableId={cumplimientoId} />
 
           <ModalFooter onCancel={handleClose} cancelLabel="Cerrar" sinPrincipal />

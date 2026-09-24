@@ -11,7 +11,6 @@ import {
   Alert,
   Grid,
   Card,
-  Divider,
   Skeleton,
 } from "@mantine/core";
 import {
@@ -27,7 +26,7 @@ import { useServidores } from "@/features/expediente/hooks/useServidores";
 import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
 import { TopeAcumulacionCard } from "./TopeAcumulacionCard";
-import { confirmar, SgthTable, StatusBadge, TableActions, Toolbar } from "@/components/ui";
+import { SectionHeading, SgthTable, StatusBadge, TableActions, Toolbar, confirmar } from "@/components/ui";
 import { SEMANTIC_COLOR, type SemanticTone } from "@/config/design.tokens";
 import type {
   ServidorConRelaciones,
@@ -378,7 +377,7 @@ export function PeriodosVacacionesTab() {
       {/* ── Tope de acumulación: quién está cerca o lo pasa ── */}
       <TopeAcumulacionCard />
 
-      <Divider label="Consulta por servidor" labelPosition="left" />
+      <SectionHeading title="Consulta por servidor" />
 
       {/* ── PANEL INFERIOR: Consulta individual ── */}
       <Toolbar

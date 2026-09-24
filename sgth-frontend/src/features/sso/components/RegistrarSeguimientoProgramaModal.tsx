@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Button, Group, Stack, Select, Textarea, Text, Divider,
-} from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+  Button, Group, Stack, Select, Textarea, Text, } from '@mantine/core'
+import { ModalFooter, SectionHeading, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -135,7 +134,7 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
             </Button>
           </Group>
 
-          <Divider label="Evidencia" labelPosition="center" />
+          <SectionHeading title="Evidencia" />
           <DocumentosSsoPanel tipo="programa_drogas_seguimiento" documentableId={seguimientoId} />
 
           <ModalFooter onCancel={handleClose} cancelLabel="Cerrar" sinPrincipal />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Grid, TextInput, Select, Textarea, NumberInput, Button, Group, Card, Text, Divider, Alert, Anchor } from '@mantine/core'
+import { Stack, Grid, TextInput, Select, Textarea, NumberInput, Button, Group, Card, Text, Alert, Anchor } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import Link from 'next/link'
 import { useForm, Controller } from 'react-hook-form'
@@ -231,7 +231,7 @@ export function NuevaConvocatoriaView() {
                 </Grid.Col>
               </Grid>
 
-              <Divider label="Período del proceso" labelPosition="left" />
+              <SectionHeading title="Período del proceso" />
 
               <Alert
                 color="ocean"
@@ -312,4 +312,4 @@ export function NuevaConvocatoriaView() {
   )
 }
 
-import { PageHeader, PageShell } from '@/components/ui'
+import { PageHeader, PageShell, SectionHeading } from '@/components/ui'
