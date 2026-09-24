@@ -4,9 +4,8 @@ import {
   Stack, TextInput, 
   NumberInput, Textarea, Button,
   Group, Text, ActionIcon, Card,
-  SegmentedControl, Divider,
-} from '@mantine/core'
-import { FormModal } from '@/components/ui'
+  SegmentedControl, } from '@mantine/core'
+import { FormModal, SectionHeading } from '@/components/ui'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useForm, useWatch, Controller } from 'react-hook-form'
@@ -153,7 +152,7 @@ export function AgregarCriterioModal({
           {...register('descripcion')}
         />
 
-        <Divider label="Configuración del criterio" />
+        <SectionHeading title="Configuración del criterio" />
 
         <Controller
           name="tipo_input"

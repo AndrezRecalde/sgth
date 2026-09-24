@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react'
 import {
-  TextInput, Select, Textarea, Grid, Switch, Divider, Text, Group,
+  TextInput, Select, Textarea, Grid, Switch, Text, Group,
   Skeleton, Stack,
 } from '@mantine/core'
 import {
@@ -19,7 +19,7 @@ import {
   unidadSchema, unidadConPadreSchema, type UnidadFormData,
 } from '../schemas/unidad.schema'
 import type { UnidadAdministrativa } from '@/types/api'
-import { StatusBadge } from '@/components/ui'
+import { SectionHeading, StatusBadge } from '@/components/ui'
 
 interface Props {
   initialValues?: Partial<UnidadFormData>
@@ -321,11 +321,7 @@ export function UnidadForm({ initialValues, onSubmit, unidadId }: Props) {
         </Grid.Col>
 
         <Grid.Col span={12}>
-          <Divider
-            my="xs"
-            label="Unidades que firman documentos"
-            labelPosition="left"
-          />
+          <SectionHeading title="Unidades que firman documentos" mt="xs" mb="xs" />
           <Text size="xs" c="dimmed" mb="xs">
             El jefe de la unidad marcada es quien firma los documentos. Solo una
             unidad puede llevar cada marca: al activarla aquí se desactiva en la

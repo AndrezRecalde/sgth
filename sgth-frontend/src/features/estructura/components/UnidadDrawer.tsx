@@ -1,11 +1,11 @@
 'use client'
 
-import { Stack, Text, Group, Divider, Skeleton } from '@mantine/core'
+import { Stack, Text, Group, Skeleton } from '@mantine/core'
 import {
   IconBuilding, IconBriefcase, IconSitemap,
 } from '@tabler/icons-react'
 import type { UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
-import { SgthDrawer, StatusBadge } from '@/components/ui'
+import { SectionHeading, SgthDrawer, StatusBadge } from '@/components/ui'
 
 interface Props {
   opened: boolean
@@ -43,16 +43,9 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
 
             {hijos.length > 0 && (
               <>
-                <Divider
-                  label={
-                    <Group gap="xs">
-                      <IconSitemap size={14} />
-                      <Text size="sm" fw={600}>
-                        Subprocesos ({hijos.length})
-                      </Text>
-                    </Group>
-                  }
-                  labelPosition="left"
+                <SectionHeading
+                  title={`Subprocesos (${hijos.length})`}
+                  icon={<IconSitemap size={14} />}
                 />
                 <Stack gap="xs">
                   {hijos.map(hijo => (
@@ -78,16 +71,9 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
 
             {puestos.length > 0 && (
               <>
-                <Divider
-                  label={
-                    <Group gap="xs">
-                      <IconBriefcase size={14} />
-                      <Text size="sm" fw={600}>
-                        Puestos ({puestos.length})
-                      </Text>
-                    </Group>
-                  }
-                  labelPosition="left"
+                <SectionHeading
+                  title={`Puestos (${puestos.length})`}
+                  icon={<IconBriefcase size={14} />}
                 />
                 <Stack gap="xs">
                   {puestos.map((puesto, i) => {

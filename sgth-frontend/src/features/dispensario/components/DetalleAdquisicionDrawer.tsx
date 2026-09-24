@@ -1,10 +1,10 @@
 'use client'
 
-import { Stack, Text, Divider, Alert, Button } from '@mantine/core'
+import { Stack, Text, Alert, Button } from '@mantine/core'
 import { IconFileText, IconBan, IconFileSearch } from '@tabler/icons-react'
 import { useDescargarDocumentoAdquisicion } from '../hooks/useAdquisicion'
 import type { Adquisicion } from '../services/adquisicionService'
-import { DetailList, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
+import { DetailList, SectionHeading, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
 import { columnasItemsAdquisicion } from './itemsAdquisicion.columns'
 
 interface Props {
@@ -93,13 +93,8 @@ export function DetalleAdquisicionDrawer({
             ]}
           />
 
-          <Divider
-            label={
-              <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-                Medicamentos ({adquisicion.items?.length ?? 0} ítems)
-              </Text>
-            }
-            labelPosition="left"
+          <SectionHeading
+            title={`Medicamentos (${adquisicion.items?.length ?? 0} ítems)`}
           />
 
           <SgthTable

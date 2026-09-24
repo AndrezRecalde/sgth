@@ -1,13 +1,13 @@
 'use client'
 
-import { Stack, Group, Text, Divider } from '@mantine/core'
+import { Stack, Group, Text } from '@mantine/core'
 import {
   CONDICION_LABELS, CONDICION_COLORS,
 } from '@/features/dispensario/services/odontogramaService'
 import type { OdontogramaPieza } from '@/features/dispensario/services/odontogramaService'
 import { Tooth } from './Tooth'
 import classes from './OdontogramaChart.module.css'
-import { LegendBadge } from '@/components/ui'
+import { LegendBadge, SectionHeading } from '@/components/ui'
 
 interface Props {
   piezas:              OdontogramaPieza[]
@@ -74,7 +74,7 @@ export function OdontogramaChart({
 
       {mostrarTemporal && (
         <>
-          <Divider label="Dentición temporal" labelPosition="left" />
+          <SectionHeading title="Dentición temporal" />
           <div className={classes.lienzo}>
             <Stack gap={4}>
               {renderFila(TEMPORAL_SUPERIOR_DERECHA, TEMPORAL_SUPERIOR_IZQUIERDA)}

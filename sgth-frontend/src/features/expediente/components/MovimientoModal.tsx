@@ -3,9 +3,9 @@
 import React from 'react'
 import {
   Button, Group, Stack, Select, Textarea, TextInput, Alert,
-  Switch, Divider, Stepper, Grid, NumberInput, Paper, Text,
+  Switch, Stepper, Grid, NumberInput, Paper, Text,
 } from '@mantine/core'
-import { ModalFooter, SgthModal, notificar } from '@/components/ui'
+import { ModalFooter, SectionHeading, SgthModal, notificar } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -710,14 +710,14 @@ function FormularioAccion({
                   )}
                 />
 
-                <Divider my={4} label="Firmarán este documento" labelPosition="left" />
+                <SectionHeading title="Firmarán este documento" mt={4} mb={4} />
 
                 <Text size="xs" c="dimmed">
                   Se toman del organigrama y quedan sellados al suscribir la acción.
                 </Text>
                 <FirmantesPanel compacto />
 
-                <Divider my={4} label="Caución" labelPosition="left" />
+                <SectionHeading title="Caución" mt={4} mb={4} />
 
                 <Controller
                   name="caucionado"

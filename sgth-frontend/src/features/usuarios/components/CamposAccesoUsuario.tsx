@@ -1,10 +1,11 @@
 'use client'
 
-import { TextInput, MultiSelect, Divider, Loader } from '@mantine/core'
+import { TextInput, MultiSelect, Loader } from '@mantine/core'
 import { Controller, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useRoles } from '../hooks/useRoles'
 import type { UsuarioFormValues } from '../schemas/usuario.schema'
+import { SectionHeading } from '@/components/ui'
 
 interface Props {
   register: UseFormRegister<UsuarioFormValues>
@@ -32,7 +33,7 @@ export function CamposAccesoUsuario({
 
   return (
     <>
-      <Divider label="Datos de acceso" labelPosition="left" />
+      <SectionHeading title="Datos de acceso" />
 
       <TextInput
         label="Correo institucional"

@@ -1,12 +1,13 @@
 'use client'
 
-import { Divider, Grid, NumberInput, Select, Stack, Text, Textarea } from '@mantine/core'
+import { Grid, NumberInput, Select, Stack, Text, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
 import type { VacacionFormData } from './vacacion.schema'
 import classes from './VacacionFechasCampos.module.css'
+import { SectionHeading } from '@/components/ui'
 
 const FECHAS = [
   { name: 'fecha_inicio',  label: 'Fecha inicio' },
@@ -30,7 +31,7 @@ export function VacacionFechasCampos({ form }: Props) {
 
   return (
     <>
-      <Divider label="Fechas" labelPosition="left" />
+      <SectionHeading title="Fechas" />
 
       <Grid>
         {FECHAS.map(({ name, label }) => (

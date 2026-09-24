@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, Divider, Grid, Select, Text, Textarea } from '@mantine/core'
+import { Alert, Grid, Select, Text, Textarea } from '@mantine/core'
 import { DatePickerInput, TimeInput } from '@mantine/dates'
 import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
@@ -14,6 +14,7 @@ import {
   type PermisoFormData,
 } from './permiso.schema'
 import { TIPO_OPCIONES } from './permisos.constants'
+import { SectionHeading } from '@/components/ui'
 
 /** El tope diario del permiso personal. Lo aplica el backend; aquí solo se avisa. */
 const MAX_MINUTOS_PERSONAL = 240
@@ -41,10 +42,7 @@ export function PermisoDatosCampos({ form }: Props) {
   return (
     <>
       {/* Separa a quién es el permiso de qué permiso es: en gris y a 12 px no se notaba. */}
-      <Divider
-        label={<Text size="sm" fw={600}>Datos del permiso</Text>}
-        labelPosition="left"
-      />
+      <SectionHeading title="Datos del permiso" />
 
       <Controller
         name="tipo"

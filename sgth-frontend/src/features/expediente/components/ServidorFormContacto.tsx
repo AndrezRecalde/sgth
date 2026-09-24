@@ -1,9 +1,10 @@
 'use client'
 
-import { TextInput, Grid, Divider } from '@mantine/core'
+import { TextInput, Grid } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useFormContext } from 'react-hook-form'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
+import { SectionHeading } from '@/components/ui'
 
 /** Contacto y documentos adicionales. Lee del contexto, como el de datos personales. */
 export function ServidorFormContacto() {
@@ -13,7 +14,7 @@ export function ServidorFormContacto() {
   return (
     <Grid>
       <Grid.Col span={12}>
-        <Divider label="Contacto" labelPosition="left" mb="xs" />
+        <SectionHeading title="Contacto" mb="xs" />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
@@ -65,7 +66,7 @@ export function ServidorFormContacto() {
       </Grid.Col>
 
       <Grid.Col span={12}>
-        <Divider label="Documentos adicionales" labelPosition="left" mb="xs" mt="xs" />
+        <SectionHeading title="Documentos adicionales" mt="xs" mb="xs" />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
