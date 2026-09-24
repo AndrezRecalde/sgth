@@ -79,6 +79,8 @@ export function ItemRecetaRow({
               render={({ field }) => (
                 <NumberInput
                   label="Cantidad"
+                  // Unidades recetadas: enteras, como las exige el servidor.
+                  allowDecimal={false}
                   size="xs"
                   min={1}
                   {...contained}

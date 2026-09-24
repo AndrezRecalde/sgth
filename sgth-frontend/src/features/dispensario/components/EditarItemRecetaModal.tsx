@@ -7,9 +7,13 @@ import {
 import { FormModal } from '@/components/ui'
 import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAccionesItem } from '../hooks/useReceta'
 import { nombreDeItem } from '../services/recetaService'
+import {
+  itemRecetaSchema, type ItemRecetaFormData,
+} from '../schemas/itemReceta.schema'
 import type { ItemReceta } from '../services/recetaService'
 
 interface Props {
@@ -18,14 +22,6 @@ interface Props {
   item:      ItemReceta | null
   recetaId:  number
   consultaId: number
-}
-
-type FormData = {
-  cantidad_prescrita: number
-  dosis:              string
-  frecuencia:         string
-  duracion:           string
-  observaciones:      string
 }
 
 export function EditarItemRecetaModal({
@@ -37,7 +33,8 @@ export function EditarItemRecetaModal({
   const {
     control, register, handleSubmit, reset,
     formState: { errors },
-  } = useForm<FormData>({
+  } = useForm<ItemRecetaFormData>({
+    resolver: zodResolver(itemRecetaSchema),
     defaultValues: {
       cantidad_prescrita: 1,
       dosis:              '',
@@ -59,7 +56,7 @@ export function EditarItemRecetaModal({
     }
   }, [opened, item, reset])
 
-  const onSubmit = (values: FormData) => {
+  const onSubmit = (values: ItemRecetaFormData) => {
     if (!item?.id) return
     actualizarItem.mutate(
       {
@@ -97,14 +94,13 @@ export function EditarItemRecetaModal({
         <Controller
           name="cantidad_prescrita"
           control={control}
-          rules={{
-            required: 'Indique la cantidad',
-            min: { value: 1, message: 'Debe ser al menos 1' },
-          }}
           render={({ field }) => (
             <NumberInput
               label="Cantidad"
               min={1}
+              // Unidades de un medicamento: no hay media cápsula, y el
+              // servidor lo exige entero. Mantine deja decimales por defecto.
+              allowDecimal={false}
               required
               {...contained}
               value={field.value}
@@ -118,7 +114,7 @@ export function EditarItemRecetaModal({
           placeholder="Ej: 1 tableta"
           required
           {...contained}
-          {...register('dosis', { required: 'Indique la dosis' })}
+          {...register('dosis')}
           error={errors.dosis?.message}
         />
         <TextInput
@@ -126,7 +122,7 @@ export function EditarItemRecetaModal({
           placeholder="Ej: Cada 8 horas"
           required
           {...contained}
-          {...register('frecuencia', { required: 'Indique la frecuencia' })}
+          {...register('frecuencia')}
           error={errors.frecuencia?.message}
         />
         <TextInput
@@ -134,7 +130,7 @@ export function EditarItemRecetaModal({
           placeholder="Ej: 5 días"
           required
           {...contained}
-          {...register('duracion', { required: 'Indique la duración' })}
+          {...register('duracion')}
           error={errors.duracion?.message}
         />
         <Textarea

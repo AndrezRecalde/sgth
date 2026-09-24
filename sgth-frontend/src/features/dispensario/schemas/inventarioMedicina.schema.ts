@@ -15,12 +15,22 @@ export const PRESENTACION_OPTIONS = [
   { value: 'otro',        label: 'Otro' },
 ]
 
+/**
+ * Las reglas son las de `StoreInventarioMedicinaRequest`. Los topes de
+ * longitud y el entero faltaban, así que lo que el servidor rechazaba volvía
+ * como un 422 suelto en vez de señalar el campo.
+ */
 export const medicinaSchema = z.object({
-  nombre:           z.string().min(2, 'Mínimo 2 caracteres'),
-  principio_activo: z.string().min(2, 'Mínimo 2 caracteres'),
+  nombre:           z.string().min(2, 'Mínimo 2 caracteres')
+    .max(255, 'Máximo 255 caracteres'),
+  principio_activo: z.string().min(2, 'Mínimo 2 caracteres')
+    .max(255, 'Máximo 255 caracteres'),
   presentacion:     z.string().min(1, 'Seleccione la presentación'),
-  concentracion:    z.string().optional().nullable(),
-  stock_minimo:     z.number().min(0, 'No puede ser negativo'),
+  concentracion:    z.string().max(100, 'Máximo 100 caracteres')
+    .optional().nullable(),
+  stock_minimo:     z.number()
+    .int('Las unidades no se parten por la mitad')
+    .min(0, 'No puede ser negativo'),
 })
 
 export type MedicinaFormData = z.infer<typeof medicinaSchema>
