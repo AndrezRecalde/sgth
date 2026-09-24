@@ -161,6 +161,22 @@ const SINTAXIS_TSX = [
     message:
       "Todo <form> debe llevar noValidate: la validación la hace Zod (zodResolver), no el navegador. Sin él, el `required` de Mantine bloquea el submit y los mensajes de error nunca se pintan.",
   },
+  // Un título de sección no se escribe dentro de un separador. El `Divider` de
+  // Mantine es un `role="separator"`: el nombre de la sección se anunciaba como
+  // el texto de una línea divisoria y no como un encabezado, así que nada decía
+  // dónde empieza «Alergias» o «Identificación». Y cuando la etiqueta llevaba
+  // dentro un botón —el «+» de agregar—, ese botón quedaba dentro del separador.
+  //
+  // Eran 31 en el repositorio, repartidos en once módulos y con tres aspectos
+  // distintos para lo mismo. Ahora hay dos piezas, según quepa la tarjeta:
+  // `SectionCard` en el cuerpo de una página, `SectionHeading` en un panel o un
+  // cajón. Las dos pintan un `h3` (regla 06).
+  //
+  // El `Divider` SIN etiqueta sigue estando bien: separar es justo lo suyo.
+  {
+    selector: 'JSXOpeningElement[name.name="Divider"] > JSXAttribute[name.name="label"]',
+    message: "Un título de sección no va dentro de un `Divider`, que es un role=\"separator\": use SectionCard o SectionHeading de '@/components/ui' (regla 06). Un Divider sin etiqueta sigue valiendo.",
+  },
 ];
 
 const USE_CLIENT_EN_PAGINA = {

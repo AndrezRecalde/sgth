@@ -45,6 +45,11 @@ export default function LoginPage() {
             Iniciar sesión
           </Title>
           <LoginForm />
+          {/* La única etiqueta de Divider que se queda en el sistema, y por
+              eso lleva su excepción: esto no titula nada. Es un separador de
+              verdad con una conjunción dentro, entre el formulario y la otra
+              forma de entrar. Convertirlo en un `h3` sería peor que dejarlo. */}
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <Divider label="O continuar con" labelPosition="center" my="lg" />
           <Button
             component="a"
