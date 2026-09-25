@@ -36,9 +36,19 @@ final class EppService
         );
     }
 
-    public function eliminarAsignacion(int $id): void
+    /**
+     * La asignación se busca DENTRO del puesto de la URL.
+     *
+     * Antes se borraba por id a secas, así que
+     * `DELETE /sso/puestos/7/equipos-proteccion/{id}` borraba igual una
+     * asignación del puesto 3: la URL afirmaba una relación que nadie
+     * comprobaba. Todos los que llegan aquí tienen `gestionar-sso`, así que no
+     * era una escalada de privilegios, pero sí un borrado que la auditoría no
+     * podía explicar —y, con una pantalla desincronizada, uno que nadie pidió.
+     */
+    public function eliminarAsignacion(int $puestoId, int $id): void
     {
-        PuestoEpp::findOrFail($id)->delete();
+        PuestoEpp::where('puesto_id', $puestoId)->findOrFail($id)->delete();
     }
 
     // ── Entregas de EPP ──────────────────────────────────────────────
