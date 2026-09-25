@@ -35,12 +35,18 @@ export interface RiesgoLaboral {
   puesto_id: number
   factor_riesgo_id: number
   descripcion: string
-  nivel_deficiencia: string
-  nivel_exposicion: string
-  nivel_consecuencias: string
-  nivel_probabilidad: number
-  nivel_riesgo_valor: number
-  nivel_intervencion: string
+  /**
+   * Los seis campos de la valoración son nullable: la migración que trajo la
+   * matriz NTP 330 reemplazó el esquema anterior sin rellenar datos, así que un
+   * riesgo identificado antes de ella los tiene en NULL. La pantalla lo muestra
+   * como «Sin valorar» y el modal obliga a completarlos al editarlo.
+   */
+  nivel_deficiencia: string | null
+  nivel_exposicion: string | null
+  nivel_consecuencias: string | null
+  nivel_probabilidad: number | null
+  nivel_riesgo_valor: number | null
+  nivel_intervencion: string | null
   medidas_preventivas?: string | null
   estado: boolean
   puesto?: PuestoResumen | null

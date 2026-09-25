@@ -59,18 +59,33 @@ final class SsoService implements SsoServiceInterface
     /**
      * Calcula NP = ND × NE, NR = NP × NC y el Nivel de Intervención según NTP 330 (INSHT).
      * En actualizaciones parciales, los niveles no enviados se toman del registro existente.
+     *
+     * Los tres niveles se resuelven con `tryFrom` y no con `from`: las columnas
+     * nacieron nullable (la migración que trajo NTP 330 reemplazó el esquema
+     * anterior sin rellenar datos), así que un riesgo identificado antes de la
+     * matriz las tiene en NULL. Un PATCH que solo toque la descripción de esa
+     * fila llegaba aquí con null y `from` lanzaba un TypeError, que sale como
+     * 500 y no dice nada. Ahora sale un 422 que pide completar la valoración,
+     * que es lo único que puede hacer quien lo edita.
      */
     private function calcularNtp330(array $datos, ?RiesgoLaboral $actual = null): array
     {
-        $nivelDeficiencia = NivelDeficienciaRiesgo::from(
-            $datos['nivel_deficiencia'] ?? $actual?->nivel_deficiencia?->value
+        $nivelDeficiencia = NivelDeficienciaRiesgo::tryFrom(
+            $datos['nivel_deficiencia'] ?? $actual?->nivel_deficiencia?->value ?? ''
         );
-        $nivelExposicion = NivelExposicionRiesgo::from(
-            $datos['nivel_exposicion'] ?? $actual?->nivel_exposicion?->value
+        $nivelExposicion = NivelExposicionRiesgo::tryFrom(
+            $datos['nivel_exposicion'] ?? $actual?->nivel_exposicion?->value ?? ''
         );
-        $nivelConsecuencias = NivelConsecuenciasRiesgo::from(
-            $datos['nivel_consecuencias'] ?? $actual?->nivel_consecuencias?->value
+        $nivelConsecuencias = NivelConsecuenciasRiesgo::tryFrom(
+            $datos['nivel_consecuencias'] ?? $actual?->nivel_consecuencias?->value ?? ''
         );
+
+        if (! $nivelDeficiencia || ! $nivelExposicion || ! $nivelConsecuencias) {
+            throw new ReglaNegocioException(
+                'Este riesgo no tiene valoración NTP 330 (fue identificado antes de la matriz). '
+                . 'Para guardarlo hay que indicar los tres niveles: deficiencia, exposición y consecuencias.'
+            );
+        }
 
         $nivelProbabilidad = $nivelDeficiencia->valor() * $nivelExposicion->valor();
         $nivelRiesgoValor = $nivelProbabilidad * $nivelConsecuencias->valor();
