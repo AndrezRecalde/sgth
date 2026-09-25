@@ -42,8 +42,17 @@ export function useMovimientoMutations(servidorId?: number | null) {
       qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })
       // Registrar una acción materializa o cierra el vínculo laboral.
       qc.invalidateQueries({ queryKey: ['servidores'] })
+      // La ficha abierta vive bajo otra clave —['servidor', id], que no es
+      // prefijo de ['servidores']— y useServidor la da por fresca cinco
+      // minutos. Desde que las acciones de personal se aprueban dentro del
+      // expediente, sin esto el encabezado seguía diciendo «Sin vínculo»
+      // después de aprobar el Ingreso de esa misma persona.
+      qc.invalidateQueries({ queryKey: ['servidor'] })
       qc.invalidateQueries({ queryKey: ['contratos'] })
       qc.invalidateQueries({ queryKey: ['actividad-laboral'] })
+      // Una comisión de servicios o una licencia sin remuneración abren una
+      // ausencia, y el panel que las lista no se enteraba.
+      qc.invalidateQueries({ queryKey: ['ausencias-temporales'] })
     },
     onError: (error) => {
       notificar.error(

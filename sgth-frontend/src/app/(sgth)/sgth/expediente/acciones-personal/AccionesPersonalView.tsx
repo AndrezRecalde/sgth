@@ -38,7 +38,10 @@ export function AccionesPersonalView() {
         description="Registre nuevas acciones y revise las que esperan aprobación de Talento Humano"
       />
 
-      <Tabs defaultValue="bandeja">
+      {/* Sin esto Mantine monta las cuatro pestañas de golpe y la pantalla
+          arranca pidiendo la bandeja, las ausencias y los firmantes aunque
+          solo se vaya a mirar una. La ficha del servidor ya lo hacía así. */}
+      <Tabs defaultValue="bandeja" keepMounted={false}>
         <Tabs.List mb="md">
           <Tabs.Tab value="bandeja" leftSection={<IconInbox size={16} />}>
             Bandeja de acciones
