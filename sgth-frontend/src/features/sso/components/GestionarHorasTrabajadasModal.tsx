@@ -4,9 +4,9 @@ import { confirmar, DataState, PAGINACION_ES, SgthModal, SgthTable } from '@/com
 import { useState } from 'react'
 import {
   Stack, Group, TextInput, NumberInput, Button,
-  ActionIcon, Text, Select,
+  ActionIcon, Text, Select, Alert,
 } from '@mantine/core'
-import { IconTrash, IconPlus, IconClock } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconClock, IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useHorasTrabajadas, useHorasTrabajadasMutations } from '../hooks/useHorasTrabajadas'
@@ -103,6 +103,18 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           un mes). Deje la unidad en blanco para registrar el total institucional. Si carga los meses y consulta
           el año, los índices CD 513 suman los meses cargados; el total institucional manda sobre las unidades.
         </Text>
+        {/* El fallo del catálogo va en un aviso y no en el campo: la fila es un
+            `Group` alineado abajo y sin envolver, así que un error debajo del
+            Select desalinea los otros dos campos. Además no es un error de lo
+            que se escribió, sino del dato que hay detrás, y aquí hay algo que
+            se puede hacer igual. */}
+        {errorUnidades && (
+          <Alert icon={<IconAlertTriangle size={16} />} color="amber" variant="light">
+            No se pudieron cargar las unidades administrativas. Puede registrar el total
+            institucional dejando la unidad en blanco.
+          </Alert>
+        )}
+
         <Group align="flex-end" wrap="nowrap">
           <TextInput
             label="Período"
@@ -122,8 +134,6 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
             {...contained}
             value={unidadId}
             onChange={setUnidadId}
-            // Sin esto, un catálogo que no cargó se ve como «no hay unidades».
-            error={errorUnidades ? 'No se pudieron cargar las unidades administrativas.' : undefined}
           />
           <NumberInput
             label="Total de horas"

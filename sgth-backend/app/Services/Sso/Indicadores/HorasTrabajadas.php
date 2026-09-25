@@ -121,16 +121,16 @@ final class HorasTrabajadas
         }
 
         $periodo = $this->origen === self::ORIGEN_MESES
-            ? "la suma de {$this->meses} meses cargados"
-            : 'el período cargado';
+            ? "Horas tomadas de la suma de {$this->meses} meses cargados"
+            : 'Horas tomadas del período cargado';
 
         $alcance = match ($this->alcance) {
-            self::ALCANCE_UNIDAD => 'la unidad consultada',
-            self::ALCANCE_SUMA_UNIDADES => "la suma de {$this->unidades} unidades, porque no hay un total institucional cargado",
-            default => 'el total institucional',
+            self::ALCANCE_UNIDAD => 'con alcance de la unidad consultada',
+            self::ALCANCE_SUMA_UNIDADES => "sumando {$this->unidades} unidades, porque no hay un total institucional cargado",
+            default => 'con alcance institucional',
         };
 
-        return "Horas tomadas de {$periodo}, con el alcance de {$alcance}.";
+        return "{$periodo}, {$alcance}.";
     }
 
     public static function esAnio(string $periodo): bool

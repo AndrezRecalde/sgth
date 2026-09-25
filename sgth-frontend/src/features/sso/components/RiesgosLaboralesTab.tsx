@@ -9,7 +9,7 @@ import { IconPlus, IconEdit, IconTrash, IconList, IconAlertTriangle } from '@tab
 import { useRiesgosLaborales, useRiesgoLaboralMutations } from '../hooks/useRiesgosLaborales'
 import { RiesgoLaboralModal } from './RiesgoLaboralModal'
 import { FactoresRiesgoModal } from './FactoresRiesgoModal'
-import { NIVEL_INTERVENCION_LABELS, TONO_NIVEL_INTERVENCION } from '../schemas/riesgoLaboral.schema'
+import { NIVEL_INTERVENCION_CORTO, TONO_NIVEL_INTERVENCION } from '../schemas/riesgoLaboral.schema'
 import type { RiesgoLaboral } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
 
@@ -66,7 +66,7 @@ export function RiesgosLaboralesTab() {
       // niveles en NULL: la insignia salía vacía, como un dato que no llegó.
       render: (r) => (
         <StatusBadge tone={TONO_NIVEL_INTERVENCION[r.nivel_intervencion ?? ''] ?? 'neutral'}>
-          {NIVEL_INTERVENCION_LABELS[r.nivel_intervencion ?? ''] ?? 'Sin valorar'}
+          {NIVEL_INTERVENCION_CORTO[r.nivel_intervencion ?? ''] ?? 'Sin valorar'}
         </StatusBadge>
       ),
     },

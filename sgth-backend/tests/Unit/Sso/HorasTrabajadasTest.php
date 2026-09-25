@@ -107,7 +107,7 @@ test('sin total institucional se suman las unidades', function () {
     expect($resolucion->horas)->toBe(900_000);
     expect($resolucion->alcance)->toBe(HorasTrabajadas::ALCANCE_SUMA_UNIDADES);
     expect($resolucion->unidades)->toBe(2);
-    expect($resolucion->detalle())->toContain('la suma de 2 unidades');
+    expect($resolucion->detalle())->toContain('sumando 2 unidades');
 });
 
 test('con unidad consultada el alcance es esa unidad', function () {
