@@ -17,6 +17,7 @@ use App\Enums\NivelConsecuenciasRiesgo;
 use App\Enums\NivelIntervencionRiesgo;
 use App\Enums\TipoEventoAccidente;
 use App\Exceptions\ReglaNegocioException;
+use App\Services\Sso\Indicadores\HorasTrabajadas;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 
@@ -300,6 +301,30 @@ final class SsoService implements SsoServiceInterface
     }
 
     /**
+     * Las horas trabajadas de un período: trae las filas candidatas —la del
+     * período pedido y, si es un año, las de sus meses— y deja que
+     * HorasTrabajadas decida cuál manda. La decisión vive ahí porque tiene dos
+     * ejes con precedencia y se prueba sin base de datos.
+     */
+    private function resolverHorasTrabajadas(string $periodo, ?int $unidadAdministrativaId): HorasTrabajadas
+    {
+        $filas = HorasTrabajadasPeriodo::query()
+            ->where(fn($q) => $q
+                ->where('periodo', $periodo)
+                ->when(
+                    HorasTrabajadas::esAnio($periodo),
+                    fn($sq) => $sq->orWhere('periodo', 'like', "{$periodo}-%"),
+                ))
+            ->when(
+                $unidadAdministrativaId !== null,
+                fn($q) => $q->where('unidad_administrativa_id', $unidadAdministrativaId),
+            )
+            ->get(['periodo', 'unidad_administrativa_id', 'total_horas']);
+
+        return HorasTrabajadas::desde($filas, $periodo, $unidadAdministrativaId);
+    }
+
+    /**
      * Índices reactivos CD 513 (Resolución IESS - Reglamento del Seguro General de Riesgos del Trabajo).
      * IF = (nº lesiones × 200000) / horas trabajadas; IG = (días perdidos × 200000) / horas trabajadas; TR = IG / IF.
      * NOTA: estas fórmulas fueron verificadas solo por fuentes secundarias (el reglamento oficial del IESS
@@ -310,9 +335,8 @@ final class SsoService implements SsoServiceInterface
     {
         [$inicio, $fin] = $this->rangoPeriodo($periodo);
 
-        $horasTrabajadas = (int) HorasTrabajadasPeriodo::where('periodo', $periodo)
-            ->where('unidad_administrativa_id', $unidadAdministrativaId)
-            ->sum('total_horas');
+        $resolucionHoras = $this->resolverHorasTrabajadas($periodo, $unidadAdministrativaId);
+        $horasTrabajadas = $resolucionHoras->horas;
 
         $accidentes = AccidenteTrabajo::query()
             ->where('tipo_evento', TipoEventoAccidente::ACCIDENTE->value)
@@ -327,13 +351,22 @@ final class SsoService implements SsoServiceInterface
         $diasPerdidos = (int) $accidentes->sum('dias_reposo_medico');
 
         if ($horasTrabajadas <= 0) {
+            // Decir qué se buscó, porque en un período anual se buscan trece
+            // cosas: el año y sus doce meses.
+            $donde = HorasTrabajadas::esAnio($periodo)
+                ? "para {$periodo} ni para sus meses ({$periodo}-01 a {$periodo}-12)"
+                : "para {$periodo}";
+
             return [
                 'periodo' => $periodo,
                 'sin_datos' => true,
-                'mensaje' => 'No hay horas trabajadas registradas para este período. Cargue el dato en "Horas trabajadas" antes de calcular los índices.',
+                'mensaje' => "No hay horas trabajadas registradas {$donde}. Cargue el dato en \"Horas trabajadas\" antes de calcular los índices.",
                 'numero_lesiones' => $numeroLesiones,
                 'dias_perdidos' => $diasPerdidos,
                 'horas_trabajadas' => 0,
+                'horas_trabajadas_origen' => null,
+                'horas_trabajadas_alcance' => null,
+                'horas_trabajadas_detalle' => null,
                 'indice_frecuencia' => null,
                 'indice_gravedad' => null,
                 'tasa_riesgo' => null,
@@ -350,6 +383,9 @@ final class SsoService implements SsoServiceInterface
             'numero_lesiones' => $numeroLesiones,
             'dias_perdidos' => $diasPerdidos,
             'horas_trabajadas' => $horasTrabajadas,
+            'horas_trabajadas_origen' => $resolucionHoras->origen,
+            'horas_trabajadas_alcance' => $resolucionHoras->alcance,
+            'horas_trabajadas_detalle' => $resolucionHoras->detalle(),
             'indice_frecuencia' => $indiceFrecuencia,
             'indice_gravedad' => $indiceGravedad,
             'tasa_riesgo' => $tasaRiesgo,

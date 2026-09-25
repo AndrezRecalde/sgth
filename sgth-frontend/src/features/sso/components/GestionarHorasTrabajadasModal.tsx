@@ -1,14 +1,13 @@
 'use client'
 
-import { confirmar, SgthModal } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Group, TextInput, NumberInput, Button,
   ActionIcon, Text, Select,
 } from '@mantine/core'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconClock } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useHorasTrabajadas, useHorasTrabajadasMutations } from '../hooks/useHorasTrabajadas'
 import type { UnidadConRelaciones } from '@/types/api'
@@ -27,10 +26,10 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
   const [unidadId, setUnidadId] = useState<string | null>(null)
   const [totalHoras, setTotalHoras] = useState<number | ''>('')
 
-  const { data, isLoading } = useHorasTrabajadas()
+  const { data, isLoading, error, refetch } = useHorasTrabajadas()
   const registros = data?.data ?? []
   const { registrar, eliminar } = useHorasTrabajadasMutations()
-  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
+  const { data: unidades = [], error: errorUnidades } = useTodasUnidades({ nivel: 2 })
   const unidadOptions = ((unidades ?? []) as UnidadConRelaciones[]).map(u => ({
     value: String(u.id), label: u.nombre ?? `Unidad ${u.id}`,
   }))
@@ -94,7 +93,8 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
       <Stack gap="md">
         <Text size="xs" c="dimmed">
           Cargue manualmente el total de horas trabajadas por período (formato AAAA para un año, o AAAA-MM para
-          un mes). Deje la unidad en blanco para registrar el total institucional.
+          un mes). Deje la unidad en blanco para registrar el total institucional. Si carga los meses y consulta
+          el año, los índices CD 513 suman los meses cargados; el total institucional manda sobre las unidades.
         </Text>
         <Group align="flex-end" wrap="nowrap">
           <TextInput
@@ -115,6 +115,8 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
             {...contained}
             value={unidadId}
             onChange={setUnidadId}
+            // Sin esto, un catálogo que no cargó se ve como «no hay unidades».
+            error={errorUnidades ? 'No se pudieron cargar las unidades administrativas.' : undefined}
           />
           <NumberInput
             label="Total de horas"
@@ -134,13 +136,26 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           </Button>
         </Group>
 
-        <SgthTable
-          records={registros}
-          columns={columns}
-          fetching={isLoading}
-          noRecordsText="Sin registros de horas trabajadas todavía."
-          minHeight={120}
-        />
+        <DataState
+          loading={isLoading}
+          error={error}
+          errorTitle="No se pudieron cargar las horas trabajadas"
+          errorHint="No quiere decir que no haya períodos cargados: no se pudieron consultar."
+          onRetry={() => refetch()}
+          skeletonRows={3}
+          empty={!registros.length}
+          emptyProps={{
+            icon: IconClock,
+            title: 'Sin registros de horas trabajadas',
+            description: 'Cargue el total de horas del período con el formulario de arriba: es el denominador de los índices CD 513.',
+          }}
+        >
+          <SgthTable
+            records={registros}
+            columns={columns}
+            minHeight={120}
+          />
+        </DataState>
       </Stack>
     </SgthModal>
   )

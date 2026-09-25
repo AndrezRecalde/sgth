@@ -146,6 +146,10 @@ export interface HorasTrabajadasPeriodo {
   unidad_administrativa?: UnidadAdministrativaResumen | null
 }
 
+/** De dónde salieron las horas del denominador (ver HorasTrabajadas en el backend). */
+export type OrigenHorasTrabajadas = 'periodo_exacto' | 'suma_de_meses'
+export type AlcanceHorasTrabajadas = 'institucional' | 'unidad' | 'suma_de_unidades'
+
 export interface IndicadoresReactivos {
   periodo: string
   sin_datos: boolean
@@ -153,6 +157,15 @@ export interface IndicadoresReactivos {
   numero_lesiones: number
   dias_perdidos: number
   horas_trabajadas: number
+  /**
+   * El período anual puede componerse de sus meses y el total institucional
+   * puede salir de la suma de unidades, así que dos consultas del mismo período
+   * pueden apoyarse en cifras distintas. `detalle` es la frase que lo explica
+   * en pantalla; sin ella el índice no se puede auditar.
+   */
+  horas_trabajadas_origen: OrigenHorasTrabajadas | null
+  horas_trabajadas_alcance: AlcanceHorasTrabajadas | null
+  horas_trabajadas_detalle: string | null
   indice_frecuencia: number | null
   indice_gravedad: number | null
   tasa_riesgo: number | null
