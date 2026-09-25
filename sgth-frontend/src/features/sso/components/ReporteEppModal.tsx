@@ -1,15 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Stack, Group, Button,
-  Text, Skeleton,
-} from '@mantine/core'
-import { CountBadge, SgthModal } from '@/components/ui'
+import { Stack, Group, Button, Text } from '@mantine/core'
+import { CountBadge, DataState, SgthModal, SgthTable } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
-import { IconSearch } from '@tabler/icons-react'
+import { IconSearch, IconTruckDelivery } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useReporteEppEntregas } from '../hooks/useEppEntregas'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
@@ -29,7 +25,7 @@ export function ReporteEppModal({ opened, onClose }: Props) {
   const [puestoId, setPuestoId] = useState<number | null>(null)
   const [filtros, setFiltros] = useState<{ fecha_inicio: string; fecha_fin: string; puesto_id?: number } | null>(null)
 
-  const { data: reporte, isLoading } = useReporteEppEntregas(filtros)
+  const { data: reporte, isLoading, error, refetch } = useReporteEppEntregas(filtros)
 
   const handleBuscar = () => {
     if (!fechaInicio || !fechaFin) return
@@ -95,27 +91,41 @@ export function ReporteEppModal({ opened, onClose }: Props) {
           </Button>
         </Group>
 
-        {isLoading && <Skeleton height={150} radius="md" />}
+        {filtros && (
+          <DataState
+            loading={isLoading}
+            error={error}
+            errorTitle="No se pudo generar el reporte de EPP entregados"
+            errorHint="No quiere decir que no haya movimientos en el período: no se pudieron consultar."
+            onRetry={() => refetch()}
+            skeletonRows={4}
+            empty={!reporte?.consolidado.length}
+            emptyProps={{
+              icon: IconTruckDelivery,
+              title: 'Sin movimientos de EPP en el período',
+              description: 'No hay entregas, devoluciones ni reposiciones entre las fechas seleccionadas.',
+            }}
+          >
+            {reporte && (
+              <>
+                <Group gap="lg">
+                  <Text size="sm">
+                    Total registros: <Text span fw={600}>{reporte.totales.total_registros}</Text>
+                  </Text>
+                  <Text size="sm">
+                    Servidores: <Text span fw={600}>{reporte.totales.total_servidores}</Text>
+                  </Text>
+                </Group>
 
-        {!isLoading && reporte && (
-          <>
-            <Group gap="lg">
-              <Text size="sm">
-                Total registros: <Text span fw={600}>{reporte.totales.total_registros}</Text>
-              </Text>
-              <Text size="sm">
-                Servidores: <Text span fw={600}>{reporte.totales.total_servidores}</Text>
-              </Text>
-            </Group>
-
-            <SgthTable
-              records={reporte.consolidado}
-              columns={columns}
-              idAccessor="servidor_id"
-              noRecordsText="Sin movimientos de EPP en el período seleccionado."
-              minHeight={120}
-            />
-          </>
+                <SgthTable
+                  records={reporte.consolidado}
+                  columns={columns}
+                  idAccessor="servidor_id"
+                  minHeight={120}
+                />
+              </>
+            )}
+          </DataState>
         )}
       </Stack>
     </SgthModal>

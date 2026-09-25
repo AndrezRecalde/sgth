@@ -10,7 +10,7 @@ import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconInfoCircle, IconPlus } from '@tabler/icons-react'
+import { IconInfoCircle, IconPlus, IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useEppEntregaMutations, useKitEppServidor } from '../hooks/useEppEntregas'
@@ -37,7 +37,7 @@ interface SeleccionKit {
 export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
   const { registrar, registrarKit } = useEppEntregaMutations()
-  const { data: equiposData } = useEquiposProteccion({ estado: true })
+  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
   const equipoOptions = (equiposData?.data ?? []).map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
 
   const [modo, setModo] = useState<'individual' | 'kit'>('individual')
@@ -69,7 +69,7 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
   const [kitSeleccion, setKitSeleccion] = useState<Record<number, SeleccionKit>>({})
   const [equipoExtra, setEquipoExtra] = useState<string | null>(null)
 
-  const { data: kitEquipos = KIT_EPP_VACIO, isLoading: kitLoading } = useKitEppServidor(kitServidorId)
+  const { data: kitEquipos = KIT_EPP_VACIO, isLoading: kitLoading, error: errorKit } = useKitEppServidor(kitServidorId)
 
   // Reinicializa la selección cuando llegan nuevos datos del kit (cambio de servidor).
   // Se ajusta durante el render (no en un efecto) siguiendo el patrón de React para
@@ -177,7 +177,10 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
                     {...contained}
                     value={field.value ? String(field.value) : null}
                     onChange={(v) => field.onChange(v ? Number(v) : 0)}
-                    error={errors.equipo_proteccion_id?.message}
+                    error={
+                      errors.equipo_proteccion_id?.message
+                      ?? (errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined)
+                    }
                   />
                 )}
               />
@@ -256,7 +259,14 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
               <Text size="sm" c="dimmed">Cargando kit del puesto…</Text>
             )}
 
-            {kitServidorId && !kitLoading && kitEquipos.length === 0 && (
+            {kitServidorId && !kitLoading && errorKit && (
+              <Alert icon={<IconAlertTriangle size={16} />} color="red" variant="light" title="No se pudo cargar el kit del puesto">
+                No quiere decir que el puesto no tenga EPP definido: no se pudo consultar.
+                Vuelva a elegir el servidor o agregue los equipos manualmente abajo.
+              </Alert>
+            )}
+
+            {kitServidorId && !kitLoading && !errorKit && kitEquipos.length === 0 && (
               <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
                 Este puesto no tiene equipos de protección definidos en su catálogo.
                 Puede agregar equipos manualmente abajo.
@@ -304,6 +314,7 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
                   {...contained}
                   value={equipoExtra}
                   onChange={setEquipoExtra}
+                  error={errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined}
                 />
                 <Button
                   variant="default"

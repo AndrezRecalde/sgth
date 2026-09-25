@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
-  Stack, Group, Button, Text, Grid, Card, Skeleton, Alert,
+  Stack, Group, Button, Text, Grid, Card, Alert,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { asistenciaService } from '@/features/asistencia/services/asistenciaService'
 import { fromDateValue } from '@/lib/fecha'
-import { notificar, SgthTable } from '@/components/ui'
+import { DataState, notificar, SgthTable } from '@/components/ui'
 import { getConsolidadoColumns } from '@/features/asistencia/components/consolidado.columns'
 
 const TIPO_ENFERMEDAD = 'enfermedad'
@@ -39,7 +39,7 @@ export function AusentismoTab() {
     tipo: TIPO_ENFERMEDAD,
   }
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['sso-ausentismo-enfermedad', params],
     queryFn: () => asistenciaService.consolidado.obtener(params),
     enabled: buscar && !!fechaInicio && !!fechaFin,
@@ -150,18 +150,28 @@ export function AusentismoTab() {
         <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
           <Text size="sm">Seleccione un rango de fechas y presione Consultar.</Text>
         </Alert>
-      ) : isLoading ? (
-        <Skeleton height={200} radius="md" />
-      ) : consolidado.length === 0 ? (
-        <Alert icon={<IconClipboardList size={16} />} color="slate" variant="light">
-          <Text size="sm">Sin permisos por enfermedad registrados en el período seleccionado.</Text>
-        </Alert>
       ) : (
-        <SgthTable
-          idAccessor="servidor_id"
-          records={consolidado}
-          columns={getConsolidadoColumns(totales)}
-        />
+        <DataState
+          loading={isLoading}
+          error={error}
+          // Antes, un fallo de la consulta se veía igual que un período sin
+          // permisos: la pantalla afirmaba que no hubo ausentismo.
+          errorTitle="No se pudo cargar el consolidado de ausentismo"
+          errorHint="No quiere decir que no haya permisos por enfermedad en el período: no se pudieron consultar."
+          onRetry={() => refetch()}
+          empty={!consolidado.length}
+          emptyProps={{
+            icon: IconClipboardList,
+            title: 'Sin permisos por enfermedad en el período',
+            description: 'No hay permisos médicos registrados entre las fechas seleccionadas. Pruebe con otro rango.',
+          }}
+        >
+          <SgthTable
+            idAccessor="servidor_id"
+            records={consolidado}
+            columns={getConsolidadoColumns(totales)}
+          />
+        </DataState>
       )}
     </Stack>
   )

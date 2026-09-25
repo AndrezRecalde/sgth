@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import {
-  Group, TextInput, Button, Text, Stack,
-  Skeleton, Alert,
+  Group, TextInput, Button, Text, Stack, Alert,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconSearch, IconList, IconAlertCircle, IconEdit } from '@tabler/icons-react'
+import {
+  IconSearch, IconList, IconAlertCircle, IconEdit, IconClipboardCheck,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable, StatusBadge, Toolbar } from '@/components/ui'
+import { DataState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
 import { useListaVerificacion } from '../hooks/useCumplimiento'
 import { NormativaLegalModal } from './NormativaLegalModal'
 import { RegistrarCumplimientoModal } from './RegistrarCumplimientoModal'
@@ -25,7 +26,7 @@ export function CumplimientoTab() {
   const [cumplimientoOpened, { open: openCumplimiento, close: closeCumplimiento }] = useDisclosure(false)
   const [filaSeleccionada, setFilaSeleccionada] = useState<FilaListaVerificacion | null>(null)
 
-  const { data: lista, isLoading } = useListaVerificacion(periodo)
+  const { data: lista, isLoading, error, refetch } = useListaVerificacion(periodo)
 
   const getTipoLabel = (valor: string) =>
     TIPO_NORMATIVA_OPTIONS.find(o => o.value === valor)?.label ?? valor
@@ -110,26 +111,44 @@ export function CumplimientoTab() {
         </Alert>
       )}
 
-      {periodo && isLoading && <Skeleton height={200} radius="md" />}
+      {periodo && (
+        <DataState
+          loading={isLoading}
+          error={error}
+          errorTitle="No se pudo cargar la lista de verificación"
+          errorHint="No quiere decir que no haya normativa registrada: no se pudo consultar."
+          onRetry={() => refetch()}
+          empty={!lista?.filas.length}
+          emptyProps={{
+            icon: IconClipboardCheck,
+            title: 'No hay normativa en el catálogo',
+            description: 'La lista de verificación se arma con la normativa activa. Agréguela para poder registrar su cumplimiento.',
+            action: (
+              <Button variant="light" leftSection={<IconList size={16} />} onClick={openNormativas}>
+                Catálogo de normativas
+              </Button>
+            ),
+          }}
+        >
+          {lista && (
+            <>
+              <Group gap="lg" mb="sm">
+                <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
+                <Text size="sm" c="emerald">Cumple: <Text span fw={600}>{lista.totales.cumple}</Text></Text>
+                <Text size="sm" c="red">No cumple: <Text span fw={600}>{lista.totales.no_cumple}</Text></Text>
+                <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
+                <Text size="sm" c="dimmed">Sin registrar: <Text span fw={600}>{lista.totales.no_registrado}</Text></Text>
+              </Group>
 
-      {periodo && !isLoading && lista && (
-        <>
-          <Group gap="lg" mb="sm">
-            <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
-            <Text size="sm" c="emerald">Cumple: <Text span fw={600}>{lista.totales.cumple}</Text></Text>
-            <Text size="sm" c="red">No cumple: <Text span fw={600}>{lista.totales.no_cumple}</Text></Text>
-            <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
-            <Text size="sm" c="dimmed">Sin registrar: <Text span fw={600}>{lista.totales.no_registrado}</Text></Text>
-          </Group>
-
-          <SgthTable
-            records={lista.filas}
-            columns={columns}
-            idAccessor="normativa.id"
-            noRecordsText='No hay normativas registradas en el catálogo. Agréguelas desde "Catálogo de normativas".'
-            minHeight={150}
-          />
-        </>
+              <SgthTable
+                records={lista.filas}
+                columns={columns}
+                idAccessor="normativa.id"
+                minHeight={150}
+              />
+            </>
+          )}
+        </DataState>
       )}
 
       <NormativaLegalModal opened={normativasOpened} onClose={closeNormativas} />

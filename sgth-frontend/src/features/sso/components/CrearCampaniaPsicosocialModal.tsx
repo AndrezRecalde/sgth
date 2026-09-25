@@ -21,7 +21,7 @@ interface Props {
 export function CrearCampaniaPsicosocialModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
   const { crearCampania } = usePsicosocialMutations()
-  const { data: unidades = [] } = useTodasUnidades()
+  const { data: unidades = [], error: errorUnidades } = useTodasUnidades()
 
   const {
     register, control, handleSubmit, reset,
@@ -74,6 +74,9 @@ export function CrearCampaniaPsicosocialModal({ opened, onClose }: Props) {
               {...contained}
               value={field.value ? String(field.value) : null}
               onChange={(v) => field.onChange(v ? Number(v) : null)}
+              // Vacío significa «toda la institución», así que un catálogo que
+              // no cargó pasaría por una elección deliberada.
+              error={errorUnidades ? 'No se pudieron cargar las unidades administrativas.' : undefined}
             />
           )}
         />

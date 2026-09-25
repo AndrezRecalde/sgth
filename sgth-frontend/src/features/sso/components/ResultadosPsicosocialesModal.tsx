@@ -1,9 +1,8 @@
 'use client'
 
-import { Stack, Text, Group, Skeleton, Alert } from '@mantine/core'
-import { SgthModal, StatusBadge } from '@/components/ui'
-import { IconAlertCircle } from '@tabler/icons-react'
-import { SgthTable } from '@/components/ui/SgthTable'
+import { Stack, Text, Group } from '@mantine/core'
+import { DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
+import { IconMoodSmile } from '@tabler/icons-react'
 import { useResultadosPsicosociales } from '../hooks/usePsicosocial'
 import { NIVEL_RIESGO_PSICOSOCIAL_LABELS, TONO_RIESGO_PSICOSOCIAL } from '../schemas/psicosocial.schema'
 import type { ResultadoDimensionAgregado } from '../services/psicosocialService'
@@ -18,7 +17,7 @@ interface Props {
 }
 
 export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Props) {
-  const { data: resultados, isLoading } = useResultadosPsicosociales(campaniaId)
+  const { data: resultados, isLoading, error, refetch } = useResultadosPsicosociales(campaniaId)
 
   const columns: DataTableColumn<FilaDimension>[] = [
     { accessor: 'etiqueta', title: 'Dimensión' },
@@ -34,39 +33,46 @@ export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Pr
       title="Resultados de la evaluación psicosocial"
       size="lg"
     >
-      {isLoading && <Skeleton height={300} radius="md" />}
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudieron cargar los resultados de la evaluación"
+        errorHint="No quiere decir que la campaña no tenga respuestas: no se pudieron consultar."
+        onRetry={() => refetch()}
+        skeletonRows={5}
+        empty={resultados?.total_respuestas === 0}
+        emptyProps={{
+          icon: IconMoodSmile,
+          title: 'Todavía no hay respuestas',
+          description: 'La campaña no ha recibido respuestas. Comparta el enlace público con el personal para que la respondan.',
+        }}
+      >
+        {resultados && resultados.total_respuestas > 0 && (
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              Total de respuestas: <Text span fw={600}>{resultados.total_respuestas}</Text>
+            </Text>
 
-      {!isLoading && resultados && resultados.total_respuestas === 0 && (
-        <Alert icon={<IconAlertCircle size={18} />} color="ocean" variant="light">
-          Todavía no se han registrado respuestas para esta campaña.
-        </Alert>
-      )}
+            <Stack gap={4}>
+              <Text size="sm" fw={600}>Resultado global</Text>
+              <Group gap="xs">
+                {(['bajo', 'medio', 'alto'] as const).map((nivel) => (
+                  <StatusBadge tone={TONO_RIESGO_PSICOSOCIAL[nivel]} key={nivel}>
+                    {NIVEL_RIESGO_PSICOSOCIAL_LABELS[nivel]}: {resultados.global[nivel]}
+                  </StatusBadge>
+                ))}
+              </Group>
+            </Stack>
 
-      {!isLoading && resultados && resultados.total_respuestas > 0 && (
-        <Stack gap="md">
-          <Text size="sm" c="dimmed">
-            Total de respuestas: <Text span fw={600}>{resultados.total_respuestas}</Text>
-          </Text>
-
-          <Stack gap={4}>
-            <Text size="sm" fw={600}>Resultado global</Text>
-            <Group gap="xs">
-              {(['bajo', 'medio', 'alto'] as const).map((nivel) => (
-                <StatusBadge tone={TONO_RIESGO_PSICOSOCIAL[nivel]} key={nivel}>
-                  {NIVEL_RIESGO_PSICOSOCIAL_LABELS[nivel]}: {resultados.global[nivel]}
-                </StatusBadge>
-              ))}
-            </Group>
+            <SgthTable
+              records={Object.entries(resultados.por_dimension).map(([key, d]) => ({ key, ...d }))}
+              columns={columns}
+              idAccessor="key"
+              minHeight={120}
+            />
           </Stack>
-
-          <SgthTable
-            records={Object.entries(resultados.por_dimension).map(([key, d]) => ({ key, ...d }))}
-            columns={columns}
-            idAccessor="key"
-            minHeight={120}
-          />
-        </Stack>
-      )}
+        )}
+      </DataState>
     </SgthModal>
   )
 }

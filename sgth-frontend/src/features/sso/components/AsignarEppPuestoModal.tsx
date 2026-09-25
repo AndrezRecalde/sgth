@@ -1,13 +1,12 @@
 'use client'
 
-import { SectionHeading, SgthModal, confirmar } from '@/components/ui'
+import { DataState, SectionHeading, SgthModal, SgthTable, confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Group, Select, NumberInput, Button,
   ActionIcon, } from '@mantine/core'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconHelmet } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useEquiposPorPuesto, usePuestoEppMutations } from '../hooks/usePuestoEpp'
 import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
@@ -27,9 +26,9 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
   const [cantidad, setCantidad] = useState<number | ''>(1)
   const [frecuencia, setFrecuencia] = useState<number | ''>('')
 
-  const { data: asignaciones = [], isLoading } = useEquiposPorPuesto(puestoId)
+  const { data: asignaciones = [], isLoading, error, refetch } = useEquiposPorPuesto(puestoId)
   const { asignar, eliminar } = usePuestoEppMutations(puestoId)
-  const { data: equiposData } = useEquiposProteccion({ estado: true })
+  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
   const equipoOptions = (equiposData?.data ?? []).map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
 
   const handleClose = () => {
@@ -115,6 +114,8 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
                 {...contained}
                 value={equipoId}
                 onChange={setEquipoId}
+                // Un catálogo que no cargó se veía igual que un catálogo vacío.
+                error={errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined}
               />
               <NumberInput
                 label="Cantidad"
@@ -142,13 +143,26 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
               </Button>
             </Group>
 
-            <SgthTable
-              records={asignaciones}
-              columns={columns}
-              fetching={isLoading}
-              noRecordsText="Este puesto no tiene EPP requerido todavía."
-              minHeight={120}
-            />
+            <DataState
+              loading={isLoading}
+              error={error}
+              errorTitle="No se pudo cargar el EPP requerido del puesto"
+              errorHint="No quiere decir que el puesto no tenga EPP asignado: no se pudo consultar."
+              onRetry={() => refetch()}
+              skeletonRows={3}
+              empty={!asignaciones.length}
+              emptyProps={{
+                icon: IconHelmet,
+                title: 'Este puesto no tiene EPP requerido todavía',
+                description: 'Agregue los equipos con el formulario de arriba: de aquí sale el kit que se entrega al servidor.',
+              }}
+            >
+              <SgthTable
+                records={asignaciones}
+                columns={columns}
+                minHeight={120}
+              />
+            </DataState>
           </>
         )}
       </Stack>

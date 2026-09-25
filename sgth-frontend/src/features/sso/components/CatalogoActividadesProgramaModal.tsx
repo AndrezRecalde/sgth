@@ -1,14 +1,13 @@
 'use client'
 
-import { confirmar, SgthModal, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
 import {
   Stack, Group, TextInput, Select, Textarea, Button,
   ActionIcon, } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconChecklist } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { useActividadesPrograma, useProgramaDrogasMutations } from '../hooks/useProgramaDrogas'
 import {
   actividadProgramaSchema, type ActividadProgramaFormData, FASE_PROGRAMA_DROGAS_OPTIONS,
@@ -23,7 +22,7 @@ interface Props {
 
 export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
-  const { data: actividades = [], isLoading } = useActividadesPrograma()
+  const { data: actividades = [], isLoading, error, refetch } = useActividadesPrograma()
   const { crearActividad, eliminarActividad } = useProgramaDrogasMutations()
 
   const {
@@ -124,13 +123,26 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
           </Stack>
         </form>
 
-        <SgthTable
-          records={actividades}
-          columns={columns}
-          fetching={isLoading}
-          noRecordsText="Sin actividades registradas todavía."
-          minHeight={120}
-        />
+        <DataState
+          loading={isLoading}
+          error={error}
+          errorTitle="No se pudo cargar el catálogo de actividades"
+          errorHint="No quiere decir que el catálogo esté vacío: no se pudo consultar."
+          onRetry={() => refetch()}
+          skeletonRows={3}
+          empty={!actividades.length}
+          emptyProps={{
+            icon: IconChecklist,
+            title: 'Sin actividades registradas todavía',
+            description: 'Agregue la primera con el formulario de arriba; la matriz de seguimiento se arma con lo que haya aquí.',
+          }}
+        >
+          <SgthTable
+            records={actividades}
+            columns={columns}
+            minHeight={120}
+          />
+        </DataState>
       </Stack>
     </SgthModal>
   )

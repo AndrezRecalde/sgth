@@ -30,7 +30,7 @@ interface Props {
 export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
   const contained         = useContainedInput()
   const { crear, editar } = useRiesgoLaboralMutations()
-  const { data: factores = [] } = useFactoresRiesgo()
+  const { data: factores = [], error: errorFactores } = useFactoresRiesgo()
   const isEditing         = !!riesgo
 
   const {
@@ -128,7 +128,12 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
               {...contained}
               value={field.value ? String(field.value) : null}
               onChange={(v) => field.onChange(v ? Number(v) : 0)}
-              error={errors.factor_riesgo_id?.message}
+              // Un catálogo que no cargó se veía como un catálogo vacío, y el
+              // usuario concluía que no hay factores registrados.
+              error={
+                errors.factor_riesgo_id?.message
+                ?? (errorFactores ? 'No se pudo cargar el catálogo de factores de riesgo.' : undefined)
+              }
             />
           )}
         />

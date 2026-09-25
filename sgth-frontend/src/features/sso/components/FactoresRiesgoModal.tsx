@@ -1,15 +1,14 @@
 'use client'
 
-import { confirmar, SgthModal, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Group, TextInput, Select, Button,
   ActionIcon, } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconShieldCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactoresRiesgo'
 import {
   factorRiesgoSchema, type FactorRiesgoFormData, CATEGORIA_FACTOR_OPTIONS,
@@ -24,7 +23,7 @@ interface Props {
 
 export function FactoresRiesgoModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
-  const { data: factores = [], isLoading } = useFactoresRiesgo()
+  const { data: factores = [], isLoading, error, refetch } = useFactoresRiesgo()
   const { crear, eliminar } = useFactorRiesgoMutations()
 
   const {
@@ -119,13 +118,26 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
           </Group>
         </form>
 
-        <SgthTable
-          records={factores}
-          columns={columns}
-          fetching={isLoading}
-          noRecordsText="Sin factores registrados todavía."
-          minHeight={120}
-        />
+        <DataState
+          loading={isLoading}
+          error={error}
+          errorTitle="No se pudo cargar el catálogo de factores"
+          errorHint="No quiere decir que el catálogo esté vacío: no se pudo consultar."
+          onRetry={() => refetch()}
+          skeletonRows={3}
+          empty={!factores.length}
+          emptyProps={{
+            icon: IconShieldCheck,
+            title: 'Sin factores registrados todavía',
+            description: 'Agregue el primer factor con el formulario de arriba.',
+          }}
+        >
+          <SgthTable
+            records={factores}
+            columns={columns}
+            minHeight={120}
+          />
+        </DataState>
       </Stack>
     </SgthModal>
   )

@@ -1,15 +1,14 @@
 'use client'
 
-import { confirmar, SgthModal, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
 import {
   Stack, Group, TextInput, Select, Textarea, Button,
   ActionIcon, } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconGavel } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { useNormativas, useNormativaMutations } from '../hooks/useNormativaLegal'
 import {
   normativaLegalSchema, type NormativaLegalFormData, TIPO_NORMATIVA_OPTIONS,
@@ -25,7 +24,7 @@ interface Props {
 
 export function NormativaLegalModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
-  const { data: normativas = [], isLoading } = useNormativas()
+  const { data: normativas = [], isLoading, error, refetch } = useNormativas()
   const { crear, eliminar } = useNormativaMutations()
 
   const {
@@ -141,13 +140,26 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
           </Stack>
         </form>
 
-        <SgthTable
-          records={normativas}
-          columns={columns}
-          fetching={isLoading}
-          noRecordsText="Sin normativas registradas todavía."
-          minHeight={120}
-        />
+        <DataState
+          loading={isLoading}
+          error={error}
+          errorTitle="No se pudo cargar el catálogo de normativa"
+          errorHint="No quiere decir que el catálogo esté vacío: no se pudo consultar."
+          onRetry={() => refetch()}
+          skeletonRows={3}
+          empty={!normativas.length}
+          emptyProps={{
+            icon: IconGavel,
+            title: 'Sin normativa registrada todavía',
+            description: 'Agregue la primera con el formulario de arriba; la lista de verificación se arma con lo que haya aquí.',
+          }}
+        >
+          <SgthTable
+            records={normativas}
+            columns={columns}
+            minHeight={120}
+          />
+        </DataState>
       </Stack>
     </SgthModal>
   )
