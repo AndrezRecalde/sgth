@@ -305,7 +305,7 @@ export const ssoService = {
     api.delete<ApiResponse<null>>(`/sso/equipos-proteccion/${id}`).then(r => r.data),
 
   // ── Catálogo de factores de riesgo ─────────────────────────────
-  listarFactoresRiesgo: (params?: { categoria?: string; search?: string }) =>
+  listarFactoresRiesgo: (params?: { categoria?: string; search?: string; solo_activos?: boolean }) =>
     api.get<ApiResponse<FactorRiesgoCatalogo[]>>('/sso/factores-riesgo', { params })
       .then(r => r.data.datos ?? []),
 

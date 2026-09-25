@@ -36,6 +36,25 @@ export function useProgramaDrogasMutations() {
     onError: notificar.alFallar('No se pudo registrar la actividad'),
   })
 
+  // Retirar una actividad de la matriz sin borrar su seguimiento: es lo que la
+  // guarda del backend pide cuando ya tiene registros, y hasta ahora no existía
+  // en la pantalla.
+  const cambiarActivoActividad = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) =>
+      programaDrogasService.actualizarActividad(id, { activo }),
+    onSuccess: (_datos, { activo }) => {
+      notificar.exito(
+        activo ? 'Actividad reactivada' : 'Actividad desactivada',
+        activo
+          ? 'Vuelve a la matriz de seguimiento de los próximos períodos.'
+          : 'Sale de la matriz y conserva el seguimiento ya registrado.',
+      )
+      qc.invalidateQueries({ queryKey: ['sso-programa-drogas-actividades'] })
+      qc.invalidateQueries({ queryKey: ['sso-programa-drogas-seguimiento'] })
+    },
+    onError: notificar.alFallar('No se pudo cambiar el estado de la actividad'),
+  })
+
   const eliminarActividad = useMutation({
     mutationFn: (id: number) => programaDrogasService.eliminarActividad(id),
     onSuccess: () => {
@@ -61,5 +80,5 @@ export function useProgramaDrogasMutations() {
     onError: notificar.alFallar('No se pudo registrar el seguimiento'),
   })
 
-  return { crearActividad, eliminarActividad, registrarSeguimiento }
+  return { crearActividad, cambiarActivoActividad, eliminarActividad, registrarSeguimiento }
 }

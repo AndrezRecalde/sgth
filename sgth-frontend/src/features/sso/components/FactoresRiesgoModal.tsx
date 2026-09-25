@@ -1,13 +1,13 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, TextInput, Select, Button,
-  ActionIcon, } from '@mantine/core'
+  Stack, Group, TextInput, Select, Button, Switch,
+} from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconShieldCheck } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconShieldCheck, IconEyeOff, IconEye } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactoresRiesgo'
 import {
@@ -23,8 +23,12 @@ interface Props {
 
 export function FactoresRiesgoModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
-  const { data: factores = [], isLoading, error, refetch } = useFactoresRiesgo()
-  const { crear, eliminar } = useFactorRiesgoMutations()
+  // El catálogo muestra los activos; los inactivos se piden a propósito, que es
+  // la única forma de volver a activar uno.
+  const [verInactivos, setVerInactivos] = useState(false)
+  const { data: factores = [], isLoading, error, refetch } =
+    useFactoresRiesgo({ solo_activos: !verInactivos })
+  const { crear, cambiarActivo, eliminar } = useFactorRiesgoMutations()
 
   const {
     register, control, handleSubmit, reset,
@@ -33,8 +37,6 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     resolver: zodResolver(factorRiesgoSchema) as Resolver<FactorRiesgoFormData>,
     defaultValues: { nombre: '', categoria: 'fisico' },
   })
-
-  const [confirmarId, setConfirmarId] = useState<number | null>(null)
 
   const getCategoriaLabel = (valor: string) =>
     CATEGORIA_FACTOR_OPTIONS.find(o => o.value === valor)?.label ?? valor
@@ -52,26 +54,45 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
       render: (f) => <StatusBadge>{getCategoriaLabel(f.categoria)}</StatusBadge>,
     },
     {
+      accessor: 'activo',
+      title: 'Estado',
+      width: 100,
+      render: (f) => (
+        <StatusBadge tone={f.activo ? 'success' : 'neutral'}>
+          {f.activo ? 'Activo' : 'Inactivo'}
+        </StatusBadge>
+      ),
+    },
+    {
       accessor: 'acciones',
       title: '',
       width: 50,
       render: (f) => (
-        <ActionIcon
-          color="red"
-          variant="subtle"
-          loading={eliminar.isPending && confirmarId === f.id}
-          onClick={() => confirmar({
-            title:   'Eliminar factor de riesgo',
-            message: <>Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.</>,
-            destructiva: true,
-            onConfirm: () => {
-              setConfirmarId(f.id)
-              eliminar.mutate(f.id)
+        <TableActions
+          actions={[
+            {
+              label: f.activo ? 'Desactivar' : 'Reactivar',
+              icon: f.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+              onClick: () => cambiarActivo.mutate({ id: f.id, activo: !f.activo }),
             },
-          })}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+            {
+              label: 'Eliminar factor',
+              icon: <IconTrash size={14} />,
+              color: 'red',
+              onClick: () => confirmar({
+                title:   'Eliminar factor de riesgo',
+                message: (
+                  <>
+                    Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.
+                    Si algún riesgo lo usa, desactívelo en vez de borrarlo.
+                  </>
+                ),
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(f.id),
+              }),
+            },
+          ]}
+        />
       ),
     },
   ]
@@ -117,6 +138,14 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
             </Button>
           </Group>
         </form>
+
+        <Group justify="flex-end">
+          <Switch
+            label="Ver inactivos"
+            checked={verInactivos}
+            onChange={(e) => setVerInactivos(e.currentTarget.checked)}
+          />
+        </Group>
 
         <DataState
           loading={isLoading}

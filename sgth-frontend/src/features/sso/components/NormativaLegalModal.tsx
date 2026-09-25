@@ -1,13 +1,14 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { useState } from 'react'
 import {
-  Stack, Group, TextInput, Select, Textarea, Button,
-  ActionIcon, } from '@mantine/core'
+  Stack, Group, TextInput, Select, Textarea, Button, Switch,
+} from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconGavel } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconGavel, IconEyeOff, IconEye } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useNormativas, useNormativaMutations } from '../hooks/useNormativaLegal'
 import {
@@ -24,8 +25,11 @@ interface Props {
 
 export function NormativaLegalModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
-  const { data: normativas = [], isLoading, error, refetch } = useNormativas()
-  const { crear, eliminar } = useNormativaMutations()
+  // El catálogo muestra las activas; las inactivas se piden a propósito, que es
+  // la única forma de volver a activar una.
+  const [verInactivas, setVerInactivas] = useState(false)
+  const { data: normativas = [], isLoading, error, refetch } = useNormativas({ solo_activas: !verInactivas })
+  const { crear, cambiarActivo, eliminar } = useNormativaMutations()
 
   const {
     register, control, handleSubmit, reset,
@@ -51,22 +55,46 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
       render: (n) => <StatusBadge>{getTipoLabel(n.tipo)}</StatusBadge>,
     },
     {
+      accessor: 'activo',
+      title: 'Estado',
+      width: 100,
+      render: (n) => (
+        <StatusBadge tone={n.activo ? 'success' : 'neutral'}>
+          {n.activo ? 'Activa' : 'Inactiva'}
+        </StatusBadge>
+      ),
+    },
+    {
       accessor: 'acciones',
       title: '',
       width: 50,
       render: (n) => (
-        <ActionIcon
-          color="red"
-          variant="subtle"
-          onClick={() => confirmar({
-            title:   'Eliminar normativa',
-            message: <>Se eliminará la normativa <b>{n.nombre}</b>. No se puede deshacer.</>,
-            destructiva: true,
-            onConfirm: () => eliminar.mutate(n.id),
-          })}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+        <TableActions
+          actions={[
+            {
+              label: n.activo ? 'Desactivar' : 'Reactivar',
+              icon: n.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+              onClick: () => cambiarActivo.mutate({ id: n.id, activo: !n.activo }),
+            },
+            {
+              label: 'Eliminar normativa',
+              icon: <IconTrash size={14} />,
+              color: 'red',
+              onClick: () => confirmar({
+                title:   'Eliminar normativa',
+                message: (
+                  <>
+                    Se eliminará la normativa <b>{n.nombre}</b>. No se puede deshacer.
+                    Si ya tiene cumplimiento registrado, desactívela en vez de borrarla:
+                    eliminarla se llevaría ese historial.
+                  </>
+                ),
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(n.id),
+              }),
+            },
+          ]}
+        />
       ),
     },
   ]
@@ -139,6 +167,14 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
             </Group>
           </Stack>
         </form>
+
+        <Group justify="flex-end">
+          <Switch
+            label="Ver inactivas"
+            checked={verInactivas}
+            onChange={(e) => setVerInactivas(e.currentTarget.checked)}
+          />
+        </Group>
 
         <DataState
           loading={isLoading}

@@ -1,12 +1,13 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { useState } from 'react'
 import {
-  Stack, Group, TextInput, Select, Textarea, Button,
-  ActionIcon, } from '@mantine/core'
+  Stack, Group, TextInput, Select, Textarea, Button, Switch,
+} from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconChecklist } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconChecklist, IconEyeOff, IconEye } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useActividadesPrograma, useProgramaDrogasMutations } from '../hooks/useProgramaDrogas'
 import {
@@ -22,8 +23,12 @@ interface Props {
 
 export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
-  const { data: actividades = [], isLoading, error, refetch } = useActividadesPrograma()
-  const { crearActividad, eliminarActividad } = useProgramaDrogasMutations()
+  // La matriz se arma con las activas; las inactivas se piden a propósito, que
+  // es la única forma de volver a activar una.
+  const [verInactivas, setVerInactivas] = useState(false)
+  const { data: actividades = [], isLoading, error, refetch } =
+    useActividadesPrograma({ solo_activas: !verInactivas })
+  const { crearActividad, cambiarActivoActividad, eliminarActividad } = useProgramaDrogasMutations()
 
   const {
     register, control, handleSubmit, reset,
@@ -49,22 +54,46 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
       render: (a) => <StatusBadge>{getFaseLabel(a.fase)}</StatusBadge>,
     },
     {
+      accessor: 'activo',
+      title: 'Estado',
+      width: 100,
+      render: (a) => (
+        <StatusBadge tone={a.activo ? 'success' : 'neutral'}>
+          {a.activo ? 'Activa' : 'Inactiva'}
+        </StatusBadge>
+      ),
+    },
+    {
       accessor: 'acciones',
       title: '',
       width: 50,
       render: (a) => (
-        <ActionIcon
-          color="red"
-          variant="subtle"
-          onClick={() => confirmar({
-            title:   'Eliminar actividad',
-            message: <>Se eliminará la actividad <b>{a.nombre}</b>. No se puede deshacer.</>,
-            destructiva: true,
-            onConfirm: () => eliminarActividad.mutate(a.id),
-          })}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+        <TableActions
+          actions={[
+            {
+              label: a.activo ? 'Desactivar' : 'Reactivar',
+              icon: a.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+              onClick: () => cambiarActivoActividad.mutate({ id: a.id, activo: !a.activo }),
+            },
+            {
+              label: 'Eliminar actividad',
+              icon: <IconTrash size={14} />,
+              color: 'red',
+              onClick: () => confirmar({
+                title:   'Eliminar actividad',
+                message: (
+                  <>
+                    Se eliminará la actividad <b>{a.nombre}</b>. No se puede deshacer.
+                    Si ya tiene seguimiento registrado, desactívela en vez de borrarla:
+                    eliminarla se llevaría ese historial.
+                  </>
+                ),
+                destructiva: true,
+                onConfirm: () => eliminarActividad.mutate(a.id),
+              }),
+            },
+          ]}
+        />
       ),
     },
   ]
@@ -122,6 +151,14 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
             </Group>
           </Stack>
         </form>
+
+        <Group justify="flex-end">
+          <Switch
+            label="Ver inactivas"
+            checked={verInactivas}
+            onChange={(e) => setVerInactivas(e.currentTarget.checked)}
+          />
+        </Group>
 
         <DataState
           loading={isLoading}

@@ -18,7 +18,18 @@ final class NormativaLegalSsoController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $normativas = $this->cumplimientoService->listarNormativas($request->all());
+        $validated = $request->validate([
+            'tipo' => ['nullable', new Enum(TipoNormativaLegal::class)],
+            'solo_activas' => ['nullable', 'boolean'],
+        ]);
+
+        $normativas = $this->cumplimientoService->listarNormativas(
+            $validated['tipo'] ?? null,
+            // `boolean()` y no el valor crudo: 'false' en la query string es una
+            // cadena, y como cadena es verdadera.
+            $request->boolean('solo_activas', true),
+        );
+
         return ApiResponse::ok($normativas, 'Normativa legal obtenida exitosamente.');
     }
 
