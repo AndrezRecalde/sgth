@@ -21,6 +21,7 @@ import {
 import type { MovimientoPersonal } from '@/types/api'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, notificar } from '@/components/ui'
+import { guardarArchivo } from '@/lib/archivo'
 import { formatFecha } from '@/lib/fecha'
 
 interface Props {
@@ -41,12 +42,7 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
     setDescargandoId(Number(movimiento.id))
     try {
       const blob = await expedienteService.descargarAccionPersonalPdf(Number(movimiento.id))
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `accion_personal_${movimiento.codigo ?? movimiento.id}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
+      guardarArchivo(blob, `accion_personal_${movimiento.codigo ?? movimiento.id}.pdf`)
     } catch (error) {
       notificar.error(
         'No se pudo generar el PDF de la acción de personal',

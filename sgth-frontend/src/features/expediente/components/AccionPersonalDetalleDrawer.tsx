@@ -24,6 +24,7 @@ import {
 } from '../utils/taxonomiaAccionPersonal'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import type { EstadoAccionPersonal } from '@/types/api'
+import { guardarArchivo } from '@/lib/archivo'
 import { formatFecha } from '@/lib/fecha'
 
 interface Props {
@@ -73,12 +74,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
     setDescargando(true)
     try {
       const blob = await expedienteService.descargarAccionPersonalPdf(Number(m.id))
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `accion_personal_${m.codigo_registro ?? m.id}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
+      guardarArchivo(blob, `accion_personal_${m.codigo_registro ?? m.id}.pdf`)
     } catch (error) {
       notificar.error('No se pudo generar el PDF de la acción de personal', getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'))
     } finally {

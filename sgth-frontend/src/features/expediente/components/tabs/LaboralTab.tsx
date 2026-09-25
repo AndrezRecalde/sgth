@@ -9,6 +9,7 @@ import {
 import { IconBriefcase, IconCalendarCog, IconInfoCircle } from '@tabler/icons-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useActividadLaboral } from '../../hooks/useActividadLaboral'
+import { etiquetaNombramiento } from '../../utils/tipoNombramientoOptions'
 import { ReprogramarPlazoModal } from '../ReprogramarPlazoModal'
 import type {
   AccionSobreVinculo, VinculoConActividad,
@@ -27,16 +28,6 @@ const ESTADO_LABELS: Record<EstadoContrato, string> = {
   vigente: 'Vigente',
   terminado: 'Terminado',
   cancelado: 'Cancelado',
-}
-
-const NOMBRAMIENTO_LABELS: Record<string, string> = {
-  nombramiento_permanente: 'Nombramiento Permanente',
-  nombramiento_provisional: 'Nombramiento Provisional',
-  servicios_ocasionales: 'Servicios Ocasionales',
-  libre_nombramiento_remocion: 'Libre Nombramiento y Remoción',
-  codigo_trabajo: 'Código del Trabajo',
-  servicios_profesionales: 'Servicios Profesionales',
-  eleccion_popular: 'Elección Popular',
 }
 
 function dinero(v?: string | number | null): string {
@@ -105,7 +96,7 @@ function Vinculo({
           <div style={{ minWidth: 0 }}>
             <Group gap="xs">
               <Text fw={600} size="sm">
-                {NOMBRAMIENTO_LABELS[c.tipo_nombramiento as string] ?? c.tipo_nombramiento}
+                {etiquetaNombramiento(c.tipo_nombramiento)}
               </Text>
               {c.numero_contrato && (
                 <Text size="sm" c="dimmed" ff="monospace">{c.numero_contrato}</Text>
