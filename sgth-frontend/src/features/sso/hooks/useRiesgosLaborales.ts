@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
 import type { RiesgoLaboral } from '../services/ssoService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 interface Params {
@@ -11,7 +12,7 @@ interface Params {
 
 export function useRiesgosLaborales(params?: Params) {
   return useQuery({
-    queryKey: ['sso-riesgos', params],
+    queryKey: clavesSso.riesgos.lista(params),
     queryFn: () => ssoService.listarRiesgos(params),
     staleTime: 1000 * 60 * 5,
   })
@@ -20,7 +21,13 @@ export function useRiesgosLaborales(params?: Params) {
 export function useRiesgoLaboralMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-riesgos'] })
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: clavesSso.riesgos.todos })
+    // El tablero cuenta los riesgos activos por nivel de intervención: sin
+    // esto, identificar un riesgo no cambiaba la cifra de la pantalla de al
+    // lado hasta que la consulta caducara sola.
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
+  }
 
   const crear = useMutation({
     mutationFn: (data: Partial<RiesgoLaboral>) => ssoService.crearRiesgo(data),

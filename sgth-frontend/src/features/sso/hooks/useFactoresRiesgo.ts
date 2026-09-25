@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useFactoresRiesgo(params?: { categoria?: string; search?: string; solo_activos?: boolean }) {
   return useQuery({
-    queryKey: ['sso-factores-riesgo', params],
+    queryKey: clavesSso.factoresRiesgo.lista(params),
     queryFn: () => ssoService.listarFactoresRiesgo(params),
     staleTime: 1000 * 60 * 10,
   })
@@ -13,7 +14,12 @@ export function useFactoresRiesgo(params?: { categoria?: string; search?: string
 export function useFactorRiesgoMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-factores-riesgo'] })
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: clavesSso.factoresRiesgo.todos })
+    // El listado de riesgos muestra el nombre y la categoría del factor:
+    // al renombrarlo o retirarlo del catálogo, la tabla los traía viejos.
+    qc.invalidateQueries({ queryKey: clavesSso.riesgos.todos })
+  }
 
   const crear = useMutation({
     mutationFn: (data: { nombre: string; categoria: string }) => ssoService.crearFactorRiesgo(data),

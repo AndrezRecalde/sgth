@@ -18,6 +18,7 @@ import { asistenciaService } from '@/features/asistencia/services/asistenciaServ
 import { fromDateValue } from '@/lib/fecha'
 import { DataState, notificar, SgthTable } from '@/components/ui'
 import { getConsolidadoColumns } from '@/features/asistencia/components/consolidado.columns'
+import { clavesSso } from '../constants/claves'
 
 const TIPO_ENFERMEDAD = 'enfermedad'
 
@@ -40,7 +41,7 @@ export function AusentismoTab() {
   }
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['sso-ausentismo-enfermedad', params],
+    queryKey: clavesSso.ausentismo.consolidado(params),
     queryFn: () => asistenciaService.consolidado.obtener(params),
     enabled: buscar && !!fechaInicio && !!fechaFin,
     staleTime: 0,

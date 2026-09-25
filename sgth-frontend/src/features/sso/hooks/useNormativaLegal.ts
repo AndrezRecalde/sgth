@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useNormativas(params?: { tipo?: string; solo_activas?: boolean }) {
   return useQuery({
-    queryKey: ['sso-normativas', params],
+    queryKey: clavesSso.normativas.lista(params),
     queryFn: () => ssoService.listarNormativas(params),
     staleTime: 1000 * 60 * 10,
   })
@@ -14,8 +15,11 @@ export function useNormativaMutations() {
   const qc = useQueryClient()
 
   const invalidar = () => {
-    qc.invalidateQueries({ queryKey: ['sso-normativas'] })
-    qc.invalidateQueries({ queryKey: ['sso-lista-verificacion'] })
+    qc.invalidateQueries({ queryKey: clavesSso.normativas.todas })
+    // Cada normativa activa es una fila de la lista de verificación, y de sus
+    // totales sale el porcentaje de cumplimiento del tablero.
+    qc.invalidateQueries({ queryKey: clavesSso.cumplimiento.todo })
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
   }
 
   const crear = useMutation({

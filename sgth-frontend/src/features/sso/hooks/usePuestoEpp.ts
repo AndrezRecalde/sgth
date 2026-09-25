@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useEquiposPorPuesto(puestoId: number | null) {
   return useQuery({
-    queryKey: ['sso-puesto-epp', puestoId],
+    queryKey: clavesSso.epp.porPuesto(puestoId),
     queryFn: () => ssoService.listarEquiposPorPuesto(puestoId!),
     enabled: !!puestoId,
     staleTime: 1000 * 60 * 5,
@@ -14,7 +15,17 @@ export function useEquiposPorPuesto(puestoId: number | null) {
 export function usePuestoEppMutations(puestoId: number | null) {
   const qc = useQueryClient()
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-puesto-epp', puestoId] })
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: clavesSso.epp.porPuesto(puestoId) })
+    // El kit de un servidor es el EPP requerido de su puesto menos lo que ya
+    // recibió: al cambiar el requerimiento hay que rehacerlo. No se puede
+    // acotar a los servidores de este puesto —la caché no sabe de qué puesto
+    // es cada kit—, así que se invalidan todos.
+    qc.invalidateQueries({ queryKey: clavesSso.epp.kits })
+    // Y la cobertura de EPP cuenta los puestos con EPP requerido.
+    qc.invalidateQueries({ queryKey: clavesSso.indicadores.todos })
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
+  }
 
   const asignar = useMutation({
     mutationFn: (data: { equipo_proteccion_id: number; cantidad_requerida?: number; frecuencia_reposicion_meses?: number }) =>

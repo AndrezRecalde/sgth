@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
 import type { AccidenteTrabajo } from '../services/ssoService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 interface Params {
@@ -11,7 +12,7 @@ interface Params {
 
 export function useAccidentesTrabajo(params?: Params) {
   return useQuery({
-    queryKey: ['sso-accidentes', params],
+    queryKey: clavesSso.accidentes.lista(params),
     queryFn: () => ssoService.listarAccidentes(params),
     staleTime: 1000 * 60 * 5,
   })
@@ -20,7 +21,15 @@ export function useAccidentesTrabajo(params?: Params) {
 export function useAccidenteTrabajoMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-accidentes'] })
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: clavesSso.accidentes.todos })
+    // Los índices reactivos del CD 513 —frecuencia, gravedad, tasa de
+    // riesgo— se calculan sobre estos accidentes. Solo las horas
+    // trabajadas los invalidaban, así que registrar un accidente dejaba
+    // los tres índices en la cifra anterior.
+    qc.invalidateQueries({ queryKey: clavesSso.indicadores.todos })
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
+  }
 
   const crear = useMutation({
     mutationFn: (data: Partial<AccidenteTrabajo>) => ssoService.crearAccidente(data),

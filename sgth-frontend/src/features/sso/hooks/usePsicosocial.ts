@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { psicosocialService, type RespuestaPsicosocialPayload } from '../services/psicosocialService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useCampaniasPsicosocial(params?: { periodo?: string }) {
   return useQuery({
-    queryKey: ['sso-psicosocial-campanias', params],
+    queryKey: clavesSso.psicosocial.campanias.lista(params),
     queryFn: () => psicosocialService.listarCampanias(params),
     staleTime: 1000 * 30,
   })
@@ -12,7 +13,7 @@ export function useCampaniasPsicosocial(params?: { periodo?: string }) {
 
 export function useResultadosPsicosociales(campaniaId: number | null) {
   return useQuery({
-    queryKey: ['sso-psicosocial-resultados', campaniaId],
+    queryKey: clavesSso.psicosocial.resultados(campaniaId),
     queryFn: () => psicosocialService.obtenerResultados(campaniaId!),
     enabled: !!campaniaId,
     staleTime: 1000 * 30,
@@ -22,6 +23,12 @@ export function useResultadosPsicosociales(campaniaId: number | null) {
 export function usePsicosocialMutations() {
   const qc = useQueryClient()
 
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: clavesSso.psicosocial.campanias.todas })
+    // El tablero cuenta las campañas activas y las respuestas del período.
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
+  }
+
   const crearCampania = useMutation({
     mutationFn: (data: { periodo: string; unidad_administrativa_id?: number | null; fecha_apertura: string; fecha_cierre?: string | null }) =>
       psicosocialService.crearCampania(data),
@@ -30,7 +37,7 @@ export function usePsicosocialMutations() {
         'Campaña creada',
         'La campaña de evaluación psicosocial fue creada exitosamente.',
       )
-      qc.invalidateQueries({ queryKey: ['sso-psicosocial-campanias'] })
+      invalidar()
     },
     onError: notificar.alFallar('No se pudo crear la campaña psicosocial'),
   })
@@ -39,7 +46,7 @@ export function usePsicosocialMutations() {
     mutationFn: (id: number) => psicosocialService.cerrarCampania(id),
     onSuccess: () => {
       notificar.exito('Campaña cerrada', 'La campaña fue cerrada exitosamente.')
-      qc.invalidateQueries({ queryKey: ['sso-psicosocial-campanias'] })
+      invalidar()
     },
     onError: notificar.alFallar('No se pudo cerrar la campaña psicosocial'),
   })
@@ -51,7 +58,7 @@ export function usePsicosocialMutations() {
 
 export function useCuestionarioPsicosocial(codigo: string | null) {
   return useQuery({
-    queryKey: ['psicosocial-cuestionario', codigo],
+    queryKey: clavesSso.psicosocial.cuestionario(codigo),
     queryFn: () => psicosocialService.obtenerCuestionarioPublico(codigo!),
     enabled: !!codigo,
     retry: false,

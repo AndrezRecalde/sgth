@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 interface Params {
@@ -10,7 +11,7 @@ interface Params {
 
 export function useHorasTrabajadas(params?: Params) {
   return useQuery({
-    queryKey: ['sso-horas-trabajadas', params],
+    queryKey: clavesSso.horasTrabajadas.lista(params),
     queryFn: () => ssoService.listarHorasTrabajadas(params),
     staleTime: 1000 * 60 * 5,
   })
@@ -20,8 +21,10 @@ export function useHorasTrabajadasMutations() {
   const qc = useQueryClient()
 
   const invalidar = () => {
-    qc.invalidateQueries({ queryKey: ['sso-horas-trabajadas'] })
-    qc.invalidateQueries({ queryKey: ['sso-indicadores-reactivos'] })
+    qc.invalidateQueries({ queryKey: clavesSso.horasTrabajadas.todas })
+    // Las horas son el denominador de los tres índices del CD 513.
+    qc.invalidateQueries({ queryKey: clavesSso.indicadores.todos })
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
   }
 
   const registrar = useMutation({

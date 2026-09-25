@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ssoService } from '../services/ssoService'
+import { clavesSso } from '../constants/claves'
 
 interface Params {
   periodo: string
@@ -8,7 +9,7 @@ interface Params {
 
 export function useIndicadoresReactivos(params: Params | null) {
   return useQuery({
-    queryKey: ['sso-indicadores-reactivos', params],
+    queryKey: clavesSso.indicadores.reactivos(params),
     queryFn: () => ssoService.obtenerIndicadoresReactivos(params!),
     enabled: !!params?.periodo,
     staleTime: 1000 * 60,
@@ -17,7 +18,7 @@ export function useIndicadoresReactivos(params: Params | null) {
 
 export function useIndicadoresProactivos(params: Params | null) {
   return useQuery({
-    queryKey: ['sso-indicadores-proactivos', params],
+    queryKey: clavesSso.indicadores.proactivos(params),
     queryFn: () => ssoService.obtenerIndicadoresProactivos(params!),
     enabled: !!params?.periodo,
     staleTime: 1000 * 60,
