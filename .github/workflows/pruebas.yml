@@ -1,0 +1,140 @@
+# Las pruebas del repositorio, en cada push a main y en cada pull request.
+#
+# Hasta ahora no había ninguna: las 1322 pruebas del backend y las tres
+# comprobaciones del frontend solo corrían si alguien se acordaba, y una rama de
+# 25 commits podía entrar a main sin que nada la mirase.
+#
+# Esto no era viable hasta hace poco. En un checkout limpio fallaban 12 pruebas
+# por configuración del propio repositorio —`phpunit.xml` fijaba `CACHE_DRIVER`,
+# que Laravel dejó de leer en la 11, y `.env.example` traía `APP_LOCALE=en`
+# cuando la aplicación corre en español—, así que un CI habría nacido en rojo.
+# Se arreglaron en el PR #160; esto es lo que aquello hizo posible.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un push nuevo sobre la misma rama cancela la corrida anterior: lo que importa
+# es si el último commit está bien, no el penúltimo.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend · Pest sobre PostgreSQL
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # El mismo motor que en desarrollo. Importa: el módulo SSO usa
+        # agregados propios de PostgreSQL —`EXTRACT(EPOCH …)` sobre columnas
+        # `time`, comparaciones `jsonb`, un índice único parcial—, así que
+        # probar sobre SQLite no probaría lo mismo.
+        image: postgres:16
+        env:
+          POSTGRES_USER: sgth
+          POSTGRES_PASSWORD: sgth
+          # `phpunit.xml` fija `DB_DATABASE=sgth_testing`; la base tiene que
+          # llamarse igual o las migraciones no encuentran dónde aplicarse.
+          POSTGRES_DB: sgth_testing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Van como variables de entorno reales y no en el `.env`: Laravel no
+      # sobrescribe con el `.env` lo que ya está en el entorno, así que esto
+      # manda sin tener que editar el archivo.
+      #
+      # La conexión también: `phpunit.xml` la fija para las pruebas, pero
+      # `artisan migrate` corre fuera de phpunit y leería el `sqlite` del
+      # ejemplo, migrando un archivo local en vez de la base del servicio.
+      DB_CONNECTION: pgsql
+      DB_DATABASE: sgth_testing
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USERNAME: sgth
+      DB_PASSWORD: sgth
+
+    defaults:
+      run:
+        working-directory: sgth-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # `composer.json` pide ^8.3; se usa 8.4, que es la de desarrollo.
+          php-version: '8.4'
+          # Las mismas que tiene el entorno de desarrollo donde la suite pasa.
+          # `zip` y `gd` no son opcionales: `maatwebsite/excel` exporta con la
+          # primera y `simple-qrcode` dibuja con la segunda, y de eso viven las
+          # pruebas de Reportería.
+          extensions: pdo_pgsql, pgsql, mbstring, intl, gd, zip, exif, fileinfo
+          coverage: none
+
+      - name: Caché de Composer
+        uses: actions/cache@v4
+        with:
+          path: sgth-backend/vendor
+          key: composer-${{ runner.os }}-php8.4-${{ hashFiles('sgth-backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php8.4-
+
+      - name: Instalar dependencias
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Preparar el entorno
+        # Sin tocar nada del ejemplo: que la suite pase con la configuración que
+        # el repositorio entrega es justamente lo que esto tiene que vigilar.
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Migrar
+        run: php artisan migrate --force
+
+      - name: Pruebas
+        run: ./vendor/bin/pest
+
+  frontend:
+    name: Frontend · tipos, lint y build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: sgth-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: sgth-frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Los tres pasos de la regla 10. No son formalidades: durante la revisión
+      # del módulo SSO cazaron errores reales varias veces —un genérico de Zod
+      # que no estrechaba el tipo, imports que quedaban huérfanos tras cada
+      # refactor—, y el frontend no tiene más red que esta.
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      - name: Lint de código y de CSS
+        run: npm run lint
+
+      - name: Build de producción
+        run: npm run build

@@ -20,9 +20,21 @@ sgth-backend/vendor/
 sgth-backend/node_modules/
 sgth-backend/storage/logs/*.log
 sgth-backend/storage/app/public/
-sgth-backend/storage/framework/cache/
-sgth-backend/storage/framework/sessions/
-sgth-backend/storage/framework/views/
+# Su contenido, no los directorios: ignorarlos enteros impedía commitear los
+# `.gitignore` que Laravel pone dentro, y como git no guarda directorios
+# vacíos, un clon nuevo se quedaba sin ellos. `composer install` fallaba en
+# `package:discover` con «Please provide a valid cache path», que es el
+# compilador de vistas buscando `storage/framework/views`. Las reglas de cada
+# directorio ya ignoran lo que hay dentro.
+sgth-backend/storage/framework/cache/*
+!sgth-backend/storage/framework/cache/.gitignore
+!sgth-backend/storage/framework/cache/data/
+sgth-backend/storage/framework/cache/data/*
+!sgth-backend/storage/framework/cache/data/.gitignore
+sgth-backend/storage/framework/sessions/*
+!sgth-backend/storage/framework/sessions/.gitignore
+sgth-backend/storage/framework/views/*
+!sgth-backend/storage/framework/views/.gitignore
 sgth-backend/bootstrap/cache/*.php
 sgth-backend/.phpunit.result.cache
 sgth-backend/coverage/
