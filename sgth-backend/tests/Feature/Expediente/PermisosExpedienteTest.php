@@ -8,8 +8,10 @@ use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\DocumentoServidor;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
+use App\Services\Expediente\CertificadoLaboralService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -221,4 +223,50 @@ test('no existe una ruta para borrar fichas', function () {
     $this->deleteJson("/api/v1/expediente/servidores/{$this->ajeno->id}")
         ->assertStatus(405);
     expect(Servidor::find($this->ajeno->id))->not->toBeNull();
+});
+
+/*
+| El certificado laboral lo emite Talento Humano, no el interesado: así lo
+| decidió la UATH el 2026-09-25. Hasta ese día la ruta no pedía rol y el
+| controlador no autorizaba, de modo que cualquier usuario autenticado obtenía
+| el de otra persona —nombre, cédula y el historial completo de vínculos— con
+| una URL de descarga firmada por 30 minutos.
+*/
+
+test('un servidor no puede emitir el certificado laboral de otro', function () {
+    $this->actingAs($this->servidor, 'sanctum');
+
+    $this->getJson("/api/v1/expediente/servidores/{$this->ajeno->id}/certificado-laboral")
+        ->assertForbidden();
+});
+
+test('un servidor tampoco emite el suyo propio: lo entrega Talento Humano', function () {
+    $this->actingAs($this->servidor, 'sanctum');
+
+    $this->getJson("/api/v1/expediente/servidores/{$this->propio->id}/certificado-laboral")
+        ->assertForbidden();
+});
+
+test('la descarga firmada del certificado tampoco se abre sin rol de Talento Humano', function () {
+    $url = URL::temporarySignedRoute(
+        'expediente.certificado.descargar',
+        now()->addMinutes(30),
+        ['archivo' => 'certificado_2222222222_1.pdf'],
+    );
+
+    $this->actingAs($this->servidor, 'sanctum')->get($url)->assertForbidden();
+});
+
+test('talento humano sigue emitiendo el certificado laboral', function () {
+    // El servicio real levanta un navegador para componer el PDF; aquí solo
+    // interesa que la petición atraviese la autorización y devuelva el enlace.
+    $this->mock(CertificadoLaboralService::class)
+        ->shouldReceive('generarCertificado')
+        ->once()
+        ->andReturn('certificados-laborales/certificado_2222222222_1.pdf');
+
+    $this->actingAs($this->uath, 'sanctum')
+        ->getJson("/api/v1/expediente/servidores/{$this->ajeno->id}/certificado-laboral")
+        ->assertOk()
+        ->assertJsonStructure(['message', 'url']);
 });

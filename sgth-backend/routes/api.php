@@ -366,10 +366,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::post('movimientos/{movimiento}/corregir', [MovimientoPersonalController::class, 'corregir'])
             ->middleware('role:admin-uath|asistente-uath');
 
-        Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar']);
-        Route::get('certificado-laboral/descargar/{archivo}', [CertificadoLaboralController::class, 'descargar'])
-            ->name('expediente.certificado.descargar')
-            ->middleware('signed');
+        // El certificado laboral lo emite Talento Humano, nunca el propio
+        // servidor: así lo pidió la UATH el 2026-09-25 —quieren decidir ellos
+        // a quién se le entrega y, al emitirlo, enviarlo por correo—. Hasta el
+        // 2026-09-25 la ruta no pedía rol ni el controlador autorizaba, y
+        // cualquier usuario autenticado podía pedir el de otra persona: nombre,
+        // cédula y el historial completo de vínculos.
+        Route::middleware('role:admin-uath|asistente-uath')->group(function () {
+            Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar']);
+            Route::get('certificado-laboral/descargar/{archivo}', [CertificadoLaboralController::class, 'descargar'])
+                ->name('expediente.certificado.descargar')
+                ->middleware('signed');
+        });
 
         // Historiales gestionados por la UATH
         Route::prefix('servidores/{servidorId}')
