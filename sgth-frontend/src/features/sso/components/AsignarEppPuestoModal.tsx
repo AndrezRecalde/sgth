@@ -1,10 +1,10 @@
 'use client'
 
-import { DataState, SectionHeading, SgthModal, SgthTable, confirmar } from '@/components/ui'
+import { DataState, SectionHeading, SgthModal, SgthTable, TableActions, confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Group, Select, NumberInput, Button,
-  ActionIcon, } from '@mantine/core'
+} from '@mantine/core'
 import { IconTrash, IconPlus, IconHelmet } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
@@ -71,18 +71,26 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
       title: '',
       width: 50,
       render: (a) => (
-        <ActionIcon
-          color="red"
-          variant="subtle"
-          onClick={() => confirmar({
-            title:   'Eliminar asignación',
-            message: 'Se eliminará esta asignación de equipo al puesto. No se puede deshacer.',
-            destructiva: true,
-            onConfirm: () => eliminar.mutate(a.id),
-          })}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+        <TableActions
+          actions={[
+            {
+              label: 'Quitar del kit',
+              icon: <IconTrash size={14} />,
+              color: 'red',
+              onClick: () => confirmar({
+                title:   'Eliminar asignación',
+                message: (
+                  <>
+                    Se quitará <b>{a.equipo_proteccion?.nombre ?? 'el equipo'}</b> del EPP
+                    requerido de este puesto. No se puede deshacer.
+                  </>
+                ),
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(a.id),
+              }),
+            },
+          ]}
+        />
       ),
     },
   ]

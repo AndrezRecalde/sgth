@@ -2,22 +2,17 @@
 
 import { useState } from 'react'
 import {
-  Box, Group, TextInput, Button, SimpleGrid, Card,
+  Box, Group, TextInput, Button, SimpleGrid,
   Text, Alert, Stack,
 } from '@mantine/core'
-import { IconSearch, IconAlertCircle } from '@tabler/icons-react'
+import {
+  IconSearch, IconAlertCircle, IconShieldCheck, IconAlertTriangle, IconStethoscope,
+  IconBed, IconGauge, IconHelmet, IconClipboardCheck, IconChecklist, IconVaccine,
+  IconMoodSmile, IconCalendarOff, IconUsers,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { DataState } from '@/components/ui'
+import { DataState, StatCard } from '@/components/ui'
 import { useDashboardSso } from '../hooks/useDashboardSso'
-
-function StatCard({ label, value, color = 'emerald' }: { label: string; value: string | number; color?: string }) {
-  return (
-    <Card withBorder radius="md" padding="md">
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600}>{label}</Text>
-      <Text size="xl" fw={700} c={color}>{value}</Text>
-    </Card>
-  )
-}
 
 export function DashboardSsoTab() {
   const contained = useContainedInput()
@@ -76,10 +71,10 @@ export function DashboardSsoTab() {
                 <Box>
                   <Text fw={600} mb="xs">Riesgos y accidentes</Text>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-                    <StatCard label="Riesgos activos" value={resumen.riesgos.total_activos} />
-                    <StatCard label="Accidentes en el período" value={resumen.accidentes.total} color="red" />
-                    <StatCard label="Con atención médica" value={resumen.accidentes.con_atencion_medica} color="amber" />
-                    <StatCard label="Días de reposo" value={resumen.accidentes.dias_reposo_total} color="amber" />
+                    <StatCard label="Riesgos activos" value={resumen.riesgos.total_activos} icon={IconShieldCheck} />
+                    <StatCard label="Accidentes en el período" value={resumen.accidentes.total} icon={IconAlertTriangle} tone="danger" />
+                    <StatCard label="Con atención médica" value={resumen.accidentes.con_atencion_medica} icon={IconStethoscope} tone="warning" />
+                    <StatCard label="Días de reposo" value={resumen.accidentes.dias_reposo_total} icon={IconBed} tone="warning" />
                   </SimpleGrid>
                 </Box>
 
@@ -89,17 +84,21 @@ export function DashboardSsoTab() {
                     <StatCard
                       label="Índice de frecuencia"
                       value={resumen.indicadores_reactivos.sin_datos ? '—' : resumen.indicadores_reactivos.indice_frecuencia ?? '—'}
+                      icon={IconGauge}
+                      hint={resumen.indicadores_reactivos.sin_datos ? 'Faltan las horas del período' : undefined}
                     />
                     <StatCard
                       label="Índice de gravedad"
                       value={resumen.indicadores_reactivos.sin_datos ? '—' : resumen.indicadores_reactivos.indice_gravedad ?? '—'}
-                      color="amber"
+                      icon={IconGauge}
+                      hint={resumen.indicadores_reactivos.sin_datos ? 'Faltan las horas del período' : undefined}
                     />
-                    <StatCard label="Equipos EPP activos" value={resumen.epp.equipos_activos} color="ocean" />
+                    <StatCard label="Equipos EPP activos" value={resumen.epp.equipos_activos} icon={IconHelmet} />
                     <StatCard
                       label="Cobertura EPP"
                       value={resumen.indicadores_proactivos.cobertura_epp.porcentaje !== null ? `${resumen.indicadores_proactivos.cobertura_epp.porcentaje}%` : '—'}
-                      color="ocean"
+                      icon={IconHelmet}
+                      hint={`${resumen.indicadores_proactivos.cobertura_epp.puestos_con_entrega_en_periodo} de ${resumen.indicadores_proactivos.cobertura_epp.total_puestos_con_epp_requerido} puestos`}
                     />
                   </SimpleGrid>
                 </Box>
@@ -107,20 +106,20 @@ export function DashboardSsoTab() {
                 <Box>
                   <Text fw={600} mb="xs">Cumplimiento y programa de drogas</Text>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-                    <StatCard label="Normativa cumple" value={resumen.cumplimiento.cumple} color="emerald" />
-                    <StatCard label="Normativa no cumple" value={resumen.cumplimiento.no_cumple} color="red" />
-                    <StatCard label="Actividades ejecutadas" value={resumen.programa_drogas.ejecutada} color="emerald" />
-                    <StatCard label="Actividades pendientes" value={resumen.programa_drogas.pendiente} color="slate" />
+                    <StatCard label="Normativa cumple" value={resumen.cumplimiento.cumple} icon={IconClipboardCheck} tone="success" hint={`sobre ${resumen.cumplimiento.total}`} />
+                    <StatCard label="Normativa no cumple" value={resumen.cumplimiento.no_cumple} icon={IconClipboardCheck} tone="danger" />
+                    <StatCard label="Actividades ejecutadas" value={resumen.programa_drogas.ejecutada} icon={IconChecklist} tone="success" hint={`sobre ${resumen.programa_drogas.total}`} />
+                    <StatCard label="Actividades pendientes" value={resumen.programa_drogas.pendiente} icon={IconChecklist} tone="warning" />
                   </SimpleGrid>
                 </Box>
 
                 <Box>
                   <Text fw={600} mb="xs">Tamizajes y ausentismo</Text>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-                    <StatCard label="ASSIST — riesgo alto" value={resumen.assist.riesgo_alto} color="red" />
-                    <StatCard label="Psicosocial — riesgo alto" value={resumen.psicosocial.riesgo_alto} color="red" />
-                    <StatCard label="Servidores con permiso por enfermedad" value={resumen.ausentismo.servidores_afectados} />
-                    <StatCard label="Días de ausentismo" value={resumen.ausentismo.total_dias} />
+                    <StatCard label="ASSIST — riesgo alto" value={resumen.assist.riesgo_alto} icon={IconVaccine} tone="danger" hint={`sobre ${resumen.assist.total_respuestas} respuestas`} />
+                    <StatCard label="Psicosocial — riesgo alto" value={resumen.psicosocial.riesgo_alto} icon={IconMoodSmile} tone="danger" hint={`sobre ${resumen.psicosocial.total_respuestas} respuestas`} />
+                    <StatCard label="Servidores con permiso por enfermedad" value={resumen.ausentismo.servidores_afectados} icon={IconUsers} />
+                    <StatCard label="Días de ausentismo" value={resumen.ausentismo.total_dias} icon={IconCalendarOff} />
                   </SimpleGrid>
                 </Box>
               </Stack>

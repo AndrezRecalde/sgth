@@ -1,10 +1,9 @@
 'use client'
 
-import { confirmar, DataState, PAGINACION_ES, SgthModal, SgthTable } from '@/components/ui'
+import { confirmar, DataState, PAGINACION_ES, SgthModal, SgthTable, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, TextInput, NumberInput, Button,
-  ActionIcon, Text, Select, Alert,
+  Stack, Group, TextInput, NumberInput, Button, Text, Select, Alert,
 } from '@mantine/core'
 import { IconTrash, IconPlus, IconClock, IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -74,18 +73,26 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
       title: '',
       width: 50,
       render: (r) => (
-        <ActionIcon
-          color="red"
-          variant="subtle"
-          onClick={() => confirmar({
-            title:   'Eliminar registro de horas',
-            message: 'Se eliminará este registro de horas trabajadas. No se puede deshacer.',
-            destructiva: true,
-            onConfirm: () => eliminar.mutate(r.id),
-          })}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+        <TableActions
+          actions={[
+            {
+              label: 'Eliminar registro',
+              icon: <IconTrash size={14} />,
+              color: 'red',
+              onClick: () => confirmar({
+                title:   'Eliminar registro de horas',
+                message: (
+                  <>
+                    Se eliminará el registro de <b>{r.periodo}</b>. Los índices CD 513 de ese
+                    período se quedan sin denominador hasta que se vuelva a cargar.
+                  </>
+                ),
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(r.id),
+              }),
+            },
+          ]}
+        />
       ),
     },
   ]

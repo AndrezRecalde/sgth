@@ -2,27 +2,19 @@
 
 import { useState } from 'react'
 import {
-  Box, Group, TextInput, Button, SimpleGrid, Card,
+  Box, Group, TextInput, Button, SimpleGrid,
   Text, Alert, Stack,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import {
   IconSearch, IconClock, IconAlertCircle, IconGauge, IconShieldCheck,
+  IconAlertTriangle, IconBed, IconClipboardList, IconSchool, IconHelmet,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useIndicadoresReactivos, useIndicadoresProactivos } from '../hooks/useIndicadoresSso'
 import { GestionarHorasTrabajadasModal } from './GestionarHorasTrabajadasModal'
-import { DataState, StatusBadge } from '@/components/ui'
-
-function StatCard({ label, value, color = 'emerald' }: { label: string; value: string | number; color?: string }) {
-  return (
-    <Card withBorder radius="md" padding="md">
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600}>{label}</Text>
-      <Text size="xl" fw={700} c={color}>{value}</Text>
-    </Card>
-  )
-}
+import { DataState, StatCard } from '@/components/ui'
 
 export function IndicadoresSsoTab() {
   const contained = useContainedInput()
@@ -117,12 +109,16 @@ export function IndicadoresSsoTab() {
               {reactivos && !reactivos.sin_datos && (
                 <>
                   <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
-                    <StatCard label="Índice de frecuencia (IF)" value={reactivos.indice_frecuencia ?? '—'} />
-                    <StatCard label="Índice de gravedad (IG)" value={reactivos.indice_gravedad ?? '—'} color="amber" />
-                    <StatCard label="Tasa de riesgo (TR)" value={reactivos.tasa_riesgo ?? '—'} color="red" />
-                    <StatCard label="Lesiones (accidentes)" value={reactivos.numero_lesiones} color="slate" />
-                    <StatCard label="Días perdidos" value={reactivos.dias_perdidos} color="slate" />
-                    <StatCard label="Horas trabajadas" value={reactivos.horas_trabajadas.toLocaleString()} color="slate" />
+                    {/* Los tres índices no llevan tono: su lectura buena o mala
+                        depende de la serie histórica del GAD, que el sistema
+                        todavía no guarda. Un rojo fijo diría que 15,71 es malo
+                        sin nada contra qué compararlo. */}
+                    <StatCard label="Índice de frecuencia (IF)" value={reactivos.indice_frecuencia ?? '—'} icon={IconGauge} />
+                    <StatCard label="Índice de gravedad (IG)" value={reactivos.indice_gravedad ?? '—'} icon={IconGauge} />
+                    <StatCard label="Tasa de riesgo (TR)" value={reactivos.tasa_riesgo ?? '—'} icon={IconGauge} hint="días perdidos por lesión" />
+                    <StatCard label="Lesiones (accidentes)" value={reactivos.numero_lesiones} icon={IconAlertTriangle} />
+                    <StatCard label="Días perdidos" value={reactivos.dias_perdidos} icon={IconBed} />
+                    <StatCard label="Horas trabajadas" value={reactivos.horas_trabajadas.toLocaleString()} icon={IconClock} />
                   </SimpleGrid>
 
                   {/* El denominador puede venir del período exacto o de la suma
@@ -160,22 +156,18 @@ export function IndicadoresSsoTab() {
               {proactivos && (
                 <>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-                    <StatCard label="Inspecciones realizadas" value={proactivos.inspecciones_realizadas} />
-                    <StatCard label="Capacitaciones realizadas" value={proactivos.capacitaciones_realizadas} />
-                    <StatCard label="Horas de capacitación" value={proactivos.horas_capacitacion_total} />
+                    <StatCard label="Inspecciones realizadas" value={proactivos.inspecciones_realizadas} icon={IconClipboardList} />
+                    <StatCard label="Capacitaciones realizadas" value={proactivos.capacitaciones_realizadas} icon={IconSchool} />
+                    <StatCard label="Horas de capacitación" value={proactivos.horas_capacitacion_total} icon={IconClock} />
                     <StatCard
                       label="Cobertura EPP"
                       value={proactivos.cobertura_epp.porcentaje !== null ? `${proactivos.cobertura_epp.porcentaje}%` : '—'}
-                      color="ocean"
+                      icon={IconHelmet}
+                      hint={proactivos.cobertura_epp.total_puestos_con_epp_requerido > 0
+                        ? `${proactivos.cobertura_epp.puestos_con_entrega_en_periodo} de ${proactivos.cobertura_epp.total_puestos_con_epp_requerido} puestos`
+                        : undefined}
                     />
                   </SimpleGrid>
-                  {proactivos.cobertura_epp.total_puestos_con_epp_requerido > 0 && (
-                    <Group mt="xs" gap="xs">
-                      <StatusBadge>
-                        {proactivos.cobertura_epp.puestos_con_entrega_en_periodo} de {proactivos.cobertura_epp.total_puestos_con_epp_requerido} puestos con entrega registrada en el período
-                      </StatusBadge>
-                    </Group>
-                  )}
                   <Text size="xs" c="dimmed" mt="xs">
                     El sistema no distingue actividades planificadas de realizadas; se reportan los conteos reales
                     registrados en el período.
