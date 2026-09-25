@@ -35,7 +35,10 @@ export function RegistrarEntregaEppModal({ opened, onClose }: Props) {
       opened={opened}
       onClose={cerrar}
       title="Registrar movimiento de EPP"
-      size="md"
+      // `lg` y no `md`: el modo kit lista equipos por código y nombre
+      // —«EPP-014 — Respirador de media cara con filtros P100»—, y en `md`
+      // ninguno cabía entero.
+      size="lg"
     >
       <Stack gap="sm">
         <SegmentedControl

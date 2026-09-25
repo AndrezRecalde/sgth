@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Group, Button, Text } from '@mantine/core'
+import { Stack, Grid, Group, Button, Text } from '@mantine/core'
 import { CountBadge, DataState, SgthModal, SgthTable } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconSearch, IconTruckDelivery } from '@tabler/icons-react'
@@ -60,36 +60,50 @@ export function ReporteEppModal({ opened, onClose }: Props) {
       size="xl"
     >
       <Stack gap="md">
-        <Group align="flex-end" wrap="wrap">
-          <DatePickerInput
-            label="Desde"
-            placeholder="Seleccionar"
-            valueFormat="DD/MM/YYYY"
-            {...contained}
-            value={toDateValue(fechaInicio)}
-            onChange={(d) => setFechaInicio(fromDateValue(d ?? null))}
-          />
-          <DatePickerInput
-            label="Hasta"
-            placeholder="Seleccionar"
-            valueFormat="DD/MM/YYYY"
-            {...contained}
-            value={toDateValue(fechaFin)}
-            onChange={(d) => setFechaFin(fromDateValue(d ?? null))}
-          />
-          <BuscarPuestoSelect
-            label="Puesto (opcional)"
-            value={puestoId}
-            onChange={setPuestoId}
-          />
-          <Button
-            leftSection={<IconSearch size={16} />}
-            onClick={handleBuscar}
-            disabled={!fechaInicio || !fechaFin}
-          >
-            Buscar
-          </Button>
-        </Group>
+        {/* El puesto se lleva la fila entera: su etiqueta es el cargo más
+            la unidad —«Operador de maquinaria pesada — Dirección de Obras
+            Públicas»— y en la fila de filtros tenía 154 px de 392. */}
+        <Grid gap="sm">
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <DatePickerInput
+              label="Desde"
+              placeholder="Seleccionar"
+              valueFormat="DD/MM/YYYY"
+              {...contained}
+              value={toDateValue(fechaInicio)}
+              onChange={(d) => setFechaInicio(fromDateValue(d ?? null))}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <DatePickerInput
+              label="Hasta"
+              placeholder="Seleccionar"
+              valueFormat="DD/MM/YYYY"
+              {...contained}
+              value={toDateValue(fechaFin)}
+              onChange={(d) => setFechaFin(fromDateValue(d ?? null))}
+            />
+          </Grid.Col>
+          <Grid.Col span={12}>
+            <BuscarPuestoSelect
+              label="Puesto (opcional)"
+              value={puestoId}
+              onChange={setPuestoId}
+            />
+          </Grid.Col>
+          <Grid.Col span={12}>
+            <Group justify="flex-end">
+              <Button
+                h={48}
+                leftSection={<IconSearch size={16} />}
+                onClick={handleBuscar}
+                disabled={!fechaInicio || !fechaFin}
+              >
+                Buscar
+              </Button>
+            </Group>
+          </Grid.Col>
+        </Grid>
 
         {filtros && (
           <DataState

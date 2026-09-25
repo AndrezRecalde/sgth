@@ -3,7 +3,7 @@
 import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, TextInput, Select, Button, Switch,
+  Stack, Grid, Group, TextInput, Select, Button, Switch,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -106,37 +106,46 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     >
       <Stack gap="md">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <Group align="flex-end" wrap="nowrap">
-            <TextInput
-              label="Nombre del factor"
-              placeholder="Ej: Manejo manual de cargas"
-              style={{ flex: 1 }}
-              {...contained}
-              {...register('nombre')}
-              error={errors.nombre?.message}
-            />
-            <Controller
-              name="categoria"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Categoría"
-                  data={CATEGORIA_FACTOR_OPTIONS}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v as FactorRiesgoFormData['categoria'])}
-                  style={{ minWidth: 160 }}
-                />
-              )}
-            />
-            <Button
-              type="submit"
-              leftSection={<IconPlus size={16} />}
-              loading={crear.isPending}
-            >
-              Agregar
-            </Button>
-          </Group>
+          {/* El nombre del factor se lleva la fila entera: «Exposición a
+              polvo de sílice en el corte de adoquín» necesita 335 px y
+              compartiendo fila con la categoría y el botón tenía 157. */}
+          <Grid gap="sm">
+            <Grid.Col span={12}>
+              <TextInput
+                label="Nombre del factor"
+                placeholder="Ej: Manejo manual de cargas"
+                {...contained}
+                {...register('nombre')}
+                error={errors.nombre?.message}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 8 }}>
+              <Controller
+                name="categoria"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Categoría"
+                    data={CATEGORIA_FACTOR_OPTIONS}
+                    {...contained}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v as FactorRiesgoFormData['categoria'])}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Button
+                type="submit"
+                h={48}
+                fullWidth
+                leftSection={<IconPlus size={16} />}
+                loading={crear.isPending}
+              >
+                Agregar
+              </Button>
+            </Grid.Col>
+          </Grid>
         </form>
 
         <Group justify="flex-end">

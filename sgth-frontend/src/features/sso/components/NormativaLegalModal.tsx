@@ -3,7 +3,7 @@
 import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, TextInput, Select, Textarea, Button, Switch,
+  Stack, Grid, Group, TextInput, Select, Textarea, Button, Switch,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
@@ -104,20 +104,29 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
       opened={opened}
       onClose={onClose}
       title="Catálogo de normativa legal SSO"
-      size="lg"
+      // `xl` y no `lg`: el título oficial de un reglamento no cabía ni
+      // ocupando la fila entera, y la tabla de abajo lista esos mismos
+      // títulos.
+      size="xl"
     >
       <Stack gap="md">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <Stack gap="sm">
-            <Group align="flex-end" wrap="nowrap">
+          {/* El nombre de la normativa se lleva la fila entera: los
+              títulos oficiales son largos —«Reglamento de Seguridad y Salud de
+              los Trabajadores y Mejoramiento del Medio Ambiente de Trabajo»
+              necesita 675 px— y compartiendo fila con el tipo, la vigencia y
+              el botón tenía 90. */}
+          <Grid gap="sm">
+            <Grid.Col span={12}>
               <TextInput
                 label="Nombre de la normativa"
                 placeholder="Ej: Reglamento de Seguridad y Salud (Decreto 2393)"
-                style={{ flex: 1 }}
                 {...contained}
                 {...register('nombre')}
                 error={errors.nombre?.message}
               />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
               <Controller
                 name="tipo"
                 control={control}
@@ -128,10 +137,11 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
                     {...contained}
                     value={field.value}
                     onChange={(v) => field.onChange(v as NormativaLegalFormData['tipo'])}
-                    style={{ minWidth: 160 }}
                   />
                 )}
               />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
               <Controller
                 name="fecha_vigencia"
                 control={control}
@@ -143,29 +153,32 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
                     {...contained}
                     value={toDateValue(field.value)}
                     onChange={(d) => field.onChange(fromDateValue(d ?? null))}
-                    style={{ width: 170 }}
                   />
                 )}
               />
-            </Group>
-            <Group align="flex-end" wrap="nowrap">
+            </Grid.Col>
+            <Grid.Col span={12}>
               <Textarea
                 label="Descripción (opcional)"
                 rows={2}
-                style={{ flex: 1 }}
                 {...contained}
                 {...register('descripcion')}
                 error={errors.descripcion?.message}
               />
-              <Button
-                type="submit"
-                leftSection={<IconPlus size={16} />}
-                loading={crear.isPending}
-              >
-                Agregar
-              </Button>
-            </Group>
-          </Stack>
+            </Grid.Col>
+            <Grid.Col span={12}>
+              <Group justify="flex-end">
+                <Button
+                  type="submit"
+                  h={48}
+                  leftSection={<IconPlus size={16} />}
+                  loading={crear.isPending}
+                >
+                  Agregar
+                </Button>
+              </Group>
+            </Grid.Col>
+          </Grid>
         </form>
 
         <Group justify="flex-end">

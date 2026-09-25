@@ -3,7 +3,7 @@
 import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, TextInput, Select, Textarea, Button, Switch,
+  Stack, Grid, Group, TextInput, Select, Textarea, Button, Switch,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -107,16 +107,20 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
     >
       <Stack gap="md">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <Stack gap="sm">
-            <Group align="flex-end" wrap="nowrap">
+          {/* El nombre de la actividad se lleva la fila entera: son frases
+              —«Capacitación sobre prevención del consumo de alcohol y
+              tabaco»— y compartiendo fila con la fase tenía 276 px de 428. */}
+          <Grid gap="sm">
+            <Grid.Col span={12}>
               <TextInput
                 label="Nombre de la actividad"
                 placeholder="Ej: Realizar campañas informativas sobre prácticas de vida saludable"
-                style={{ flex: 1 }}
                 {...contained}
                 {...register('nombre')}
                 error={errors.nombre?.message}
               />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
               <Controller
                 name="fase"
                 control={control}
@@ -127,29 +131,32 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
                     {...contained}
                     value={field.value}
                     onChange={(v) => field.onChange(v as ActividadProgramaFormData['fase'])}
-                    style={{ minWidth: 220 }}
                   />
                 )}
               />
-            </Group>
-            <Group align="flex-end" wrap="nowrap">
+            </Grid.Col>
+            <Grid.Col span={12}>
               <Textarea
                 label="Descripción (opcional)"
                 rows={2}
-                style={{ flex: 1 }}
                 {...contained}
                 {...register('descripcion')}
                 error={errors.descripcion?.message}
               />
-              <Button
-                type="submit"
-                leftSection={<IconPlus size={16} />}
-                loading={crearActividad.isPending}
-              >
-                Agregar
-              </Button>
-            </Group>
-          </Stack>
+            </Grid.Col>
+            <Grid.Col span={12}>
+              <Group justify="flex-end">
+                <Button
+                  type="submit"
+                  h={48}
+                  leftSection={<IconPlus size={16} />}
+                  loading={crearActividad.isPending}
+                >
+                  Agregar
+                </Button>
+              </Group>
+            </Grid.Col>
+          </Grid>
         </form>
 
         <Group justify="flex-end">

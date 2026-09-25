@@ -215,18 +215,19 @@ export function EntregaKitEppForm({ onListo, onCancelar }: Props) {
         {!!servidorId && (
           <>
             <SectionHeading title="Agregar un equipo que no está en el kit" />
-            <Group align="flex-end" wrap="nowrap">
-              <Select
-                label="Equipo"
-                placeholder="Seleccione un equipo"
-                data={equiposDisponibles}
-                searchable
-                style={{ flex: 1 }}
-                {...contained}
-                value={equipoExtra}
-                onChange={setEquipoExtra}
-                error={errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined}
-              />
+            {/* El equipo, en su propia fila: su etiqueta es el código más el
+                nombre, y este modal es estrecho. */}
+            <Select
+              label="Equipo"
+              placeholder="Seleccione un equipo"
+              data={equiposDisponibles}
+              searchable
+              {...contained}
+              value={equipoExtra}
+              onChange={setEquipoExtra}
+              error={errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined}
+            />
+            <Group justify="flex-end">
               <Button
                 variant="light"
                 leftSection={<IconPlus size={16} />}

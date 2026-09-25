@@ -3,7 +3,7 @@
 import { DataState, SectionHeading, SgthModal, SgthTable, TableActions, confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, Select, NumberInput, Button,
+  Stack, Grid, Select, NumberInput, Button,
 } from '@mantine/core'
 import { Controller, useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -133,70 +133,80 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
             {/* Alineados arriba: el error de un campo crece hacia abajo y no
                 mueve a los otros dos. */}
             <form onSubmit={handleSubmit(guardar)} noValidate>
-              <Group align="flex-start" wrap="nowrap">
-                <Controller
-                  name="equipo_proteccion_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Equipo"
-                      placeholder="Seleccione un equipo"
-                      data={equipoOptions}
-                      searchable
-                      style={{ flex: 1 }}
-                      {...contained}
-                      value={field.value ? String(field.value) : null}
-                      onChange={(v) => field.onChange(v ? Number(v) : 0)}
-                      // Un catálogo que no cargó se veía igual que un catálogo vacío.
-                      error={
-                        errors.equipo_proteccion_id?.message
-                        ?? (errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined)
-                      }
-                    />
-                  )}
-                />
-                <Controller
-                  name="cantidad_requerida"
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      label="Cantidad"
-                      min={1}
-                      hideControls
-                      style={{ width: 100 }}
-                      {...contained}
-                      value={field.value}
-                      onChange={(v) => field.onChange(typeof v === 'number' ? v : 0)}
-                      error={errors.cantidad_requerida?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  name="frecuencia_reposicion_meses"
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      label="Reposición (meses)"
-                      min={1}
-                      hideControls
-                      style={{ width: 150 }}
-                      {...contained}
-                      value={field.value ?? ''}
-                      onChange={(v) => field.onChange(typeof v === 'number' ? v : null)}
-                      error={errors.frecuencia_reposicion_meses?.message}
-                    />
-                  )}
-                />
-                {/* Los campos contained miden 48 px; el botón los iguala. */}
-                <Button
-                  type="submit"
-                  h={48}
-                  leftSection={<IconPlus size={16} />}
-                  loading={asignar.isPending}
-                >
-                  Agregar
-                </Button>
-              </Group>
+              {/* El equipo se lleva la fila entera: su etiqueta es el código
+                  más el nombre —«EPP-014 — Respirador de media cara con
+                  filtros P100»— y compartiendo fila con la cantidad, la
+                  reposición y el botón le quedaban 91 px de 354. */}
+              <Grid gap="sm">
+                <Grid.Col span={12}>
+                  <Controller
+                    name="equipo_proteccion_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        label="Equipo"
+                        placeholder="Seleccione un equipo"
+                        data={equipoOptions}
+                        searchable
+                        {...contained}
+                        value={field.value ? String(field.value) : null}
+                        onChange={(v) => field.onChange(v ? Number(v) : 0)}
+                        // Un catálogo que no cargó se veía igual que un catálogo vacío.
+                        error={
+                          errors.equipo_proteccion_id?.message
+                          ?? (errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined)
+                        }
+                      />
+                    )}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
+                  <Controller
+                    name="cantidad_requerida"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        label="Cantidad"
+                        min={1}
+                        hideControls
+                        {...contained}
+                        value={field.value}
+                        onChange={(v) => field.onChange(typeof v === 'number' ? v : 0)}
+                        error={errors.cantidad_requerida?.message}
+                      />
+                    )}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
+                  <Controller
+                    name="frecuencia_reposicion_meses"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        label="Reposición (meses)"
+                        min={1}
+                        hideControls
+                        {...contained}
+                        value={field.value ?? ''}
+                        onChange={(v) => field.onChange(typeof v === 'number' ? v : null)}
+                        error={errors.frecuencia_reposicion_meses?.message}
+                      />
+                    )}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
+                  {/* Los campos contained miden 48 px; el botón los iguala. */}
+                  <Button
+                    type="submit"
+                    h={48}
+                    fullWidth
+                    leftSection={<IconPlus size={16} />}
+                    loading={asignar.isPending}
+                  >
+                    Agregar
+                  </Button>
+                </Grid.Col>
+              </Grid>
             </form>
 
             <DataState
