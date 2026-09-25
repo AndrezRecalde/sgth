@@ -3,7 +3,7 @@
 import { confirmar, DataState, PAGINACION_ES, SgthModal, SgthTable, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, TextInput, NumberInput, Button, Text, Select, Alert,
+  Stack, Grid, TextInput, NumberInput, Button, Text, Select, Alert,
 } from '@mantine/core'
 import { Controller, useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -148,64 +148,73 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           </Alert>
         )}
 
-        {/* Los tres campos van en una fila alineada abajo, así que el error de
-            cada uno lo sostiene su propio hueco: un mensaje bajo el período no
-            desalinea la unidad ni las horas. */}
+        {/* En rejilla y no en una fila sin envolver: los cuatro controles no
+            caben en el ancho de este modal, y el que se llevaba el recorte era
+            la unidad —«Dirección de Gestión de Obras Públicas y Vialidad»
+            necesita 384 px y tenía 115—. Con la unidad ocupando dos tercios de
+            su línea cabe entera, y en un teléfono cada campo baja a su propia
+            fila en vez de estrujarse. */}
         <form onSubmit={handleSubmit(guardar)} noValidate>
-          <Group align="flex-start" wrap="nowrap">
-            <TextInput
-              label="Período"
-              placeholder={EJEMPLO_PERIODO}
-              style={{ flex: 1 }}
-              {...contained}
-              {...register('periodo')}
-              error={errors.periodo?.message}
-            />
-            <Controller
-              name="unidad_administrativa_id"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Unidad (opcional)"
-                  placeholder="Total institucional"
-                  data={unidadOptions}
-                  searchable
-                  clearable
-                  style={{ flex: 1 }}
-                  {...contained}
-                  value={field.value ? String(field.value) : null}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
-                  error={errors.unidad_administrativa_id?.message}
-                />
-              )}
-            />
-            <Controller
-              name="total_horas"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Total de horas"
-                  min={1}
-                  hideControls
-                  style={{ width: 150 }}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(typeof v === 'number' ? v : 0)}
-                  error={errors.total_horas?.message}
-                />
-              )}
-            />
-            {/* Los campos contained miden 48 px; el botón los iguala para que
-                la fila no quede escalonada. */}
-            <Button
-              type="submit"
-              h={48}
-              leftSection={<IconPlus size={16} />}
-              loading={registrar.isPending}
-            >
-              Guardar
-            </Button>
-          </Group>
+          <Grid gap="sm">
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <TextInput
+                label="Período"
+                placeholder={EJEMPLO_PERIODO}
+                {...contained}
+                {...register('periodo')}
+                error={errors.periodo?.message}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 8 }}>
+              <Controller
+                name="unidad_administrativa_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Unidad (opcional)"
+                    placeholder="Total institucional"
+                    data={unidadOptions}
+                    searchable
+                    clearable
+                    {...contained}
+                    value={field.value ? String(field.value) : null}
+                    onChange={(v) => field.onChange(v ? Number(v) : null)}
+                    error={errors.unidad_administrativa_id?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Controller
+                name="total_horas"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label="Total de horas"
+                    min={1}
+                    hideControls
+                    {...contained}
+                    value={field.value}
+                    onChange={(v) => field.onChange(typeof v === 'number' ? v : 0)}
+                    error={errors.total_horas?.message}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              {/* Los campos contained miden 48 px; el botón los iguala para
+                  que no quede escalonado al lado de las horas. */}
+              <Button
+                type="submit"
+                h={48}
+                fullWidth
+                leftSection={<IconPlus size={16} />}
+                loading={registrar.isPending}
+              >
+                Guardar
+              </Button>
+            </Grid.Col>
+          </Grid>
         </form>
 
         <DataState
