@@ -45,24 +45,40 @@ final class DashboardSsoService
 
     private function resumenRiesgos(): array
     {
-        $riesgos = RiesgoLaboral::where('estado', true)->get();
+        $porNivel = RiesgoLaboral::query()
+            ->where('estado', true)
+            ->selectRaw('nivel_intervencion, COUNT(*) AS total')
+            ->groupBy('nivel_intervencion')
+            // Sin ordenar, el orden de los niveles en el tablero era el que
+            // quisiera el motor. Alfabético coincide con el de la NTP 330
+            // —i, ii, iii, iv— y PostgreSQL deja los nulos al final, que es
+            // donde tienen que ir los riesgos sin valorar.
+            ->orderBy('nivel_intervencion')
+            ->pluck('total', 'nivel_intervencion')
+            ->map(fn($total) => (int) $total);
 
         return [
-            'total_activos' => $riesgos->count(),
-            'por_nivel_intervencion' => $riesgos
-                ->groupBy(fn(RiesgoLaboral $r) => $r->nivel_intervencion?->value)
-                ->map->count(),
+            'total_activos' => $porNivel->sum(),
+            // La clave vacía son los riesgos anteriores a la matriz NTP 330,
+            // que tienen el nivel en NULL. Antes salían igual, porque agrupar
+            // por null en PHP también da la clave vacía.
+            'por_nivel_intervencion' => $porNivel,
         ];
     }
 
     private function resumenAccidentes(Carbon $inicio, Carbon $fin): array
     {
-        $accidentes = AccidenteTrabajo::whereBetween('fecha_accidente', [$inicio, $fin])->get();
+        $fila = AccidenteTrabajo::query()
+            ->whereBetween('fecha_accidente', [$inicio, $fin])
+            ->selectRaw('COUNT(*) AS total')
+            ->selectRaw('COALESCE(SUM(CASE WHEN requirio_atencion_medica THEN 1 ELSE 0 END), 0) AS con_atencion')
+            ->selectRaw('COALESCE(SUM(dias_reposo_medico), 0) AS dias_reposo')
+            ->first();
 
         return [
-            'total' => $accidentes->count(),
-            'con_atencion_medica' => $accidentes->where('requirio_atencion_medica', true)->count(),
-            'dias_reposo_total' => (int) $accidentes->sum('dias_reposo_medico'),
+            'total' => (int) $fila->total,
+            'con_atencion_medica' => (int) $fila->con_atencion,
+            'dias_reposo_total' => (int) $fila->dias_reposo,
         ];
     }
 
@@ -76,56 +92,64 @@ final class DashboardSsoService
 
     private function resumenPsicosocial(string $periodo): array
     {
-        $evaluaciones = EvaluacionPsicosocial::where('periodo', $periodo)->withCount('respuestas')->get();
-        $respuestas = collect();
-        if ($evaluaciones->isNotEmpty()) {
-            $respuestas = RespuestaPsicosocial::whereIn(
-                'evaluacion_psicosocial_id',
-                $evaluaciones->pluck('id'),
-            )->get();
-        }
+        $campanias = EvaluacionPsicosocial::where('periodo', $periodo);
+        $ids = (clone $campanias)->pluck('id');
+
+        $respuestas = fn() => RespuestaPsicosocial::whereIn('evaluacion_psicosocial_id', $ids);
 
         return [
-            'campanias_activas' => $evaluaciones->where('activa', true)->count(),
-            'total_respuestas' => $respuestas->count(),
-            'riesgo_alto' => $respuestas->where('nivel_riesgo_global', NivelRiesgoPsicosocial::ALTO->value)->count(),
+            'campanias_activas' => (clone $campanias)->where('activa', true)->count(),
+            'total_respuestas' => $respuestas()->count(),
+            'riesgo_alto' => $respuestas()
+                ->where('nivel_riesgo_global', NivelRiesgoPsicosocial::ALTO->value)
+                ->count(),
         ];
     }
 
     private function resumenAssist(string $periodo): array
     {
-        $evaluaciones = EvaluacionAssist::where('periodo', $periodo)->get();
-        $respuestas = collect();
-        if ($evaluaciones->isNotEmpty()) {
-            $respuestas = RespuestaAssist::whereIn(
-                'evaluacion_assist_id',
-                $evaluaciones->pluck('id'),
-            )->get();
-        }
+        $campanias = EvaluacionAssist::where('periodo', $periodo);
+        $ids = (clone $campanias)->pluck('id');
+
+        $respuestas = fn() => RespuestaAssist::whereIn('evaluacion_assist_id', $ids);
 
         return [
-            'campanias_activas' => $evaluaciones->where('activa', true)->count(),
-            'total_respuestas' => $respuestas->count(),
-            'riesgo_alto' => $respuestas->where('nivel_riesgo_maximo', NivelRiesgoAssist::ALTO->value)->count(),
-            'sin_consumo_reportado' => $respuestas->filter(fn($r) => empty($r->niveles_riesgo))->count(),
+            'campanias_activas' => (clone $campanias)->where('activa', true)->count(),
+            'total_respuestas' => $respuestas()->count(),
+            'riesgo_alto' => $respuestas()
+                ->where('nivel_riesgo_maximo', NivelRiesgoAssist::ALTO->value)
+                ->count(),
+            // «No reporta consumo» es quien contestó que no ha consumido
+            // ninguna sustancia: el mapa de niveles llega vacío. Se compara
+            // como jsonb porque el tipo `json` de PostgreSQL no tiene operador
+            // de igualdad, y contra las dos formas de lo vacío porque el mapa
+            // lo arma PHP: un array asociativo sin claves se serializa `[]`,
+            // no `{}`. Quedarse con una sola contaba cero.
+            'sin_consumo_reportado' => $respuestas()
+                ->whereRaw("niveles_riesgo::jsonb IN ('[]'::jsonb, '{}'::jsonb)")
+                ->count(),
         ];
     }
 
     private function resumenAusentismo(Carbon $inicio, Carbon $fin): array
     {
-        $permisos = PermisoServidor::whereBetween('fecha', [$inicio, $fin])
+        // Los minutos se suman en la base: `hora_inicio` y `hora_fin` son
+        // columnas `time` obligatorias, así que la resta es un intervalo y da
+        // lo mismo que restarlas con Carbon una por una.
+        $fila = PermisoServidor::query()
+            ->whereBetween('fecha', [$inicio, $fin])
             ->where('tipo', 'enfermedad')
             ->whereNotIn('estado', ['anulado', 'pendiente'])
-            ->get();
-
-        $totalMinutos = $permisos->sum(function (PermisoServidor $p) {
-            return Carbon::parse($p->hora_inicio)->diffInMinutes(Carbon::parse($p->hora_fin));
-        });
+            ->selectRaw('COUNT(*) AS total')
+            ->selectRaw('COUNT(DISTINCT servidor_id) AS servidores')
+            ->selectRaw('COALESCE(SUM(EXTRACT(EPOCH FROM (hora_fin - hora_inicio)) / 60), 0) AS minutos')
+            ->first();
 
         return [
-            'total_permisos' => $permisos->count(),
-            'servidores_afectados' => $permisos->pluck('servidor_id')->unique()->count(),
-            'total_dias' => round($totalMinutos / 480, 2),
+            'total_permisos' => (int) $fila->total,
+            'servidores_afectados' => (int) $fila->servidores,
+            // 480 minutos es la jornada de ocho horas.
+            'total_dias' => round(((float) $fila->minutos) / 480, 2),
         ];
     }
 
