@@ -20,6 +20,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Services\Sso\Indicadores\HorasTrabajadas;
 use App\Services\Sso\Indicadores\IndicesReactivos;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 
 final class SsoService implements SsoServiceInterface
 {
@@ -260,17 +261,43 @@ final class SsoService implements SsoServiceInterface
             ->paginate($filtros['por_pagina'] ?? 15);
     }
 
+    /**
+     * Carga las horas trabajadas de un período.
+     *
+     * Rechaza el duplicado en vez de sobrescribirlo. Era un `updateOrCreate`:
+     * volver a cargar un período que ya estaba pisaba `total_horas` sin decir
+     * nada y respondía «registradas». Ese número es el denominador de los tres
+     * índices del CD 513 que se reportan al IESS, así que cambiarlo por
+     * accidente —un mes tecleado dos veces, un copiar y pegar— movía los tres
+     * sin dejar rastro. Para corregir un período cargado está el borrado, que
+     * sí es una decisión deliberada.
+     */
     public function registrarHorasTrabajadas(array $datos): HorasTrabajadasPeriodo
     {
-        $datos['registrado_por'] = auth()->id();
+        $unidadId = $datos['unidad_administrativa_id'] ?? null;
 
-        return HorasTrabajadasPeriodo::updateOrCreate(
-            [
-                'periodo' => $datos['periodo'],
-                'unidad_administrativa_id' => $datos['unidad_administrativa_id'] ?? null,
-            ],
-            ['total_horas' => $datos['total_horas'], 'registrado_por' => $datos['registrado_por']]
-        );
+        $yaCargado = HorasTrabajadasPeriodo::query()
+            ->where('periodo', $datos['periodo'])
+            // `whereNull` explícito: el total institucional va con la unidad en
+            // NULL, y en SQL `= NULL` no es cierto nunca.
+            ->when($unidadId, fn($q) => $q->where('unidad_administrativa_id', $unidadId))
+            ->when(! $unidadId, fn($q) => $q->whereNull('unidad_administrativa_id'))
+            ->exists();
+
+        if ($yaCargado) {
+            throw ValidationException::withMessages([
+                'periodo' => $unidadId
+                    ? "El período {$datos['periodo']} ya tiene horas cargadas para esa unidad. Elimine el registro existente para cargarlo de nuevo."
+                    : "El período {$datos['periodo']} ya tiene horas cargadas como total institucional. Elimine el registro existente para cargarlo de nuevo.",
+            ]);
+        }
+
+        return HorasTrabajadasPeriodo::create([
+            'periodo' => $datos['periodo'],
+            'unidad_administrativa_id' => $unidadId,
+            'total_horas' => $datos['total_horas'],
+            'registrado_por' => auth()->id(),
+        ]);
     }
 
     public function actualizarHorasTrabajadas(int $id, array $datos): HorasTrabajadasPeriodo

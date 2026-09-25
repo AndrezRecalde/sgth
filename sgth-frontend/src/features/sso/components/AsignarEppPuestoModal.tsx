@@ -36,12 +36,22 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
   const { data: asignaciones = [], isLoading, error, refetch } = useEquiposPorPuesto(puestoId)
   const { asignar, eliminar } = usePuestoEppMutations(puestoId)
   const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
-  const equipoOptions = (equiposData?.data ?? []).map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
+
+  // Fuera los que este puesto ya requiere. `asignarEquipoAPuesto` es un
+  // `updateOrCreate`: volver a elegir uno ya asignado no daba error, pisaba su
+  // cantidad y dejaba la frecuencia de reposición en blanco, y la pantalla
+  // respondía «equipo asignado». La tabla de abajo ya los muestra; ofrecerlos
+  // otra vez en el desplegable solo servía para pisarlos sin querer.
+  const yaAsignados = new Set(asignaciones.map(a => a.equipo_proteccion_id))
+  const equipoOptions = (equiposData?.data ?? [])
+    .filter(e => !yaAsignados.has(e.id))
+    .map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
 
   // Estaba a mano con tres `useState` y sin validación: una cantidad en blanco
-  // solo desactivaba el botón, sin decir por qué, y el 422 del backend —un
-  // equipo ya asignado a este puesto— salía como notificación sin señalar el
-  // campo que lo provoca.
+  // solo desactivaba el botón, sin decir por qué. El reparto de errores por
+  // campo se mantiene para lo que el backend sí rechaza —un equipo que ya no
+  // existe, por ejemplo—; el duplicado no llega a intentarse porque el
+  // desplegable ya no lo ofrece.
   const {
     control, handleSubmit, reset, setError,
     formState: { errors },
@@ -148,6 +158,13 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
                         placeholder="Seleccione un equipo"
                         data={equipoOptions}
                         searchable
+                        // Un desplegable vacío porque ya está todo asignado se
+                        // veía igual que un catálogo sin equipos.
+                        nothingFoundMessage={
+                          yaAsignados.size && !equipoOptions.length
+                            ? 'Este puesto ya requiere todos los equipos activos del catálogo.'
+                            : 'Sin equipos en el catálogo.'
+                        }
                         {...contained}
                         value={field.value ? String(field.value) : null}
                         onChange={(v) => field.onChange(v ? Number(v) : 0)}

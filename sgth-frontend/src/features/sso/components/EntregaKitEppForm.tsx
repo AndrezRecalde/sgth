@@ -107,29 +107,64 @@ export function EntregaKitEppForm({ onListo, onCancelar }: Props) {
   const marcados = equipos.filter(e => e.incluido)
 
   const guardar = (valores: EntregaKitEppFormData) => {
+    // Solo viajan los marcados, así que el índice de una fila en lo enviado no
+    // es el mismo que tiene en el formulario. Se guarda la correspondencia
+    // para poder devolver el error a la casilla correcta.
+    const filasEnviadas: number[] = []
+    const equipos = valores.equipos.flatMap((e, indice) => {
+      if (! e.incluido) return []
+      filasEnviadas.push(indice)
+      return [{ equipo_proteccion_id: e.equipo_proteccion_id, cantidad: e.cantidad }]
+    })
+
     registrarKit.mutateAsync({
       servidor_id: valores.servidor_id,
       fecha_entrega: valores.fecha_entrega,
       observaciones: valores.observaciones || undefined,
-      equipos: valores.equipos
-        .filter(e => e.incluido)
-        .map(e => ({ equipo_proteccion_id: e.equipo_proteccion_id, cantidad: e.cantidad })),
+      equipos,
     })
       .then(onListo)
       .catch((error) => {
-        // Un 422 del backend al campo que lo provoca. Los de la lista llegan
-        // como `equipos.0.cantidad`: se traducen al índice del formulario.
         const campos = erroresDeCampo(error)
-        if (!campos) return // el hook ya lo notificó
-        for (const [campo, mensaje] of Object.entries(campos)) {
-          const fila = campo.match(/^equipos\.(\d+)\.(\w+)$/)
-          if (fila) {
-            setError(`equipos.${Number(fila[1])}.${fila[2]}` as 'equipos.0.cantidad', { message: mensaje })
-            continue
-          }
-          setError(campo as keyof EntregaKitEppFormData, { message: mensaje })
-        }
+        if (! campos) return // el hook ya lo notificó
+        repartirErrores(campos, filasEnviadas)
       })
+  }
+
+  /**
+   * Los errores del 422, cada uno a su campo.
+   *
+   * Los de la lista llegan como `equipos.0.cantidad`, con el índice de lo que
+   * se envió, que no es el de la fila en pantalla en cuanto hay una casilla
+   * desmarcada antes. Sin traducirlo, el mensaje aterrizaba en otra fila: la
+   * prueba del navegador lo confirmó marcando como inválido el equipo que no
+   * se había enviado. Se lee, pero señala al equipo equivocado, y quien lo
+   * lee corrige donde no era.
+   *
+   * Si aun así el mensaje no encuentra dónde ir —un campo que el formulario no
+   * tiene—, cae en el error del array, que sí se ve.
+   */
+  function repartirErrores(campos: Record<string, string>, filasEnviadas: number[]) {
+    for (const [campo, mensaje] of Object.entries(campos)) {
+      const fila = campo.match(/^equipos\.(\d+)\.(\w+)$/)
+
+      if (fila) {
+        const enFormulario = filasEnviadas[Number(fila[1])]
+        if (enFormulario === undefined) {
+          setError('equipos', { message: mensaje })
+          continue
+        }
+        setError(`equipos.${enFormulario}.${fila[2]}` as 'equipos.0.cantidad', { message: mensaje })
+        continue
+      }
+
+      if (campo === 'equipos' || campo in VALORES_INICIALES) {
+        setError(campo as keyof EntregaKitEppFormData, { message: mensaje })
+        continue
+      }
+
+      setError('equipos', { message: mensaje })
+    }
   }
 
   return (

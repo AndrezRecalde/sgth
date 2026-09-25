@@ -135,7 +135,20 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
     [valoracionCompleta, nivelDeficiencia, nivelExposicion, nivelConsecuencias],
   )
 
-  const factorOptions = factores.map(f => ({ value: String(f.id), label: f.nombre }))
+  // El catálogo solo trae los factores activos, que es lo correcto al
+  // identificar un riesgo nuevo. Pero al editar uno cuyo factor se desactivó
+  // después, su opción no está en la lista y el campo salía en blanco: parecía
+  // que el riesgo no tenía factor, cuando lo que pasa es que ya no se ofrece.
+  // Se añade el suyo, dicho con todas las letras.
+  const factorDelRiesgo = riesgo?.factor_riesgo
+  const faltaElSuyo = !!factorDelRiesgo && !factores.some(f => f.id === factorDelRiesgo.id)
+
+  const factorOptions = [
+    ...factores.map(f => ({ value: String(f.id), label: f.nombre })),
+    ...(faltaElSuyo
+      ? [{ value: String(factorDelRiesgo.id), label: `${factorDelRiesgo.nombre} (desactivado)` }]
+      : []),
+  ]
 
   return (
     <FormModal
