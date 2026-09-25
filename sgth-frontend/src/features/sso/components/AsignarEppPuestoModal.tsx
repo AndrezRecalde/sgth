@@ -48,10 +48,12 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
     .map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
 
   // Estaba a mano con tres `useState` y sin validación: una cantidad en blanco
-  // solo desactivaba el botón, sin decir por qué. El reparto de errores por
-  // campo se mantiene para lo que el backend sí rechaza —un equipo que ya no
-  // existe, por ejemplo—; el duplicado no llega a intentarse porque el
-  // desplegable ya no lo ofrece.
+  // solo desactivaba el botón, sin decir por qué.
+  //
+  // El duplicado se ataja dos veces a propósito: el desplegable no lo ofrece, y
+  // el backend lo rechaza con un error en `equipo_proteccion_id`. Lo segundo no
+  // sobra: esta lista se carga al abrir el modal, así que si alguien asigna ese
+  // mismo equipo mientras está abierto, lo que se ve aquí ya no es lo que hay.
   const {
     control, handleSubmit, reset, setError,
     formState: { errors },

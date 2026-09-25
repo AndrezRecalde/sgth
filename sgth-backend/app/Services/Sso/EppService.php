@@ -22,18 +22,38 @@ final class EppService
             ->get();
     }
 
+    /**
+     * Agrega un equipo al EPP que requiere un puesto.
+     *
+     * Rechaza el duplicado en vez de sobrescribirlo. Era un `updateOrCreate`:
+     * volver a elegir un equipo que el puesto ya requería no daba error, pisaba
+     * `cantidad_requerida` y dejaba la frecuencia de reposición en NULL —el
+     * segundo argumento la escribe con `?? null`, y el formulario la manda
+     * vacía si no se rellena—, todo respondiendo «equipo asignado».
+     *
+     * De este requerimiento sale el kit que se entrega al servidor, así que
+     * perder la frecuencia es perder cuándo toca reponer. Para cambiar una
+     * asignación existente está el borrado, que es una decisión deliberada.
+     */
     public function asignarEquipoAPuesto(array $datos): PuestoEpp
     {
-        return PuestoEpp::updateOrCreate(
-            [
-                'puesto_id' => $datos['puesto_id'],
-                'equipo_proteccion_id' => $datos['equipo_proteccion_id'],
-            ],
-            [
-                'cantidad_requerida' => $datos['cantidad_requerida'] ?? 1,
-                'frecuencia_reposicion_meses' => $datos['frecuencia_reposicion_meses'] ?? null,
-            ]
-        );
+        $yaRequerido = PuestoEpp::query()
+            ->where('puesto_id', $datos['puesto_id'])
+            ->where('equipo_proteccion_id', $datos['equipo_proteccion_id'])
+            ->exists();
+
+        if ($yaRequerido) {
+            throw ValidationException::withMessages([
+                'equipo_proteccion_id' => 'Este puesto ya requiere ese equipo. Elimine la asignación existente para cambiar su cantidad o su frecuencia de reposición.',
+            ]);
+        }
+
+        return PuestoEpp::create([
+            'puesto_id' => $datos['puesto_id'],
+            'equipo_proteccion_id' => $datos['equipo_proteccion_id'],
+            'cantidad_requerida' => $datos['cantidad_requerida'] ?? 1,
+            'frecuencia_reposicion_meses' => $datos['frecuencia_reposicion_meses'] ?? null,
+        ]);
     }
 
     /**
