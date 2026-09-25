@@ -4,6 +4,7 @@ import { confirmar, notificar } from '@/components/ui'
 import { useState } from 'react'
 import { Group, Button, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
@@ -16,6 +17,12 @@ import type { DataTableColumn } from 'mantine-datatable'
 
 export function CampaniasPsicosocialTab() {
   const { data: campanias = [], isLoading, error } = useCampaniasPsicosocial()
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
+
   const { cerrarCampania } = usePsicosocialMutations()
   const [crearOpened, { open: openCrear, close: closeCrear }] = useDisclosure(false)
   const [resultadosOpened, { open: openResultados, close: closeResultados }] = useDisclosure(false)
@@ -87,7 +94,7 @@ export function CampaniasPsicosocialTab() {
               label: 'Cerrar campaña',
               icon: <IconLock size={14} />,
               color: 'red',
-              hidden: !campania.activa,
+              hidden: !campania.activa || !puedeGestionar,
               onClick: () => confirmar({
                 title:   'Cerrar campaña',
                 message: (
@@ -113,9 +120,11 @@ export function CampaniasPsicosocialTab() {
         <Text size="sm" c="dimmed">
           Cuestionario anónimo de evaluación de riesgo psicosocial (Ministerio del Trabajo, 58 ítems).
         </Text>
-        <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
-          Nueva campaña
-        </Button>
+        {puedeGestionar && (
+          <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
+            Nueva campaña
+          </Button>
+        )}
       </Group>
 
       <DataState

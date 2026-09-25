@@ -4,6 +4,7 @@ import { confirmar } from '@/components/ui'
 import { useState } from 'react'
 import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconClipboardList, IconShieldCheck } from '@tabler/icons-react'
 import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useEquiposProteccion, useEquipoProteccionMutations } from '../hooks/useEquiposProteccion'
@@ -18,6 +19,12 @@ export function EquiposProteccionTab() {
   const [editEquipo, setEditEquipo] = useState<EquipoProteccion | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [asignarOpened, { open: openAsignar, close: closeAsignar }] = useDisclosure(false)
+
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { eliminar } = useEquipoProteccionMutations()
   const { data, isLoading, error } = useEquiposProteccion({ page })
@@ -69,12 +76,14 @@ export function EquiposProteccionTab() {
             {
               label: 'Editar equipo',
               icon: <IconEdit size={14} />,
+              hidden: !puedeGestionar,
               onClick: () => handleEdit(equipo),
             },
             {
               label: 'Eliminar equipo',
               icon: <IconTrash size={14} />,
               color: 'red',
+              hidden: !puedeGestionar,
               onClick: () => confirmar({
                 title:   'Eliminar equipo',
                 message: <>Se eliminará el equipo <b>{equipo.nombre}</b>. No se puede deshacer.</>,
@@ -90,22 +99,24 @@ export function EquiposProteccionTab() {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end" mb="md">
-        <Button
-          leftSection={<IconClipboardList size={16} />}
-          variant="default"
-          onClick={openAsignar}
-        >
-          EPP por puesto
-        </Button>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="light"
-          onClick={() => { setEditEquipo(null); open() }}
-        >
-          Nuevo equipo
-        </Button>
-      </Group>
+      {puedeGestionar && (
+        <Group justify="flex-end" mb="md">
+          <Button
+            leftSection={<IconClipboardList size={16} />}
+            variant="default"
+            onClick={openAsignar}
+          >
+            EPP por puesto
+          </Button>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="light"
+            onClick={() => { setEditEquipo(null); open() }}
+          >
+            Nuevo equipo
+          </Button>
+        </Group>
+      )}
       <DataState
         loading={isLoading}
         error={error}

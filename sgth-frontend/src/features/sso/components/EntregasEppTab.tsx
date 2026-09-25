@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Box, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconReportAnalytics, IconTruckDelivery } from '@tabler/icons-react'
 import { useEppEntregas } from '../hooks/useEppEntregas'
 import { RegistrarEntregaEppModal } from './RegistrarEntregaEppModal'
@@ -17,6 +18,12 @@ export function EntregasEppTab() {
   const [page, setPage] = useState(1)
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [reporteOpened, { open: openReporte, close: closeReporte }] = useDisclosure(false)
+
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { data, isLoading, error, refetch } = useEppEntregas({ page })
   const records = data?.data ?? []
@@ -68,13 +75,15 @@ export function EntregasEppTab() {
         >
           Lista de EPP entregados
         </Button>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="light"
-          onClick={open}
-        >
-          Registrar movimiento
-        </Button>
+        {puedeGestionar && (
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="light"
+            onClick={open}
+          >
+            Registrar movimiento
+          </Button>
+        )}
       </Group>
       <DataState
         loading={isLoading}
@@ -87,11 +96,11 @@ export function EntregasEppTab() {
           icon: IconTruckDelivery,
           title: 'Sin movimientos de EPP',
           description: 'Aún no se ha registrado ninguna entrega, devolución ni reposición.',
-          action: (
+          action: puedeGestionar ? (
             <Button variant="light" leftSection={<IconPlus size={16} />} onClick={open}>
               Registrar movimiento
             </Button>
-          ),
+          ) : undefined,
         }}
         page={page}
       >

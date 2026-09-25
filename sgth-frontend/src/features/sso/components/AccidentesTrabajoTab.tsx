@@ -4,6 +4,7 @@ import { confirmar, DataState, SgthTable, StatusBadge, TableActions } from '@/co
 import { useState } from 'react'
 import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconAlertTriangle } from '@tabler/icons-react'
 import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '../hooks/useAccidentesTrabajo'
 import { AccidenteTrabajoModal } from './AccidenteTrabajoModal'
@@ -16,6 +17,12 @@ export function AccidentesTrabajoTab() {
   const [page, setPage] = useState(1)
   const [editAccidente, setEditAccidente] = useState<AccidenteTrabajo | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
+
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { eliminar } = useAccidenteTrabajoMutations()
   const { data, isLoading, error } = useAccidentesTrabajo({ page })
@@ -88,12 +95,14 @@ export function AccidentesTrabajoTab() {
             {
               label: 'Editar accidente',
               icon: <IconEdit size={14} />,
+              hidden: !puedeGestionar,
               onClick: () => handleEdit(accidente),
             },
             {
               label: 'Eliminar accidente',
               icon: <IconTrash size={14} />,
               color: 'red',
+              hidden: !puedeGestionar,
               onClick: () => confirmar({
                 title:   'Eliminar accidente de trabajo',
                 message: 'Se eliminará este registro de accidente de trabajo. No se puede deshacer.',
@@ -109,15 +118,17 @@ export function AccidentesTrabajoTab() {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end" mb="md">
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="light"
-          onClick={() => { setEditAccidente(null); open() }}
-        >
-          Nuevo accidente
-        </Button>
-      </Group>
+      {puedeGestionar && (
+        <Group justify="flex-end" mb="md">
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="light"
+            onClick={() => { setEditAccidente(null); open() }}
+          >
+            Nuevo accidente
+          </Button>
+        </Group>
+      )}
       <DataState
         loading={isLoading}
         error={error}

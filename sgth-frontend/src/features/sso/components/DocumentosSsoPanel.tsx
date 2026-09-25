@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Box, Stack, Group, Text, TextInput, Button, ActionIcon, Alert } from '@mantine/core'
 import { Dropzone } from '@mantine/dropzone'
 import { IconUpload, IconX, IconFile, IconDownload, IconTrash, IconAlertCircle } from '@tabler/icons-react'
+import { useAuth } from '@/hooks/useAuth'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDocumentosSso, useDocumentoSsoMutations } from '../hooks/useDocumentosSso'
 import { formatFecha } from '@/lib/fecha'
@@ -34,6 +35,10 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
   const contained = useContainedInput()
   const { data: documentos = [], isLoading, error, refetch } = useDocumentosSso(tipo, documentableId)
   const { subir, eliminar, descargar } = useDocumentoSsoMutations(tipo, documentableId)
+
+  // Descargar la evidencia es lectura; adjuntarla y borrarla, no.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const [archivo, setArchivo] = useState<File | null>(null)
   const [nombre, setNombre] = useState('')
@@ -97,65 +102,69 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
               >
                 <IconDownload size={16} />
               </ActionIcon>
-              <ActionIcon
-                variant="subtle"
-                color="red"
-                onClick={() => confirmar({
-                  title:   'Eliminar documento',
-                  message: <>Se eliminará el documento <b>{doc.nombre}</b>. No se puede deshacer.</>,
-                  destructiva: true,
-                  onConfirm: () => eliminar.mutate(doc.id),
-                })}
-                aria-label="Eliminar"
-              >
-                <IconTrash size={16} />
-              </ActionIcon>
+              {puedeGestionar && (
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  onClick={() => confirmar({
+                    title:   'Eliminar documento',
+                    message: <>Se eliminará el documento <b>{doc.nombre}</b>. No se puede deshacer.</>,
+                    destructiva: true,
+                    onConfirm: () => eliminar.mutate(doc.id),
+                  })}
+                  aria-label="Eliminar"
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              )}
             </Group>
           </Group>
         ))}
       </DataState>
 
-      <TextInput
-        label="Nombre del documento"
-        placeholder="Ej: Acta de socialización, evidencia fotográfica..."
-        size="xs"
-        {...contained}
-        value={nombre}
-        onChange={(e) => setNombre(e.currentTarget.value)}
-      />
+      {puedeGestionar && (<>
+        <TextInput
+          label="Nombre del documento"
+          placeholder="Ej: Acta de socialización, evidencia fotográfica..."
+          size="xs"
+          {...contained}
+          value={nombre}
+          onChange={(e) => setNombre(e.currentTarget.value)}
+        />
 
-      <Dropzone
-        onDrop={(files) => { setArchivo(files[0]); setArchivoError('') }}
-        onReject={() => setArchivoError('Archivo no válido')}
-        maxSize={10 * 1024 * 1024}
-        accept={MIMES_ACEPTADOS}
-      >
-        <Group justify="center" gap="md" mih={60}>
-          <Dropzone.Accept>
-            <IconUpload size={22} color="var(--mantine-color-emerald-6)" />
-          </Dropzone.Accept>
-          <Dropzone.Reject>
-            <IconX size={22} color="var(--mantine-color-red-6)" />
-          </Dropzone.Reject>
-          <Dropzone.Idle>
-            <IconFile size={22} color="var(--mantine-color-dimmed)" />
-          </Dropzone.Idle>
-          <Text size="xs" c={archivo ? 'emerald' : 'dimmed'}>
-            {archivo ? archivo.name : 'Arrastre el archivo aquí o haga clic (PDF, DOC, JPG, PNG — máx. 10MB)'}
-          </Text>
-        </Group>
-      </Dropzone>
-      {archivoError && <Text size="xs" c="red">{archivoError}</Text>}
+        <Dropzone
+          onDrop={(files) => { setArchivo(files[0]); setArchivoError('') }}
+          onReject={() => setArchivoError('Archivo no válido')}
+          maxSize={10 * 1024 * 1024}
+          accept={MIMES_ACEPTADOS}
+        >
+          <Group justify="center" gap="md" mih={60}>
+            <Dropzone.Accept>
+              <IconUpload size={22} color="var(--mantine-color-emerald-6)" />
+            </Dropzone.Accept>
+            <Dropzone.Reject>
+              <IconX size={22} color="var(--mantine-color-red-6)" />
+            </Dropzone.Reject>
+            <Dropzone.Idle>
+              <IconFile size={22} color="var(--mantine-color-dimmed)" />
+            </Dropzone.Idle>
+            <Text size="xs" c={archivo ? 'emerald' : 'dimmed'}>
+              {archivo ? archivo.name : 'Arrastre el archivo aquí o haga clic (PDF, DOC, JPG, PNG — máx. 10MB)'}
+            </Text>
+          </Group>
+        </Dropzone>
+        {archivoError && <Text size="xs" c="red">{archivoError}</Text>}
 
-      <Button
-        size="xs"
-        variant="light"
-        leftSection={<IconUpload size={14} />}
-        loading={subir.isPending}
-        onClick={handleSubir}
-      >
-        Subir documento
-      </Button>
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<IconUpload size={14} />}
+          loading={subir.isPending}
+          onClick={handleSubir}
+        >
+          Subir documento
+        </Button>
+      </>)}
     </Stack>
   )
 }

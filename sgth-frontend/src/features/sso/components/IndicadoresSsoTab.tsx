@@ -6,6 +6,7 @@ import {
   Text, Alert, Stack,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import {
   IconSearch, IconClock, IconAlertCircle, IconGauge, IconShieldCheck,
 } from '@tabler/icons-react'
@@ -28,6 +29,12 @@ export function IndicadoresSsoTab() {
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
   const [horasOpened, { open: openHoras, close: closeHoras }] = useDisclosure(false)
+
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const params = periodo ? { periodo } : null
   const {
@@ -65,9 +72,11 @@ export function IndicadoresSsoTab() {
             Consultar
           </Button>
         </Group>
-        <Button leftSection={<IconClock size={16} />} variant="default" onClick={openHoras}>
-          Horas trabajadas
-        </Button>
+        {puedeGestionar && (
+          <Button leftSection={<IconClock size={16} />} variant="default" onClick={openHoras}>
+            Horas trabajadas
+          </Button>
+        )}
       </Group>
 
       {!periodo && (
@@ -98,11 +107,11 @@ export function IndicadoresSsoTab() {
                 icon: IconClock,
                 title: 'Faltan las horas trabajadas del período',
                 description: reactivos?.mensaje,
-                action: (
+                action: puedeGestionar ? (
                   <Button variant="light" leftSection={<IconClock size={16} />} onClick={openHoras}>
                     Cargar horas trabajadas
                   </Button>
-                ),
+                ) : undefined,
               }}
             >
               {reactivos && !reactivos.sin_datos && (

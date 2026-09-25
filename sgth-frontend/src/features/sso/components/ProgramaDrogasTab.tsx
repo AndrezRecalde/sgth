@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Group, TextInput, Button, Text, Alert, Accordion, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import {
   IconSearch, IconList, IconAlertCircle, IconEdit, IconChecklist,
 } from '@tabler/icons-react'
@@ -23,6 +24,12 @@ export function ProgramaDrogasTab() {
   const [catalogoOpened, { open: openCatalogo, close: closeCatalogo }] = useDisclosure(false)
   const [seguimientoOpened, { open: openSeguimiento, close: closeSeguimiento }] = useDisclosure(false)
   const [filaSeleccionada, setFilaSeleccionada] = useState<FilaSeguimientoPrograma | null>(null)
+
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { data: lista, isLoading, error, refetch } = useListaSeguimientoPrograma(periodo)
 
@@ -57,11 +64,11 @@ export function ProgramaDrogasTab() {
       accessor: 'acciones',
       title: '',
       width: 110,
-      render: (fila) => (
+      render: (fila) => puedeGestionar ? (
         <Button size="xs" variant="subtle" leftSection={<IconEdit size={14} />} onClick={() => handleEditar(fila)}>
           Registrar
         </Button>
-      ),
+      ) : null,
     },
   ]
 
@@ -77,9 +84,11 @@ export function ProgramaDrogasTab() {
             >
               Consultar
             </Button>
-            <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
-              Catálogo de actividades
-            </Button>
+            {puedeGestionar && (
+              <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
+                Catálogo de actividades
+              </Button>
+            )}
           </>
         }
       >
@@ -116,11 +125,11 @@ export function ProgramaDrogasTab() {
             icon: IconChecklist,
             title: 'No hay actividades en el catálogo del programa',
             description: 'La matriz se arma con las actividades activas de las 6 fases. Agréguelas para poder registrar su seguimiento.',
-            action: (
+            action: puedeGestionar ? (
               <Button variant="light" leftSection={<IconList size={16} />} onClick={openCatalogo}>
                 Catálogo de actividades
               </Button>
-            ),
+            ) : undefined,
           }}
         >
           {lista && (

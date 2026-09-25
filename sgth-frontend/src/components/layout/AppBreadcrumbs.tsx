@@ -29,7 +29,7 @@ export function AppBreadcrumbs({ subsistema }: Props) {
   const { usuario } = useAuth()
 
   const cfg = SUBSISTEMAS[subsistema]
-  const trail = findNavTrail(subsistema, usuario?.permisos ?? [], pathname)
+  const trail = findNavTrail(subsistema, usuario?.permisos ?? [], usuario?.roles ?? [], pathname)
 
   if (!trail) return null
 

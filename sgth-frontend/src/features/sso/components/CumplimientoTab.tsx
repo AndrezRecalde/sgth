@@ -5,6 +5,7 @@ import {
   Group, TextInput, Button, Text, Stack, Alert,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import {
   IconSearch, IconList, IconAlertCircle, IconEdit, IconClipboardCheck,
 } from '@tabler/icons-react'
@@ -25,6 +26,12 @@ export function CumplimientoTab() {
   const [normativasOpened, { open: openNormativas, close: closeNormativas }] = useDisclosure(false)
   const [cumplimientoOpened, { open: openCumplimiento, close: closeCumplimiento }] = useDisclosure(false)
   const [filaSeleccionada, setFilaSeleccionada] = useState<FilaListaVerificacion | null>(null)
+
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { data: lista, isLoading, error, refetch } = useListaVerificacion(periodo)
 
@@ -64,7 +71,7 @@ export function CumplimientoTab() {
       accessor: 'acciones',
       title: '',
       width: 120,
-      render: (fila) => (
+      render: (fila) => puedeGestionar ? (
         <Button
           size="xs"
           variant="subtle"
@@ -73,7 +80,7 @@ export function CumplimientoTab() {
         >
           Registrar
         </Button>
-      ),
+      ) : null,
     },
   ]
 
@@ -89,9 +96,11 @@ export function CumplimientoTab() {
             >
               Consultar
             </Button>
-            <Button leftSection={<IconList size={16} />} variant="default" onClick={openNormativas}>
-              Catálogo de normativas
-            </Button>
+            {puedeGestionar && (
+              <Button leftSection={<IconList size={16} />} variant="default" onClick={openNormativas}>
+                Catálogo de normativas
+              </Button>
+            )}
           </>
         }
       >
@@ -123,11 +132,11 @@ export function CumplimientoTab() {
             icon: IconClipboardCheck,
             title: 'No hay normativa en el catálogo',
             description: 'La lista de verificación se arma con la normativa activa. Agréguela para poder registrar su cumplimiento.',
-            action: (
+            action: puedeGestionar ? (
               <Button variant="light" leftSection={<IconList size={16} />} onClick={openNormativas}>
                 Catálogo de normativas
               </Button>
-            ),
+            ) : undefined,
           }}
         >
           {lista && (
