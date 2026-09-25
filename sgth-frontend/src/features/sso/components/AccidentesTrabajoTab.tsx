@@ -8,7 +8,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconAlertTriangle } from '@tabler/icons-react'
 import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '../hooks/useAccidentesTrabajo'
 import { AccidenteTrabajoModal } from './AccidenteTrabajoModal'
-import { TONO_GRAVEDAD, TONO_TIPO_EVENTO_ACCIDENTE, TIPO_EVENTO_ACCIDENTE_OPTIONS } from '../schemas/accidenteTrabajo.schema'
+import {
+  TONO_GRAVEDAD, TONO_TIPO_EVENTO_ACCIDENTE, TIPO_EVENTO_ACCIDENTE_OPTIONS, GRAVEDAD_OPTIONS,
+} from '../schemas/accidenteTrabajo.schema'
 import { formatFecha } from '@/lib/fecha'
 import type { AccidenteTrabajo } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -69,9 +71,13 @@ export function AccidentesTrabajoTab() {
       accessor: 'gravedad',
       title: 'Gravedad',
       width: 120,
+      // La etiqueta, no el valor crudo: la columna pintaba «leve» y «mortal»
+      // en minúscula, como vienen de la base, mientras las demás columnas del
+      // módulo sí traducen. El texto sin traducir se conserva por si alguna
+      // fila anterior a la validación trae algo fuera de la escala.
       render: (a) => (
         <StatusBadge tone={TONO_GRAVEDAD[a.gravedad] ?? 'neutral'}>
-          {a.gravedad}
+          {GRAVEDAD_OPTIONS.find(o => o.value === a.gravedad)?.label ?? a.gravedad}
         </StatusBadge>
       ),
     },

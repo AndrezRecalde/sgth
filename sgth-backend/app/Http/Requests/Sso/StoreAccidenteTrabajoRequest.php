@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Sso;
 
+use App\Enums\GravedadAccidente;
 use App\Enums\TipoEventoAccidente;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
@@ -22,7 +23,7 @@ class StoreAccidenteTrabajoRequest extends FormRequest
             'hora_accidente'           => ['required', 'date_format:H:i'],
             'lugar_accidente'          => ['required', 'string', 'max:255'],
             'descripcion_hechos'       => ['required', 'string', 'max:3000'],
-            'gravedad'                 => ['required', 'string', 'max:50'],
+            'gravedad'                 => ['required', new Enum(GravedadAccidente::class)],
             'requirio_atencion_medica' => ['boolean'],
             'dias_reposo_medico'       => ['nullable', 'integer', 'min:0'],
             'causa_raiz'               => ['nullable', 'string', 'max:2000'],
