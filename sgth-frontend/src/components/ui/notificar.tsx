@@ -2,6 +2,7 @@ import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconCheck, IconX } from '@tabler/icons-react'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { getApiErrorMessage } from '@/types/api'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 /*
 | El resultado de una acción del usuario, siempre con el mismo color e icono
@@ -59,6 +60,17 @@ export const notificar = {
 
   /** Manejador de error para `onError`: el título dice qué falló; el mensaje, lo que respondió el API. */
   alFallar: (title: string) => (error: unknown) => mostrar('error', title, getApiErrorMessage(error)),
+
+  /**
+   * Igual, pero se calla cuando el 422 trae errores por campo, porque esos ya
+   * los pinta el formulario debajo de cada casilla (regla 07). Notificarlos
+   * además repite el mismo mensaje en dos sitios y obliga a leerlo dos veces.
+   * Lo demás —un 500, un 403, un 422 con un solo mensaje— sí se notifica: sin
+   * eso la acción fallaría en silencio.
+   */
+  alFallarSalvoCampos: (title: string) => (error: unknown) => {
+    if (!erroresDeCampo(error)) mostrar('error', title, getApiErrorMessage(error))
+  },
 
   /** Una espera visible que después se convierte en su resultado. */
   proceso(title: string, message?: React.ReactNode) {

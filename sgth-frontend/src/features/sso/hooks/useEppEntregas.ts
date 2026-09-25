@@ -63,7 +63,7 @@ export function useEppEntregaMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la entrega'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la entrega'),
   })
 
   const registrarKit = useMutation({
@@ -80,7 +80,7 @@ export function useEppEntregaMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo entregar el kit'),
+    onError: notificar.alFallarSalvoCampos('No se pudo entregar el kit'),
   })
 
   return { registrar, registrarKit }

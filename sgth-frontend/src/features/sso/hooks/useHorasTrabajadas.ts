@@ -37,7 +37,8 @@ export function useHorasTrabajadasMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudieron registrar las horas'),
+    // El formulario reparte el 422 por campo; notificarlo además lo repetía.
+    onError: notificar.alFallarSalvoCampos('No se pudieron registrar las horas'),
   })
 
   const eliminar = useMutation({

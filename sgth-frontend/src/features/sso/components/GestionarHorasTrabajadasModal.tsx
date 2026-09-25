@@ -5,13 +5,26 @@ import { useState } from 'react'
 import {
   Stack, Group, TextInput, NumberInput, Button, Text, Select, Alert,
 } from '@mantine/core'
+import { Controller, useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { IconTrash, IconPlus, IconClock, IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useHorasTrabajadas, useHorasTrabajadasMutations } from '../hooks/useHorasTrabajadas'
+import {
+  horasTrabajadasSchema, type HorasTrabajadasFormData,
+} from '../schemas/horasTrabajadas.schema'
+import { EJEMPLO_PERIODO } from '../constants/periodo'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import type { UnidadConRelaciones } from '@/types/api'
 import type { HorasTrabajadasPeriodo } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
+
+const VALORES_INICIALES: HorasTrabajadasFormData = {
+  periodo: '',
+  unidad_administrativa_id: null,
+  total_horas: 1,
+}
 
 interface Props {
   opened: boolean
@@ -25,9 +38,6 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
   // el registro 16 y los siguientes existían, contaban para los índices y no
   // había forma de verlos ni de borrarlos. Con carga mensual son 15 meses.
   const [page, setPage] = useState(1)
-  const [periodo, setPeriodo] = useState('')
-  const [unidadId, setUnidadId] = useState<string | null>(null)
-  const [totalHoras, setTotalHoras] = useState<number | ''>('')
 
   const { data, isLoading, error, refetch } = useHorasTrabajadas({ page })
   const registros = data?.data ?? []
@@ -37,22 +47,38 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
     value: String(u.id), label: u.nombre ?? `Unidad ${u.id}`,
   }))
 
-  const handleRegistrar = () => {
-    if (!periodo || !totalHoras) return
-    registrar.mutate({
-      periodo,
-      unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
-      total_horas: Number(totalHoras),
-    }, {
-      onSuccess: () => {
-        setPeriodo('')
-        setUnidadId(null)
-        setTotalHoras('')
+  // El formulario no validaba nada: «2026-13» o «el año pasado» salían hacia
+  // el servidor y el 422 volvía como notificación, sin decir qué campo estaba
+  // mal. Zod comprueba el formato con la misma expresión que usa `PeriodoSso`
+  // en el backend, y lo que solo el servidor puede saber —que el período ya
+  // está cargado— cae en su campo.
+  const {
+    register, control, handleSubmit, reset, setError,
+    formState: { errors },
+  } = useForm<HorasTrabajadasFormData>({
+    resolver: zodResolver(horasTrabajadasSchema) as Resolver<HorasTrabajadasFormData>,
+    defaultValues: VALORES_INICIALES,
+  })
+
+  const guardar = (valores: HorasTrabajadasFormData) => {
+    registrar.mutateAsync({
+      periodo: valores.periodo,
+      unidad_administrativa_id: valores.unidad_administrativa_id ?? undefined,
+      total_horas: valores.total_horas,
+    })
+      .then(() => {
+        reset(VALORES_INICIALES)
         // El listado va por período descendente: lo que se acaba de cargar
         // aparece en la primera página, no en la que se esté mirando.
         setPage(1)
-      },
-    })
+      })
+      .catch((error) => {
+        const campos = erroresDeCampo(error)
+        if (!campos) return // el hook ya lo notificó
+        for (const [campo, mensaje] of Object.entries(campos)) {
+          setError(campo as keyof HorasTrabajadasFormData, { message: mensaje })
+        }
+      })
   }
 
   const columns: DataTableColumn<HorasTrabajadasPeriodo>[] = [
@@ -122,43 +148,65 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           </Alert>
         )}
 
-        <Group align="flex-end" wrap="nowrap">
-          <TextInput
-            label="Período"
-            placeholder="2026 o 2026-07"
-            style={{ flex: 1 }}
-            {...contained}
-            value={periodo}
-            onChange={(e) => setPeriodo(e.currentTarget.value)}
-          />
-          <Select
-            label="Unidad (opcional)"
-            placeholder="Total institucional"
-            data={unidadOptions}
-            searchable
-            clearable
-            style={{ flex: 1 }}
-            {...contained}
-            value={unidadId}
-            onChange={setUnidadId}
-          />
-          <NumberInput
-            label="Total de horas"
-            min={1}
-            style={{ width: 150 }}
-            {...contained}
-            value={totalHoras}
-            onChange={(v) => setTotalHoras(typeof v === 'number' ? v : '')}
-          />
-          <Button
-            leftSection={<IconPlus size={16} />}
-            loading={registrar.isPending}
-            onClick={handleRegistrar}
-            disabled={!periodo || !totalHoras}
-          >
-            Guardar
-          </Button>
-        </Group>
+        {/* Los tres campos van en una fila alineada abajo, así que el error de
+            cada uno lo sostiene su propio hueco: un mensaje bajo el período no
+            desalinea la unidad ni las horas. */}
+        <form onSubmit={handleSubmit(guardar)} noValidate>
+          <Group align="flex-start" wrap="nowrap">
+            <TextInput
+              label="Período"
+              placeholder={EJEMPLO_PERIODO}
+              style={{ flex: 1 }}
+              {...contained}
+              {...register('periodo')}
+              error={errors.periodo?.message}
+            />
+            <Controller
+              name="unidad_administrativa_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Unidad (opcional)"
+                  placeholder="Total institucional"
+                  data={unidadOptions}
+                  searchable
+                  clearable
+                  style={{ flex: 1 }}
+                  {...contained}
+                  value={field.value ? String(field.value) : null}
+                  onChange={(v) => field.onChange(v ? Number(v) : null)}
+                  error={errors.unidad_administrativa_id?.message}
+                />
+              )}
+            />
+            <Controller
+              name="total_horas"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Total de horas"
+                  min={1}
+                  hideControls
+                  style={{ width: 150 }}
+                  {...contained}
+                  value={field.value}
+                  onChange={(v) => field.onChange(typeof v === 'number' ? v : 0)}
+                  error={errors.total_horas?.message}
+                />
+              )}
+            />
+            {/* Los campos contained miden 48 px; el botón los iguala para que
+                la fila no quede escalonada. */}
+            <Button
+              type="submit"
+              h={48}
+              leftSection={<IconPlus size={16} />}
+              loading={registrar.isPending}
+            >
+              Guardar
+            </Button>
+          </Group>
+        </form>
 
         <DataState
           loading={isLoading}

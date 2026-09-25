@@ -34,7 +34,8 @@ export function usePuestoEppMutations(puestoId: number | null) {
       notificar.exito('Equipo asignado', 'El equipo de protección fue asignado al puesto.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo asignar el equipo'),
+    // El formulario reparte el 422 por campo; notificarlo además lo repetía.
+    onError: notificar.alFallarSalvoCampos('No se pudo asignar el equipo'),
   })
 
   const eliminar = useMutation({
