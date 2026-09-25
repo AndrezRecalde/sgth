@@ -9,6 +9,12 @@ export const ROUTES = {
   // dentro o fuera de la institución, puede consultar su estructura.
   PUBLICO: {
     ORGANIGRAMA: '/organigrama',
+
+    // Los dos enlaces de campaña que Talento Humano envía por correo a todo el
+    // personal. Se construían a mano en el JSX de las dos pestañas de
+    // campañas: si la ruta cambia, no había un solo sitio donde cambiarla.
+    PSICOSOCIAL: (codigo: string) => `/psicosocial/${codigo}`,
+    ASSIST:      (codigo: string) => `/assist/${codigo}`,
   },
 
   // ── SGTH (Talento Humano) ─────────────

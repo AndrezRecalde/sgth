@@ -4,6 +4,7 @@ import { confirmar, notificar } from '@/components/ui'
 import { useState } from 'react'
 import { Group, Button, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
@@ -29,12 +30,18 @@ export function AssistCampaniasTab() {
   const [campaniaSeleccionada, setCampaniaSeleccionada] = useState<number | null>(null)
 
   const copiarLink = (codigo: string) => {
-    const url = `${window.location.origin}/assist/${codigo}`
+    const url = `${window.location.origin}${ROUTES.PUBLICO.ASSIST(codigo)}`
     navigator.clipboard.writeText(url).then(() => {
       notificar.exito(
         'Enlace copiado',
         'Comparta este enlace con el personal para que responda el tamizaje.',
       )
+    }).catch(() => {
+      // El portapapeles no está disponible en contexto no seguro y el permiso
+      // se puede denegar: sin esto la promesa se rechazaba en silencio y quien
+      // pulsaba no sabía si el enlace se había copiado.
+      // Sin cierre automático: el enlace hay que poder leerlo para copiarlo.
+      notificar.error('No se pudo copiar el enlace', `Cópielo a mano: ${url}`, { autoClose: false })
     })
   }
 

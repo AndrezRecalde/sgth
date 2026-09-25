@@ -32,8 +32,6 @@ interface SsoServiceInterface
 
     public function actualizarAccidente(int $id, array $datos): AccidenteTrabajo;
 
-    public function cerrarInvestigacionAccidente(int $id, array $datos): AccidenteTrabajo;
-
     public function eliminarAccidente(int $id): void;
 
     // ── Equipos de protección personal ────────────────────────────

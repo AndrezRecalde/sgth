@@ -139,15 +139,6 @@ final class SsoService implements SsoServiceInterface
         return $accidente->fresh();
     }
 
-    public function cerrarInvestigacionAccidente(int $id, array $datos): AccidenteTrabajo
-    {
-        $accidente = AccidenteTrabajo::findOrFail($id);
-        $datos['estado'] = false; // cerrado
-        $datos['updated_by'] = auth()->id();
-        $accidente->update($datos);
-        return $accidente->fresh();
-    }
-
     public function eliminarAccidente(int $id): void
     {
         AccidenteTrabajo::findOrFail($id)->delete();
