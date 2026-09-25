@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Services\Sso\PeriodoSso;
 use App\Services\Sso\AssistService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ final class EvaluacionAssistController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'periodo' => ['required', 'regex:/^\d{4}(-\d{2})?$/'],
+            'periodo' => PeriodoSso::reglas(),
             'unidad_administrativa_id' => ['nullable', 'integer', 'exists:unidades_administrativas,id'],
             'fecha_apertura' => ['required', 'date'],
             'fecha_cierre' => ['nullable', 'date', 'after_or_equal:fecha_apertura'],

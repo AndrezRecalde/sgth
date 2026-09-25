@@ -60,6 +60,21 @@ export const NIVEL_INTERVENCION_LABELS: Record<string, string> = {
   iv: 'IV — No intervenir, salvo análisis más preciso',
 }
 
+/**
+ * La misma escala, para una celda de tabla.
+ *
+ * Las etiquetas largas no caben en la columna: la insignia no parte el texto
+ * ni lo recorta, así que «I — Situación crítica, corrección urgente» se salía
+ * de su celda y se montaba encima de la columna Estado. El texto completo se
+ * queda en el modal, que es donde hay sitio y donde se está decidiendo.
+ */
+export const NIVEL_INTERVENCION_CORTO: Record<string, string> = {
+  i: 'I — Situación crítica',
+  ii: 'II — Corregir y controlar',
+  iii: 'III — Mejorar si es posible',
+  iv: 'IV — No intervenir',
+}
+
 export const TONO_NIVEL_INTERVENCION: Record<string, SemanticTone> = {
   i: 'danger',
   ii: 'warning',

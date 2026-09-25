@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
+import type { IndicadoresReactivos } from './tipos'
 
 export interface ResumenDashboardSso {
   periodo: string
@@ -16,17 +17,9 @@ export interface ResumenDashboardSso {
     equipos_activos: number
     entregas_periodo: number
   }
-  indicadores_reactivos: {
-    periodo: string
-    sin_datos: boolean
-    mensaje?: string
-    numero_lesiones: number
-    dias_perdidos: number
-    horas_trabajadas: number
-    indice_frecuencia: number | null
-    indice_gravedad: number | null
-    tasa_riesgo: number | null
-  }
+  // El mismo cálculo que expone /sso/indicadores/reactivos: un solo tipo, para
+  // que los campos nuevos no haya que agregarlos en dos sitios.
+  indicadores_reactivos: IndicadoresReactivos
   indicadores_proactivos: {
     inspecciones_realizadas: number
     capacitaciones_realizadas: number

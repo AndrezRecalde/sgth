@@ -3,6 +3,7 @@
 namespace App\Services\Sso;
 
 use App\Enums\FaseProgramaDrogas;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Sso\ProgramaDrogaActividad;
 use App\Models\Sso\ProgramaDrogaSeguimiento;
 use Illuminate\Database\Eloquent\Collection;
@@ -11,14 +12,17 @@ final class ProgramaDrogasService
 {
     // ── Catálogo de actividades ───────────────────────────────────
 
-    public function listarActividades(array $filtros): Collection
+    /**
+     * Parámetros tipados y no un arreglo de filtros: `solo_activas` llegaba
+     * desde la query string como la CADENA 'false' —truthy en PHP—, así que el
+     * filtro se aplicaba igual y no había forma de listar una actividad
+     * inactiva. Con un `bool` en la firma, el error no puede volver.
+     */
+    public function listarActividades(?string $fase = null, bool $soloActivas = true): Collection
     {
         return ProgramaDrogaActividad::query()
-            ->when(isset($filtros['fase']), fn($q) => $q->where('fase', $filtros['fase']))
-            ->when(
-                $filtros['solo_activas'] ?? true,
-                fn($q) => $q->where('activo', true)
-            )
+            ->when($fase !== null, fn($q) => $q->where('fase', $fase))
+            ->when($soloActivas, fn($q) => $q->where('activo', true))
             ->get()
             ->sortBy(fn(ProgramaDrogaActividad $a) => [$a->fase->orden(), $a->nombre])
             ->values();
@@ -36,9 +40,26 @@ final class ProgramaDrogasService
         return $actividad->fresh();
     }
 
+    /**
+     * No se borra una actividad que ya tiene seguimiento registrado.
+     *
+     * La FK de `programa_drogas_seguimiento` es `cascadeOnDelete`, así que el
+     * borrado se llevaba en silencio el seguimiento de todos los períodos —la
+     * evidencia de las 6 fases del programa ante el MDT— sin advertirlo.
+     * Marcarla inactiva la retira de la matriz y conserva lo registrado.
+     */
     public function eliminarActividad(int $id): void
     {
-        ProgramaDrogaActividad::findOrFail($id)->delete();
+        $actividad = ProgramaDrogaActividad::findOrFail($id);
+
+        if ($actividad->seguimientos()->exists()) {
+            throw new ReglaNegocioException(
+                'No se puede eliminar la actividad porque tiene seguimiento registrado en uno o más períodos. '
+                . 'Márquela como inactiva para retirarla de la matriz sin perder el historial.'
+            );
+        }
+
+        $actividad->delete();
     }
 
     // ── Seguimiento por período ───────────────────────────────────
@@ -68,7 +89,7 @@ final class ProgramaDrogasService
      */
     public function listaSeguimiento(string $periodo): array
     {
-        $actividades = $this->listarActividades(['solo_activas' => true]);
+        $actividades = $this->listarActividades(soloActivas: true);
 
         $seguimientos = ProgramaDrogaSeguimiento::where('periodo', $periodo)
             ->whereIn('programa_droga_actividad_id', $actividades->pluck('id'))

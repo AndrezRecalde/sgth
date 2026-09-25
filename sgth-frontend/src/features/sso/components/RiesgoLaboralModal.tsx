@@ -7,9 +7,10 @@ import {
   Select, Textarea, Switch, Alert, Text,
 } from '@mantine/core'
 import { FormModal } from '@/components/ui'
-import { useForm, useWatch, Controller, type Resolver } from 'react-hook-form'
+import { useForm, useWatch, Controller, type DefaultValues, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconGauge } from '@tabler/icons-react'
+import type { ZodType } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useRiesgoLaboralMutations } from '../hooks/useRiesgosLaborales'
@@ -19,7 +20,7 @@ import {
   NIVEL_DEFICIENCIA_OPTIONS, NIVEL_EXPOSICION_OPTIONS, NIVEL_CONSECUENCIAS_OPTIONS,
   NIVEL_INTERVENCION_LABELS, TONO_NIVEL_INTERVENCION, calcularNtp330,
 } from '../schemas/riesgoLaboral.schema'
-import type { RiesgoLaboral } from '../services/ssoService'
+import type { RiesgoLaboral } from '../services/tipos'
 
 interface Props {
   opened:  boolean
@@ -27,10 +28,66 @@ interface Props {
   riesgo?: RiesgoLaboral | null
 }
 
+/**
+ * El nivel que viene del API, solo si es uno de los que el esquema acepta.
+ *
+ * Se valida contra el propio esquema Zod en vez de afirmar el tipo con `as`:
+ * estos campos llegan como `string | null` —son nullable en la base— y un
+ * riesgo anterior a la matriz NTP 330 los trae en NULL.
+ */
+function nivelDelApi<T extends string>(
+  esquema: ZodType<T>,
+  valor: string | null | undefined,
+): T | undefined {
+  const resultado = esquema.safeParse(valor)
+  return resultado.success ? resultado.data : undefined
+}
+
+/**
+ * Un riesgo nuevo arranca en el centro de la escala; uno existente conserva su
+ * valoración.
+ *
+ * Si no la tiene —identificado antes de NTP 330, con los tres niveles en
+ * NULL— los selectores arrancan **vacíos** y hay que elegirlos: heredar el
+ * centro de la escala le inventaría una valoración de un clic, y la valoración
+ * de un riesgo laboral es justo lo que nadie debería poner por descuido. El
+ * esquema los exige, así que el formulario no se envía sin ellos.
+ */
+function valoresIniciales(riesgo?: RiesgoLaboral | null): DefaultValues<RiesgoLaboralFormData> {
+  const base: DefaultValues<RiesgoLaboralFormData> = {
+    puesto_id:           riesgo?.puesto_id           ?? 0,
+    factor_riesgo_id:    riesgo?.factor_riesgo_id    ?? 0,
+    descripcion:         riesgo?.descripcion         ?? '',
+    medidas_preventivas: riesgo?.medidas_preventivas ?? '',
+    estado:              riesgo?.estado              ?? true,
+  }
+
+  if (!riesgo) {
+    return {
+      ...base,
+      nivel_deficiencia:   'mejorable',
+      nivel_exposicion:    'ocasional',
+      nivel_consecuencias: 'leve',
+    }
+  }
+
+  const forma = riesgoLaboralSchema.shape
+  const deficiencia   = nivelDelApi(forma.nivel_deficiencia, riesgo.nivel_deficiencia)
+  const exposicion    = nivelDelApi(forma.nivel_exposicion, riesgo.nivel_exposicion)
+  const consecuencias = nivelDelApi(forma.nivel_consecuencias, riesgo.nivel_consecuencias)
+
+  return {
+    ...base,
+    ...(deficiencia ? { nivel_deficiencia: deficiencia } : {}),
+    ...(exposicion ? { nivel_exposicion: exposicion } : {}),
+    ...(consecuencias ? { nivel_consecuencias: consecuencias } : {}),
+  }
+}
+
 export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
   const contained         = useContainedInput()
   const { crear, editar } = useRiesgoLaboralMutations()
-  const { data: factores = [] } = useFactoresRiesgo()
+  const { data: factores = [], error: errorFactores } = useFactoresRiesgo()
   const isEditing         = !!riesgo
 
   const {
@@ -41,29 +98,11 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
     formState: { errors },
   } = useForm<RiesgoLaboralFormData>({
     resolver: zodResolver(riesgoLaboralSchema) as Resolver<RiesgoLaboralFormData>,
-    defaultValues: {
-      puesto_id:            riesgo?.puesto_id            ?? 0,
-      factor_riesgo_id:     riesgo?.factor_riesgo_id      ?? 0,
-      descripcion:          riesgo?.descripcion           ?? '',
-      nivel_deficiencia:    (riesgo?.nivel_deficiencia as RiesgoLaboralFormData['nivel_deficiencia']) ?? 'mejorable',
-      nivel_exposicion:     (riesgo?.nivel_exposicion as RiesgoLaboralFormData['nivel_exposicion']) ?? 'ocasional',
-      nivel_consecuencias:  (riesgo?.nivel_consecuencias as RiesgoLaboralFormData['nivel_consecuencias']) ?? 'leve',
-      medidas_preventivas:  riesgo?.medidas_preventivas   ?? '',
-      estado:               riesgo?.estado                ?? true,
-    },
+    defaultValues: valoresIniciales(riesgo),
   })
 
   useEffect(() => {
-    reset({
-      puesto_id:            riesgo?.puesto_id            ?? 0,
-      factor_riesgo_id:     riesgo?.factor_riesgo_id      ?? 0,
-      descripcion:          riesgo?.descripcion           ?? '',
-      nivel_deficiencia:    (riesgo?.nivel_deficiencia as RiesgoLaboralFormData['nivel_deficiencia']) ?? 'mejorable',
-      nivel_exposicion:     (riesgo?.nivel_exposicion as RiesgoLaboralFormData['nivel_exposicion']) ?? 'ocasional',
-      nivel_consecuencias:  (riesgo?.nivel_consecuencias as RiesgoLaboralFormData['nivel_consecuencias']) ?? 'leve',
-      medidas_preventivas:  riesgo?.medidas_preventivas   ?? '',
-      estado:               riesgo?.estado                ?? true,
-    })
+    reset(valoresIniciales(riesgo))
   }, [riesgo, reset])
 
   const handleClose = () => {
@@ -84,12 +123,32 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
   const nivelExposicion = useWatch({ control, name: 'nivel_exposicion' })
   const nivelConsecuencias = useWatch({ control, name: 'nivel_consecuencias' })
 
+  // Un riesgo sin valorar llega con los tres vacíos: calcular sobre ellos daría
+  // NR 0 y «No intervenir», que es la lectura más tranquilizadora posible y
+  // justo la que no corresponde.
+  const valoracionCompleta = !!nivelDeficiencia && !!nivelExposicion && !!nivelConsecuencias
+
   const resultado = useMemo(
-    () => calcularNtp330(nivelDeficiencia, nivelExposicion, nivelConsecuencias),
-    [nivelDeficiencia, nivelExposicion, nivelConsecuencias],
+    () => (valoracionCompleta
+      ? calcularNtp330(nivelDeficiencia, nivelExposicion, nivelConsecuencias)
+      : null),
+    [valoracionCompleta, nivelDeficiencia, nivelExposicion, nivelConsecuencias],
   )
 
-  const factorOptions = factores.map(f => ({ value: String(f.id), label: f.nombre }))
+  // El catálogo solo trae los factores activos, que es lo correcto al
+  // identificar un riesgo nuevo. Pero al editar uno cuyo factor se desactivó
+  // después, su opción no está en la lista y el campo salía en blanco: parecía
+  // que el riesgo no tenía factor, cuando lo que pasa es que ya no se ofrece.
+  // Se añade el suyo, dicho con todas las letras.
+  const factorDelRiesgo = riesgo?.factor_riesgo
+  const faltaElSuyo = !!factorDelRiesgo && !factores.some(f => f.id === factorDelRiesgo.id)
+
+  const factorOptions = [
+    ...factores.map(f => ({ value: String(f.id), label: f.nombre })),
+    ...(faltaElSuyo
+      ? [{ value: String(factorDelRiesgo.id), label: `${factorDelRiesgo.nombre} (desactivado)` }]
+      : []),
+  ]
 
   return (
     <FormModal
@@ -128,7 +187,12 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
               {...contained}
               value={field.value ? String(field.value) : null}
               onChange={(v) => field.onChange(v ? Number(v) : 0)}
-              error={errors.factor_riesgo_id?.message}
+              // Un catálogo que no cargó se veía como un catálogo vacío, y el
+              // usuario concluía que no hay factores registrados.
+              error={
+                errors.factor_riesgo_id?.message
+                ?? (errorFactores ? 'No se pudo cargar el catálogo de factores de riesgo.' : undefined)
+              }
             />
           )}
         />
@@ -150,9 +214,11 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
             render={({ field }) => (
               <Select
                 label="Nivel de deficiencia"
+                placeholder="Seleccione"
+                required
                 data={NIVEL_DEFICIENCIA_OPTIONS}
                 {...contained}
-                value={field.value}
+                value={field.value ?? null}
                 onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_deficiencia'])}
                 error={errors.nivel_deficiencia?.message}
               />
@@ -164,9 +230,11 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
             render={({ field }) => (
               <Select
                 label="Nivel de exposición"
+                placeholder="Seleccione"
+                required
                 data={NIVEL_EXPOSICION_OPTIONS}
                 {...contained}
-                value={field.value}
+                value={field.value ?? null}
                 onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_exposicion'])}
                 error={errors.nivel_exposicion?.message}
               />
@@ -178,9 +246,11 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
             render={({ field }) => (
               <Select
                 label="Nivel de consecuencias"
+                placeholder="Seleccione"
+                required
                 data={NIVEL_CONSECUENCIAS_OPTIONS}
                 {...contained}
-                value={field.value}
+                value={field.value ?? null}
                 onChange={(v) => field.onChange(v as RiesgoLaboralFormData['nivel_consecuencias'])}
                 error={errors.nivel_consecuencias?.message}
               />
@@ -188,19 +258,29 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
           />
         </Group>
 
-        <Alert
-          icon={<IconGauge size={18} />}
-          color={SEMANTIC_COLOR[TONO_NIVEL_INTERVENCION[resultado.nivelIntervencion]]}
-          variant="light"
-        >
-          <Text size="sm">
-            NP (probabilidad) = <b>{resultado.nivelProbabilidad}</b>{' '}
-            &nbsp;·&nbsp; NR (riesgo) = <b>{resultado.nivelRiesgo}</b>
-          </Text>
-          <Text size="sm" fw={600}>
-            {NIVEL_INTERVENCION_LABELS[resultado.nivelIntervencion]}
-          </Text>
-        </Alert>
+        {resultado ? (
+          <Alert
+            icon={<IconGauge size={18} />}
+            color={SEMANTIC_COLOR[TONO_NIVEL_INTERVENCION[resultado.nivelIntervencion]]}
+            variant="light"
+          >
+            <Text size="sm">
+              NP (probabilidad) = <b>{resultado.nivelProbabilidad}</b>{' '}
+              &nbsp;·&nbsp; NR (riesgo) = <b>{resultado.nivelRiesgo}</b>
+            </Text>
+            <Text size="sm" fw={600}>
+              {NIVEL_INTERVENCION_LABELS[resultado.nivelIntervencion]}
+            </Text>
+          </Alert>
+        ) : (
+          <Alert icon={<IconGauge size={18} />} color="slate" variant="light">
+            <Text size="sm">
+              {isEditing
+                ? 'Este riesgo se identificó antes de la matriz NTP 330 y no tiene valoración. Elija los tres niveles para calcularla.'
+                : 'Elija los tres niveles para calcular la valoración.'}
+            </Text>
+          </Alert>
+        )}
 
         <Textarea
           label="Medidas preventivas"

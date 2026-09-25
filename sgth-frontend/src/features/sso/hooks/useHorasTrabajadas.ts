@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
+import { horasTrabajadasService } from '../services/indicadoresService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 interface Params {
@@ -10,8 +11,8 @@ interface Params {
 
 export function useHorasTrabajadas(params?: Params) {
   return useQuery({
-    queryKey: ['sso-horas-trabajadas', params],
-    queryFn: () => ssoService.listarHorasTrabajadas(params),
+    queryKey: clavesSso.horasTrabajadas.lista(params),
+    queryFn: () => horasTrabajadasService.listar(params),
     staleTime: 1000 * 60 * 5,
   })
 }
@@ -20,13 +21,15 @@ export function useHorasTrabajadasMutations() {
   const qc = useQueryClient()
 
   const invalidar = () => {
-    qc.invalidateQueries({ queryKey: ['sso-horas-trabajadas'] })
-    qc.invalidateQueries({ queryKey: ['sso-indicadores-reactivos'] })
+    qc.invalidateQueries({ queryKey: clavesSso.horasTrabajadas.todas })
+    // Las horas son el denominador de los tres índices del CD 513.
+    qc.invalidateQueries({ queryKey: clavesSso.indicadores.todos })
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
   }
 
   const registrar = useMutation({
     mutationFn: (data: { periodo: string; unidad_administrativa_id?: number; total_horas: number }) =>
-      ssoService.registrarHorasTrabajadas(data),
+      horasTrabajadasService.registrar(data),
     onSuccess: () => {
       notificar.exito(
         'Horas registradas',
@@ -34,11 +37,12 @@ export function useHorasTrabajadasMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudieron registrar las horas'),
+    // El formulario reparte el 422 por campo; notificarlo además lo repetía.
+    onError: notificar.alFallarSalvoCampos('No se pudieron registrar las horas'),
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => ssoService.eliminarHorasTrabajadas(id),
+    mutationFn: (id: number) => horasTrabajadasService.eliminar(id),
     onSuccess: () => {
       notificar.exito('Registro eliminado', 'El registro de horas trabajadas fue eliminado.')
       invalidar()

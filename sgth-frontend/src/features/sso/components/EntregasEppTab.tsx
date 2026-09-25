@@ -3,23 +3,29 @@
 import { useState } from 'react'
 import { Box, Button, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconReportAnalytics } from '@tabler/icons-react'
-import { SgthTable } from '@/components/ui/SgthTable'
+import { useAuth } from '@/hooks/useAuth'
+import { IconPlus, IconReportAnalytics, IconTruckDelivery } from '@tabler/icons-react'
 import { useEppEntregas } from '../hooks/useEppEntregas'
 import { RegistrarEntregaEppModal } from './RegistrarEntregaEppModal'
 import { ReporteEppModal } from './ReporteEppModal'
 import { MOTIVO_ENTREGA_OPTIONS } from '../schemas/eppEntrega.schema'
 import { formatFecha } from '@/lib/fecha'
-import type { EppEntrega } from '../services/ssoService'
+import type { EppEntrega } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
-import { StatusBadge } from '@/components/ui'
+import { DataState, SgthTable, StatusBadge } from '@/components/ui'
 
 export function EntregasEppTab() {
   const [page, setPage] = useState(1)
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [reporteOpened, { open: openReporte, close: closeReporte }] = useDisclosure(false)
 
-  const { data, isLoading } = useEppEntregas({ page })
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
+
+  const { data, isLoading, error, refetch } = useEppEntregas({ page })
   const records = data?.data ?? []
 
   const getMotivoLabel = (valor: string) =>
@@ -69,24 +75,45 @@ export function EntregasEppTab() {
         >
           Lista de EPP entregados
         </Button>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="light"
-          onClick={open}
-        >
-          Registrar movimiento
-        </Button>
+        {puedeGestionar && (
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="light"
+            onClick={open}
+          >
+            Registrar movimiento
+          </Button>
+        )}
       </Group>
-      <SgthTable
-        records={records}
-        columns={columns}
-        fetching={isLoading}
-        totalRecords={data?.total ?? 0}
-        recordsPerPage={15}
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudieron cargar las entregas de EPP"
+        errorHint="No quiere decir que no haya movimientos registrados: no se pudieron consultar."
+        onRetry={() => refetch()}
+        empty={!records.length}
+        emptyProps={{
+          icon: IconTruckDelivery,
+          title: 'Sin movimientos de EPP',
+          description: 'Aún no se ha registrado ninguna entrega, devolución ni reposición.',
+          action: puedeGestionar ? (
+            <Button variant="light" leftSection={<IconPlus size={16} />} onClick={open}>
+              Registrar movimiento
+            </Button>
+          ) : undefined,
+        }}
         page={page}
-        onPageChange={setPage}
-        minHeight={200}
-      />
+      >
+        <SgthTable
+          records={records}
+          columns={columns}
+          totalRecords={data?.total ?? 0}
+          recordsPerPage={15}
+          page={page}
+          onPageChange={setPage}
+          minHeight={200}
+        />
+      </DataState>
       <RegistrarEntregaEppModal
         opened={modalOpened}
         onClose={close}

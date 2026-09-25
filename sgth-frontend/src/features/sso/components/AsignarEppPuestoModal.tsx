@@ -1,18 +1,27 @@
 'use client'
 
-import { SectionHeading, SgthModal, confirmar } from '@/components/ui'
+import { DataState, SectionHeading, SgthModal, SgthTable, TableActions, confirmar } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, Select, NumberInput, Button,
-  ActionIcon, } from '@mantine/core'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+  Stack, Grid, Select, NumberInput, Button,
+} from '@mantine/core'
+import { Controller, useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { IconTrash, IconPlus, IconHelmet } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useEquiposPorPuesto, usePuestoEppMutations } from '../hooks/usePuestoEpp'
 import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
-import type { PuestoEpp } from '../services/ssoService'
+import { puestoEppSchema, type PuestoEppFormData } from '../schemas/puestoEpp.schema'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import type { PuestoEpp } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
+
+const VALORES_INICIALES: PuestoEppFormData = {
+  equipo_proteccion_id: 0,
+  cantidad_requerida: 1,
+  frecuencia_reposicion_meses: null,
+}
 
 interface Props {
   opened: boolean
@@ -23,36 +32,56 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
 
   const [puestoId, setPuestoId] = useState<number | null>(null)
-  const [equipoId, setEquipoId] = useState<string | null>(null)
-  const [cantidad, setCantidad] = useState<number | ''>(1)
-  const [frecuencia, setFrecuencia] = useState<number | ''>('')
 
-  const { data: asignaciones = [], isLoading } = useEquiposPorPuesto(puestoId)
+  const { data: asignaciones = [], isLoading, error, refetch } = useEquiposPorPuesto(puestoId)
   const { asignar, eliminar } = usePuestoEppMutations(puestoId)
-  const { data: equiposData } = useEquiposProteccion({ estado: true })
-  const equipoOptions = (equiposData?.data ?? []).map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
+  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
+
+  // Fuera los que este puesto ya requiere. `asignarEquipoAPuesto` es un
+  // `updateOrCreate`: volver a elegir uno ya asignado no daba error, pisaba su
+  // cantidad y dejaba la frecuencia de reposición en blanco, y la pantalla
+  // respondía «equipo asignado». La tabla de abajo ya los muestra; ofrecerlos
+  // otra vez en el desplegable solo servía para pisarlos sin querer.
+  const yaAsignados = new Set(asignaciones.map(a => a.equipo_proteccion_id))
+  const equipoOptions = (equiposData?.data ?? [])
+    .filter(e => !yaAsignados.has(e.id))
+    .map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
+
+  // Estaba a mano con tres `useState` y sin validación: una cantidad en blanco
+  // solo desactivaba el botón, sin decir por qué.
+  //
+  // El duplicado se ataja dos veces a propósito: el desplegable no lo ofrece, y
+  // el backend lo rechaza con un error en `equipo_proteccion_id`. Lo segundo no
+  // sobra: esta lista se carga al abrir el modal, así que si alguien asigna ese
+  // mismo equipo mientras está abierto, lo que se ve aquí ya no es lo que hay.
+  const {
+    control, handleSubmit, reset, setError,
+    formState: { errors },
+  } = useForm<PuestoEppFormData>({
+    resolver: zodResolver(puestoEppSchema) as Resolver<PuestoEppFormData>,
+    defaultValues: VALORES_INICIALES,
+  })
 
   const handleClose = () => {
     setPuestoId(null)
-    setEquipoId(null)
-    setCantidad(1)
-    setFrecuencia('')
+    reset(VALORES_INICIALES)
     onClose()
   }
 
-  const handleAsignar = () => {
-    if (!equipoId || !cantidad) return
-    asignar.mutate({
-      equipo_proteccion_id: Number(equipoId),
-      cantidad_requerida: Number(cantidad),
-      frecuencia_reposicion_meses: frecuencia ? Number(frecuencia) : undefined,
-    }, {
-      onSuccess: () => {
-        setEquipoId(null)
-        setCantidad(1)
-        setFrecuencia('')
-      },
+  const guardar = (valores: PuestoEppFormData) => {
+    asignar.mutateAsync({
+      equipo_proteccion_id: valores.equipo_proteccion_id,
+      cantidad_requerida: valores.cantidad_requerida,
+      frecuencia_reposicion_meses: valores.frecuencia_reposicion_meses ?? undefined,
     })
+      .then(() => reset(VALORES_INICIALES))
+      .catch((error) => {
+        const campos = erroresDeCampo(error)
+        if (!campos) return // el hook ya lo notificó
+        for (const [campo, mensaje] of Object.entries(campos)) {
+          setError(campo as keyof PuestoEppFormData, { message: mensaje })
+        }
+      })
   }
 
   const columns: DataTableColumn<PuestoEpp>[] = [
@@ -72,18 +101,26 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
       title: '',
       width: 50,
       render: (a) => (
-        <ActionIcon
-          color="red"
-          variant="subtle"
-          onClick={() => confirmar({
-            title:   'Eliminar asignación',
-            message: 'Se eliminará esta asignación de equipo al puesto. No se puede deshacer.',
-            destructiva: true,
-            onConfirm: () => eliminar.mutate(a.id),
-          })}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+        <TableActions
+          actions={[
+            {
+              label: 'Quitar del kit',
+              icon: <IconTrash size={14} />,
+              color: 'red',
+              onClick: () => confirmar({
+                title:   'Eliminar asignación',
+                message: (
+                  <>
+                    Se quitará <b>{a.equipo_proteccion?.nombre ?? 'el equipo'}</b> del EPP
+                    requerido de este puesto. No se puede deshacer.
+                  </>
+                ),
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(a.id),
+              }),
+            },
+          ]}
+        />
       ),
     },
   ]
@@ -105,50 +142,112 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
         {puestoId && (
           <>
             <SectionHeading title="Agregar equipo requerido" />
-            <Group align="flex-end" wrap="nowrap">
-              <Select
-                label="Equipo"
-                placeholder="Seleccione un equipo"
-                data={equipoOptions}
-                searchable
-                style={{ flex: 1 }}
-                {...contained}
-                value={equipoId}
-                onChange={setEquipoId}
-              />
-              <NumberInput
-                label="Cantidad"
-                min={1}
-                style={{ width: 100 }}
-                {...contained}
-                value={cantidad}
-                onChange={(v) => setCantidad(typeof v === 'number' ? v : '')}
-              />
-              <NumberInput
-                label="Reposición (meses)"
-                min={1}
-                style={{ width: 150 }}
-                {...contained}
-                value={frecuencia}
-                onChange={(v) => setFrecuencia(typeof v === 'number' ? v : '')}
-              />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                loading={asignar.isPending}
-                onClick={handleAsignar}
-                disabled={!equipoId}
-              >
-                Agregar
-              </Button>
-            </Group>
+            {/* Alineados arriba: el error de un campo crece hacia abajo y no
+                mueve a los otros dos. */}
+            <form onSubmit={handleSubmit(guardar)} noValidate>
+              {/* El equipo se lleva la fila entera: su etiqueta es el código
+                  más el nombre —«EPP-014 — Respirador de media cara con
+                  filtros P100»— y compartiendo fila con la cantidad, la
+                  reposición y el botón le quedaban 91 px de 354. */}
+              <Grid gap="sm">
+                <Grid.Col span={12}>
+                  <Controller
+                    name="equipo_proteccion_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        label="Equipo"
+                        placeholder="Seleccione un equipo"
+                        data={equipoOptions}
+                        searchable
+                        // Un desplegable vacío porque ya está todo asignado se
+                        // veía igual que un catálogo sin equipos.
+                        nothingFoundMessage={
+                          yaAsignados.size && !equipoOptions.length
+                            ? 'Este puesto ya requiere todos los equipos activos del catálogo.'
+                            : 'Sin equipos en el catálogo.'
+                        }
+                        {...contained}
+                        value={field.value ? String(field.value) : null}
+                        onChange={(v) => field.onChange(v ? Number(v) : 0)}
+                        // Un catálogo que no cargó se veía igual que un catálogo vacío.
+                        error={
+                          errors.equipo_proteccion_id?.message
+                          ?? (errorEquipos ? 'No se pudo cargar el catálogo de equipos de protección.' : undefined)
+                        }
+                      />
+                    )}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
+                  <Controller
+                    name="cantidad_requerida"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        label="Cantidad"
+                        min={1}
+                        hideControls
+                        {...contained}
+                        value={field.value}
+                        onChange={(v) => field.onChange(typeof v === 'number' ? v : 0)}
+                        error={errors.cantidad_requerida?.message}
+                      />
+                    )}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
+                  <Controller
+                    name="frecuencia_reposicion_meses"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        label="Reposición (meses)"
+                        min={1}
+                        hideControls
+                        {...contained}
+                        value={field.value ?? ''}
+                        onChange={(v) => field.onChange(typeof v === 'number' ? v : null)}
+                        error={errors.frecuencia_reposicion_meses?.message}
+                      />
+                    )}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
+                  {/* Los campos contained miden 48 px; el botón los iguala. */}
+                  <Button
+                    type="submit"
+                    h={48}
+                    fullWidth
+                    leftSection={<IconPlus size={16} />}
+                    loading={asignar.isPending}
+                  >
+                    Agregar
+                  </Button>
+                </Grid.Col>
+              </Grid>
+            </form>
 
-            <SgthTable
-              records={asignaciones}
-              columns={columns}
-              fetching={isLoading}
-              noRecordsText="Este puesto no tiene EPP requerido todavía."
-              minHeight={120}
-            />
+            <DataState
+              loading={isLoading}
+              error={error}
+              errorTitle="No se pudo cargar el EPP requerido del puesto"
+              errorHint="No quiere decir que el puesto no tenga EPP asignado: no se pudo consultar."
+              onRetry={() => refetch()}
+              skeletonRows={3}
+              empty={!asignaciones.length}
+              emptyProps={{
+                icon: IconHelmet,
+                title: 'Este puesto no tiene EPP requerido todavía',
+                description: 'Agregue los equipos con el formulario de arriba: de aquí sale el kit que se entrega al servidor.',
+              }}
+            >
+              <SgthTable
+                records={asignaciones}
+                columns={columns}
+                minHeight={120}
+              />
+            </DataState>
           </>
         )}
       </Stack>

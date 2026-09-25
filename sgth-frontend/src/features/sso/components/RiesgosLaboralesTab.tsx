@@ -4,12 +4,13 @@ import { confirmar, DataState, SgthTable, StatusBadge, TableActions } from '@/co
 import { useState } from 'react'
 import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconList, IconAlertTriangle } from '@tabler/icons-react'
 import { useRiesgosLaborales, useRiesgoLaboralMutations } from '../hooks/useRiesgosLaborales'
 import { RiesgoLaboralModal } from './RiesgoLaboralModal'
 import { FactoresRiesgoModal } from './FactoresRiesgoModal'
-import { NIVEL_INTERVENCION_LABELS, TONO_NIVEL_INTERVENCION } from '../schemas/riesgoLaboral.schema'
-import type { RiesgoLaboral } from '../services/ssoService'
+import { NIVEL_INTERVENCION_CORTO, TONO_NIVEL_INTERVENCION } from '../schemas/riesgoLaboral.schema'
+import type { RiesgoLaboral } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function RiesgosLaboralesTab() {
@@ -17,6 +18,12 @@ export function RiesgosLaboralesTab() {
   const [editRiesgo, setEditRiesgo] = useState<RiesgoLaboral | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [factoresOpened, { open: openFactores, close: closeFactores }] = useDisclosure(false)
+
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { eliminar } = useRiesgoLaboralMutations()
   const { data, isLoading, error } = useRiesgosLaborales({ page })
@@ -49,15 +56,17 @@ export function RiesgosLaboralesTab() {
       accessor: 'nivel_riesgo_valor',
       title: 'NR',
       width: 70,
-      render: (r) => r.nivel_riesgo_valor,
+      render: (r) => r.nivel_riesgo_valor ?? '—',
     },
     {
       accessor: 'nivel_intervencion',
       title: 'Nivel de intervención',
       width: 200,
+      // Los riesgos identificados antes de la matriz NTP 330 tienen los tres
+      // niveles en NULL: la insignia salía vacía, como un dato que no llegó.
       render: (r) => (
-        <StatusBadge tone={TONO_NIVEL_INTERVENCION[r.nivel_intervencion] ?? 'neutral'}>
-          {NIVEL_INTERVENCION_LABELS[r.nivel_intervencion] ?? r.nivel_intervencion}
+        <StatusBadge tone={TONO_NIVEL_INTERVENCION[r.nivel_intervencion ?? ''] ?? 'neutral'}>
+          {NIVEL_INTERVENCION_CORTO[r.nivel_intervencion ?? ''] ?? 'Sin valorar'}
         </StatusBadge>
       ),
     },
@@ -81,12 +90,14 @@ export function RiesgosLaboralesTab() {
             {
               label: 'Editar riesgo',
               icon: <IconEdit size={14} />,
+              hidden: !puedeGestionar,
               onClick: () => handleEdit(riesgo),
             },
             {
               label: 'Eliminar riesgo',
               icon: <IconTrash size={14} />,
               color: 'red',
+              hidden: !puedeGestionar,
               onClick: () => confirmar({
                 title:   'Eliminar riesgo laboral',
                 message: 'Se eliminará este riesgo laboral y su valoración. No se puede deshacer.',
@@ -102,22 +113,24 @@ export function RiesgosLaboralesTab() {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end" mb="md">
-        <Button
-          leftSection={<IconList size={16} />}
-          variant="default"
-          onClick={openFactores}
-        >
-          Catálogo de factores
-        </Button>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="light"
-          onClick={() => { setEditRiesgo(null); open() }}
-        >
-          Nuevo riesgo
-        </Button>
-      </Group>
+      {puedeGestionar && (
+        <Group justify="flex-end" mb="md">
+          <Button
+            leftSection={<IconList size={16} />}
+            variant="default"
+            onClick={openFactores}
+          >
+            Catálogo de factores
+          </Button>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="light"
+            onClick={() => { setEditRiesgo(null); open() }}
+          >
+            Nuevo riesgo
+          </Button>
+        </Group>
+      )}
       <DataState
         loading={isLoading}
         error={error}

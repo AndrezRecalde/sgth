@@ -1,20 +1,19 @@
 'use client'
 
-import { confirmar, SgthModal, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import {
-  Stack, Group, TextInput, Select, Button,
-  ActionIcon, } from '@mantine/core'
+  Stack, Grid, Group, TextInput, Select, Button, Switch,
+} from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconShieldCheck, IconEyeOff, IconEye } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable } from '@/components/ui/SgthTable'
 import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactoresRiesgo'
 import {
   factorRiesgoSchema, type FactorRiesgoFormData, CATEGORIA_FACTOR_OPTIONS,
 } from '../schemas/factorRiesgo.schema'
-import type { FactorRiesgoCatalogo } from '../services/ssoService'
+import type { FactorRiesgoCatalogo } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
@@ -24,8 +23,12 @@ interface Props {
 
 export function FactoresRiesgoModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
-  const { data: factores = [], isLoading } = useFactoresRiesgo()
-  const { crear, eliminar } = useFactorRiesgoMutations()
+  // El catálogo muestra los activos; los inactivos se piden a propósito, que es
+  // la única forma de volver a activar uno.
+  const [verInactivos, setVerInactivos] = useState(false)
+  const { data: factores = [], isLoading, error, refetch } =
+    useFactoresRiesgo({ solo_activos: !verInactivos })
+  const { crear, cambiarActivo, eliminar } = useFactorRiesgoMutations()
 
   const {
     register, control, handleSubmit, reset,
@@ -34,8 +37,6 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     resolver: zodResolver(factorRiesgoSchema) as Resolver<FactorRiesgoFormData>,
     defaultValues: { nombre: '', categoria: 'fisico' },
   })
-
-  const [confirmarId, setConfirmarId] = useState<number | null>(null)
 
   const getCategoriaLabel = (valor: string) =>
     CATEGORIA_FACTOR_OPTIONS.find(o => o.value === valor)?.label ?? valor
@@ -53,26 +54,45 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
       render: (f) => <StatusBadge>{getCategoriaLabel(f.categoria)}</StatusBadge>,
     },
     {
+      accessor: 'activo',
+      title: 'Estado',
+      width: 100,
+      render: (f) => (
+        <StatusBadge tone={f.activo ? 'success' : 'neutral'}>
+          {f.activo ? 'Activo' : 'Inactivo'}
+        </StatusBadge>
+      ),
+    },
+    {
       accessor: 'acciones',
       title: '',
       width: 50,
       render: (f) => (
-        <ActionIcon
-          color="red"
-          variant="subtle"
-          loading={eliminar.isPending && confirmarId === f.id}
-          onClick={() => confirmar({
-            title:   'Eliminar factor de riesgo',
-            message: <>Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.</>,
-            destructiva: true,
-            onConfirm: () => {
-              setConfirmarId(f.id)
-              eliminar.mutate(f.id)
+        <TableActions
+          actions={[
+            {
+              label: f.activo ? 'Desactivar' : 'Reactivar',
+              icon: f.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+              onClick: () => cambiarActivo.mutate({ id: f.id, activo: !f.activo }),
             },
-          })}
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+            {
+              label: 'Eliminar factor',
+              icon: <IconTrash size={14} />,
+              color: 'red',
+              onClick: () => confirmar({
+                title:   'Eliminar factor de riesgo',
+                message: (
+                  <>
+                    Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.
+                    Si algún riesgo lo usa, desactívelo en vez de borrarlo.
+                  </>
+                ),
+                destructiva: true,
+                onConfirm: () => eliminar.mutate(f.id),
+              }),
+            },
+          ]}
+        />
       ),
     },
   ]
@@ -86,46 +106,76 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     >
       <Stack gap="md">
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <Group align="flex-end" wrap="nowrap">
-            <TextInput
-              label="Nombre del factor"
-              placeholder="Ej: Manejo manual de cargas"
-              style={{ flex: 1 }}
-              {...contained}
-              {...register('nombre')}
-              error={errors.nombre?.message}
-            />
-            <Controller
-              name="categoria"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Categoría"
-                  data={CATEGORIA_FACTOR_OPTIONS}
-                  {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v as FactorRiesgoFormData['categoria'])}
-                  style={{ minWidth: 160 }}
-                />
-              )}
-            />
-            <Button
-              type="submit"
-              leftSection={<IconPlus size={16} />}
-              loading={crear.isPending}
-            >
-              Agregar
-            </Button>
-          </Group>
+          {/* El nombre del factor se lleva la fila entera: «Exposición a
+              polvo de sílice en el corte de adoquín» necesita 335 px y
+              compartiendo fila con la categoría y el botón tenía 157. */}
+          <Grid gap="sm">
+            <Grid.Col span={12}>
+              <TextInput
+                label="Nombre del factor"
+                placeholder="Ej: Manejo manual de cargas"
+                {...contained}
+                {...register('nombre')}
+                error={errors.nombre?.message}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 8 }}>
+              <Controller
+                name="categoria"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Categoría"
+                    data={CATEGORIA_FACTOR_OPTIONS}
+                    {...contained}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v as FactorRiesgoFormData['categoria'])}
+                  />
+                )}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 4 }}>
+              <Button
+                type="submit"
+                h={48}
+                fullWidth
+                leftSection={<IconPlus size={16} />}
+                loading={crear.isPending}
+              >
+                Agregar
+              </Button>
+            </Grid.Col>
+          </Grid>
         </form>
 
-        <SgthTable
-          records={factores}
-          columns={columns}
-          fetching={isLoading}
-          noRecordsText="Sin factores registrados todavía."
-          minHeight={120}
-        />
+        <Group justify="flex-end">
+          <Switch
+            label="Ver inactivos"
+            checked={verInactivos}
+            onChange={(e) => setVerInactivos(e.currentTarget.checked)}
+          />
+        </Group>
+
+        <DataState
+          loading={isLoading}
+          error={error}
+          errorTitle="No se pudo cargar el catálogo de factores"
+          errorHint="No quiere decir que el catálogo esté vacío: no se pudo consultar."
+          onRetry={() => refetch()}
+          skeletonRows={3}
+          empty={!factores.length}
+          emptyProps={{
+            icon: IconShieldCheck,
+            title: 'Sin factores registrados todavía',
+            description: 'Agregue el primer factor con el formulario de arriba.',
+          }}
+        >
+          <SgthTable
+            records={factores}
+            columns={columns}
+            minHeight={120}
+          />
+        </DataState>
       </Stack>
     </SgthModal>
   )

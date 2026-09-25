@@ -6,6 +6,13 @@ export interface NavItem {
   icon:       string
   permiso?:   string
   /**
+   * Permisos alternativos: basta con tener uno. Para un destino que el backend
+   * sirve a quien puede gestionarlo O a quien solo puede leerlo, como SSO
+   * (`gestionar-sso|ver-reportes-sso`). Con un único `permiso` el auditor, que
+   * tiene el de lectura, no veía el módulo que el API sí le abre.
+   */
+  permisos?:  string[]
+  /**
    * Roles que pueden ver el destino, cuando el backend lo protege por rol y no
    * por permiso —como todo el Dispensario—. Basta con tener uno de ellos.
    */
@@ -159,7 +166,12 @@ export const NAV_SGTH: NavGroup[] = [
         label:    'Riesgos laborales (SSO)',
         href:     ROUTES.SGTH.RIESGOS_LABORALES,
         icon:     'IconShieldCheck',
-        permiso:  'gestionar-sso',
+        // El prefijo `sso` del API pide uno de estos tres roles y, dentro,
+        // `gestionar-sso|ver-reportes-sso`. Se declara igual aquí: con solo
+        // `gestionar-sso`, el auditor —que tiene el de lectura y el rol— no
+        // veía en el menú un módulo que el API le abre completo en lectura.
+        roles:    ['admin-uath', 'asistente-uath', 'auditor'],
+        permisos: ['gestionar-sso', 'ver-reportes-sso'],
         children: [
           {
             label: 'Dashboard',
@@ -506,8 +518,9 @@ export function buildNav(
     portal: NAV_PORTAL,
   }
 
-  const visible = (item: { permiso?: string; roles?: string[] }) =>
+  const visible = (item: { permiso?: string; permisos?: string[]; roles?: string[] }) =>
     (!item.permiso || permisos.includes(item.permiso)) &&
+    (!item.permisos || item.permisos.some(p => permisos.includes(p))) &&
     (!item.roles || item.roles.some(rol => roles.includes(rol)))
 
   return navMap[subsistema]
@@ -577,13 +590,20 @@ export function flattenNav(
  * Devuelve la ruta jerárquica hasta la pantalla activa, para las migas de pan.
  * Elige la coincidencia MÁS LARGA: `/sgth/expediente/subrogaciones` gana sobre
  * `/sgth/expediente`, que también es prefijo válido.
+ *
+ * Los roles entran igual que en el sidebar y en el buscador: sin ellos,
+ * `flattenNav` descartaba toda pantalla declarada por rol —el Dispensario
+ * entero y ahora SSO—, y esas pantallas se quedaban sin migas de pan. Es el
+ * mismo aplanado que consume el resto del shell, así que tiene que recibir lo
+ * mismo.
  */
 export function findNavTrail(
   subsistema: 'sgth' | 'salud' | 'portal',
   permisos: string[],
+  roles: string[],
   pathname: string,
 ): NavLeaf | null {
-  const candidatos = flattenNav(subsistema, permisos).filter(
+  const candidatos = flattenNav(subsistema, permisos, roles).filter(
     (leaf) => pathname === leaf.href || pathname.startsWith(`${leaf.href}/`),
   )
 

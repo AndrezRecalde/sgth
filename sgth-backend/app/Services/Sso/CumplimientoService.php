@@ -2,6 +2,7 @@
 
 namespace App\Services\Sso;
 
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Sso\NormativaLegalSso;
 use App\Models\Sso\CumplimientoNormativa;
 use Illuminate\Database\Eloquent\Collection;
@@ -10,14 +11,17 @@ final class CumplimientoService
 {
     // ── Catálogo de normativa legal ───────────────────────────────
 
-    public function listarNormativas(array $filtros): Collection
+    /**
+     * Parámetros tipados y no un arreglo de filtros: `solo_activas` llegaba
+     * desde la query string como la CADENA 'false' —truthy en PHP—, así que el
+     * filtro se aplicaba igual y no había forma de listar una normativa
+     * inactiva. Con un `bool` en la firma, el error no puede volver.
+     */
+    public function listarNormativas(?string $tipo = null, bool $soloActivas = true): Collection
     {
         return NormativaLegalSso::query()
-            ->when(isset($filtros['tipo']), fn($q) => $q->where('tipo', $filtros['tipo']))
-            ->when(
-                $filtros['solo_activas'] ?? true,
-                fn($q) => $q->where('activo', true)
-            )
+            ->when($tipo !== null, fn($q) => $q->where('tipo', $tipo))
+            ->when($soloActivas, fn($q) => $q->where('activo', true))
             ->orderBy('nombre')
             ->get();
     }
@@ -34,9 +38,28 @@ final class CumplimientoService
         return $normativa->fresh();
     }
 
+    /**
+     * No se borra una normativa que ya tiene cumplimiento registrado.
+     *
+     * La FK de `cumplimiento_normativa` es `cascadeOnDelete`, así que el
+     * borrado se llevaba en silencio el historial de cumplimiento de todos los
+     * períodos —justo la evidencia que una auditoría de SSO viene a pedir— sin
+     * que nada en la pantalla lo advirtiera. Quien quiera retirarla del
+     * catálogo la marca inactiva: deja de aparecer en la lista de verificación
+     * y conserva lo registrado.
+     */
     public function eliminarNormativa(int $id): void
     {
-        NormativaLegalSso::findOrFail($id)->delete();
+        $normativa = NormativaLegalSso::findOrFail($id);
+
+        if ($normativa->cumplimientos()->exists()) {
+            throw new ReglaNegocioException(
+                'No se puede eliminar la normativa porque tiene cumplimiento registrado en uno o más períodos. '
+                . 'Márquela como inactiva para retirarla de la lista de verificación sin perder el historial.'
+            );
+        }
+
+        $normativa->delete();
     }
 
     // ── Cumplimiento por período ──────────────────────────────────

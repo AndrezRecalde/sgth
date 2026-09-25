@@ -32,8 +32,6 @@ interface SsoServiceInterface
 
     public function actualizarAccidente(int $id, array $datos): AccidenteTrabajo;
 
-    public function cerrarInvestigacionAccidente(int $id, array $datos): AccidenteTrabajo;
-
     public function eliminarAccidente(int $id): void;
 
     // ── Equipos de protección personal ────────────────────────────
@@ -72,6 +70,10 @@ interface SsoServiceInterface
     // ── Horas trabajadas por período (carga manual, CD 513) ─────────
     public function listarHorasTrabajadas(array $filtros): LengthAwarePaginator;
 
+    /**
+     * Carga las horas de un período. Rechaza el duplicado con una
+     * ValidationException sobre `periodo`: no sobrescribe lo ya cargado.
+     */
     public function registrarHorasTrabajadas(array $datos): HorasTrabajadasPeriodo;
 
     public function actualizarHorasTrabajadas(int $id, array $datos): HorasTrabajadasPeriodo;

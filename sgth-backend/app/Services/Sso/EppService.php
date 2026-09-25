@@ -22,23 +22,53 @@ final class EppService
             ->get();
     }
 
+    /**
+     * Agrega un equipo al EPP que requiere un puesto.
+     *
+     * Rechaza el duplicado en vez de sobrescribirlo. Era un `updateOrCreate`:
+     * volver a elegir un equipo que el puesto ya requería no daba error, pisaba
+     * `cantidad_requerida` y dejaba la frecuencia de reposición en NULL —el
+     * segundo argumento la escribe con `?? null`, y el formulario la manda
+     * vacía si no se rellena—, todo respondiendo «equipo asignado».
+     *
+     * De este requerimiento sale el kit que se entrega al servidor, así que
+     * perder la frecuencia es perder cuándo toca reponer. Para cambiar una
+     * asignación existente está el borrado, que es una decisión deliberada.
+     */
     public function asignarEquipoAPuesto(array $datos): PuestoEpp
     {
-        return PuestoEpp::updateOrCreate(
-            [
-                'puesto_id' => $datos['puesto_id'],
-                'equipo_proteccion_id' => $datos['equipo_proteccion_id'],
-            ],
-            [
-                'cantidad_requerida' => $datos['cantidad_requerida'] ?? 1,
-                'frecuencia_reposicion_meses' => $datos['frecuencia_reposicion_meses'] ?? null,
-            ]
-        );
+        $yaRequerido = PuestoEpp::query()
+            ->where('puesto_id', $datos['puesto_id'])
+            ->where('equipo_proteccion_id', $datos['equipo_proteccion_id'])
+            ->exists();
+
+        if ($yaRequerido) {
+            throw ValidationException::withMessages([
+                'equipo_proteccion_id' => 'Este puesto ya requiere ese equipo. Elimine la asignación existente para cambiar su cantidad o su frecuencia de reposición.',
+            ]);
+        }
+
+        return PuestoEpp::create([
+            'puesto_id' => $datos['puesto_id'],
+            'equipo_proteccion_id' => $datos['equipo_proteccion_id'],
+            'cantidad_requerida' => $datos['cantidad_requerida'] ?? 1,
+            'frecuencia_reposicion_meses' => $datos['frecuencia_reposicion_meses'] ?? null,
+        ]);
     }
 
-    public function eliminarAsignacion(int $id): void
+    /**
+     * La asignación se busca DENTRO del puesto de la URL.
+     *
+     * Antes se borraba por id a secas, así que
+     * `DELETE /sso/puestos/7/equipos-proteccion/{id}` borraba igual una
+     * asignación del puesto 3: la URL afirmaba una relación que nadie
+     * comprobaba. Todos los que llegan aquí tienen `gestionar-sso`, así que no
+     * era una escalada de privilegios, pero sí un borrado que la auditoría no
+     * podía explicar —y, con una pantalla desincronizada, uno que nadie pidió.
+     */
+    public function eliminarAsignacion(int $puestoId, int $id): void
     {
-        PuestoEpp::findOrFail($id)->delete();
+        PuestoEpp::where('puesto_id', $puestoId)->findOrFail($id)->delete();
     }
 
     // ── Entregas de EPP ──────────────────────────────────────────────

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Enums\EstadoCumplimientoNormativa;
+use App\Services\Sso\PeriodoSso;
 use App\Services\Sso\CumplimientoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ final class CumplimientoNormativaController extends Controller
     {
         $validated = $request->validate([
             'normativa_legal_sso_id' => ['required', 'integer', 'exists:normativa_legal_sso,id'],
-            'periodo' => ['required', 'regex:/^\d{4}(-\d{2})?$/'],
+            'periodo' => PeriodoSso::reglas(),
             'estado' => ['required', new Enum(EstadoCumplimientoNormativa::class)],
             'observaciones' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -32,7 +33,7 @@ final class CumplimientoNormativaController extends Controller
     public function listaVerificacion(Request $request): JsonResponse
     {
         $request->validate([
-            'periodo' => ['required', 'regex:/^\d{4}(-\d{2})?$/'],
+            'periodo' => PeriodoSso::reglas(),
         ]);
 
         $lista = $this->cumplimientoService->listaVerificacion($request->string('periodo')->value());

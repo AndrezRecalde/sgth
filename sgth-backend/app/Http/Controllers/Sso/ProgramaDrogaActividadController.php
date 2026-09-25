@@ -18,7 +18,18 @@ final class ProgramaDrogaActividadController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $actividades = $this->programaDrogasService->listarActividades($request->all());
+        $validated = $request->validate([
+            'fase' => ['nullable', new Enum(FaseProgramaDrogas::class)],
+            'solo_activas' => ['nullable', 'boolean'],
+        ]);
+
+        $actividades = $this->programaDrogasService->listarActividades(
+            $validated['fase'] ?? null,
+            // `boolean()` y no el valor crudo: 'false' en la query string es una
+            // cadena, y como cadena es verdadera.
+            $request->boolean('solo_activas', true),
+        );
+
         return ApiResponse::ok($actividades, 'Actividades del programa de drogas obtenidas exitosamente.');
     }
 

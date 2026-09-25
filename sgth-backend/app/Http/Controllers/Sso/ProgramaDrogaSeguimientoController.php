@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Enums\EstadoActividadPrograma;
+use App\Services\Sso\PeriodoSso;
 use App\Services\Sso\ProgramaDrogasService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ final class ProgramaDrogaSeguimientoController extends Controller
     {
         $validated = $request->validate([
             'programa_droga_actividad_id' => ['required', 'integer', 'exists:programa_drogas_actividades,id'],
-            'periodo' => ['required', 'regex:/^\d{4}(-\d{2})?$/'],
+            'periodo' => PeriodoSso::reglas(),
             'estado' => ['required', new Enum(EstadoActividadPrograma::class)],
             'fecha_ejecucion' => ['nullable', 'date'],
             'observaciones' => ['nullable', 'string', 'max:2000'],
@@ -33,7 +34,7 @@ final class ProgramaDrogaSeguimientoController extends Controller
     public function listaSeguimiento(Request $request): JsonResponse
     {
         $request->validate([
-            'periodo' => ['required', 'regex:/^\d{4}(-\d{2})?$/'],
+            'periodo' => PeriodoSso::reglas(),
         ]);
 
         $lista = $this->programaDrogasService->listaSeguimiento($request->string('periodo')->value());

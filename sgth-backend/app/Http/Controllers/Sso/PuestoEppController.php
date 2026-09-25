@@ -35,7 +35,7 @@ final class PuestoEppController extends Controller
 
     public function destroy(int $puestoId, int $id): JsonResponse
     {
-        $this->eppService->eliminarAsignacion($id);
+        $this->eppService->eliminarAsignacion($puestoId, $id);
         return ApiResponse::ok(null, 'Asignación eliminada exitosamente.');
     }
 }

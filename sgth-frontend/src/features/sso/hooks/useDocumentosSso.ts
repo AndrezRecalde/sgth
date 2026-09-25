@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { documentoSsoService, type TipoDocumentableSso } from '../services/documentoSsoService'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useDocumentosSso(tipo: TipoDocumentableSso, documentableId: number | null) {
   return useQuery({
-    queryKey: ['sso-documentos', tipo, documentableId],
+    queryKey: clavesSso.documentos.de(tipo, documentableId),
     queryFn: () => documentoSsoService.listar(tipo, documentableId!),
     enabled: !!documentableId,
     staleTime: 1000 * 15,
@@ -14,7 +15,8 @@ export function useDocumentosSso(tipo: TipoDocumentableSso, documentableId: numb
 export function useDocumentoSsoMutations(tipo: TipoDocumentableSso, documentableId: number | null) {
   const qc = useQueryClient()
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-documentos', tipo, documentableId] })
+  const invalidar = () =>
+    qc.invalidateQueries({ queryKey: clavesSso.documentos.de(tipo, documentableId) })
 
   const subir = useMutation({
     mutationFn: (data: { nombre: string; archivo: File }) =>

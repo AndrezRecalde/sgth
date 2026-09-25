@@ -1,10 +1,11 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, DataState } from '@/components/ui'
 import { useState } from 'react'
-import { Box, Stack, Group, Text, TextInput, Button, ActionIcon, Alert, Loader } from '@mantine/core'
+import { Box, Stack, Group, Text, TextInput, Button, ActionIcon, Alert } from '@mantine/core'
 import { Dropzone } from '@mantine/dropzone'
 import { IconUpload, IconX, IconFile, IconDownload, IconTrash, IconAlertCircle } from '@tabler/icons-react'
+import { useAuth } from '@/hooks/useAuth'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDocumentosSso, useDocumentoSsoMutations } from '../hooks/useDocumentosSso'
 import { formatFecha } from '@/lib/fecha'
@@ -32,8 +33,12 @@ interface Props {
 /** Panel de adjuntos genérico (Fase 9): lista + sube evidencias/actas para un registro SSO. */
 export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
   const contained = useContainedInput()
-  const { data: documentos = [], isLoading } = useDocumentosSso(tipo, documentableId)
+  const { data: documentos = [], isLoading, error, refetch } = useDocumentosSso(tipo, documentableId)
   const { subir, eliminar, descargar } = useDocumentoSsoMutations(tipo, documentableId)
+
+  // Descargar la evidencia es lectura; adjuntarla y borrarla, no.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
 
   const [archivo, setArchivo] = useState<File | null>(null)
   const [nombre, setNombre] = useState('')
@@ -67,87 +72,99 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
     <Stack gap="sm">
       <Text size="sm" fw={600}>Documentos de respaldo</Text>
 
-      {isLoading && <Loader size="sm" />}
-
-      {!isLoading && documentos.length === 0 && (
-        <Text size="xs" c="dimmed">Sin documentos adjuntos todavía.</Text>
-      )}
-
-      {documentos.map((doc: DocumentoSso) => (
-        <Group key={doc.id} justify="space-between" wrap="nowrap" gap="xs">
-          <Box style={{ minWidth: 0, flex: 1 }}>
-            <Text size="sm" truncate>{doc.nombre}</Text>
-            <Text size="xs" c="dimmed">
-              {formatFecha(doc.created_at)} · {formatTamano(doc.tamano_bytes)}
-            </Text>
-          </Box>
-          <Group gap={4} wrap="nowrap">
-            <ActionIcon
-              variant="subtle"
-              loading={descargar.isPending}
-              onClick={() => descargar.mutate(doc.id)}
-              aria-label="Descargar"
-            >
-              <IconDownload size={16} />
-            </ActionIcon>
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              onClick={() => confirmar({
-                title:   'Eliminar documento',
-                message: <>Se eliminará el documento <b>{doc.nombre}</b>. No se puede deshacer.</>,
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(doc.id),
-              })}
-              aria-label="Eliminar"
-            >
-              <IconTrash size={16} />
-            </ActionIcon>
+      {/* DataState como compuerta: la lista es pequeña y su estado vacío cabe
+          en una línea, pero el error necesitaba dejar de verse como «no hay
+          adjuntos». */}
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudieron cargar los documentos de respaldo"
+        errorHint="No quiere decir que el registro no tenga evidencia adjunta: no se pudo consultar."
+        onRetry={() => refetch()}
+        skeletonRows={2}
+      >
+        {documentos.length === 0 ? (
+          <Text size="xs" c="dimmed">Sin documentos adjuntos todavía.</Text>
+        ) : documentos.map((doc: DocumentoSso) => (
+          <Group key={doc.id} justify="space-between" wrap="nowrap" gap="xs">
+            <Box style={{ minWidth: 0, flex: 1 }}>
+              <Text size="sm" truncate>{doc.nombre}</Text>
+              <Text size="xs" c="dimmed">
+                {formatFecha(doc.created_at)} · {formatTamano(doc.tamano_bytes)}
+              </Text>
+            </Box>
+            <Group gap={4} wrap="nowrap">
+              <ActionIcon
+                variant="subtle"
+                loading={descargar.isPending}
+                onClick={() => descargar.mutate(doc.id)}
+                aria-label="Descargar"
+              >
+                <IconDownload size={16} />
+              </ActionIcon>
+              {puedeGestionar && (
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  onClick={() => confirmar({
+                    title:   'Eliminar documento',
+                    message: <>Se eliminará el documento <b>{doc.nombre}</b>. No se puede deshacer.</>,
+                    destructiva: true,
+                    onConfirm: () => eliminar.mutate(doc.id),
+                  })}
+                  aria-label="Eliminar"
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              )}
+            </Group>
           </Group>
-        </Group>
-      ))}
+        ))}
+      </DataState>
 
-      <TextInput
-        label="Nombre del documento"
-        placeholder="Ej: Acta de socialización, evidencia fotográfica..."
-        size="xs"
-        {...contained}
-        value={nombre}
-        onChange={(e) => setNombre(e.currentTarget.value)}
-      />
+      {puedeGestionar && (<>
+        <TextInput
+          label="Nombre del documento"
+          placeholder="Ej: Acta de socialización, evidencia fotográfica..."
+          size="xs"
+          {...contained}
+          value={nombre}
+          onChange={(e) => setNombre(e.currentTarget.value)}
+        />
 
-      <Dropzone
-        onDrop={(files) => { setArchivo(files[0]); setArchivoError('') }}
-        onReject={() => setArchivoError('Archivo no válido')}
-        maxSize={10 * 1024 * 1024}
-        accept={MIMES_ACEPTADOS}
-      >
-        <Group justify="center" gap="md" mih={60}>
-          <Dropzone.Accept>
-            <IconUpload size={22} color="var(--mantine-color-emerald-6)" />
-          </Dropzone.Accept>
-          <Dropzone.Reject>
-            <IconX size={22} color="var(--mantine-color-red-6)" />
-          </Dropzone.Reject>
-          <Dropzone.Idle>
-            <IconFile size={22} color="var(--mantine-color-dimmed)" />
-          </Dropzone.Idle>
-          <Text size="xs" c={archivo ? 'emerald' : 'dimmed'}>
-            {archivo ? archivo.name : 'Arrastre el archivo aquí o haga clic (PDF, DOC, JPG, PNG — máx. 10MB)'}
-          </Text>
-        </Group>
-      </Dropzone>
-      {archivoError && <Text size="xs" c="red">{archivoError}</Text>}
+        <Dropzone
+          onDrop={(files) => { setArchivo(files[0]); setArchivoError('') }}
+          onReject={() => setArchivoError('Archivo no válido')}
+          maxSize={10 * 1024 * 1024}
+          accept={MIMES_ACEPTADOS}
+        >
+          <Group justify="center" gap="md" mih={60}>
+            <Dropzone.Accept>
+              <IconUpload size={22} color="var(--mantine-color-emerald-6)" />
+            </Dropzone.Accept>
+            <Dropzone.Reject>
+              <IconX size={22} color="var(--mantine-color-red-6)" />
+            </Dropzone.Reject>
+            <Dropzone.Idle>
+              <IconFile size={22} color="var(--mantine-color-dimmed)" />
+            </Dropzone.Idle>
+            <Text size="xs" c={archivo ? 'emerald' : 'dimmed'}>
+              {archivo ? archivo.name : 'Arrastre el archivo aquí o haga clic (PDF, DOC, JPG, PNG — máx. 10MB)'}
+            </Text>
+          </Group>
+        </Dropzone>
+        {archivoError && <Text size="xs" c="red">{archivoError}</Text>}
 
-      <Button
-        size="xs"
-        variant="light"
-        leftSection={<IconUpload size={14} />}
-        loading={subir.isPending}
-        onClick={handleSubir}
-      >
-        Subir documento
-      </Button>
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<IconUpload size={14} />}
+          loading={subir.isPending}
+          onClick={handleSubir}
+        >
+          Subir documento
+        </Button>
+      </>)}
     </Stack>
   )
 }

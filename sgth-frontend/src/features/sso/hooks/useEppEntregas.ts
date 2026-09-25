@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
-import type { EppEntrega } from '../services/ssoService'
+import { eppEntregasService } from '../services/eppService'
+import type { EppEntrega } from '../services/tipos'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 interface Params {
@@ -13,16 +14,16 @@ interface Params {
 
 export function useEppEntregas(params?: Params) {
   return useQuery({
-    queryKey: ['sso-epp-entregas', params],
-    queryFn: () => ssoService.listarEntregasEpp(params),
+    queryKey: clavesSso.epp.entregas.lista(params),
+    queryFn: () => eppEntregasService.listar(params),
     staleTime: 1000 * 60 * 5,
   })
 }
 
 export function useReporteEppEntregas(params: { fecha_inicio: string; fecha_fin: string; puesto_id?: number } | null) {
   return useQuery({
-    queryKey: ['sso-epp-reporte', params],
-    queryFn: () => ssoService.reporteEntregasEpp(params!),
+    queryKey: clavesSso.epp.entregas.reporte(params),
+    queryFn: () => eppEntregasService.reporte(params!),
     enabled: !!params,
     staleTime: 1000 * 60,
   })
@@ -30,8 +31,8 @@ export function useReporteEppEntregas(params: { fecha_inicio: string; fecha_fin:
 
 export function useKitEppServidor(servidorId: number | null) {
   return useQuery({
-    queryKey: ['sso-epp-kit-servidor', servidorId],
-    queryFn: () => ssoService.obtenerKitEppServidor(servidorId!),
+    queryKey: clavesSso.epp.kit(servidorId),
+    queryFn: () => eppEntregasService.kitDelServidor(servidorId!),
     enabled: !!servidorId,
     staleTime: 1000 * 30,
   })
@@ -40,10 +41,21 @@ export function useKitEppServidor(servidorId: number | null) {
 export function useEppEntregaMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-epp-entregas'] })
+  // Una entrega cambia cuatro cosas, y antes solo se invalidaba una: el
+  // listado. El reporte por rango y el kit del servidor tenían claves
+  // hermanas, no hijas, así que no los alcanzaba: se entregaba el kit
+  // completo y el modal seguía mostrando los mismos equipos pendientes, con
+  // la misma fecha de última entrega. La cobertura de EPP de los indicadores
+  // proactivos y el tablero se calculan también sobre estas entregas.
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: clavesSso.epp.entregas.todas })
+    qc.invalidateQueries({ queryKey: clavesSso.epp.kits })
+    qc.invalidateQueries({ queryKey: clavesSso.indicadores.todos })
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
+  }
 
   const registrar = useMutation({
-    mutationFn: (data: Partial<EppEntrega>) => ssoService.registrarEntregaEpp(data),
+    mutationFn: (data: Partial<EppEntrega>) => eppEntregasService.registrar(data),
     onSuccess: () => {
       notificar.exito(
         'Entrega registrada',
@@ -51,7 +63,7 @@ export function useEppEntregaMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la entrega'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la entrega'),
   })
 
   const registrarKit = useMutation({
@@ -60,7 +72,7 @@ export function useEppEntregaMutations() {
       fecha_entrega: string
       observaciones?: string
       equipos: { equipo_proteccion_id: number; cantidad?: number }[]
-    }) => ssoService.registrarEntregaKitEpp(data),
+    }) => eppEntregasService.registrarKit(data),
     onSuccess: (entregas) => {
       notificar.exito(
         'Kit entregado',
@@ -68,7 +80,7 @@ export function useEppEntregaMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo entregar el kit'),
+    onError: notificar.alFallarSalvoCampos('No se pudo entregar el kit'),
   })
 
   return { registrar, registrarKit }

@@ -79,6 +79,22 @@ export function hoyIso(): string {
 }
 
 /**
+ * ¿La fecha `YYYY-MM-DD` es de hoy o anterior?
+ *
+ * El espejo del `before_or_equal:today` de Laravel, para que el aviso salga en
+ * el campo y no después del viaje al servidor. Compara cadenas, que en este
+ * formato ordenan igual que las fechas, y contra `hoyIso()` —la hora local—:
+ * con `new Date().toISOString()` el día cambia a las 19:00 en Ecuador.
+ *
+ * Sin fecha devuelve `true`: que el campo esté vacío lo dice el `min(1)`, no
+ * esta comprobación, y dos mensajes para un mismo hueco sobran.
+ */
+export function noEsFutura(fecha?: string | null): boolean {
+  if (!fecha) return true
+  return fecha.substring(0, 10) <= hoyIso()
+}
+
+/**
  * `Date` de un selector de fecha y hora a `YYYY-MM-DDTHH:mm`, en la hora
  * local, que es como lo espera el backend. Sin fecha, cadena vacía.
  *

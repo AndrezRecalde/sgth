@@ -1,15 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Group, TextInput, Button, Text, Skeleton, Alert, Accordion, Stack } from '@mantine/core'
+import { Group, TextInput, Button, Text, Alert, Accordion, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconSearch, IconList, IconAlertCircle, IconEdit } from '@tabler/icons-react'
+import { useAuth } from '@/hooks/useAuth'
+import {
+  IconSearch, IconList, IconAlertCircle, IconEdit, IconChecklist,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { SgthTable, StatusBadge, Toolbar } from '@/components/ui'
+import { DataState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
 import { useListaSeguimientoPrograma } from '../hooks/useProgramaDrogas'
 import { CatalogoActividadesProgramaModal } from './CatalogoActividadesProgramaModal'
 import { RegistrarSeguimientoProgramaModal } from './RegistrarSeguimientoProgramaModal'
 import { TONO_ACTIVIDAD_PROGRAMA, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '../schemas/programaDrogas.schema'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 import { formatFecha } from '@/lib/fecha'
 import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -22,10 +26,16 @@ export function ProgramaDrogasTab() {
   const [seguimientoOpened, { open: openSeguimiento, close: closeSeguimiento }] = useDisclosure(false)
   const [filaSeleccionada, setFilaSeleccionada] = useState<FilaSeguimientoPrograma | null>(null)
 
-  const { data: lista, isLoading } = useListaSeguimientoPrograma(periodo)
+  // Las acciones siguen la misma matriz que la API: el módulo se abre con
+  // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
+  // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-sso')
+
+  const { data: lista, isLoading, error, refetch } = useListaSeguimientoPrograma(periodo)
 
   const handleConsultar = () => {
-    if (/^\d{4}(-\d{2})?$/.test(periodoInput)) setPeriodo(periodoInput)
+    if (esPeriodoValido(periodoInput)) setPeriodo(periodoInput)
   }
 
   const handleEditar = (fila: FilaSeguimientoPrograma) => {
@@ -55,11 +65,11 @@ export function ProgramaDrogasTab() {
       accessor: 'acciones',
       title: '',
       width: 110,
-      render: (fila) => (
+      render: (fila) => puedeGestionar ? (
         <Button size="xs" variant="subtle" leftSection={<IconEdit size={14} />} onClick={() => handleEditar(fila)}>
           Registrar
         </Button>
-      ),
+      ) : null,
     },
   ]
 
@@ -71,20 +81,22 @@ export function ProgramaDrogasTab() {
             <Button
               leftSection={<IconSearch size={16} />}
               onClick={handleConsultar}
-              disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
+              disabled={!esPeriodoValido(periodoInput)}
             >
               Consultar
             </Button>
-            <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
-              Catálogo de actividades
-            </Button>
+            {puedeGestionar && (
+              <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
+                Catálogo de actividades
+              </Button>
+            )}
           </>
         }
       >
           <TextInput
             label="Período"
-            placeholder="2026 o 2026-07"
-            description="Formato AAAA (año) o AAAA-MM (mes)"
+            placeholder={EJEMPLO_PERIODO}
+            description={AYUDA_PERIODO}
             {...contained}
             value={periodoInput}
             onChange={(e) => setPeriodoInput(e.currentTarget.value)}
@@ -101,42 +113,62 @@ export function ProgramaDrogasTab() {
         </Alert>
       )}
 
-      {periodo && isLoading && <Skeleton height={300} radius="md" />}
+      {periodo && (
+        <DataState
+          loading={isLoading}
+          error={error}
+          errorTitle="No se pudo cargar la matriz de seguimiento"
+          errorHint="No quiere decir que no haya actividades registradas: no se pudo consultar."
+          onRetry={() => refetch()}
+          skeletonRows={6}
+          empty={!lista?.totales.total}
+          emptyProps={{
+            icon: IconChecklist,
+            title: 'No hay actividades en el catálogo del programa',
+            description: 'La matriz se arma con las actividades activas de las 6 fases. Agréguelas para poder registrar su seguimiento.',
+            action: puedeGestionar ? (
+              <Button variant="light" leftSection={<IconList size={16} />} onClick={openCatalogo}>
+                Catálogo de actividades
+              </Button>
+            ) : undefined,
+          }}
+        >
+          {lista && (
+            <>
+              <Group gap="lg" mb="md">
+                <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
+                <Text size="sm" c="emerald">Ejecutadas: <Text span fw={600}>{lista.totales.ejecutada}</Text></Text>
+                <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
+                <Text size="sm" c="red">No ejecutadas: <Text span fw={600}>{lista.totales.no_ejecutada}</Text></Text>
+                <Text size="sm" c="dimmed">Pendientes: <Text span fw={600}>{lista.totales.pendiente}</Text></Text>
+              </Group>
 
-      {periodo && !isLoading && lista && (
-        <>
-          <Group gap="lg" mb="md">
-            <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
-            <Text size="sm" c="emerald">Ejecutadas: <Text span fw={600}>{lista.totales.ejecutada}</Text></Text>
-            <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
-            <Text size="sm" c="red">No ejecutadas: <Text span fw={600}>{lista.totales.no_ejecutada}</Text></Text>
-            <Text size="sm" c="dimmed">Pendientes: <Text span fw={600}>{lista.totales.pendiente}</Text></Text>
-          </Group>
-
-          <Accordion multiple defaultValue={Object.keys(lista.por_fase)} variant="separated">
-            {Object.entries(lista.por_fase)
-              .sort(([, a], [, b]) => a.orden - b.orden)
-              .map(([faseKey, fase]) => (
-                <Accordion.Item key={faseKey} value={faseKey}>
-                  <Accordion.Control>
-                    <Group justify="space-between" pr="md">
-                      <Text fw={600} size="sm">{fase.etiqueta}</Text>
-                      <StatusBadge>{fase.filas.length} actividades</StatusBadge>
-                    </Group>
-                  </Accordion.Control>
-                  <Accordion.Panel>
-                    <SgthTable
-                      records={fase.filas}
-                      columns={columns}
-                      idAccessor="actividad.id"
-                      minHeight={80}
-                      noRecordsText="Sin actividades registradas en esta fase."
-                    />
-                  </Accordion.Panel>
-                </Accordion.Item>
-              ))}
-          </Accordion>
-        </>
+              <Accordion multiple defaultValue={Object.keys(lista.por_fase)} variant="separated">
+                {Object.entries(lista.por_fase)
+                  .sort(([, a], [, b]) => a.orden - b.orden)
+                  .map(([faseKey, fase]) => (
+                    <Accordion.Item key={faseKey} value={faseKey}>
+                      <Accordion.Control>
+                        <Group justify="space-between" pr="md">
+                          <Text fw={600} size="sm">{fase.etiqueta}</Text>
+                          <StatusBadge>{fase.filas.length} actividades</StatusBadge>
+                        </Group>
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <SgthTable
+                          records={fase.filas}
+                          columns={columns}
+                          idAccessor="actividad.id"
+                          minHeight={80}
+                          noRecordsText="Sin actividades registradas en esta fase."
+                        />
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  ))}
+              </Accordion>
+            </>
+          )}
+        </DataState>
       )}
 
       <CatalogoActividadesProgramaModal opened={catalogoOpened} onClose={closeCatalogo} />

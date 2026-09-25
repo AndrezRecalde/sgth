@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
-import type { AccidenteTrabajo } from '../services/ssoService'
+import { accidentesService } from '../services/accidentesService'
+import type { AccidenteTrabajo } from '../services/tipos'
+import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 interface Params {
@@ -11,8 +12,8 @@ interface Params {
 
 export function useAccidentesTrabajo(params?: Params) {
   return useQuery({
-    queryKey: ['sso-accidentes', params],
-    queryFn: () => ssoService.listarAccidentes(params),
+    queryKey: clavesSso.accidentes.lista(params),
+    queryFn: () => accidentesService.listar(params),
     staleTime: 1000 * 60 * 5,
   })
 }
@@ -20,10 +21,18 @@ export function useAccidentesTrabajo(params?: Params) {
 export function useAccidenteTrabajoMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ['sso-accidentes'] })
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: clavesSso.accidentes.todos })
+    // Los índices reactivos del CD 513 —frecuencia, gravedad, tasa de
+    // riesgo— se calculan sobre estos accidentes. Solo las horas
+    // trabajadas los invalidaban, así que registrar un accidente dejaba
+    // los tres índices en la cifra anterior.
+    qc.invalidateQueries({ queryKey: clavesSso.indicadores.todos })
+    qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
+  }
 
   const crear = useMutation({
-    mutationFn: (data: Partial<AccidenteTrabajo>) => ssoService.crearAccidente(data),
+    mutationFn: (data: Partial<AccidenteTrabajo>) => accidentesService.crear(data),
     onSuccess: () => {
       notificar.exito(
         'Accidente registrado',
@@ -36,7 +45,7 @@ export function useAccidenteTrabajoMutations() {
 
   const editar = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AccidenteTrabajo> }) =>
-      ssoService.actualizarAccidente(id, data),
+      accidentesService.actualizar(id, data),
     onSuccess: () => {
       notificar.exito('Accidente actualizado', 'Los datos fueron actualizados.')
       invalidar()
@@ -45,7 +54,7 @@ export function useAccidenteTrabajoMutations() {
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => ssoService.eliminarAccidente(id),
+    mutationFn: (id: number) => accidentesService.eliminar(id),
     onSuccess: () => {
       notificar.exito('Accidente eliminado', 'El registro fue eliminado.')
       invalidar()

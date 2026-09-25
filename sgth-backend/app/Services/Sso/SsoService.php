@@ -17,8 +17,10 @@ use App\Enums\NivelConsecuenciasRiesgo;
 use App\Enums\NivelIntervencionRiesgo;
 use App\Enums\TipoEventoAccidente;
 use App\Exceptions\ReglaNegocioException;
+use App\Services\Sso\Indicadores\HorasTrabajadas;
+use App\Services\Sso\Indicadores\IndicesReactivos;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 final class SsoService implements SsoServiceInterface
 {
@@ -58,18 +60,33 @@ final class SsoService implements SsoServiceInterface
     /**
      * Calcula NP = ND × NE, NR = NP × NC y el Nivel de Intervención según NTP 330 (INSHT).
      * En actualizaciones parciales, los niveles no enviados se toman del registro existente.
+     *
+     * Los tres niveles se resuelven con `tryFrom` y no con `from`: las columnas
+     * nacieron nullable (la migración que trajo NTP 330 reemplazó el esquema
+     * anterior sin rellenar datos), así que un riesgo identificado antes de la
+     * matriz las tiene en NULL. Un PATCH que solo toque la descripción de esa
+     * fila llegaba aquí con null y `from` lanzaba un TypeError, que sale como
+     * 500 y no dice nada. Ahora sale un 422 que pide completar la valoración,
+     * que es lo único que puede hacer quien lo edita.
      */
     private function calcularNtp330(array $datos, ?RiesgoLaboral $actual = null): array
     {
-        $nivelDeficiencia = NivelDeficienciaRiesgo::from(
-            $datos['nivel_deficiencia'] ?? $actual?->nivel_deficiencia?->value
+        $nivelDeficiencia = NivelDeficienciaRiesgo::tryFrom(
+            $datos['nivel_deficiencia'] ?? $actual?->nivel_deficiencia?->value ?? ''
         );
-        $nivelExposicion = NivelExposicionRiesgo::from(
-            $datos['nivel_exposicion'] ?? $actual?->nivel_exposicion?->value
+        $nivelExposicion = NivelExposicionRiesgo::tryFrom(
+            $datos['nivel_exposicion'] ?? $actual?->nivel_exposicion?->value ?? ''
         );
-        $nivelConsecuencias = NivelConsecuenciasRiesgo::from(
-            $datos['nivel_consecuencias'] ?? $actual?->nivel_consecuencias?->value
+        $nivelConsecuencias = NivelConsecuenciasRiesgo::tryFrom(
+            $datos['nivel_consecuencias'] ?? $actual?->nivel_consecuencias?->value ?? ''
         );
+
+        if (! $nivelDeficiencia || ! $nivelExposicion || ! $nivelConsecuencias) {
+            throw new ReglaNegocioException(
+                'Este riesgo no tiene valoración NTP 330 (fue identificado antes de la matriz). '
+                . 'Para guardarlo hay que indicar los tres niveles: deficiencia, exposición y consecuencias.'
+            );
+        }
 
         $nivelProbabilidad = $nivelDeficiencia->valor() * $nivelExposicion->valor();
         $nivelRiesgoValor = $nivelProbabilidad * $nivelConsecuencias->valor();
@@ -117,15 +134,6 @@ final class SsoService implements SsoServiceInterface
     public function actualizarAccidente(int $id, array $datos): AccidenteTrabajo
     {
         $accidente = AccidenteTrabajo::findOrFail($id);
-        $datos['updated_by'] = auth()->id();
-        $accidente->update($datos);
-        return $accidente->fresh();
-    }
-
-    public function cerrarInvestigacionAccidente(int $id, array $datos): AccidenteTrabajo
-    {
-        $accidente = AccidenteTrabajo::findOrFail($id);
-        $datos['estado'] = false; // cerrado
         $datos['updated_by'] = auth()->id();
         $accidente->update($datos);
         return $accidente->fresh();
@@ -253,17 +261,49 @@ final class SsoService implements SsoServiceInterface
             ->paginate($filtros['por_pagina'] ?? 15);
     }
 
+    /**
+     * Carga las horas trabajadas de un período.
+     *
+     * Rechaza el duplicado en vez de sobrescribirlo. Era un `updateOrCreate`:
+     * volver a cargar un período que ya estaba pisaba `total_horas` sin decir
+     * nada y respondía «registradas». Ese número es el denominador de los tres
+     * índices del CD 513 que se reportan al IESS, así que cambiarlo por
+     * accidente —un mes tecleado dos veces, un copiar y pegar— movía los tres
+     * sin dejar rastro. Para corregir un período cargado está el borrado, que
+     * sí es una decisión deliberada.
+     *
+     * Esta comprobación es la que da el mensaje al campo; la garantía de
+     * verdad la pone la base, con el `unique(periodo, unidad_administrativa_id)`
+     * de la tabla y el índice parcial que cubre el total institucional —dos
+     * NULL no son iguales entre sí, así que el primero no lo alcanzaba—. Entre
+     * el SELECT y el INSERT de aquí hay un hueco que solo el índice cierra.
+     */
     public function registrarHorasTrabajadas(array $datos): HorasTrabajadasPeriodo
     {
-        $datos['registrado_por'] = auth()->id();
+        $unidadId = $datos['unidad_administrativa_id'] ?? null;
 
-        return HorasTrabajadasPeriodo::updateOrCreate(
-            [
-                'periodo' => $datos['periodo'],
-                'unidad_administrativa_id' => $datos['unidad_administrativa_id'] ?? null,
-            ],
-            ['total_horas' => $datos['total_horas'], 'registrado_por' => $datos['registrado_por']]
-        );
+        $yaCargado = HorasTrabajadasPeriodo::query()
+            ->where('periodo', $datos['periodo'])
+            // `whereNull` explícito: el total institucional va con la unidad en
+            // NULL, y en SQL `= NULL` no es cierto nunca.
+            ->when($unidadId, fn($q) => $q->where('unidad_administrativa_id', $unidadId))
+            ->when(! $unidadId, fn($q) => $q->whereNull('unidad_administrativa_id'))
+            ->exists();
+
+        if ($yaCargado) {
+            throw ValidationException::withMessages([
+                'periodo' => $unidadId
+                    ? "El período {$datos['periodo']} ya tiene horas cargadas para esa unidad. Elimine el registro existente para cargarlo de nuevo."
+                    : "El período {$datos['periodo']} ya tiene horas cargadas como total institucional. Elimine el registro existente para cargarlo de nuevo.",
+            ]);
+        }
+
+        return HorasTrabajadasPeriodo::create([
+            'periodo' => $datos['periodo'],
+            'unidad_administrativa_id' => $unidadId,
+            'total_horas' => $datos['total_horas'],
+            'registrado_por' => auth()->id(),
+        ]);
     }
 
     public function actualizarHorasTrabajadas(int $id, array $datos): HorasTrabajadasPeriodo
@@ -282,37 +322,40 @@ final class SsoService implements SsoServiceInterface
     // ── Indicadores SSO ──────────────────────────────────────────────
 
     /**
-     * Convierte un período 'YYYY' (año) o 'YYYY-MM' (mes) en su rango de fechas.
+     * Las horas trabajadas de un período: trae las filas candidatas —la del
+     * período pedido y, si es un año, las de sus meses— y deja que
+     * HorasTrabajadas decida cuál manda. La decisión vive ahí porque tiene dos
+     * ejes con precedencia y se prueba sin base de datos.
      */
-    private function rangoPeriodo(string $periodo): array
+    private function resolverHorasTrabajadas(string $periodo, ?int $unidadAdministrativaId): HorasTrabajadas
     {
-        if (preg_match('/^\d{4}$/', $periodo)) {
-            $inicio = Carbon::createFromDate((int) $periodo, 1, 1)->startOfYear();
-            return [$inicio, $inicio->copy()->endOfYear()];
-        }
+        $filas = HorasTrabajadasPeriodo::query()
+            ->where(fn($q) => $q
+                ->where('periodo', $periodo)
+                ->when(
+                    PeriodoSso::esAnio($periodo),
+                    fn($sq) => $sq->orWhere('periodo', 'like', "{$periodo}-%"),
+                ))
+            ->when(
+                $unidadAdministrativaId !== null,
+                fn($q) => $q->where('unidad_administrativa_id', $unidadAdministrativaId),
+            )
+            ->get(['periodo', 'unidad_administrativa_id', 'total_horas']);
 
-        if (preg_match('/^\d{4}-\d{2}$/', $periodo)) {
-            $inicio = Carbon::createFromFormat('Y-m-d', "{$periodo}-01")->startOfMonth();
-            return [$inicio, $inicio->copy()->endOfMonth()];
-        }
-
-        throw new ReglaNegocioException('El período debe tener el formato AAAA o AAAA-MM.');
+        return HorasTrabajadas::desde($filas, $periodo, $unidadAdministrativaId);
     }
 
     /**
-     * Índices reactivos CD 513 (Resolución IESS - Reglamento del Seguro General de Riesgos del Trabajo).
-     * IF = (nº lesiones × 200000) / horas trabajadas; IG = (días perdidos × 200000) / horas trabajadas; TR = IG / IF.
-     * NOTA: estas fórmulas fueron verificadas solo por fuentes secundarias (el reglamento oficial del IESS
-     * no pudo confirmarse contra un PDF primario legible en el entorno de desarrollo) — Talento Humano
-     * debe confirmarlas contra el reglamento antes de tratarlas como referencia legal definitiva.
+     * Índices reactivos CD 513: cuenta las lesiones y los días perdidos del
+     * período, resuelve el denominador y deja las fórmulas —y la nota sobre su
+     * verificación legal— en `Indicadores\IndicesReactivos`.
      */
     public function calcularIndicadoresMrl(string $periodo, ?int $unidadAdministrativaId = null): array
     {
-        [$inicio, $fin] = $this->rangoPeriodo($periodo);
+        [$inicio, $fin] = PeriodoSso::rango($periodo);
 
-        $horasTrabajadas = (int) HorasTrabajadasPeriodo::where('periodo', $periodo)
-            ->where('unidad_administrativa_id', $unidadAdministrativaId)
-            ->sum('total_horas');
+        $resolucionHoras = $this->resolverHorasTrabajadas($periodo, $unidadAdministrativaId);
+        $horasTrabajadas = $resolucionHoras->horas;
 
         $accidentes = AccidenteTrabajo::query()
             ->where('tipo_evento', TipoEventoAccidente::ACCIDENTE->value)
@@ -327,22 +370,29 @@ final class SsoService implements SsoServiceInterface
         $diasPerdidos = (int) $accidentes->sum('dias_reposo_medico');
 
         if ($horasTrabajadas <= 0) {
+            // Decir qué se buscó, porque en un período anual se buscan trece
+            // cosas: el año y sus doce meses.
+            $donde = PeriodoSso::esAnio($periodo)
+                ? "para {$periodo} ni para sus meses ({$periodo}-01 a {$periodo}-12)"
+                : "para {$periodo}";
+
             return [
                 'periodo' => $periodo,
                 'sin_datos' => true,
-                'mensaje' => 'No hay horas trabajadas registradas para este período. Cargue el dato en "Horas trabajadas" antes de calcular los índices.',
+                'mensaje' => "No hay horas trabajadas registradas {$donde}. Cargue el dato en \"Horas trabajadas\" antes de calcular los índices.",
                 'numero_lesiones' => $numeroLesiones,
                 'dias_perdidos' => $diasPerdidos,
                 'horas_trabajadas' => 0,
+                'horas_trabajadas_origen' => null,
+                'horas_trabajadas_alcance' => null,
+                'horas_trabajadas_detalle' => null,
                 'indice_frecuencia' => null,
                 'indice_gravedad' => null,
                 'tasa_riesgo' => null,
             ];
         }
 
-        $indiceFrecuencia = round(($numeroLesiones * 200000) / $horasTrabajadas, 2);
-        $indiceGravedad = round(($diasPerdidos * 200000) / $horasTrabajadas, 2);
-        $tasaRiesgo = $indiceFrecuencia > 0 ? round($indiceGravedad / $indiceFrecuencia, 2) : 0.0;
+        $indices = IndicesReactivos::desde($numeroLesiones, $diasPerdidos, $horasTrabajadas);
 
         return [
             'periodo' => $periodo,
@@ -350,9 +400,12 @@ final class SsoService implements SsoServiceInterface
             'numero_lesiones' => $numeroLesiones,
             'dias_perdidos' => $diasPerdidos,
             'horas_trabajadas' => $horasTrabajadas,
-            'indice_frecuencia' => $indiceFrecuencia,
-            'indice_gravedad' => $indiceGravedad,
-            'tasa_riesgo' => $tasaRiesgo,
+            'horas_trabajadas_origen' => $resolucionHoras->origen,
+            'horas_trabajadas_alcance' => $resolucionHoras->alcance,
+            'horas_trabajadas_detalle' => $resolucionHoras->detalle(),
+            'indice_frecuencia' => $indices->indiceFrecuencia,
+            'indice_gravedad' => $indices->indiceGravedad,
+            'tasa_riesgo' => $indices->tasaRiesgo,
         ];
     }
 
@@ -363,7 +416,7 @@ final class SsoService implements SsoServiceInterface
      */
     public function calcularIndicadoresProactivos(string $periodo, ?int $unidadAdministrativaId = null): array
     {
-        [$inicio, $fin] = $this->rangoPeriodo($periodo);
+        [$inicio, $fin] = PeriodoSso::rango($periodo);
 
         $inspecciones = InspeccionSso::query()
             ->whereBetween('fecha_inspeccion', [$inicio, $fin])

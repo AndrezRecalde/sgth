@@ -14,16 +14,29 @@ class FactorRiesgoCatalogoController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $request->validate([
+            'search' => ['nullable', 'string', 'max:150'],
+            'categoria' => ['nullable', new Enum(CategoriaFactorRiesgo::class)],
+            'solo_activos' => ['nullable', 'boolean'],
+        ]);
+
         $factores = FactorRiesgoCatalogo::query()
             ->when(
                 $request->filled('search'),
-                fn($q) => $q->where('nombre', 'ilike', "%{$request->search}%")
+                fn($q) => $q->where('nombre', 'ilike', "%{$request->string('search')->value()}%")
             )
             ->when(
                 $request->filled('categoria'),
-                fn($q) => $q->where('categoria', $request->categoria)
+                fn($q) => $q->where('categoria', $request->string('categoria')->value())
             )
-            ->where('activo', true)
+            // Antes era `->where('activo', true)` sin excepción: `update` permitía
+            // desactivar un factor y ningún listado volvía a mostrarlo, así que
+            // reactivarlo era imposible. Sigue siendo el comportamiento por
+            // defecto, pero ahora se puede pedir el catálogo completo.
+            ->when(
+                $request->boolean('solo_activos', true),
+                fn($q) => $q->where('activo', true)
+            )
             ->orderBy('categoria')
             ->orderBy('nombre')
             ->get();
@@ -60,7 +73,11 @@ class FactorRiesgoCatalogoController extends Controller
     {
         $factor = FactorRiesgoCatalogo::findOrFail($id);
 
-        if ($factor->riesgosLaborales()->exists()) {
+        // `withTrashed()`: RiesgoLaboral usa SoftDeletes, así que un riesgo en la
+        // papelera no contaba y la guarda dejaba pasar el borrado. La FK es
+        // `restrictOnDelete`, de modo que PostgreSQL lo cortaba después con un
+        // 500 en vez del 422 que esta comprobación quería dar.
+        if ($factor->riesgosLaborales()->withTrashed()->exists()) {
             return ApiResponse::error(
                 'No se puede eliminar el factor porque tiene riesgos laborales asociados.',
                 null, 422

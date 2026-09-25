@@ -13,7 +13,7 @@ import { useEquipoProteccionMutations } from '../hooks/useEquiposProteccion'
 import {
   equipoProteccionSchema, type EquipoProteccionFormData, TIPO_EPP_OPTIONS,
 } from '../schemas/equipoProteccion.schema'
-import type { EquipoProteccion } from '../services/ssoService'
+import type { EquipoProteccion } from '../services/tipos'
 
 interface Props {
   opened: boolean

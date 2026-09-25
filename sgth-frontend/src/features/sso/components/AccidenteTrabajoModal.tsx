@@ -17,7 +17,7 @@ import {
   TIPO_EVENTO_ACCIDENTE_OPTIONS,
 } from '../schemas/accidenteTrabajo.schema'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
-import type { AccidenteTrabajo } from '../services/ssoService'
+import type { AccidenteTrabajo } from '../services/tipos'
 
 interface Props {
   opened:     boolean
