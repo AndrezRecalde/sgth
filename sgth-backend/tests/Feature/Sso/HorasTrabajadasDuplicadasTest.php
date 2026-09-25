@@ -105,6 +105,28 @@ test('la misma unidad no repite período', function () {
     ]))->toThrow(ValidationException::class);
 });
 
+test('la base tampoco deja dos totales institucionales del mismo período', function () {
+    // El servicio comprueba antes de insertar, pero entre el SELECT y el
+    // INSERT hay un hueco: dos peticiones a la vez podrían colarse las dos. El
+    // `unique(periodo, unidad_administrativa_id)` de la tabla no lo impide,
+    // porque en SQL dos NULL no son iguales entre sí. Lo cierra el índice
+    // parcial que añade la migración, y esto lo comprueba saltándose el
+    // servicio.
+    HorasTrabajadasPeriodo::create([
+        'periodo' => '2026-08',
+        'unidad_administrativa_id' => null,
+        'total_horas' => 98_000,
+        'registrado_por' => $this->usuario->id,
+    ]);
+
+    expect(fn() => HorasTrabajadasPeriodo::create([
+        'periodo' => '2026-08',
+        'unidad_administrativa_id' => null,
+        'total_horas' => 12,
+        'registrado_por' => $this->usuario->id,
+    ]))->toThrow(Illuminate\Database\QueryException::class);
+});
+
 test('borrado el registro, el período se puede volver a cargar', function () {
     // Es la salida que se le deja a quien se equivocó: borrar y cargar de
     // nuevo, que es una decisión deliberada y deja el registro en la auditoría.

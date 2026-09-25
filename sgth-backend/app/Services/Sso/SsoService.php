@@ -271,6 +271,12 @@ final class SsoService implements SsoServiceInterface
      * accidente —un mes tecleado dos veces, un copiar y pegar— movía los tres
      * sin dejar rastro. Para corregir un período cargado está el borrado, que
      * sí es una decisión deliberada.
+     *
+     * Esta comprobación es la que da el mensaje al campo; la garantía de
+     * verdad la pone la base, con el `unique(periodo, unidad_administrativa_id)`
+     * de la tabla y el índice parcial que cubre el total institucional —dos
+     * NULL no son iguales entre sí, así que el primero no lo alcanzaba—. Entre
+     * el SELECT y el INSERT de aquí hay un hueco que solo el índice cierra.
      */
     public function registrarHorasTrabajadas(array $datos): HorasTrabajadasPeriodo
     {
