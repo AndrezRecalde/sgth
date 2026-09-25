@@ -15,6 +15,7 @@ import { useListaVerificacion } from '../hooks/useCumplimiento'
 import { NormativaLegalModal } from './NormativaLegalModal'
 import { RegistrarCumplimientoModal } from './RegistrarCumplimientoModal'
 import { TIPO_NORMATIVA_OPTIONS } from '../schemas/normativaLegal.schema'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 import { TONO_ESTADO_CUMPLIMIENTO, ESTADO_CUMPLIMIENTO_LABELS } from '../schemas/cumplimiento.schema'
 import type { FilaListaVerificacion } from '../services/ssoService'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -39,7 +40,7 @@ export function CumplimientoTab() {
     TIPO_NORMATIVA_OPTIONS.find(o => o.value === valor)?.label ?? valor
 
   const handleConsultar = () => {
-    if (/^\d{4}(-\d{2})?$/.test(periodoInput)) {
+    if (esPeriodoValido(periodoInput)) {
       setPeriodo(periodoInput)
     }
   }
@@ -92,7 +93,7 @@ export function CumplimientoTab() {
             <Button
               leftSection={<IconSearch size={16} />}
               onClick={handleConsultar}
-              disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
+              disabled={!esPeriodoValido(periodoInput)}
             >
               Consultar
             </Button>
@@ -106,8 +107,8 @@ export function CumplimientoTab() {
       >
           <TextInput
             label="Período"
-            placeholder="2026 o 2026-07"
-            description="Formato AAAA (año) o AAAA-MM (mes)"
+            placeholder={EJEMPLO_PERIODO}
+            description={AYUDA_PERIODO}
             {...contained}
             value={periodoInput}
             onChange={(e) => setPeriodoInput(e.currentTarget.value)}

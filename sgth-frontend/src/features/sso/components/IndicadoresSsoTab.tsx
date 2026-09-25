@@ -13,6 +13,7 @@ import {
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useIndicadoresReactivos, useIndicadoresProactivos } from '../hooks/useIndicadoresSso'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 import { GestionarHorasTrabajadasModal } from './GestionarHorasTrabajadasModal'
 import { DataState, StatCard } from '@/components/ui'
 
@@ -39,7 +40,7 @@ export function IndicadoresSsoTab() {
   } = useIndicadoresProactivos(params)
 
   const handleConsultar = () => {
-    if (/^\d{4}(-\d{2})?$/.test(periodoInput)) {
+    if (esPeriodoValido(periodoInput)) {
       setPeriodo(periodoInput)
     }
   }
@@ -50,8 +51,8 @@ export function IndicadoresSsoTab() {
         <Group align="flex-end">
           <TextInput
             label="Período"
-            placeholder="2026 o 2026-07"
-            description="Formato AAAA (año) o AAAA-MM (mes)"
+            placeholder={EJEMPLO_PERIODO}
+            description={AYUDA_PERIODO}
             {...contained}
             value={periodoInput}
             onChange={(e) => setPeriodoInput(e.currentTarget.value)}
@@ -59,7 +60,7 @@ export function IndicadoresSsoTab() {
           <Button
             leftSection={<IconSearch size={16} />}
             onClick={handleConsultar}
-            disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
+            disabled={!esPeriodoValido(periodoInput)}
           >
             Consultar
           </Button>

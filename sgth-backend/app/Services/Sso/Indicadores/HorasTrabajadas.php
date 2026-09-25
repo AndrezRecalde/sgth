@@ -2,6 +2,7 @@
 
 namespace App\Services\Sso\Indicadores;
 
+use App\Services\Sso\PeriodoSso;
 use Illuminate\Support\Collection;
 
 /**
@@ -93,7 +94,7 @@ final class HorasTrabajadas
         if ($exactas->isNotEmpty()) {
             $filas = $exactas;
             $origen = self::ORIGEN_EXACTO;
-        } elseif (self::esAnio($periodo)) {
+        } elseif (PeriodoSso::esAnio($periodo)) {
             $origen = self::ORIGEN_MESES;
         } else {
             return self::sinDatos();
@@ -133,8 +134,4 @@ final class HorasTrabajadas
         return "{$periodo}, {$alcance}.";
     }
 
-    public static function esAnio(string $periodo): bool
-    {
-        return (bool) preg_match('/^\d{4}$/', $periodo);
-    }
 }

@@ -20,7 +20,6 @@ use App\Exceptions\ReglaNegocioException;
 use App\Services\Sso\Indicadores\HorasTrabajadas;
 use App\Services\Sso\Indicadores\IndicesReactivos;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 
 final class SsoService implements SsoServiceInterface
 {
@@ -290,24 +289,6 @@ final class SsoService implements SsoServiceInterface
     // ── Indicadores SSO ──────────────────────────────────────────────
 
     /**
-     * Convierte un período 'YYYY' (año) o 'YYYY-MM' (mes) en su rango de fechas.
-     */
-    private function rangoPeriodo(string $periodo): array
-    {
-        if (preg_match('/^\d{4}$/', $periodo)) {
-            $inicio = Carbon::createFromDate((int) $periodo, 1, 1)->startOfYear();
-            return [$inicio, $inicio->copy()->endOfYear()];
-        }
-
-        if (preg_match('/^\d{4}-\d{2}$/', $periodo)) {
-            $inicio = Carbon::createFromFormat('Y-m-d', "{$periodo}-01")->startOfMonth();
-            return [$inicio, $inicio->copy()->endOfMonth()];
-        }
-
-        throw new ReglaNegocioException('El período debe tener el formato AAAA o AAAA-MM.');
-    }
-
-    /**
      * Las horas trabajadas de un período: trae las filas candidatas —la del
      * período pedido y, si es un año, las de sus meses— y deja que
      * HorasTrabajadas decida cuál manda. La decisión vive ahí porque tiene dos
@@ -319,7 +300,7 @@ final class SsoService implements SsoServiceInterface
             ->where(fn($q) => $q
                 ->where('periodo', $periodo)
                 ->when(
-                    HorasTrabajadas::esAnio($periodo),
+                    PeriodoSso::esAnio($periodo),
                     fn($sq) => $sq->orWhere('periodo', 'like', "{$periodo}-%"),
                 ))
             ->when(
@@ -338,7 +319,7 @@ final class SsoService implements SsoServiceInterface
      */
     public function calcularIndicadoresMrl(string $periodo, ?int $unidadAdministrativaId = null): array
     {
-        [$inicio, $fin] = $this->rangoPeriodo($periodo);
+        [$inicio, $fin] = PeriodoSso::rango($periodo);
 
         $resolucionHoras = $this->resolverHorasTrabajadas($periodo, $unidadAdministrativaId);
         $horasTrabajadas = $resolucionHoras->horas;
@@ -358,7 +339,7 @@ final class SsoService implements SsoServiceInterface
         if ($horasTrabajadas <= 0) {
             // Decir qué se buscó, porque en un período anual se buscan trece
             // cosas: el año y sus doce meses.
-            $donde = HorasTrabajadas::esAnio($periodo)
+            $donde = PeriodoSso::esAnio($periodo)
                 ? "para {$periodo} ni para sus meses ({$periodo}-01 a {$periodo}-12)"
                 : "para {$periodo}";
 
@@ -402,7 +383,7 @@ final class SsoService implements SsoServiceInterface
      */
     public function calcularIndicadoresProactivos(string $periodo, ?int $unidadAdministrativaId = null): array
     {
-        [$inicio, $fin] = $this->rangoPeriodo($periodo);
+        [$inicio, $fin] = PeriodoSso::rango($periodo);
 
         $inspecciones = InspeccionSso::query()
             ->whereBetween('fecha_inspeccion', [$inicio, $fin])

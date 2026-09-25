@@ -13,6 +13,7 @@ import { useListaSeguimientoPrograma } from '../hooks/useProgramaDrogas'
 import { CatalogoActividadesProgramaModal } from './CatalogoActividadesProgramaModal'
 import { RegistrarSeguimientoProgramaModal } from './RegistrarSeguimientoProgramaModal'
 import { TONO_ACTIVIDAD_PROGRAMA, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '../schemas/programaDrogas.schema'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 import { formatFecha } from '@/lib/fecha'
 import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -34,7 +35,7 @@ export function ProgramaDrogasTab() {
   const { data: lista, isLoading, error, refetch } = useListaSeguimientoPrograma(periodo)
 
   const handleConsultar = () => {
-    if (/^\d{4}(-\d{2})?$/.test(periodoInput)) setPeriodo(periodoInput)
+    if (esPeriodoValido(periodoInput)) setPeriodo(periodoInput)
   }
 
   const handleEditar = (fila: FilaSeguimientoPrograma) => {
@@ -80,7 +81,7 @@ export function ProgramaDrogasTab() {
             <Button
               leftSection={<IconSearch size={16} />}
               onClick={handleConsultar}
-              disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
+              disabled={!esPeriodoValido(periodoInput)}
             >
               Consultar
             </Button>
@@ -94,8 +95,8 @@ export function ProgramaDrogasTab() {
       >
           <TextInput
             label="Período"
-            placeholder="2026 o 2026-07"
-            description="Formato AAAA (año) o AAAA-MM (mes)"
+            placeholder={EJEMPLO_PERIODO}
+            description={AYUDA_PERIODO}
             {...contained}
             value={periodoInput}
             onChange={(e) => setPeriodoInput(e.currentTarget.value)}

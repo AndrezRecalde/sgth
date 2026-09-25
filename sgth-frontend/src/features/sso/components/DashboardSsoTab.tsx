@@ -13,6 +13,7 @@ import {
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { DataState, StatCard } from '@/components/ui'
 import { useDashboardSso } from '../hooks/useDashboardSso'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 
 export function DashboardSsoTab() {
   const contained = useContainedInput()
@@ -23,7 +24,7 @@ export function DashboardSsoTab() {
   const { data: resumen, isLoading, error, refetch } = useDashboardSso(params)
 
   const handleConsultar = () => {
-    if (/^\d{4}(-\d{2})?$/.test(periodoInput)) {
+    if (esPeriodoValido(periodoInput)) {
       setPeriodo(periodoInput)
     }
   }
@@ -35,8 +36,8 @@ export function DashboardSsoTab() {
           <Group align="flex-end">
             <TextInput
               label="Período"
-              placeholder="2026 o 2026-07"
-              description="Formato AAAA (año) o AAAA-MM (mes)"
+              placeholder={EJEMPLO_PERIODO}
+              description={AYUDA_PERIODO}
               {...contained}
               value={periodoInput}
               onChange={(e) => setPeriodoInput(e.currentTarget.value)}
@@ -44,7 +45,7 @@ export function DashboardSsoTab() {
             <Button
               leftSection={<IconSearch size={16} />}
               onClick={handleConsultar}
-              disabled={!/^\d{4}(-\d{2})?$/.test(periodoInput)}
+              disabled={!esPeriodoValido(periodoInput)}
             >
               Consultar
             </Button>

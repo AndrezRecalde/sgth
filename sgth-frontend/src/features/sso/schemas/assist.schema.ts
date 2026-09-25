@@ -1,8 +1,9 @@
 import { z } from 'zod/v4'
 import type { SemanticTone } from '@/config/design.tokens'
+import { AYUDA_PERIODO, PATRON_PERIODO } from '../constants/periodo'
 
 export const crearCampaniaAssistSchema = z.object({
-  periodo: z.string().regex(/^\d{4}(-\d{2})?$/, 'Formato AAAA (año) o AAAA-MM (mes)'),
+  periodo: z.string().regex(PATRON_PERIODO, AYUDA_PERIODO),
   unidad_administrativa_id: z.number().nullable().optional(),
   fecha_apertura: z.string().min(1, 'Requerido'),
   fecha_cierre: z.string().nullable().optional(),

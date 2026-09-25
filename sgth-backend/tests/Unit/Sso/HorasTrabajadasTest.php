@@ -180,8 +180,3 @@ test('los meses de varias unidades se suman en los dos ejes', function () {
     expect($resolucion->meses)->toBe(2);
     expect($resolucion->unidades)->toBe(2);
 });
-
-test('esAnio distingue el año del mes', function () {
-    expect(HorasTrabajadas::esAnio('2026'))->toBeTrue();
-    expect(HorasTrabajadas::esAnio('2026-07'))->toBeFalse();
-});

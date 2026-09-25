@@ -5,7 +5,6 @@ namespace App\Services\Sso;
 use App\Contracts\Sso\SsoServiceInterface;
 use App\Enums\NivelRiesgoAssist;
 use App\Enums\NivelRiesgoPsicosocial;
-use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Sso\AccidenteTrabajo;
 use App\Models\Sso\EppEntrega;
@@ -27,7 +26,7 @@ final class DashboardSsoService
 
     public function resumen(string $periodo, ?int $unidadAdministrativaId = null): array
     {
-        [$inicio, $fin] = $this->rangoPeriodo($periodo);
+        [$inicio, $fin] = PeriodoSso::rango($periodo);
 
         return [
             'periodo' => $periodo,
@@ -130,18 +129,4 @@ final class DashboardSsoService
         ];
     }
 
-    private function rangoPeriodo(string $periodo): array
-    {
-        if (preg_match('/^\d{4}$/', $periodo)) {
-            $inicio = Carbon::createFromDate((int) $periodo, 1, 1)->startOfYear();
-            return [$inicio, $inicio->copy()->endOfYear()];
-        }
-
-        if (preg_match('/^\d{4}-\d{2}$/', $periodo)) {
-            $inicio = Carbon::createFromFormat('Y-m-d', "{$periodo}-01")->startOfMonth();
-            return [$inicio, $inicio->copy()->endOfMonth()];
-        }
-
-        throw new ReglaNegocioException('El período debe tener el formato AAAA o AAAA-MM.');
-    }
 }
