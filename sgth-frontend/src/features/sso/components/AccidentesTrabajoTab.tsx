@@ -12,7 +12,7 @@ import {
   TONO_GRAVEDAD, TONO_TIPO_EVENTO_ACCIDENTE, TIPO_EVENTO_ACCIDENTE_OPTIONS, GRAVEDAD_OPTIONS,
 } from '../schemas/accidenteTrabajo.schema'
 import { formatFecha } from '@/lib/fecha'
-import type { AccidenteTrabajo } from '../services/ssoService'
+import type { AccidenteTrabajo } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function AccidentesTrabajoTab() {

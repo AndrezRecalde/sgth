@@ -15,7 +15,7 @@ import {
   normativaLegalSchema, type NormativaLegalFormData, TIPO_NORMATIVA_OPTIONS,
 } from '../schemas/normativaLegal.schema'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
-import type { NormativaLegalSso } from '../services/ssoService'
+import type { NormativaLegalSso } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {

@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
+import { puestoEppService } from '../services/eppService'
 import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useEquiposPorPuesto(puestoId: number | null) {
   return useQuery({
     queryKey: clavesSso.epp.porPuesto(puestoId),
-    queryFn: () => ssoService.listarEquiposPorPuesto(puestoId!),
+    queryFn: () => puestoEppService.listar(puestoId!),
     enabled: !!puestoId,
     staleTime: 1000 * 60 * 5,
   })
@@ -29,7 +29,7 @@ export function usePuestoEppMutations(puestoId: number | null) {
 
   const asignar = useMutation({
     mutationFn: (data: { equipo_proteccion_id: number; cantidad_requerida?: number; frecuencia_reposicion_meses?: number }) =>
-      ssoService.asignarEquipoAPuesto(puestoId!, data),
+      puestoEppService.asignar(puestoId!, data),
     onSuccess: () => {
       notificar.exito('Equipo asignado', 'El equipo de protección fue asignado al puesto.')
       invalidar()
@@ -39,7 +39,7 @@ export function usePuestoEppMutations(puestoId: number | null) {
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => ssoService.eliminarAsignacionEpp(puestoId!, id),
+    mutationFn: (id: number) => puestoEppService.eliminarAsignacion(puestoId!, id),
     onSuccess: () => {
       notificar.exito(
         'Asignación eliminada',

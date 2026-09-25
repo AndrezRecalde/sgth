@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
+import { normativaLegalService } from '../services/cumplimientoService'
 import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useNormativas(params?: { tipo?: string; solo_activas?: boolean }) {
   return useQuery({
     queryKey: clavesSso.normativas.lista(params),
-    queryFn: () => ssoService.listarNormativas(params),
+    queryFn: () => normativaLegalService.listar(params),
     staleTime: 1000 * 60 * 10,
   })
 }
@@ -24,7 +24,7 @@ export function useNormativaMutations() {
 
   const crear = useMutation({
     mutationFn: (data: { nombre: string; tipo: string; fecha_vigencia?: string; descripcion?: string }) =>
-      ssoService.crearNormativa(data),
+      normativaLegalService.crear(data),
     onSuccess: () => {
       notificar.exito('Normativa registrada', 'La normativa fue agregada al catálogo.')
       invalidar()
@@ -38,7 +38,7 @@ export function useNormativaMutations() {
   // listado volvía a mostrarla—.
   const cambiarActivo = useMutation({
     mutationFn: ({ id, activo }: { id: number; activo: boolean }) =>
-      ssoService.actualizarNormativa(id, { activo }),
+      normativaLegalService.actualizar(id, { activo }),
     onSuccess: (_datos, { activo }) => {
       notificar.exito(
         activo ? 'Normativa reactivada' : 'Normativa desactivada',
@@ -52,7 +52,7 @@ export function useNormativaMutations() {
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => ssoService.eliminarNormativa(id),
+    mutationFn: (id: number) => normativaLegalService.eliminar(id),
     onSuccess: () => {
       notificar.exito('Normativa eliminada', 'La normativa fue eliminada del catálogo.')
       invalidar()

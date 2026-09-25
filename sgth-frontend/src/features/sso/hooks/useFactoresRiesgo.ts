@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
+import { factoresRiesgoService } from '../services/riesgosService'
 import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useFactoresRiesgo(params?: { categoria?: string; search?: string; solo_activos?: boolean }) {
   return useQuery({
     queryKey: clavesSso.factoresRiesgo.lista(params),
-    queryFn: () => ssoService.listarFactoresRiesgo(params),
+    queryFn: () => factoresRiesgoService.listar(params),
     staleTime: 1000 * 60 * 10,
   })
 }
@@ -22,7 +22,7 @@ export function useFactorRiesgoMutations() {
   }
 
   const crear = useMutation({
-    mutationFn: (data: { nombre: string; categoria: string }) => ssoService.crearFactorRiesgo(data),
+    mutationFn: (data: { nombre: string; categoria: string }) => factoresRiesgoService.crear(data),
     onSuccess: () => {
       notificar.exito('Factor de riesgo registrado', 'El factor fue agregado al catálogo.')
       invalidar()
@@ -35,7 +35,7 @@ export function useFactorRiesgoMutations() {
   // la salida que faltaba en la pantalla.
   const cambiarActivo = useMutation({
     mutationFn: ({ id, activo }: { id: number; activo: boolean }) =>
-      ssoService.actualizarFactorRiesgo(id, { activo }),
+      factoresRiesgoService.actualizar(id, { activo }),
     onSuccess: (_datos, { activo }) => {
       notificar.exito(
         activo ? 'Factor reactivado' : 'Factor desactivado',
@@ -49,7 +49,7 @@ export function useFactorRiesgoMutations() {
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => ssoService.eliminarFactorRiesgo(id),
+    mutationFn: (id: number) => factoresRiesgoService.eliminar(id),
     onSuccess: () => {
       notificar.exito('Factor eliminado', 'El factor fue eliminado del catálogo.')
       invalidar()

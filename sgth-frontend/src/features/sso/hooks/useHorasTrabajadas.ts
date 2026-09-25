@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
+import { horasTrabajadasService } from '../services/indicadoresService'
 import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
@@ -12,7 +12,7 @@ interface Params {
 export function useHorasTrabajadas(params?: Params) {
   return useQuery({
     queryKey: clavesSso.horasTrabajadas.lista(params),
-    queryFn: () => ssoService.listarHorasTrabajadas(params),
+    queryFn: () => horasTrabajadasService.listar(params),
     staleTime: 1000 * 60 * 5,
   })
 }
@@ -29,7 +29,7 @@ export function useHorasTrabajadasMutations() {
 
   const registrar = useMutation({
     mutationFn: (data: { periodo: string; unidad_administrativa_id?: number; total_horas: number }) =>
-      ssoService.registrarHorasTrabajadas(data),
+      horasTrabajadasService.registrar(data),
     onSuccess: () => {
       notificar.exito(
         'Horas registradas',
@@ -42,7 +42,7 @@ export function useHorasTrabajadasMutations() {
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => ssoService.eliminarHorasTrabajadas(id),
+    mutationFn: (id: number) => horasTrabajadasService.eliminar(id),
     onSuccess: () => {
       notificar.exito('Registro eliminado', 'El registro de horas trabajadas fue eliminado.')
       invalidar()

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
-import type { EppEntrega } from '../services/ssoService'
+import { eppEntregasService } from '../services/eppService'
+import type { EppEntrega } from '../services/tipos'
 import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
@@ -15,7 +15,7 @@ interface Params {
 export function useEppEntregas(params?: Params) {
   return useQuery({
     queryKey: clavesSso.epp.entregas.lista(params),
-    queryFn: () => ssoService.listarEntregasEpp(params),
+    queryFn: () => eppEntregasService.listar(params),
     staleTime: 1000 * 60 * 5,
   })
 }
@@ -23,7 +23,7 @@ export function useEppEntregas(params?: Params) {
 export function useReporteEppEntregas(params: { fecha_inicio: string; fecha_fin: string; puesto_id?: number } | null) {
   return useQuery({
     queryKey: clavesSso.epp.entregas.reporte(params),
-    queryFn: () => ssoService.reporteEntregasEpp(params!),
+    queryFn: () => eppEntregasService.reporte(params!),
     enabled: !!params,
     staleTime: 1000 * 60,
   })
@@ -32,7 +32,7 @@ export function useReporteEppEntregas(params: { fecha_inicio: string; fecha_fin:
 export function useKitEppServidor(servidorId: number | null) {
   return useQuery({
     queryKey: clavesSso.epp.kit(servidorId),
-    queryFn: () => ssoService.obtenerKitEppServidor(servidorId!),
+    queryFn: () => eppEntregasService.kitDelServidor(servidorId!),
     enabled: !!servidorId,
     staleTime: 1000 * 30,
   })
@@ -55,7 +55,7 @@ export function useEppEntregaMutations() {
   }
 
   const registrar = useMutation({
-    mutationFn: (data: Partial<EppEntrega>) => ssoService.registrarEntregaEpp(data),
+    mutationFn: (data: Partial<EppEntrega>) => eppEntregasService.registrar(data),
     onSuccess: () => {
       notificar.exito(
         'Entrega registrada',
@@ -72,7 +72,7 @@ export function useEppEntregaMutations() {
       fecha_entrega: string
       observaciones?: string
       equipos: { equipo_proteccion_id: number; cantidad?: number }[]
-    }) => ssoService.registrarEntregaKitEpp(data),
+    }) => eppEntregasService.registrarKit(data),
     onSuccess: (entregas) => {
       notificar.exito(
         'Kit entregado',

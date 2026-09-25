@@ -20,7 +20,7 @@ import {
   NIVEL_DEFICIENCIA_OPTIONS, NIVEL_EXPOSICION_OPTIONS, NIVEL_CONSECUENCIAS_OPTIONS,
   NIVEL_INTERVENCION_LABELS, TONO_NIVEL_INTERVENCION, calcularNtp330,
 } from '../schemas/riesgoLaboral.schema'
-import type { RiesgoLaboral } from '../services/ssoService'
+import type { RiesgoLaboral } from '../services/tipos'
 
 interface Props {
   opened:  boolean

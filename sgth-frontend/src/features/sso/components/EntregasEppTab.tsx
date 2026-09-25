@@ -10,7 +10,7 @@ import { RegistrarEntregaEppModal } from './RegistrarEntregaEppModal'
 import { ReporteEppModal } from './ReporteEppModal'
 import { MOTIVO_ENTREGA_OPTIONS } from '../schemas/eppEntrega.schema'
 import { formatFecha } from '@/lib/fecha'
-import type { EppEntrega } from '../services/ssoService'
+import type { EppEntrega } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 import { DataState, SgthTable, StatusBadge } from '@/components/ui'
 

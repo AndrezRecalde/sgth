@@ -14,7 +14,7 @@ import { useEquiposPorPuesto, usePuestoEppMutations } from '../hooks/usePuestoEp
 import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
 import { puestoEppSchema, type PuestoEppFormData } from '../schemas/puestoEpp.schema'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
-import type { PuestoEpp } from '../services/ssoService'
+import type { PuestoEpp } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 const VALORES_INICIALES: PuestoEppFormData = {

@@ -17,7 +17,7 @@ import { RegistrarCumplimientoModal } from './RegistrarCumplimientoModal'
 import { TIPO_NORMATIVA_OPTIONS } from '../schemas/normativaLegal.schema'
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 import { TONO_ESTADO_CUMPLIMIENTO, ESTADO_CUMPLIMIENTO_LABELS } from '../schemas/cumplimiento.schema'
-import type { FilaListaVerificacion } from '../services/ssoService'
+import type { FilaListaVerificacion } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function CumplimientoTab() {

@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
+import { cumplimientoNormativaService } from '../services/cumplimientoService'
 import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
 export function useListaVerificacion(periodo: string | null) {
   return useQuery({
     queryKey: clavesSso.cumplimiento.listaVerificacion(periodo),
-    queryFn: () => ssoService.listaVerificacionCumplimiento(periodo!),
+    queryFn: () => cumplimientoNormativaService.listaVerificacion(periodo!),
     enabled: !!periodo,
     staleTime: 1000 * 30,
   })
@@ -17,7 +17,7 @@ export function useCumplimientoMutations() {
 
   const registrar = useMutation({
     mutationFn: (data: { normativa_legal_sso_id: number; periodo: string; estado: string; observaciones?: string }) =>
-      ssoService.registrarCumplimiento(data),
+      cumplimientoNormativaService.registrar(data),
     onSuccess: () => {
       notificar.exito(
         'Cumplimiento registrado',

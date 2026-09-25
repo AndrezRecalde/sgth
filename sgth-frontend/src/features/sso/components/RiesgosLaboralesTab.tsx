@@ -10,7 +10,7 @@ import { useRiesgosLaborales, useRiesgoLaboralMutations } from '../hooks/useRies
 import { RiesgoLaboralModal } from './RiesgoLaboralModal'
 import { FactoresRiesgoModal } from './FactoresRiesgoModal'
 import { NIVEL_INTERVENCION_CORTO, TONO_NIVEL_INTERVENCION } from '../schemas/riesgoLaboral.schema'
-import type { RiesgoLaboral } from '../services/ssoService'
+import type { RiesgoLaboral } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function RiesgosLaboralesTab() {

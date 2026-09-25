@@ -11,7 +11,7 @@ import { useEquiposProteccion, useEquipoProteccionMutations } from '../hooks/use
 import { EquipoProteccionModal } from './EquipoProteccionModal'
 import { AsignarEppPuestoModal } from './AsignarEppPuestoModal'
 import { TIPO_EPP_OPTIONS } from '../schemas/equipoProteccion.schema'
-import type { EquipoProteccion } from '../services/ssoService'
+import type { EquipoProteccion } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function EquiposProteccionTab() {

@@ -17,7 +17,7 @@ import {
 import { EJEMPLO_PERIODO } from '../constants/periodo'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import type { UnidadConRelaciones } from '@/types/api'
-import type { HorasTrabajadasPeriodo } from '../services/ssoService'
+import type { HorasTrabajadasPeriodo } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 const VALORES_INICIALES: HorasTrabajadasFormData = {

@@ -1,6 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
-import type { IndicadoresReactivos } from './ssoService'
+import type { IndicadoresReactivos } from './tipos'
 
 export interface ResumenDashboardSso {
   periodo: string

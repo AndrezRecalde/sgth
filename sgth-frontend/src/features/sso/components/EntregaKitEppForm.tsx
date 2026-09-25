@@ -18,7 +18,7 @@ import {
 } from '../schemas/entregaKitEpp.schema'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
-import type { PuestoEpp } from '../services/ssoService'
+import type { PuestoEpp } from '../services/tipos'
 
 const KIT_EPP_VACIO: PuestoEpp[] = []
 

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ssoService } from '../services/ssoService'
-import type { EquipoProteccion } from '../services/ssoService'
+import { equiposProteccionService } from '../services/eppService'
+import type { EquipoProteccion } from '../services/tipos'
 import { clavesSso } from '../constants/claves'
 import { notificar } from '@/components/ui'
 
@@ -13,7 +13,7 @@ interface Params {
 export function useEquiposProteccion(params?: Params) {
   return useQuery({
     queryKey: clavesSso.epp.equipos.lista(params),
-    queryFn: () => ssoService.listarEquiposProteccion(params),
+    queryFn: () => equiposProteccionService.listar(params),
     staleTime: 1000 * 60 * 5,
   })
 }
@@ -30,7 +30,7 @@ export function useEquipoProteccionMutations() {
   }
 
   const crear = useMutation({
-    mutationFn: (data: Partial<EquipoProteccion>) => ssoService.crearEquipoProteccion(data),
+    mutationFn: (data: Partial<EquipoProteccion>) => equiposProteccionService.crear(data),
     onSuccess: () => {
       notificar.exito(
         'Equipo registrado',
@@ -43,7 +43,7 @@ export function useEquipoProteccionMutations() {
 
   const editar = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<EquipoProteccion> }) =>
-      ssoService.actualizarEquipoProteccion(id, data),
+      equiposProteccionService.actualizar(id, data),
     onSuccess: () => {
       notificar.exito('Equipo actualizado', 'Los datos fueron actualizados.')
       invalidar()
@@ -52,7 +52,7 @@ export function useEquipoProteccionMutations() {
   })
 
   const eliminar = useMutation({
-    mutationFn: (id: number) => ssoService.eliminarEquipoProteccion(id),
+    mutationFn: (id: number) => equiposProteccionService.eliminar(id),
     onSuccess: () => {
       notificar.exito('Equipo eliminado', 'El registro fue eliminado.')
       invalidar()

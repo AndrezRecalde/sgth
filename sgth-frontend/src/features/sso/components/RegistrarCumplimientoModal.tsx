@@ -12,7 +12,7 @@ import { DocumentosSsoPanel } from './DocumentosSsoPanel'
 import {
   cumplimientoSchema, type CumplimientoFormData, ESTADO_CUMPLIMIENTO_OPTIONS,
 } from '../schemas/cumplimiento.schema'
-import type { FilaListaVerificacion } from '../services/ssoService'
+import type { FilaListaVerificacion } from '../services/tipos'
 
 interface Props {
   opened: boolean

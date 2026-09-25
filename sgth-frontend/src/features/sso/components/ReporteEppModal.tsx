@@ -9,7 +9,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useReporteEppEntregas } from '../hooks/useEppEntregas'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
-import type { ReporteEppFila } from '../services/ssoService'
+import type { ReporteEppFila } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {

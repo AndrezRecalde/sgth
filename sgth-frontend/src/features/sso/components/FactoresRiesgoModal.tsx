@@ -13,7 +13,7 @@ import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactore
 import {
   factorRiesgoSchema, type FactorRiesgoFormData, CATEGORIA_FACTOR_OPTIONS,
 } from '../schemas/factorRiesgo.schema'
-import type { FactorRiesgoCatalogo } from '../services/ssoService'
+import type { FactorRiesgoCatalogo } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
