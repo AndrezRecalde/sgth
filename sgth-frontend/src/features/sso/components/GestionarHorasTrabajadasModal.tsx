@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable } from '@/components/ui'
+import { confirmar, DataState, PAGINACION_ES, SgthModal, SgthTable } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Group, TextInput, NumberInput, Button,
@@ -22,11 +22,15 @@ interface Props {
 export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
 
+  // La tabla estaba sin paginador contra un endpoint que pagina de 15 en 15:
+  // el registro 16 y los siguientes existían, contaban para los índices y no
+  // había forma de verlos ni de borrarlos. Con carga mensual son 15 meses.
+  const [page, setPage] = useState(1)
   const [periodo, setPeriodo] = useState('')
   const [unidadId, setUnidadId] = useState<string | null>(null)
   const [totalHoras, setTotalHoras] = useState<number | ''>('')
 
-  const { data, isLoading, error, refetch } = useHorasTrabajadas()
+  const { data, isLoading, error, refetch } = useHorasTrabajadas({ page })
   const registros = data?.data ?? []
   const { registrar, eliminar } = useHorasTrabajadasMutations()
   const { data: unidades = [], error: errorUnidades } = useTodasUnidades({ nivel: 2 })
@@ -45,6 +49,9 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
         setPeriodo('')
         setUnidadId(null)
         setTotalHoras('')
+        // El listado va por período descendente: lo que se acaba de cargar
+        // aparece en la primera página, no en la que se esté mirando.
+        setPage(1)
       },
     })
   }
@@ -144,6 +151,7 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           onRetry={() => refetch()}
           skeletonRows={3}
           empty={!registros.length}
+          page={page}
           emptyProps={{
             icon: IconClock,
             title: 'Sin registros de horas trabajadas',
@@ -151,8 +159,13 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           }}
         >
           <SgthTable
+            {...PAGINACION_ES}
             records={registros}
             columns={columns}
+            totalRecords={data?.total ?? 0}
+            recordsPerPage={15}
+            page={page}
+            onPageChange={setPage}
             minHeight={120}
           />
         </DataState>
