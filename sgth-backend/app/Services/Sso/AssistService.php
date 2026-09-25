@@ -97,8 +97,13 @@ final class AssistService
      * Suma las puntuaciones de las preguntas P2 a P7 (manual Cap. 13). Si P2 = 'nunca'
      * (no consumida en los últimos 3 meses), P3-P5 no se preguntan y no suman. P5 no
      * aplica a tabaco. P1 y P8 no cuentan para el puntaje.
+     *
+     * Público, como `determinarNivel`, por lo mismo que en el psicosocial: es la
+     * parte con consecuencia para la persona tamizada, no toca la base de datos
+     * y sus puntuaciones son verbatim del manual de la OMS. Probarla es la
+     * única forma de notar que una de ellas se copió mal.
      */
-    private function calcularPuntajeSustancia(SustanciaAssist $sustancia, array $respuestas): int
+    public function calcularPuntajeSustancia(SustanciaAssist $sustancia, array $respuestas): int
     {
         $puntuaciones = CuestionarioAssistData::puntuaciones();
         $puntaje = 0;
@@ -120,7 +125,8 @@ final class AssistService
         return $puntaje;
     }
 
-    private function determinarNivel(SustanciaAssist $sustancia, int $puntaje): NivelRiesgoAssist
+    /** El nivel de riesgo de un puntaje, contra los puntos de corte del manual (Cap. 14). */
+    public function determinarNivel(SustanciaAssist $sustancia, int $puntaje): NivelRiesgoAssist
     {
         $cortes = CuestionarioAssistData::puntosCorte($sustancia);
 

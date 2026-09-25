@@ -87,10 +87,15 @@ final class PsicosocialService
      * El puntaje global es la suma de las 8 dimensiones principales (ítems 1-58, sin
      * duplicar las subdimensiones de "otros puntos importantes", que son solo un desglose).
      *
+     * Es público porque es la operación con consecuencia para la persona
+     * evaluada —el nivel de riesgo psicosocial que queda en su campaña— y no
+     * toca la base de datos: así se prueba item por item contra las tablas de
+     * la guía del MDT, que es la única forma de detectar una errata en ellas.
+     *
      * @param array<int|string, int> $respuestas ítem (1-58) => puntuación (1-4)
      * @return array{0: array, 1: int, 2: NivelRiesgoPsicosocial}
      */
-    private function calcularPuntajes(array $respuestas): array
+    public function calcularPuntajes(array $respuestas): array
     {
         $resultado = [];
         $puntajeGlobal = 0;

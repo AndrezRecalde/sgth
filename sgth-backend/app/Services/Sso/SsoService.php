@@ -18,6 +18,7 @@ use App\Enums\NivelIntervencionRiesgo;
 use App\Enums\TipoEventoAccidente;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Sso\Indicadores\HorasTrabajadas;
+use App\Services\Sso\Indicadores\IndicesReactivos;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 
@@ -340,11 +341,9 @@ final class SsoService implements SsoServiceInterface
     }
 
     /**
-     * Índices reactivos CD 513 (Resolución IESS - Reglamento del Seguro General de Riesgos del Trabajo).
-     * IF = (nº lesiones × 200000) / horas trabajadas; IG = (días perdidos × 200000) / horas trabajadas; TR = IG / IF.
-     * NOTA: estas fórmulas fueron verificadas solo por fuentes secundarias (el reglamento oficial del IESS
-     * no pudo confirmarse contra un PDF primario legible en el entorno de desarrollo) — Talento Humano
-     * debe confirmarlas contra el reglamento antes de tratarlas como referencia legal definitiva.
+     * Índices reactivos CD 513: cuenta las lesiones y los días perdidos del
+     * período, resuelve el denominador y deja las fórmulas —y la nota sobre su
+     * verificación legal— en `Indicadores\IndicesReactivos`.
      */
     public function calcularIndicadoresMrl(string $periodo, ?int $unidadAdministrativaId = null): array
     {
@@ -388,9 +387,7 @@ final class SsoService implements SsoServiceInterface
             ];
         }
 
-        $indiceFrecuencia = round(($numeroLesiones * 200000) / $horasTrabajadas, 2);
-        $indiceGravedad = round(($diasPerdidos * 200000) / $horasTrabajadas, 2);
-        $tasaRiesgo = $indiceFrecuencia > 0 ? round($indiceGravedad / $indiceFrecuencia, 2) : 0.0;
+        $indices = IndicesReactivos::desde($numeroLesiones, $diasPerdidos, $horasTrabajadas);
 
         return [
             'periodo' => $periodo,
@@ -401,9 +398,9 @@ final class SsoService implements SsoServiceInterface
             'horas_trabajadas_origen' => $resolucionHoras->origen,
             'horas_trabajadas_alcance' => $resolucionHoras->alcance,
             'horas_trabajadas_detalle' => $resolucionHoras->detalle(),
-            'indice_frecuencia' => $indiceFrecuencia,
-            'indice_gravedad' => $indiceGravedad,
-            'tasa_riesgo' => $tasaRiesgo,
+            'indice_frecuencia' => $indices->indiceFrecuencia,
+            'indice_gravedad' => $indices->indiceGravedad,
+            'tasa_riesgo' => $indices->tasaRiesgo,
         ];
     }
 
