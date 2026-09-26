@@ -1,7 +1,8 @@
 'use client'
 
-import { Box, Grid, Paper, Skeleton, Text } from '@mantine/core'
+import { Box, Grid, Skeleton, Text } from '@mantine/core'
 import { useServidor } from '../hooks/useServidor'
+import { BloqueDetalle } from './BloqueDetalle'
 
 interface Props {
   servidorId: number
@@ -50,7 +51,7 @@ export function SituacionActualPanel({
   const rmuFmt = rmu != null ? `$ ${Number(rmu).toFixed(2)}` : null
 
   return (
-    <Paper withBorder p="sm" radius="md" bg="var(--sgth-surface-sunken)">
+    <BloqueDetalle hundido>
       <Text size="sm" fw={700} mb="xs">{titulo}</Text>
       <Grid>
         {!soloVinculo && (
@@ -97,6 +98,6 @@ export function SituacionActualPanel({
           </>
         )}
       </Grid>
-    </Paper>
+    </BloqueDetalle>
   )
 }

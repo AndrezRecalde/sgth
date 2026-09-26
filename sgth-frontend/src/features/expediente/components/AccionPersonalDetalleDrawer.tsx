@@ -1,8 +1,10 @@
 'use client'
 
-import { confirmar, notificar, SgthDrawer, StatusBadge } from '@/components/ui'
+import {
+  confirmar, DetailList, notificar, SectionHeading, SgthDrawer, StatusBadge,
+} from '@/components/ui'
 import { useState } from 'react'
-import { Alert, Box, Button, Divider, Grid, Group, Paper, Skeleton, Stack, Text } from '@mantine/core'
+import { Alert, Button, Divider, Grid, Group, Skeleton, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconAlertTriangle, IconBan, IconCheck, IconFileDownload,
@@ -11,6 +13,7 @@ import {
 import { expedienteService } from '../services/expedienteService'
 import { getApiErrorMessage } from '@/types/api'
 import { useMovimiento, useMovimientoMutations } from '../hooks/useMovimientoMutations'
+import { BloqueDetalle } from './BloqueDetalle'
 import { MovimientoModal } from './MovimientoModal'
 import { CompletarVinculoModal } from './CompletarVinculoModal'
 import { DictamenPresupuestarioModal } from './DictamenPresupuestarioModal'
@@ -35,15 +38,6 @@ interface Props {
 
 function dinero(v?: string | number | null): string {
   return v != null ? `$ ${Number(v).toFixed(2)}` : '—'
-}
-
-function Dato({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
-  return (
-    <Box>
-      <Text size="xs" fw={600} c="dimmed" tt="uppercase">{etiqueta}</Text>
-      <Text size="sm">{valor?.toString().trim() || '—'}</Text>
-    </Box>
-  )
 }
 
 /**
@@ -153,22 +147,20 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           )}
         </Group>
 
-        <Paper withBorder p="sm" radius="md">
-          <Grid>
-            <Grid.Col span={6}>
-              <Dato
-                etiqueta="Servidor"
-                valor={[mv.servidor?.apellido, mv.servidor?.nombre].filter(Boolean).join(' ')}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}><Dato etiqueta="Cédula" valor={mv.servidor?.cedula} /></Grid.Col>
-            <Grid.Col span={6}><Dato etiqueta="Rige desde" valor={formatFecha(m.fecha_efectiva)} /></Grid.Col>
-            <Grid.Col span={6}><Dato etiqueta="Código" valor={m.codigo_registro} /></Grid.Col>
-          </Grid>
-        </Paper>
+        <BloqueDetalle>
+          <DetailList items={[
+            {
+              label: 'Servidor',
+              value: [mv.servidor?.apellido, mv.servidor?.nombre].filter(Boolean).join(' '),
+            },
+            { label: 'Cédula', value: mv.servidor?.cedula },
+            { label: 'Rige desde', value: formatFecha(m.fecha_efectiva) },
+            { label: 'Código', value: m.codigo_registro },
+          ]} />
+        </BloqueDetalle>
 
         <div>
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb={4}>Explicación</Text>
+          <SectionHeading title="Explicación" mb={4} />
           <Text size="sm">{m.descripcion}</Text>
         </div>
 
@@ -179,30 +171,31 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           {/* Sin columna derecha —cesación, sanción— la actual ocupa el ancho
               completo en vez de dejar medio panel vacío. */}
           <Grid.Col span={{ base: 12, sm: propone || ausencia ? 6 : 12 }}>
-            <Paper withBorder p="sm" radius="md" h="100%" bg="var(--sgth-surface-sunken)">
-              <Text size="sm" fw={700} mb="xs">
-                {propone ? 'SITUACIÓN ACTUAL' : 'SITUACIÓN DEL SERVIDOR'}
-              </Text>
+            <BloqueDetalle hundido altoCompleto>
+              <SectionHeading
+                title={propone ? 'Situación actual' : 'Situación del servidor'}
+                mb="xs"
+              />
               {esIngreso ? (
                 <Text size="sm" c="dimmed">
                   Sin vínculo previo — este es el primer ingreso del servidor.
                 </Text>
               ) : (
-                <Stack gap="xs">
-                  <Dato etiqueta="Apellidos" valor={apellidos} />
-                  <Dato etiqueta="Nombres" valor={nombres} />
-                  <Dato etiqueta="Cédula" valor={mv.servidor?.cedula} />
-                  <Dato etiqueta="Papeleta de votación" valor={mv.servidor?.numero_papeleta_votacion} />
-                  <Dato etiqueta="Unidad" valor={mv.unidad_origen?.nombre} />
-                  <Dato etiqueta="Puesto" valor={mv.puesto_origen?.cargo?.nombre} />
-                  <Dato etiqueta="R.M.U." valor={dinero(m.remuneracion_origen)} />
-                  <Dato etiqueta="Partida" valor={mv.partida_origen?.codigo} />
-                </Stack>
+                <DetailList columnas={1} items={[
+                  { label: 'Apellidos', value: apellidos },
+                  { label: 'Nombres', value: nombres },
+                  { label: 'Cédula', value: mv.servidor?.cedula },
+                  { label: 'Papeleta de votación', value: mv.servidor?.numero_papeleta_votacion },
+                  { label: 'Unidad', value: mv.unidad_origen?.nombre },
+                  { label: 'Puesto', value: mv.puesto_origen?.cargo?.nombre },
+                  { label: 'R.M.U.', value: dinero(m.remuneracion_origen) },
+                  { label: 'Partida', value: mv.partida_origen?.codigo },
+                ]} />
               )}
 
               {/* Solo cuando no hay tarjeta a la derecha donde anclarlo. */}
               {!propone && !ausencia && botonEditar}
-            </Paper>
+            </BloqueDetalle>
           </Grid.Col>
 
           {/* Una cesación no propone nada: termina el vínculo. Una comisión o
@@ -211,61 +204,65 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
               rellenarla de guiones. */}
           {propone && (
             <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Paper withBorder p="sm" radius="md" h="100%">
-                <Text size="sm" fw={700} mb="xs">
-                  {esSubrogacion ? 'PUESTO SUBROGADO' : 'SITUACIÓN PROPUESTA'}
-                </Text>
-                <Stack gap="xs">
-                  <Dato etiqueta="Unidad" valor={mv.unidad_destino?.nombre} />
-                  <Dato etiqueta="Puesto" valor={mv.puesto_destino?.cargo?.nombre} />
-                  {!esSubrogacion && (
-                    <Dato etiqueta="Lugar de trabajo" valor={m.lugar_trabajo} />
-                  )}
-                  {/* La de la acción manda; si Talento Humano no fijó ninguna,
-                      rige la del puesto de destino. */}
-                  <Dato
-                    etiqueta="Partida"
-                    valor={mv.partida_presupuestaria?.codigo
-                      ?? mv.puesto_destino?.partida_presupuestaria?.codigo}
-                  />
-                  <Dato
-                    etiqueta={esSubrogacion ? 'R.M.U. del puesto' : 'R.M.U. propuesta'}
-                    valor={dinero(m.remuneracion_propuesta)}
-                  />
-                  {/* Lo que realmente se autoriza en una subrogación: no el
-                      sueldo del puesto, sino la diferencia contra lo que el
-                      servidor ya percibe (Art. 21 Reglamento LOSEP). Ambas
-                      cifras quedaron congeladas al crear la acción, así que
-                      esta resta es la que se aprobó, no la de hoy. */}
-                  {esSubrogacion && (
-                    <Dato
-                      etiqueta="Diferencia a pagar"
-                      valor={diferencia != null && diferencia > 0 ? dinero(diferencia) : null}
-                    />
-                  )}
-                </Stack>
+              <BloqueDetalle altoCompleto>
+                <SectionHeading
+                  title={esSubrogacion ? 'Puesto subrogado' : 'Situación propuesta'}
+                  mb="xs"
+                />
+                <DetailList columnas={1} items={[
+                  { label: 'Unidad', value: mv.unidad_destino?.nombre },
+                  { label: 'Puesto', value: mv.puesto_destino?.cargo?.nombre },
+                  ...(esSubrogacion
+                    ? []
+                    : [{ label: 'Lugar de trabajo', value: m.lugar_trabajo }]),
+                  {
+                    label: 'Partida',
+                    // La de la acción manda; si Talento Humano no fijó
+                    // ninguna, rige la del puesto de destino.
+                    value: mv.partida_presupuestaria?.codigo
+                      ?? mv.puesto_destino?.partida_presupuestaria?.codigo,
+                  },
+                  {
+                    label: esSubrogacion ? 'R.M.U. del puesto' : 'R.M.U. propuesta',
+                    value: dinero(m.remuneracion_propuesta),
+                  },
+                  // Lo que realmente se autoriza en una subrogación: no el
+                  // sueldo del puesto, sino la diferencia contra lo que el
+                  // servidor ya percibe (Art. 21 Reglamento LOSEP). Ambas
+                  // cifras quedaron congeladas al crear la acción, así que
+                  // esta resta es la que se aprobó, no la de hoy.
+                  ...(esSubrogacion
+                    ? [{
+                        label: 'Diferencia a pagar',
+                        value: diferencia != null && diferencia > 0 ? dinero(diferencia) : null,
+                      }]
+                    : []),
+                ]} />
 
                 {botonEditar}
-              </Paper>
+              </BloqueDetalle>
             </Grid.Col>
           )}
 
           {ausencia && (
             <Grid.Col span={{ base: 12, sm: 6 }}>
-              <Paper withBorder p="sm" radius="md" h="100%">
-                <Text size="sm" fw={700} mb="xs">PERÍODO DE LA AUSENCIA</Text>
-                <Stack gap="xs">
-                  <Dato etiqueta="Desde" valor={formatFecha(m.fecha_inicio)} />
-                  <Dato etiqueta="Hasta" valor={m.fecha_fin ? formatFecha(m.fecha_fin) : 'Sin fecha de fin'} />
-                  <Dato etiqueta="Destino" valor={mv.unidad_destino?.nombre} />
-                  <Text size="xs" c="dimmed" mt={4}>
-                    El servidor conserva su puesto y su plaza; regresa al vencer
-                    el período.
-                  </Text>
-                </Stack>
+              <BloqueDetalle altoCompleto>
+                <SectionHeading title="Período de la ausencia" mb="xs" />
+                <DetailList columnas={1} items={[
+                  { label: 'Desde', value: formatFecha(m.fecha_inicio) },
+                  {
+                    label: 'Hasta',
+                    value: m.fecha_fin ? formatFecha(m.fecha_fin) : 'Sin fecha de fin',
+                  },
+                  { label: 'Destino', value: mv.unidad_destino?.nombre },
+                ]} />
+                <Text size="xs" c="dimmed" mt="xs">
+                  El servidor conserva su puesto y su plaza; regresa al vencer
+                  el período.
+                </Text>
 
                 {botonEditar}
-              </Paper>
+              </BloqueDetalle>
             </Grid.Col>
           )}
         </Grid>
@@ -276,57 +273,56 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             llenar. Resolución y dictamen sí aplican a cualquier acción, así que
             se quedan fuera de ese bloque. */}
         {esIngreso && (
-          <Paper withBorder p="sm" radius="md">
-            <Text size="sm" fw={700} mb="xs">DATOS DE LA CONTRATACIÓN</Text>
-            <Grid>
-              <Grid.Col span={6}>
-                <Dato
-                  etiqueta="Nombramiento"
-                  valor={etiquetaNombramiento(m.tipo_nombramiento_propuesto)}
-                />
-              </Grid.Col>
-              <Grid.Col span={6}><Dato etiqueta="N.º de contrato" valor={m.numero_contrato} /></Grid.Col>
-              <Grid.Col span={6}><Dato etiqueta="Remuneración" valor={dinero(m.remuneracion_propuesta)} /></Grid.Col>
-              <Grid.Col span={6}>
-                <Dato etiqueta="Marca asistencia" valor={m.puede_marcar == null ? '—' : (m.puede_marcar ? 'Sí' : 'No')} />
-              </Grid.Col>
-            </Grid>
-          </Paper>
+          <BloqueDetalle>
+            <SectionHeading title="Datos de la contratación" mb="xs" />
+            <DetailList items={[
+              {
+                label: 'Nombramiento',
+                value: etiquetaNombramiento(m.tipo_nombramiento_propuesto),
+              },
+              { label: 'N.º de contrato', value: m.numero_contrato },
+              { label: 'Remuneración', value: dinero(m.remuneracion_propuesta) },
+              {
+                label: 'Marca asistencia',
+                value: m.puede_marcar == null ? null : (m.puede_marcar ? 'Sí' : 'No'),
+              },
+            ]} />
+          </BloqueDetalle>
         )}
 
-        <Paper withBorder p="sm" radius="md">
-          <Text size="sm" fw={700} mb="xs">RESPALDOS</Text>
-          <Grid>
-            <Grid.Col span={6}><Dato etiqueta="N.º de resolución" valor={m.resolucion_numero} /></Grid.Col>
-            <Grid.Col span={6}>
-              <Dato
-                etiqueta="Dictamen médico"
-                valor={m.requiere_dictamen_medico
-                  ? (mv.solicitud_certificacion?.dictamen ?? 'Pendiente')
-                  : 'No requiere'}
-              />
-            </Grid.Col>
-            {m.caucionado && (
-              <>
-                <Grid.Col span={6}><Dato etiqueta="Caución N.º" valor={m.caucion_numero} /></Grid.Col>
-                <Grid.Col span={6}><Dato etiqueta="Fecha de caución" valor={formatFecha(m.caucion_fecha)} /></Grid.Col>
-              </>
-            )}
-          </Grid>
-        </Paper>
+        <BloqueDetalle>
+          <SectionHeading title="Respaldos" mb="xs" />
+          <DetailList items={[
+            { label: 'N.º de resolución', value: m.resolucion_numero },
+            {
+              label: 'Dictamen médico',
+              value: m.requiere_dictamen_medico
+                ? (mv.solicitud_certificacion?.dictamen ?? 'Pendiente')
+                : 'No requiere',
+            },
+            ...(m.caucionado
+              ? [
+                  { label: 'Caución N.º', value: m.caucion_numero },
+                  { label: 'Fecha de caución', value: formatFecha(m.caucion_fecha) },
+                ]
+              : []),
+          ]} />
+        </BloqueDetalle>
 
         {(m.firmante_autoridad_nombre || m.firmante_th_nombre) && (
-          <Paper withBorder p="sm" radius="md">
-            <Text size="sm" fw={700} mb="xs">FIRMANTES SELLADOS</Text>
-            <Grid>
-              <Grid.Col span={6}>
-                <Dato etiqueta={m.firmante_autoridad_cargo ?? 'Autoridad'} valor={m.firmante_autoridad_nombre} />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <Dato etiqueta={m.firmante_th_cargo ?? 'Talento Humano'} valor={m.firmante_th_nombre} />
-              </Grid.Col>
-            </Grid>
-          </Paper>
+          <BloqueDetalle>
+            <SectionHeading title="Firmantes sellados" mb="xs" />
+            <DetailList items={[
+              {
+                label: m.firmante_autoridad_cargo ?? 'Autoridad',
+                value: m.firmante_autoridad_nombre,
+              },
+              {
+                label: m.firmante_th_cargo ?? 'Talento Humano',
+                value: m.firmante_th_nombre,
+              },
+            ]} />
+          </BloqueDetalle>
         )}
 
         {mv.cubre_movimiento && (

@@ -9,8 +9,13 @@ export interface DetailItem {
 
 interface Props {
   items: DetailItem[]
-  /** Columnas en escritorio. En móvil siempre es una. */
-  columnas?: 2 | 3
+  /**
+   * Columnas en escritorio. En móvil siempre es una.
+   *
+   * `1` es para un panel estrecho —una columna de un cajón de detalle, una
+   * barra lateral—, donde dos pares por fila se pisan.
+   */
+  columnas?: 1 | 2 | 3
 }
 
 /**
@@ -25,7 +30,7 @@ interface Props {
  * "no tiene dato" de "se me olvidó pintarlo".
  */
 export function DetailList({ items, columnas = 2 }: Props) {
-  const span = columnas === 3 ? 4 : 6
+  const span = { 1: 12, 2: 6, 3: 4 }[columnas]
 
   return (
     <Grid gap="md">
