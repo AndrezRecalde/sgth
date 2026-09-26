@@ -372,12 +372,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // 2026-09-25 la ruta no pedía rol ni el controlador autorizaba, y
         // cualquier usuario autenticado podía pedir el de otra persona: nombre,
         // cédula y el historial completo de vínculos.
-        Route::middleware('role:admin-uath|asistente-uath')->group(function () {
-            Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar']);
-            Route::get('certificado-laboral/descargar/{archivo}', [CertificadoLaboralController::class, 'descargar'])
-                ->name('expediente.certificado.descargar')
-                ->middleware('signed');
-        });
+        // 'descargar' se retiró: el PDF ya no se guarda en disco, sale en la
+        // misma respuesta. Servía una carpeta que nadie limpiaba y que
+        // acumulaba copias con cédula y remuneración.
+        Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar'])
+            ->middleware('role:admin-uath|asistente-uath');
 
         // Historiales gestionados por la UATH
         Route::prefix('servidores/{servidorId}')
