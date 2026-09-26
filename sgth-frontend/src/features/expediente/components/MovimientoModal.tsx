@@ -3,7 +3,7 @@
 import React from 'react'
 import {
   Button, Group, Stack, Select, Textarea, TextInput, Alert,
-  Switch, Stepper, Grid, NumberInput, Paper, Text,
+  Switch, Stepper, Grid, NumberInput, Text,
 } from '@mantine/core'
 import { ModalFooter, SectionHeading, SgthModal, notificar } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
@@ -30,6 +30,7 @@ import {
 } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal, UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
 import { formatFecha, toDateValue, fromDateValue, fromDateValueOrNull } from '@/lib/fecha'
+import { BloqueDetalle } from './BloqueDetalle'
 
 interface Props {
   opened: boolean
@@ -407,7 +408,7 @@ function FormularioAccion({
                       <SituacionActualPanel servidorId={servidorId} />
                     </Grid.Col>
                     <Grid.Col span={{ base: 12, md: 6 }}>
-                      <Paper withBorder p="sm" radius="md">
+                      <BloqueDetalle>
                         <Text size="sm" fw={700} mb="xs">SITUACIÓN PROPUESTA</Text>
                         <Stack gap="xs">
                           <Controller
@@ -621,7 +622,7 @@ function FormularioAccion({
                             </>
                           )}
                         </Stack>
-                      </Paper>
+                      </BloqueDetalle>
                     </Grid.Col>
                   </Grid>
                 ) : null}

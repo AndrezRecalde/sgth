@@ -1,7 +1,8 @@
 'use client'
 
-import { Box, Grid, Paper, Text } from '@mantine/core'
+import { Box, Grid, Text } from '@mantine/core'
 import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
+import { BloqueDetalle } from './BloqueDetalle'
 
 interface Props {
   unidad?: UnidadConRelaciones | null
@@ -37,7 +38,7 @@ export function SituacionSubrogadaPanel({ unidad, puesto, rmuSubrogante }: Props
     : null
 
   return (
-    <Paper withBorder p="sm" radius="md" h="100%">
+    <BloqueDetalle altoCompleto>
       <Text size="sm" fw={700} mb="xs">PUESTO A SUBROGAR</Text>
       <Grid>
         <Grid.Col span={12}>
@@ -74,6 +75,6 @@ export function SituacionSubrogadaPanel({ unidad, puesto, rmuSubrogante }: Props
           </Box>
         </Grid.Col>
       </Grid>
-    </Paper>
+    </BloqueDetalle>
   )
 }

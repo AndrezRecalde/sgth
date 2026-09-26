@@ -2,7 +2,7 @@
 
 import {
   Button, Group, Stack, Select, TextInput, Textarea, SegmentedControl,
-  Grid, Paper, Text, Alert,
+  Grid, Text, Alert,
 } from '@mantine/core'
 import { FormModal } from '@/components/ui'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
@@ -21,6 +21,7 @@ import {
 } from '../schemas/subrogacion.schema'
 import type { UnidadConRelaciones, PuestoConRelaciones, ServidorConRelaciones } from '@/types/api'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
+import { BloqueDetalle } from './BloqueDetalle'
 
 const TIPO_OPTIONS = [
   { value: 'subrogacion', label: 'Subrogación' },
@@ -279,12 +280,12 @@ export function SubrogacionModal({ opened, onClose }: Props) {
 
             <Grid.Col span={{ base: 12, md: 4 }}>
               {tipo === 'encargo' ? (
-                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--sgth-surface-sunken)">
+                <BloqueDetalle hundido altoCompleto>
                   <Text size="sm" fw={700} mb="xs">TITULAR</Text>
                   <Text size="sm" c="dimmed">
                     Encargo: el puesto no tiene titular que reemplazar.
                   </Text>
-                </Paper>
+                </BloqueDetalle>
               ) : subrogadoId ? (
                 <SituacionActualPanel
                   servidorId={Number(subrogadoId)}
@@ -292,7 +293,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
                   soloVinculo
                 />
               ) : (
-                <Paper withBorder p="sm" radius="md" h="100%" bg="var(--sgth-surface-sunken)">
+                <BloqueDetalle hundido altoCompleto>
                   <Text size="sm" fw={700} mb="xs">TITULAR SUBROGADO</Text>
                   <Text size="sm" c="dimmed">
                     {/* Ya no se elige: sale del puesto. */}
@@ -300,7 +301,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
                       ? 'El puesto está vacante — no hay titular.'
                       : 'Seleccione el puesto: el titular es quien lo ocupa.'}
                   </Text>
-                </Paper>
+                </BloqueDetalle>
               )}
             </Grid.Col>
 
