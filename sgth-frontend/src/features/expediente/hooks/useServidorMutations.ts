@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { expedienteService } from '../services/expedienteService'
+import { servidorService } from '../services/servidorService'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { ServidorLaboralFormData } from '../schemas/servidorLaboral.schema'
 import { notificar } from '@/components/ui'
@@ -22,7 +22,7 @@ export function useServidorMutations() {
 
   const crear = useMutation({
     mutationFn: (data: ServidorBasicoFormData) =>
-      expedienteService.crear(data),
+      servidorService.crear(data),
     onSuccess: () => {
       notificar.exito('Servidor registrado', 'El expediente fue creado correctamente.')
       invalidar()
@@ -34,7 +34,7 @@ export function useServidorMutations() {
     mutationFn: ({ id, data }: {
       id: number
       data: Partial<ServidorBasicoFormData & ServidorLaboralFormData>
-    }) => expedienteService.editar(id, data),
+    }) => servidorService.editar(id, data),
     onSuccess: (_, { id }) => {
       notificar.exito(
         'Expediente actualizado',

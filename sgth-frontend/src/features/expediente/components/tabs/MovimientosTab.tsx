@@ -9,7 +9,7 @@ import { useMovimientos } from '../../hooks/useMovimientos'
 import { MovimientoModal } from '../MovimientoModal'
 import { AccionPersonalDetalleDrawer } from '../AccionPersonalDetalleDrawer'
 import { getMovimientoColumns } from '../movimientos.columns'
-import { expedienteService } from '../../services/expedienteService'
+import { movimientoService } from '../../services/movimientoService'
 import { getApiErrorMessage } from '@/types/api'
 import type { MovimientoPersonal } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
@@ -31,7 +31,7 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
   const handleDescargarPdf = async (movimiento: MovimientoPersonal) => {
     setDescargandoId(Number(movimiento.id))
     try {
-      const blob = await expedienteService.descargarAccionPersonalPdf(Number(movimiento.id))
+      const blob = await movimientoService.descargarPdf(Number(movimiento.id))
       guardarArchivo(blob, `accion_personal_${movimiento.codigo ?? movimiento.id}.pdf`)
     } catch (error) {
       notificar.error(

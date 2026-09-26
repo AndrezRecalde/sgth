@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient } from '@tanstack/react-query'
-import { expedienteService } from '../services/expedienteService'
+import { cargaFamiliarService } from '../services/cargaFamiliarService'
 import React from 'react'
 import { toDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
@@ -56,7 +56,7 @@ export function EnfermedadCargaFamiliarModal({
 
   const onSubmit = async (values: FormData) => {
     try {
-      await expedienteService.crearEnfermedadCarga(
+      await cargaFamiliarService.crearEnfermedadCarga(
         cargaId,
         values
       )

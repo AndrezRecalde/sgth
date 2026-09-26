@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useQueryClient } from '@tanstack/react-query'
-import { expedienteService } from '../services/expedienteService'
+import { cargaFamiliarService } from '../services/cargaFamiliarService'
 import React from 'react'
 
 import { getApiErrorMessage } from '@/types/api'
@@ -67,7 +67,7 @@ export function DiscapacidadCargaFamiliarModal({
 
   const onSubmit = async (values: FormData) => {
     try {
-      await expedienteService.crearDiscapacidadCarga(
+      await cargaFamiliarService.crearDiscapacidadCarga(
         cargaId,
         values
       )

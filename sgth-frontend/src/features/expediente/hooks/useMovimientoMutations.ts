@@ -1,9 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  expedienteService,
-  type ActualizarBorradorData,
-  type TransicionarData,
-} from '../services/expedienteService'
+import { movimientoService } from '../services/movimientoService'
+import type { TransicionarData, ActualizarBorradorData } from '../services/movimientoService'
 import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
@@ -12,7 +9,7 @@ export function useMovimientoMutations(servidorId?: number | null) {
 
   const actualizarBorrador = useMutation({
     mutationFn: ({ id, data }: { id: number; data: ActualizarBorradorData }) =>
-      expedienteService.actualizarBorradorMovimiento(id, data),
+      movimientoService.actualizarBorrador(id, data),
     onSuccess: () => {
       notificar.exito(
         'Borrador actualizado',
@@ -34,7 +31,7 @@ export function useMovimientoMutations(servidorId?: number | null) {
 
   const transicionar = useMutation({
     mutationFn: ({ id, ...datos }: { id: number } & TransicionarData) =>
-      expedienteService.transicionarMovimiento(id, datos),
+      movimientoService.transicionar(id, datos),
     onSuccess: () => {
       notificar.exito('Acción actualizada', 'La acción de personal avanzó de estado.')
       qc.invalidateQueries({ queryKey: ['movimientos'] })
@@ -68,7 +65,7 @@ export function useMovimientoMutations(servidorId?: number | null) {
 export function useMovimiento(id: number | null) {
   return useQuery({
     queryKey: ['movimiento', id],
-    queryFn: () => expedienteService.obtenerMovimiento(id!),
+    queryFn: () => movimientoService.obtener(id!),
     enabled: id !== null,
     staleTime: 1000 * 30,
   })
@@ -81,7 +78,7 @@ export function useBandejaMovimientos(params?: {
 }) {
   return useQuery({
     queryKey: ['bandeja-movimientos', params],
-    queryFn: () => expedienteService.listarBandejaMovimientos(params),
+    queryFn: () => movimientoService.listarBandeja(params),
     staleTime: 1000 * 60,
   })
 }

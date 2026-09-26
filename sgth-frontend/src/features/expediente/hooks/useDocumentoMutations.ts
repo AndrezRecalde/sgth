@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { expedienteService } from '../services/expedienteService'
+import { documentoService } from '../services/documentoService'
 import { notificar } from '@/components/ui'
 
 export function useDocumentoMutations(servidorId: number) {
@@ -9,7 +9,7 @@ export function useDocumentoMutations(servidorId: number) {
 
   const subir = useMutation({
     mutationFn: (formData: FormData) =>
-      expedienteService.subirDocumento(servidorId, formData),
+      documentoService.subir(servidorId, formData),
     onSuccess: () => {
       notificar.exito('Documento subido', 'El documento fue anexado al expediente.')
       invalidar()
@@ -19,7 +19,7 @@ export function useDocumentoMutations(servidorId: number) {
 
   const eliminar = useMutation({
     mutationFn: (documentoId: number) =>
-      expedienteService.eliminarDocumento(servidorId, documentoId),
+      documentoService.eliminar(servidorId, documentoId),
     onSuccess: () => {
       notificar.exito('Documento eliminado', 'El documento fue eliminado.')
       invalidar()
