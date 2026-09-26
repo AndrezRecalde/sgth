@@ -1,10 +1,11 @@
 'use client'
 
-import { Button, Skeleton, Stack, Tabs } from '@mantine/core'
+import { Button, Group, Skeleton, Stack, Tabs } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
 import {
   IconBriefcase,
+  IconCertificate,
   IconCreditCard,
   IconEdit,
   IconFileDescription,
@@ -29,6 +30,8 @@ import { ServidorEncabezado, nombreCompletoDe }
   from '@/features/expediente/components/ServidorEncabezado'
 import { ServidorEditarModal }
   from '@/features/expediente/components/ServidorEditarModal'
+import { CertificadoLaboralModal }
+  from '@/features/expediente/components/CertificadoLaboralModal'
 import { AcademicoTab } from '@/features/expediente/components/tabs/AcademicoTab'
 import { CondicionTab } from '@/features/expediente/components/tabs/CondicionTab'
 import { CuentasBancariasTab } from '@/features/expediente/components/tabs/CuentasBancariasTab'
@@ -62,6 +65,8 @@ export function ServidorDetalleView({ id }: Props) {
   const servidorId = Number(id)
   const { data: servidor, isLoading } = useServidor(servidorId)
   const [editarOpened, { open: abrirEditar, close: cerrarEditar }] = useDisclosure(false)
+  const [certificadoOpened, { open: abrirCertificado, close: cerrarCertificado }] =
+    useDisclosure(false)
 
   if (isLoading) {
     return (
@@ -106,13 +111,24 @@ export function ServidorDetalleView({ id }: Props) {
         // acciones y desde otros módulos: se vuelve a donde se estaba.
         onBack={() => router.back()}
         actions={
-          <Button
-            variant="light"
-            leftSection={<IconEdit size={16} />}
-            onClick={abrirEditar}
-          >
-            Editar datos
-          </Button>
+          <Group gap="xs" wrap="nowrap">
+            {/* Lo emite Talento Humano, nunca el interesado: el endpoint está
+                cerrado a admin-uath y asistente-uath. */}
+            <Button
+              variant="default"
+              leftSection={<IconCertificate size={16} />}
+              onClick={abrirCertificado}
+            >
+              Certificado
+            </Button>
+            <Button
+              variant="light"
+              leftSection={<IconEdit size={16} />}
+              onClick={abrirEditar}
+            >
+              Editar datos
+            </Button>
+          </Group>
         }
       />
 
@@ -192,6 +208,12 @@ export function ServidorDetalleView({ id }: Props) {
       <ServidorEditarModal
         opened={editarOpened}
         onClose={cerrarEditar}
+        servidor={servidor}
+      />
+
+      <CertificadoLaboralModal
+        opened={certificadoOpened}
+        onClose={cerrarCertificado}
         servidor={servidor}
       />
     </PageShell>
