@@ -511,13 +511,27 @@ class MovimientoPersonalStateService
     {
         $anio = now()->year;
 
-        // Postgres no permite FOR UPDATE junto a un count() agregado: se
-        // seleccionan las filas (bloqueándolas) y se cuentan en PHP.
-        $correlativo = DB::table('movimientos_personal')
+        // Se toma el último código del año, no cuántos hay: contar filas
+        // supone que la secuencia no tiene huecos, y basta uno para que el
+        // correlativo apunte a un código ya emitido. Entonces el INSERT choca
+        // contra movimientos_personal_codigo_registro_unique, la transición
+        // completa se deshace —corre dentro de DB::transaction— y el conteo
+        // se queda donde estaba: el siguiente intento repite el mismo código
+        // duplicado y Talento Humano no vuelve a registrar una acción en todo
+        // el año. El usuario, además, veía «verifique que no esté duplicando
+        // datos que deben ser únicos (ej. cédula)» e iba a revisar la cédula.
+        //
+        // Postgres no permite FOR UPDATE junto a un agregado, así que se
+        // ordena y se toma la primera fila, bloqueándola.
+        $ultimo = DB::table('movimientos_personal')
             ->where('codigo_registro', 'like', "AP-{$anio}-%")
+            ->orderByDesc('codigo_registro')
             ->lockForUpdate()
-            ->get(['id'])
-            ->count();
+            ->value('codigo_registro');
+
+        // El sufijo va relleno a cuatro cifras, así que el mayor
+        // lexicográfico es también el mayor numérico.
+        $correlativo = $ultimo ? (int) substr($ultimo, -4) : 0;
 
         return sprintf('AP-%d-%04d', $anio, $correlativo + 1);
     }
