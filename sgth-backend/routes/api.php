@@ -71,6 +71,7 @@ use App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController;
 use App\Http\Controllers\Expediente\HistorialAcademicoController;
 use App\Http\Controllers\Expediente\AusenciaTemporalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
+use App\Http\Controllers\Expediente\VerificacionCertificadoController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
 use App\Http\Controllers\Expediente\ServidorController;
 use App\Http\Controllers\Expediente\SubrogacionController;
@@ -177,6 +178,17 @@ Route::prefix('v1')->group(function () {
     Route::get('sso/assist/{codigo}/cuestionario', [RespuestaAssistController::class, 'cuestionario']);
     Route::post('sso/assist/{codigo}/respuestas', [RespuestaAssistController::class, 'store'])
         ->middleware('throttle:20,1');
+
+    // Comprobar que un certificado laboral salió de aquí. La usan el banco o
+    // el IESS que reciben el papel, así que no hay sesión que pedirles.
+    //
+    // Es la misma superficie que tuvo la verificación de permisos y que se
+    // retiró más arriba por exponer folios correlativos. Aquí no se repite:
+    // el código es aleatorio (ver CertificadoLaboralService) y la ruta va
+    // limitada por IP, para que recorrerla no compense.
+    Route::get('certificados/verificar/{codigo}', VerificacionCertificadoController::class)
+        ->middleware('throttle:10,1')
+        ->name('certificados.verificar');
 
     // SSO: descarga de documentos adjuntos (Fase 9) protegida por firma temporal de URL,
     // igual que sgd.documentos.descargar.

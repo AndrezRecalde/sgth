@@ -12,12 +12,17 @@ import { destinoSeguro } from '@/lib/destino'
  * Y el organigrama, que es información pública de la institución: se consulta
  * desde fuera, sin cuenta de por medio.
  *
+ * `/verificar` es la comprobación de un certificado laboral. La abre quien
+ * recibió el papel —un banco, el IESS— siguiendo la dirección impresa en el
+ * pie, y no tiene ni va a tener cuenta aquí. A diferencia del QR del permiso,
+ * este caso sí existe: el documento sale de la institución hacia fuera.
+ *
  * El QR del permiso llegó a estar aquí, cuando se pensaba para que un guardia
  * comprobara la autenticidad del papel. No es ese su uso: lo escanea Talento
  * Humano para confirmar o rechazar el documento, así que va al sistema con
  * sesión como cualquier otra pantalla.
  */
-const RUTAS_ABIERTAS = ['/assist', '/psicosocial', '/organigrama']
+const RUTAS_ABIERTAS = ['/assist', '/psicosocial', '/organigrama', '/verificar']
 
 /**
  * Rutas de autenticación: se ven sin sesión, y CON sesión sobran.
