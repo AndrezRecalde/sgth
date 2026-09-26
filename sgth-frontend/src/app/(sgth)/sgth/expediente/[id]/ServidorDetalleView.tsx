@@ -184,7 +184,7 @@ export function ServidorDetalleView({ id }: Props) {
             <CondicionTab servidorId={servidorId} />
           </Tabs.Panel>
           <Tabs.Panel value="salud" pt="md">
-            <SaludOcupacionalTab servidorId={servidorId} />
+            <SaludOcupacionalTab servidor={servidor} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

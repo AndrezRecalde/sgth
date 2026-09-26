@@ -42,17 +42,33 @@ export const getSaludOcupacionalColumns = (
     title: 'Estado',
     width: 140,
     render: (s) => (
-      <Stack gap={4}>
-        <StatusBadge tone={TONO_ESTADO_SOLICITUD[s.estado] ?? 'neutral'}>
-          {ESTADO_SOLICITUD_LABELS[s.estado] ?? s.estado}
-        </StatusBadge>
-        {s.dictamen && (
-          <StatusBadge size="xs" tone={TONO_DICTAMEN[s.dictamen] ?? 'neutral'}>
+      <StatusBadge tone={TONO_ESTADO_SOLICITUD[s.estado] ?? 'neutral'}>
+        {ESTADO_SOLICITUD_LABELS[s.estado] ?? s.estado}
+      </StatusBadge>
+    ),
+  },
+  {
+    accessor: 'dictamen',
+    title: 'Aptitud',
+    // El dictamen iba como una insignia pequeña debajo del estado, dentro de
+    // su columna: es el resultado de la evaluación, no un detalle del trámite.
+    // Y las restricciones, que son lo que condiciona el puesto, no se veían.
+    render: (s) => {
+      if (!s.dictamen) return <Text size="sm" c="dimmed">—</Text>
+
+      const restricciones = s.ficha_salud_ocupacional?.restricciones
+
+      return (
+        <Stack gap={4}>
+          <StatusBadge tone={TONO_DICTAMEN[s.dictamen] ?? 'neutral'}>
             {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
           </StatusBadge>
-        )}
-      </Stack>
-    ),
+          {restricciones && (
+            <Text size="xs" c="dimmed" lineClamp={2}>{restricciones}</Text>
+          )}
+        </Stack>
+      )
+    },
   },
   {
     accessor: 'acciones',
