@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
-import { expedienteService } from '../services/expedienteService'
+import { cargaFamiliarService } from '../services/cargaFamiliarService'
 
 /**
  * Bajas de las condiciones de salud de una carga familiar. Vivían como
@@ -12,7 +12,7 @@ export function useCondicionCargaMutations(servidorId: number, cargaId: number) 
     qc.invalidateQueries({ queryKey: ['cargas-familiares', servidorId] })
 
   const eliminarDiscapacidad = useMutation({
-    mutationFn: (id: number) => expedienteService.eliminarDiscapacidadCarga(cargaId, id),
+    mutationFn: (id: number) => cargaFamiliarService.eliminarDiscapacidadCarga(cargaId, id),
     onSuccess: () => {
       notificar.exito('Discapacidad eliminada', 'La discapacidad dejó de constar en la carga familiar.')
       invalidar()
@@ -21,7 +21,7 @@ export function useCondicionCargaMutations(servidorId: number, cargaId: number) 
   })
 
   const eliminarEnfermedad = useMutation({
-    mutationFn: (id: number) => expedienteService.eliminarEnfermedadCarga(cargaId, id),
+    mutationFn: (id: number) => cargaFamiliarService.eliminarEnfermedadCarga(cargaId, id),
     onSuccess: () => {
       notificar.exito('Enfermedad eliminada', 'La enfermedad dejó de constar en la carga familiar.')
       invalidar()

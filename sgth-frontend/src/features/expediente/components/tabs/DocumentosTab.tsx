@@ -8,7 +8,7 @@ import { guardarArchivo } from '@/lib/archivo'
 import { getApiErrorMessage } from '@/types/api'
 import { useDocumentos } from '../../hooks/useDocumentos'
 import { useDocumentoMutations } from '../../hooks/useDocumentoMutations'
-import { expedienteService } from '../../services/expedienteService'
+import { documentoService } from '../../services/documentoService'
 import { getDocumentosColumns } from '../documentos.columns'
 import { documentosQueFaltan } from '../../utils/documentosBasicos'
 import { DocumentoModal } from '../DocumentoModal'
@@ -24,7 +24,7 @@ export function DocumentosTab({ servidorId }: Props) {
   const descargar = async (doc: DocumentoServidor) => {
     try {
       guardarArchivo(
-        await expedienteService.descargarDocumento(servidorId, doc.id),
+        await documentoService.descargar(servidorId, doc.id),
         doc.nombre_archivo,
       )
     } catch (e) {

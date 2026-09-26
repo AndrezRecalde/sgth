@@ -15,7 +15,7 @@ import { usePendientesVinculacion } from '@/features/expediente/hooks/usePendien
 import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
 import { useServidores } from '@/features/expediente/hooks/useServidores'
 import { useFiltrosServidores } from '@/features/expediente/hooks/useFiltrosServidores'
-import { expedienteService } from '@/features/expediente/services/expedienteService'
+import { servidorService } from '@/features/expediente/services/servidorService'
 import { getApiErrorMessage } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
 import { useAuth } from '@/hooks/useAuth'
@@ -61,8 +61,8 @@ export function ExpedienteView() {
     setExportando(tipo)
     try {
       const blob = tipo === 'excel'
-        ? await expedienteService.exportarExcel(filtros)
-        : await expedienteService.exportarPdf(filtros)
+        ? await servidorService.exportarExcel(filtros)
+        : await servidorService.exportarPdf(filtros)
       guardarArchivo(blob, `nomina_servidores.${tipo === 'excel' ? 'xlsx' : 'pdf'}`)
     } catch (error) {
       notificar.error(

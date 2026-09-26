@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { expedienteService } from '../services/expedienteService'
+import { cargaFamiliarService } from '../services/cargaFamiliarService'
 import { notificar } from '@/components/ui'
 
 export function useCargaFamiliarMutations(servidorId: number) {
@@ -8,8 +8,8 @@ export function useCargaFamiliarMutations(servidorId: number) {
     qc.invalidateQueries({ queryKey: ['cargas-familiares', servidorId] })
 
   const crear = useMutation({
-    mutationFn: (data: Parameters<typeof expedienteService.crearCargaFamiliar>[1]) =>
-      expedienteService.crearCargaFamiliar(servidorId, data),
+    mutationFn: (data: Parameters<typeof cargaFamiliarService.crear>[1]) =>
+      cargaFamiliarService.crear(servidorId, data),
     onSuccess: () => {
       notificar.exito('Carga familiar registrada', 'La carga familiar fue registrada.')
       invalidar()
@@ -18,8 +18,8 @@ export function useCargaFamiliarMutations(servidorId: number) {
   })
 
   const editar = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof expedienteService.editarCargaFamiliar>[2] }) =>
-      expedienteService.editarCargaFamiliar(servidorId, id, data),
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof cargaFamiliarService.editar>[2] }) =>
+      cargaFamiliarService.editar(servidorId, id, data),
     onSuccess: () => {
       notificar.exito('Carga familiar actualizada', 'La carga familiar fue actualizada.')
       invalidar()
@@ -29,7 +29,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
 
   const eliminar = useMutation({
     mutationFn: (id: number) =>
-      expedienteService.eliminarCargaFamiliar(servidorId, id),
+      cargaFamiliarService.eliminar(servidorId, id),
     onSuccess: () => {
       notificar.exito('Carga familiar eliminada', 'La carga familiar fue eliminada.')
       invalidar()
@@ -39,7 +39,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
 
   const toggleEstado = useMutation({
     mutationFn: (id: number) =>
-      expedienteService.toggleEstadoCarga(servidorId, id),
+      cargaFamiliarService.toggleEstado(servidorId, id),
     onMutate: async (id: number) => {
       await qc.cancelQueries({
         queryKey: ['cargas-familiares', servidorId],

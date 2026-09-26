@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { expedienteService } from '../services/expedienteService'
+import { servidorService } from '../services/servidorService'
 
 /**
  * Cuántas fichas quedaron a medio registrar: la persona existe en el sistema
@@ -11,7 +11,7 @@ import { expedienteService } from '../services/expedienteService'
 export function usePendientesVinculacion() {
   return useQuery({
     queryKey: ['servidores', 'pendientes-vinculacion'],
-    queryFn: () => expedienteService.listar({ pendiente_vinculacion: true, per_page: 1 }),
+    queryFn: () => servidorService.listar({ pendiente_vinculacion: true, per_page: 1 }),
     select: (data) => data?.total ?? 0,
     staleTime: 1000 * 30,
   })

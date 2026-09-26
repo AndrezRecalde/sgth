@@ -15,7 +15,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { usePuestos } from '@/features/estructura/hooks/usePuestos'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
-import { expedienteService } from '../services/expedienteService'
+import { movimientoService } from '../services/movimientoService'
 import { getApiErrorMessage } from '@/types/api'
 import { movimientoSchema, type MovimientoFormData } from '../schemas/movimiento.schema'
 import { SituacionActualPanel } from './SituacionActualPanel'
@@ -285,10 +285,10 @@ function FormularioAccion({
         delete (editable as Partial<MovimientoFormData>).tipo_movimiento
         delete (editable as Partial<MovimientoFormData>).subtipo_movimiento
 
-        return expedienteService.actualizarBorradorMovimiento(movimiento!.id, editable)
+        return movimientoService.actualizarBorrador(movimiento!.id, editable)
       }
 
-      return expedienteService.crearMovimiento(servidorId, limpio)
+      return movimientoService.crear(servidorId, limpio)
     },
     onSuccess: () => {
       notificar.exito(

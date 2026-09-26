@@ -10,7 +10,7 @@ import {
   IconAlertTriangle, IconBan, IconCheck, IconFileDownload,
   IconPencil, IconUserOff,
 } from '@tabler/icons-react'
-import { expedienteService } from '../services/expedienteService'
+import { movimientoService } from '../services/movimientoService'
 import { getApiErrorMessage } from '@/types/api'
 import { useMovimiento, useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import { BloqueDetalle } from './BloqueDetalle'
@@ -67,7 +67,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
     if (!m) return
     setDescargando(true)
     try {
-      const blob = await expedienteService.descargarAccionPersonalPdf(Number(m.id))
+      const blob = await movimientoService.descargarPdf(Number(m.id))
       guardarArchivo(blob, `accion_personal_${m.codigo_registro ?? m.id}.pdf`)
     } catch (error) {
       notificar.error('No se pudo generar el PDF de la acción de personal', getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'))

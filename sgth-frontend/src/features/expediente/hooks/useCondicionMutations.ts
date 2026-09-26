@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
-import { expedienteService } from '../services/expedienteService'
+import { condicionService } from '../services/condicionService'
 import type { DiscapacidadFormData } from '../schemas/discapacidad.schema'
 import type { EnfermedadFormData } from '../schemas/enfermedad.schema'
 
@@ -23,7 +23,7 @@ export function useCondicionMutations(servidorId: number) {
 
   const crearDiscapacidad = useMutation({
     mutationFn: (data: DiscapacidadFormData) =>
-      expedienteService.crearDiscapacidad(servidorId, data),
+      condicionService.crearDiscapacidad(servidorId, data),
     onSuccess: () => {
       notificar.exito('Discapacidad registrada', 'La discapacidad fue registrada correctamente.')
       invalidar('discapacidades')()
@@ -33,7 +33,7 @@ export function useCondicionMutations(servidorId: number) {
 
   const editarDiscapacidad = useMutation({
     mutationFn: ({ id, data }: { id: number; data: DiscapacidadFormData }) =>
-      expedienteService.editarDiscapacidad(servidorId, id, data),
+      condicionService.editarDiscapacidad(servidorId, id, data),
     onSuccess: () => {
       notificar.exito('Discapacidad actualizada', 'El registro fue actualizado correctamente.')
       invalidar('discapacidades')()
@@ -42,7 +42,7 @@ export function useCondicionMutations(servidorId: number) {
   })
 
   const eliminarDiscapacidad = useMutation({
-    mutationFn: (id: number) => expedienteService.eliminarDiscapacidad(servidorId, id),
+    mutationFn: (id: number) => condicionService.eliminarDiscapacidad(servidorId, id),
     onSuccess: () => {
       notificar.exito('Registro eliminado', 'La discapacidad fue eliminada del expediente.')
       invalidar('discapacidades')()
@@ -52,7 +52,7 @@ export function useCondicionMutations(servidorId: number) {
 
   const crearEnfermedad = useMutation({
     mutationFn: (data: EnfermedadFormData) =>
-      expedienteService.crearEnfermedad(servidorId, data),
+      condicionService.crearEnfermedad(servidorId, data),
     onSuccess: () => {
       notificar.exito('Enfermedad registrada', 'La enfermedad catastrófica fue registrada.')
       invalidar('enfermedades')()
@@ -62,7 +62,7 @@ export function useCondicionMutations(servidorId: number) {
 
   const editarEnfermedad = useMutation({
     mutationFn: ({ id, data }: { id: number; data: EnfermedadFormData }) =>
-      expedienteService.editarEnfermedad(servidorId, id, data),
+      condicionService.editarEnfermedad(servidorId, id, data),
     onSuccess: () => {
       notificar.exito('Enfermedad actualizada', 'El registro fue actualizado correctamente.')
       invalidar('enfermedades')()
@@ -71,7 +71,7 @@ export function useCondicionMutations(servidorId: number) {
   })
 
   const eliminarEnfermedad = useMutation({
-    mutationFn: (id: number) => expedienteService.eliminarEnfermedad(servidorId, id),
+    mutationFn: (id: number) => condicionService.eliminarEnfermedad(servidorId, id),
     onSuccess: () => {
       notificar.exito(
         'Registro eliminado',
