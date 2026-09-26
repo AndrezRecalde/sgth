@@ -40,6 +40,12 @@ final class SolicitudCertificacionController extends Controller
             'solicitadoPor:id,usuario_ti,email,servidor_id',
             'solicitadoPor.servidor:id,nombre,apellido',
             'constantesVitales',
+            // La aptitud y sus restricciones son lo que el Expediente necesita
+            // para ubicar a alguien en su puesto, y hasta ahora no viajaban.
+            // Se enumeran las columnas a propósito: `observaciones` es el texto
+            // clínico que escribe quien evalúa, y la UATH acordó el 2026-09-26
+            // que no forma parte del expediente administrativo.
+            'fichaSaludOcupacional:id,aptitud,restricciones,fecha_evaluacion',
         ])
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.

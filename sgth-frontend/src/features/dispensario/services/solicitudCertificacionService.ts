@@ -70,6 +70,17 @@ export interface SolicitudCertificacion {
   ficha_femo_id?:      number | null
   dictamen?:           string | null
   observacion_medica?: string | null
+  /**
+   * La ficha que firmó quien evaluó. Solo llegan la aptitud, sus
+   * restricciones y la fecha: `observaciones` es texto clínico y no viaja al
+   * Expediente (acuerdo con la UATH del 2026-09-26).
+   */
+  ficha_salud_ocupacional?: {
+    id:               number
+    aptitud:          string
+    restricciones?:   string | null
+    fecha_evaluacion: string
+  } | null
   constantes_vitales?: SolicitudConstantesVitales | null
   servidor?: {
     id:      number
