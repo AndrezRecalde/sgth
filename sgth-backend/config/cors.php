@@ -25,7 +25,10 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    // El certificado laboral sale como PDF en el cuerpo, así que su código de
+    // verificación viaja en una cabecera. Sin exponerla, el navegador no la
+    // deja leer y Talento Humano no puede ver el código sin abrir el PDF.
+    'exposed_headers' => ['X-Codigo-Certificado'],
 
     'max_age' => 0,
 

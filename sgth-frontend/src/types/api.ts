@@ -600,7 +600,11 @@ export type ServidorConRelaciones = Servidor & {
     } | null
   } | null
   unidad_administrativa?: { id: number; nombre?: string }
-  regimen_laboral?: 'losep' | 'codigo_trabajo'
+  // Tres, no dos: `servicios_profesionales` se sumó al enum del backend el
+  // 2026-08-29 y este tipo se quedó atrás. Ojo, el régimen de un PUESTO sí
+  // tiene solo dos —una plaza es LOSEP o Código del Trabajo—; este es el de
+  // la persona. Ver `lib/regimen.ts`.
+  regimen_laboral?: RegimenServidor
   numero_papeleta_votacion?: string | null
   nacionalidad?: string | null
   pais_origen?: string | null
