@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Button } from '@mantine/core'
+import { Alert, Stack, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconHistory } from '@tabler/icons-react'
-import { DataState, SectionCard, SgthTable, StatusBadge, notificar } from '@/components/ui'
+import { IconAlertTriangle, IconPlus, IconHistory } from '@tabler/icons-react'
+import { DataState, SectionCard, SgthTable, notificar } from '@/components/ui'
 import { useMovimientos } from '../../hooks/useMovimientos'
 import { MovimientoModal } from '../MovimientoModal'
 import { AccionPersonalDetalleDrawer } from '../AccionPersonalDetalleDrawer'
@@ -67,10 +67,20 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
           </Button>
         }
       >
+        {/* Un aviso, no una etiqueta: `StatusBadge` es para el estado de un
+            registro o para una categoría, y esto es una frase que explica por
+            qué el botón de arriba no va a llevar a ninguna parte. */}
         {!tipoNombramiento && (
-          <StatusBadge tone="warning" mb="sm">
-            Sin contrato vigente — no se pueden registrar acciones de personal
-          </StatusBadge>
+          <Alert
+            variant="light"
+            color="amber"
+            icon={<IconAlertTriangle size={16} />}
+            mb="sm"
+          >
+            Este servidor no tiene contrato vigente, así que no se le pueden
+            registrar acciones de personal: registre primero su Ingreso y
+            Vinculación.
+          </Alert>
         )}
 
         <DataState
