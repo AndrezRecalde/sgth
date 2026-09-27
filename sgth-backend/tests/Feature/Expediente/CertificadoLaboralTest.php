@@ -85,9 +85,9 @@ test('un vínculo anulado no cuenta como tiempo trabajado', function () {
 });
 
 test('el tiempo de servicio se cuenta desde el ingreso a la institución', function () {
-    // En régimen LOSEP el accesor `anios_servicio` del modelo cuenta desde el
-    // sector público. El certificado no lo usa: la UATH pidió el tiempo en la
-    // institución, y aquí las dos fechas se separan siete años a propósito.
+    // Las dos fechas se separan siete años a propósito: en régimen LOSEP la
+    // antigüedad en el sector público es mayor, y es la que rige para las
+    // vacaciones. Lo que se certifica es el tiempo AQUÍ.
     $servidor = ($this->servidorCon)([
         'fecha_ingreso_sector_publico' => '2010-01-01',
         'fecha_ingreso_institucion'    => '2017-01-01',
@@ -103,7 +103,9 @@ test('el tiempo de servicio se cuenta desde el ingreso a la institución', funct
     );
 
     expect($emision->datos['anios_servicio'])->toBe($enLaInstitucion)
-        ->and($emision->datos['anios_servicio'])->not->toBe($servidor->anios_servicio);
+        // Y coincide con lo que muestra la ficha. Llegaron a decir cifras
+        // distintas del mismo servidor: ese era el problema.
+        ->and($emision->datos['anios_servicio'])->toBe($servidor->fresh()->anios_servicio);
 });
 
 test('la remuneración solo viaja en la variante que la pide', function () {
