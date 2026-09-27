@@ -1,0 +1,64 @@
+'use client'
+
+import { Anchor, Group, Skeleton, Text } from '@mantine/core'
+import { IconExternalLink } from '@tabler/icons-react'
+import Link from 'next/link'
+import { SectionCard } from '@/components/ui'
+import { ROUTES } from '@/config/routes'
+import { useAusentismoSalud } from '../hooks/useAusentismoSalud'
+
+interface Props {
+  servidorId: number
+}
+
+/**
+ * Cuántas veces pidió permiso por enfermedad, como indicador de salud
+ * ocupacional.
+ *
+ * Son **permisos, no días**: el sistema guarda cada permiso con su hora de
+ * inicio y fin, no como un rango de días, y convertirlo exigiría asumir una
+ * jornada. Y mide **episodios, no tiempo fuera**: una enfermedad de diez días
+ * seguidos puede ser un solo permiso. De ahí que la cifra se rotule «permisos»
+ * y nunca «ausencias».
+ *
+ * Sin fechas ni motivos: el detalle vive en el módulo de Permisos, y la
+ * observación de un permiso es texto libre que puede llevar un diagnóstico.
+ */
+export function AusentismoSaludPanel({ servidorId }: Props) {
+  const { data, isLoading } = useAusentismoSalud(servidorId)
+
+  return (
+    <SectionCard
+      title="Ausentismo por salud"
+      actions={
+        <Anchor
+          component={Link}
+          href={ROUTES.SGTH.ASISTENCIA_PERMISOS}
+          size="sm"
+        >
+          <Group gap={4} wrap="nowrap">
+            Ver en Permisos
+            <IconExternalLink size={14} />
+          </Group>
+        </Anchor>
+      }
+    >
+      {isLoading ? (
+        <Skeleton height={44} radius="md" />
+      ) : (
+        <>
+          <Text size="xl" fw={700}>
+            {data?.permisos ?? 0}
+            <Text span size="sm" fw={400} c="dimmed" ml={6}>
+              {data?.permisos === 1 ? 'permiso por enfermedad' : 'permisos por enfermedad'}
+            </Text>
+          </Text>
+          <Text size="xs" c="dimmed" mt={4}>
+            En los últimos {data?.meses ?? 12} meses. Cuenta cuántas veces se
+            concedió un permiso, no cuánto tiempo estuvo fuera.
+          </Text>
+        </>
+      )}
+    </SectionCard>
+  )
+}

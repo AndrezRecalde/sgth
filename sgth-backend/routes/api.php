@@ -57,6 +57,7 @@ use App\Http\Controllers\Estructura\UnidadAdministrativaController;
 use App\Http\Controllers\Evaluacion\EvaluacionController;
 use App\Http\Controllers\Expediente\CargaFamiliarController;
 use App\Http\Controllers\Expediente\AccionPersonalPdfController;
+use App\Http\Controllers\Expediente\AusentismoSaludController;
 use App\Http\Controllers\Expediente\CertificadoLaboralController;
 use App\Http\Controllers\Expediente\FirmanteAccionPersonalController;
 use App\Http\Controllers\Expediente\ExportServidoresController;
@@ -399,6 +400,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 // Talento Humano). El alta directa sobrevive solo para carga
                 // histórica, detrás de un rol aparte —ver más abajo—, porque
                 // se salta la máquina de estados y no deja acción de personal.
+                // Indicador de salud ocupacional: cuántos permisos por
+                // enfermedad pidió en el último año. Sin motivos ni fechas —la
+                // observación del permiso es texto libre y puede llevar un
+                // diagnóstico—, solo la cifra.
+                Route::get('ausentismo-salud', AusentismoSaludController::class)
+                    ->name('expediente.ausentismoSalud');
+
                 Route::get('actividad-laboral', [ContratoServidorController::class, 'actividadLaboral'])
                     ->name('contratos.actividadLaboral');
 
