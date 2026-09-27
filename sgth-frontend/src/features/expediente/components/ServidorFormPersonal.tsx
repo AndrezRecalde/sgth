@@ -63,6 +63,27 @@ export function ServidorFormPersonal() {
       <Grid.Col span={12}>
         <SectionHeading title="Identificación" mb="xs" />
       </Grid.Col>
+      {/* La cédula va primero y sola en su fila. Es la llave de la ficha: el
+          backend rechaza la que ya exista, y tenerla al final obligaba a
+          escribir los cuatro nombres antes de enterarse de que la persona ya
+          estaba registrada. Estaba además a `sm: 4` detrás de cuatro campos de
+          `sm: 6`, así que quedaba huérfana a media anchura en mitad del bloque.
+
+          Ocupa la fila entera, como el correo y la dirección en el paso de
+          contacto: en este formulario, el campo que va solo en su fila la llena.
+          Una columna de 4 dejaría que el primer nombre subiera a su derecha y
+          partiría las parejas de nombre y apellido, y un tope de anchura la
+          volvía a dejar a media fila entre campos que sí la llenan. */}
+      <Grid.Col span={12}>
+        <TextInput
+          label="Cédula de identidad"
+          placeholder="0000000000"
+          maxLength={10}
+          {...contained}
+          {...register('cedula')}
+          error={errors.cedula?.message}
+        />
+      </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
           label="Primer nombre"
@@ -99,21 +120,13 @@ export function ServidorFormPersonal() {
           error={errors.segundo_apellido?.message}
         />
       </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 4 }}>
-        <TextInput
-          label="Cédula de identidad"
-          placeholder="0000000000"
-          maxLength={10}
-          {...contained}
-          {...register('cedula')}
-          error={errors.cedula?.message}
-        />
-      </Grid.Col>
-
       <Grid.Col span={12}>
         <SectionHeading title="Datos demográficos" mt="xs" mb="xs" />
       </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 4 }}>
+      {/* Los cuatro a `sm: 6`. Género y estado civil iban a `sm: 4` y los dos
+          de abajo a `sm: 6`: la primera fila quedaba con un hueco de un tercio
+          a la derecha y las cajas de las dos filas no coincidían de ancho. */}
+      <Grid.Col span={{ base: 12, sm: 6 }}>
         <Controller
           name="genero"
           control={form.control}
@@ -130,7 +143,7 @@ export function ServidorFormPersonal() {
           )}
         />
       </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 4 }}>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
         <Controller
           name="estado_civil"
           control={form.control}
