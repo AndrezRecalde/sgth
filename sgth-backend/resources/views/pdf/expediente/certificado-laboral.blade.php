@@ -3,6 +3,8 @@
 
     $fecha = fn (?string $f) => $f ? Carbon::parse($f)->format('d/m/Y') : null;
     $dinero = fn ($v) => $v !== null ? '$ '.number_format((float) $v, 2) : '—';
+
+    $urlVerificacion = $emision->urlVerificacion();
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -43,12 +45,12 @@
         .seccion { font-size: 10pt; font-weight: bold; margin: 16px 0 4px 0; }
 
         .cierre { margin-top: 16px; }
-        .lugar { margin-top: 18px; margin-bottom: 0; }
+        .lugar { margin-top: 12px; margin-bottom: 0; }
 
         /* Sin `page-break-inside: avoid`: dompdf no lo respeta partiendo el
            bloque, lo empuja entero a la página siguiente, y con un solo
            período mandaba la firma a una segunda hoja casi vacía. */
-        .firma { margin-top: 28px; text-align: center; }
+        .firma { margin-top: 20px; text-align: center; }
         .firma .linea { border-top: 1px solid #222222; width: 62%; margin: 0 auto 4px auto; }
         .firma .nombre { font-weight: bold; margin: 0; }
         .firma .cargo { font-size: 9pt; color: #555555; margin: 0; }
@@ -70,6 +72,13 @@
             color: #555555;
         }
         .verificacion .codigo { font-weight: bold; letter-spacing: 0.5px; }
+        .pie-tabla { width: 100%; border-collapse: collapse; margin: 0; }
+        .pie-tabla td { border: none; padding: 0; font-size: 8pt; vertical-align: middle; }
+        /* 68px ≈ 1,8 cm impresos. Más pequeño, los módulos quedan tan finos
+           que la cámara de un móvil corriente falla; más grande, el pie crece
+           y empuja el certificado a una segunda hoja. */
+        .pie-qr { width: 78px; padding-right: 10px !important; }
+        .pie-qr img { width: 68px; height: 68px; }
     </style>
 </head>
 <body>
@@ -209,12 +218,22 @@
 </div>
 
 <div class="verificacion">
-    Código de verificación <span class="codigo">{{ $emision->codigo }}</span>.
-    Compruebe la autenticidad de este documento en
-    {{ config('app.url') }}/verificar/{{ $emision->codigo }}
-    <br>
-    Válido hasta el {{ $emision->vence_en->format('d/m/Y') }}. Este certificado
-    refleja la información del expediente a la fecha de su emisión.
+    <table class="pie-tabla">
+        <tr>
+            @if ($qrSrc)
+                <td class="pie-qr"><img src="{{ $qrSrc }}" alt=""></td>
+            @endif
+            <td>
+                Código de verificación <span class="codigo">{{ $emision->codigo }}</span>.
+                Compruebe la autenticidad de este documento escaneando el código
+                o en {{ $urlVerificacion }}
+                <br>
+                Válido hasta el {{ $emision->vence_en->format('d/m/Y') }}. Este
+                certificado refleja la información del expediente a la fecha de
+                su emisión.
+            </td>
+        </tr>
+    </table>
 </div>
 
 </div>

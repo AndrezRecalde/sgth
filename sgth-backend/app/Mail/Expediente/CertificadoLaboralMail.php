@@ -43,8 +43,7 @@ class CertificadoLaboralMail extends Mailable
                 'nombre'   => $this->emision->datos['nombre_completo'] ?? '',
                 'codigo'   => $this->emision->codigo,
                 'venceEl'  => $this->emision->vence_en->format('d/m/Y'),
-                'urlVerificacion' => rtrim(config('app.url'), '/')
-                    .'/verificar/'.$this->emision->codigo,
+                'urlVerificacion' => $this->emision->urlVerificacion(),
             ],
         );
     }

@@ -183,6 +183,28 @@ test('el certificado ya no deja archivos en el disco del servidor', function () 
     expect(is_dir(storage_path('app/certificados-laborales')))->toBeFalse();
 });
 
+test('el QR es un SVG y cambia con cada certificado', function () {
+    // El QR no se puede leer desde una prueba, así que aquí se fija lo poco
+    // que sí puede romperse en silencio: que se genera, que es un SVG
+    // incrustable, y que depende del código —si devolviera siempre el mismo
+    // dibujo, todos los certificados llevarían al mismo sitio—. Que la
+    // dirección sea la del frontend lo cubre EnvioCertificadoTest.
+    $servidor = ($this->servidorCon)();
+    ($this->contrato)($servidor);
+
+    $primero = $this->servicio->qrDeVerificacion(
+        $this->servicio->emitir($servidor, false, $this->uath->id),
+    );
+    $segundo = $this->servicio->qrDeVerificacion(
+        $this->servicio->emitir($servidor, false, $this->uath->id),
+    );
+
+    expect($primero)->toStartWith('data:image/svg+xml;base64,')
+        ->and(base64_decode(substr($primero, strlen('data:image/svg+xml;base64,'))))
+        ->toContain('<svg')
+        ->and($segundo)->not->toBe($primero);
+});
+
 test('el certificado entra en una hoja, también con nombres largos', function () {
     // Se ha escapado dos veces. La primera comprobación se hizo con una unidad
     // de nombre corto y «cabe en una hoja» resultó ser «cabe con estos datos»:

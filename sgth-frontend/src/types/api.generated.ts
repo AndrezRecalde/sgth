@@ -543,6 +543,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/servidores/{servidorId}/ausentismo-salud": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["expediente.ausentismoSalud"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/login": {
         parameters: {
             query?: never;
@@ -1208,6 +1224,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * El PDF sale en la misma respuesta, sin pasar por disco
+         * @description Antes se guardaba en storage con un nombre con marca de tiempo y se
+         *     devolvía una URL firmada. Nada borraba esos archivos, así que la carpeta
+         *     crecía sola con copias de documentos que llevan cédula y remuneración.
+         *     La constancia de que el certificado se emitió vive ahora en la bitácora,
+         *     que es lo que de verdad hacía falta guardar.
+         */
         get: operations["certificadoLaboral.generar"];
         put?: never;
         post?: never;
@@ -1217,14 +1241,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/expediente/certificado-laboral/descargar/{archivo}": {
+    "/v1/expediente/servidores/{servidorId}/certificados-emitidos": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["expediente.certificado.descargar"];
+        /**
+         * La bitácora de certificados de un servidor, del más reciente al más
+         *     antiguo
+         * @description Sirve para dos cosas a la vez. Para Talento Humano, evitar emitir a
+         *     ciegas: ver que hace tres días ya se emitió uno sin remuneración ahorra
+         *     repetir el trabajo y explica por qué la persona vuelve a pedirlo. Y para
+         *     la institución, dejar registro de quién accedió a datos personales: el
+         *     certificado lleva cédula y, en una de sus variantes, la remuneración.
+         *
+         *     No es un indicador de nada sobre el servidor. Un número alto no
+         *     significa nada malo —quien pide créditos o está en un concurso pide
+         *     varios—, y por eso no existe ningún listado que los ordene por cantidad.
+         */
+        get: operations["certificados.emitidos"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5950,6 +5987,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/certificados/verificar/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["certificados.verificar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos": {
         parameters: {
             query?: never;
@@ -7142,6 +7195,20 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /** EmisionCertificadoResource */
+        EmisionCertificadoResource: {
+            id: number;
+            codigo: string;
+            tipo: string;
+            /** @enum {string} */
+            tipo_titulo: "CERTIFICADO LABORAL" | "CERTIFICADO DE PRESTACIÓN DE SERVICIOS";
+            con_remuneracion: boolean;
+            emitido_en: string;
+            vence_en: string;
+            vigente: boolean;
+            emitido_por?: string;
+            firmante_nombre: string | null;
+        };
         /** EmpresaTransporte */
         EmpresaTransporte: {
             id: number;
@@ -7493,6 +7560,12 @@ export interface components {
             tratamiento_hormonal: boolean | null;
             tratamiento_hormonal_cual: string | null;
         };
+        /**
+         * GravedadAccidente
+         * @description Gravedad de un accidente de trabajo. La columna nació como texto libre (`string, 50`) y los Form Requests la validaban igual —`['required','string','max:50']`—, así que el API aceptaba cualquier cosa: la tabla pintaba lo que llegara y el mapa de tonos le daba el neutro a lo que no reconocía. Los cuatro valores son los que el formulario ofrece desde siempre.  NOTA: el modelo todavía NO castea esta columna a enum. Las filas anteriores a esta validación pueden tener cualquier texto, y un cast haría reventar la lectura del listado entero con un `ValueError` por una sola fila rara. Normalizar lo que haya —y recién entonces castear— necesita mirar los datos reales de producción, que es una decisión de Talento Humano y no del código.
+         * @enum {string}
+         */
+        GravedadAccidente: "leve" | "moderada" | "grave" | "mortal";
         /** GrupoOcupacional */
         GrupoOcupacional: {
             id: number;
@@ -8792,7 +8865,7 @@ export interface components {
             hora_accidente: string;
             lugar_accidente: string;
             descripcion_hechos: string;
-            gravedad: string;
+            gravedad: components["schemas"]["GravedadAccidente"];
             requirio_atencion_medica?: boolean;
             dias_reposo_medico?: number | null;
             causa_raiz?: string | null;
@@ -9421,8 +9494,12 @@ export interface components {
             pais_origen?: string | null;
             numero_papeleta_votacion?: string | null;
             pasaporte_numero?: string | null;
-            tiene_discapacidad: boolean;
-            tiene_enfermedad_catastrofica: boolean;
+            /**
+             * @description Se derivan de los registros de la pestaña Condición: una ficha
+             *     nueva nace sin ninguno.
+             */
+            tiene_discapacidad?: string;
+            tiene_enfermedad_catastrofica?: string;
             /** @description Contacto opcional */
             telefono_celular?: string | null;
             telefono_convencional?: string | null;
@@ -9563,8 +9640,12 @@ export interface components {
             pais_origen?: string | null;
             numero_papeleta_votacion?: string | null;
             pasaporte_numero?: string | null;
-            tiene_discapacidad: boolean;
-            tiene_enfermedad_catastrofica: boolean;
+            /**
+             * @description Se derivan de los registros de la pestaña Condición: la carga
+             *     inicial solo trae la identidad y el vínculo.
+             */
+            tiene_discapacidad?: string;
+            tiene_enfermedad_catastrofica?: string;
             telefono_celular?: string | null;
             telefono_convencional?: string | null;
             /** Format: email */
@@ -9958,7 +10039,7 @@ export interface components {
             hora_accidente?: string;
             lugar_accidente?: string;
             descripcion_hechos?: string;
-            gravedad?: string;
+            gravedad?: components["schemas"]["GravedadAccidente"];
             requirio_atencion_medica?: boolean;
             dias_reposo_medico?: number | null;
             causa_raiz?: string | null;
@@ -10299,84 +10380,6 @@ export interface components {
             nivel_consecuencias?: components["schemas"]["NivelConsecuenciasRiesgo"];
             medidas_preventivas?: string | null;
             estado?: boolean;
-        };
-        /** UpdateServidorRequest */
-        UpdateServidorRequest: {
-            /** @description Identidad base */
-            cedula?: string;
-            nombre?: string;
-            segundo_nombre?: string | null;
-            apellido?: string;
-            segundo_apellido?: string | null;
-            /** @description Relaciones y datos base */
-            regimen_laboral?: components["schemas"]["RegimenLaboral"];
-            /**
-             * @description puesto_id/unidad_administrativa_id NUNCA se editan aquí: la
-             *     única vía es ContratoServidorService::sincronizarPuestoDesdeVinculo(),
-             *     derivado siempre del ContratoServidor vigente. Un cambio de
-             *     puesto/unidad se hace registrando un MovimientoPersonal
-             *     (traslado/ascenso/traspaso/cambio_administrativo), no
-             *     editando el Servidor directamente.
-             */
-            unidad_administrativa_id?: string;
-            puesto_id?: string;
-            /**
-             * Format: date-time
-             * @description Sección A
-             */
-            fecha_nacimiento?: string;
-            /** @enum {string} */
-            genero?: "masculino" | "femenino" | "otro";
-            /** @enum {string} */
-            estado_civil?: "soltero" | "casado" | "union_libre" | "divorciado" | "viudo";
-            /** @enum {string|null} */
-            tipo_sangre?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | null;
-            /** @description Extranjería condicional */
-            es_extranjero?: boolean;
-            provincia_nacimiento_id?: number | null;
-            canton_nacimiento_id?: number | null;
-            nacionalidad?: string | null;
-            pais_origen?: string | null;
-            /** @description Sección B */
-            numero_papeleta_votacion?: string | null;
-            pasaporte_numero?: string | null;
-            /** Format: date-time */
-            pasaporte_vencimiento?: string | null;
-            /** @description Sección C */
-            telefono_celular?: string | null;
-            telefono_convencional?: string | null;
-            /** Format: email */
-            correo_personal?: string | null;
-            /**
-             * @description Registro profesional ante el ACESS. Solo lo tiene el personal
-             *     de salud; aparece en la sección O de la ficha FEMO que firma.
-             */
-            codigo_medico?: string | null;
-            direccion_domicilio?: string | null;
-            /** @description Sección D */
-            tiene_discapacidad?: boolean;
-            /** @description Sección E */
-            tiene_enfermedad_catastrofica?: boolean;
-            /**
-             * @description Sección F
-             *     tipo_nombramiento tampoco se edita aquí, mismo razonamiento
-             *     que puesto_id/unidad_administrativa_id: un cambio de
-             *     modalidad pasa por creaVinculo()/modificaVinculo() al
-             *     registrar el MovimientoPersonal correspondiente, nunca por
-             *     un update() directo sobre Servidor.
-             */
-            tipo_nombramiento?: string;
-            numero_contrato?: string | null;
-            /** Format: date-time */
-            fecha_ingreso_institucion?: string;
-            /** Format: date-time */
-            fecha_ingreso_sector_publico?: string | null;
-            /** Format: date-time */
-            fecha_nombramiento?: string | null;
-            /** Format: date-time */
-            fecha_inicio_ultimo_contrato?: string | null;
-            /** Format: date-time */
-            fecha_fin_ultimo_contrato?: string | null;
         };
         /** UpdateUnidadAdministrativaRequest */
         UpdateUnidadAdministrativaRequest: {
@@ -12242,6 +12245,39 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "expediente.ausentismoSalud": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ausentismo por salud del servidor.";
+                        datos: {
+                            permisos: number;
+                            /** @constant */
+                            meses: 12;
+                            desde: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "auth.login": {
         parameters: {
             query?: never;
@@ -14004,6 +14040,35 @@ export interface operations {
     };
     "certificadoLaboral.generar": {
         parameters: {
+            query?: {
+                con_remuneracion?: boolean;
+                enviar?: boolean;
+            };
+            header?: never;
+            path: {
+                servidorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "X-Codigo-Certificado"?: string;
+                    "X-Envio-Certificado"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "certificados.emitidos": {
+        parameters: {
             query?: never;
             header?: never;
             path: {
@@ -14019,36 +14084,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Certificado generado con éxito";
-                        url: string;
+                        mensaje: "Certificados laborales emitidos.";
+                        datos: components["schemas"]["EmisionCertificadoResource"][];
+                        meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "expediente.certificado.descargar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                archivo: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "dispensario.certificados.index": {
@@ -16003,8 +16047,13 @@ export interface operations {
                         datos: {
                             periodo: string;
                             riesgos: {
-                                total_activos: number;
-                                por_nivel_intervencion: string;
+                                total_activos: string;
+                                /**
+                                 * @description La clave vacía son los riesgos anteriores a la matriz NTP 330,
+                                 *     que tienen el nivel en NULL. Antes salían igual, porque agrupar
+                                 *     por null en PHP también da la clave vacía.
+                                 */
+                                por_nivel_intervencion: number[];
                             };
                             accidentes: {
                                 total: number;
@@ -16025,14 +16074,22 @@ export interface operations {
                                 no_registrado: number;
                             };
                             psicosocial: {
-                                campanias_activas: number;
+                                campanias_activas: string;
                                 total_respuestas: number;
                                 riesgo_alto: number;
                             };
                             assist: {
-                                campanias_activas: number;
+                                campanias_activas: string;
                                 total_respuestas: number;
                                 riesgo_alto: number;
+                                /**
+                                 * @description «No reporta consumo» es quien contestó que no ha consumido
+                                 *     ninguna sustancia: el mapa de niveles llega vacío. Se compara
+                                 *     como jsonb porque el tipo `json` de PostgreSQL no tiene operador
+                                 *     de igualdad, y contra las dos formas de lo vacío porque el mapa
+                                 *     lo arma PHP: un array asociativo sin claves se serializa `[]`,
+                                 *     no `{}`. Quedarse con una sola contaba cero.
+                                 */
                                 sin_consumo_reportado: number;
                             };
                             programa_drogas: {
@@ -16045,6 +16102,7 @@ export interface operations {
                             ausentismo: {
                                 total_permisos: number;
                                 servidores_afectados: number;
+                                /** @description 480 minutos es la jornada de ocho horas. */
                                 total_dias: number;
                             };
                         };
@@ -16447,7 +16505,11 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    tipo_discapacidad: string;
+                    /**
+                     * @description El modelo lo castea a TipoDiscapacidad: un texto fuera del
+                     *     catálogo pasaba esta validación y reventaba en 500 al guardar.
+                     */
+                    tipo_discapacidad: components["schemas"]["TipoDiscapacidad"];
                     porcentaje: number;
                     numero_carnet_conadis?: string | null;
                 };
@@ -17145,6 +17207,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -18664,7 +18727,11 @@ export interface operations {
     };
     "factorRiesgoCatalogo.index": {
         parameters: {
-            query?: never;
+            query?: {
+                search?: string | null;
+                categoria?: components["schemas"]["CategoriaFactorRiesgo"];
+                solo_activos?: boolean | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -18686,6 +18753,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "factorRiesgoCatalogo.store": {
@@ -21235,7 +21303,10 @@ export interface operations {
     };
     "normativaLegalSso.index": {
         parameters: {
-            query?: never;
+            query?: {
+                tipo?: components["schemas"]["TipoNormativaLegal"];
+                solo_activas?: boolean | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -21257,6 +21328,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "normativaLegalSso.store": {
@@ -23349,7 +23421,10 @@ export interface operations {
     };
     "programaDrogaActividad.index": {
         parameters: {
-            query?: never;
+            query?: {
+                fase?: components["schemas"]["FaseProgramaDrogas"];
+                solo_activas?: boolean | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -23371,6 +23446,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "programaDrogaActividad.store": {
@@ -25513,11 +25589,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["UpdateServidorRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -27805,6 +27877,65 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "certificados.verificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description Un vencido sí se reconoce: al banco le sirve saber que el documento
+             *     es auténtico pero que caducó, y decidir si pide uno nuevo.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Certificado verificado.";
+                        datos: {
+                            codigo: string;
+                            /** @enum {string} */
+                            documento: "CERTIFICADO LABORAL" | "CERTIFICADO DE PRESTACIÓN DE SERVICIOS";
+                            nombre_completo: unknown;
+                            cedula: string | null;
+                            puesto: unknown;
+                            unidad: unknown;
+                            anios_servicio: unknown;
+                            emitido_en: string;
+                            vence_en: string;
+                            vigente: boolean;
+                            firmante: string | null;
+                            firmante_cargo: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No existe ningún certificado con ese código de verificación.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "viatico.index": {

@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Expediente;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Expediente\EmisionCertificadoResource;
+use App\Http\Responses\ApiResponse;
+use App\Models\Expediente\EmisionCertificadoLaboral;
 use App\Models\Expediente\Servidor;
 use App\Services\Expediente\CertificadoLaboralService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -17,6 +21,38 @@ class CertificadoLaboralController extends Controller
     public function __construct(
         private readonly CertificadoLaboralService $certificados,
     ) {
+    }
+
+    /**
+     * La bitácora de certificados de un servidor, del más reciente al más
+     * antiguo.
+     *
+     * Sirve para dos cosas a la vez. Para Talento Humano, evitar emitir a
+     * ciegas: ver que hace tres días ya se emitió uno sin remuneración ahorra
+     * repetir el trabajo y explica por qué la persona vuelve a pedirlo. Y para
+     * la institución, dejar registro de quién accedió a datos personales: el
+     * certificado lleva cédula y, en una de sus variantes, la remuneración.
+     *
+     * No es un indicador de nada sobre el servidor. Un número alto no
+     * significa nada malo —quien pide créditos o está en un concurso pide
+     * varios—, y por eso no existe ningún listado que los ordene por cantidad.
+     */
+    public function emitidos(int $servidorId): JsonResponse
+    {
+        // `nombre_completo` del usuario sale de su servidor: sin la relación
+        // anidada serían dos consultas por cada línea de la bitácora.
+        $emisiones = EmisionCertificadoLaboral::with([
+            'emitidoPor:id,usuario_ti,servidor_id',
+            'emitidoPor.servidor:id,nombre,apellido',
+        ])
+            ->where('servidor_id', $servidorId)
+            ->orderByDesc('emitido_en')
+            ->get();
+
+        return ApiResponse::ok(
+            EmisionCertificadoResource::collection($emisiones),
+            'Certificados laborales emitidos.',
+        );
     }
 
     /**

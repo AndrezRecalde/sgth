@@ -11,6 +11,7 @@ import { useDocumentoMutations } from '../../hooks/useDocumentoMutations'
 import { documentoService } from '../../services/documentoService'
 import { getDocumentosColumns } from '../documentos.columns'
 import { documentosQueFaltan } from '../../utils/documentosBasicos'
+import { CertificadosEmitidosPanel } from '../CertificadosEmitidosPanel'
 import { DocumentoModal } from '../DocumentoModal'
 import type { DocumentoServidor } from '@/types/api'
 
@@ -80,6 +81,8 @@ export function DocumentosTab({ servidorId }: Props) {
           <SgthTable records={documentos} columns={columns} minHeight={100} />
         </DataState>
       </SectionCard>
+
+      <CertificadosEmitidosPanel servidorId={servidorId} />
 
       <DocumentoModal opened={opened} onClose={close} servidorId={servidorId} />
     </Stack>

@@ -3239,6 +3239,78 @@
                 }
             }
         },
+        "/v1/expediente/servidores/{servidorId}/ausentismo-salud": {
+            "get": {
+                "operationId": "expediente.ausentismoSalud",
+                "tags": [
+                    "AusentismoSalud"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Ausentismo por salud del servidor."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "permisos": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "meses": {
+                                                    "type": "integer",
+                                                    "const": 12
+                                                },
+                                                "desde": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "permisos",
+                                                "meses",
+                                                "desde"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "operationId": "auth.login",
@@ -6810,6 +6882,77 @@
         "/v1/expediente/servidores/{servidorId}/certificado-laboral": {
             "get": {
                 "operationId": "certificadoLaboral.generar",
+                "description": "Antes se guardaba en storage con un nombre con marca de tiempo y se\ndevolv\u00eda una URL firmada. Nada borraba esos archivos, as\u00ed que la carpeta\ncrec\u00eda sola con copias de documentos que llevan c\u00e9dula y remuneraci\u00f3n.\nLa constancia de que el certificado se emiti\u00f3 vive ahora en la bit\u00e1cora,\nque es lo que de verdad hac\u00eda falta guardar.",
+                "summary": "El PDF sale en la misma respuesta, sin pasar por disco",
+                "tags": [
+                    "CertificadoLaboral"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "con_remuneracion",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "enviar",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "X-Codigo-Certificado": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "X-Envio-Certificado": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/certificados-emitidos": {
+            "get": {
+                "operationId": "certificados.emitidos",
+                "description": "Sirve para dos cosas a la vez. Para Talento Humano, evitar emitir a\nciegas: ver que hace tres d\u00edas ya se emiti\u00f3 uno sin remuneraci\u00f3n ahorra\nrepetir el trabajo y explica por qu\u00e9 la persona vuelve a pedirlo. Y para\nla instituci\u00f3n, dejar registro de qui\u00e9n accedi\u00f3 a datos personales: el\ncertificado lleva c\u00e9dula y, en una de sus variantes, la remuneraci\u00f3n.\n\nNo es un indicador de nada sobre el servidor. Un n\u00famero alto no\nsignifica nada malo \u2014quien pide cr\u00e9ditos o est\u00e1 en un concurso pide\nvarios\u2014, y por eso no existe ning\u00fan listado que los ordene por cantidad.",
+                "summary": "La bit\u00e1cora de certificados de un servidor, del m\u00e1s reciente al m\u00e1s\nantiguo",
                 "tags": [
                     "CertificadoLaboral"
                 ],
@@ -6831,57 +6974,32 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Certificado generado con \u00e9xito"
+                                        "exito": {
+                                            "type": "boolean"
                                         },
-                                        "url": {
-                                            "type": "string"
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Certificados laborales emitidos."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EmisionCertificadoResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "message",
-                                        "url"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/expediente/certificado-laboral/descargar/{archivo}": {
-            "get": {
-                "operationId": "expediente.certificado.descargar",
-                "tags": [
-                    "CertificadoLaboral"
-                ],
-                "parameters": [
-                    {
-                        "name": "archivo",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -10612,7 +10730,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     }
                 ],
@@ -10749,7 +10867,7 @@
                                     },
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "estado": {
                                         "$ref": "#/components/schemas/EstadoCumplimientoNormativa"
@@ -11466,7 +11584,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     },
                     {
@@ -11505,11 +11623,14 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "total_activos": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "string"
                                                         },
                                                         "por_nivel_intervencion": {
-                                                            "type": "string"
+                                                            "type": "array",
+                                                            "description": "La clave vac\u00eda son los riesgos anteriores a la matriz NTP 330,\nque tienen el nivel en NULL. Antes sal\u00edan igual, porque agrupar\npor null en PHP tambi\u00e9n da la clave vac\u00eda.",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            }
                                                         }
                                                     },
                                                     "required": [
@@ -11521,12 +11642,10 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "total": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "con_atencion_medica": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "dias_reposo_total": {
                                                             "type": "integer"
@@ -11599,8 +11718,7 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "campanias_activas": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "string"
                                                         },
                                                         "total_respuestas": {
                                                             "type": "integer",
@@ -11621,8 +11739,7 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "campanias_activas": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "string"
                                                         },
                                                         "total_respuestas": {
                                                             "type": "integer",
@@ -11634,6 +11751,7 @@
                                                         },
                                                         "sin_consumo_reportado": {
                                                             "type": "integer",
+                                                            "description": "\u00abNo reporta consumo\u00bb es quien contest\u00f3 que no ha consumido\nninguna sustancia: el mapa de niveles llega vac\u00edo. Se compara\ncomo jsonb porque el tipo `json` de PostgreSQL no tiene operador\nde igualdad, y contra las dos formas de lo vac\u00edo porque el mapa\nlo arma PHP: un array asociativo sin claves se serializa `[]`,\nno `{}`. Quedarse con una sola contaba cero.",
                                                             "minimum": 0
                                                         }
                                                     },
@@ -11680,15 +11798,14 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "total_permisos": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "servidores_afectados": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "total_dias": {
-                                                            "type": "number"
+                                                            "type": "number",
+                                                            "description": "480 minutos es la jornada de ocho horas."
                                                         }
                                                     },
                                                     "required": [
@@ -12569,7 +12686,8 @@
                                 "type": "object",
                                 "properties": {
                                     "tipo_discapacidad": {
-                                        "type": "string"
+                                        "description": "El modelo lo castea a TipoDiscapacidad: un texto fuera del\ncat\u00e1logo pasaba esta validaci\u00f3n y reventaba en 500 al guardar.",
+                                        "$ref": "#/components/schemas/TipoDiscapacidad"
                                     },
                                     "porcentaje": {
                                         "type": "number",
@@ -14073,6 +14191,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -16468,7 +16589,7 @@
                                 "properties": {
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "unidad_administrativa_id": {
                                         "type": [
@@ -16733,7 +16854,7 @@
                                 "properties": {
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "unidad_administrativa_id": {
                                         "type": [
@@ -17234,6 +17355,36 @@
                 "tags": [
                     "FactorRiesgoCatalogo"
                 ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 150
+                        }
+                    },
+                    {
+                        "name": "categoria",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/CategoriaFactorRiesgo"
+                        }
+                    },
+                    {
+                        "name": "solo_activos",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -17268,6 +17419,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -19497,7 +19651,7 @@
                                 "properties": {
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "unidad_administrativa_id": {
                                         "type": [
@@ -19700,7 +19854,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     },
                     {
@@ -19769,7 +19923,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     },
                     {
@@ -23019,6 +23173,25 @@
                 "tags": [
                     "NormativaLegalSso"
                 ],
+                "parameters": [
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoNormativaLegal"
+                        }
+                    },
+                    {
+                        "name": "solo_activas",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -23053,6 +23226,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -27795,6 +27971,25 @@
                 "tags": [
                     "ProgramaDrogaActividad"
                 ],
+                "parameters": [
+                    {
+                        "name": "fase",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/FaseProgramaDrogas"
+                        }
+                    },
+                    {
+                        "name": "solo_activas",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -27829,6 +28024,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -28061,7 +28259,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     }
                 ],
@@ -28169,7 +28367,7 @@
                                     },
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "estado": {
                                         "$ref": "#/components/schemas/EstadoActividadPrograma"
@@ -33077,15 +33275,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateServidorRequest"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -38114,6 +38303,145 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/certificados/verificar/{codigo}": {
+            "get": {
+                "operationId": "certificados.verificar",
+                "tags": [
+                    "VerificacionCertificado"
+                ],
+                "parameters": [
+                    {
+                        "name": "codigo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Un vencido s\u00ed se reconoce: al banco le sirve saber que el documento\nes aut\u00e9ntico pero que caduc\u00f3, y decidir si pide uno nuevo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Certificado verificado."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "codigo": {
+                                                    "type": "string"
+                                                },
+                                                "documento": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "CERTIFICADO LABORAL",
+                                                        "CERTIFICADO DE PRESTACI\u00d3N DE SERVICIOS"
+                                                    ]
+                                                },
+                                                "nombre_completo": {},
+                                                "cedula": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "puesto": {},
+                                                "unidad": {},
+                                                "anios_servicio": {},
+                                                "emitido_en": {
+                                                    "type": "string"
+                                                },
+                                                "vence_en": {
+                                                    "type": "string"
+                                                },
+                                                "vigente": {
+                                                    "type": "boolean"
+                                                },
+                                                "firmante": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "firmante_cargo": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "codigo",
+                                                "documento",
+                                                "nombre_completo",
+                                                "cedula",
+                                                "puesto",
+                                                "unidad",
+                                                "anios_servicio",
+                                                "emitido_en",
+                                                "vence_en",
+                                                "vigente",
+                                                "firmante",
+                                                "firmante_cargo"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "No existe ning\u00fan certificado con ese c\u00f3digo de verificaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -43339,6 +43667,60 @@
                 ],
                 "title": "DocumentoSso"
             },
+            "EmisionCertificadoResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "codigo": {
+                        "type": "string"
+                    },
+                    "tipo": {
+                        "type": "string"
+                    },
+                    "tipo_titulo": {
+                        "type": "string",
+                        "enum": [
+                            "CERTIFICADO LABORAL",
+                            "CERTIFICADO DE PRESTACI\u00d3N DE SERVICIOS"
+                        ]
+                    },
+                    "con_remuneracion": {
+                        "type": "boolean"
+                    },
+                    "emitido_en": {
+                        "type": "string"
+                    },
+                    "vence_en": {
+                        "type": "string"
+                    },
+                    "vigente": {
+                        "type": "boolean"
+                    },
+                    "emitido_por": {
+                        "type": "string"
+                    },
+                    "firmante_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "codigo",
+                    "tipo",
+                    "tipo_titulo",
+                    "con_remuneracion",
+                    "emitido_en",
+                    "vence_en",
+                    "vigente",
+                    "firmante_nombre"
+                ],
+                "title": "EmisionCertificadoResource"
+            },
             "EmpresaTransporte": {
                 "type": "object",
                 "properties": {
@@ -44656,6 +45038,17 @@
                     "tratamiento_hormonal_cual"
                 ],
                 "title": "FichaSaludOcupacional"
+            },
+            "GravedadAccidente": {
+                "type": "string",
+                "description": "Gravedad de un accidente de trabajo. La columna naci\u00f3 como texto libre (`string, 50`) y los Form Requests la validaban igual \u2014`['required','string','max:50']`\u2014, as\u00ed que el API aceptaba cualquier cosa: la tabla pintaba lo que llegara y el mapa de tonos le daba el neutro a lo que no reconoc\u00eda. Los cuatro valores son los que el formulario ofrece desde siempre.  NOTA: el modelo todav\u00eda NO castea esta columna a enum. Las filas anteriores a esta validaci\u00f3n pueden tener cualquier texto, y un cast har\u00eda reventar la lectura del listado entero con un `ValueError` por una sola fila rara. Normalizar lo que haya \u2014y reci\u00e9n entonces castear\u2014 necesita mirar los datos reales de producci\u00f3n, que es una decisi\u00f3n de Talento Humano y no del c\u00f3digo.\n",
+                "enum": [
+                    "leve",
+                    "moderada",
+                    "grave",
+                    "mortal"
+                ],
+                "title": "GravedadAccidente"
             },
             "GrupoOcupacional": {
                 "type": "object",
@@ -49962,8 +50355,7 @@
                         "maxLength": 3000
                     },
                     "gravedad": {
-                        "type": "string",
-                        "maxLength": 50
+                        "$ref": "#/components/schemas/GravedadAccidente"
                     },
                     "requirio_atencion_medica": {
                         "type": "boolean"
@@ -52449,10 +52841,11 @@
                         "maxLength": 50
                     },
                     "tiene_discapacidad": {
-                        "type": "boolean"
+                        "type": "string",
+                        "description": "Se derivan de los registros de la pesta\u00f1a Condici\u00f3n: una ficha\nnueva nace sin ninguno."
                     },
                     "tiene_enfermedad_catastrofica": {
-                        "type": "boolean"
+                        "type": "string"
                     },
                     "telefono_celular": {
                         "type": [
@@ -52514,9 +52907,7 @@
                     "fecha_nacimiento",
                     "genero",
                     "estado_civil",
-                    "es_extranjero",
-                    "tiene_discapacidad",
-                    "tiene_enfermedad_catastrofica"
+                    "es_extranjero"
                 ],
                 "title": "StoreServidorBasicoRequest"
             },
@@ -53022,10 +53413,11 @@
                         "maxLength": 50
                     },
                     "tiene_discapacidad": {
-                        "type": "boolean"
+                        "type": "string",
+                        "description": "Se derivan de los registros de la pesta\u00f1a Condici\u00f3n: la carga\ninicial solo trae la identidad y el v\u00ednculo."
                     },
                     "tiene_enfermedad_catastrofica": {
-                        "type": "boolean"
+                        "type": "string"
                     },
                     "telefono_celular": {
                         "type": [
@@ -53138,8 +53530,6 @@
                     "genero",
                     "estado_civil",
                     "es_extranjero",
-                    "tiene_discapacidad",
-                    "tiene_enfermedad_catastrofica",
                     "vinculo"
                 ],
                 "title": "StoreVinculacionInicialRequest"
@@ -54485,8 +54875,7 @@
                         "maxLength": 3000
                     },
                     "gravedad": {
-                        "type": "string",
-                        "maxLength": 50
+                        "$ref": "#/components/schemas/GravedadAccidente"
                     },
                     "requirio_atencion_medica": {
                         "type": "boolean"
@@ -55909,230 +56298,6 @@
                     }
                 },
                 "title": "UpdateRiesgoLaboralRequest"
-            },
-            "UpdateServidorRequest": {
-                "type": "object",
-                "properties": {
-                    "cedula": {
-                        "type": "string",
-                        "description": "Identidad base",
-                        "pattern": "^\\d{10}$"
-                    },
-                    "nombre": {
-                        "type": "string",
-                        "maxLength": 100
-                    },
-                    "segundo_nombre": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "apellido": {
-                        "type": "string",
-                        "maxLength": 100
-                    },
-                    "segundo_apellido": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "regimen_laboral": {
-                        "description": "Relaciones y datos base",
-                        "$ref": "#/components/schemas/RegimenLaboral"
-                    },
-                    "unidad_administrativa_id": {
-                        "type": "string",
-                        "description": "puesto_id/unidad_administrativa_id NUNCA se editan aqu\u00ed: la\n\u00fanica v\u00eda es ContratoServidorService::sincronizarPuestoDesdeVinculo(),\nderivado siempre del ContratoServidor vigente. Un cambio de\npuesto/unidad se hace registrando un MovimientoPersonal\n(traslado/ascenso/traspaso/cambio_administrativo), no\neditando el Servidor directamente."
-                    },
-                    "puesto_id": {
-                        "type": "string"
-                    },
-                    "fecha_nacimiento": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Secci\u00f3n A"
-                    },
-                    "genero": {
-                        "type": "string",
-                        "enum": [
-                            "masculino",
-                            "femenino",
-                            "otro"
-                        ]
-                    },
-                    "estado_civil": {
-                        "type": "string",
-                        "enum": [
-                            "soltero",
-                            "casado",
-                            "union_libre",
-                            "divorciado",
-                            "viudo"
-                        ]
-                    },
-                    "tipo_sangre": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "enum": [
-                            "A+",
-                            "A-",
-                            "B+",
-                            "B-",
-                            "AB+",
-                            "AB-",
-                            "O+",
-                            "O-"
-                        ]
-                    },
-                    "es_extranjero": {
-                        "type": "boolean",
-                        "description": "Extranjer\u00eda condicional"
-                    },
-                    "provincia_nacimiento_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "canton_nacimiento_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "nacionalidad": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "pais_origen": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "numero_papeleta_votacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "Secci\u00f3n B",
-                        "maxLength": 20
-                    },
-                    "pasaporte_numero": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 50
-                    },
-                    "pasaporte_vencimiento": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "telefono_celular": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "Secci\u00f3n C",
-                        "maxLength": 20
-                    },
-                    "telefono_convencional": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 20
-                    },
-                    "correo_personal": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "email",
-                        "maxLength": 150
-                    },
-                    "codigo_medico": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "Registro profesional ante el ACESS. Solo lo tiene el personal\nde salud; aparece en la secci\u00f3n O de la ficha FEMO que firma.",
-                        "maxLength": 30
-                    },
-                    "direccion_domicilio": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
-                    },
-                    "tiene_discapacidad": {
-                        "type": "boolean",
-                        "description": "Secci\u00f3n D"
-                    },
-                    "tiene_enfermedad_catastrofica": {
-                        "type": "boolean",
-                        "description": "Secci\u00f3n E"
-                    },
-                    "tipo_nombramiento": {
-                        "type": "string",
-                        "description": "Secci\u00f3n F\ntipo_nombramiento tampoco se edita aqu\u00ed, mismo razonamiento\nque puesto_id/unidad_administrativa_id: un cambio de\nmodalidad pasa por creaVinculo()/modificaVinculo() al\nregistrar el MovimientoPersonal correspondiente, nunca por\nun update() directo sobre Servidor."
-                    },
-                    "numero_contrato": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "fecha_ingreso_institucion": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_ingreso_sector_publico": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "fecha_nombramiento": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "fecha_inicio_ultimo_contrato": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "fecha_fin_ultimo_contrato": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    }
-                },
-                "title": "UpdateServidorRequest"
             },
             "UpdateUnidadAdministrativaRequest": {
                 "type": "object",

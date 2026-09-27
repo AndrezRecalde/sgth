@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CertificadoLaboralService
 {
@@ -142,7 +143,37 @@ class CertificadoLaboralService
             'datos'   => $emision->datos,
             'tipo'    => $emision->tipo,
             'logo'    => public_path('images/logo-gadpe.png'),
+            'qrSrc'   => $this->qrDeVerificacion($emision),
         ])->setPaper('a4', 'portrait')->output();
+    }
+
+    /**
+     * El QR que lleva a la página de verificación, listo para incrustar.
+     *
+     * `margin(1)` deja la zona de silencio que la norma del QR exige: sin ese
+     * blanco alrededor muchos lectores no enganchan el código.
+     *
+     * Devuelve null si algo falla. Un QR de más no debe impedir que salga el
+     * certificado: el código va también escrito en el pie, y quien reciba el
+     * papel puede teclearlo.
+     */
+    public function qrDeVerificacion(EmisionCertificadoLaboral $emision): ?string
+    {
+        try {
+            $svg = QrCode::format('svg')
+                ->size(120)
+                ->margin(1)
+                ->generate($emision->urlVerificacion());
+
+            return $svg ? 'data:image/svg+xml;base64,'.base64_encode($svg) : null;
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo generar el QR del certificado laboral', [
+                'codigo' => $emision->codigo,
+                'motivo' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     public function nombreArchivo(EmisionCertificadoLaboral $emision): string

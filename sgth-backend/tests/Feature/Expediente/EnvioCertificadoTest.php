@@ -128,6 +128,34 @@ test('el correo lleva el PDF adjunto y el código en el cuerpo', function () {
     });
 });
 
+test('la dirección de verificación apunta al frontend, no a la API', function () {
+    // Salió mal en toda la primera tanda de certificados: el PDF y el correo
+    // componían la dirección con `app.url`, que es el dominio de la API. La
+    // pantalla `/verificar/{codigo}` la sirve el frontend, y en producción son
+    // dos dominios distintos, así que quien recibía el papel llegaba a un 404.
+    // El PDF de permisos ya había tropezado antes con lo mismo.
+    config([
+        'app.url'          => 'https://api.sgth.gadpe.gob.ec',
+        'app.frontend_url' => 'https://sgth.gadpe.gob.ec',
+    ]);
+
+    $servidor = ($this->servidorCon)(['correo_personal' => 'ana@gmail.com']);
+    $emision = $this->servicio->emitir($servidor, false, $this->uath->id);
+
+    expect($emision->urlVerificacion())
+        ->toBe('https://sgth.gadpe.gob.ec/verificar/'.$emision->codigo);
+
+    $this->servicio->enviar($emision, $servidor);
+
+    Mail::assertSent(CertificadoLaboralMail::class, fn ($mail) => str_contains(
+        $mail->render(),
+        // Del botón, y no del cuerpo entero: la cabecera de la plantilla de
+        // Laravel enlaza el nombre de la aplicación a `app.url`, y ahí sí
+        // corresponde el dominio de la API.
+        'href="https://sgth.gadpe.gob.ec/verificar/'.$emision->codigo.'"',
+    ));
+});
+
 test('emitir sin pedir el envío no manda ningún correo', function () {
     $servidor = ($this->servidorCon)(['correo_personal' => 'ana@gmail.com']);
 
