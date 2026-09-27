@@ -5,7 +5,21 @@
  * que de todas formas serían rechazadas, y para etiquetarlas igual.
  */
 
-export type AccionTipo =
+import type { SubtipoMovimientoPersonal, TipoMovimientoPersonal } from '@/types/api'
+
+/**
+ * Los tipos que el formulario ofrece: un subconjunto del enum del backend, no
+ * todo él. Los históricos genéricos —novedad de contrato, cambio de puesto— y
+ * los planos legados —traslado, traspaso— aparecen en el historial pero no se
+ * crean desde aquí.
+ *
+ * Va con `Extract` y no escrito a mano para que siga siendo un subconjunto
+ * comprobado: si el backend retira un tipo, como pasó con 'ascenso' el
+ * 2026-07-23, esta línea deja de compilar en vez de ofrecer una opción que el
+ * servidor rechaza.
+ */
+export type AccionTipo = Extract<
+  TipoMovimientoPersonal,
   | 'ingreso'
   | 'cambio_administrativo'
   | 'cesacion_funciones'
@@ -14,19 +28,10 @@ export type AccionTipo =
   | 'prestacion_servicios'
   | 'licencia_sin_remuneracion'
   | 'incremento_remuneracion'
+>
 
-export type AccionSubtipo =
-  | 'traslado_administrativo'
-  | 'traspaso'
-  | 'comision_con_remuneracion'
-  | 'comision_sin_remuneracion'
-  | 'sancion_disciplinaria'
-  | 'renuncia'
-  | 'destitucion'
-  | 'jubilacion'
-  | 'incapacidad'
-  | 'contrato_finalizado'
-  | 'visto_bueno'
+/** Los subtipos sí son todos: el enum completo del backend. */
+export type AccionSubtipo = SubtipoMovimientoPersonal
 
 export const TIPO_LABELS: Record<AccionTipo, string> = {
   ingreso: 'Ingreso y Vinculación',
@@ -45,18 +50,27 @@ export const TIPO_LABELS: Record<AccionTipo, string> = {
  * son bitácora interna del expediente o tipos planos heredados. Van aparte de
  * TIPO_LABELS a propósito — necesitan etiqueta para *mostrarse*, no para
  * ofrecerse como opción.
+ *
+ * El tipo del mapa es `Exclude<…, AccionTipo>`, no `Record<string, string>`:
+ * juntos, los dos mapas tienen que cubrir el enum entero, y así lo comprueba
+ * tsc. Con `string` como clave faltaba 'comision_sin_remuneracion' —tipo plano
+ * legado, de cuando la comisión no era todavía subtipo de Cambio
+ * Administrativo— y `etiquetaTipoMovimiento()` caía en su último `??`: la tabla
+ * del historial imprimía el slug crudo «comision_sin_remuneracion».
  */
-const TIPO_LABELS_FUERA_DEL_FORMULARIO: Record<string, string> = {
-  subrogacion:        'Subrogación',
-  novedad_contrato:   'Novedad de Contrato',
-  cambio_puesto:      'Cambio de Puesto',
-  cambio_regimen:     'Cambio de Régimen',
-  traslado:           'Traslado',
-  traspaso:           'Traspaso',
-  comision_servicios: 'Comisión de Servicios',
-  egreso:             'Egreso',
-  destitucion:        'Destitución',
-}
+const TIPO_LABELS_FUERA_DEL_FORMULARIO:
+  Record<Exclude<TipoMovimientoPersonal, AccionTipo>, string> = {
+    subrogacion:               'Subrogación',
+    novedad_contrato:          'Novedad de Contrato',
+    cambio_puesto:             'Cambio de Puesto',
+    cambio_regimen:            'Cambio de Régimen',
+    traslado:                  'Traslado',
+    traspaso:                  'Traspaso',
+    comision_servicios:        'Comisión de Servicios',
+    comision_sin_remuneracion: 'Comisión de Servicios sin Remuneración',
+    egreso:                    'Egreso',
+    destitucion:               'Destitución',
+  }
 
 /**
  * Espeja TipoMovimientoPersonal::tieneEfectoEconomico(). Estos comprometen
@@ -64,17 +78,24 @@ const TIPO_LABELS_FUERA_DEL_FORMULARIO: Record<string, string> = {
  * referencia del dictamen presupuestario, así que hay que pedirla antes de
  * intentar la transición en vez de dejar que falle.
  */
-export function tieneEfectoEconomico(tipo?: string | null): boolean {
+export function tieneEfectoEconomico(tipo?: TipoMovimientoPersonal | null): boolean {
   return tipo === 'subrogacion' || tipo === 'incremento_remuneracion'
 }
 
-/** Etiqueta legible de cualquier tipo de movimiento, venga o no del formulario. */
-export function etiquetaTipoMovimiento(tipo?: string | null): string {
-  if (!tipo) return '—'
+/**
+ * Etiqueta legible de cualquier tipo de movimiento, venga o no del formulario.
+ *
+ * Los dos mapas se juntan en uno exhaustivo, así que no hace falta ni asertar
+ * la clave ni caer al slug cuando no hay etiqueta: el tipo del `Record` obliga a
+ * que estén las dieciocho.
+ */
+const ETIQUETAS_POR_TIPO: Record<TipoMovimientoPersonal, string> = {
+  ...TIPO_LABELS,
+  ...TIPO_LABELS_FUERA_DEL_FORMULARIO,
+}
 
-  return TIPO_LABELS[tipo as AccionTipo]
-    ?? TIPO_LABELS_FUERA_DEL_FORMULARIO[tipo]
-    ?? tipo
+export function etiquetaTipoMovimiento(tipo?: TipoMovimientoPersonal | null): string {
+  return tipo ? ETIQUETAS_POR_TIPO[tipo] : '—'
 }
 
 export const SUBTIPO_LABELS: Record<AccionSubtipo, string> = {
@@ -202,7 +223,7 @@ export function esComision(subtipo?: AccionSubtipo | null): boolean {
  * algo.
  */
 export function proponeSituacion(
-  tipo?: string | null,
+  tipo?: TipoMovimientoPersonal | null,
   subtipo?: AccionSubtipo | null,
 ): boolean {
   return tipo === 'ingreso' || tipo === 'subrogacion' || reubicaAlServidor(subtipo)
@@ -210,7 +231,7 @@ export function proponeSituacion(
 
 /** Acciones que apartan temporalmente al servidor: lo suyo es el período. */
 export function esAusenciaTemporal(
-  tipo?: string | null,
+  tipo?: TipoMovimientoPersonal | null,
   subtipo?: AccionSubtipo | null,
 ): boolean {
   return tipo === 'licencia_sin_remuneracion' || esComision(subtipo)

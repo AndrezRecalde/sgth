@@ -538,11 +538,9 @@ export type ContratoParams = {
   estado?: EstadoContrato
 }
 
-export type MovimientoPersonalParams = {
-  page?: number
-  per_page?: number
-  servidor_id?: number
-}
+// 'MovimientoPersonalParams' se retiró el 2026-09-27: ningún servicio ni hook
+// lo usaba. Los filtros de la bandeja los declara movimientoService.listarBandeja
+// junto a la petición que los manda, que es donde se ven.
 
 export type ServidorConRelaciones = Servidor & {
   id: number
@@ -651,22 +649,22 @@ export type ContratoConRelaciones = ContratoServidor & {
   rau?: string | number | null
 }
 
-export type TipoMovimientoPersonal =
-  | 'traslado'
-  | 'ascenso'
-  | 'subrogacion'
-  | 'comision_servicios'
-  | 'cambio_regimen'
-  | 'cambio_puesto'
-  | 'ingreso'
-  | 'egreso'
-  | 'novedad_contrato'
-  | 'cambio_denominacion'
-  | 'prestacion_servicios'
-  | 'cambio_administrativo'
-  | 'comision_sin_remuneracion'
-  | 'licencia_sin_remuneracion'
-  | 'incremento_remuneracion'
+/**
+ * Los dos niveles de la taxonomía, aliasados al generado. ←AUTO
+ *
+ * Escritos a mano se habían separado del backend: la unión tenía 'ascenso',
+ * retirado del enum el 2026-07-23 por no existir en la operación real del GAD, y
+ * le faltaban los cuatro que nacieron con la taxonomía de dos niveles —traspaso,
+ * destitucion, cesacion_funciones y regimen_disciplinario—. Una cesación, que es
+ * de lo más común que registra Talento Humano, no era representable con este
+ * tipo, y comparar `tipo_movimiento === 'cesacion_funciones'` no compilaba.
+ *
+ * `api.generated.ts` ya trae los dos enums completos desde que el recurso
+ * enumera sus columnas y Scramble puede inferirlo, así que aquí solo se
+ * aliasan: es la única forma de que no vuelvan a separarse.
+ */
+export type TipoMovimientoPersonal = components['schemas']['TipoMovimientoPersonal']
+export type SubtipoMovimientoPersonal = components['schemas']['SubtipoMovimientoPersonal']
 
 export type EstadoAccionPersonal =
   | 'borrador'
@@ -684,7 +682,7 @@ export type MovimientoPersonal = {
   id: number
   servidor_id: number
   tipo_movimiento: TipoMovimientoPersonal
-  subtipo_movimiento?: string | null
+  subtipo_movimiento?: SubtipoMovimientoPersonal | null
   categoria?: CategoriaEventoVinculo | null
   estado?: EstadoAccionPersonal
   // Datos del vínculo que Talento Humano fija mientras está en borrador y que
@@ -861,14 +859,10 @@ export type CuentaBancariaConRelaciones = CuentaBancariaServidor & {
   estado?:               boolean
 }
 
-export type MovimientoPersonalConRelaciones = {
-  id: number
-  servidor_id: number
-  tipo_movimiento?: string
-  descripcion?: string
-  fecha_movimiento?: string
-  created_at?: string
-}
+// 'MovimientoPersonalConRelaciones' se retiró el 2026-09-27: nadie lo importaba,
+// y encima mentía —declaraba un `fecha_movimiento` que el recurso nunca devolvió;
+// la columna es `fecha_efectiva`—. Las relaciones de un movimiento viven en
+// `MovimientoPersonal`, que las declara todas.
 
 // ── Historial Académico ───────────────────────
 export type TipoEstudio = 'estudio' | 'capacitacion'
