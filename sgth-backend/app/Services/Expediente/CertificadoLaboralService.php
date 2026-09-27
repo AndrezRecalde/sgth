@@ -3,11 +3,14 @@
 namespace App\Services\Expediente;
 
 use App\Enums\RolFirmaAccionPersonal;
+use App\Mail\Expediente\CertificadoLaboralMail;
 use App\Enums\TipoCertificadoLaboral;
 use App\Models\Expediente\EmisionCertificadoLaboral;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CertificadoLaboralService
@@ -61,6 +64,74 @@ class CertificadoLaboralService
             'firmante_cedula'  => $firmante?->cedula,
             'datos'            => $this->fotografiar($servidor, $tipo, $conRemuneracion),
         ]);
+    }
+
+    /**
+     * A qué dirección se manda, y de dónde salió.
+     *
+     * Regla de la UATH del 2026-09-25: el correo institucional, que vive en la
+     * cuenta de usuario. Si no tiene cuenta —o ya salió de la institución—, el
+     * personal. Y si no hay ninguno, no se inventa nada: se le dice a Talento
+     * Humano que lo descargue y lo envíe a mano.
+     *
+     * @return array{direccion: ?string, origen: string}
+     */
+    public function destinatario(Servidor $servidor): array
+    {
+        $servidor->loadMissing('usuario');
+
+        if ($institucional = $servidor->usuario?->email) {
+            return ['direccion' => $institucional, 'origen' => 'institucional'];
+        }
+
+        if ($personal = $servidor->correo_personal) {
+            return ['direccion' => $personal, 'origen' => 'personal'];
+        }
+
+        return ['direccion' => null, 'origen' => 'sin_direccion'];
+    }
+
+    /**
+     * Envía el certificado ya emitido. Devuelve de dónde salió la dirección,
+     * o 'sin_direccion' si no había ninguna.
+     *
+     * Síncrono a propósito: quien emite espera la respuesta y necesita saber
+     * en ese momento si el correo salió o si le toca enviarlo a mano.
+     */
+    public function enviar(EmisionCertificadoLaboral $emision, Servidor $servidor): string
+    {
+        $destino = $this->destinatario($servidor);
+
+        if (! $destino['direccion']) {
+            return 'sin_direccion';
+        }
+
+        // Un correo que no sale no puede llevarse por delante la emisión.
+        //
+        // Se descubrió probando contra el servidor real: el SMTP no respondía,
+        // la excepción subió hasta el controlador y quien emitía perdía el PDF
+        // —ya descargado en su navegador— de un certificado que SÍ había
+        // quedado registrado en la bitácora. Ahora se avisa de que hay que
+        // enviarlo a mano, que es justo la salida que la UATH pidió para
+        // cuando no hay dirección.
+        try {
+            Mail::to($destino['direccion'])->send(new CertificadoLaboralMail(
+                $emision,
+                $this->pdf($emision),
+                $this->nombreArchivo($emision),
+            ));
+        } catch (\Throwable $e) {
+            Log::error('No salió el correo del certificado laboral', [
+                'emision' => $emision->id,
+                'codigo'  => $emision->codigo,
+                'destino' => $destino['origen'],
+                'motivo'  => $e->getMessage(),
+            ]);
+
+            return 'fallo_envio';
+        }
+
+        return $destino['origen'];
     }
 
     /** El PDF de una emisión, compuesto a partir de su foto. */

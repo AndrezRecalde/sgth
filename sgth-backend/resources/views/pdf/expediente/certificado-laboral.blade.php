@@ -12,32 +12,32 @@
          aplica también a @page y deja la hoja sin márgenes. Cada elemento
          declara los suyos. --}}
     <style>
-        @page { margin: 1.9cm 2cm; }
+        @page { margin: 1.9cm 2cm 2.3cm 2cm; }
 
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 10.5pt;
             color: #222222;
-            line-height: 1.5;
+            line-height: 1.35;
         }
 
         .encabezado { text-align: center; margin-bottom: 14px; }
-        .encabezado img { height: 48px; }
+        .encabezado img { height: 42px; }
         .institucion { font-size: 12pt; font-weight: bold; margin: 6px 0 0 0; }
         .titulo { font-size: 13pt; font-weight: bold; margin: 14px 0 2px 0; }
         .unidad { font-size: 9.5pt; color: #555555; margin: 0; }
 
-        p { margin: 0 0 10px 0; }
+        p { margin: 0 0 8px 0; }
         .persona { text-align: center; font-weight: bold; margin: 12px 0; }
         .persona .cedula { display: block; font-weight: normal; font-size: 10pt; }
 
         table { width: 100%; border-collapse: collapse; margin: 6px 0 10px 0; }
-        th, td { border: 1px solid #cccccc; padding: 5px 6px; font-size: 8.5pt; text-align: left; }
+        th, td { border: 1px solid #cccccc; padding: 3px 5px; font-size: 8.5pt; text-align: left; }
         th { background-color: #f2f2f2; font-weight: bold; }
         td.num { text-align: right; }
 
         .resumen { margin: 10px 0; }
-        .resumen td { border: none; padding: 2px 0; font-size: 10pt; }
+        .resumen td { border: none; padding: 1px 0; font-size: 10pt; }
         .resumen td.etiqueta { color: #555555; width: 45%; }
 
         .seccion { font-size: 10pt; font-weight: bold; margin: 16px 0 4px 0; }
@@ -53,8 +53,17 @@
         .firma .nombre { font-weight: bold; margin: 0; }
         .firma .cargo { font-size: 9pt; color: #555555; margin: 0; }
 
+        /* Anclado al pie de la hoja y fuera del flujo. Recortar márgenes para
+           que entrara solo movía el umbral: con una unidad de nombre largo
+           —«Gestión de Tecnologías de la Información y Comunicación» ocupa
+           cuatro líneas en la celda— la firma volvía a partirse. `bottom: 0`,
+           nunca negativo: con un valor negativo dompdf saca el bloque de la
+           hoja y desaparece. */
         .verificacion {
-            margin-top: 16px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             border-top: 1px solid #dddddd;
             padding-top: 8px;
             font-size: 8pt;

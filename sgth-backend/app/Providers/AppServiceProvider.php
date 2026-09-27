@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
@@ -239,6 +240,8 @@ class AppServiceProvider extends ServiceProvider
             'programa_drogas_seguimiento' => \App\Models\Sso\ProgramaDrogaSeguimiento::class,
         ]);
 
+        $this->desviarCorreoFueraDeProduccion();
+
         Gate::define('viewPulse', function (?User $user) {
             if (app()->environment('local')) {
                 return true;
@@ -283,5 +286,35 @@ class AppServiceProvider extends ServiceProvider
                     SecurityScheme::http('bearer')
                 );
             });
+    }
+
+    /**
+     * Fuera de producción, todo el correo va a un solo buzón.
+     *
+     * La base de desarrollo lleva direcciones reales de servidores, y el
+     * sistema manda documentos con cédula —roles de pago, certificados—. Sin
+     * esto, un fallo resolviendo el destinatario escribe de verdad a una
+     * persona desde el portátil de quien esté programando, y no hay forma de
+     * retirarlo.
+     *
+     * No estorba a las pruebas manuales: el correo llega igual, con su adjunto
+     * y su formato, y el destinatario que el código pretendía sigue anotado en
+     * el registro. Quién debía recibirlo se comprueba con `Mail::fake()`, que
+     * es donde esa comprobación corresponde.
+     *
+     * Se activa poniendo MAIL_BUZON_DE_PRUEBAS en el .env. Sin esa variable no
+     * hace nada, para no romper a quien ya tenga su propio arreglo.
+     */
+    private function desviarCorreoFueraDeProduccion(): void
+    {
+        if (app()->environment('production')) {
+            return;
+        }
+
+        $buzon = config('mail.buzon_de_pruebas');
+
+        if ($buzon) {
+            Mail::alwaysTo($buzon);
+        }
     }
 }
