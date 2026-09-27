@@ -1,12 +1,29 @@
 'use client'
 
-import { useState } from 'react'
 import { Alert, Stack, Text, TextInput } from '@mantine/core'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod/v4'
 import { ModalFooter, SgthModal } from '@/components/ui'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import type { MovimientoPersonal } from '@/types/api'
+
+/*
+| Un solo campo, pero con el estándar del proyecto (regla 07): validaba a mano
+| con `useState` y, al no haber `<form>`, la tecla Intro no enviaba —había que
+| alcanzar el botón con el ratón o con el tabulador—.
+*/
+const schema = z.object({
+  referencia: z
+    .string()
+    .trim()
+    .min(3, 'Escriba la referencia del dictamen — es el respaldo del compromiso')
+    .max(255, 'No puede exceder los 255 caracteres'),
+})
+
+type FormData = z.infer<typeof schema>
 
 /**
  * Referencia del dictamen presupuestario, pedida en el acto de suscribir.
@@ -35,28 +52,27 @@ export function DictamenPresupuestarioModal({ opened, onClose, movimiento }: Pro
   const contained = useContainedInput()
   const { transicionar } = useMovimientoMutations()
 
-  const [referencia, setReferencia] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const {
+    register, handleSubmit, reset,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { referencia: '' },
+  })
 
   const cerrar = () => {
-    setReferencia('')
-    setError(null)
+    reset({ referencia: '' })
     onClose()
   }
 
-  const suscribir = () => {
+  const suscribir = ({ referencia }: FormData) => {
     if (!movimiento) return
-
-    if (referencia.trim().length < 3) {
-      setError('Escriba la referencia del dictamen — es el respaldo del compromiso.')
-      return
-    }
 
     transicionar.mutate(
       {
         id: Number(movimiento.id),
         estado: 'suscrita',
-        dictamen_presupuestario_ref: referencia.trim(),
+        dictamen_presupuestario_ref: referencia,
       },
       { onSuccess: cerrar },
     )
@@ -80,38 +96,39 @@ export function DictamenPresupuestarioModal({ opened, onClose, movimiento }: Pro
       title="Suscribir con dictamen presupuestario"
       size="md"
     >
-      <Stack gap="md">
-        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
-          Esta acción compromete presupuesto, así que no puede suscribirse sin la
-          certificación previa de la Dirección Financiera (Art. 105 LOSEP).
-        </Alert>
+      <form onSubmit={handleSubmit(suscribir)} noValidate>
+        <Stack gap="md">
+          <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
+            Esta acción compromete presupuesto, así que no puede suscribirse sin la
+            certificación previa de la Dirección Financiera (Art. 105 LOSEP).
+          </Alert>
 
-        {comprometido != null && comprometido > 0 && (
-          <div>
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-              {esSubrogacion ? 'Diferencia mensual a pagar' : 'Remuneración mensual'}
-            </Text>
-            <Text size="lg" fw={700} c="emerald">{dinero(comprometido)}</Text>
-          </div>
-        )}
+          {comprometido != null && comprometido > 0 && (
+            <div>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                {esSubrogacion ? 'Diferencia mensual a pagar' : 'Remuneración mensual'}
+              </Text>
+              <Text size="lg" fw={700} c="emerald">{dinero(comprometido)}</Text>
+            </div>
+          )}
 
-        <TextInput
-          label="N.º de dictamen o certificación presupuestaria"
-          placeholder="Ej. DF-CP-2026-0142"
-          description="Oficio o memorando con el que la Dirección Financiera certificó la disponibilidad."
-          {...contained}
-          value={referencia}
-          onChange={(e) => { setReferencia(e.currentTarget.value); setError(null) }}
-          error={error}
-          data-autofocus
-        />
-      </Stack>
-      <ModalFooter
-        onCancel={cerrar}
-        submitLabel="Suscribir"
-        submitting={transicionar.isPending}
-        onSubmit={suscribir}
-      />
+          <TextInput
+            label="N.º de dictamen o certificación presupuestaria"
+            placeholder="Ej. DF-CP-2026-0142"
+            description="Oficio o memorando con el que la Dirección Financiera certificó la disponibilidad."
+            error={errors.referencia?.message}
+            data-autofocus
+            {...contained}
+            {...register('referencia')}
+          />
+
+          <ModalFooter
+            onCancel={cerrar}
+            submitLabel="Suscribir"
+            submitting={transicionar.isPending}
+          />
+        </Stack>
+      </form>
     </SgthModal>
   )
 }

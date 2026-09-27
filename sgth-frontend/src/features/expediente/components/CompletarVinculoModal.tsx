@@ -1,18 +1,22 @@
 'use client'
 
-import { useState } from 'react'
 import {
   Alert, Grid, NumberInput, Stack, Switch, Text, TextInput,
 } from '@mantine/core'
 import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
+import { Controller, useForm, type DefaultValues } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
+import {
+  completarVinculoSchema, type CompletarVinculoFormData,
+} from '../schemas/completarVinculo.schema'
 import type { MovimientoPersonal } from '@/types/api'
-import { formatFecha, fromDateValueOrNull } from '@/lib/fecha'
+import { formatFecha, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 /** Nombramientos cuyo vínculo lleva plazo pactado. */
 const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
@@ -70,186 +74,206 @@ function Formulario({
   const nombramiento = movimiento.tipo_nombramiento_propuesto ?? null
   const derivaDelPuesto = esLosep(nombramiento)
   const llevaPlazo = nombramiento ? CON_PLAZO.includes(nombramiento) : false
+  const marca = admiteMarcacion(nombramiento)
 
   const puesto = movimiento.puesto_destino
 
   // La RMU solo se sugiere en LOSEP, donde sale del grupo ocupacional del
   // puesto. En Código del Trabajo y Servicios Profesionales se negocia en el
   // contrato, así que el campo arranca vacío a propósito.
-  const rmuSugerida = derivaDelPuesto && puesto?.rmu != null ? Number(puesto.rmu) : ''
+  const rmuSugerida = derivaDelPuesto && puesto?.rmu != null ? Number(puesto.rmu) : undefined
 
   const rmuHeredada = remuneracionEsHeredada(
     nombramiento,
     puesto?.rmu != null ? Number(puesto.rmu) : null,
   )
 
-  const [numeroContrato, setNumeroContrato] = useState(movimiento.numero_contrato ?? '')
-  const [remuneracion, setRemuneracion] = useState<number | ''>(
-    movimiento.remuneracion_propuesta != null
+  /*
+  | Hasta el 2026-09-27 este formulario llevaba seis `useState` y validaba a mano
+  | en el `submit`, con lo que faltaba en un `Alert` al pie: el usuario leía «falta
+  | número de contrato y remuneración» y tenía que buscar cuáles de los seis
+  | campos eran. Es el estándar del proyecto desde hace tiempo (regla 07), y era
+  | el último formulario del módulo que no lo usaba.
+  */
+  const iniciales: DefaultValues<CompletarVinculoFormData> = {
+    numero_contrato: movimiento.numero_contrato ?? '',
+    remuneracion_propuesta: movimiento.remuneracion_propuesta != null
       ? Number(movimiento.remuneracion_propuesta)
       : rmuSugerida,
-  )
-  const [resolucion, setResolucion] = useState(movimiento.resolucion_numero ?? '')
-  const [partidaId, setPartidaId] = useState<number | null>(
-    movimiento.partida_presupuestaria_id
+    resolucion_numero: movimiento.resolucion_numero ?? '',
+    partida_presupuestaria_id: movimiento.partida_presupuestaria_id
       ?? puesto?.partida_presupuestaria?.id
       ?? null,
-  )
-  const [puedeMarcar, setPuedeMarcar] = useState<boolean>(movimiento.puede_marcar ?? false)
-  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
-  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
-  // dos formas, que es lo que `fromDateValue` sabe leer.
-  const [fechaFin, setFechaFin] = useState<Date | string | null>(
-    movimiento.fecha_fin_propuesta ? new Date(movimiento.fecha_fin_propuesta) : null,
-  )
-  const [error, setError] = useState<string | null>(null)
-
-  const datos = () => ({
-    numero_contrato: numeroContrato.trim() || null,
-    remuneracion_propuesta: remuneracion === '' ? null : Number(remuneracion),
-    resolucion_numero: resolucion.trim() || null,
-    partida_presupuestaria_id: partidaId,
-    puede_marcar: puedeMarcar,
-    fecha_fin_propuesta: llevaPlazo ? fromDateValueOrNull(fechaFin) : null,
-  })
-
-  const submit = () => {
-    // Obligatorios: el contrato nace en este acto y no admite quedar a medias.
-    const faltantes: string[] = []
-    if (!numeroContrato.trim()) faltantes.push('número de contrato')
-    if (remuneracion === '') faltantes.push('remuneración')
-
-    if (faltantes.length > 0) {
-      return setError(`Falta ${faltantes.join(' y ')} para registrar el vínculo.`)
-    }
-
-    setError(null)
-
-    transicionar
-      .mutateAsync({ id: Number(movimiento.id), estado: 'registrada', ...datos() })
-      .then(() => { onClose(); onSaved?.() })
-      .catch(() => {})
+    // La modalidad manda sobre lo que quedó guardado: servicios profesionales,
+    // libre nombramiento y elección popular no marcan nunca.
+    puede_marcar: marca && (movimiento.puede_marcar ?? false),
+    fecha_fin_propuesta: movimiento.fecha_fin_propuesta?.split('T')[0] ?? null,
   }
 
-  const pendiente = transicionar.isPending
+  const {
+    control, handleSubmit, register,
+    formState: { errors },
+  } = useForm<CompletarVinculoFormData>({
+    resolver: zodResolver(completarVinculoSchema),
+    defaultValues: iniciales,
+  })
+
+  const registrar = (datos: CompletarVinculoFormData) =>
+    transicionar
+      .mutateAsync({
+        id: Number(movimiento.id),
+        estado: 'registrada',
+        ...datos,
+        resolucion_numero: datos.resolucion_numero || null,
+        // Sin plazo pactado no se manda fecha de término, aunque haya quedado
+        // una escrita antes de cambiar de modalidad.
+        fecha_fin_propuesta: llevaPlazo ? datos.fecha_fin_propuesta : null,
+        // Cinturón: el interruptor está bloqueado, pero el valor guardado pudo
+        // llegar en true desde el borrador.
+        puede_marcar: marca && datos.puede_marcar,
+      })
+      .then(() => { onClose(); onSaved?.() })
+      // El fallo ya lo notifica el `onError` de la mutación.
+      .catch(() => {})
 
   return (
-    <Stack gap="sm">
-      <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
-        Al registrar se crea el vínculo laboral con estos datos. Después la acción
-        queda inmutable: solo se corrige registrando una acción nueva.
-      </Alert>
+    <form onSubmit={handleSubmit(registrar)} noValidate>
+      <Stack gap="sm">
+        <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
+          Al registrar se crea el vínculo laboral con estos datos. Después la acción
+          queda inmutable: solo se corrige registrando una acción nueva.
+        </Alert>
 
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Número de contrato"
-            placeholder="Ej: CT-2026-0099"
-            value={numeroContrato}
-            onChange={(e) => setNumeroContrato(e.currentTarget.value)}
-            required
-            {...contained}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Número de resolución"
-            placeholder="Opcional"
-            value={resolucion}
-            onChange={(e) => setResolucion(e.currentTarget.value)}
-            {...contained}
-          />
-        </Grid.Col>
-      </Grid>
-
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Fecha de inicio"
-            description="Es la fecha en que rige la acción; para cambiarla se anula y se registra otra."
-            value={formatFecha(movimiento.fecha_efectiva)}
-            readOnly
-            {...contained}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          {llevaPlazo ? (
-            <DatePickerInput
-              label="Fecha de término"
-              description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
-              value={fechaFin}
-              onChange={(v) => setFechaFin(v)}
-              valueFormat="DD/MM/YYYY"
-              clearable
-              {...contained}
-            />
-          ) : (
+        <Grid>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
             <TextInput
-              label="Fecha de término"
-              description="Este nombramiento no lleva plazo."
-              value="Sin plazo"
+              label="Número de contrato"
+              placeholder="Ej: CT-2026-0099"
+              error={errors.numero_contrato?.message}
+              {...contained}
+              {...register('numero_contrato')}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="Número de resolución"
+              placeholder="Opcional"
+              error={errors.resolucion_numero?.message}
+              {...contained}
+              {...register('resolucion_numero')}
+            />
+          </Grid.Col>
+        </Grid>
+
+        <Grid>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="Fecha de inicio"
+              description="Es la fecha en que rige la acción; para cambiarla se anula y se registra otra."
+              value={formatFecha(movimiento.fecha_efectiva)}
               readOnly
               {...contained}
             />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            {llevaPlazo ? (
+              <Controller
+                name="fecha_fin_propuesta"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerInput
+                    label="Fecha de término"
+                    description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
+                    valueFormat="DD/MM/YYYY"
+                    clearable
+                    value={toDateValue(field.value)}
+                    onChange={(d) => field.onChange(fromDateValueOrNull(d))}
+                    error={errors.fecha_fin_propuesta?.message}
+                    {...contained}
+                  />
+                )}
+              />
+            ) : (
+              <TextInput
+                label="Fecha de término"
+                description="Este nombramiento no lleva plazo."
+                value="Sin plazo"
+                readOnly
+                {...contained}
+              />
+            )}
+          </Grid.Col>
+        </Grid>
+
+        <Controller
+          name="remuneracion_propuesta"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Remuneración mensual unificada (R.M.U.)"
+              description={rmuHeredada
+                ? 'Fijada por el grupo ocupacional del puesto. No se edita en régimen LOSEP.'
+                : derivaDelPuesto
+                  ? 'Este puesto no tiene grupo ocupacional asignado: ingrese el monto a mano.'
+                  : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.'}
+              placeholder="0.00"
+              min={0}
+              decimalScale={2}
+              readOnly={rmuHeredada}
+              error={errors.remuneracion_propuesta?.message}
+              value={field.value ?? ''}
+              onChange={(v) => {
+                const n = typeof v === 'number' ? v : parseFloat(String(v))
+                field.onChange(Number.isFinite(n) ? n : undefined)
+              }}
+              {...contained}
+            />
           )}
-        </Grid.Col>
-      </Grid>
+        />
 
-      <NumberInput
-        label="Remuneración mensual unificada (R.M.U.)"
-        description={rmuHeredada
-          ? 'Fijada por el grupo ocupacional del puesto. No se edita en régimen LOSEP.'
-          : derivaDelPuesto
-            ? 'Este puesto no tiene grupo ocupacional asignado: ingrese el monto a mano.'
-            : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.'}
-        placeholder="0.00"
-        min={0}
-        decimalScale={2}
-        readOnly={rmuHeredada}
-        value={remuneracion}
-        onChange={(v) => {
-          const n = typeof v === 'number' ? v : parseFloat(String(v))
-          setRemuneracion(Number.isFinite(n) ? n : '')
-        }}
-        required
-        {...contained}
-      />
+        {!derivaDelPuesto && (
+          <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+            <Text size="xs">
+              Bajo Código del Trabajo y Servicios Profesionales la remuneración es
+              la negociada con el trabajador, no la del puesto.
+            </Text>
+          </Alert>
+        )}
 
-      {!derivaDelPuesto && (
-        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
-          <Text size="xs">
-            Bajo Código del Trabajo y Servicios Profesionales la remuneración es
-            la negociada con el trabajador, no la del puesto.
-          </Text>
-        </Alert>
-      )}
+        <Controller
+          name="partida_presupuestaria_id"
+          control={control}
+          render={({ field }) => (
+            <SelectPartidaPresupuestaria
+              value={field.value ?? null}
+              onChange={field.onChange}
+              modalidad={nombramiento}
+            />
+          )}
+        />
 
-      <SelectPartidaPresupuestaria
-        value={partidaId}
-        onChange={setPartidaId}
-        modalidad={nombramiento}
-      />
+        <Controller
+          name="puede_marcar"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              label="Marcación biométrica"
+              description={marca
+                ? 'Sugerida según el nombramiento; ajústela si este caso es distinto.'
+                : 'Esta modalidad no marca biométrico.'}
+              checked={marca && !!field.value}
+              disabled={!marca}
+              onChange={(e) => field.onChange(e.currentTarget.checked)}
+            />
+          )}
+        />
 
-      {/* Servicios profesionales, libre nombramiento y elección popular no
-          marcan nunca; el backend fuerza el valor igualmente. */}
-      <Switch
-        label="Marcación biométrica"
-        description={admiteMarcacion(nombramiento)
-          ? 'Sugerida según el nombramiento; ajústela si este caso es distinto.'
-          : 'Esta modalidad no marca biométrico.'}
-        checked={admiteMarcacion(nombramiento) && puedeMarcar}
-        disabled={!admiteMarcacion(nombramiento)}
-        onChange={(e) => setPuedeMarcar(e.currentTarget.checked)}
-      />
-
-      {error && <Alert variant="light" color="red">{error}</Alert>}
-
-      <ModalFooter
-        onCancel={onClose}
-        submitLabel="Registrar vínculo"
-        submitting={pendiente}
-        onSubmit={submit}
-      />
-    </Stack>
+        <ModalFooter
+          onCancel={onClose}
+          submitLabel="Registrar vínculo"
+          submitting={transicionar.isPending}
+        />
+      </Stack>
+    </form>
   )
 }
