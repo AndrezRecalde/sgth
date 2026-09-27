@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Group, Button } from '@mantine/core'
+import { Stack, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconSchool } from '@tabler/icons-react'
-import { DataState, SgthTable } from '@/components/ui'
+import { DataState, SectionCard, SgthTable } from '@/components/ui'
 import { useHistorialAcademico } from '../../hooks/useHistorialAcademico'
 import { useHistorialAcademicoMutations } from '../../hooks/useHistorialAcademicoMutations'
 import { getHistorialAcademicoColumns } from '../historialAcademico.columns'
@@ -26,26 +26,29 @@ export function AcademicoTab({ servidorId }: Props) {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end">
-        <Button size="xs" variant="light"
-          leftSection={<IconPlus size={14} />} onClick={open}>
-          Agregar registro
-        </Button>
-      </Group>
-
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={historial.length === 0}
-        skeletonRows={3}
-        emptyProps={{
-          icon: IconSchool,
-          title: 'Sin historial académico',
-          description: 'Registra los títulos académicos o capacitaciones del servidor.',
-        }}
+      <SectionCard
+        title="Historial académico"
+        actions={
+          <Button size="xs" variant="light"
+            leftSection={<IconPlus size={14} />} onClick={open}>
+            Agregar registro
+          </Button>
+        }
       >
-        <SgthTable records={historial} columns={columns} minHeight={100} />
-      </DataState>
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={historial.length === 0}
+          skeletonRows={3}
+          emptyProps={{
+            icon: IconSchool,
+            title: 'Sin historial académico',
+            description: 'Registra los títulos académicos o capacitaciones del servidor.',
+          }}
+        >
+          <SgthTable records={historial} columns={columns} minHeight={100} />
+        </DataState>
+      </SectionCard>
 
       <HistorialAcademicoModal
         key={editItem?.id ?? 'nuevo'}

@@ -1,9 +1,9 @@
 'use client'
 
-import { Alert, Button, Group, Stack } from '@mantine/core'
+import { Alert, Button, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconAlertTriangle, IconPaperclip, IconPlus } from '@tabler/icons-react'
-import { DataState, SgthTable, notificar } from '@/components/ui'
+import { DataState, SectionCard, SgthTable, notificar } from '@/components/ui'
 import { guardarArchivo } from '@/lib/archivo'
 import { getApiErrorMessage } from '@/types/api'
 import { useDocumentos } from '../../hooks/useDocumentos'
@@ -43,39 +43,43 @@ export function DocumentosTab({ servidorId }: Props) {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end">
-        <Button size="xs" variant="light"
-          leftSection={<IconPlus size={14} />} onClick={open}>
-          Subir documento
-        </Button>
-      </Group>
-
-      {/* Qué falta por anexar: revisarlo a ojo obligaba a conocer de memoria
-          la lista de documentos básicos del expediente. */}
-      {!isLoading && faltan.length > 0 && (
-        <Alert
-          variant="light"
-          color="amber"
-          icon={<IconAlertTriangle size={16} />}
-          title={`Faltan ${faltan.length} de los documentos básicos`}
-        >
-          Sin anexar: {faltan.join(', ')}.
-        </Alert>
-      )}
-
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={documentos.length === 0}
-        skeletonRows={3}
-        emptyProps={{
-          icon: IconPaperclip,
-          title: 'Sin documentos',
-          description: 'Sube los documentos del expediente del servidor.',
-        }}
+      <SectionCard
+        title="Documentos del expediente"
+        actions={
+          <Button size="xs" variant="light"
+            leftSection={<IconPlus size={14} />} onClick={open}>
+            Subir documento
+          </Button>
+        }
       >
-        <SgthTable records={documentos} columns={columns} minHeight={100} />
-      </DataState>
+        {/* Qué falta por anexar: revisarlo a ojo obligaba a conocer de memoria
+            la lista de documentos básicos del expediente. */}
+        {!isLoading && faltan.length > 0 && (
+          <Alert
+            variant="light"
+            color="amber"
+            icon={<IconAlertTriangle size={16} />}
+            title={`Faltan ${faltan.length} de los documentos básicos`}
+            mb="md"
+          >
+            Sin anexar: {faltan.join(', ')}.
+          </Alert>
+        )}
+
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={documentos.length === 0}
+          skeletonRows={3}
+          emptyProps={{
+            icon: IconPaperclip,
+            title: 'Sin documentos',
+            description: 'Sube los documentos del expediente del servidor.',
+          }}
+        >
+          <SgthTable records={documentos} columns={columns} minHeight={100} />
+        </DataState>
+      </SectionCard>
 
       <DocumentoModal opened={opened} onClose={close} servidorId={servidorId} />
     </Stack>

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Group, Text, Button } from '@mantine/core'
+import { Stack, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconHistory } from '@tabler/icons-react'
-import { DataState, SgthTable, StatusBadge, notificar } from '@/components/ui'
+import { DataState, SectionCard, SgthTable, StatusBadge, notificar } from '@/components/ui'
 import { useMovimientos } from '../../hooks/useMovimientos'
 import { MovimientoModal } from '../MovimientoModal'
 import { AccionPersonalDetalleDrawer } from '../AccionPersonalDetalleDrawer'
@@ -51,38 +51,39 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center">
-        <Text size="sm" c="dimmed">
-          Historial inmutable de movimientos y acciones de personal del servidor.
-        </Text>
-        <Button
-          size="xs" variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={open}
-        >
-          Nueva acción de personal
-        </Button>
-      </Group>
-
-      {!tipoNombramiento && (
-        <StatusBadge tone="warning">
-          Sin contrato vigente — no se pueden registrar acciones de personal
-        </StatusBadge>
-      )}
-
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={lista.length === 0}
-        skeletonRows={3}
-        emptyProps={{
-          icon: IconHistory,
-          title: 'Sin movimientos registrados',
-          description: 'El historial de movimientos y acciones de personal aparecerá aquí.',
-        }}
+      <SectionCard
+        title="Historial de acciones"
+        description="Registro inmutable de los movimientos y acciones de personal del servidor."
+        actions={
+          <Button
+            size="xs" variant="light"
+            leftSection={<IconPlus size={14} />}
+            onClick={open}
+          >
+            Nueva acción de personal
+          </Button>
+        }
       >
-        <SgthTable records={lista} columns={columns} minHeight={120} />
-      </DataState>
+        {!tipoNombramiento && (
+          <StatusBadge tone="warning" mb="sm">
+            Sin contrato vigente — no se pueden registrar acciones de personal
+          </StatusBadge>
+        )}
+
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={lista.length === 0}
+          skeletonRows={3}
+          emptyProps={{
+            icon: IconHistory,
+            title: 'Sin movimientos registrados',
+            description: 'El historial de movimientos y acciones de personal aparecerá aquí.',
+          }}
+        >
+          <SgthTable records={lista} columns={columns} minHeight={120} />
+        </DataState>
+      </SectionCard>
 
       <MovimientoModal
         opened={opened}

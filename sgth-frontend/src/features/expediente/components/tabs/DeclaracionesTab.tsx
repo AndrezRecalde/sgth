@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button, Group, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconDownload, IconFileDescription, IconPlus } from '@tabler/icons-react'
-import { DataState, SgthTable, notificar } from '@/components/ui'
+import { DataState, SectionCard, SgthTable, notificar } from '@/components/ui'
 import { abrirArchivo } from '@/lib/archivo'
 import { getApiErrorMessage } from '@/types/api'
 import { useDeclaraciones } from '../../hooks/useDeclaraciones'
@@ -38,30 +38,35 @@ export function DeclaracionesTab({ servidorId }: Props) {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between">
-        <Button size="xs" variant="light"
-          leftSection={<IconDownload size={14} />} onClick={abrirExportar}>
-          Exportar
-        </Button>
-        <Button size="xs" variant="light"
-          leftSection={<IconPlus size={14} />} onClick={open}>
-          Nueva declaración
-        </Button>
-      </Group>
-
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={declaraciones.length === 0}
-        skeletonRows={3}
-        emptyProps={{
-          icon: IconFileDescription,
-          title: 'Sin declaraciones juramentadas',
-          description: 'Registra las declaraciones juramentadas del servidor.',
-        }}
+      <SectionCard
+        title="Declaraciones juramentadas"
+        actions={
+        <Group gap="xs">
+            <Button size="xs" variant="light"
+              leftSection={<IconDownload size={14} />} onClick={abrirExportar}>
+              Exportar
+            </Button>
+            <Button size="xs" variant="light"
+              leftSection={<IconPlus size={14} />} onClick={open}>
+              Nueva declaración
+            </Button>
+        </Group>
+        }
       >
-        <SgthTable records={declaraciones} columns={columns} minHeight={100} />
-      </DataState>
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={declaraciones.length === 0}
+          skeletonRows={3}
+          emptyProps={{
+            icon: IconFileDescription,
+            title: 'Sin declaraciones juramentadas',
+            description: 'Registra las declaraciones juramentadas del servidor.',
+          }}
+        >
+          <SgthTable records={declaraciones} columns={columns} minHeight={100} />
+        </DataState>
+      </SectionCard>
 
       <DeclaracionModal
         key={editItem?.id ?? 'nueva'}
