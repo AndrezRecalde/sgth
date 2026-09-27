@@ -191,12 +191,11 @@ class CertificadoLaboralService
             'unidad_actual'    => $servidor->contratoVigente?->unidadAdministrativa?->nombre
                 ?? $servidor->unidadAdministrativa?->nombre,
             'ingreso'          => $servidor->fecha_ingreso_institucion?->toDateString(),
-            // En la institución, no en el sector público: así lo pidió la UATH
-            // el 2026-09-25. El accesor `anios_servicio` del modelo cuenta
-            // desde el sector público en régimen LOSEP, y por eso no se usa.
-            'anios_servicio'   => $servidor->fecha_ingreso_institucion
-                ? (int) floor($servidor->fecha_ingreso_institucion->diffInYears(now()))
-                : null,
+            // El accesor ya cuenta desde el ingreso a la institución, que es
+            // lo que la UATH quiere certificar. Tenía su propio cálculo aquí
+            // mientras el accesor contaba desde el sector público en LOSEP: dos
+            // definiciones del mismo número que se contradecían en pantalla.
+            'anios_servicio'   => $servidor->anios_servicio,
             'etiqueta_tiempo'  => $tipo->etiquetaTiempo(),
             'periodos'         => $periodos,
             'subrogaciones'    => $this->subrogaciones($servidor),

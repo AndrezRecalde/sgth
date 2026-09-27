@@ -176,9 +176,24 @@ class Servidor extends Model
     }
 
     /**
-     * Años de servicio calculados desde la fecha de referencia según régimen
-     * (mismo criterio que PeriodoVacacionService::calcularAntiguedad, pero
-     * contado hasta hoy en vez de al cierre de un año fiscal).
+     * Tiempo de servicio EN LA INSTITUCIÓN, en años cumplidos.
+     *
+     * Son dos conceptos distintos y los dos son legítimos, así que conviene no
+     * volver a mezclarlos:
+     *
+     * - **Antigüedad en el sector público.** De ella cuelgan derechos: en
+     *   régimen LOSEP los días de vacaciones se calculan sobre el tiempo
+     *   acumulado en TODO el sector público, no solo aquí. Eso vive donde
+     *   corresponde, en `PeriodoVacacionService::calcularAntiguedad`, y no se
+     *   toca.
+     * - **Tiempo de servicio en la institución.** Es lo que el GAD certifica:
+     *   cuánto lleva esta persona trabajando AQUÍ.
+     *
+     * Este accesor es el segundo. Contaba desde el sector público en régimen
+     * LOSEP, y como solo se muestra en la ficha del expediente, un servidor
+     * LOSEP veía en pantalla una cifra y otra distinta en su certificado
+     * laboral — que sí cuenta desde el ingreso a la institución, porque así lo
+     * pidió la UATH. La incoherencia la confirmaron ellos el 2026-09-26.
      *
      * Años cumplidos, enteros: `diffInYears()` devuelve un float desde Carbon 3
      * y el expediente llegó a mostrar «9.034447289411942 años».
@@ -187,16 +202,13 @@ class Servidor extends Model
     {
         return Attribute::make(
             get: function () {
-                $esLosep = $this->regimen_laboral?->value === 'losep';
-                $fechaRef = $esLosep && $this->fecha_ingreso_sector_publico
-                    ? $this->fecha_ingreso_sector_publico
-                    : $this->fecha_ingreso_institucion;
-
-                if (!$fechaRef) {
+                if (! $this->fecha_ingreso_institucion) {
                     return null;
                 }
 
-                return (int) floor(\Carbon\Carbon::parse($fechaRef)->diffInYears(now()));
+                return (int) floor(
+                    \Carbon\Carbon::parse($this->fecha_ingreso_institucion)->diffInYears(now())
+                );
             }
         );
     }
