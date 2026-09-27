@@ -10,6 +10,7 @@ import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSol
 import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
 import { getSaludOcupacionalColumns } from '../saludOcupacional.columns'
 import { AptitudVigentePanel } from '../AptitudVigentePanel'
+import { AusentismoSaludPanel } from '../AusentismoSaludPanel'
 import { SolicitarCertificacionLoteModal } from '../SolicitarCertificacionLoteModal'
 import { aptitudVigente } from '../../utils/aptitudMedica'
 import type { ServidorConRelaciones } from '@/types/api'
@@ -65,6 +66,8 @@ export function SaludOcupacionalTab({ servidor }: Props) {
         onSolicitar={abrirSolicitar}
         puedeSolicitar={hasPermiso('solicitar-certificacion-medica')}
       />
+
+      <AusentismoSaludPanel servidorId={servidorId} />
 
       <SectionCard
         title="Historial de evaluaciones"
