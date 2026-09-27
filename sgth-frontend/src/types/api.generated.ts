@@ -7878,6 +7878,7 @@ export interface components {
             cubre_movimiento_id: number | null;
             remuneracion_origen: string | null;
             partida_origen_id: number | null;
+            motivo_anulacion: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -7954,6 +7955,7 @@ export interface components {
             autorizado_por: number | null;
             notificado_por: number | null;
             fecha_notificacion: string | null;
+            motivo_anulacion: string | null;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
@@ -9902,6 +9904,14 @@ export interface components {
             estado: components["schemas"]["EstadoAccionPersonal"];
             dictamen_presupuestario_ref?: string | null;
             notificado_por?: number | null;
+            /**
+             * @description Anular es un acto sobre otro acto: se exige el motivo, que es lo
+             *     que queda como justificación en el expediente. La regla vive aquí
+             *     —en el borde HTTP— y no en el servicio de estados, porque ese
+             *     mismo servicio es el camino de las anulaciones en cascada y de las
+             *     pruebas del grafo, que no tienen a quién pedirle una explicación.
+             */
+            motivo_anulacion?: string | null;
             /**
              * @description Datos del vínculo que se completan al aprobar. Viajan con la
              *     transición y no por edición porque una acción suscrita ya no se

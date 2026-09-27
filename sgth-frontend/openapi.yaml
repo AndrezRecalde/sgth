@@ -46345,6 +46345,12 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -46398,7 +46404,8 @@
                     "fecha_fin_propuesta",
                     "cubre_movimiento_id",
                     "remuneracion_origen",
-                    "partida_origen_id"
+                    "partida_origen_id",
+                    "motivo_anulacion"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -46702,6 +46709,12 @@
                             "null"
                         ]
                     },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "created_at": {
                         "type": [
                             "string",
@@ -46914,6 +46927,7 @@
                     "autorizado_por",
                     "notificado_por",
                     "fecha_notificacion",
+                    "motivo_anulacion",
                     "created_at",
                     "updated_at"
                 ],
@@ -54308,6 +54322,15 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Anular es un acto sobre otro acto: se exige el motivo, que es lo\nque queda como justificaci\u00f3n en el expediente. La regla vive aqu\u00ed\n\u2014en el borde HTTP\u2014 y no en el servicio de estados, porque ese\nmismo servicio es el camino de las anulaciones en cascada y de las\npruebas del grafo, que no tienen a qui\u00e9n pedirle una explicaci\u00f3n.",
+                        "minLength": 5,
+                        "maxLength": 500
                     },
                     "numero_contrato": {
                         "type": [

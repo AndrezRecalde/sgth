@@ -92,6 +92,7 @@ class MovimientoPersonalResource extends JsonResource
             'autorizado_por'     => $this->autorizado_por,
             'notificado_por'     => $this->notificado_por,
             'fecha_notificacion' => $this->fecha_notificacion,
+            'motivo_anulacion'   => $this->motivo_anulacion,
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

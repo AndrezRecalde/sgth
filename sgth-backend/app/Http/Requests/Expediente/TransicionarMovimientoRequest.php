@@ -20,6 +20,15 @@ class TransicionarMovimientoRequest extends FormRequest
             'dictamen_presupuestario_ref' => ['nullable', 'string', 'max:255'],
             'notificado_por'              => ['nullable', 'integer', 'exists:users,id'],
 
+            // Anular es un acto sobre otro acto: se exige el motivo, que es lo
+            // que queda como justificación en el expediente. La regla vive aquí
+            // —en el borde HTTP— y no en el servicio de estados, porque ese
+            // mismo servicio es el camino de las anulaciones en cascada y de las
+            // pruebas del grafo, que no tienen a quién pedirle una explicación.
+            'motivo_anulacion' => [
+                'nullable', 'required_if:estado,anulada', 'string', 'min:5', 'max:500',
+            ],
+
             // Datos del vínculo que se completan al aprobar. Viajan con la
             // transición y no por edición porque una acción suscrita ya no se
             // edita: el documento circuló. Se aplican como parte del acto de

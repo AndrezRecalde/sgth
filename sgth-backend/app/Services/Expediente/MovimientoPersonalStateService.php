@@ -260,6 +260,10 @@ class MovimientoPersonalStateService
     {
         $this->aplicarDictamenSiViene($movimiento, $datos);
 
+        if (! blank($datos['motivo_anulacion'] ?? null)) {
+            $movimiento->motivo_anulacion = trim($datos['motivo_anulacion']);
+        }
+
         if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION) {
             $this->subrogacionService->cancelarPorMovimiento($movimiento);
         }

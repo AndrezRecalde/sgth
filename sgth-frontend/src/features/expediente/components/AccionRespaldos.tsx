@@ -1,5 +1,7 @@
 'use client'
 
+import { Alert, Text } from '@mantine/core'
+import { IconBan } from '@tabler/icons-react'
 import { DetailList, SectionHeading } from '@/components/ui'
 import { BloqueDetalle } from './BloqueDetalle'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
@@ -57,6 +59,15 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
               : []),
           ]} />
         </BloqueDetalle>
+
+        {/* Por qué se anuló. Se pide al anular desde el 2026-09-27; en lo anulado
+            antes no hay nada que mostrar, así que el bloque no se monta. */}
+        {m.estado === 'anulada' && m.motivo_anulacion && (
+          <Alert variant="light" color="red" icon={<IconBan size={16} />}>
+            <Text size="sm" fw={600} mb={2}>Motivo de la anulación</Text>
+            <Text size="sm">{m.motivo_anulacion}</Text>
+          </Alert>
+        )}
 
         {(m.firmante_autoridad_nombre || m.firmante_th_nombre) && (
           <BloqueDetalle>

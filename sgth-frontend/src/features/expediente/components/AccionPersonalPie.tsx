@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useDisclosure } from '@mantine/hooks'
 import { Button } from '@mantine/core'
 import { IconBan, IconFileDownload } from '@tabler/icons-react'
-import { confirmar, ModalFooter, notificar } from '@/components/ui'
+import { ModalFooter, MotivoModal, notificar } from '@/components/ui'
 import { getApiErrorMessage } from '@/types/api'
 import { movimientoService } from '../services/movimientoService'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
@@ -35,6 +36,7 @@ interface Props {
 export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDictamen }: Props) {
   const { transicionar } = useMovimientoMutations()
   const [descargando, setDescargando] = useState(false)
+  const [anularOpened, { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
 
   const estado = m.estado
   const posibles = estado ? TRANSICIONES[estado] : []
@@ -73,7 +75,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
     if (siguiente) transicionar.mutate({ id: Number(m.id), estado: siguiente })
   }
 
-  return (
+  const pie = (
     <ModalFooter
       onCancel={onClose}
       cancelLabel="Cerrar"
@@ -99,14 +101,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
               variant="subtle"
               color="red"
               leftSection={<IconBan size={14} />}
-              onClick={() => confirmar({
-                title:   'Anular acción de personal',
-                message: 'Se anulará esta acción de personal y no podrá reactivarse.',
-                destructiva: true,
-                confirmLabel: 'Anular',
-                onConfirm: () =>
-                  transicionar.mutate({ id: Number(m.id), estado: 'anulada' }, { onSuccess: onClose }),
-              })}
+              onClick={abrirAnular}
             >
               Anular
             </Button>
@@ -114,5 +109,36 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
         </>
       }
     />
+  )
+
+  /*
+  | Anular pide el motivo, como en Permisos, Vacaciones y Viáticos. Antes era un
+  | `confirmar()` de sí o no, y anular un acto administrativo no dejaba ni una
+  | línea que explicara la decisión: el expediente se quedaba con una acción en
+  | 'anulada' y nadie sabía por qué. El backend lo exige con `required_if`.
+  */
+  return (
+    <>
+      {pie}
+
+      <MotivoModal
+        opened={anularOpened}
+        onClose={cerrarAnular}
+        title="Anular acción de personal"
+        descripcion={
+          <>
+            Se anulará {m.codigo_registro ? <b>{m.codigo_registro}</b> : 'esta acción de personal'}
+            {' '}y no podrá reactivarse. El motivo queda en el expediente.
+          </>
+        }
+        confirmLabel="Anular"
+        destructiva
+        cargando={transicionar.isPending}
+        onConfirm={(motivo) => transicionar.mutate(
+          { id: Number(m.id), estado: 'anulada', motivo_anulacion: motivo },
+          { onSuccess: () => { cerrarAnular(); onClose() } },
+        )}
+      />
+    </>
   )
 }

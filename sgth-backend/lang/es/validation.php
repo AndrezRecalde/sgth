@@ -265,6 +265,7 @@ return [
         'observacion' => 'observación',
         'observaciones' => 'observaciones',
         'motivo' => 'motivo',
+        'motivo_anulacion' => 'motivo de la anulación',
         'documento' => 'documento',
         'archivo' => 'archivo',
 
