@@ -1,13 +1,20 @@
 'use client'
 
-import { Box, Grid, Skeleton, Text } from '@mantine/core'
+import { Alert, Box, Grid, Skeleton, Text } from '@mantine/core'
+import { IconAlertTriangle } from '@tabler/icons-react'
+import { SectionHeading } from '@/components/ui'
+import { getApiErrorMessage } from '@/types/api'
 import { useServidor } from '../hooks/useServidor'
 import { BloqueDetalle } from './BloqueDetalle'
 
 interface Props {
   servidorId: number
-  /** Por defecto "SITUACIÓN ACTUAL". En subrogaciones se muestran dos: la del
-   *  subrogante y la del titular, y cada una necesita su rótulo. */
+  /** Por defecto «Situación actual». En subrogaciones se muestran dos: la del
+   *  subrogante y la del titular, y cada una necesita su rótulo.
+   *
+   *  En minúsculas desde que el rótulo es un `SectionHeading` —un h3— y no un
+   *  `Text` en negrita: las versalitas venían de imitar el formulario impreso y
+   *  como encabezado se leen a gritos. */
   titulo?: string
   /** Oculta identidad y papeleta: útil cuando ya se ve en otra parte. */
   soloVinculo?: boolean
@@ -28,12 +35,28 @@ function Campo({ etiqueta, valor }: { etiqueta: string; valor?: string | null })
  * el formulario — son datos que ya existen y que nadie debería re-teclear.
  */
 export function SituacionActualPanel({
-  servidorId, titulo = 'SITUACIÓN ACTUAL', soloVinculo = false,
+  servidorId, titulo = 'Situación actual', soloVinculo = false,
 }: Props) {
-  const { data: servidor, isLoading } = useServidor(servidorId)
+  const { data: servidor, isLoading, error } = useServidor(servidorId)
 
   if (isLoading) return <Skeleton height={190} radius="md" />
-  if (!servidor) return null
+
+  if (error || !servidor) {
+    return (
+      <Alert
+        variant="light"
+        color="red"
+        icon={<IconAlertTriangle size={16} />}
+        title="No se pudo leer la situación actual"
+      >
+        <Text size="sm">
+          {getApiErrorMessage(error, 'No se pudo consultar el expediente del servidor.')}{' '}
+          No quiere decir que no tenga vínculo: no se pudo consultar. El
+          documento impreso toma estos datos de la acción, no de aquí.
+        </Text>
+      </Alert>
+    )
+  }
 
   const s = servidor
   const contrato = s.contrato_vigente ?? null
@@ -52,14 +75,14 @@ export function SituacionActualPanel({
 
   return (
     <BloqueDetalle hundido>
-      <Text size="sm" fw={700} mb="xs">{titulo}</Text>
+      <SectionHeading title={titulo} mb="xs" />
       <Grid>
         {!soloVinculo && (
           <>
-            <Grid.Col span={6}><Campo etiqueta="Apellidos" valor={apellidos} /></Grid.Col>
-            <Grid.Col span={6}><Campo etiqueta="Nombres" valor={nombres} /></Grid.Col>
-            <Grid.Col span={6}><Campo etiqueta="Cédula" valor={s.cedula} /></Grid.Col>
-            <Grid.Col span={6}>
+            <Grid.Col span={{ base: 12, xs: 6 }}><Campo etiqueta="Apellidos" valor={apellidos} /></Grid.Col>
+            <Grid.Col span={{ base: 12, xs: 6 }}><Campo etiqueta="Nombres" valor={nombres} /></Grid.Col>
+            <Grid.Col span={{ base: 12, xs: 6 }}><Campo etiqueta="Cédula" valor={s.cedula} /></Grid.Col>
+            <Grid.Col span={{ base: 12, xs: 6 }}>
               <Campo etiqueta="Papeleta de votación" valor={s.numero_papeleta_votacion} />
             </Grid.Col>
           </>
@@ -88,8 +111,8 @@ export function SituacionActualPanel({
             <Grid.Col span={12}>
               <Campo etiqueta="Puesto" valor={puesto?.cargo?.nombre} />
             </Grid.Col>
-            <Grid.Col span={6}><Campo etiqueta="R.M.U." valor={rmuFmt} /></Grid.Col>
-            <Grid.Col span={6}>
+            <Grid.Col span={{ base: 12, xs: 6 }}><Campo etiqueta="R.M.U." valor={rmuFmt} /></Grid.Col>
+            <Grid.Col span={{ base: 12, xs: 6 }}>
               <Campo
                 etiqueta="Partida presupuestaria"
                 valor={puesto?.partida_presupuestaria?.codigo}

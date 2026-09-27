@@ -272,7 +272,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
               <Grid.Col span={{ base: 12, md: 4 }}>
                 <SituacionActualPanel
                   servidorId={Number(subroganteId)}
-                  titulo={tipo === 'encargo' ? 'SITUACIÓN DEL ENCARGADO' : 'SITUACIÓN DEL SUBROGANTE'}
+                  titulo={tipo === 'encargo' ? 'Situación del encargado' : 'Situación del subrogante'}
                   soloVinculo
                 />
               </Grid.Col>
@@ -289,7 +289,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
               ) : subrogadoId ? (
                 <SituacionActualPanel
                   servidorId={Number(subrogadoId)}
-                  titulo="TITULAR SUBROGADO"
+                  titulo="Titular subrogado"
                   soloVinculo
                 />
               ) : (
