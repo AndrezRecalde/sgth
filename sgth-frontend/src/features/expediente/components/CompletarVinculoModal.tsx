@@ -1,22 +1,20 @@
 'use client'
 
-import {
-  Alert, Grid, NumberInput, Stack, Switch, Text, TextInput,
-} from '@mantine/core'
+import { Alert, Grid, Stack, Switch, TextInput } from '@mantine/core'
 import { ModalFooter, SgthModal } from '@/components/ui'
-import { DatePickerInput } from '@mantine/dates'
 import { Controller, useForm, type DefaultValues } from 'react-hook-form'
+import { CompletarVinculoPlazo } from './CompletarVinculoPlazo'
+import { CompletarVinculoRemuneracion } from './CompletarVinculoRemuneracion'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
-import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
+import { admiteMarcacion, esLosep } from '../utils/nombramiento'
 import {
   completarVinculoSchema, type CompletarVinculoFormData,
 } from '../schemas/completarVinculo.schema'
 import type { MovimientoPersonal } from '@/types/api'
-import { formatFecha, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 /** Nombramientos cuyo vínculo lleva plazo pactado. */
 const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
@@ -83,11 +81,6 @@ function Formulario({
   // contrato, así que el campo arranca vacío a propósito.
   const rmuSugerida = derivaDelPuesto && puesto?.rmu != null ? Number(puesto.rmu) : undefined
 
-  const rmuHeredada = remuneracionEsHeredada(
-    nombramiento,
-    puesto?.rmu != null ? Number(puesto.rmu) : null,
-  )
-
   /*
   | Hasta el 2026-09-27 este formulario llevaba seis `useState` y validaba a mano
   | en el `submit`, con lo que faltaba en un `Alert` al pie: el usuario leía «falta
@@ -110,13 +103,12 @@ function Formulario({
     fecha_fin_propuesta: movimiento.fecha_fin_propuesta?.split('T')[0] ?? null,
   }
 
-  const {
-    control, handleSubmit, register,
-    formState: { errors },
-  } = useForm<CompletarVinculoFormData>({
+  const form = useForm<CompletarVinculoFormData>({
     resolver: zodResolver(completarVinculoSchema),
     defaultValues: iniciales,
   })
+
+  const { control, handleSubmit, register, formState: { errors } } = form
 
   const registrar = (datos: CompletarVinculoFormData) =>
     transicionar
@@ -165,80 +157,17 @@ function Formulario({
           </Grid.Col>
         </Grid>
 
-        <Grid>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <TextInput
-              label="Fecha de inicio"
-              description="Es la fecha en que rige la acción; para cambiarla se anula y se registra otra."
-              value={formatFecha(movimiento.fecha_efectiva)}
-              readOnly
-              {...contained}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            {llevaPlazo ? (
-              <Controller
-                name="fecha_fin_propuesta"
-                control={control}
-                render={({ field }) => (
-                  <DatePickerInput
-                    label="Fecha de término"
-                    description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
-                    valueFormat="DD/MM/YYYY"
-                    clearable
-                    value={toDateValue(field.value)}
-                    onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-                    error={errors.fecha_fin_propuesta?.message}
-                    {...contained}
-                  />
-                )}
-              />
-            ) : (
-              <TextInput
-                label="Fecha de término"
-                description="Este nombramiento no lleva plazo."
-                value="Sin plazo"
-                readOnly
-                {...contained}
-              />
-            )}
-          </Grid.Col>
-        </Grid>
-
-        <Controller
-          name="remuneracion_propuesta"
-          control={control}
-          render={({ field }) => (
-            <NumberInput
-              label="Remuneración mensual unificada (R.M.U.)"
-              description={rmuHeredada
-                ? 'Fijada por el grupo ocupacional del puesto. No se edita en régimen LOSEP.'
-                : derivaDelPuesto
-                  ? 'Este puesto no tiene grupo ocupacional asignado: ingrese el monto a mano.'
-                  : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.'}
-              placeholder="0.00"
-              min={0}
-              decimalScale={2}
-              readOnly={rmuHeredada}
-              error={errors.remuneracion_propuesta?.message}
-              value={field.value ?? ''}
-              onChange={(v) => {
-                const n = typeof v === 'number' ? v : parseFloat(String(v))
-                field.onChange(Number.isFinite(n) ? n : undefined)
-              }}
-              {...contained}
-            />
-          )}
+        <CompletarVinculoPlazo
+          form={form}
+          fechaEfectiva={movimiento.fecha_efectiva}
+          llevaPlazo={llevaPlazo}
         />
 
-        {!derivaDelPuesto && (
-          <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
-            <Text size="xs">
-              Bajo Código del Trabajo y Servicios Profesionales la remuneración es
-              la negociada con el trabajador, no la del puesto.
-            </Text>
-          </Alert>
-        )}
+        <CompletarVinculoRemuneracion
+          form={form}
+          nombramiento={nombramiento}
+          rmuDelPuesto={puesto?.rmu != null ? Number(puesto.rmu) : null}
+        />
 
         <Controller
           name="partida_presupuestaria_id"

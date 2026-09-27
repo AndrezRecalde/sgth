@@ -1,37 +1,25 @@
 'use client'
 
 import React from 'react'
-import {
-  Button, Group, Stack, Select, Textarea, TextInput, Alert,
-  Switch, Stepper, Grid, NumberInput, Text,
-} from '@mantine/core'
-import { ModalFooter, SectionHeading, SgthModal, notificar } from '@/components/ui'
-import { DatePickerInput } from '@mantine/dates'
-import { useForm, useWatch, Controller, type DefaultValues } from 'react-hook-form'
+import { Alert, Button, Grid, Stack, Stepper } from '@mantine/core'
+import { ModalFooter, SgthModal } from '@/components/ui'
+import { useForm, useWatch, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconInfoCircle } from '@tabler/icons-react'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import { usePuestos } from '@/features/estructura/hooks/usePuestos'
-import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
-import { movimientoService } from '../services/movimientoService'
-import { getApiErrorMessage } from '@/types/api'
 import { movimientoSchema, type MovimientoFormData } from '../schemas/movimiento.schema'
 import { SituacionActualPanel } from './SituacionActualPanel'
-import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
-import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
-import { useAusenciasTemporales } from '../hooks/useAusenciasTemporales'
-import { FirmantesPanel } from './FirmantesPanel'
+import { useGuardarAccionPersonal } from '../hooks/useGuardarAccionPersonal'
 import {
-  SUBTIPO_LABELS, TIPO_LABELS, esComision, esTipoDelFormulario,
-  etiquetaTipoMovimiento, requiereDictamenPorDefecto, requiereSubtipo,
-  reubicaAlServidor, subtiposElegibles, tiposElegibles,
+  TIPO_LABELS, esTipoDelFormulario, etiquetaTipoMovimiento,
+  requiereDictamenPorDefecto, requiereSubtipo, reubicaAlServidor,
+  subtiposElegibles, tiposElegibles,
   type AccionSubtipo, type AccionTipo,
 } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
-import { formatFecha, toDateValue, fromDateValue, fromDateValueOrNull } from '@/lib/fecha'
-import { BloqueDetalle } from './BloqueDetalle'
+import { MovimientoPasoTipo } from './MovimientoPasoTipo'
+import { MovimientoSituacionPropuesta } from './MovimientoSituacionPropuesta'
+import { MovimientoDatosDelActo } from './MovimientoDatosDelActo'
+import { valoresDelBorrador, VALORES_EN_BLANCO } from '../utils/movimientoIniciales'
 
 interface Props {
   opened: boolean
@@ -53,38 +41,6 @@ interface Props {
   /** Encabezado del modal cuando el contexto ya dice de quién se trata. */
   titulo?: string
 }
-
-const BLANK: DefaultValues<MovimientoFormData> = {
-  descripcion: '',
-  fecha_efectiva: '',
-  fecha_inicio: null,
-  fecha_fin: null,
-  unidad_destino_id: null,
-  puesto_destino_id: null,
-  remuneracion_propuesta: null,
-  partida_presupuestaria_id: null,
-  lugar_trabajo: '',
-  resolucion_numero: '',
-  observacion: '',
-  caucionado: false,
-  caucion_numero: '',
-  caucion_fecha: null,
-  requiere_dictamen_medico: false,
-  tipo_nombramiento_propuesto: null,
-  numero_contrato: '',
-  fecha_fin_propuesta: null,
-  puede_marcar: false,
-  cubre_movimiento_id: null,
-}
-
-/**
- * Un reemplazo es transitorio por definición: dura lo que dura la ausencia del
- * titular. La misma regla la impone el backend en validarReemplazo().
- */
-const NOMBRAMIENTOS_DE_REEMPLAZO = ['servicios_ocasionales', 'servicios_profesionales']
-
-/** Como formatFecha, pero un plazo sin fin se dice con palabras. */
-const fechaCorta = (f?: string | null): string => (f ? formatFecha(f) : 'sin fin')
 
 export function MovimientoModal({
   opened, onClose, servidorId, tipoNombramiento, movimiento = null,
@@ -137,6 +93,14 @@ export function MovimientoModal({
   )
 }
 
+/**
+ * Orquesta el formulario: decide los pasos, junta los bloques y envía.
+ *
+ * Los cuatro bloques —paso de tipo, situación propuesta, datos de la
+ * contratación y datos del acto— viven en sus propios archivos y cada uno pide
+ * los datos que necesita. Aquí quedan solo las decisiones que son de todo el
+ * formulario.
+ */
 function FormularioAccion({
   servidorId,
   tipoNombramiento,
@@ -150,9 +114,6 @@ function FormularioAccion({
   tipoFijo?: AccionTipo
   onClose: () => void
 }) {
-  const contained = useContainedInput()
-  const qc = useQueryClient()
-
   const edicion = !!movimiento
   /**
    * Sin paso de selección: al editar, porque cambiar la naturaleza del acto no
@@ -175,117 +136,26 @@ function FormularioAccion({
     : null
 
   const iniciales: DefaultValues<MovimientoFormData> = edicion
-    ? {
-      // No nulo aquí: el envoltorio ya descartó los tipos que este formulario
-      // no representa. Antes era un `as AccionTipo` que mentía, y un borrador
-      // de tipo plano legado —traslado, traspaso, comision_servicios,
-      // destitucion, que también nacen en borrador— entraba con un tipo que el
-      // esquema rechaza: el formulario no se enviaba y no decía nada.
-      tipo_movimiento: tipoDelBorrador ?? undefined,
-      subtipo_movimiento: movimiento!.subtipo_movimiento ?? null,
-      descripcion: movimiento!.descripcion ?? '',
-      fecha_efectiva: movimiento!.fecha_efectiva?.split('T')[0] ?? '',
-      fecha_inicio: movimiento!.fecha_inicio?.split('T')[0] ?? null,
-      fecha_fin: movimiento!.fecha_fin?.split('T')[0] ?? null,
-      unidad_destino_id: movimiento!.unidad_destino_id ?? null,
-      puesto_destino_id: movimiento!.puesto_destino_id ?? null,
-      remuneracion_propuesta: movimiento!.remuneracion_propuesta != null
-        ? Number(movimiento!.remuneracion_propuesta) : null,
-      partida_presupuestaria_id: movimiento!.partida_presupuestaria_id ?? null,
-      lugar_trabajo: movimiento!.lugar_trabajo ?? '',
-      tipo_nombramiento_propuesto: movimiento!.tipo_nombramiento_propuesto ?? null,
-      numero_contrato: movimiento!.numero_contrato ?? '',
-      fecha_fin_propuesta: movimiento!.fecha_fin_propuesta?.split('T')[0] ?? null,
-      puede_marcar: movimiento!.puede_marcar ?? false,
-      cubre_movimiento_id: movimiento!.cubre_movimiento_id ?? null,
-      requiere_dictamen_medico: movimiento!.requiere_dictamen_medico ?? false,
-      resolucion_numero: movimiento!.resolucion_numero ?? '',
-      observacion: movimiento!.observacion ?? '',
-      caucionado: movimiento!.caucionado ?? false,
-      caucion_numero: movimiento!.caucion_numero ?? '',
-      caucion_fecha: movimiento!.caucion_fecha?.split('T')[0] ?? null,
-    }
-    : { ...BLANK, tipo_movimiento: tipoFijo ?? tipos[0] }
+    ? valoresDelBorrador(movimiento!, tipoDelBorrador)
+    : { ...VALORES_EN_BLANCO, tipo_movimiento: tipoFijo ?? tipos[0] }
 
-  const {
-    control, handleSubmit, reset, register, setValue,
-    formState: { errors },
-  } = useForm<MovimientoFormData>({
+  const form = useForm<MovimientoFormData>({
     resolver: zodResolver(movimientoSchema),
     defaultValues: iniciales,
   })
 
+  const { control, handleSubmit, reset, setValue, formState: { errors } } = form
+
   const tipo = useWatch({ control, name: 'tipo_movimiento' })
   const subtipo = useWatch({ control, name: 'subtipo_movimiento' })
-  const caucionado = useWatch({ control, name: 'caucionado' })
-  const unidadDestinoId = useWatch({ control, name: 'unidad_destino_id' })
-  const puestoDestinoId = useWatch({ control, name: 'puesto_destino_id' })
-  const nombramiento = useWatch({ control, name: 'tipo_nombramiento_propuesto' })
-  const cubreId = useWatch({ control, name: 'cubre_movimiento_id' })
 
   const subtipos = tipo ? subtiposElegibles(tipo, tipoNombramiento) : []
   const esIngreso = tipo === 'ingreso'
   // El ingreso siempre propone puesto y unidad: es donde nace el vínculo.
   const muestraPropuesta = reubicaAlServidor(subtipo) || esIngreso
-  const muestraFechas = esComision(subtipo)
-
-  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
-
-  const { data: puestosData } = usePuestos(
-    unidadDestinoId ? { unidad_administrativa_id: Number(unidadDestinoId), per_page: 100 } : undefined,
-  )
-  const puestos = puestosData?.data ?? []
-  const puestosTruncados = (puestosData?.total ?? 0) > puestos.length
-
-  /**
-   * Qué régimen decide si la R.M.U. se hereda o se teclea.
-   *
-   * En un ingreso es el nombramiento PROPUESTO: es el régimen que va a tener el
-   * vínculo que nace, y quien ingresa no tiene ninguno vigente del que sacarlo.
-   * Antes se usaba `tipoNombramiento` —el del vínculo vigente— también aquí, y
-   * como en un ingreso llega vacío, `esLosep(undefined)` daba true: el campo
-   * salía en solo lectura diciendo «No se edita en régimen LOSEP» en todo
-   * ingreso, incluidos los de Código del Trabajo y Servicios Profesionales, que
-   * son justo los dos casos en que la remuneración se negocia en el contrato y
-   * el campo tiene que estar abierto.
-   *
-   * En un traslado o un traspaso sigue siendo el vigente: esas acciones no
-   * cambian de nombramiento, reubican dentro del que ya tiene.
-   */
-  const regimenDeLaRmu = esIngreso ? nombramiento : tipoNombramiento
-
-  const puestoDestino = puestos.find((p) => p.id === Number(puestoDestinoId))
-  const rmuHeredada = remuneracionEsHeredada(
-    regimenDeLaRmu,
-    puestoDestino?.rmu != null ? Number(puestoDestino.rmu) : null,
-  )
-
-  // ── Reemplazo: solo aplica al ingreso con nombramiento temporal ──
-  const puedeCubrir = esIngreso && NOMBRAMIENTOS_DE_REEMPLAZO.includes(nombramiento ?? '')
-
-  // Solo las que hoy siguen sin cubrir: ofrecer una ya cubierta serviría solo
-  // para que el backend la rechace.
-  const { data: ausencias = [] } = useAusenciasTemporales({ cubiertas: false })
-
-  const ausenciaOptions = ausencias.map((a) => ({
-    value: String(a.id),
-    label: `${a.servidor.nombre} — ${a.etiqueta ?? 'Ausencia'} (hasta ${fechaCorta(a.hasta)})`,
-  }))
-
-  const ausenciaSel = ausencias.find((a) => a.id === Number(cubreId))
-
-  const descripcionRmu = rmuHeredada
-    ? 'Fijada por el grupo ocupacional del puesto destino. No se edita en régimen LOSEP.'
-    : esIngreso && !nombramiento
-      ? 'Elija primero el tipo de nombramiento: de él depende si la remuneración se hereda del puesto o se pacta.'
-      : esLosep(regimenDeLaRmu)
-        ? (puestoDestinoId
-          ? 'Este puesto no tiene grupo ocupacional asignado, así que no hay monto que heredar: ingréselo a mano.'
-          : 'Elija el puesto destino para heredar la remuneración de su grupo ocupacional.')
-        : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.'
 
   const handleClose = () => {
-    reset(BLANK)
+    reset(VALORES_EN_BLANCO)
     onClose()
   }
 
@@ -300,580 +170,96 @@ function FormularioAccion({
     setValue('requiere_dictamen_medico', requiereDictamenPorDefecto(valor))
   }
 
-  /**
-   * Los campos de contratación solo viajan en el ingreso. Enviarlos en un
-   * traspaso los grabaría en una acción que nunca creará un contrato, y el
-   * documento impreso acabaría con un número que no corresponde a nada.
-   */
-  const soloLoQueAplica = (data: MovimientoFormData): MovimientoFormData => {
-    if (data.tipo_movimiento === 'ingreso') {
-      // Cinturón, además del `setValue` al cambiar de nombramiento: un borrador
-      // que ya venía con la marcación puesta y un nombramiento que no marca se
-      // edita sin tocar ese selector, y entonces el `onChange` no corre. La
-      // modalidad manda sobre lo que quedó guardado.
-      return admiteMarcacion(data.tipo_nombramiento_propuesto)
-        ? data
-        : { ...data, puede_marcar: false }
-    }
-
-    return {
-      ...data,
-      numero_contrato: null,
-      fecha_fin_propuesta: null,
-      puede_marcar: null,
-      tipo_nombramiento_propuesto: null,
-      cubre_movimiento_id: null,
-    }
-  }
-
-  const guardar = useMutation({
-    mutationFn: (data: MovimientoFormData) => {
-      const limpio = soloLoQueAplica(data)
-
-      if (edicion) {
-        // tipo y subtipo no se envían: el backend los rechaza en la edición
-        // porque cambiar la naturaleza del acto exige anular y registrar otro.
-        const editable = { ...limpio }
-        delete (editable as Partial<MovimientoFormData>).tipo_movimiento
-        delete (editable as Partial<MovimientoFormData>).subtipo_movimiento
-
-        return movimientoService.actualizarBorrador(movimiento!.id, editable)
-      }
-
-      return movimientoService.crear(servidorId, limpio)
-    },
-    onSuccess: () => {
-      notificar.exito(
-        edicion ? 'Borrador actualizado' : 'Acción de personal registrada',
-        edicion
-          ? 'Los cambios quedaron guardados en la acción de personal.'
-          : 'Quedó en borrador, pendiente de revisión y aprobación.',
-      )
-      qc.invalidateQueries({ queryKey: ['movimientos'] })
-      qc.invalidateQueries({ queryKey: ['movimiento'] })
-      qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })
-      handleClose()
-    },
-    onError: (error) => {
-      notificar.error(
-        edicion ? 'No se pudo guardar' : 'No se pudo registrar',
-        getApiErrorMessage(
-          error,
-          edicion
-            ? 'No se pudo actualizar el borrador.'
-            : 'No se pudo registrar la acción de personal.',
-        ),
-      )
-    },
+  const guardar = useGuardarAccionPersonal({
+    servidorId,
+    movimientoId: movimiento?.id,
+    onGuardado: handleClose,
   })
 
-  const puedeAvanzar = !!tipo && (!requiereSubtipo(tipo) || !!subtipo)
+  if (!sinPasoDeTipo && tipos.length === 0) {
+    return (
+      <Alert icon={<IconInfoCircle size={16} />} color="amber" variant="light">
+        El servidor no tiene un contrato vigente elegible para ninguna acción de
+        personal formal, o no tiene contrato vigente registrado.
+      </Alert>
+    )
+  }
 
   return (
-    <>
-      {!sinPasoDeTipo && tipos.length === 0 ? (
-        <Alert icon={<IconInfoCircle size={16} />} color="amber" variant="light">
-          El servidor no tiene un contrato vigente elegible para ninguna acción de
-          personal formal, o no tiene contrato vigente registrado.
-        </Alert>
-      ) : (
-        <form onSubmit={handleSubmit((v) => guardar.mutate(v))} noValidate>
-          <Stepper
-            active={paso}
-            onStepClick={sinPasoDeTipo ? undefined : setPaso}
-            size="sm"
-          >
-            {/* Con el tipo ya fijado, lo único que queda por elegir aquí es el
-                subtipo — y el rótulo debe decirlo solo cuando de verdad lo
-                haya. */}
-            <Stepper.Step
-              label={tipoFijo && requiereSubtipo(tipoFijo) ? 'Subtipo' : 'Tipo de acción'}
-              description={
-                tipoFijo && requiereSubtipo(tipoFijo)
-                  ? 'Bajo qué figura'
-                  : 'Qué se va a registrar'
-              }
-            >
-              <Stack gap="sm" mt="md">
-                {/* Con tipo fijo no se vuelve a preguntar: ya se eligió en el
-                    grid, y ofrecerlo otra vez permitiría contradecirlo. */}
-                {!tipoFijo && (
-                  <Controller
-                    name="tipo_movimiento"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        label="Tipo de acción de personal"
-                        data={tipos.map((t) => ({ value: t, label: TIPO_LABELS[t] }))}
-                        value={field.value}
-                        onChange={(v) => {
-                          field.onChange(tipos.find((t) => t === v))
-                          elegirSubtipo(null)
-                        }}
-                        error={errors.tipo_movimiento?.message}
-                        {...contained}
-                      />
-                    )}
+    <form onSubmit={handleSubmit((v) => guardar.mutate(v))} noValidate>
+      <Stepper
+        active={paso}
+        onStepClick={sinPasoDeTipo ? undefined : setPaso}
+        size="sm"
+      >
+        {/* Con el tipo ya fijado, lo único que queda por elegir aquí es el
+            subtipo — y el rótulo debe decirlo solo cuando de verdad lo haya. */}
+        <Stepper.Step
+          label={tipoFijo && requiereSubtipo(tipoFijo) ? 'Subtipo' : 'Tipo de acción'}
+          description={
+            tipoFijo && requiereSubtipo(tipoFijo)
+              ? 'Bajo qué figura'
+              : 'Qué se va a registrar'
+          }
+        >
+          <MovimientoPasoTipo
+            form={form}
+            tipos={tipos}
+            subtipos={subtipos}
+            tipo={tipo}
+            subtipo={subtipo}
+            tipoFijo={tipoFijo}
+            elegirSubtipo={elegirSubtipo}
+            onCancel={handleClose}
+            onContinuar={() => setPaso(1)}
+          />
+        </Stepper.Step>
+
+        <Stepper.Step label="Detalle" description="Datos de la acción">
+          <Stack gap="sm" mt="md">
+            {muestraPropuesta && (
+              <Grid>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <SituacionActualPanel servidorId={servidorId} />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <MovimientoSituacionPropuesta
+                    form={form}
+                    esIngreso={esIngreso}
+                    tipoNombramiento={tipoNombramiento}
                   />
-                )}
+                </Grid.Col>
+              </Grid>
+            )}
 
-                {tipo && requiereSubtipo(tipo) && (
-                  <Controller
-                    name="subtipo_movimiento"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        label="Subtipo"
-                        placeholder="Seleccione el subtipo"
-                        description="Es el subtipo el que determina las reglas y el documento que se imprime."
-                        data={subtipos.map((s) => ({ value: s, label: SUBTIPO_LABELS[s] }))}
-                        value={field.value ?? null}
-                        onChange={(v) => elegirSubtipo(subtipos.find((s) => s === v) ?? null)}
-                        error={errors.subtipo_movimiento?.message}
-                        {...contained}
-                      />
-                    )}
-                  />
-                )}
+            <MovimientoDatosDelActo form={form} />
 
-                {tipo && requiereSubtipo(tipo) && subtipos.length === 0 && (
-                  <Alert color="amber" variant="light" icon={<IconInfoCircle size={16} />}>
-                    Ningún subtipo de {TIPO_LABELS[tipo]} aplica al nombramiento vigente
-                    de este servidor.
-                  </Alert>
-                )}
+            {/* Red de seguridad: si algo no valida, se dice.
+                Ocho campos no pintaban su error, así que un texto de más de 100
+                caracteres en «Número de contrato» o un ingreso sin unidad dejaban
+                el botón sin efecto: `handleSubmit` no llama a la mutación y no
+                había nada en pantalla. Con el error en cada campo basta para los
+                ocho, pero esto cubre también lo que valide el esquema mañana y
+                quede fuera de la vista —un campo del paso anterior, o uno oculto
+                por el subtipo elegido—. */}
+            {Object.keys(errors).length > 0 && (
+              <Alert color="red" variant="light" icon={<IconInfoCircle size={16} />}>
+                Revise los campos marcados: hay {Object.keys(errors).length} dato(s)
+                que el formulario no puede enviar todavía.
+              </Alert>
+            )}
 
-                <ModalFooter
-                  onCancel={handleClose}
-                  submitLabel="Continuar"
-                  submitDisabled={!puedeAvanzar}
-                  onSubmit={() => setPaso(1)}
-                />
-              </Stack>
-            </Stepper.Step>
-
-            <Stepper.Step label="Detalle" description="Datos de la acción">
-              <Stack gap="sm" mt="md">
-                {muestraPropuesta ? (
-                  <Grid>
-                    <Grid.Col span={{ base: 12, md: 6 }}>
-                      <SituacionActualPanel servidorId={servidorId} />
-                    </Grid.Col>
-                    <Grid.Col span={{ base: 12, md: 6 }}>
-                      <BloqueDetalle>
-                        <Text size="sm" fw={700} mb="xs">SITUACIÓN PROPUESTA</Text>
-                        <Stack gap="xs">
-                          <Controller
-                            name="unidad_destino_id"
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                label="Unidad administrativa"
-                                placeholder="Seleccionar"
-                                data={unidades.map((u) => ({
-                                  value: String(u.id), label: u.nombre ?? `Unidad ${u.id}`,
-                                }))}
-                                searchable
-                                value={field.value ? String(field.value) : null}
-                                onChange={(v) => {
-                                  field.onChange(v ? Number(v) : null)
-                                  setValue('puesto_destino_id', null)
-                                }}
-                                error={errors.unidad_destino_id?.message}
-                                {...contained}
-                              />
-                            )}
-                          />
-                          <Controller
-                            name="puesto_destino_id"
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                label="Puesto"
-                                // El listado pide 100 por página. Si la unidad
-                                // tuviera más, antes se recortaba en silencio y
-                                // el puesto que falta era indistinguible de uno
-                                // que no existe. El día que esto aparezca, el
-                                // arreglo de fondo es una búsqueda del lado del
-                                // servidor: el endpoint de puestos todavía no
-                                // acepta `search`.
-                                description={puestosTruncados
-                                  ? `Se muestran ${puestos.length} de ${puestosData?.total} puestos de la unidad.`
-                                  : undefined}
-                                placeholder={unidadDestinoId ? 'Seleccionar' : 'Elija primero la unidad'}
-                                data={puestos.map((p) => ({
-                                  value: String(p.id), label: p.cargo?.nombre ?? `Puesto ${p.id}`,
-                                }))}
-                                searchable
-                                disabled={!unidadDestinoId}
-                                value={field.value ? String(field.value) : null}
-                                onChange={(v) => {
-                                  field.onChange(v ? Number(v) : null)
-                                  const sel = puestos.find((p) => p.id === Number(v))
-                                  if (sel?.rmu) setValue('remuneracion_propuesta', Number(sel.rmu))
-                                  // La partida del puesto es la sugerencia, no
-                                  // una imposición: el campo queda editable
-                                  // porque Talento Humano puede respaldar el
-                                  // vínculo con otra.
-                                  if (sel?.partida_presupuestaria_id != null) {
-                                    setValue(
-                                      'partida_presupuestaria_id',
-                                      Number(sel.partida_presupuestaria_id),
-                                    )
-                                  }
-                                }}
-                                error={errors.puesto_destino_id?.message}
-                                {...contained}
-                              />
-                            )}
-                          />
-                          <TextInput
-                            label="Lugar de trabajo"
-                            placeholder="Ej: Esmeraldas"
-                            error={errors.lugar_trabajo?.message}
-                            {...contained}
-                            {...register('lugar_trabajo')}
-                          />
-                          <Controller
-                            name="remuneracion_propuesta"
-                            control={control}
-                            render={({ field }) => (
-                              <NumberInput
-                                label="R.M.U. propuesta"
-                                description={descripcionRmu}
-                                placeholder="0.00"
-                                min={0}
-                                decimalScale={2}
-                                readOnly={rmuHeredada}
-                                error={errors.remuneracion_propuesta?.message}
-                                value={field.value ?? ''}
-                                onChange={(v) => {
-                                  const n = typeof v === 'number' ? v : parseFloat(String(v))
-                                  field.onChange(Number.isFinite(n) ? n : null)
-                                }}
-                                {...contained}
-                              />
-                            )}
-                          />
-                          <Controller
-                            name="partida_presupuestaria_id"
-                            control={control}
-                            render={({ field }) => (
-                              <SelectPartidaPresupuestaria
-                                value={field.value}
-                                onChange={field.onChange}
-                                // La partida la decide la modalidad, no el
-                                // puesto: un ocasional y un permanente sobre
-                                // la misma plaza se imputan distinto.
-                                modalidad={nombramiento}
-                              />
-                            )}
-                          />
-
-                          {/* Solo el ingreso da origen a un contrato. En un
-                              traspaso o una comisión estos campos ni se
-                              muestran ni se envían: no hay instrumento nuevo
-                              que numerar. */}
-                          {esIngreso && (
-                            <>
-                              <Controller
-                                name="tipo_nombramiento_propuesto"
-                                control={control}
-                                render={({ field }) => (
-                                  <Select
-                                    label="Tipo de nombramiento"
-                                    data={TIPO_NOMBRAMIENTO_OPTIONS}
-                                    searchable
-                                    value={field.value ?? null}
-                                    onChange={(v) => {
-                                      field.onChange(v)
-                                      // Al salir de un nombramiento temporal el
-                                      // enlace de reemplazo deja de ser válido.
-                                      if (!NOMBRAMIENTOS_DE_REEMPLAZO.includes(v ?? '')) {
-                                        setValue('cubre_movimiento_id', null)
-                                      }
-                                      // Y si la modalidad nueva no marca nunca,
-                                      // la casilla se apaga DE VERDAD. El
-                                      // interruptor se pintaba apagado con
-                                      // `checked={admite && …}` pero el valor
-                                      // del formulario seguía en true, y eso es
-                                      // lo que viajaba: al editar el borrador, el
-                                      // backend lo guardaba tal cual y el
-                                      // documento acababa diciendo «Marca
-                                      // asistencia: Sí» en un contrato civil.
-                                      if (!admiteMarcacion(v)) {
-                                        setValue('puede_marcar', false)
-                                      }
-                                    }}
-                                    error={errors.tipo_nombramiento_propuesto?.message}
-                                    {...contained}
-                                  />
-                                )}
-                              />
-
-                              {/* Un reemplazo dura lo que dura la ausencia, así
-                                  que solo se ofrece con nombramiento temporal.
-                                  La misma regla la impone validarReemplazo(). */}
-                              {puedeCubrir && (
-                                <Controller
-                                  name="cubre_movimiento_id"
-                                  control={control}
-                                  render={({ field }) => (
-                                    <Select
-                                      label="¿Cubre una ausencia temporal?"
-                                      description="Enlaza este ingreso con la comisión o licencia cuyo hueco viene a cubrir. El titular conserva su plaza."
-                                      placeholder={ausenciaOptions.length === 0
-                                        ? 'No hay ausencias sin cubrir'
-                                        : 'Ninguna — es un ingreso ordinario'}
-                                      data={ausenciaOptions}
-                                      disabled={ausenciaOptions.length === 0}
-                                      searchable
-                                      clearable
-                                      value={field.value ? String(field.value) : null}
-                                      onChange={(v) => {
-                                        field.onChange(v ? Number(v) : null)
-
-                                        // El suplente entra a la plaza del
-                                        // ausente, no a otra.
-                                        const sel = ausencias.find((a) => String(a.id) === v)
-                                        if (sel?.unidad_id) setValue('unidad_destino_id', sel.unidad_id)
-                                        if (sel?.puesto_id) setValue('puesto_destino_id', sel.puesto_id)
-                                      }}
-                                      {...contained}
-                                    />
-                                  )}
-                                />
-                              )}
-
-                              {ausenciaSel && (
-                                <Alert variant="light" color="amethyst" icon={<IconInfoCircle size={16} />}>
-                                  Reemplaza a <strong>{ausenciaSel.servidor.nombre}</strong> en{' '}
-                                  {ausenciaSel.puesto ?? 'su puesto'}. El contrato no puede
-                                  pasar del {fechaCorta(ausenciaSel.hasta)}, que es cuando regresa.
-                                </Alert>
-                              )}
-                              <TextInput
-                                label="Número de contrato"
-                                placeholder="Ej: CT-2026-0099"
-                                error={errors.numero_contrato?.message}
-                                {...contained}
-                                {...register('numero_contrato')}
-                              />
-                              <Controller
-                                name="fecha_fin_propuesta"
-                                control={control}
-                                render={({ field }) => (
-                                  <DatePickerInput
-                                    label="Fecha de término del contrato"
-                                    description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
-                                    valueFormat="DD/MM/YYYY"
-                                    clearable
-                                    value={toDateValue(field.value)}
-                                    onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-                                    error={errors.fecha_fin_propuesta?.message}
-                                    {...contained}
-                                  />
-                                )}
-                              />
-                              <Controller
-                                name="puede_marcar"
-                                control={control}
-                                render={({ field }) => {
-                                  // Servicios profesionales, libre nombramiento
-                                  // y elección popular no marcan nunca: el
-                                  // interruptor se apaga y se bloquea, y el
-                                  // backend fuerza el valor igualmente.
-                                  const admite = admiteMarcacion(nombramiento)
-
-                                  return (
-                                    <Switch
-                                      label="Marcación biométrica"
-                                      description={admite
-                                        ? 'Sugerida según el nombramiento; ajústela si este caso es distinto.'
-                                        : 'Esta modalidad no marca biométrico.'}
-                                      checked={admite && !!field.value}
-                                      disabled={!admite}
-                                      onChange={(e) => field.onChange(e.currentTarget.checked)}
-                                    />
-                                  )
-                                }}
-                              />
-                            </>
-                          )}
-                        </Stack>
-                      </BloqueDetalle>
-                    </Grid.Col>
-                  </Grid>
-                ) : null}
-
-                <Textarea
-                  label="Explicación"
-                  placeholder="Detalle y justificación de la acción de personal"
-                  minRows={3}
-                  {...contained}
-                  {...register('descripcion')}
-                  error={errors.descripcion?.message}
-                />
-
-                <Controller
-                  name="fecha_efectiva"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePickerInput
-                      label="Rige a partir de"
-                      placeholder="Seleccionar fecha"
-                      valueFormat="DD/MM/YYYY"
-                      value={toDateValue(field.value)}
-                      onChange={(d) => field.onChange(fromDateValue(d))}
-                      error={errors.fecha_efectiva?.message}
-                      {...contained}
-                    />
-                  )}
-                />
-
-                {muestraFechas && (
-                  <>
-                    <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
-                      La comisión de servicios dura entre 1 y 6 años, y el servidor
-                      necesita al menos 2 años de antigüedad en la institución.
-                    </Alert>
-                    <Group grow>
-                      <Controller
-                        name="fecha_inicio"
-                        control={control}
-                        render={({ field }) => (
-                          <DatePickerInput
-                            label="Desde"
-                            valueFormat="DD/MM/YYYY"
-                            value={toDateValue(field.value)}
-                            onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-                            error={errors.fecha_inicio?.message}
-                            {...contained}
-                          />
-                        )}
-                      />
-                      <Controller
-                        name="fecha_fin"
-                        control={control}
-                        render={({ field }) => (
-                          <DatePickerInput
-                            label="Hasta"
-                            valueFormat="DD/MM/YYYY"
-                            value={toDateValue(field.value)}
-                            onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-                            error={errors.fecha_fin?.message}
-                            {...contained}
-                          />
-                        )}
-                      />
-                    </Group>
-                  </>
-                )}
-
-                <TextInput
-                  label="Número de resolución"
-                  placeholder="Opcional"
-                  error={errors.resolucion_numero?.message}
-                  {...contained}
-                  {...register('resolucion_numero')}
-                />
-
-                <Controller
-                  name="requiere_dictamen_medico"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch
-                      label="Requiere ficha de salud ocupacional"
-                      description="Si se marca, no podrá registrarse sin dictamen de aptitud del dispensario."
-                      checked={!!field.value}
-                      onChange={(e) => field.onChange(e.currentTarget.checked)}
-                    />
-                  )}
-                />
-
-                <SectionHeading title="Firmarán este documento" mt={4} mb={4} />
-
-                <Text size="xs" c="dimmed">
-                  Se toman del organigrama y quedan sellados al suscribir la acción.
-                </Text>
-                <FirmantesPanel compacto />
-
-                <SectionHeading title="Caución" mt={4} mb={4} />
-
-                <Controller
-                  name="caucionado"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch
-                      label="El puesto exige caución"
-                      checked={!!field.value}
-                      onChange={(e) => field.onChange(e.currentTarget.checked)}
-                    />
-                  )}
-                />
-
-                {caucionado && (
-                  <Group grow>
-                    <TextInput
-                      label="Caución registrada con No."
-                      {...contained}
-                      {...register('caucion_numero')}
-                      error={errors.caucion_numero?.message}
-                    />
-                    <Controller
-                      name="caucion_fecha"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePickerInput
-                          label="Fecha"
-                          valueFormat="DD/MM/YYYY"
-                          value={toDateValue(field.value)}
-                          onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-                          error={errors.caucion_fecha?.message}
-                          {...contained}
-                        />
-                      )}
-                    />
-                  </Group>
-                )}
-
-                <Textarea
-                  label="Observación"
-                  placeholder="Opcional"
-                  minRows={2}
-                  error={errors.observacion?.message}
-                  {...contained}
-                  {...register('observacion')}
-                />
-
-                {/* Red de seguridad: si algo no valida, se dice.
-                    Ocho campos no pintaban su error, así que un texto de más de
-                    100 caracteres en «Número de contrato» o un ingreso sin unidad
-                    dejaban el botón sin efecto: `handleSubmit` no llama a la
-                    mutación y no había nada en pantalla. Con el error en cada
-                    campo basta para los ocho, pero esto cubre también lo que
-                    valide el esquema mañana y quede fuera de la vista —un campo
-                    del paso anterior, o uno oculto por el subtipo elegido—. */}
-                {Object.keys(errors).length > 0 && (
-                  <Alert color="red" variant="light" icon={<IconInfoCircle size={16} />}>
-                    Revise los campos marcados: hay {Object.keys(errors).length} dato(s)
-                    que el formulario no puede enviar todavía.
-                  </Alert>
-                )}
-
-                <ModalFooter
-                  onCancel={handleClose}
-                  leftSection={!sinPasoDeTipo && (
-                    <Button variant="default" onClick={() => setPaso(0)}>Atrás</Button>
-                  )}
-                  submitLabel={edicion ? 'Guardar cambios' : 'Registrar en borrador'}
-                  submitting={guardar.isPending}
-                />
-              </Stack>
-            </Stepper.Step>
-          </Stepper>
-        </form>
-      )}
-    </>
+            <ModalFooter
+              onCancel={handleClose}
+              leftSection={!sinPasoDeTipo && (
+                <Button variant="default" onClick={() => setPaso(0)}>Atrás</Button>
+              )}
+              submitLabel={edicion ? 'Guardar cambios' : 'Registrar en borrador'}
+              submitting={guardar.isPending}
+            />
+          </Stack>
+        </Stepper.Step>
+      </Stepper>
+    </form>
   )
 }
