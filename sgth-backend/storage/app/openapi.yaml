@@ -3239,6 +3239,78 @@
                 }
             }
         },
+        "/v1/expediente/servidores/{servidorId}/ausentismo-salud": {
+            "get": {
+                "operationId": "expediente.ausentismoSalud",
+                "tags": [
+                    "AusentismoSalud"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Ausentismo por salud del servidor."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "permisos": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "meses": {
+                                                    "type": "integer",
+                                                    "const": 12
+                                                },
+                                                "desde": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "permisos",
+                                                "meses",
+                                                "desde"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "operationId": "auth.login",
@@ -3498,6 +3570,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -3566,6 +3641,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -3589,15 +3667,20 @@
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
                                     "observacion": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "maxLength": 1000
                                     }
-                                }
+                                },
+                                "required": [
+                                    "observacion"
+                                ]
                             }
                         }
                     }
@@ -3633,6 +3716,12 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -3709,6 +3798,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -3741,6 +3833,52 @@
                                         },
                                         "datos": {
                                             "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/companeros-de-unidad": {
+            "get": {
+                "operationId": "autoservicio.companerosDeUnidad",
+                "summary": "Los compa\u00f1eros de unidad, para elegir al jefe inmediato de un permiso\npropio. Ver `AutoservicioService::obtenerCompanerosDeUnidad()`",
+                "tags": [
+                    "Autoservicio"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Compa\u00f1eros de unidad obtenidos."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
                                         },
                                         "meta": {
                                             "type": "null"
@@ -4100,6 +4238,226 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/bandeja": {
+            "get": {
+                "operationId": "bandejaViatico.index",
+                "tags": [
+                    "BandejaViatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "etapa",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "por_aprobar",
+                                "por_anticipo",
+                                "por_iniciar",
+                                "en_comision",
+                                "por_liquidar",
+                                "por_revisar",
+                                "cerrados"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "vencidas",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vi\u00e1ticos de la bandeja."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "integer"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "desde": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "hasta": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina",
+                                                "desde",
+                                                "hasta"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/viaticos/bandeja/resumen": {
+            "get": {
+                "operationId": "bandejaViatico.resumen",
+                "tags": [
+                    "BandejaViatico"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resumen de la bandeja de vi\u00e1ticos."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "conteos": {
+                                                    "type": "string"
+                                                },
+                                                "vencidas": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "montos": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "comprometido": {
+                                                            "type": "number",
+                                                            "description": "Lo que la instituci\u00f3n se comprometi\u00f3 a pagar y a\u00fan no cerr\u00f3."
+                                                        },
+                                                        "anticipos_entregados": {
+                                                            "type": "number",
+                                                            "description": "Dinero que ya sali\u00f3 como anticipo en vi\u00e1ticos sin cerrar."
+                                                        },
+                                                        "por_contabilizar": {
+                                                            "type": "number",
+                                                            "description": "Liquidado por el servidor, esperando la revisi\u00f3n de Financiero."
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "comprometido",
+                                                        "anticipos_entregados",
+                                                        "por_contabilizar"
+                                                    ]
+                                                },
+                                                "unidades": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/UnidadAdministrativa"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "conteos",
+                                                "vencidas",
+                                                "montos",
+                                                "unidades"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -6524,6 +6882,77 @@
         "/v1/expediente/servidores/{servidorId}/certificado-laboral": {
             "get": {
                 "operationId": "certificadoLaboral.generar",
+                "description": "Antes se guardaba en storage con un nombre con marca de tiempo y se\ndevolv\u00eda una URL firmada. Nada borraba esos archivos, as\u00ed que la carpeta\ncrec\u00eda sola con copias de documentos que llevan c\u00e9dula y remuneraci\u00f3n.\nLa constancia de que el certificado se emiti\u00f3 vive ahora en la bit\u00e1cora,\nque es lo que de verdad hac\u00eda falta guardar.",
+                "summary": "El PDF sale en la misma respuesta, sin pasar por disco",
+                "tags": [
+                    "CertificadoLaboral"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "con_remuneracion",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "enviar",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "X-Codigo-Certificado": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "X-Envio-Certificado": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/{servidorId}/certificados-emitidos": {
+            "get": {
+                "operationId": "certificados.emitidos",
+                "description": "Sirve para dos cosas a la vez. Para Talento Humano, evitar emitir a\nciegas: ver que hace tres d\u00edas ya se emiti\u00f3 uno sin remuneraci\u00f3n ahorra\nrepetir el trabajo y explica por qu\u00e9 la persona vuelve a pedirlo. Y para\nla instituci\u00f3n, dejar registro de qui\u00e9n accedi\u00f3 a datos personales: el\ncertificado lleva c\u00e9dula y, en una de sus variantes, la remuneraci\u00f3n.\n\nNo es un indicador de nada sobre el servidor. Un n\u00famero alto no\nsignifica nada malo \u2014quien pide cr\u00e9ditos o est\u00e1 en un concurso pide\nvarios\u2014, y por eso no existe ning\u00fan listado que los ordene por cantidad.",
+                "summary": "La bit\u00e1cora de certificados de un servidor, del m\u00e1s reciente al m\u00e1s\nantiguo",
                 "tags": [
                     "CertificadoLaboral"
                 ],
@@ -6545,57 +6974,32 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Certificado generado con \u00e9xito"
+                                        "exito": {
+                                            "type": "boolean"
                                         },
-                                        "url": {
-                                            "type": "string"
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Certificados laborales emitidos."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EmisionCertificadoResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
-                                        "message",
-                                        "url"
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/expediente/certificado-laboral/descargar/{archivo}": {
-            "get": {
-                "operationId": "expediente.certificado.descargar",
-                "tags": [
-                    "CertificadoLaboral"
-                ],
-                "parameters": [
-                    {
-                        "name": "archivo",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -10326,7 +10730,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     }
                 ],
@@ -10463,7 +10867,7 @@
                                     },
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "estado": {
                                         "$ref": "#/components/schemas/EstadoCumplimientoNormativa"
@@ -11180,7 +11584,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     },
                     {
@@ -11219,11 +11623,14 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "total_activos": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "string"
                                                         },
                                                         "por_nivel_intervencion": {
-                                                            "type": "string"
+                                                            "type": "array",
+                                                            "description": "La clave vac\u00eda son los riesgos anteriores a la matriz NTP 330,\nque tienen el nivel en NULL. Antes sal\u00edan igual, porque agrupar\npor null en PHP tambi\u00e9n da la clave vac\u00eda.",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            }
                                                         }
                                                     },
                                                     "required": [
@@ -11235,12 +11642,10 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "total": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "con_atencion_medica": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "dias_reposo_total": {
                                                             "type": "integer"
@@ -11313,8 +11718,7 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "campanias_activas": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "string"
                                                         },
                                                         "total_respuestas": {
                                                             "type": "integer",
@@ -11335,8 +11739,7 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "campanias_activas": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "string"
                                                         },
                                                         "total_respuestas": {
                                                             "type": "integer",
@@ -11348,6 +11751,7 @@
                                                         },
                                                         "sin_consumo_reportado": {
                                                             "type": "integer",
+                                                            "description": "\u00abNo reporta consumo\u00bb es quien contest\u00f3 que no ha consumido\nninguna sustancia: el mapa de niveles llega vac\u00edo. Se compara\ncomo jsonb porque el tipo `json` de PostgreSQL no tiene operador\nde igualdad, y contra las dos formas de lo vac\u00edo porque el mapa\nlo arma PHP: un array asociativo sin claves se serializa `[]`,\nno `{}`. Quedarse con una sola contaba cero.",
                                                             "minimum": 0
                                                         }
                                                     },
@@ -11394,15 +11798,14 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "total_permisos": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "servidores_afectados": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "integer"
                                                         },
                                                         "total_dias": {
-                                                            "type": "number"
+                                                            "type": "number",
+                                                            "description": "480 minutos es la jornada de ocho horas."
                                                         }
                                                     },
                                                     "required": [
@@ -12283,7 +12686,8 @@
                                 "type": "object",
                                 "properties": {
                                     "tipo_discapacidad": {
-                                        "type": "string"
+                                        "description": "El modelo lo castea a TipoDiscapacidad: un texto fuera del\ncat\u00e1logo pasaba esta validaci\u00f3n y reventaba en 500 al guardar.",
+                                        "$ref": "#/components/schemas/TipoDiscapacidad"
                                     },
                                     "porcentaje": {
                                         "type": "number",
@@ -13787,6 +14191,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -16182,7 +16589,7 @@
                                 "properties": {
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "unidad_administrativa_id": {
                                         "type": [
@@ -16447,7 +16854,7 @@
                                 "properties": {
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "unidad_administrativa_id": {
                                         "type": [
@@ -16948,6 +17355,36 @@
                 "tags": [
                     "FactorRiesgoCatalogo"
                 ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 150
+                        }
+                    },
+                    {
+                        "name": "categoria",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/CategoriaFactorRiesgo"
+                        }
+                    },
+                    {
+                        "name": "solo_activos",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -16982,6 +17419,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -17207,190 +17647,6 @@
                                         "mensaje",
                                         "datos",
                                         "errores"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/liquidaciones/{liquidacionId}/facturas": {
-            "get": {
-                "operationId": "facturaViatico.index",
-                "tags": [
-                    "FacturaViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "liquidacionId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Facturas listadas exitosamente."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/FacturaViatico"
-                                            }
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "facturaViatico.store",
-                "tags": [
-                    "FacturaViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "liquidacionId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreFacturaViaticoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Factura agregada exitosamente."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/FacturaViatico"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/liquidaciones/{liquidacionId}/facturas/{facturaId}": {
-            "delete": {
-                "operationId": "facturaViatico.destroy",
-                "tags": [
-                    "FacturaViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "liquidacionId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "facturaId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Factura eliminada exitosamente."
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
                                     ]
                                 }
                             }
@@ -18472,7 +18728,18 @@
                                                         "type": "string"
                                                     },
                                                     "cargo": {
-                                                        "type": "string"
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "PREFECTO/A PROVINCIAL",
+                                                                    "DIRECTOR/A DE TALENTO HUMANO"
+                                                                ]
+                                                            }
+                                                        ]
                                                     },
                                                     "subrogado": {
                                                         "type": "string"
@@ -19384,7 +19651,7 @@
                                 "properties": {
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "unidad_administrativa_id": {
                                         "type": [
@@ -19587,7 +19854,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     },
                     {
@@ -19656,7 +19923,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     },
                     {
@@ -19705,41 +19972,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/viaticos/informe/descargar/{archivo}": {
-            "get": {
-                "operationId": "viaticos.informe.descargar",
-                "summary": "Endpoint legacy \u2014 redirige al nuevo",
-                "tags": [
-                    "InformeViatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "archivo",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "410": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string",
-                                    "const": "Endpoint deprecado."
-                                }
-                            }
-                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -21058,8 +21290,9 @@
         },
         "/v1/viaticos/{viaticoId}/liquidacion": {
             "get": {
-                "operationId": "liquidacionViatico.obtenerOCrear",
-                "summary": "Obtener o crear la liquidaci\u00f3n del vi\u00e1tico\nSe crea vac\u00eda cuando el vi\u00e1tico entra en\nestado pendiente_liquidacion",
+                "operationId": "liquidacionViatico.obtener",
+                "description": "Leerla no la crea. Antes esta ruta era \u00abobtener o crear\u00bb: abrir la ficha\nde un vi\u00e1tico pendiente de liquidaci\u00f3n dejaba una fila vac\u00eda en la base,\naunque nadie registrara nada. Ahora, si todav\u00eda no hay liquidaci\u00f3n, se\ndevuelve una vac\u00eda sin guardar \u2014con la cuenta del vi\u00e1tico, que la\npantalla muestra desde el principio\u2014 y la crea el primer guardado de\nactividades o comprobantes.",
+                "summary": "La liquidaci\u00f3n del vi\u00e1tico, para verla o empezar a llenarla",
                 "tags": [
                     "LiquidacionViatico"
                 ],
@@ -21322,7 +21555,7 @@
                                         "datos": {
                                             "anyOf": [
                                                 {
-                                                    "type": "string"
+                                                    "type": "object"
                                                 },
                                                 {
                                                     "type": "array",
@@ -21382,7 +21615,8 @@
                                             "type": "object",
                                             "properties": {
                                                 "categoria_factura_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "description": "Solo las categor\u00edas vigentes: el cat\u00e1logo del formulario ya no\nofrece las que el vi\u00e1tico no cubre."
                                                 },
                                                 "nombre_proveedor": {
                                                     "type": "string"
@@ -21419,10 +21653,7 @@
                                                     ]
                                                 },
                                                 "fecha_factura": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
+                                                    "type": "string",
                                                     "format": "date-time"
                                                 },
                                                 "detalle": {
@@ -21436,7 +21667,8 @@
                                                 "categoria_factura_id",
                                                 "nombre_proveedor",
                                                 "monto",
-                                                "tipo_comprobante"
+                                                "tipo_comprobante",
+                                                "fecha_factura"
                                             ]
                                         },
                                         "minItems": 1
@@ -21493,6 +21725,108 @@
                 }
             }
         },
+        "/v1/viaticos/{viaticoId}/liquidacion/facturas/{factura}/revision": {
+            "post": {
+                "operationId": "liquidacionViatico.revisarFactura",
+                "summary": "Financiero acepta u observa un comprobante. Observar pide motivo: es lo\nque el servidor leer\u00e1 para corregirlo",
+                "tags": [
+                    "LiquidacionViatico"
+                ],
+                "parameters": [
+                    {
+                        "name": "viaticoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "factura",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "aceptada",
+                                            "observada"
+                                        ]
+                                    },
+                                    "observacion": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "decision"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Comprobante aceptado.",
+                                                "Comprobante observado."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/viaticos/{viaticoId}/liquidacion/confirmar": {
             "post": {
                 "operationId": "liquidacionViatico.confirmar",
@@ -21525,7 +21859,7 @@
                                             "const": "Liquidaci\u00f3n registrada correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -21536,65 +21870,6 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Debe registrar al menos un comprobante."
-                                                },
-                                                "datos": {
-                                                    "type": "null"
-                                                },
-                                                "errores": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "errores"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Debe registrar al menos una actividad."
-                                                },
-                                                "datos": {
-                                                    "type": "null"
-                                                },
-                                                "errores": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "errores"
-                                            ]
-                                        }
                                     ]
                                 }
                             }
@@ -22898,6 +23173,25 @@
                 "tags": [
                     "NormativaLegalSso"
                 ],
+                "parameters": [
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoNormativaLegal"
+                        }
+                    },
+                    {
+                        "name": "solo_activas",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -22932,6 +23226,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -27674,6 +27971,25 @@
                 "tags": [
                     "ProgramaDrogaActividad"
                 ],
+                "parameters": [
+                    {
+                        "name": "fase",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/FaseProgramaDrogas"
+                        }
+                    },
+                    {
+                        "name": "solo_activas",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -27708,6 +28024,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -27940,7 +28259,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "pattern": "^\\d{4}(-\\d{2})?$"
+                            "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                         }
                     }
                 ],
@@ -28048,7 +28367,7 @@
                                     },
                                     "periodo": {
                                         "type": "string",
-                                        "pattern": "^\\d{4}(-\\d{2})?$"
+                                        "pattern": "^\\d{4}(-(0[1-9]|1[0-2]))?$"
                                     },
                                     "estado": {
                                         "$ref": "#/components/schemas/EstadoActividadPrograma"
@@ -32956,15 +33275,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateServidorRequest"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -35673,6 +35983,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -35760,8 +36073,17 @@
                                         "type": "string",
                                         "maxLength": 150
                                     },
+                                    "catalogo_transporte_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
                                     "empresa_transporte_id": {
-                                        "type": "integer"
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
                                     },
                                     "datetime_salida": {
                                         "type": "string",
@@ -35770,13 +36092,6 @@
                                     "datetime_llegada": {
                                         "type": "string",
                                         "format": "date-time"
-                                    },
-                                    "orden": {
-                                        "type": [
-                                            "integer",
-                                            "null"
-                                        ],
-                                        "minimum": 1
                                     },
                                     "tipo_tramo": {
                                         "type": [
@@ -35796,7 +36111,6 @@
                                     "origen_ciudad",
                                     "destino_tipo",
                                     "destino_ciudad",
-                                    "empresa_transporte_id",
                                     "datetime_salida",
                                     "datetime_llegada"
                                 ]
@@ -35936,8 +36250,14 @@
                                         "type": "string",
                                         "maxLength": 150
                                     },
-                                    "empresa_transporte_id": {
+                                    "catalogo_transporte_id": {
                                         "type": "integer"
+                                    },
+                                    "empresa_transporte_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
                                     },
                                     "datetime_salida": {
                                         "type": "string",
@@ -35947,12 +36267,11 @@
                                         "type": "string",
                                         "format": "date-time"
                                     },
-                                    "orden": {
-                                        "type": "integer",
-                                        "minimum": 1
-                                    },
                                     "tipo_tramo": {
-                                        "type": "string",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
                                         "enum": [
                                             "ida",
                                             "destino",
@@ -35981,14 +36300,7 @@
                                             "const": "Tramo actualizado."
                                         },
                                         "datos": {
-                                            "anyOf": [
-                                                {
-                                                    "$ref": "#/components/schemas/TramoViatico"
-                                                },
-                                                {
-                                                    "type": "null"
-                                                }
-                                            ]
+                                            "$ref": "#/components/schemas/TramoViatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -36004,11 +36316,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -37995,6 +38307,145 @@
                 }
             }
         },
+        "/v1/certificados/verificar/{codigo}": {
+            "get": {
+                "operationId": "certificados.verificar",
+                "tags": [
+                    "VerificacionCertificado"
+                ],
+                "parameters": [
+                    {
+                        "name": "codigo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Un vencido s\u00ed se reconoce: al banco le sirve saber que el documento\nes aut\u00e9ntico pero que caduc\u00f3, y decidir si pide uno nuevo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Certificado verificado."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "codigo": {
+                                                    "type": "string"
+                                                },
+                                                "documento": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "CERTIFICADO LABORAL",
+                                                        "CERTIFICADO DE PRESTACI\u00d3N DE SERVICIOS"
+                                                    ]
+                                                },
+                                                "nombre_completo": {},
+                                                "cedula": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "puesto": {},
+                                                "unidad": {},
+                                                "anios_servicio": {},
+                                                "emitido_en": {
+                                                    "type": "string"
+                                                },
+                                                "vence_en": {
+                                                    "type": "string"
+                                                },
+                                                "vigente": {
+                                                    "type": "boolean"
+                                                },
+                                                "firmante": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "firmante_cargo": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "codigo",
+                                                "documento",
+                                                "nombre_completo",
+                                                "cedula",
+                                                "puesto",
+                                                "unidad",
+                                                "anios_servicio",
+                                                "emitido_en",
+                                                "vence_en",
+                                                "vigente",
+                                                "firmante",
+                                                "firmante_cargo"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "No existe ning\u00fan certificado con ese c\u00f3digo de verificaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/viaticos": {
             "get": {
                 "operationId": "viatico.index",
@@ -38169,6 +38620,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -38226,6 +38680,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -38285,6 +38742,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
@@ -38341,8 +38801,7 @@
                                         "type": "string",
                                         "enum": [
                                             "sin_anticipo",
-                                            "total",
-                                            "parcial"
+                                            "total"
                                         ]
                                     },
                                     "monto_calculado": {
@@ -38365,15 +38824,6 @@
                                             "null"
                                         ],
                                         "maxLength": 100
-                                    },
-                                    "servidores_acompanantes": {
-                                        "type": [
-                                            "array",
-                                            "null"
-                                        ],
-                                        "items": {
-                                            "type": "integer"
-                                        }
                                     }
                                 }
                             }
@@ -38412,6 +38862,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -38427,6 +38880,7 @@
         "/v1/viaticos/servidor/{servidorId}/solicitar": {
             "post": {
                 "operationId": "viatico.solicitar.por.servidor",
+                "summary": "Registrar un vi\u00e1tico a nombre de un servidor. Lo hace quien opera los\nvi\u00e1ticos (lo comprueba la request); antes lo pod\u00eda hacer cualquier\nusuario con cualquier id",
                 "tags": [
                     "Viatico"
                 ],
@@ -38487,73 +38941,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/viaticos/{servidorId}/solicitar": {
-            "post": {
-                "operationId": "viatico.solicitar.propio",
-                "tags": [
-                    "Viatico"
-                ],
-                "parameters": [
-                    {
-                        "name": "servidorId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SolicitarViaticoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Solicitud de vi\u00e1tico creada con \u00e9xito. El monto ha sido calculado autom\u00e1ticamente basado en la normativa del MRL."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/Viatico"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -38590,7 +38980,7 @@
                                             "const": "Vi\u00e1tico aprobado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38631,6 +39021,29 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "numero_resolucion": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "partida_presupuestaria_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "required": [
+                                    "numero_resolucion",
+                                    "partida_presupuestaria_id"
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -38647,7 +39060,7 @@
                                             "const": "Anticipo entregado. El vi\u00e1tico queda listo para la comisi\u00f3n."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38665,6 +39078,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -38704,7 +39120,7 @@
                                             "const": "Vi\u00e1tico marcado en comisi\u00f3n."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38715,37 +39131,6 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string"
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "errores": {
-                                            "type": "integer",
-                                            "const": 422
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "errores"
                                     ]
                                 }
                             }
@@ -38792,7 +39177,7 @@
                                             "const": "Vi\u00e1tico cancelado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38807,6 +39192,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -38846,7 +39234,7 @@
                                             "const": "Vi\u00e1tico rechazado correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38903,7 +39291,7 @@
                                             "const": "Vi\u00e1tico devuelto a correcci\u00f3n correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38918,6 +39306,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -38957,7 +39348,7 @@
                                             "const": "Vi\u00e1tico marcado como pendiente de liquidaci\u00f3n."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "$ref": "#/components/schemas/Viatico"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -38968,37 +39359,6 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string"
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "errores": {
-                                            "type": "integer",
-                                            "const": 422
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "errores"
                                     ]
                                 }
                             }
@@ -39029,6 +39389,24 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "numero_resolucion": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "partida_presupuestaria_id": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -39063,6 +39441,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -39144,6 +39525,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -40656,6 +41040,10 @@
                                     "null"
                                 ]
                             },
+                            "servidor_id": {
+                                "type": "integer",
+                                "description": "Qui\u00e9n viaja: la pantalla no ofrece decidir sobre el vuelo\nde un vi\u00e1tico propio."
+                            },
                             "servidor": {
                                 "type": [
                                     "object",
@@ -40701,6 +41089,7 @@
                         "required": [
                             "id",
                             "codigo_viatico",
+                            "servidor_id",
                             "servidor"
                         ]
                     },
@@ -41823,20 +42212,6 @@
                     "deleted_at"
                 ],
                 "title": "ComentarioTicket"
-            },
-            "ConceptoFactura": {
-                "type": "string",
-                "enum": [
-                    "alimentacion",
-                    "hospedaje",
-                    "transporte_terrestre",
-                    "pasaje_aereo",
-                    "combustible",
-                    "peaje",
-                    "materiales",
-                    "otro"
-                ],
-                "title": "ConceptoFactura"
             },
             "ConceptoNomina": {
                 "type": "object",
@@ -43292,6 +43667,60 @@
                 ],
                 "title": "DocumentoSso"
             },
+            "EmisionCertificadoResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "codigo": {
+                        "type": "string"
+                    },
+                    "tipo": {
+                        "type": "string"
+                    },
+                    "tipo_titulo": {
+                        "type": "string",
+                        "enum": [
+                            "CERTIFICADO LABORAL",
+                            "CERTIFICADO DE PRESTACI\u00d3N DE SERVICIOS"
+                        ]
+                    },
+                    "con_remuneracion": {
+                        "type": "boolean"
+                    },
+                    "emitido_en": {
+                        "type": "string"
+                    },
+                    "vence_en": {
+                        "type": "string"
+                    },
+                    "vigente": {
+                        "type": "boolean"
+                    },
+                    "emitido_por": {
+                        "type": "string"
+                    },
+                    "firmante_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "codigo",
+                    "tipo",
+                    "tipo_titulo",
+                    "con_remuneracion",
+                    "emitido_en",
+                    "vence_en",
+                    "vigente",
+                    "firmante_nombre"
+                ],
+                "title": "EmisionCertificadoResource"
+            },
             "EmpresaTransporte": {
                 "type": "object",
                 "properties": {
@@ -44245,7 +44674,8 @@
                         "type": [
                             "string",
                             "null"
-                        ]
+                        ],
+                        "format": "date"
                     },
                     "tipo_comprobante": {
                         "type": "string"
@@ -44255,6 +44685,28 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "estado_revision": {
+                        "type": "string"
+                    },
+                    "observacion_revision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "revisado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "revisado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -44272,7 +44724,11 @@
                     "categoria_factura_id",
                     "fecha_factura",
                     "tipo_comprobante",
-                    "numero_ticket"
+                    "numero_ticket",
+                    "estado_revision",
+                    "observacion_revision",
+                    "revisado_por",
+                    "revisado_en"
                 ],
                 "title": "FacturaViatico"
             },
@@ -44582,6 +45038,17 @@
                     "tratamiento_hormonal_cual"
                 ],
                 "title": "FichaSaludOcupacional"
+            },
+            "GravedadAccidente": {
+                "type": "string",
+                "description": "Gravedad de un accidente de trabajo. La columna naci\u00f3 como texto libre (`string, 50`) y los Form Requests la validaban igual \u2014`['required','string','max:50']`\u2014, as\u00ed que el API aceptaba cualquier cosa: la tabla pintaba lo que llegara y el mapa de tonos le daba el neutro a lo que no reconoc\u00eda. Los cuatro valores son los que el formulario ofrece desde siempre.  NOTA: el modelo todav\u00eda NO castea esta columna a enum. Las filas anteriores a esta validaci\u00f3n pueden tener cualquier texto, y un cast har\u00eda reventar la lectura del listado entero con un `ValueError` por una sola fila rara. Normalizar lo que haya \u2014y reci\u00e9n entonces castear\u2014 necesita mirar los datos reales de producci\u00f3n, que es una decisi\u00f3n de Talento Humano y no del c\u00f3digo.\n",
+                "enum": [
+                    "leve",
+                    "moderada",
+                    "grave",
+                    "mortal"
+                ],
+                "title": "GravedadAccidente"
             },
             "GrupoOcupacional": {
                 "type": "object",
@@ -45273,9 +45740,6 @@
                     "total_facturas": {
                         "type": "string"
                     },
-                    "diferencia_devolver": {
-                        "type": "string"
-                    },
                     "fecha_retorno": {
                         "type": [
                             "string",
@@ -45352,13 +45816,21 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "total_justificado": {
+                        "type": "string"
+                    },
+                    "monto_reconocido": {
+                        "type": "string"
+                    },
+                    "saldo": {
+                        "type": "string"
                     }
                 },
                 "required": [
                     "id",
                     "viatico_id",
                     "total_facturas",
-                    "diferencia_devolver",
                     "fecha_retorno",
                     "fecha_liquidacion",
                     "observaciones",
@@ -45370,7 +45842,10 @@
                     "jefe_financiero_id",
                     "cargo_jefe_financiero",
                     "contabilizado_por",
-                    "fecha_contabilizacion"
+                    "fecha_contabilizacion",
+                    "total_justificado",
+                    "monto_reconocido",
+                    "saldo"
                 ],
                 "title": "LiquidacionViatico"
             },
@@ -45477,10 +45952,7 @@
                                     "maxLength": 20
                                 },
                                 "fecha_factura": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ],
+                                    "type": "string",
                                     "format": "date-time"
                                 },
                                 "detalle": {
@@ -46929,6 +47401,9 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "dias_vencidos": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -46946,7 +47421,8 @@
                     "estado",
                     "alerta_enviada",
                     "created_at",
-                    "updated_at"
+                    "updated_at",
+                    "dias_vencidos"
                 ],
                 "title": "PeriodoVacacion"
             },
@@ -47090,6 +47566,12 @@
                     },
                     "dirigido_a_talento_humano": {
                         "type": "boolean"
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -47118,7 +47600,8 @@
                     "rechazado_por",
                     "rechazado_en",
                     "motivo_rechazo",
-                    "dirigido_a_talento_humano"
+                    "dirigido_a_talento_humano",
+                    "motivo_anulacion"
                 ],
                 "title": "PermisoServidor"
             },
@@ -49588,15 +50071,6 @@
                             "null"
                         ],
                         "minimum": 0
-                    },
-                    "servidores_acompanantes": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
-                        "items": {
-                            "type": "integer"
-                        }
                     }
                 },
                 "required": [
@@ -49881,8 +50355,7 @@
                         "maxLength": 3000
                     },
                     "gravedad": {
-                        "type": "string",
-                        "maxLength": 50
+                        "$ref": "#/components/schemas/GravedadAccidente"
                     },
                     "requirio_atencion_medica": {
                         "type": "boolean"
@@ -50814,43 +51287,6 @@
                     "responsable"
                 ],
                 "title": "StoreExtensionTelefonicaRequest"
-            },
-            "StoreFacturaViaticoRequest": {
-                "type": "object",
-                "properties": {
-                    "concepto": {
-                        "$ref": "#/components/schemas/ConceptoFactura"
-                    },
-                    "numero_factura": {
-                        "type": "string",
-                        "maxLength": 50
-                    },
-                    "ruc_proveedor": {
-                        "type": "string"
-                    },
-                    "nombre_proveedor": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "monto": {
-                        "type": "number",
-                        "minimum": 0.01
-                    },
-                    "archivo_ruta": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "concepto",
-                    "numero_factura",
-                    "ruc_proveedor",
-                    "nombre_proveedor",
-                    "monto"
-                ],
-                "title": "StoreFacturaViaticoRequest"
             },
             "StoreFichaSaludOcupacionalRequest": {
                 "type": "object",
@@ -52095,7 +52531,8 @@
                         "type": [
                             "integer",
                             "null"
-                        ]
+                        ],
+                        "description": "Alguien tiene que firmar: el jefe inmediato elegido o, con la\nopci\u00f3n activa, el jefe de Talento Humano que resuelve el servicio.\nSin ninguno de los dos, el permiso quedaba sin firmante."
                     },
                     "dirigido_a_talento_humano": {
                         "type": "boolean",
@@ -52404,10 +52841,11 @@
                         "maxLength": 50
                     },
                     "tiene_discapacidad": {
-                        "type": "boolean"
+                        "type": "string",
+                        "description": "Se derivan de los registros de la pesta\u00f1a Condici\u00f3n: una ficha\nnueva nace sin ninguno."
                     },
                     "tiene_enfermedad_catastrofica": {
-                        "type": "boolean"
+                        "type": "string"
                     },
                     "telefono_celular": {
                         "type": [
@@ -52469,9 +52907,7 @@
                     "fecha_nacimiento",
                     "genero",
                     "estado_civil",
-                    "es_extranjero",
-                    "tiene_discapacidad",
-                    "tiene_enfermedad_catastrofica"
+                    "es_extranjero"
                 ],
                 "title": "StoreServidorBasicoRequest"
             },
@@ -52724,6 +53160,9 @@
                     },
                     "es_maxima_autoridad": {
                         "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -52974,10 +53413,11 @@
                         "maxLength": 50
                     },
                     "tiene_discapacidad": {
-                        "type": "boolean"
+                        "type": "string",
+                        "description": "Se derivan de los registros de la pesta\u00f1a Condici\u00f3n: la carga\ninicial solo trae la identidad y el v\u00ednculo."
                     },
                     "tiene_enfermedad_catastrofica": {
-                        "type": "boolean"
+                        "type": "string"
                     },
                     "telefono_celular": {
                         "type": [
@@ -53090,8 +53530,6 @@
                     "genero",
                     "estado_civil",
                     "es_extranjero",
-                    "tiene_discapacidad",
-                    "tiene_enfermedad_catastrofica",
                     "vinculo"
                 ],
                 "title": "StoreVinculacionInicialRequest"
@@ -53791,7 +54229,10 @@
                         "type": "string"
                     },
                     "empresa_transporte_id": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "datetime_salida": {
                         "type": "string",
@@ -53820,6 +54261,9 @@
                     },
                     "tipo_tramo": {
                         "type": "string"
+                    },
+                    "catalogo_transporte_id": {
+                        "type": "integer"
                     }
                 },
                 "required": [
@@ -53841,7 +54285,8 @@
                     "orden",
                     "created_at",
                     "updated_at",
-                    "tipo_tramo"
+                    "tipo_tramo",
+                    "catalogo_transporte_id"
                 ],
                 "title": "TramoViatico"
             },
@@ -54175,6 +54620,9 @@
                     },
                     "es_maxima_autoridad": {
                         "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -54191,7 +54639,8 @@
                     "acronimo",
                     "tipo_unidad_id",
                     "es_unidad_talento_humano",
-                    "es_maxima_autoridad"
+                    "es_maxima_autoridad",
+                    "es_unidad_financiera"
                 ],
                 "title": "UnidadAdministrativa"
             },
@@ -54236,6 +54685,9 @@
                         "description": "Anclajes de los firmantes de las Acciones de Personal."
                     },
                     "es_maxima_autoridad": {
+                        "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
                         "type": "boolean"
                     },
                     "tipo_unidad": {
@@ -54329,6 +54781,7 @@
                     "estado",
                     "es_unidad_talento_humano",
                     "es_maxima_autoridad",
+                    "es_unidad_financiera",
                     "puestos_count",
                     "subrogaciones_vigentes"
                 ],
@@ -54422,8 +54875,7 @@
                         "maxLength": 3000
                     },
                     "gravedad": {
-                        "type": "string",
-                        "maxLength": 50
+                        "$ref": "#/components/schemas/GravedadAccidente"
                     },
                     "requirio_atencion_medica": {
                         "type": "boolean"
@@ -55847,230 +56299,6 @@
                 },
                 "title": "UpdateRiesgoLaboralRequest"
             },
-            "UpdateServidorRequest": {
-                "type": "object",
-                "properties": {
-                    "cedula": {
-                        "type": "string",
-                        "description": "Identidad base",
-                        "pattern": "^\\d{10}$"
-                    },
-                    "nombre": {
-                        "type": "string",
-                        "maxLength": 100
-                    },
-                    "segundo_nombre": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "apellido": {
-                        "type": "string",
-                        "maxLength": 100
-                    },
-                    "segundo_apellido": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "regimen_laboral": {
-                        "description": "Relaciones y datos base",
-                        "$ref": "#/components/schemas/RegimenLaboral"
-                    },
-                    "unidad_administrativa_id": {
-                        "type": "string",
-                        "description": "puesto_id/unidad_administrativa_id NUNCA se editan aqu\u00ed: la\n\u00fanica v\u00eda es ContratoServidorService::sincronizarPuestoDesdeVinculo(),\nderivado siempre del ContratoServidor vigente. Un cambio de\npuesto/unidad se hace registrando un MovimientoPersonal\n(traslado/ascenso/traspaso/cambio_administrativo), no\neditando el Servidor directamente."
-                    },
-                    "puesto_id": {
-                        "type": "string"
-                    },
-                    "fecha_nacimiento": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Secci\u00f3n A"
-                    },
-                    "genero": {
-                        "type": "string",
-                        "enum": [
-                            "masculino",
-                            "femenino",
-                            "otro"
-                        ]
-                    },
-                    "estado_civil": {
-                        "type": "string",
-                        "enum": [
-                            "soltero",
-                            "casado",
-                            "union_libre",
-                            "divorciado",
-                            "viudo"
-                        ]
-                    },
-                    "tipo_sangre": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "enum": [
-                            "A+",
-                            "A-",
-                            "B+",
-                            "B-",
-                            "AB+",
-                            "AB-",
-                            "O+",
-                            "O-"
-                        ]
-                    },
-                    "es_extranjero": {
-                        "type": "boolean",
-                        "description": "Extranjer\u00eda condicional"
-                    },
-                    "provincia_nacimiento_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "canton_nacimiento_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "nacionalidad": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "pais_origen": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "numero_papeleta_votacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "Secci\u00f3n B",
-                        "maxLength": 20
-                    },
-                    "pasaporte_numero": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 50
-                    },
-                    "pasaporte_vencimiento": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "telefono_celular": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "Secci\u00f3n C",
-                        "maxLength": 20
-                    },
-                    "telefono_convencional": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 20
-                    },
-                    "correo_personal": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "email",
-                        "maxLength": 150
-                    },
-                    "codigo_medico": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "Registro profesional ante el ACESS. Solo lo tiene el personal\nde salud; aparece en la secci\u00f3n O de la ficha FEMO que firma.",
-                        "maxLength": 30
-                    },
-                    "direccion_domicilio": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
-                    },
-                    "tiene_discapacidad": {
-                        "type": "boolean",
-                        "description": "Secci\u00f3n D"
-                    },
-                    "tiene_enfermedad_catastrofica": {
-                        "type": "boolean",
-                        "description": "Secci\u00f3n E"
-                    },
-                    "tipo_nombramiento": {
-                        "type": "string",
-                        "description": "Secci\u00f3n F\ntipo_nombramiento tampoco se edita aqu\u00ed, mismo razonamiento\nque puesto_id/unidad_administrativa_id: un cambio de\nmodalidad pasa por creaVinculo()/modificaVinculo() al\nregistrar el MovimientoPersonal correspondiente, nunca por\nun update() directo sobre Servidor."
-                    },
-                    "numero_contrato": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 100
-                    },
-                    "fecha_ingreso_institucion": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_ingreso_sector_publico": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "fecha_nombramiento": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "fecha_inicio_ultimo_contrato": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "fecha_fin_ultimo_contrato": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    }
-                },
-                "title": "UpdateServidorRequest"
-            },
             "UpdateUnidadAdministrativaRequest": {
                 "type": "object",
                 "properties": {
@@ -56117,6 +56345,9 @@
                         "description": "Anclan de qu\u00e9 unidad sale cada firmante de las Acciones de\nPersonal. Marcar otra unidad desmarca la anterior \u2014 lo hace\nUnidadAdministrativaController para no chocar con el \u00edndice \u00fanico."
                     },
                     "es_maxima_autoridad": {
+                        "type": "boolean"
+                    },
+                    "es_unidad_financiera": {
                         "type": "boolean"
                     }
                 },
@@ -56565,6 +56796,31 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "anulado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "anulado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -56588,7 +56844,11 @@
                     "creado_por",
                     "unidad_administrativa_id",
                     "persona_reemplaza_id",
-                    "periodo_vacacion_id"
+                    "periodo_vacacion_id",
+                    "anulado_por",
+                    "anulado_en",
+                    "motivo_anulacion",
+                    "observacion"
                 ],
                 "title": "Vacacion"
             },
@@ -56617,12 +56877,6 @@
                         "type": "string"
                     },
                     "numero_resolucion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "partida_presupuestaria": {
                         "type": [
                             "string",
                             "null"
@@ -56693,8 +56947,8 @@
                         "type": "string",
                         "format": "date-time"
                     },
-                    "total_dias": {
-                        "type": "string"
+                    "noches": {
+                        "type": "integer"
                     },
                     "coeficiente_exterior": {
                         "type": [
@@ -56705,6 +56959,12 @@
                     "motivo_rechazo": {
                         "type": [
                             "string",
+                            "null"
+                        ]
+                    },
+                    "partida_presupuestaria_id": {
+                        "type": [
+                            "integer",
                             "null"
                         ]
                     }
@@ -56718,7 +56978,6 @@
                     "monto_calculado",
                     "monto_anticipo",
                     "numero_resolucion",
-                    "partida_presupuestaria",
                     "created_by",
                     "updated_by",
                     "created_at",
@@ -56731,9 +56990,10 @@
                     "fecha_solicitud",
                     "datetime_salida",
                     "datetime_llegada",
-                    "total_dias",
+                    "noches",
                     "coeficiente_exterior",
-                    "motivo_rechazo"
+                    "motivo_rechazo",
+                    "partida_presupuestaria_id"
                 ],
                 "title": "Viatico"
             },

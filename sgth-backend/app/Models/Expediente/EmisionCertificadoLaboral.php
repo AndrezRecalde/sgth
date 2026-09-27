@@ -36,6 +36,20 @@ class EmisionCertificadoLaboral extends Model
         ];
     }
 
+    /**
+     * Dónde comprueba su autenticidad quien recibe el certificado.
+     *
+     * Vive aquí y no en cada plantilla porque son dos sitios —el PDF y el
+     * correo— y ya se desincronizaron una vez: ambos apuntaban a `app.url`,
+     * que es la API. La pantalla `/verificar/{codigo}` la sirve el frontend,
+     * y en producción son dos dominios distintos. El PDF de permisos tropezó
+     * antes con lo mismo y sus QR dieron 404 durante meses.
+     */
+    public function urlVerificacion(): string
+    {
+        return rtrim(config('app.frontend_url'), '/').'/verificar/'.$this->codigo;
+    }
+
     public function servidor(): BelongsTo
     {
         return $this->belongsTo(Servidor::class);

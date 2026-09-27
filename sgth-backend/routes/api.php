@@ -391,6 +391,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar'])
             ->middleware('role:admin-uath|asistente-uath');
 
+        // La bitácora de lo ya emitido. Mismo rol que emitir: quien no puede
+        // entregar un certificado tampoco tiene por qué saber a quién se le
+        // entregó uno ni cuándo.
+        Route::get('servidores/{id}/certificados-emitidos', [CertificadoLaboralController::class, 'emitidos'])
+            ->middleware('role:admin-uath|asistente-uath')
+            ->name('certificados.emitidos');
+
         // Historiales gestionados por la UATH
         Route::prefix('servidores/{servidorId}')
             ->middleware('role:admin-uath|asistente-uath')
