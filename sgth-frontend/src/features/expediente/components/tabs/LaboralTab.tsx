@@ -6,7 +6,7 @@ import {
   Accordion, ActionIcon, Alert, Group, Paper, Stack, Text, Tooltip,
 } from '@mantine/core'
 import { IconBriefcase, IconCalendarCog, IconInfoCircle } from '@tabler/icons-react'
-import { DataState, DetailList, SectionHeading } from '@/components/ui'
+import { DataState, DetailList, SectionCard, SectionHeading } from '@/components/ui'
 import { useActividadLaboral } from '../../hooks/useActividadLaboral'
 import { etiquetaNombramiento } from '../../utils/tipoNombramientoOptions'
 import { ReprogramarPlazoModal } from '../ReprogramarPlazoModal'
@@ -229,31 +229,38 @@ export function LaboralTab({ servidorId }: Props) {
 
   return (
     <Stack gap="md">
-      {vinculos.length > 0 && (
-        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
-          Cada vínculo conserva su número de contrato original. Traspasos,
-          comisiones y sanciones no crean uno nuevo: se registran sobre el mismo,
-          y se ven al desplegarlo.
-        </Alert>
-      )}
+      <SectionCard title="Vínculos laborales">
+        {vinculos.length > 0 && (
+          <Alert
+            variant="light"
+            color="ocean"
+            icon={<IconInfoCircle size={16} />}
+            mb="md"
+          >
+            Cada vínculo conserva su número de contrato original. Traspasos,
+            comisiones y sanciones no crean uno nuevo: se registran sobre el
+            mismo, y se ven al desplegarlo.
+          </Alert>
+        )}
 
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={vinculos.length === 0}
-        skeletonRows={2}
-        emptyProps={{
-          icon: IconBriefcase,
-          title: 'Sin vínculos registrados',
-          description: 'El vínculo laboral se crea al aprobar una acción de personal de Ingreso y Vinculación.',
-        }}
-      >
-        <Accordion variant="separated" defaultValue={String(vinculos[0]?.contrato.id)}>
-          {vinculos.map((v) => (
-            <Vinculo key={v.contrato.id} vinculo={v} onReprogramar={setReprogramando} />
-          ))}
-        </Accordion>
-      </DataState>
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={vinculos.length === 0}
+          skeletonRows={2}
+          emptyProps={{
+            icon: IconBriefcase,
+            title: 'Sin vínculos registrados',
+            description: 'El vínculo laboral se crea al aprobar una acción de personal de Ingreso y Vinculación.',
+          }}
+        >
+          <Accordion variant="separated" defaultValue={String(vinculos[0]?.contrato.id)}>
+            {vinculos.map((v) => (
+              <Vinculo key={v.contrato.id} vinculo={v} onReprogramar={setReprogramando} />
+            ))}
+          </Accordion>
+        </DataState>
+      </SectionCard>
 
       <ReprogramarPlazoModal
         opened={reprogramando !== null}

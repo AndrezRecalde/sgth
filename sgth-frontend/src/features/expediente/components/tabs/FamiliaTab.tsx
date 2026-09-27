@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Group, Stack } from '@mantine/core'
+import { Button, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconUsers } from '@tabler/icons-react'
-import { DataState, SgthTable } from '@/components/ui'
+import { DataState, SectionCard, SgthTable } from '@/components/ui'
 import { useCargasFamiliares } from '../../hooks/useCargasFamiliares'
 import { useCargaFamiliarMutations } from '../../hooks/useCargaFamiliarMutations'
 import { getCargasFamiliaresColumns } from '../cargasFamiliares.columns'
@@ -28,42 +28,45 @@ export function FamiliaTab({ servidorId }: Props) {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end">
-        <Button size="xs" variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={() => { setEditItem(null); open() }}>
-          Agregar carga familiar
-        </Button>
-      </Group>
-
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={cargas.length === 0}
-        skeletonRows={2}
-        emptyProps={{
-          icon: IconUsers,
-          title: 'Sin cargas familiares',
-          description: 'Registra los familiares dependientes del servidor.',
-        }}
+      <SectionCard
+        title="Cargas familiares"
+        actions={
+          <Button size="xs" variant="light"
+            leftSection={<IconPlus size={14} />}
+            onClick={() => { setEditItem(null); open() }}>
+            Agregar carga familiar
+          </Button>
+        }
       >
-        <SgthTable
-          records={cargas}
-          columns={columns}
-          minHeight={80}
-          // Las condiciones de salud se despliegan bajo la fila, y solo en
-          // quienes las tienen declaradas.
-          rowExpansion={{
-            allowMultiple: true,
-            trigger: 'click',
-            expandable: ({ record }) =>
-              Boolean(record.persona_con_discapacidad || record.posee_enfermedad_catastrofica),
-            content: ({ record }) => (
-              <CargaFamiliarCondiciones carga={record} servidorId={servidorId} />
-            ),
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={cargas.length === 0}
+          skeletonRows={2}
+          emptyProps={{
+            icon: IconUsers,
+            title: 'Sin cargas familiares',
+            description: 'Registra los familiares dependientes del servidor.',
           }}
-        />
-      </DataState>
+        >
+          <SgthTable
+            records={cargas}
+            columns={columns}
+            minHeight={80}
+            // Las condiciones de salud se despliegan bajo la fila, y solo en
+            // quienes las tienen declaradas.
+            rowExpansion={{
+              allowMultiple: true,
+              trigger: 'click',
+              expandable: ({ record }) =>
+                Boolean(record.persona_con_discapacidad || record.posee_enfermedad_catastrofica),
+              content: ({ record }) => (
+                <CargaFamiliarCondiciones carga={record} servidorId={servidorId} />
+              ),
+            }}
+          />
+        </DataState>
+      </SectionCard>
 
       <CargaFamiliarModal
         key={editItem?.id ?? 'nueva'}
