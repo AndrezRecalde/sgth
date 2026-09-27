@@ -44,12 +44,18 @@ class MovimientoPersonalStateService
         $this->assertTransicionPermitida($origen, $destino);
 
         return DB::transaction(function () use ($movimiento, $destino, $datos) {
+            // Sin rama 'default': los cuatro estados de arriba son los únicos
+            // alcanzables. El quinto, BORRADOR, no figura como destino en
+            // ninguna entrada de TRANSICIONES —de un borrador se sale, nunca se
+            // vuelve— y assertTransicionPermitida() ya lo rechazó. La rama
+            // existía y no se ejecutaba nunca; sin ella, el match es exhaustivo
+            // y añadir un estado al enum falla ruidosamente aquí en vez de caer
+            // en silencio sobre el dictamen.
             match ($destino) {
                 EstadoAccionPersonal::SUSCRITA   => $this->aplicarSuscrita($movimiento, $datos),
                 EstadoAccionPersonal::REGISTRADA => $this->aplicarRegistro($movimiento, $datos),
                 EstadoAccionPersonal::NOTIFICADA => $this->aplicarNotificacion($movimiento, $datos),
                 EstadoAccionPersonal::ANULADA    => $this->aplicarAnulacion($movimiento, $datos),
-                default                          => $this->aplicarDictamenSiViene($movimiento, $datos),
             };
 
             $movimiento->estado = $destino;

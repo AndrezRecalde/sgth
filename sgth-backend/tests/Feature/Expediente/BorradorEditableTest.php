@@ -177,12 +177,65 @@ test('cambiar el nombramiento propuesto recalcula el sugerido de marcación', fu
     expect($actualizado->puede_marcar)->toBeFalse();
 });
 
-test('un puede_marcar explícito gana sobre el recálculo', function () {
+test('un puede_marcar explícito gana sobre el recálculo donde la modalidad lo admite', function () {
     [, $movimiento] = ($this->ingresoBorrador)();
 
+    // Código del Trabajo no marca por defecto, pero sí admite marcación: entre
+    // los obreros unos marcan y otros no, así que Talento Humano decide.
     $actualizado = $this->service->actualizarBorrador($movimiento, [
-        'tipo_nombramiento_propuesto' => TipoNombramiento::SERVICIOS_PROFESIONALES->value,
+        'tipo_nombramiento_propuesto' => TipoNombramiento::CODIGO_TRABAJO->value,
         'puede_marcar'                => true,
+    ]);
+
+    expect($actualizado->puede_marcar)->toBeTrue();
+});
+
+/*
+| Hasta el 2026-09-27 esta prueba no existía y su contraria afirmaba justo lo
+| opuesto: que un `puede_marcar` explícito ganaba también sobre las modalidades
+| que no marcan nunca. La rama de recálculo solo corría cuando 'puede_marcar' no
+| venía en la petición, y el formulario lo manda siempre, así que no corría
+| nunca: editar un borrador colaba la marcación en un contrato civil.
+*/
+test('editar un borrador no puede colar marcación en una modalidad que no marca', function () {
+    foreach ([
+        TipoNombramiento::SERVICIOS_PROFESIONALES,
+        TipoNombramiento::LIBRE_NOMBRAMIENTO,
+        TipoNombramiento::ELECCION_POPULAR,
+    ] as $nombramiento) {
+        [, $movimiento] = ($this->ingresoBorrador)();
+
+        $actualizado = $this->service->actualizarBorrador($movimiento, [
+            'tipo_nombramiento_propuesto' => $nombramiento->value,
+            'puede_marcar'                => true,   // el cliente insiste
+        ]);
+
+        expect($actualizado->puede_marcar)
+            ->toBeFalse("Nombramiento '{$nombramiento->value}'");
+    }
+});
+
+test('editar solo la casilla respeta la restricción del nombramiento ya guardado', function () {
+    [, $movimiento] = ($this->ingresoBorrador)([
+        'tipo_nombramiento_propuesto' => TipoNombramiento::SERVICIOS_PROFESIONALES->value,
+    ]);
+
+    // La edición no toca el nombramiento: la restricción se evalúa contra el
+    // que el movimiento ya tiene, no contra un nombramiento ausente.
+    $actualizado = $this->service->actualizarBorrador($movimiento, [
+        'puede_marcar' => true,
+    ]);
+
+    expect($actualizado->puede_marcar)->toBeFalse();
+});
+
+test('editar sin tocar la marcación conserva la que había', function () {
+    [, $movimiento] = ($this->ingresoBorrador)();
+
+    expect($movimiento->puede_marcar)->toBeTrue();
+
+    $actualizado = $this->service->actualizarBorrador($movimiento, [
+        'resolucion_numero' => 'RES-2026-0099',
     ]);
 
     expect($actualizado->puede_marcar)->toBeTrue();

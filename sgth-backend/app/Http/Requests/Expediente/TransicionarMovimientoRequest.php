@@ -33,25 +33,9 @@ class TransicionarMovimientoRequest extends FormRequest
         ];
     }
 
-    /**
-     * Campos del vínculo presentes en la petición. Se separan del resto para
-     * que el servicio de estados sepa qué aplicar al movimiento antes de
-     * materializar el contrato.
-     *
-     * @return array<string, mixed>
-     */
-    public function datosVinculo(): array
-    {
-        return array_filter(
-            $this->safe()->only([
-                'numero_contrato',
-                'remuneracion_propuesta',
-                'partida_presupuestaria_id',
-                'puede_marcar',
-                'resolucion_numero',
-                'fecha_fin_propuesta',
-            ]),
-            fn ($valor) => $valor !== null
-        );
-    }
+    // 'datosVinculo()' se retiró el 2026-09-27: nadie la llamaba. El
+    // controlador pasa `$request->safe()->except('estado')` al servicio de
+    // estados, que elige los campos del vínculo en aplicarDatosVinculo() y
+    // descarta los nulos ahí mismo. La homónima que sí se usa es la de
+    // StoreVinculacionInicialRequest, que es otro flujo.
 }

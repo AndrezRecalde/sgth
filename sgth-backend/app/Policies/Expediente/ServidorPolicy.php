@@ -28,11 +28,24 @@ class ServidorPolicy
 
     /**
      * Determine whether the user can view the model.
+     *
+     * 'asistente-uath' entró aquí el 2026-09-27. Las rutas de Acciones de
+     * Personal le conceden el rol —registrar, transicionar, la bandeja— pero
+     * los controladores autorizan contra este policy, así que veía la bandeja
+     * y recibía 403 al abrir cualquier fila, al pedir el PDF y al intentar
+     * registrar o hacer avanzar una acción: la ruta y el policy se
+     * contradecían. Se cierra por aquí, que es lo que decidió Talento Humano,
+     * y no con un policy propio de MovimientoPersonal.
+     *
+     * Lo que esto abre, además de las acciones de personal: el expediente
+     * completo de cualquier servidor y sus documentos (listar y descargar).
+     * Coherente con lo que el asistente ya gestionaba por middleware de ruta
+     * —cargas familiares, sus discapacidades y enfermedades, permisos—.
      */
     public function ver(User $user, Servidor $servidor): bool
     {
         // Un servidor solo puede ver su propio expediente. UATH puede ver todos.
-        if ($user->hasRole('admin-uath') || $user->hasRole('super-admin')) {
+        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath') || $user->hasRole('super-admin')) {
             return true;
         }
 
@@ -52,13 +65,26 @@ class ServidorPolicy
 
     /**
      * Determine whether the user can update the model.
+     *
+     * 'asistente-uath' entró aquí el 2026-09-27 por el mismo motivo que en
+     * ver(): registrar y transicionar una acción de personal autorizan contra
+     * este método. Deliberadamente NO entra en crear(), y de ahí sale el
+     * límite: `UpdateServidorRequest` da la ficha entera solo a quien pasa
+     * `can('crear', Servidor::class)` y marca el resto de campos como
+     * `prohibited`, así que el asistente edita los cuatro campos de contacto
+     * del titular —teléfonos, correo, domicilio— y nada más. Cédula, régimen y
+     * fecha de ingreso siguen siendo de admin-uath.
+     *
+     * Lo que sí gana además de las acciones de personal: subir y borrar
+     * documentos del expediente de cualquier servidor, que no tienen middleware
+     * de rol y se autorizan solo por aquí.
      */
     public function actualizar(User $user, Servidor $servidor): bool
     {
         // El servidor titular puede actualizar partes no sensibles (ej. teléfono),
         // pero UATH puede actualizar todo. La validación de campos se delega al Request/Service.
         // Aquí validamos el acceso general a la actualización.
-        if ($user->hasRole('admin-uath') || $user->hasRole('super-admin')) {
+        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath') || $user->hasRole('super-admin')) {
             return true;
         }
 
