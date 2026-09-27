@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconFileDescription } from '@tabler/icons-react'
-import { DataState, SgthTable, Toolbar } from '@/components/ui'
+import { DataState, PAGINACION_ES, SgthTable, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useBandejaMovimientos } from '../hooks/useMovimientoMutations'
+import { POR_PAGINA_BANDEJA, useBandejaMovimientos } from '../hooks/useMovimientoMutations'
 import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
 import { getBandejaAccionesColumns } from './bandejaAcciones.columns'
 import { ESTADO_LABELS } from '../utils/estadoAccionPersonal'
@@ -21,15 +21,28 @@ const ESTADO_OPTIONS = (Object.keys(ESTADO_LABELS) as EstadoAccionPersonal[])
  * que son los que esperan decisión de Talento Humano.
  */
 export function BandejaAccionesPersonal() {
-  const contained = useContainedInput()
-  const [estado, setEstado] = useState<string | null>('borrador')
+  // Compacta, que es la altura del patrón contained dentro de una `Toolbar`:
+  // así el filtro convive con el resto de la barra sin el aire de un formulario
+  // de captura.
+  const contained = useContainedInput('sm')
+  const [estado, setEstado] = useState<EstadoAccionPersonal | null>('borrador')
+  const [pagina, setPagina] = useState(1)
   const [seleccionadoId, setSeleccionadoId] = useState<number | null>(null)
   const [detalleOpened, { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
 
-  const { data, isLoading, error } = useBandejaMovimientos(
-    estado ? { estado } : undefined,
-  )
+  const { data, isLoading, error, refetch } = useBandejaMovimientos({
+    ...(estado ? { estado } : {}),
+    page: pagina,
+  })
+
   const acciones = data?.data ?? []
+  const total = data?.total ?? 0
+
+  /** Cambiar el filtro devuelve a la primera página: la 4 puede no existir. */
+  const cambiarEstado = (valor: string | null) => {
+    setEstado(valor as EstadoAccionPersonal | null)
+    setPagina(1)
+  }
 
   const columns = getBandejaAccionesColumns({
     onVerDetalle: (m) => { setSeleccionadoId(Number(m.id)); abrirDetalle() },
@@ -40,7 +53,7 @@ export function BandejaAccionesPersonal() {
       <Toolbar
         actions={
           <Text size="sm" c="dimmed">
-            {acciones.length} acción(es) en la vista
+            {total} acción(es) {estado ? `en ${ESTADO_LABELS[estado].toLowerCase()}` : 'en total'}
           </Text>
         }
       >
@@ -49,7 +62,7 @@ export function BandejaAccionesPersonal() {
           placeholder="Todos"
           data={ESTADO_OPTIONS}
           value={estado}
-          onChange={setEstado}
+          onChange={cambiarEstado}
           clearable
           {...contained}
           style={{ minWidth: 260 }}
@@ -59,7 +72,10 @@ export function BandejaAccionesPersonal() {
       <DataState
         loading={isLoading}
         error={error}
+        errorTitle="No se pudo cargar la bandeja de acciones de personal"
+        onRetry={refetch}
         empty={!acciones.length}
+        page={pagina}
         emptyProps={{
           icon: IconFileDescription,
           title: 'Sin acciones de personal',
@@ -69,8 +85,13 @@ export function BandejaAccionesPersonal() {
         }}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={acciones}
           columns={columns}
+          totalRecords={total}
+          recordsPerPage={POR_PAGINA_BANDEJA}
+          page={pagina}
+          onPageChange={setPagina}
           minHeight={200}
         />
       </DataState>
