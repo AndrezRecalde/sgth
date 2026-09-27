@@ -69,16 +69,16 @@ export function ServidorFormPersonal() {
           estaba registrada. Estaba además a `sm: 4` detrás de cuatro campos de
           `sm: 6`, así que quedaba huérfana a media anchura en mitad del bloque.
 
-          La columna ocupa los 12 y el ancho lo pone el campo con `maw`: una
-          columna de 4 dejaría que el primer nombre subiera a su derecha y
-          partiría las parejas de nombre y apellido. Diez dígitos no piden más
-          de 260px, y en móvil vuelve a ocupar todo. */}
+          Ocupa la fila entera, como el correo y la dirección en el paso de
+          contacto: en este formulario, el campo que va solo en su fila la llena.
+          Una columna de 4 dejaría que el primer nombre subiera a su derecha y
+          partiría las parejas de nombre y apellido, y un tope de anchura la
+          volvía a dejar a media fila entre campos que sí la llenan. */}
       <Grid.Col span={12}>
         <TextInput
           label="Cédula de identidad"
           placeholder="0000000000"
           maxLength={10}
-          maw={{ base: '100%', sm: 260 }}
           {...contained}
           {...register('cedula')}
           error={errors.cedula?.message}
