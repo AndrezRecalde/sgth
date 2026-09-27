@@ -32,6 +32,7 @@ class CertificadoLaboralController extends Controller
     {
         $datos = $request->validate([
             'con_remuneracion' => ['sometimes', 'boolean'],
+            'enviar'           => ['sometimes', 'boolean'],
         ]);
 
         $servidor = Servidor::findOrFail($servidorId);
@@ -42,12 +43,21 @@ class CertificadoLaboralController extends Controller
             $request->user()->id,
         );
 
+        // El envío va aquí y no en cola: quien emite espera la respuesta y
+        // necesita saber en ese momento si el correo salió o si le toca
+        // mandarlo a mano.
+        $envio = ($datos['enviar'] ?? false)
+            ? $this->certificados->enviar($emision, $servidor)
+            : 'no_solicitado';
+
         return response($this->certificados->pdf($emision), 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'
                 .$this->certificados->nombreArchivo($emision).'"',
-            // Para que el frontend pueda mostrar el código sin volver a pedirlo.
+            // El cuerpo es el PDF, así que el resultado viaja en cabeceras.
+            // Van expuestas en config/cors.php; sin eso el navegador no las lee.
             'X-Codigo-Certificado' => $emision->codigo,
+            'X-Envio-Certificado'  => $envio,
         ]);
     }
 }

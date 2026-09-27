@@ -180,3 +180,37 @@ test('el certificado ya no deja archivos en el disco del servidor', function () 
 
     expect(is_dir(storage_path('app/certificados-laborales')))->toBeFalse();
 });
+
+test('el certificado entra en una hoja, también con nombres largos', function () {
+    // Se ha escapado dos veces. La primera comprobación se hizo con una unidad
+    // de nombre corto y «cabe en una hoja» resultó ser «cabe con estos datos»:
+    // con «Gestión de Tecnologías de la Información y Comunicación», que ocupa
+    // cuatro líneas en la celda, la firma se iba a una segunda página casi
+    // vacía. Aquí queda fijado con el caso difícil.
+    $unidadLarga = unidadDePrueba([
+        'codigo' => 'UATH-TIC',
+        'nombre' => 'Gestión de Tecnologías de la Información y Comunicación',
+    ]);
+    $puesto = puestoDePrueba(
+        $unidadLarga,
+        'Analista de Tecnologías de la Información y Comunicación',
+    );
+
+    $servidor = ($this->servidorCon)([
+        'cedula'                   => '1710000009',
+        'nombre'                   => 'Cristhian Andrés',
+        'apellido'                 => 'Recalde Solano',
+        'unidad_administrativa_id' => $unidadLarga->id,
+        'puesto_id'                => $puesto->id,
+    ]);
+    ($this->contrato)($servidor, [
+        'unidad_administrativa_id' => $unidadLarga->id,
+        'puesto_id'                => $puesto->id,
+    ]);
+
+    $pdf = $this->servicio->pdf(
+        $this->servicio->emitir($servidor, true, $this->uath->id),
+    );
+
+    expect(preg_match_all('/\/Type\s*\/Page[^s]/', $pdf))->toBe(1);
+});

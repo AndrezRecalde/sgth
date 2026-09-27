@@ -110,6 +110,23 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Buzón de pruebas
+    |--------------------------------------------------------------------------
+    |
+    | Fuera de producción, todo el correo se desvía aquí (ver
+    | AppServiceProvider::desviarCorreoFueraDeProduccion). La base de
+    | desarrollo lleva direcciones reales de servidores y el sistema manda
+    | documentos con cédula: sin esto, un fallo resolviendo el destinatario
+    | escribe de verdad a una persona desde una máquina de desarrollo.
+    |
+    | Vacío = no se desvía nada.
+    |
+    */
+
+    'buzon_de_pruebas' => env('MAIL_BUZON_DE_PRUEBAS'),
+
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
