@@ -2,7 +2,6 @@
 
 namespace App\Models\Estructura;
 
-use App\Enums\EstadoSubrogacion;
 use App\Models\Expediente\Subrogacion;
 use App\Observers\UnidadAdministrativaObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -107,8 +106,6 @@ class UnidadAdministrativa extends Model
     public function subrogacionesVigentes(): HasMany
     {
         return $this->hasMany(Subrogacion::class, 'unidad_administrativa_id')
-            ->where('estado', EstadoSubrogacion::ACTIVA->value)
-            ->whereDate('fecha_inicio', '<=', now())
-            ->whereDate('fecha_fin', '>=', now());
+            ->activaEnFecha(now());
     }
 }

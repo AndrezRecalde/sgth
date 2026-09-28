@@ -40,7 +40,6 @@ class RegistrarSubrogacionRequest extends FormRequest
             'fecha_fin'                => ['required', 'date', 'after:fecha_inicio'],
             'motivo'                   => ['required', new Enum(MotivoSubrogacion::class)],
             'resolucion_numero'        => ['nullable', 'string', 'max:100'],
-            'documento_respaldo'       => ['nullable', 'string', 'max:255'],
             'observacion'              => ['nullable', 'string', 'max:1000'],
         ];
     }

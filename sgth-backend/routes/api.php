@@ -492,7 +492,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::prefix('subrogaciones')->group(function () {
             Route::middleware('role:admin-uath|asistente-uath|auditor|maxima-autoridad|admin-ti')
                 ->group(function () {
-                    Route::get('activas', [SubrogacionController::class, 'listarActivas']);
+                    // 'activas' se retiró el 2026-09-28: no lo consumía nadie.
+                    // A «quién ejerce hoy» responde el organigrama, con la
+                    // relación UnidadAdministrativa::subrogacionesVigentes().
                     Route::get('vigentes', [SubrogacionController::class, 'listarVigentes']);
                 });
 
