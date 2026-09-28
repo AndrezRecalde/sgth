@@ -6,8 +6,21 @@ export const subrogacionService = {
   /** Pendientes de aprobación + activas: lo que la pantalla administra. */
   listarVigentes: (params?: SubrogacionParams) =>
     api
-      .get<ApiResponse<Subrogacion[]>>('/expediente/subrogaciones/vigentes', { params })
-      .then((r) => r.data.datos ?? []),
+      .get<{
+        exito:   boolean
+        mensaje: string
+        datos:   Subrogacion[]
+        meta: {
+          total:         number
+          pagina_actual: number
+          por_pagina:    number
+          ultima_pagina: number
+        }
+      }>('/expediente/subrogaciones/vigentes', { params })
+      .then((r) => ({
+        data:  r.data.datos ?? [],
+        total: r.data.meta?.total ?? 0,
+      })),
 
   listarPorServidor: (servidorId: number) =>
     api

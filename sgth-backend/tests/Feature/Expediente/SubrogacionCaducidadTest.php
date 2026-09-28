@@ -167,7 +167,7 @@ test('el listado de la pantalla excluye las vencidas aunque nadie las haya caduc
     ($this->subrogacionActiva)('2026-01-01', '2026-03-31');
     ($this->subrogacionActiva)(now()->subDay()->toDateString(), now()->addMonth()->toDateString());
 
-    expect($this->service->listarVigentes())->toHaveCount(1);
+    expect($this->service->listarVigentes()->total())->toBe(1);
 });
 
 // ── Visibilidad ─────────────────────────────────────────────────

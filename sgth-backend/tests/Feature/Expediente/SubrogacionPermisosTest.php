@@ -202,3 +202,29 @@ test('el mensaje de validación nombra el campo en español', function () {
     expect($respuesta->json('errores.servidor_subrogante_id.0'))
         ->toContain('servidor subrogante');
 });
+
+// ── Paginación del listado ──────────────────────────────────────
+
+/**
+ * El listado devolvía la colección entera: nada limita cuántas subrogaciones
+ * vigentes puede haber, y la pantalla no tenía paginador que mostrar.
+ */
+test('el listado viene paginado, con su total aparte de las filas', function () {
+    ($this->comoRol)('admin-uath');
+
+    $respuesta = $this->getJson('/api/v1/expediente/subrogaciones/vigentes?per_page=2')
+        ->assertOk();
+
+    expect($respuesta->json('meta'))
+        ->toHaveKeys(['pagina_actual', 'por_pagina', 'total', 'ultima_pagina'])
+        ->and($respuesta->json('meta.por_pagina'))->toBe(2)
+        ->and($respuesta->json('datos'))->toBeArray();
+});
+
+test('el tamaño de página tiene tope', function () {
+    ($this->comoRol)('admin-uath');
+
+    $this->getJson('/api/v1/expediente/subrogaciones/vigentes?per_page=5000')
+        ->assertOk()
+        ->assertJsonPath('meta.por_pagina', 100);
+});

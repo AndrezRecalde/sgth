@@ -98,6 +98,10 @@ export const NAV_SGTH: NavGroup[] = [
             label: 'Subrogaciones y encargos',
             href:  ROUTES.SGTH.SUBROGACIONES,
             icon:  'IconArrowsExchange',
+            // El endpoint solo lo sirve a estos roles desde el
+            // 2026-09-28. Sin declararlos aquí, un director o un jefe de unidad
+            // veía la pantalla en el menú y se encontraba un 403 al abrirla.
+            roles: ['admin-uath', 'asistente-uath', 'auditor', 'maxima-autoridad', 'admin-ti'],
           },
           {
             label: 'Nueva acción de personal',
