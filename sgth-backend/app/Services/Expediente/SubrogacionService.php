@@ -304,9 +304,17 @@ class SubrogacionService implements SubrogacionServiceInterface
      */
     public function activarPorMovimiento(MovimientoPersonal $movimiento): void
     {
-        Subrogacion::where('movimiento_personal_id', $movimiento->id)
+        // Update por instancia, no mass-update: un mass-update no dispara
+        // eventos de modelo, y con ellos se perdía el rastro en activity_log de
+        // justo el momento en que alguien adquiere la facultad de firmar. El
+        // volumen es siempre 0 o 1 (una subrogación por acción de personal).
+        $pendientes = Subrogacion::where('movimiento_personal_id', $movimiento->id)
             ->where('estado', EstadoSubrogacion::PENDIENTE->value)
-            ->update(['estado' => EstadoSubrogacion::ACTIVA->value]);
+            ->get();
+
+        foreach ($pendientes as $subrogacion) {
+            $subrogacion->update(['estado' => EstadoSubrogacion::ACTIVA->value]);
+        }
     }
 
     /**
@@ -315,15 +323,31 @@ class SubrogacionService implements SubrogacionServiceInterface
      */
     public function cancelarPorMovimiento(MovimientoPersonal $movimiento): void
     {
-        Subrogacion::where('movimiento_personal_id', $movimiento->id)
+        $vigentes = Subrogacion::where('movimiento_personal_id', $movimiento->id)
             ->whereIn('estado', [
                 EstadoSubrogacion::PENDIENTE->value,
                 EstadoSubrogacion::ACTIVA->value,
             ])
-            ->update([
+            ->get();
+
+        foreach ($vigentes as $subrogacion) {
+            $subrogacion->update([
                 'estado' => EstadoSubrogacion::CANCELADA->value,
-                'observacion' => 'Cancelada automáticamente: se anuló la Acción de Personal que la respaldaba.',
+                // Se añade, no se reemplaza: el mass-update anterior borraba de
+                // un golpe lo que Talento Humano hubiera anotado al registrarla.
+                // `cancelar()` ya concatenaba; esto hacía lo contrario.
+                'observacion' => $this->conNota(
+                    $subrogacion->observacion,
+                    'Cancelada automáticamente: se anuló la Acción de Personal que la respaldaba.'
+                ),
             ]);
+        }
+    }
+
+    /** Añade una nota a la observación sin perder lo que ya decía. */
+    private function conNota(?string $observacion, string $nota): string
+    {
+        return trim(($observacion ? $observacion."\n" : '').$nota);
     }
 
     /**
@@ -385,11 +409,19 @@ class SubrogacionService implements SubrogacionServiceInterface
     {
         $fecha = $hasta ?? now()->toDateString();
 
-        $caducadas = Subrogacion::where('estado', EstadoSubrogacion::ACTIVA->value)
+        // Una por una y no con un mass-update: el estado de una subrogación es
+        // lo que decide quién firma, así que cada cierre deja su línea en
+        // activity_log con el estado del que venía. El volumen diario es de unas
+        // pocas filas —las que vencieron ayer—, no de un padrón.
+        $vencidas = Subrogacion::where('estado', EstadoSubrogacion::ACTIVA->value)
             ->whereDate('fecha_fin', '<', $fecha)
-            ->update(['estado' => EstadoSubrogacion::FINALIZADA->value]);
+            ->get();
 
-        return ['caducadas' => $caducadas, 'fecha' => $fecha];
+        foreach ($vencidas as $subrogacion) {
+            $subrogacion->update(['estado' => EstadoSubrogacion::FINALIZADA->value]);
+        }
+
+        return ['caducadas' => $vencidas->count(), 'fecha' => $fecha];
     }
 
     public function cancelar(int $subrogacionId, string $motivo): Subrogacion
