@@ -1,4 +1,10 @@
 *.log
+# Pruebas de usar y tirar. Se escriben para comprobar algo en el momento
+# —una consulta, el comportamiento de una aserción— y se borran después.
+# Están ignoradas porque este repositorio lo comparten varias sesiones de
+# trabajo a la vez: una de ellas creó `TmpBordeActivasTest.php` mientras otra
+# hacía `git add -A`, y el archivo acabó en main dentro de un PR ajeno.
+tests/**/Tmp*Test.php
 .DS_Store
 .env
 .env.backup
