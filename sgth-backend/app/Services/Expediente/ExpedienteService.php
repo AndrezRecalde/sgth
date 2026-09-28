@@ -288,8 +288,11 @@ class ExpedienteService implements ExpedienteServiceInterface
         );
 
         // Con tope: sin él, per_page=100000 devolvía la institución entera en
-        // una respuesta. 500 porque el selector de subrogaciones todavía pide
-        // esa cantidad para listar a todos.
+        // una respuesta. El tope era de 500 «porque el selector de subrogaciones
+        // todavía pide esa cantidad para listar a todos»; desde el 2026-09-28 ese
+        // selector busca contra el servidor con BuscarServidorSelect, así que ya
+        // nadie pide de a 500. El tope se queda como red de seguridad: la
+        // exportación de nómina y la vinculación inicial piden páginas grandes.
         $perPage = isset($filtros['per_page'])
             ? min(max((int) $filtros['per_page'], 1), self::MAXIMO_POR_PAGINA) : 15;
 
