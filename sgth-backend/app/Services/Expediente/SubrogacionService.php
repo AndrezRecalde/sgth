@@ -283,9 +283,14 @@ class SubrogacionService implements SubrogacionServiceInterface
 
     /**
      * La partida contra la que se paga la diferencia: 510512 para la
-     * subrogación, 510513 para el encargo. Null si no están registradas — el
-     * guard del Art. 105 lo rechazará al suscribir, que es mejor que imputar
-     * el gasto a una partida equivocada.
+     * subrogación, 510513 para el encargo. Null si no están registradas o están
+     * inactivas, y entonces el guard del Art. 105 no deja suscribir la acción,
+     * que es mejor que imputar el gasto a una partida equivocada.
+     *
+     * Ese rechazo no era cierto hasta el 2026-09-28: `aplicarSuscrita()` caía a
+     * la partida del contrato vigente del subrogante y luego a la del puesto, de
+     * modo que la acción se suscribía igual y cargaba la diferencia donde no
+     * debía. Ahora la subrogación no hereda partida de nadie.
      */
     private function partidaDeLaDiferencia(Subrogacion $subrogacion): ?int
     {

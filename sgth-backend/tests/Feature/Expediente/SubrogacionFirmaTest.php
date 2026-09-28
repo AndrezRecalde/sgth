@@ -39,8 +39,14 @@ beforeEach(function () {
     // La subrogación compromete presupuesto (Art. 105 LOSEP): sin partida
     // disponible su acción no puede suscribirse, que es justo lo que este
     // arreglo hace valer.
+    //
+    // El código es 510512, la partida de la diferencia que confirmó la
+    // Dirección Financiera. Decía 510106 —que es «Salarios Unificados»— con la
+    // descripción «Subrogaciones» encima, y funcionaba solo porque el guard del
+    // Art. 105 aceptaba cualquier partida heredada del puesto. Desde que la
+    // subrogación no hereda, el fixture tiene que nombrar la de verdad.
     $this->partida = \App\Models\Estructura\PartidaPresupuestaria::create([
-        'codigo' => '510106', 'descripcion' => 'Subrogaciones',
+        'codigo' => '510512', 'descripcion' => 'Subrogaciones',
         'grupo_gasto' => 'Gastos en Personal', 'activo' => true, 'disponible' => true,
     ]);
 

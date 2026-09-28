@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Expediente;
 
+use App\Enums\EstadoAccionPersonal;
 use App\Enums\TipoSubrogacion;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\Cargo;
 use App\Models\Estructura\GrupoOcupacional;
 use App\Models\Estructura\PartidaPresupuestaria;
@@ -11,6 +13,7 @@ use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
+use App\Services\Expediente\MovimientoPersonalStateService;
 use App\Services\Expediente\SubrogacionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -200,4 +203,79 @@ test('un encargo sin titular también congela su situación', function () {
 
     expect((float) $movimiento->remuneracion_origen)->toBe(585.00)
         ->and((float) $movimiento->remuneracion_propuesta)->toBe(1412.00);
+});
+
+// ── La partida de la diferencia no se hereda ────────────────────
+
+/**
+ * `partidaDeLaDiferencia()` documentaba que si 510512/510513 no están
+ * registradas la acción queda sin partida y «el guard del Art. 105 lo rechazará
+ * al suscribir». No lo rechazaba: la cadena de respaldo de aplicarSuscrita()
+ * caía a la partida del contrato vigente del subrogante —y luego a la del
+ * puesto—, así que la acción se suscribía igual y cargaba la diferencia al
+ * vínculo que el subrogante ya tenía. Comprobado antes de arreglarlo: pasaba a
+ * SUSCRITA con `partida_presupuestaria_id` en null.
+ *
+ * Aquí no se siembra el catálogo a propósito: sin el seeder, 510512 no existe.
+ */
+test('sin la partida de la diferencia en el catálogo, la acción no se suscribe', function () {
+    $titular    = ($this->servidorCon)($this->puestoJefe);
+    $subrogante = ($this->servidorCon)($this->puestoAsistente);
+
+    $movimiento = ($this->registrar)($subrogante, $titular)->movimientoPersonal;
+    $movimiento->update(['dictamen_presupuestario_ref' => 'DICT-2026-001']);
+
+    expect($movimiento->partida_presupuestaria_id)->toBeNull();
+
+    expect(fn () => app(MovimientoPersonalStateService::class)->transicionar(
+        $movimiento->fresh(), EstadoAccionPersonal::SUSCRITA, []
+    ))->toThrow(ReglaNegocioException::class);
+
+    expect($movimiento->fresh()->estado)->toBe(EstadoAccionPersonal::BORRADOR);
+});
+
+test('el mensaje nombra las dos partidas y dice a quién pedirlas', function () {
+    $titular    = ($this->servidorCon)($this->puestoJefe);
+    $subrogante = ($this->servidorCon)($this->puestoAsistente);
+
+    $movimiento = ($this->registrar)($subrogante, $titular)->movimientoPersonal;
+    $movimiento->update(['dictamen_presupuestario_ref' => 'DICT-2026-001']);
+
+    try {
+        app(MovimientoPersonalStateService::class)
+            ->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA, []);
+        $this->fail('Se esperaba que la suscripción fuera rechazada.');
+    } catch (ReglaNegocioException $e) {
+        expect($e->getMessage())
+            ->toContain('510512')
+            ->toContain('510513')
+            ->toContain('Dirección Financiera');
+    }
+});
+
+test('un encargo sin su partida tampoco se suscribe', function () {
+    $subrogante = ($this->servidorCon)($this->puestoAsistente);
+
+    $movimiento = ($this->registrar)($subrogante, null)->movimientoPersonal;
+    $movimiento->update(['dictamen_presupuestario_ref' => 'DICT-2026-001']);
+
+    expect(fn () => app(MovimientoPersonalStateService::class)->transicionar(
+        $movimiento->fresh(), EstadoAccionPersonal::SUSCRITA, []
+    ))->toThrow(ReglaNegocioException::class);
+});
+
+test('con la partida en el catálogo se suscribe como siempre', function () {
+    $this->seed(\Database\Seeders\PartidaPresupuestariaSeeder::class);
+
+    $titular    = ($this->servidorCon)($this->puestoJefe);
+    $subrogante = ($this->servidorCon)($this->puestoAsistente);
+
+    $movimiento = ($this->registrar)($subrogante, $titular)->movimientoPersonal;
+    $movimiento->update(['dictamen_presupuestario_ref' => 'DICT-2026-001']);
+
+    app(MovimientoPersonalStateService::class)
+        ->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA, []);
+
+    expect($movimiento->fresh()->estado)->toBe(EstadoAccionPersonal::SUSCRITA)
+        ->and($movimiento->fresh()->partidaPresupuestaria?->codigo)->toBe('510512');
 });
