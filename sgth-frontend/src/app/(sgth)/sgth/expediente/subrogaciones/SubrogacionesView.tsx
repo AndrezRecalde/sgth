@@ -8,13 +8,15 @@ import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useSubrogacionesVigentes } from '@/features/expediente/hooks/useSubrogaciones'
 import { useSubrogacionMutations } from '@/features/expediente/hooks/useSubrogacionMutations'
 import { SubrogacionModal } from '@/features/expediente/components/SubrogacionModal'
-import { CancelarSubrogacionModal } from '@/features/expediente/components/CancelarSubrogacionModal'
 import { getSubrogacionColumns } from '@/features/expediente/components/subrogaciones.columns'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { formatFecha } from '@/lib/fecha'
 import { useAuth } from '@/hooks/useAuth'
-import { TIPO_OPTIONS } from '@/features/expediente/utils/subrogaciones'
+import { TIPO_LABELS, TIPO_OPTIONS } from '@/features/expediente/utils/subrogaciones'
 import type { Subrogacion, TipoSubrogacion, UnidadConRelaciones } from '@/types/api'
-import { DataState, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
+import {
+  DataState, MotivoModal, PageHeader, PageShell, SgthTable, Toolbar,
+} from '@/components/ui'
 
 export function SubrogacionesView() {
   const contained = useContainedInput()
@@ -26,7 +28,8 @@ export function SubrogacionesView() {
   const puedeAdministrar = hasRole('admin-uath') || hasRole('asistente-uath') || hasRole('admin-ti')
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [cancelarOpened, { open: openCancelar, close: closeCancelar }] = useDisclosure(false)
-  const [cancelarId, setCancelarId] = useState<number | null>(null)
+  // El registro entero y no su id: el modal nombra lo que se va a cancelar.
+  const [cancelando, setCancelando] = useState<Subrogacion | null>(null)
 
   const [unidadId, setUnidadId] = useState<string | null>(null)
   const [tipo, setTipo] = useState<string | null>(null)
@@ -39,13 +42,18 @@ export function SubrogacionesView() {
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
     tipo: (tipo as TipoSubrogacion) || undefined,
   })
-  const { finalizar } = useSubrogacionMutations()
+  const { finalizar, cancelar } = useSubrogacionMutations()
 
   const lista = subrogaciones as Subrogacion[]
 
+  const cerrarCancelar = () => { setCancelando(null); closeCancelar() }
+
   const columns = getSubrogacionColumns({
     onFinalizar: (id) => finalizar.mutate(id),
-    onCancelar: (id) => { setCancelarId(id); openCancelar() },
+    onCancelar: (id) => {
+      setCancelando(lista.find((s) => s.id === id) ?? null)
+      openCancelar()
+    },
     puedeAdministrar,
   })
 
@@ -112,10 +120,31 @@ export function SubrogacionesView() {
       </DataState>
 
       <SubrogacionModal opened={modalOpened} onClose={closeModal} />
-      <CancelarSubrogacionModal
+
+      <MotivoModal
         opened={cancelarOpened}
-        onClose={() => { setCancelarId(null); closeCancelar() }}
-        subrogacionId={cancelarId}
+        onClose={cerrarCancelar}
+        title="Cancelar subrogación / encargo"
+        descripcion={
+          cancelando
+            ? (
+                <>
+                  Se cancelará {TIPO_LABELS[cancelando.tipo].toLowerCase()} de{' '}
+                  <b>{cancelando.puesto_subrogado?.cargo?.nombre ?? 'el puesto asignado'}</b>{' '}
+                  ({formatFecha(cancelando.fecha_inicio)} — {formatFecha(cancelando.fecha_fin)}).
+                  Si su Acción de Personal ya estaba registrada, el subrogante deja de
+                  poder firmar.
+                </>
+              )
+            : 'Se cancelará el registro seleccionado.'
+        }
+        confirmLabel="Cancelar registro"
+        destructiva
+        cargando={cancelar.isPending}
+        onConfirm={(motivo) => {
+          if (!cancelando) return
+          cancelar.mutate({ id: cancelando.id, motivo }, { onSuccess: cerrarCancelar })
+        }}
       />
     </PageShell>
   )
