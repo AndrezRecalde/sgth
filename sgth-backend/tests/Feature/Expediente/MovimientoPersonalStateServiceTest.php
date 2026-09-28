@@ -481,3 +481,66 @@ test('el endpoint HTTP entrega el PDF de un ingreso registrado', function () {
         ->assertOk()
         ->assertHeader('Content-Type', 'application/pdf');
 });
+
+// ── Anular deja constancia de por qué ───────────────────────────────────
+
+/*
+| Anular es un acto administrativo sobre otro acto administrativo, y hasta el
+| 2026-09-27 no dejaba rastro de la decisión: la pantalla preguntaba sí o no y el
+| movimiento quedaba en 'anulada' sin una línea que la explicara. En Permisos,
+| Vacaciones y Viáticos el motivo se pide desde hace tiempo con `MotivoModal`.
+*/
+test('anular exige el motivo y lo guarda', function () {
+    $movimiento = crearMovimiento(['estado' => EstadoAccionPersonal::BORRADOR]);
+
+    $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}/transicionar", [
+        'estado' => 'anulada',
+    ])->assertStatus(422)->assertJsonStructure(['errores' => ['motivo_anulacion']]);
+
+    expect($movimiento->fresh()->estado)->toBe(EstadoAccionPersonal::BORRADOR);
+
+    $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}/transicionar", [
+        'estado'           => 'anulada',
+        'motivo_anulacion' => '  Se registró sobre el servidor equivocado.  ',
+    ])->assertOk();
+
+    expect($movimiento->fresh())
+        ->estado->toBe(EstadoAccionPersonal::ANULADA)
+        // Recortado: el espacio de más no es parte de la justificación.
+        ->motivo_anulacion->toBe('Se registró sobre el servidor equivocado.');
+});
+
+test('el motivo no se exige en las demás transiciones', function () {
+    $movimiento = crearMovimiento(['estado' => EstadoAccionPersonal::BORRADOR]);
+
+    $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}/transicionar", [
+        'estado' => 'suscrita',
+    ])->assertOk();
+
+    expect($movimiento->fresh())
+        ->estado->toBe(EstadoAccionPersonal::SUSCRITA)
+        ->motivo_anulacion->toBeNull();
+});
+
+test('un motivo de menos de cinco caracteres no pasa', function () {
+    $movimiento = crearMovimiento(['estado' => EstadoAccionPersonal::BORRADOR]);
+
+    $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}/transicionar", [
+        'estado'           => 'anulada',
+        'motivo_anulacion' => 'no',
+    ])->assertStatus(422)->assertJsonStructure(['errores' => ['motivo_anulacion']]);
+});
+
+test('una corrección no arrastra el motivo de anulación del original', function () {
+    $movimiento = crearMovimiento([
+        'estado'           => EstadoAccionPersonal::REGISTRADA,
+        'codigo_registro'  => 'AP-2026-0900',
+        'fecha_registro'   => now(),
+        'motivo_anulacion' => 'Motivo de una anulación anterior',
+    ]);
+
+    $corregido = app(MovimientoPersonalStateService::class)
+        ->corregir($movimiento, ['descripcion' => 'Corregido']);
+
+    expect($corregido->motivo_anulacion)->toBeNull();
+});

@@ -726,6 +726,8 @@ export type MovimientoPersonal = {
   autorizado_por?: number | null
   notificado_por?: number | null
   fecha_notificacion?: string | null
+  /** Por qué se anuló. Null en lo anulado antes del 2026-09-27, que no lo pedía. */
+  motivo_anulacion?: string | null
   observacion?: string | null
   lugar_trabajo?: string | null
   caucionado?: boolean | null

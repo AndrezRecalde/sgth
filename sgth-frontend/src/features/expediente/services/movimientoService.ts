@@ -33,6 +33,11 @@ export type TransicionarData = {
   puede_marcar?: boolean | null
   resolucion_numero?: string | null
   fecha_fin_propuesta?: string | null
+  /**
+   * Por qué se anula. Obligatorio al pasar a 'anulada' —el backend lo exige con
+   * `required_if`—: anular es un acto sobre otro acto y tiene que quedar dicho.
+   */
+  motivo_anulacion?: string | null
 }
 
 /**

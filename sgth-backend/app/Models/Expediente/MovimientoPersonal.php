@@ -48,6 +48,9 @@ class MovimientoPersonal extends Model
                 'dictamen_presupuestario_ref',
                 'notificado_por',
                 'fecha_notificacion',
+                // Por qué se anuló: es la justificación de un acto sobre otro
+                // acto, así que va al registro de auditoría con el resto.
+                'motivo_anulacion',
                 'corrige_a_id',
                 'fecha_suscripcion',
                 'firmante_autoridad_nombre',
@@ -167,6 +170,9 @@ class MovimientoPersonal extends Model
         'caucionado',
         'caucion_numero',
         'caucion_fecha',
+        // No entra en los campos copiables de corregir(): una corrección nace en
+        // borrador y no arrastra por qué se anuló la anterior.
+        'motivo_anulacion',
     ];
 
     protected function casts(): array
