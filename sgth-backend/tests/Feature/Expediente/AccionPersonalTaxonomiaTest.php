@@ -541,3 +541,71 @@ test('el ingreso sigue fuera de esAccionDePersonal(), donde vive la elegibilidad
     expect(TipoMovimientoPersonal::INGRESO->esAccionDePersonal())->toBeFalse()
         ->and(TipoMovimientoPersonal::INGRESO->tieneDocumentoImprimible())->toBeTrue();
 });
+
+// ── Reglas revisadas con TH el 2026-09-28 ───────────────────────
+
+/*
+| Tres reglas que el código contradecía. Van juntas porque salen de la misma
+| consulta y porque las tres se comprobaban solo en la pantalla o en ninguna
+| parte. La cuarta que TH confirmó —cambio de denominación solo para obreros— ya
+| estaba bien y la cubre la matriz de arriba.
+*/
+test('el incremento de remuneración es solo para obreros', function () {
+    foreach (TipoNombramiento::cases() as $nombramiento) {
+        expect(TipoMovimientoPersonal::INCREMENTO_REMUNERACION->elegiblePara($nombramiento))
+            ->toBe($nombramiento === TipoNombramiento::CODIGO_TRABAJO, $nombramiento->value);
+    }
+});
+
+test('la prestación de servicios es para provisionales, ocasionales y servicios profesionales', function () {
+    $elegibles = [
+        TipoNombramiento::PROVISIONAL,
+        TipoNombramiento::SERVICIOS_OCASIONALES,
+        TipoNombramiento::SERVICIOS_PROFESIONALES,
+    ];
+
+    foreach (TipoNombramiento::cases() as $nombramiento) {
+        expect(TipoMovimientoPersonal::PRESTACION_SERVICIOS->elegiblePara($nombramiento))
+            ->toBe(in_array($nombramiento, $elegibles, true), $nombramiento->value);
+    }
+});
+
+/*
+| El traslado es el intercambio de personal ENTRE INSTITUCIONES y no cierra ni
+| crea vínculo, así que no reubica a nadie dentro del GAD. Se había implementado
+| como movimiento interno, idéntico al traspaso: los dos subtipos hacían lo mismo
+| y solo cambiaba la palabra impresa en el documento.
+*/
+test('el traslado no reubica y el traspaso sí', function () {
+    expect(SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO->modificaPuesto())->toBeFalse()
+        ->and(SubtipoMovimientoPersonal::TRASPASO->modificaPuesto())->toBeTrue();
+
+    // Y ninguno de los otros dos del tipo paraguas: son ausencias temporales.
+    expect(SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->modificaPuesto())->toBeFalse()
+        ->and(SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION->modificaPuesto())->toBeFalse();
+});
+
+test('un traslado se registra sin puesto de destino', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+
+    $movimiento = $this->service->registrar($servidor->id, [
+        'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
+        'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO->value,
+        'descripcion'        => 'Traslado al Ministerio de Salud Pública.',
+        'fecha_efectiva'     => '2026-10-01',
+        // Sin puesto_destino_id: no hay puesto del GAD que ocupar.
+    ]);
+
+    $registrado = $this->stateService->transicionar(
+        $this->stateService->transicionar($movimiento, EstadoAccionPersonal::SUSCRITA),
+        EstadoAccionPersonal::REGISTRADA,
+    );
+
+    expect($registrado->estado)->toBe(EstadoAccionPersonal::REGISTRADA);
+
+    // El vínculo no se movió: ni de puesto ni de unidad, y sigue vigente.
+    $vigente = $servidor->fresh()->contratoVigente;
+
+    expect($vigente)->not->toBeNull()
+        ->and($vigente->puesto_id)->toBe($this->puesto->id);
+});

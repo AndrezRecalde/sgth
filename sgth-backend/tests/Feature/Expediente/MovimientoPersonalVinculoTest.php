@@ -101,7 +101,16 @@ test('un ingreso sin puesto o unidad propuestos no puede registrarse', function 
 
 // ── Completitud de datos propuestos — modificaVinculo() ──────────
 
-test('un traslado sin puesto_destino_id no puede registrarse', function () {
+/*
+| Estas dos usaban el tipo plano 'traslado' y pasaron a 'traspaso' el 2026-09-28.
+| Lo que comprueban —que reubicar exige puesto de destino, y que reubicar
+| conserva el mismo contrato— sigue siendo cierto, pero del traspaso: TH aclaró
+| que el traslado es el intercambio de personal ENTRE INSTITUCIONES y no toca el
+| vínculo, así que afirmarlo del traslado era fijar el malentendido que tenía el
+| código. Que un traslado se registre sin puesto y deje el vínculo quieto lo
+| cubre ahora AccionPersonalTaxonomiaTest.
+*/
+test('un traspaso sin puesto_destino_id no puede registrarse', function () {
     $servidor = Servidor::create([
         'user_id' => User::factory()->create()->id,
         'cedula' => '3333333333', 'nombre' => 'Titular', 'apellido' => 'Test',
@@ -121,10 +130,10 @@ test('un traslado sin puesto_destino_id no puede registrarse', function () {
 
     $movimiento = MovimientoPersonal::create([
         'servidor_id'     => $servidor->id,
-        'tipo_movimiento' => 'traslado',
+        'tipo_movimiento' => 'traspaso',
         'categoria'       => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
         'estado'          => EstadoAccionPersonal::SUSCRITA,
-        'descripcion'     => 'Traslado sin puesto de destino',
+        'descripcion'     => 'Traspaso sin puesto de destino',
         'fecha_efectiva'  => '2026-08-01',
         'autorizado_por'  => $this->user->id,
     ]);
@@ -189,7 +198,7 @@ test('un ingreso completo, al registrarse, crea el ContratoServidor y sincroniza
 
 // ── End-to-end: traslado (reubica dentro del mismo vínculo) ──────
 
-test('un traslado reubica al servidor conservando el mismo contrato', function () {
+test('un traspaso reubica al servidor conservando el mismo contrato', function () {
     $servidor = Servidor::create([
         'user_id' => User::factory()->create()->id,
         'cedula' => '5555555555', 'nombre' => 'Titular', 'apellido' => 'Traslado',
@@ -211,10 +220,10 @@ test('un traslado reubica al servidor conservando el mismo contrato', function (
 
     $movimiento = MovimientoPersonal::create([
         'servidor_id'       => $servidor->id,
-        'tipo_movimiento'   => 'traslado',
+        'tipo_movimiento'   => 'traspaso',
         'categoria'         => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
         'estado'            => EstadoAccionPersonal::SUSCRITA,
-        'descripcion'       => 'Traslado al puesto B',
+        'descripcion'       => 'Traspaso al puesto B',
         'fecha_efectiva'    => '2026-08-01',
         'puesto_destino_id' => $this->puestoB->id,
         'autorizado_por'    => $this->user->id,
@@ -224,7 +233,7 @@ test('un traslado reubica al servidor conservando el mismo contrato', function (
 
     expect($registrado->estado)->toBe(EstadoAccionPersonal::REGISTRADA);
 
-    // El traslado no interrumpe la relación laboral: sigue habiendo UN solo
+    // El traspaso no interrumpe la relación laboral: sigue habiendo UN solo
     // contrato, el mismo, con su número y resolución originales — no existe
     // ningún documento nuevo que justificara crear otro.
     expect(ContratoServidor::where('servidor_id', $servidor->id)->count())->toBe(1);
@@ -243,10 +252,10 @@ test('un traslado reubica al servidor conservando el mismo contrato', function (
         ->toBe($servidor->contratoVigente->puesto_id)
         ->toBe($this->puestoB->id);
 
-    // Sin duplicado de 'novedad_contrato': solo existe el traslado mismo.
+    // Sin duplicado de 'novedad_contrato': solo existe el traspaso mismo.
     $movimientosDelServidor = MovimientoPersonal::where('servidor_id', $servidor->id)->get();
     expect($movimientosDelServidor)->toHaveCount(1);
-    expect($movimientosDelServidor->first()->tipo_movimiento->value)->toBe('traslado');
+    expect($movimientosDelServidor->first()->tipo_movimiento->value)->toBe('traspaso');
 });
 
 // ── PUT /expediente/servidores/{id} rechaza puesto/unidad/tipo_nombramiento ──

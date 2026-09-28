@@ -173,17 +173,23 @@ const NOMBRAMIENTOS_POR_SUBTIPO: Record<AccionSubtipo, string[]> = {
 /** Espeja TipoMovimientoPersonal::elegiblePara() para los tipos sin subtipo. */
 const NOMBRAMIENTOS_POR_TIPO_SIMPLE: Partial<Record<AccionTipo, string[]>> = {
   cambio_denominacion: ['codigo_trabajo'],
+  // Las tres que nombró TH (2026-09-28). Antes espejaba un
+  // `esLosep() && !== permanente` que daba un conjunto parecido y no el mismo:
+  // dejaba fuera Servicios Profesionales y colaba Libre Nombramiento y Elección
+  // Popular.
   prestacion_servicios: [
     'nombramiento_provisional',
     'servicios_ocasionales',
-    'libre_nombramiento_remocion',
-    'eleccion_popular',
+    'servicios_profesionales',
   ],
   licencia_sin_remuneracion: [
     'nombramiento_permanente',
     'codigo_trabajo',
     'eleccion_popular',
   ],
+  // Solo obreros (TH, 2026-09-28). Se ofrecía a todos, porque se añadía a la
+  // lista fuera de este mapa y sin condición.
+  incremento_remuneracion: ['codigo_trabajo'],
 }
 
 export function subtiposElegibles(
@@ -213,7 +219,7 @@ export function tiposElegibles(tipoNombramiento?: string | null): AccionTipo[] {
   const simples = (Object.keys(NOMBRAMIENTOS_POR_TIPO_SIMPLE) as AccionTipo[])
     .filter((t) => NOMBRAMIENTOS_POR_TIPO_SIMPLE[t]!.includes(tipoNombramiento))
 
-  return [...conSubtipos, ...simples, 'incremento_remuneracion']
+  return [...conSubtipos, ...simples]
 }
 
 export function requiereSubtipo(tipo: AccionTipo): boolean {
@@ -241,9 +247,16 @@ export function esTipoDelFormulario(
 /**
  * Acciones que reubican al servidor: el formulario muestra la comparación
  * "situación actual vs propuesta" y pide unidad, puesto, RMU y partida.
+ *
+ * Solo el traspaso. El traslado administrativo salió el 2026-09-28: TH aclaró
+ * que es el intercambio de personal ENTRE INSTITUCIONES, no un movimiento
+ * interno, así que no tiene puesto de destino dentro del GAD que proponer — el
+ * formulario le pedía una unidad y un puesto del organigrama propio que para
+ * esa figura no significan nada. Espeja
+ * `SubtipoMovimientoPersonal::modificaPuesto()`, donde está el detalle.
  */
 export function reubicaAlServidor(subtipo?: AccionSubtipo | null): boolean {
-  return subtipo === 'traslado_administrativo' || subtipo === 'traspaso'
+  return subtipo === 'traspaso'
 }
 
 export function esComision(subtipo?: AccionSubtipo | null): boolean {

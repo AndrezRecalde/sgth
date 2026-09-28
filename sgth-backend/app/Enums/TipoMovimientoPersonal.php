@@ -239,9 +239,11 @@ enum TipoMovimientoPersonal: string
 
     /**
      * Reglas de elegibilidad de Talento Humano por tipo de nombramiento
-     * vigente del servidor:
+     * vigente del servidor (revisadas con TH el 2026-09-28):
      * - Cambio de denominación: solo obreros (Código de Trabajo).
-     * - Prestación de servicios: solo LOSEP, excepto Permanente.
+     * - Incremento de remuneración: solo obreros (Código de Trabajo).
+     * - Prestación de servicios: Provisional, Servicios Ocasionales y
+     *   Servicios Profesionales.
      * - Cambio administrativo: solo Nombramiento Permanente.
      * - Comisión de servicios sin remuneración: solo Permanente
      *   (+ validación de antigüedad y duración en el servicio).
@@ -263,8 +265,16 @@ enum TipoMovimientoPersonal: string
         return match ($this) {
             self::CAMBIO_DENOMINACION =>
                 $tipo === TipoNombramiento::CODIGO_TRABAJO,
-            self::PRESTACION_SERVICIOS =>
-                $tipo->esLosep() && $tipo !== TipoNombramiento::PERMANENTE,
+            // Las tres que nombró TH (2026-09-28), enumeradas. Antes era
+            // `esLosep() && !== PERMANENTE`, que daba un conjunto parecido pero
+            // no el mismo: dejaba fuera Servicios Profesionales —porque
+            // esLosep() es falso para el contrato civil— y colaba Libre
+            // Nombramiento y Elección Popular, que TH no incluye.
+            self::PRESTACION_SERVICIOS => in_array($tipo, [
+                TipoNombramiento::PROVISIONAL,
+                TipoNombramiento::SERVICIOS_OCASIONALES,
+                TipoNombramiento::SERVICIOS_PROFESIONALES,
+            ], true),
             self::CAMBIO_ADMINISTRATIVO =>
                 $tipo === TipoNombramiento::PERMANENTE,
             self::LICENCIA_SIN_REMUNERACION => in_array($tipo, [
@@ -272,6 +282,12 @@ enum TipoMovimientoPersonal: string
                 TipoNombramiento::CODIGO_TRABAJO,
                 TipoNombramiento::ELECCION_POPULAR,
             ], true),
+            // Solo obreros (TH, 2026-09-28). Caía en el `default` de abajo, así
+            // que se ofrecía a cualquier nombramiento: un permanente veía
+            // «Incremento de Remuneración» entre sus opciones, y el backend lo
+            // aceptaba.
+            self::INCREMENTO_REMUNERACION =>
+                $tipo === TipoNombramiento::CODIGO_TRABAJO,
             default => true,
         };
     }
