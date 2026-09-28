@@ -256,9 +256,11 @@ class MovimientoPersonalStateService
                 'estado'                   => 'vigente',
             ], $movimiento);
         } elseif ($movimiento->subtipoEfectivo()?->modificaPuesto()) {
-            // Traslado y traspaso reubican dentro del mismo vínculo. Las
-            // comisiones, que comparten el tipo paraguas, no entran aquí: son
-            // ausencias temporales y el servidor conserva su puesto.
+            // El traspaso reubica dentro del mismo vínculo. Los otros tres
+            // subtipos del tipo paraguas no entran aquí: las comisiones son
+            // ausencias temporales y el servidor conserva su puesto, y el
+            // traslado es entre instituciones —ver modificaPuesto()—, así que
+            // no hay puesto de destino dentro del GAD al que moverlo.
             $this->contratoServidorService->reestructurarDesdeMovimiento($movimiento);
         } elseif ($movimiento->subtipoEfectivo()?->cierraVinculo()) {
             $this->cerrarVinculo($movimiento);

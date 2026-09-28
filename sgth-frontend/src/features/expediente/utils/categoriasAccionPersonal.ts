@@ -1,4 +1,4 @@
-import { TIPO_LABELS, type AccionTipo } from './taxonomiaAccionPersonal'
+import { TIPO_LABELS, tiposElegibles, type AccionTipo } from './taxonomiaAccionPersonal'
 
 export interface CategoriaAccionPersonal {
   value: AccionTipo
@@ -30,15 +30,30 @@ export const CATEGORIAS_ACCION_PERSONAL: CategoriaAccionPersonal[] =
   }))
 
 /**
- * true si la categoría está habilitada dado el estado de vínculo del
- * servidor seleccionado. pendiente_vinculacion null (desconocido) deshabilita
- * todo por defecto.
+ * ¿Se puede registrar esta categoría a este servidor?
+ *
+ * Dos condiciones. La primera es el estado del vínculo: sin vínculo solo cabe el
+ * ingreso, y con vínculo cabe todo menos el ingreso. `pendiente_vinculacion` en
+ * null —desconocido— deshabilita todo, porque no se puede decidir.
+ *
+ * La segunda es el nombramiento vigente, y faltaba. La rejilla ofrecía las ocho
+ * categorías a cualquiera con vínculo, así que a un permanente se le ofrecían
+ * «Cambio de Denominación» —solo obreros— y «Prestación de Servicios» —que no
+ * incluye permanentes—: se elegían, se llenaba el formulario entero y el backend
+ * lo rechazaba al guardar con «no aplica para el tipo de nombramiento vigente».
+ * Justo el botón que va a fallar que el resto del módulo evita ofrecer.
  */
 export function categoriaHabilitada(
   categoria: CategoriaAccionPersonal,
-  pendienteVinculacion: boolean | null | undefined
+  pendienteVinculacion: boolean | null | undefined,
+  tipoNombramiento?: string | null,
 ): boolean {
   if (pendienteVinculacion === true) return !categoria.requiereVinculo
-  if (pendienteVinculacion === false) return categoria.requiereVinculo
-  return false
+  if (pendienteVinculacion !== false) return false
+
+  // Tiene vínculo: el ingreso no aplica, y el resto solo si el nombramiento lo
+  // admite. `tiposElegibles()` es el espejo de las reglas del backend.
+  if (!categoria.requiereVinculo) return false
+
+  return tiposElegibles(tipoNombramiento).includes(categoria.value)
 }

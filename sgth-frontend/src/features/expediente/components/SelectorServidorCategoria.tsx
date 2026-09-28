@@ -9,6 +9,7 @@ import {
 import type { AccionTipo } from '../utils/taxonomiaAccionPersonal'
 import type { ServidorConRelaciones } from '@/types/api'
 import { SectionHeading } from '@/components/ui'
+import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import classes from './SelectorServidorCategoria.module.css'
 
 interface Props {
@@ -17,18 +18,30 @@ interface Props {
   onCategoriaSeleccionada: (categoria: AccionTipo) => void
 }
 
-function tooltipDeshabilitado(categoria: string, pendienteVinculacion: boolean | null | undefined): string {
+function tooltipDeshabilitado(
+  categoria: string,
+  pendienteVinculacion: boolean | null | undefined,
+  tipoNombramiento?: string | null,
+): string {
   if (pendienteVinculacion === true) {
     return 'Este servidor aún no tiene un vínculo laboral vigente — registre primero su Ingreso y Vinculación.'
   }
   if (pendienteVinculacion === false && categoria === 'ingreso') {
     return 'Este servidor ya tiene un vínculo laboral vigente — no aplica un nuevo ingreso.'
   }
+  if (pendienteVinculacion === false) {
+    return `Esta acción no aplica al nombramiento vigente del servidor (${etiquetaNombramiento(tipoNombramiento)}).`
+  }
   return 'No se pudo determinar el estado de vínculo de este servidor.'
 }
 
 export function SelectorServidorCategoria({ servidor, onServidorChange, onCategoriaSeleccionada }: Props) {
   const pendienteVinculacion = servidor?.pendiente_vinculacion
+  const tipoNombramiento = servidor?.contrato_vigente?.tipo_nombramiento
+
+  const ningunaAplica = CATEGORIAS_ACCION_PERSONAL.every(
+    (c) => !categoriaHabilitada(c, pendienteVinculacion, tipoNombramiento),
+  )
 
   /**
    * Todas las categorías abren el mismo formulario con el tipo ya fijado.
@@ -70,9 +83,25 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
             </Alert>
           )}
 
+          {/* Ocho tarjetas en gris con su tooltip no son una respuesta: si
+              ninguna aplica, hay que decirlo de frente y nombrar el motivo. */}
+          {pendienteVinculacion === false && ningunaAplica && (
+            <Alert
+              variant="light"
+              color="amber"
+              icon={<IconAlertTriangle size={16} />}
+            >
+              Ninguna acción de personal aplica al nombramiento vigente de este
+              servidor ({etiquetaNombramiento(tipoNombramiento)}). Las reglas de
+              elegibilidad las fija Talento Humano por tipo de nombramiento.
+            </Alert>
+          )}
+
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
             {CATEGORIAS_ACCION_PERSONAL.map((categoria) => {
-              const habilitada = categoriaHabilitada(categoria, pendienteVinculacion)
+              const habilitada = categoriaHabilitada(
+                categoria, pendienteVinculacion, tipoNombramiento,
+              )
 
               /*
               | Las no elegibles llevan `aria-disabled` y no `disabled`, y siguen
@@ -99,7 +128,7 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
               return habilitada ? boton : (
                 <Tooltip
                   key={categoria.value}
-                  label={tooltipDeshabilitado(categoria.value, pendienteVinculacion)}
+                  label={tooltipDeshabilitado(categoria.value, pendienteVinculacion, tipoNombramiento)}
                   events={{ hover: true, focus: true, touch: true }}
                   multiline
                   w={260}

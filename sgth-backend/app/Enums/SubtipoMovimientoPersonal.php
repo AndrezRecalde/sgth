@@ -112,15 +112,31 @@ enum SubtipoMovimientoPersonal: string
      * ni nombramiento nuevo, así que el número y la resolución originales se
      * conservan.
      *
+     * Solo el traspaso, que es «ocupar otro puesto que ya existe en otra unidad,
+     * con la misma remuneración» (TH, 2026-09-28).
+     *
      * Las comisiones de servicios quedan fuera a propósito: son ausencias
      * temporales, el servidor conserva su puesto y vuelve a él al terminar.
+     *
+     * Y el TRASLADO ADMINISTRATIVO salió de aquí el 2026-09-28. Estaba por un
+     * malentendido de la figura: se había implementado como un movimiento
+     * interno, igual que el traspaso, hasta el punto de que los dos subtipos
+     * hacían exactamente lo mismo y solo cambiaba la palabra impresa. TH aclaró
+     * que es lo contrario de lo que parecía — un traslado es el intercambio de
+     * personal ENTRE INSTITUCIONES públicas, y no cierra el vínculo al salir ni
+     * lo crea al entrar—, así que no tiene puesto de destino dentro del GAD que
+     * ocupar: reubicarlo movía dentro de la casa a quien se marcha de ella, y
+     * exigía un `puesto_destino_id` interno que para esta figura no existe.
+     *
+     * Queda como acto documental: se registra, se firma y se imprime, sin tocar
+     * el vínculo. La institución de destino va por ahora en la explicación del
+     * acto, que es texto libre y también se imprime; TH dice que la figura se
+     * usa muy rara vez, así que no se le inventó una columna sin un caso real
+     * delante.
      */
     public function modificaPuesto(): bool
     {
-        return in_array($this, [
-            self::TRASLADO_ADMINISTRATIVO,
-            self::TRASPASO,
-        ], true);
+        return $this === self::TRASPASO;
     }
 
     /**
