@@ -605,9 +605,9 @@ class ContratoServidorService
     }
 
     /**
-     * Reubica al servidor dentro del mismo vínculo: un traslado o un traspaso
-     * cambian puesto y unidad, pero NO terminan la relación laboral ni generan
-     * un instrumento nuevo.
+     * Reubica al servidor dentro del mismo vínculo: un traspaso o una
+     * prestación de servicios cambian puesto y unidad, pero NO terminan la
+     * relación laboral ni generan un instrumento nuevo.
      *
      * Por eso se actualiza el contrato en vez de cerrarlo y crear otro: el
      * número de contrato, la resolución y la fecha de inicio son los del
@@ -620,6 +620,12 @@ class ContratoServidorService
      * traspaso se hace dentro del mismo grupo ocupacional, sin incremento ni
      * decremento. La partida presupuestaria sí acompaña al puesto, porque
      * cuelga de él y no del contrato.
+     *
+     * Para la prestación de servicios se asume lo mismo, y es un supuesto sin
+     * confirmar: TH la describió como «prácticamente como un traspaso»
+     * (2026-09-28) sin pronunciarse sobre la remuneración. Si resultara que sí
+     * puede cambiar, lo que hay que tocar es este método —y el formulario ya
+     * captura `remuneracion_propuesta`, así que el dato está.
      */
     public function reestructurarDesdeMovimiento(MovimientoPersonal $movimiento): void
     {

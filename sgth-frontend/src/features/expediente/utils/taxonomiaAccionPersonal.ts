@@ -248,15 +248,27 @@ export function esTipoDelFormulario(
  * Acciones que reubican al servidor: el formulario muestra la comparación
  * "situación actual vs propuesta" y pide unidad, puesto, RMU y partida.
  *
- * Solo el traspaso. El traslado administrativo salió el 2026-09-28: TH aclaró
- * que es el intercambio de personal ENTRE INSTITUCIONES, no un movimiento
- * interno, así que no tiene puesto de destino dentro del GAD que proponer — el
- * formulario le pedía una unidad y un puesto del organigrama propio que para
- * esa figura no significan nada. Espeja
- * `SubtipoMovimientoPersonal::modificaPuesto()`, donde está el detalle.
+ * El traspaso y la prestación de servicios. Son la misma figura repartida por
+ * tipo de nombramiento: TH (2026-09-28) describió la prestación de servicios
+ * como «prácticamente como un traspaso pero se hace para servidores con
+ * nombramientos Provisionales, Ocasionales, Servicios Profesionales, igualmente
+ * con su situación actual y situación propuesta», y el traspaso solo aplica a
+ * permanentes. La prestación de servicios entró aquí ese día: se guardaba sin
+ * puesto propuesto y el registro reubicaba a nadie.
+ *
+ * El traslado administrativo salió el mismo día: TH aclaró que es el
+ * intercambio de personal ENTRE INSTITUCIONES, no un movimiento interno, así
+ * que no tiene puesto de destino dentro del GAD que proponer — el formulario le
+ * pedía una unidad y un puesto del organigrama propio que para esa figura no
+ * significan nada.
+ *
+ * Espeja `MovimientoPersonal::reubicaAlServidor()`, donde está el detalle.
  */
-export function reubicaAlServidor(subtipo?: AccionSubtipo | null): boolean {
-  return subtipo === 'traspaso'
+export function reubicaAlServidor(
+  tipo?: TipoMovimientoPersonal | null,
+  subtipo?: AccionSubtipo | null,
+): boolean {
+  return tipo === 'prestacion_servicios' || subtipo === 'traspaso'
 }
 
 export function esComision(subtipo?: AccionSubtipo | null): boolean {
@@ -279,7 +291,7 @@ export function proponeSituacion(
   tipo?: TipoMovimientoPersonal | null,
   subtipo?: AccionSubtipo | null,
 ): boolean {
-  return tipo === 'ingreso' || tipo === 'subrogacion' || reubicaAlServidor(subtipo)
+  return tipo === 'ingreso' || tipo === 'subrogacion' || reubicaAlServidor(tipo, subtipo)
 }
 
 /** Acciones que apartan temporalmente al servidor: lo suyo es el período. */

@@ -23,9 +23,10 @@ interface Props {
 /**
  * La columna derecha del documento: dónde queda el servidor después del acto.
  *
- * La piden el ingreso —que es donde nace el vínculo— y los subtipos que
- * reubican, traslado y traspaso. Una cesación no propone nada y una comisión
- * deja al servidor en su puesto, así que ahí este bloque no se monta.
+ * La piden el ingreso —que es donde nace el vínculo— y las acciones que
+ * reubican: el traspaso y la prestación de servicios. Una cesación no propone
+ * nada y una comisión deja al servidor en su puesto, así que ahí este bloque no
+ * se monta.
  */
 export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento }: Props) {
   const contained = useContainedInput()
@@ -54,8 +55,8 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
    * Código del Trabajo y Servicios Profesionales, que son justo los dos casos en
    * que la remuneración se negocia en el contrato.
    *
-   * En un traslado o un traspaso sigue siendo el vigente: esas acciones no
-   * cambian de nombramiento, reubican dentro del que ya tiene.
+   * En un traspaso o una prestación de servicios sigue siendo el vigente: esas
+   * acciones no cambian de nombramiento, reubican dentro del que ya tiene.
    */
   const regimenDeLaRmu = esIngreso ? nombramiento : tipoNombramiento
 
@@ -180,8 +181,14 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
               value={field.value}
               onChange={field.onChange}
               // La partida la decide la modalidad, no el puesto: un ocasional y
-              // un permanente sobre la misma plaza se imputan distinto.
-              modalidad={nombramiento}
+              // un permanente sobre la misma plaza se imputan distinto. Se pasa
+              // el mismo régimen que manda en la R.M.U. —el propuesto en un
+              // ingreso, el vigente cuando solo se reubica—, y no
+              // `tipo_nombramiento_propuesto` a secas: fuera del ingreso llega
+              // vacío, y el selector caía al catálogo completo justo donde la
+              // modalidad más distingue (un provisional, un ocasional y un
+              // profesional se imputan a partidas distintas).
+              modalidad={regimenDeLaRmu}
             />
           )}
         />

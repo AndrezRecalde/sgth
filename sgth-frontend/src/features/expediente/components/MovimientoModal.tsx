@@ -152,7 +152,7 @@ function FormularioAccion({
   const subtipos = tipo ? subtiposElegibles(tipo, tipoNombramiento) : []
   const esIngreso = tipo === 'ingreso'
   // El ingreso siempre propone puesto y unidad: es donde nace el vínculo.
-  const muestraPropuesta = reubicaAlServidor(subtipo) || esIngreso
+  const muestraPropuesta = reubicaAlServidor(tipo, subtipo) || esIngreso
 
   const handleClose = () => {
     reset(VALORES_EN_BLANCO)
