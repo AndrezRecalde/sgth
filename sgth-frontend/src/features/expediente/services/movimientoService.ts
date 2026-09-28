@@ -1,6 +1,23 @@
 import api from '@/lib/axios'
-import type { ApiResponse, MovimientoPersonal } from '@/types/api'
+import type {
+  ApiResponse, EstadoAccionPersonal, MovimientoPersonal, PaginatedResponse,
+  TipoMovimientoPersonal,
+} from '@/types/api'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
+
+/**
+ * Filtros de la bandeja. `servidor_id` lo acepta el backend y todavía no lo usa
+ * ninguna pantalla; se declara aquí porque es donde se ve qué admite el
+ * endpoint.
+ */
+export type FiltrosBandeja = {
+  estado?: EstadoAccionPersonal
+  tipo_movimiento?: TipoMovimientoPersonal
+  servidor_id?: number
+  anio?: number
+  page?: number
+  per_page?: number
+}
 
 /**
  * Payload de una transición. Los datos del vínculo solo aplican al pasar un
@@ -60,15 +77,18 @@ export const movimientoService = {
       )
       .then((r) => r.data.datos),
 
-  /** Bandeja transversal: acciones de personal de todos los servidores. */
-  listarBandeja: (params?: {
-    estado?: string
-    tipo_movimiento?: string
-    anio?: number
-    per_page?: number
-  }) =>
+  /**
+   * Bandeja transversal: acciones de personal de todos los servidores.
+   *
+   * El endpoint pagina, y hasta el 2026-09-27 el tipo declaraba solo `{ data }`
+   * y descartaba el resto del sobre. La tabla se pintaba sin paginador: a partir
+   * de la acción 21 —el `per_page` por defecto del backend— el resto quedaba
+   * invisible y sin forma de alcanzarlo, y el rótulo «N acción(es) en la vista»
+   * contaba las de la primera página como si fueran todas.
+   */
+  listarBandeja: (params?: FiltrosBandeja) =>
     api
-      .get<ApiResponse<{ data: MovimientoPersonal[] }>>(
+      .get<ApiResponse<PaginatedResponse<MovimientoPersonal>>>(
         '/expediente/movimientos', { params },
       )
       .then((r) => r.data.datos),

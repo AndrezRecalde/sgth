@@ -1,10 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { movimientoService } from '../services/movimientoService'
-import type { TransicionarData, ActualizarBorradorData } from '../services/movimientoService'
+import type {
+  TransicionarData, ActualizarBorradorData, FiltrosBandeja,
+} from '../services/movimientoService'
 import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
 
-export function useMovimientoMutations(servidorId?: number | null) {
+/**
+ * El `servidorId` que recibía se retiró el 2026-09-27: lo único que hacía era
+ * invalidar ['movimientos', servidorId], que ya cae dentro de ['movimientos'].
+ */
+export function useMovimientoMutations() {
   const qc = useQueryClient()
 
   const actualizarBorrador = useMutation({
@@ -15,7 +21,8 @@ export function useMovimientoMutations(servidorId?: number | null) {
         'Borrador actualizado',
         'Los cambios quedaron guardados en la acción de personal.',
       )
-      qc.invalidateQueries({ queryKey: ['movimientos', servidorId ?? undefined] })
+      // ['movimientos'] es prefijo de ['movimientos', servidorId], así que
+      // invalida también el historial de cada servidor.
       qc.invalidateQueries({ queryKey: ['movimientos'] })
       // El detalle abierto en el drawer vive bajo otra clave.
       qc.invalidateQueries({ queryKey: ['movimiento'] })
@@ -71,11 +78,15 @@ export function useMovimiento(id: number | null) {
   })
 }
 
-export function useBandejaMovimientos(params?: {
-  estado?: string
-  tipo_movimiento?: string
-  anio?: number
-}) {
+/**
+ * Paginación del lado del servidor, 15 por página como el resto del sistema.
+ * La clave lleva los filtros y la página: todo lo que cambia el resultado.
+ */
+export const POR_PAGINA_BANDEJA = 15
+
+export function useBandejaMovimientos(filtros: FiltrosBandeja = {}) {
+  const params = { ...filtros, per_page: POR_PAGINA_BANDEJA }
+
   return useQuery({
     queryKey: ['bandeja-movimientos', params],
     queryFn: () => movimientoService.listarBandeja(params),

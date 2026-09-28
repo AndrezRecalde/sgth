@@ -65,7 +65,7 @@ function Formulario({
   onSaved?: () => void
 }) {
   const contained = useContainedInput()
-  const { transicionar } = useMovimientoMutations(movimiento.servidor_id)
+  const { transicionar } = useMovimientoMutations()
 
   const nombramiento = movimiento.tipo_nombramiento_propuesto ?? null
   const derivaDelPuesto = esLosep(nombramiento)
