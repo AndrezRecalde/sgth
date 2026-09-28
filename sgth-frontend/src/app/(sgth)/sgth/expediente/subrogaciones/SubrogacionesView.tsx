@@ -8,6 +8,7 @@ import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useSubrogacionesVigentes } from '@/features/expediente/hooks/useSubrogaciones'
 import { useSubrogacionMutations } from '@/features/expediente/hooks/useSubrogacionMutations'
 import { SubrogacionModal } from '@/features/expediente/components/SubrogacionModal'
+import { SubrogacionDetalleDrawer } from '@/features/expediente/components/SubrogacionDetalleDrawer'
 import { getSubrogacionColumns } from '@/features/expediente/components/subrogaciones.columns'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAuth } from '@/hooks/useAuth'
@@ -33,6 +34,8 @@ export function SubrogacionesView() {
   const puedeAdministrar = hasRole('admin-uath') || hasRole('asistente-uath') || hasRole('admin-ti')
 
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
+  const [detalleOpened, { open: openDetalle, close: closeDetalle }] = useDisclosure(false)
+  const [detalle, setDetalle] = useState<Subrogacion | null>(null)
   const [cancelarOpened, { open: openCancelar, close: closeCancelar }] = useDisclosure(false)
   // El registro entero y no su id: el modal nombra lo que se va a cancelar.
   const [cancelando, setCancelando] = useState<Subrogacion | null>(null)
@@ -68,6 +71,10 @@ export function SubrogacionesView() {
   const cerrarCancelar = () => { setCancelando(null); closeCancelar() }
 
   const columns = getSubrogacionColumns({
+    onVerDetalle: (id) => {
+      setDetalle(lista.find((s) => s.id === id) ?? null)
+      openDetalle()
+    },
     onFinalizar: (id) => finalizar.mutate(id),
     onCancelar: (id) => {
       setCancelando(lista.find((s) => s.id === id) ?? null)
@@ -161,6 +168,12 @@ export function SubrogacionesView() {
       </DataState>
 
       <SubrogacionModal opened={modalOpened} onClose={closeModal} />
+
+      <SubrogacionDetalleDrawer
+        subrogacion={detalle}
+        opened={detalleOpened}
+        onClose={() => { setDetalle(null); closeDetalle() }}
+      />
 
       <MotivoModal
         opened={cancelarOpened}

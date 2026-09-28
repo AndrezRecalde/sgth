@@ -1,5 +1,5 @@
 import { Text } from '@mantine/core'
-import { IconBan, IconPlayerStop } from '@tabler/icons-react'
+import { IconBan, IconEye, IconPlayerStop } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -14,6 +14,7 @@ function nombreServidor(s?: { nombre?: string; apellido?: string } | null): stri
 }
 
 type Handlers = {
+  onVerDetalle: (id: number) => void
   onFinalizar: (id: number) => void
   onCancelar: (id: number) => void
   /** Falso para quien solo consulta: auditoría y máxima autoridad. */
@@ -21,7 +22,7 @@ type Handlers = {
 }
 
 export const getSubrogacionColumns = ({
-  onFinalizar, onCancelar, puedeAdministrar,
+  onVerDetalle, onFinalizar, onCancelar, puedeAdministrar,
 }: Handlers): DataTableColumn<Subrogacion>[] => [
   {
     accessor: 'tipo',
@@ -104,6 +105,13 @@ export const getSubrogacionColumns = ({
     render: (s) => (
       <TableActions
         actions={[
+          {
+            // Lo primero del menú, y para todos: quien solo consulta no puede
+            // hacer nada con la fila, pero sí necesita leerla entera.
+            label: 'Ver detalle',
+            icon: <IconEye size={14} />,
+            onClick: () => onVerDetalle(Number(s.id)),
+          },
           {
             label: 'Finalizar',
             icon: <IconPlayerStop size={14} />,
