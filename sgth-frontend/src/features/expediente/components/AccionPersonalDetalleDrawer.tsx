@@ -418,11 +418,18 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         />
 
         {/* El mismo formulario con el que se registró la acción, en modo
-            edición: un solo sitio donde corregir cada campo. */}
+            edición: un solo sitio donde corregir cada campo.
+
+            `tipoNombramiento` no se pasaba, y de él depende el régimen: sin él,
+            `esLosep(undefined)` daba true y la R.M.U. salía en solo lectura
+            diciendo «No se edita en régimen LOSEP» al corregir el borrador de un
+            obrero del Código del Trabajo, que es de los dos casos en que se
+            negocia en el contrato. */}
         <MovimientoModal
           opened={editarOpened}
           onClose={cerrarEditar}
           servidorId={m.servidor_id}
+          tipoNombramiento={m.servidor?.contrato_vigente?.tipo_nombramiento}
           movimiento={m}
         />
 

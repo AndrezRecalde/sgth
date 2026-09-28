@@ -744,6 +744,12 @@ export type MovimientoPersonal = {
     cedula?: string | null
     /** Solo en el detalle: la bandeja no la selecciona. */
     numero_papeleta_votacion?: string | null
+    /**
+     * Solo en el detalle, que carga 'servidor.contratoVigente'. De su
+     * `tipo_nombramiento` depende el régimen —y con él si la R.M.U. se hereda
+     * del puesto o se pacta—, así que el formulario de edición lo necesita.
+     */
+    contrato_vigente?: { id: number; tipo_nombramiento?: string | null } | null
   } | null
   unidad_origen?: { id: number; nombre?: string } | null
   unidad_destino?: { id: number; nombre?: string } | null

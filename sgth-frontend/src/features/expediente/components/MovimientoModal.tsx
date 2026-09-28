@@ -7,7 +7,7 @@ import {
 } from '@mantine/core'
 import { ModalFooter, SectionHeading, SgthModal, notificar } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
-import { useForm, useWatch, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -24,11 +24,12 @@ import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
 import { useAusenciasTemporales } from '../hooks/useAusenciasTemporales'
 import { FirmantesPanel } from './FirmantesPanel'
 import {
-  SUBTIPO_LABELS, TIPO_LABELS, esComision, reubicaAlServidor,
-  requiereDictamenPorDefecto, requiereSubtipo, subtiposElegibles, tiposElegibles,
+  SUBTIPO_LABELS, TIPO_LABELS, esComision, esTipoDelFormulario,
+  etiquetaTipoMovimiento, requiereDictamenPorDefecto, requiereSubtipo,
+  reubicaAlServidor, subtiposElegibles, tiposElegibles,
   type AccionSubtipo, type AccionTipo,
 } from '../utils/taxonomiaAccionPersonal'
-import type { MovimientoPersonal, UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
+import type { MovimientoPersonal } from '@/types/api'
 import { formatFecha, toDateValue, fromDateValue, fromDateValueOrNull } from '@/lib/fecha'
 import { BloqueDetalle } from './BloqueDetalle'
 
@@ -53,7 +54,7 @@ interface Props {
   titulo?: string
 }
 
-const BLANK: Partial<MovimientoFormData> = {
+const BLANK: DefaultValues<MovimientoFormData> = {
   descripcion: '',
   fecha_efectiva: '',
   fecha_inicio: null,
@@ -106,14 +107,31 @@ export function MovimientoModal({
       {/* Se monta al abrir, así el formulario arranca limpio sin resetear
           estado desde un efecto. */}
       {opened && (
-        <FormularioAccion
-          key={movimiento?.id ?? tipoFijo ?? 'nuevo'}
-          servidorId={servidorId}
-          tipoNombramiento={tipoNombramiento}
-          movimiento={movimiento}
-          tipoFijo={tipoFijo}
-          onClose={onClose}
-        />
+        movimiento && !esTipoDelFormulario(movimiento.tipo_movimiento) ? (
+          /* Un borrador de tipo plano legado —traslado, traspaso, comisión de
+             servicios, destitución— o de subrogación. También nacen en borrador,
+             pero este formulario no los representa: se abría igual, entraba con
+             un tipo que el esquema Zod rechaza, y «Guardar cambios» no hacía
+             nada ni decía por qué. */
+          <>
+            <Alert icon={<IconInfoCircle size={16} />} color="amber" variant="light">
+              «{etiquetaTipoMovimiento(movimiento.tipo_movimiento)}» no se corrige
+              con este formulario: es un tipo anterior a la taxonomía de dos
+              niveles, o nace en su propia pantalla. Anule el borrador y registre
+              la acción que corresponda.
+            </Alert>
+            <ModalFooter onCancel={onClose} cancelLabel="Cerrar" sinPrincipal />
+          </>
+        ) : (
+          <FormularioAccion
+            key={movimiento?.id ?? tipoFijo ?? 'nuevo'}
+            servidorId={servidorId}
+            tipoNombramiento={tipoNombramiento}
+            movimiento={movimiento}
+            tipoFijo={tipoFijo}
+            onClose={onClose}
+          />
+        )
       )}
     </SgthModal>
   )
@@ -151,10 +169,20 @@ function FormularioAccion({
 
   const tipos = tiposElegibles(tipoNombramiento)
 
-  const iniciales: Partial<MovimientoFormData> = edicion
+  /** Garantizado no nulo en modo edición por la guarda del envoltorio. */
+  const tipoDelBorrador = movimiento && esTipoDelFormulario(movimiento.tipo_movimiento)
+    ? movimiento.tipo_movimiento
+    : null
+
+  const iniciales: DefaultValues<MovimientoFormData> = edicion
     ? {
-      tipo_movimiento: movimiento!.tipo_movimiento as AccionTipo,
-      subtipo_movimiento: (movimiento!.subtipo_movimiento ?? null) as AccionSubtipo | null,
+      // No nulo aquí: el envoltorio ya descartó los tipos que este formulario
+      // no representa. Antes era un `as AccionTipo` que mentía, y un borrador
+      // de tipo plano legado —traslado, traspaso, comision_servicios,
+      // destitucion, que también nacen en borrador— entraba con un tipo que el
+      // esquema rechaza: el formulario no se enviaba y no decía nada.
+      tipo_movimiento: tipoDelBorrador ?? undefined,
+      subtipo_movimiento: movimiento!.subtipo_movimiento ?? null,
       descripcion: movimiento!.descripcion ?? '',
       fecha_efectiva: movimiento!.fecha_efectiva?.split('T')[0] ?? '',
       fecha_inicio: movimiento!.fecha_inicio?.split('T')[0] ?? null,
@@ -184,14 +212,16 @@ function FormularioAccion({
     formState: { errors },
   } = useForm<MovimientoFormData>({
     resolver: zodResolver(movimientoSchema),
-    defaultValues: iniciales as MovimientoFormData,
+    defaultValues: iniciales,
   })
 
-  const tipo = useWatch({ control, name: 'tipo_movimiento' }) as AccionTipo | undefined
-  const subtipo = useWatch({ control, name: 'subtipo_movimiento' }) as AccionSubtipo | null | undefined
+  const tipo = useWatch({ control, name: 'tipo_movimiento' })
+  const subtipo = useWatch({ control, name: 'subtipo_movimiento' })
   const caucionado = useWatch({ control, name: 'caucionado' })
   const unidadDestinoId = useWatch({ control, name: 'unidad_destino_id' })
   const puestoDestinoId = useWatch({ control, name: 'puesto_destino_id' })
+  const nombramiento = useWatch({ control, name: 'tipo_nombramiento_propuesto' })
+  const cubreId = useWatch({ control, name: 'cubre_movimiento_id' })
 
   const subtipos = tipo ? subtiposElegibles(tipo, tipoNombramiento) : []
   const esIngreso = tipo === 'ingreso'
@@ -199,26 +229,38 @@ function FormularioAccion({
   const muestraPropuesta = reubicaAlServidor(subtipo) || esIngreso
   const muestraFechas = esComision(subtipo)
 
-  const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 })
-  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
+  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
 
   const { data: puestosData } = usePuestos(
     unidadDestinoId ? { unidad_administrativa_id: Number(unidadDestinoId), per_page: 100 } : undefined,
   )
-  const puestos = (puestosData?.data ?? []) as PuestoConRelaciones[]
+  const puestos = puestosData?.data ?? []
+  const puestosTruncados = (puestosData?.total ?? 0) > puestos.length
 
-  // Aquí el régimen es el del vínculo vigente del servidor: estas acciones no
-  // cambian de nombramiento, reubican dentro del que ya tiene.
+  /**
+   * Qué régimen decide si la R.M.U. se hereda o se teclea.
+   *
+   * En un ingreso es el nombramiento PROPUESTO: es el régimen que va a tener el
+   * vínculo que nace, y quien ingresa no tiene ninguno vigente del que sacarlo.
+   * Antes se usaba `tipoNombramiento` —el del vínculo vigente— también aquí, y
+   * como en un ingreso llega vacío, `esLosep(undefined)` daba true: el campo
+   * salía en solo lectura diciendo «No se edita en régimen LOSEP» en todo
+   * ingreso, incluidos los de Código del Trabajo y Servicios Profesionales, que
+   * son justo los dos casos en que la remuneración se negocia en el contrato y
+   * el campo tiene que estar abierto.
+   *
+   * En un traslado o un traspaso sigue siendo el vigente: esas acciones no
+   * cambian de nombramiento, reubican dentro del que ya tiene.
+   */
+  const regimenDeLaRmu = esIngreso ? nombramiento : tipoNombramiento
+
   const puestoDestino = puestos.find((p) => p.id === Number(puestoDestinoId))
   const rmuHeredada = remuneracionEsHeredada(
-    tipoNombramiento,
+    regimenDeLaRmu,
     puestoDestino?.rmu != null ? Number(puestoDestino.rmu) : null,
   )
 
   // ── Reemplazo: solo aplica al ingreso con nombramiento temporal ──
-  const nombramiento = useWatch({ control, name: 'tipo_nombramiento_propuesto' })
-  const cubreId = useWatch({ control, name: 'cubre_movimiento_id' })
-
   const puedeCubrir = esIngreso && NOMBRAMIENTOS_DE_REEMPLAZO.includes(nombramiento ?? '')
 
   // Solo las que hoy siguen sin cubrir: ofrecer una ya cubierta serviría solo
@@ -234,14 +276,16 @@ function FormularioAccion({
 
   const descripcionRmu = rmuHeredada
     ? 'Fijada por el grupo ocupacional del puesto destino. No se edita en régimen LOSEP.'
-    : esLosep(tipoNombramiento)
-      ? (puestoDestinoId
-        ? 'Este puesto no tiene grupo ocupacional asignado, así que no hay monto que heredar: ingréselo a mano.'
-        : 'Elija el puesto destino para heredar la remuneración de su grupo ocupacional.')
-      : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.'
+    : esIngreso && !nombramiento
+      ? 'Elija primero el tipo de nombramiento: de él depende si la remuneración se hereda del puesto o se pacta.'
+      : esLosep(regimenDeLaRmu)
+        ? (puestoDestinoId
+          ? 'Este puesto no tiene grupo ocupacional asignado, así que no hay monto que heredar: ingréselo a mano.'
+          : 'Elija el puesto destino para heredar la remuneración de su grupo ocupacional.')
+        : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.'
 
   const handleClose = () => {
-    reset(BLANK as MovimientoFormData)
+    reset(BLANK)
     onClose()
   }
 
@@ -262,7 +306,15 @@ function FormularioAccion({
    * documento impreso acabaría con un número que no corresponde a nada.
    */
   const soloLoQueAplica = (data: MovimientoFormData): MovimientoFormData => {
-    if (data.tipo_movimiento === 'ingreso') return data
+    if (data.tipo_movimiento === 'ingreso') {
+      // Cinturón, además del `setValue` al cambiar de nombramiento: un borrador
+      // que ya venía con la marcación puesta y un nombramiento que no marca se
+      // edita sin tocar ese selector, y entonces el `onChange` no corre. La
+      // modalidad manda sobre lo que quedó guardado.
+      return admiteMarcacion(data.tipo_nombramiento_propuesto)
+        ? data
+        : { ...data, puede_marcar: false }
+    }
 
     return {
       ...data,
@@ -355,7 +407,7 @@ function FormularioAccion({
                         data={tipos.map((t) => ({ value: t, label: TIPO_LABELS[t] }))}
                         value={field.value}
                         onChange={(v) => {
-                          field.onChange(v as AccionTipo)
+                          field.onChange(tipos.find((t) => t === v))
                           elegirSubtipo(null)
                         }}
                         error={errors.tipo_movimiento?.message}
@@ -376,7 +428,7 @@ function FormularioAccion({
                         description="Es el subtipo el que determina las reglas y el documento que se imprime."
                         data={subtipos.map((s) => ({ value: s, label: SUBTIPO_LABELS[s] }))}
                         value={field.value ?? null}
-                        onChange={(v) => elegirSubtipo(v as AccionSubtipo | null)}
+                        onChange={(v) => elegirSubtipo(subtipos.find((s) => s === v) ?? null)}
                         error={errors.subtipo_movimiento?.message}
                         {...contained}
                       />
@@ -427,6 +479,7 @@ function FormularioAccion({
                                   field.onChange(v ? Number(v) : null)
                                   setValue('puesto_destino_id', null)
                                 }}
+                                error={errors.unidad_destino_id?.message}
                                 {...contained}
                               />
                             )}
@@ -437,6 +490,16 @@ function FormularioAccion({
                             render={({ field }) => (
                               <Select
                                 label="Puesto"
+                                // El listado pide 100 por página. Si la unidad
+                                // tuviera más, antes se recortaba en silencio y
+                                // el puesto que falta era indistinguible de uno
+                                // que no existe. El día que esto aparezca, el
+                                // arreglo de fondo es una búsqueda del lado del
+                                // servidor: el endpoint de puestos todavía no
+                                // acepta `search`.
+                                description={puestosTruncados
+                                  ? `Se muestran ${puestos.length} de ${puestosData?.total} puestos de la unidad.`
+                                  : undefined}
                                 placeholder={unidadDestinoId ? 'Seleccionar' : 'Elija primero la unidad'}
                                 data={puestos.map((p) => ({
                                   value: String(p.id), label: p.cargo?.nombre ?? `Puesto ${p.id}`,
@@ -467,6 +530,7 @@ function FormularioAccion({
                           <TextInput
                             label="Lugar de trabajo"
                             placeholder="Ej: Esmeraldas"
+                            error={errors.lugar_trabajo?.message}
                             {...contained}
                             {...register('lugar_trabajo')}
                           />
@@ -481,6 +545,7 @@ function FormularioAccion({
                                 min={0}
                                 decimalScale={2}
                                 readOnly={rmuHeredada}
+                                error={errors.remuneracion_propuesta?.message}
                                 value={field.value ?? ''}
                                 onChange={(v) => {
                                   const n = typeof v === 'number' ? v : parseFloat(String(v))
@@ -526,6 +591,18 @@ function FormularioAccion({
                                       // enlace de reemplazo deja de ser válido.
                                       if (!NOMBRAMIENTOS_DE_REEMPLAZO.includes(v ?? '')) {
                                         setValue('cubre_movimiento_id', null)
+                                      }
+                                      // Y si la modalidad nueva no marca nunca,
+                                      // la casilla se apaga DE VERDAD. El
+                                      // interruptor se pintaba apagado con
+                                      // `checked={admite && …}` pero el valor
+                                      // del formulario seguía en true, y eso es
+                                      // lo que viajaba: al editar el borrador, el
+                                      // backend lo guardaba tal cual y el
+                                      // documento acababa diciendo «Marca
+                                      // asistencia: Sí» en un contrato civil.
+                                      if (!admiteMarcacion(v)) {
+                                        setValue('puede_marcar', false)
                                       }
                                     }}
                                     error={errors.tipo_nombramiento_propuesto?.message}
@@ -578,6 +655,7 @@ function FormularioAccion({
                               <TextInput
                                 label="Número de contrato"
                                 placeholder="Ej: CT-2026-0099"
+                                error={errors.numero_contrato?.message}
                                 {...contained}
                                 {...register('numero_contrato')}
                               />
@@ -592,6 +670,7 @@ function FormularioAccion({
                                     clearable
                                     value={toDateValue(field.value)}
                                     onChange={(d) => field.onChange(fromDateValueOrNull(d))}
+                                    error={errors.fecha_fin_propuesta?.message}
                                     {...contained}
                                   />
                                 )}
@@ -694,6 +773,7 @@ function FormularioAccion({
                 <TextInput
                   label="Número de resolución"
                   placeholder="Opcional"
+                  error={errors.resolucion_numero?.message}
                   {...contained}
                   {...register('resolucion_numero')}
                 />
@@ -749,6 +829,7 @@ function FormularioAccion({
                           valueFormat="DD/MM/YYYY"
                           value={toDateValue(field.value)}
                           onChange={(d) => field.onChange(fromDateValueOrNull(d))}
+                          error={errors.caucion_fecha?.message}
                           {...contained}
                         />
                       )}
@@ -760,9 +841,25 @@ function FormularioAccion({
                   label="Observación"
                   placeholder="Opcional"
                   minRows={2}
+                  error={errors.observacion?.message}
                   {...contained}
                   {...register('observacion')}
                 />
+
+                {/* Red de seguridad: si algo no valida, se dice.
+                    Ocho campos no pintaban su error, así que un texto de más de
+                    100 caracteres en «Número de contrato» o un ingreso sin unidad
+                    dejaban el botón sin efecto: `handleSubmit` no llama a la
+                    mutación y no había nada en pantalla. Con el error en cada
+                    campo basta para los ocho, pero esto cubre también lo que
+                    valide el esquema mañana y quede fuera de la vista —un campo
+                    del paso anterior, o uno oculto por el subtipo elegido—. */}
+                {Object.keys(errors).length > 0 && (
+                  <Alert color="red" variant="light" icon={<IconInfoCircle size={16} />}>
+                    Revise los campos marcados: hay {Object.keys(errors).length} dato(s)
+                    que el formulario no puede enviar todavía.
+                  </Alert>
+                )}
 
                 <ModalFooter
                   onCancel={handleClose}

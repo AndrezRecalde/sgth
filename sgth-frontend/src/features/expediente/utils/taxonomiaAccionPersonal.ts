@@ -13,24 +13,46 @@ import type { SubtipoMovimientoPersonal, TipoMovimientoPersonal } from '@/types/
  * los planos legados —traslado, traspaso— aparecen en el historial pero no se
  * crean desde aquí.
  *
- * Va con `Extract` y no escrito a mano para que siga siendo un subconjunto
- * comprobado: si el backend retira un tipo, como pasó con 'ascenso' el
- * 2026-07-23, esta línea deja de compilar en vez de ofrecer una opción que el
- * servidor rechaza.
+ * Es una tupla y no una unión escrita a mano porque hace tres trabajos con una
+ * sola lista: `satisfies` comprueba que cada miembro exista de verdad en el enum
+ * del backend —si retira uno, como pasó con 'ascenso' el 2026-07-23, esto deja
+ * de compilar en vez de seguir ofreciendo una opción que el servidor rechaza—,
+ * de ella sale el tipo `AccionTipo`, y de ella sale el `z.enum()` del esquema,
+ * que antes repetía los ocho valores en otro archivo.
  */
-export type AccionTipo = Extract<
-  TipoMovimientoPersonal,
-  | 'ingreso'
-  | 'cambio_administrativo'
-  | 'cesacion_funciones'
-  | 'regimen_disciplinario'
-  | 'cambio_denominacion'
-  | 'prestacion_servicios'
-  | 'licencia_sin_remuneracion'
-  | 'incremento_remuneracion'
->
+export const TIPOS_DEL_FORMULARIO = [
+  'ingreso',
+  'cambio_administrativo',
+  'cesacion_funciones',
+  'regimen_disciplinario',
+  'cambio_denominacion',
+  'prestacion_servicios',
+  'licencia_sin_remuneracion',
+  'incremento_remuneracion',
+] as const satisfies readonly TipoMovimientoPersonal[]
 
-/** Los subtipos sí son todos: el enum completo del backend. */
+export type AccionTipo = (typeof TIPOS_DEL_FORMULARIO)[number]
+
+/**
+ * Los subtipos sí son todos los del backend, así que el tipo se aliasa y la
+ * tupla existe solo para el `z.enum()`. Que esté completa lo comprueba
+ * `SUBTIPO_LABELS`, que es `Record<AccionSubtipo, string>` y no compila si falta
+ * una etiqueta.
+ */
+export const SUBTIPOS_DE_ACCION = [
+  'traslado_administrativo',
+  'traspaso',
+  'comision_con_remuneracion',
+  'comision_sin_remuneracion',
+  'sancion_disciplinaria',
+  'renuncia',
+  'destitucion',
+  'jubilacion',
+  'incapacidad',
+  'contrato_finalizado',
+  'visto_bueno',
+] as const satisfies readonly SubtipoMovimientoPersonal[]
+
 export type AccionSubtipo = SubtipoMovimientoPersonal
 
 export const TIPO_LABELS: Record<AccionTipo, string> = {
@@ -196,6 +218,24 @@ export function tiposElegibles(tipoNombramiento?: string | null): AccionTipo[] {
 
 export function requiereSubtipo(tipo: AccionTipo): boolean {
   return (SUBTIPOS_POR_TIPO[tipo] ?? []).length > 0
+}
+
+/**
+ * ¿El formulario de acción de personal puede capturar y corregir este tipo?
+ *
+ * No todo borrador es de un tipo que el formulario represente: los planos
+ * legados —traslado, traspaso, comision_servicios, destitucion— también nacen en
+ * borrador (`modificaVinculo()` en el backend), y la subrogación tiene su propia
+ * pantalla. Abrirlos en el formulario dejaba un `tipo_movimiento` que el esquema
+ * Zod rechaza, y el envío moría en silencio.
+ *
+ * Es un predicado de tipo, no una aserción: ensancha la tupla hacia la unión del
+ * enum para comparar, que es ensanchar hacia la verdad.
+ */
+export function esTipoDelFormulario(
+  tipo?: TipoMovimientoPersonal | null,
+): tipo is AccionTipo {
+  return !!tipo && (TIPOS_DEL_FORMULARIO as readonly TipoMovimientoPersonal[]).includes(tipo)
 }
 
 /**

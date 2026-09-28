@@ -23,16 +23,19 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
   const [detalleOpened, { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
   const [detalleId, setDetalleId] = useState<number | null>(null)
-  const { data: movimientos = [], isLoading, error } = useMovimientos(servidorId)
+  const { data: lista = [], isLoading, error } = useMovimientos(servidorId)
   const [descargandoId, setDescargandoId] = useState<number | null>(null)
-
-  const lista = movimientos as MovimientoPersonal[]
 
   const handleDescargarPdf = async (movimiento: MovimientoPersonal) => {
     setDescargandoId(Number(movimiento.id))
     try {
       const blob = await movimientoService.descargarPdf(Number(movimiento.id))
-      guardarArchivo(blob, `accion_personal_${movimiento.codigo ?? movimiento.id}.pdf`)
+      // `codigo_registro` es el correlativo AP-AAAA-NNNN que el sistema asigna
+      // al registrar. `codigo` es el campo libre del backend, que casi nunca se
+      // llena: el archivo bajaba como «accion_personal_312.pdf» —el id de la
+      // fila— mientras el mismo documento, pedido desde la bandeja, bajaba con
+      // su correlativo.
+      guardarArchivo(blob, `accion_personal_${movimiento.codigo_registro ?? movimiento.id}.pdf`)
     } catch (error) {
       notificar.error(
         'No se pudo generar el PDF de la acción de personal',

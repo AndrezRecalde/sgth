@@ -1,31 +1,15 @@
 import { z } from 'zod/v4'
+import {
+  SUBTIPOS_DE_ACCION, TIPOS_DEL_FORMULARIO, esComision, requiereSubtipo,
+  reubicaAlServidor,
+} from '../utils/taxonomiaAccionPersonal'
 
 export const movimientoSchema = z.object({
-  tipo_movimiento: z.enum([
-    'cambio_administrativo',
-    'cesacion_funciones',
-    'regimen_disciplinario',
-    'cambio_denominacion',
-    'prestacion_servicios',
-    'licencia_sin_remuneracion',
-    'incremento_remuneracion',
-    // Solo llega en modo edición: un ingreso se crea desde su propio
-    // formulario, pero su borrador se corrige con este.
-    'ingreso',
-  ]),
-  subtipo_movimiento: z.enum([
-    'traslado_administrativo',
-    'traspaso',
-    'comision_con_remuneracion',
-    'comision_sin_remuneracion',
-    'sancion_disciplinaria',
-    'renuncia',
-    'destitucion',
-    'jubilacion',
-    'incapacidad',
-    'contrato_finalizado',
-    'visto_bueno',
-  ]).optional().nullable(),
+  // Las dos listas salen de la taxonomía, que es el espejo del enum del
+  // backend. Escritas aquí a mano eran una tercera copia —y una que nadie
+  // comprobaba contra las otras dos—.
+  tipo_movimiento: z.enum(TIPOS_DEL_FORMULARIO),
+  subtipo_movimiento: z.enum(SUBTIPOS_DE_ACCION).optional().nullable(),
 
   descripcion:     z.string().min(1, 'La descripción es requerida').max(1000),
   fecha_efectiva:  z.string().min(1, 'La fecha efectiva es requerida'),
@@ -52,26 +36,25 @@ export const movimientoSchema = z.object({
   requiere_dictamen_medico: z.boolean().optional().nullable(),
   resolucion_numero: z.string().max(100).optional().nullable(),
   observacion:     z.string().max(1000).optional().nullable(),
-  codigo:          z.string().max(30).optional().nullable(),
+  // 'codigo' se retiró del esquema: ningún campo del formulario lo captura. Es
+  // el campo libre del backend, distinto de `codigo_registro` —el correlativo
+  // AP-AAAA-NNNN que el sistema asigna al registrar—, y declararlo aquí hacía
+  // creer que el formulario lo pedía.
   caucionado:      z.boolean().optional().nullable(),
   caucion_numero:  z.string().max(100).optional().nullable(),
   caucion_fecha:   z.string().optional().nullable(),
 }).superRefine((data, ctx) => {
-  const conSubtipo = [
-    'cambio_administrativo', 'cesacion_funciones', 'regimen_disciplinario',
-  ]
-
-  if (conSubtipo.includes(data.tipo_movimiento) && !data.subtipo_movimiento) {
+  // Las tres condiciones —qué tipo exige subtipo, qué es una comisión y qué
+  // reubica al servidor— las decide la taxonomía. Repetidas aquí, cambiar una
+  // regla de Talento Humano obligaba a acordarse de los dos sitios.
+  if (requiereSubtipo(data.tipo_movimiento) && !data.subtipo_movimiento) {
     ctx.addIssue({
       path: ['subtipo_movimiento'], code: 'custom',
       message: 'Seleccione el subtipo de la acción de personal',
     })
   }
 
-  const esComision = data.subtipo_movimiento === 'comision_con_remuneracion'
-    || data.subtipo_movimiento === 'comision_sin_remuneracion'
-
-  if (esComision) {
+  if (esComision(data.subtipo_movimiento)) {
     if (!data.fecha_inicio) {
       ctx.addIssue({
         path: ['fecha_inicio'], code: 'custom',
@@ -88,10 +71,7 @@ export const movimientoSchema = z.object({
 
   // Traslado y traspaso reubican al servidor: sin puesto destino no hay
   // situación propuesta que registrar, y el backend rechaza el registro.
-  const reubica = data.subtipo_movimiento === 'traslado_administrativo'
-    || data.subtipo_movimiento === 'traspaso'
-
-  if (reubica && !data.puesto_destino_id) {
+  if (reubicaAlServidor(data.subtipo_movimiento) && !data.puesto_destino_id) {
     ctx.addIssue({
       path: ['puesto_destino_id'], code: 'custom',
       message: 'Indique el puesto al que será asignado',
