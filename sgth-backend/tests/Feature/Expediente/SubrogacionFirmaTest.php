@@ -457,3 +457,57 @@ test('un plazo posterior sobre el mismo puesto sí se registra', function () {
 
     expect($siguiente->estado)->toBe(EstadoSubrogacion::PENDIENTE);
 });
+
+// ── La subrogación no se edita ──────────────────────────────────
+
+/**
+ * La regla existía desde el 2026-09-26 pero solo en la pantalla:
+ * `AccionBotonEditar` esconde el botón y explica por qué. `PUT /movimientos/{id}`
+ * no la comprobaba y la ruta pide únicamente `role:admin-uath`, así que se
+ * alcanzaba sin pasar por ninguna pantalla — y entonces la acción y la fila de
+ * `subrogaciones` quedaban diciendo cosas distintas: una manda el documento
+ * impreso, la otra decide quién firma.
+ */
+test('el borrador de una subrogación no se edita desde el API', function () {
+    $titular    = ($this->servidorCon)($this->puesto->id);
+    $subrogante = ($this->servidorCon)();
+
+    $movimiento = ($this->registrarSubrogacion)($subrogante, $titular)->movimientoPersonal;
+
+    $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}", [
+        'fecha_inicio' => now()->addMonths(6)->toDateString(),
+        'fecha_fin'    => now()->addMonths(9)->toDateString(),
+    ])->assertStatus(422);
+
+    expect($movimiento->fresh()->fecha_inicio->toDateString())
+        ->toBe(now()->subDay()->toDateString());
+});
+
+test('el mensaje dice qué hacer en su lugar', function () {
+    $titular    = ($this->servidorCon)($this->puesto->id);
+    $movimiento = ($this->registrarSubrogacion)(($this->servidorCon)(), $titular)->movimientoPersonal;
+
+    $respuesta = $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}", [
+        'puesto_destino_id' => $this->puesto->id,
+    ])->assertStatus(422);
+
+    expect($respuesta->json('mensaje'))->toContain('Cancélela y regístrela de nuevo');
+});
+
+test('el borrador de cualquier otro tipo se sigue editando', function () {
+    $servidor = ($this->servidorCon)($this->puesto->id);
+
+    $movimiento = MovimientoPersonal::create([
+        'servidor_id'     => $servidor->id,
+        'tipo_movimiento' => 'novedad_contrato',
+        'estado'          => EstadoAccionPersonal::BORRADOR,
+        'descripcion'     => 'Novedad de prueba',
+        'fecha_efectiva'  => now()->toDateString(),
+    ]);
+
+    $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}", [
+        'descripcion' => 'Novedad corregida',
+    ])->assertOk();
+
+    expect($movimiento->fresh()->descripcion)->toBe('Novedad corregida');
+});
