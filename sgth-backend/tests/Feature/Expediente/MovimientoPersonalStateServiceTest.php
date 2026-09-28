@@ -544,3 +544,71 @@ test('una corrección no arrastra el motivo de anulación del original', functio
 
     expect($corregido->motivo_anulacion)->toBeNull();
 });
+
+// ── La constancia no es un acto: no tiene documento ─────────────
+
+/*
+| Hay filas que nacen directamente en REGISTRADA sin pasar por la máquina de
+| estados, porque son constancia de un hecho consumado y no un acto que alguien
+| apruebe: la finalización anticipada de una subrogación y su cancelación
+| (SubrogacionService), o la novedad de contrato (ContratoServidorService).
+|
+| Comparten `tipo_movimiento` con la acción de verdad, así que el filtro por tipo
+| no las distinguía, y hasta el 2026-09-28 ofrecían y emitían un documento
+| oficial de Acción de Personal — con los firmantes en blanco, porque nunca se
+| suscribieron. Lo que las separa es el correlativo, que solo estampa
+| aplicarRegistro().
+*/
+test('una constancia en registrada sin correlativo no emite documento', function () {
+    $constancia = crearMovimiento([
+        'tipo_movimiento' => TipoMovimientoPersonal::SUBROGACION->value,
+        'estado'          => EstadoAccionPersonal::REGISTRADA,
+        'descripcion'     => 'Cancelación de Subrogación: dejó de surtir efecto.',
+        // Sin codigo_registro y sin categoria, como las crea SubrogacionService.
+    ]);
+
+    expect($constancia->codigo_registro)->toBeNull();
+
+    expect(fn () => app(\App\Services\Expediente\AccionPersonalPdfService::class)
+        ->generarContent($constancia->id))
+        ->toThrow(ReglaNegocioException::class, 'no hay documento que emitir');
+});
+
+test('la acción de verdad de una subrogación sí emite su documento', function () {
+    // Mismo tipo y mismo estado que la constancia de arriba: lo único que
+    // cambia es el correlativo, que es justo lo que las distingue.
+    $acto = crearMovimiento([
+        'tipo_movimiento'  => TipoMovimientoPersonal::SUBROGACION->value,
+        'estado'           => EstadoAccionPersonal::REGISTRADA,
+        'codigo_registro'  => 'AP-2026-0777',
+        'fecha_registro'   => now(),
+        'categoria'        => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
+    ]);
+
+    $resultado = app(\App\Services\Expediente\AccionPersonalPdfService::class)
+        ->generarContent($acto->id);
+
+    expect($resultado['filename'])->toBe('accion_personal_AP-2026-0777.pdf');
+});
+
+/*
+| `categoria` parecía el discriminante natural y no lo es: ContratoServidorService
+| la deriva del nombramiento con CategoriaEventoVinculo::paraTipoNombramiento(),
+| así que una novedad de contrato de un servidor LOSEP es bitácora y lleva
+| 'accion_de_personal' igualmente. Esta prueba fija el porqué de haber ido por el
+| correlativo, para que nadie cambie el guard a la categoría creyendo que es más
+| expresivo.
+*/
+test('la categoría no distingue el acto de la constancia', function () {
+    expect(CategoriaEventoVinculo::paraTipoNombramiento(\App\Enums\TipoNombramiento::PERMANENTE))
+        ->toBe(CategoriaEventoVinculo::ACCION_DE_PERSONAL);
+
+    $bitacora = crearMovimiento([
+        'tipo_movimiento' => TipoMovimientoPersonal::NOVEDAD_CONTRATO->value,
+        'estado'          => EstadoAccionPersonal::REGISTRADA,
+        'categoria'       => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
+    ]);
+
+    expect($bitacora->categoria)->toBe(CategoriaEventoVinculo::ACCION_DE_PERSONAL)
+        ->and($bitacora->codigo_registro)->toBeNull();
+});

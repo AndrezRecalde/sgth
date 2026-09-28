@@ -51,6 +51,36 @@ class AccionPersonalPdfService
             );
         }
 
+        /*
+        | Sin correlativo no hay documento.
+        |
+        | El estado por sí solo no basta: hay filas que nacen directamente en
+        | REGISTRADA sin pasar por la máquina de estados, porque son constancia
+        | de un hecho consumado y no un acto que alguien apruebe —la
+        | finalización anticipada de una subrogación, su cancelación, la novedad
+        | de contrato—. Con el guard anterior, esas filas ofrecían y generaban
+        | un documento oficial de Acción de Personal, con los firmantes en
+        | blanco porque nunca se suscribieron y `sellarEn()` no corrió.
+        |
+        | El correlativo AP-AAAA-NNNN lo estampa `aplicarRegistro()` y nadie
+        | más, así que su presencia es exactamente «esto pasó por el flujo
+        | guardado». Y no es un discriminante de conveniencia: es el
+        | identificador que el propio documento imprime, de modo que un
+        | movimiento sin él no puede producir un documento identificable.
+        |
+        | `categoria` parecía el candidato natural —null en las constancias— y
+        | no sirve: `ContratoServidorService` la deriva del nombramiento con
+        | `CategoriaEventoVinculo::paraTipoNombramiento()`, así que una novedad
+        | de contrato de un servidor LOSEP es bitácora y lleva
+        | 'accion_de_personal' igualmente.
+        */
+        if (blank($movimiento->codigo_registro)) {
+            throw new ReglaNegocioException(
+                'Este movimiento es una constancia del expediente, no un acto administrativo: '
+                    .'no pasó por la suscripción ni tiene correlativo, así que no hay documento que emitir.'
+            );
+        }
+
         $pdf = Pdf::loadView('pdf.expediente.accion-personal', [
             'movimiento'   => $movimiento,
             'servidor'     => $movimiento->servidor,

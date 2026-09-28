@@ -85,7 +85,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
       onSubmit={siguiente ? avanzar : undefined}
       leftSection={
         <>
-          {puedeDescargarPdf(estado, m.tipo_movimiento) && (
+          {puedeDescargarPdf(m) && (
             <Button
               variant="subtle"
               leftSection={<IconFileDownload size={14} />}

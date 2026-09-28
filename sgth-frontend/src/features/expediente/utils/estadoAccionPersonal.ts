@@ -43,11 +43,34 @@ const SIN_DOCUMENTO: TipoMovimientoPersonal[] = [
   'novedad_contrato', 'cambio_puesto', 'egreso', 'cambio_regimen',
 ]
 
-export function puedeDescargarPdf(
-  estado?: EstadoAccionPersonal | null,
-  tipoMovimiento?: TipoMovimientoPersonal | null,
-): boolean {
-  if (tipoMovimiento && SIN_DOCUMENTO.includes(tipoMovimiento)) return false
+/**
+ * ¿Este movimiento tiene documento que descargar?
+ *
+ * Tres condiciones, y la tercera es la que faltaba: el tipo tiene que producir
+ * documento, el acto tiene que estar registrado o notificado, y tiene que
+ * **llevar correlativo**.
+ *
+ * Sin la tercera, las constancias del expediente ofrecían el botón. Hay filas
+ * que nacen directamente en 'registrada' sin pasar por la máquina de estados
+ * —la finalización anticipada de una subrogación, su cancelación— porque son
+ * constancia de un hecho consumado y no algo que alguien apruebe. Comparten el
+ * `tipo_movimiento` con la acción de verdad, así que el filtro por tipo no las
+ * distingue, y el botón acababa emitiendo un documento oficial con los
+ * firmantes en blanco.
+ *
+ * El correlativo AP-AAAA-NNNN lo estampa el backend al registrar y nadie más, y
+ * es el identificador que el documento imprime: sin él no hay documento que
+ * identificar. Espeja el guard de `AccionPersonalPdfService::generarContent()`.
+ */
+export function puedeDescargarPdf(movimiento: {
+  estado?: EstadoAccionPersonal | null
+  tipo_movimiento?: TipoMovimientoPersonal | null
+  codigo_registro?: string | null
+}): boolean {
+  const { estado, tipo_movimiento: tipo, codigo_registro: correlativo } = movimiento
+
+  if (tipo && SIN_DOCUMENTO.includes(tipo)) return false
+  if (!correlativo) return false
 
   return estado === 'registrada' || estado === 'notificada'
 }
