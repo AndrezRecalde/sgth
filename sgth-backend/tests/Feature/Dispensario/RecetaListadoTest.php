@@ -160,8 +160,21 @@ test('los_contadores_de_la_cabecera_cuentan_todas_las_recetas_no_solo_la_página
     $respuesta = $this->getJson('/api/v1/dispensario/recetas?per_page=5')
         ->assertOk()->json();
 
+    // `resumen` sale de un GROUP BY sin ORDER BY, así que el orden de las
+    // claves lo decide Postgres y cambia entre ejecuciones: comparado con
+    // `toBe()` tal cual, esto fallaba de vez en cuando en la suite completa
+    // —«Failed asserting that two arrays are identical», las mismas dos claves
+    // al revés— y pasaba siempre aislado.
+    //
+    // Se ordena por clave en vez de usar `toEqualCanonicalizing`, que
+    // canonicaliza con `sort()` y de paso descarta las claves: con él,
+    // 'anulada' => 12 y 'pendiente' => 6 también pasaría, y lo que esta prueba
+    // comprueba es justamente a qué estado pertenece cada cifra.
+    $resumen = $respuesta['meta']['resumen'];
+    ksort($resumen);
+
     expect($respuesta['datos']['data'])->toHaveCount(5)
-        ->and($respuesta['meta']['resumen'])->toBe([
+        ->and($resumen)->toBe([
             'anulada'   => 6,
             'pendiente' => 12,
         ]);

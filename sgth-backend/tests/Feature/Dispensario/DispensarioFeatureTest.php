@@ -1600,7 +1600,16 @@ test('el_listado_de_recetas_pagina_y_cuenta_los_estados_completos', function () 
 
     // Pero los contadores de la cabecera cuentan todas, no solo la página:
     // con la lista recortada dirían «5 pendientes» habiendo doce.
-    expect($respuesta['meta']['resumen'])->toBe([
+    //
+    // Se ordena por clave porque `resumen` sale de un GROUP BY sin ORDER BY y el
+    // orden lo decide Postgres. No se usa `toEqualCanonicalizing`: canonicaliza
+    // con `sort()`, que descarta las claves, y entonces 'anulada' => 12 con
+    // 'pendiente' => 6 también pasaría. Ver RecetaListadoTest, que tiene la
+    // misma comprobación.
+    $resumen = $respuesta['meta']['resumen'];
+    ksort($resumen);
+
+    expect($resumen)->toBe([
         'anulada'   => 6,
         'pendiente' => 12,
     ]);
