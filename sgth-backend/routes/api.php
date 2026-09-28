@@ -483,13 +483,29 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('{cuenta}/set-principal', [CuentaBancariaServidorController::class, 'setPrincipal']);
             });
 
+        // Subrogaciones y encargos. Hasta el 2026-09-28 ninguna de las seis
+        // rutas pedía rol y el policy autorizaba la lectura a cualquier usuario
+        // autenticado: un servidor raso listaba las subrogaciones de toda la
+        // institución y el historial de cualquier persona. El rol va aquí
+        // además del policy, y nombra a admin-ti porque este middleware no pasa
+        // por el Gate::before que se lo concede todo.
         Route::prefix('subrogaciones')->group(function () {
-            Route::get('activas', [SubrogacionController::class, 'listarActivas']);
-            Route::get('vigentes', [SubrogacionController::class, 'listarVigentes']);
+            Route::middleware('role:admin-uath|asistente-uath|auditor|maxima-autoridad|admin-ti')
+                ->group(function () {
+                    Route::get('activas', [SubrogacionController::class, 'listarActivas']);
+                    Route::get('vigentes', [SubrogacionController::class, 'listarVigentes']);
+                });
+
+            // Sin rol a propósito: el historial de un servidor también lo abre
+            // el propio interesado, y eso depende de qué servidor se pide.
+            // Lo decide SubrogacionPolicy::verDeServidor().
             Route::get('servidor/{servidorId}', [SubrogacionController::class, 'listarPorServidor']);
-            Route::post('/', [SubrogacionController::class, 'registrar']);
-            Route::put('{id}/finalizar', [SubrogacionController::class, 'finalizar']);
-            Route::put('{id}/cancelar', [SubrogacionController::class, 'cancelar']);
+
+            Route::middleware('role:admin-uath|asistente-uath|admin-ti')->group(function () {
+                Route::post('/', [SubrogacionController::class, 'registrar']);
+                Route::put('{id}/finalizar', [SubrogacionController::class, 'finalizar']);
+                Route::put('{id}/cancelar', [SubrogacionController::class, 'cancelar']);
+            });
         });
     });
 

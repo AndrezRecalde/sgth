@@ -251,6 +251,11 @@ return [
         'puede_marcar' => 'marcación',
         'resolucion_numero' => 'número de resolución',
 
+        // Subrogaciones y encargos
+        'servidor_subrogante_id' => 'servidor subrogante',
+        'servidor_subrogado_id' => 'servidor titular a subrogar',
+        'puesto_subrogado_id' => 'puesto a subrogar',
+
         // Fechas y estados comunes
         'fecha' => 'fecha',
         'fecha_inicio' => 'fecha de inicio',
