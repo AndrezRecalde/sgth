@@ -3,6 +3,7 @@
 namespace App\Services\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\PartidaPorModalidad;
 use App\Enums\TipoMovimientoPersonal;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
@@ -160,9 +161,31 @@ class MovimientoPersonalStateService
         // a la 510105 con la que el orgánico presupuesta la plaza.
         $puesto = $movimiento->puestoDestino ?? $movimiento->puestoOrigen ?? $movimiento->servidor?->puesto;
 
-        $partida = $movimiento->partidaPresupuestaria
-            ?? $movimiento->servidor?->contratoVigente?->partidaPresupuestaria
-            ?? $puesto?->partidaPresupuestaria;
+        // La subrogación y el encargo son la excepción a esa cadena: lo que se
+        // paga no es el sueldo del puesto sino la diferencia, y esa tiene
+        // partida propia —510512 y 510513, confirmadas por la Dirección
+        // Financiera—. Si la acción no la trae, es porque no están registradas
+        // o están inactivas, y entonces el respaldo imputaba el gasto a la
+        // partida del contrato del subrogante: exactamente lo que
+        // SubrogacionService::partidaDeLaDiferencia() decía que este guard
+        // rechazaría. Comprobado que no lo rechazaba: la acción se suscribía con
+        // la partida de otro vínculo.
+        $heredaPartida = $movimiento->tipo_movimiento !== TipoMovimientoPersonal::SUBROGACION;
+
+        $partida = $movimiento->partidaPresupuestaria ?? ($heredaPartida
+            ? ($movimiento->servidor?->contratoVigente?->partidaPresupuestaria
+                ?? $puesto?->partidaPresupuestaria)
+            : null);
+
+        if (!$partida && ! $heredaPartida) {
+            throw new ReglaNegocioException(
+                'La partida de la diferencia no está disponible en el catálogo '
+                    .'('.PartidaPorModalidad::SUBROGACION.' subrogaciones, '
+                    .PartidaPorModalidad::ENCARGO.' encargos). Solicítela a la '
+                    .'Dirección Financiera: la diferencia no puede imputarse a la '
+                    .'partida del puesto ni a la del contrato del servidor.'
+            );
+        }
 
         if (!$partida) {
             throw new ReglaNegocioException(
