@@ -1,0 +1,42 @@
+/* Las tarjetas de categoría del asistente de acciones de personal.
+
+   Estaban escritas como `style={{}}` dentro del `.map()`: borde, radio, padding,
+   opacidad y cursor repetidos en cada tarjeta, que es lo que la regla 09 manda
+   sacar a un módulo —se copia y pega, y la próxima vez que cambie hay que cazar
+   ocho copias—. De paso ganan estado de hover y de foco, que en línea no había:
+   una tarjeta que se pulsa y no responde al pasar por encima no parece pulsable. */
+
+.tarjeta {
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-sm);
+  background-color: var(--sgth-surface);
+  transition: border-color 120ms ease, background-color 120ms ease;
+  width: 100%;
+  text-align: left;
+}
+
+.tarjeta:hover {
+  background-color: var(--sgth-surface-hover);
+  border-color: var(--sgth-border-strong);
+}
+
+/* El anillo de foco lo pinta el navegador con el color del subsistema: sin esto
+   no se veía por dónde iba el tabulador entre ocho tarjetas. */
+.tarjeta:focus-visible {
+  outline: 2px solid var(--sgth-accent);
+  outline-offset: 2px;
+}
+
+/* No elegible por el estado de vínculo del servidor. Sigue siendo enfocable a
+   propósito —lleva `aria-disabled`, no `disabled`—: es la única forma de que
+   quien navega con teclado pueda leer en el tooltip POR QUÉ no aplica. */
+.deshabilitada {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deshabilitada:hover {
+  background-color: var(--sgth-surface);
+  border-color: var(--sgth-border);
+}

@@ -1,13 +1,15 @@
 'use client'
 
-import { Stack, SimpleGrid, UnstyledButton, Text, Tooltip, Box } from '@mantine/core'
+import { Alert, SimpleGrid, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { BuscarServidorSelect } from './BuscarServidorSelect'
 import {
   CATEGORIAS_ACCION_PERSONAL, categoriaHabilitada,
 } from '../utils/categoriasAccionPersonal'
 import type { AccionTipo } from '../utils/taxonomiaAccionPersonal'
 import type { ServidorConRelaciones } from '@/types/api'
-import { StatusBadge } from '@/components/ui'
+import { SectionHeading } from '@/components/ui'
+import classes from './SelectorServidorCategoria.module.css'
 
 interface Props {
   servidor:          ServidorConRelaciones | null
@@ -51,47 +53,59 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
 
       {servidor && (
         <Stack gap="xs">
-          <Text size="sm" fw={500}>
-            Seleccione la categoría de acción de personal
-          </Text>
+          <SectionHeading title="Categoría de la acción de personal" />
 
+          {/* Un aviso es un aviso, no una etiqueta de estado: `StatusBadge`
+              sirve para el estado de un registro o para una categoría, y esto es
+              una frase que explica por qué no se puede continuar. */}
           {pendienteVinculacion == null && (
-            <StatusBadge tone="warning" style={{ alignSelf: 'flex-start' }}>
-              No se pudo determinar el estado de vínculo de este servidor
-            </StatusBadge>
+            <Alert
+              variant="light"
+              color="amber"
+              icon={<IconAlertTriangle size={16} />}
+            >
+              No se pudo determinar si este servidor tiene vínculo vigente, así
+              que ninguna categoría está disponible. Vuelva a abrirlo desde el
+              buscador; si sigue igual, revise su expediente.
+            </Alert>
           )}
 
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
             {CATEGORIAS_ACCION_PERSONAL.map((categoria) => {
               const habilitada = categoriaHabilitada(categoria, pendienteVinculacion)
 
+              /*
+              | Las no elegibles llevan `aria-disabled` y no `disabled`, y siguen
+              | en el orden de tabulación a propósito: el motivo vive en el
+              | tooltip, y un botón deshabilitado no se puede enfocar, así que
+              | quien navega con teclado no tenía forma de leerlo. El `Tooltip`
+              | va directamente sobre el botón —antes envolvía un `Box`, que no
+              | es enfocable— y con `focus: true`, porque el ajuste de Mantine
+              | por defecto solo lo abre al pasar el ratón.
+              */
               const boton = (
                 <UnstyledButton
+                  key={categoria.value}
                   onClick={() => handleClickCategoria(categoria.value, habilitada)}
-                  data-disabled={!habilitada || undefined}
-                  style={{
-                    border: '1px solid var(--mantine-color-default-border)',
-                    borderRadius: 'var(--mantine-radius-md)',
-                    padding: 'var(--mantine-spacing-sm)',
-                    opacity: habilitada ? 1 : 0.5,
-                    cursor: habilitada ? 'pointer' : 'not-allowed',
-                  }}
+                  aria-disabled={!habilitada || undefined}
+                  className={habilitada
+                    ? classes.tarjeta
+                    : `${classes.tarjeta} ${classes.deshabilitada}`}
                 >
                   <Text size="sm" fw={500}>{categoria.label}</Text>
                 </UnstyledButton>
               )
 
-              return habilitada ? (
-                <Box key={categoria.value}>{boton}</Box>
-              ) : (
+              return habilitada ? boton : (
                 <Tooltip
                   key={categoria.value}
                   label={tooltipDeshabilitado(categoria.value, pendienteVinculacion)}
+                  events={{ hover: true, focus: true, touch: true }}
                   multiline
                   w={260}
                   withArrow
                 >
-                  <Box>{boton}</Box>
+                  {boton}
                 </Tooltip>
               )
             })}
