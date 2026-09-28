@@ -1,11 +1,18 @@
 'use client'
 
 import { Box, Grid, Text } from '@mantine/core'
-import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
+import type { PuestoConRelaciones } from '@/types/api'
 import { BloqueDetalle } from './BloqueDetalle'
 
 interface Props {
-  unidad?: UnidadConRelaciones | null
+  /**
+   * De la unidad solo se pinta el nombre, así que se pide eso y no
+   * `UnidadConRelaciones`: exigir el tipo con relaciones obligaba a quien lo
+   * usa a asertar el resultado de `useTodasUnidades()` —que devuelve
+   * `UnidadAdministrativa`, un tipo que ni siquiera es compatible—, y la regla
+   * 09 llama a eso arreglar el tipo, no asertarlo.
+   */
+  unidad?: { nombre?: string | null } | null
   puesto?: PuestoConRelaciones | null
   /** R.M.U. del subrogante, para calcular la diferencia que se le pagará. */
   rmuSubrogante?: number | null
