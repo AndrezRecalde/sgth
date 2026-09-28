@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Expediente;
 
 use App\Contracts\Expediente\SubrogacionServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Expediente\CancelarSubrogacionRequest;
+use App\Http\Requests\Expediente\RegistrarSubrogacionRequest;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,26 +20,11 @@ class SubrogacionController extends Controller
         $this->subrogacionService = $subrogacionService;
     }
 
-    public function registrar(Request $request): JsonResponse
+    public function registrar(RegistrarSubrogacionRequest $request): JsonResponse
     {
-        // La validación en el controlador se delega o se usa FormRequest. Aquí validamos básico.
         $this->authorize('registrar', Subrogacion::class);
 
-        $datos = $request->validate([
-            'tipo'                     => 'required|string|in:subrogacion,encargo',
-            'servidor_subrogante_id'   => 'required|exists:servidores,id',
-            'servidor_subrogado_id'    => 'nullable|exists:servidores,id',
-            'unidad_administrativa_id' => 'required|exists:unidades_administrativas,id',
-            'puesto_subrogado_id'      => 'required|exists:puestos,id',
-            'fecha_inicio'             => 'required|date',
-            'fecha_fin'                => 'required|date|after:fecha_inicio',
-            'motivo'                   => 'required|string',
-            'resolucion_numero'        => 'nullable|string',
-            'documento_respaldo'       => 'nullable|string',
-            'observacion'              => 'nullable|string',
-        ]);
-
-        $subrogacion = $this->subrogacionService->registrar($datos);
+        $subrogacion = $this->subrogacionService->registrar($request->validated());
 
         return ApiResponse::created($subrogacion, 'Subrogación/Encargo registrado exitosamente.');
     }
@@ -51,15 +38,11 @@ class SubrogacionController extends Controller
         return ApiResponse::ok($subrogacion, 'Subrogación/Encargo finalizado correctamente.');
     }
 
-    public function cancelar(Request $request, int $id): JsonResponse
+    public function cancelar(CancelarSubrogacionRequest $request, int $id): JsonResponse
     {
         $this->authorize('cancelar', Subrogacion::class);
 
-        $datos = $request->validate([
-            'motivo' => 'required|string|min:5',
-        ]);
-
-        $subrogacion = $this->subrogacionService->cancelar($id, $datos['motivo']);
+        $subrogacion = $this->subrogacionService->cancelar($id, $request->validated()['motivo']);
 
         return ApiResponse::ok($subrogacion, 'Subrogación/Encargo cancelado exitosamente.');
     }
@@ -86,9 +69,14 @@ class SubrogacionController extends Controller
         return ApiResponse::ok($vigentes, 'Subrogaciones pendientes y activas');
     }
 
+    /**
+     * Historial de un servidor en ambos papeles. Lo abre quien administra o
+     * audita, y el propio interesado: de eso se encarga el policy, porque
+     * depende de qué servidor se pide y el middleware de la ruta no lo sabe.
+     */
     public function listarPorServidor(int $servidorId): JsonResponse
     {
-        $this->authorize('verAny', Subrogacion::class);
+        $this->authorize('verDeServidor', [Subrogacion::class, $servidorId]);
 
         $historial = $this->subrogacionService->listarPorServidor($servidorId);
 
