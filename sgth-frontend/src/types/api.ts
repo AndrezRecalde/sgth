@@ -848,6 +848,8 @@ export type Subrogacion = {
 export type SubrogacionParams = {
   unidad_administrativa_id?: number
   tipo?: TipoSubrogacion
+  page?: number
+  per_page?: number
 }
 
 export type DocumentoServidorConRelaciones = {

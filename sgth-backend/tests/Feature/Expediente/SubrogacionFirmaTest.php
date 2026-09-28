@@ -319,9 +319,9 @@ test('el listado de la pantalla sí muestra las pendientes', function () {
 
     $vigentes = $this->service->listarVigentes();
 
-    expect($vigentes)->toHaveCount(1)
-        ->and($vigentes->first()->id)->toBe($subrogacion->id)
-        ->and($vigentes->first()->estado)->toBe(EstadoSubrogacion::PENDIENTE);
+    expect($vigentes->total())->toBe(1)
+        ->and($vigentes->items()[0]->id)->toBe($subrogacion->id)
+        ->and($vigentes->items()[0]->estado)->toBe(EstadoSubrogacion::PENDIENTE);
 });
 
 test('el listado de la pantalla deja fuera las canceladas', function () {
@@ -331,7 +331,7 @@ test('el listado de la pantalla deja fuera las canceladas', function () {
     $subrogacion = ($this->registrarSubrogacion)($subrogante, $titular);
     $this->service->cancelar($subrogacion->id, 'Se resolvió de otra forma');
 
-    expect($this->service->listarVigentes())->toHaveCount(0);
+    expect($this->service->listarVigentes()->total())->toBe(0);
 });
 
 test('una pendiente se puede cancelar sin haber sido aprobada', function () {

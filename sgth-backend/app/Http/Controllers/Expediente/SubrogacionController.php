@@ -52,10 +52,24 @@ class SubrogacionController extends Controller
         $this->authorize('verAny', Subrogacion::class);
 
         $vigentes = $this->subrogacionService->listarVigentes(
-            $request->only(['unidad_administrativa_id', 'tipo'])
+            $request->only(['unidad_administrativa_id', 'tipo', 'per_page', 'page'])
         );
 
-        return ApiResponse::ok($vigentes, 'Subrogaciones pendientes y activas');
+        // `datos` y `meta` por separado, como el resto de los listados
+        // paginados del expediente: la tabla necesita el total para dibujar su
+        // paginador, y devolver el paginador entero metía sus enlaces dentro de
+        // `datos`.
+        return response()->json([
+            'exito'   => true,
+            'mensaje' => 'Subrogaciones pendientes y activas',
+            'datos'   => $vigentes->items(),
+            'meta'    => [
+                'pagina_actual' => $vigentes->currentPage(),
+                'por_pagina'    => $vigentes->perPage(),
+                'total'         => $vigentes->total(),
+                'ultima_pagina' => $vigentes->lastPage(),
+            ],
+        ]);
     }
 
     /**

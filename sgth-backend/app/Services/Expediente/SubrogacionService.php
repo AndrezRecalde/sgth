@@ -13,6 +13,7 @@ use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Subrogacion;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -468,8 +469,13 @@ class SubrogacionService implements SubrogacionServiceInterface
      * Las vencidas se excluyen por fecha, no solo por estado: caducarVencidas()
      * las cierra a diario, pero si el scheduler está caído la pantalla no puede
      * quedar mostrando como vigente algo que terminó hace meses.
+     *
+     * Pagina del lado del servidor, con 15 por página como el resto de los
+     * listados: devolver la colección entera dejaba crecer la respuesta sin
+     * tope —nada limita cuántas subrogaciones vigentes puede haber— y la
+     * pantalla no tenía paginador que mostrar.
      */
-    public function listarVigentes(array $filtros = []): Collection
+    public function listarVigentes(array $filtros = []): LengthAwarePaginator
     {
         $hoy = now()->toDateString();
 
@@ -497,7 +503,7 @@ class SubrogacionService implements SubrogacionServiceInterface
         return $query->orderByRaw("CASE WHEN estado = 'pendiente' THEN 0 ELSE 1 END")
             ->orderByDesc('fecha_inicio')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(min(max((int) ($filtros['per_page'] ?? 15), 1), 100));
     }
 
     /**

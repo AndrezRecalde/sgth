@@ -244,7 +244,7 @@ test('registrar la acción de personal activa su subrogación, como antes', func
 test('el listado dice quién registró cada subrogación, sin perder el id', function () {
     ($this->registrar)();
 
-    $fila = $this->service->listarVigentes()->first()->toArray();
+    $fila = $this->service->listarVigentes()->items()[0]->toArray();
 
     expect($fila['registrado_por'])->toBe($this->user->id)
         ->and($fila['registrado_por_usuario']['id'])->toBe($this->user->id)
