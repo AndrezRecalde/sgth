@@ -46,7 +46,7 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
         label="Buscar servidor"
         value={servidor?.id ?? null}
         onChange={(id) => { if (!id) onServidorChange(null) }}
-        onSelect={(srv) => onServidorChange(srv as ServidorConRelaciones)}
+        onSelect={onServidorChange}
       />
 
       {servidor && (

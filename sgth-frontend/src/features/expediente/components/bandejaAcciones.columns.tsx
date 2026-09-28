@@ -41,8 +41,7 @@ export const getBandejaAccionesColumns = ({
         </Text>
         {m.subtipo_movimiento && (
           <Text size="xs" c="dimmed">
-            {SUBTIPO_LABELS[m.subtipo_movimiento as keyof typeof SUBTIPO_LABELS]
-              ?? m.subtipo_movimiento}
+            {SUBTIPO_LABELS[m.subtipo_movimiento]}
           </Text>
         )}
       </div>

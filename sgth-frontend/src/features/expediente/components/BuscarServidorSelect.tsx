@@ -9,27 +9,27 @@ import {
 import { useDebouncedValue } from '@mantine/hooks'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
+import type { ApiResponse, PaginatedResponse, ServidorConRelaciones } from '@/types/api'
 
 // Cada tecla pedía una lista: escribir un apellido disparaba una petición por
 // letra y solo importaba la última. Contra el servidor de desarrollo, que
 // atiende de una en una, se encolan y el desplegable se queda en «Buscando...».
 const RETARDO_BUSQUEDA_MS = 300
 
-interface Servidor {
-  id:              number
-  nombre:          string
-  apellido:        string
-  segundo_nombre?: string | null
-  segundo_apellido?: string | null
-  cedula?:         string
-  pendiente_vinculacion?: boolean | null
-}
-
+/*
+| El tipo es el del API, no una copia local.
+|
+| Había una interfaz `Servidor` propia con siete campos, y como no declaraba
+| `contrato_vigente` —que el listado sí carga: ExpedienteService::listarServidores
+| lo trae en su `with()`— quien la consumía tenía que asertar. De ahí venía el
+| `srv as ServidorConRelaciones` del selector de categorías, justo el gesto que
+| la regla 09 señala: una relación que el endpoint devuelve y el tipo no declara.
+*/
 interface Props {
   label:     string
   value?:    number | null
   onChange:  (id: number | null) => void
-  onSelect?: (servidor: Servidor) => void
+  onSelect?: (servidor: ServidorConRelaciones) => void
   required?: boolean
   error?:    string
 }
@@ -44,7 +44,7 @@ export function BuscarServidorSelect({
   // muestra el servidor seleccionado. Una cadena vacía sí es escritura suya.
   const [search, setSearch]       = useState<string | null>(null)
 
-  const getNombreCompleto = (s: Servidor) =>
+  const getNombreCompleto = (s: ServidorConRelaciones) =>
     [s.nombre, s.segundo_nombre, s.apellido, s.segundo_apellido]
       .filter(Boolean).join(' ')
 
@@ -54,10 +54,10 @@ export function BuscarServidorSelect({
   // contra la API para poder mostrarlo.
   const { data: servidorSel } = useQuery({
     queryKey: ['expediente', 'servidor', value],
-    queryFn: async () => {
-      const res = await api.get(`/expediente/servidores/${value}`)
-      return res.data?.datos as Servidor
-    },
+    queryFn: () =>
+      api
+        .get<ApiResponse<ServidorConRelaciones>>(`/expediente/servidores/${value}`)
+        .then((r) => r.data.datos),
     enabled: !!value,
     staleTime: Infinity,
   })
@@ -73,16 +73,16 @@ export function BuscarServidorSelect({
   const { data: servidores = [], isFetching } = useQuery({
     queryKey: ['expediente', 'servidores', 'buscar', termino],
     queryFn: async () => {
-      const res = await api.get('/expediente/servidores', {
-        params: { search: termino, per_page: 10 },
-      })
-      const datos = res.data?.datos
-      const items: Servidor[] = Array.isArray(datos)
-        ? datos
-        : Array.isArray(datos?.data)
-          ? datos.data
-          : []
-      return items
+      // El listado devuelve `datos` como arreglo y la paginación en `meta`,
+      // pero otros endpoints del expediente anidan `datos.data`: se aceptan
+      // las dos formas porque este selector se usa en ambos sitios.
+      const { data } = await api.get<
+        ApiResponse<ServidorConRelaciones[] | PaginatedResponse<ServidorConRelaciones>>
+      >('/expediente/servidores', { params: { search: termino, per_page: 10 } })
+
+      const datos = data.datos
+
+      return Array.isArray(datos) ? datos : datos?.data ?? []
     },
     enabled: termino.length >= 2,
   })
@@ -92,7 +92,7 @@ export function BuscarServidorSelect({
   // en mitad de una palabra.
   const buscando = isFetching || (escrito.length >= 2 && termino !== escrito)
 
-  const handleSelect = (srv: Servidor) => {
+  const handleSelect = (srv: ServidorConRelaciones) => {
     // Sembrar la caché con el servidor recién elegido evita que el campo
     // parpadee vacío mientras la consulta por id va y vuelve.
     queryClient.setQueryData(['expediente', 'servidor', srv.id], srv)

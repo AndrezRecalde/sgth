@@ -31,8 +31,7 @@ export const getMovimientoColumns = ({
         </Text>
         {subtipo_movimiento && (
           <Text size="xs" c="dimmed">
-            {SUBTIPO_LABELS[subtipo_movimiento as keyof typeof SUBTIPO_LABELS]
-              ?? subtipo_movimiento}
+            {SUBTIPO_LABELS[subtipo_movimiento]}
           </Text>
         )}
       </div>

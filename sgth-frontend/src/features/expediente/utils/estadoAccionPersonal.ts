@@ -1,4 +1,4 @@
-import type { EstadoAccionPersonal } from '@/types/api'
+import type { EstadoAccionPersonal, TipoMovimientoPersonal } from '@/types/api'
 import type { SemanticTone } from '@/config/design.tokens'
 
 export const ESTADO_LABELS: Record<EstadoAccionPersonal, string> = {
@@ -39,13 +39,13 @@ export const TRANSICIONES: Record<EstadoAccionPersonal, EstadoAccionPersonal[]> 
  * Reglamento a la LOSEP) y se imprime con el mismo formato de situación actual
  * y propuesta que las demás. Espeja TipoMovimientoPersonal::tieneDocumentoImprimible().
  */
-const SIN_DOCUMENTO = [
+const SIN_DOCUMENTO: TipoMovimientoPersonal[] = [
   'novedad_contrato', 'cambio_puesto', 'egreso', 'cambio_regimen',
 ]
 
 export function puedeDescargarPdf(
-  estado?: string | null,
-  tipoMovimiento?: string | null,
+  estado?: EstadoAccionPersonal | null,
+  tipoMovimiento?: TipoMovimientoPersonal | null,
 ): boolean {
   if (tipoMovimiento && SIN_DOCUMENTO.includes(tipoMovimiento)) return false
 
@@ -57,8 +57,8 @@ export function puedeDescargarPdf(
  * completan los datos del vínculo (número, remuneración, resolución).
  */
 export function requiereCompletarVinculo(
-  estado?: string | null,
-  tipoMovimiento?: string | null,
+  estado?: EstadoAccionPersonal | null,
+  tipoMovimiento?: TipoMovimientoPersonal | null,
 ): boolean {
   return estado === 'suscrita' && tipoMovimiento === 'ingreso'
 }
