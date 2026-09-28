@@ -102,12 +102,34 @@ class MovimientoPersonalService
             );
         }
 
-        // Si cambia el nombramiento propuesto y TH no fijó la marcación a mano,
-        // el sugerido se recalcula para no arrastrar el del nombramiento viejo.
+        // La marcación se vuelve a resolver siempre que la edición toque el
+        // nombramiento o la casilla, y se evalúa sobre el resultado de la
+        // edición —no sobre lo que vino—, porque es parcial y puede traer uno
+        // sin el otro.
+        //
+        // Antes solo se recalculaba cuando 'puede_marcar' NO venía en la
+        // petición, y el formulario lo manda siempre: la rama no corría nunca y
+        // la restricción dura de admiteMarcacion() —servicios profesionales,
+        // libre nombramiento y elección popular no marcan jamás— quedaba solo
+        // en el camino de creación. Editando un borrador se colaba
+        // `puede_marcar = true` en un contrato civil: el contrato se salvaba
+        // porque ContratoServidorService vuelve a forzarlo, pero el movimiento
+        // guardaba true y el documento impreso decía «Marca asistencia: Sí»
+        // contra un vínculo que marcaba No. La promesa del enum es que esto no
+        // depende de que la pantalla se comporte bien.
         if (array_key_exists('tipo_nombramiento_propuesto', $datos)
-            && !array_key_exists('puede_marcar', $datos)
+            || array_key_exists('puede_marcar', $datos)
         ) {
-            $datos['puede_marcar'] = $this->resolverPuedeMarcar($datos);
+            $datos['puede_marcar'] = $this->resolverPuedeMarcar([
+                'tipo_nombramiento_propuesto' => $datos['tipo_nombramiento_propuesto']
+                    ?? $movimiento->tipo_nombramiento_propuesto,
+                // Solo se pasa si vino: su ausencia es lo que pide el default
+                // del nombramiento, y un null explícito significa «esta acción
+                // no opina», que resolverPuedeMarcar() ya distingue.
+                ...(array_key_exists('puede_marcar', $datos)
+                    ? ['puede_marcar' => $datos['puede_marcar']]
+                    : []),
+            ]);
         }
 
         $this->revalidarPeriodoDeComision($movimiento, $datos);

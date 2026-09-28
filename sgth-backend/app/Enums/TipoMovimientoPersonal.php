@@ -186,19 +186,37 @@ enum TipoMovimientoPersonal: string
     /**
      * Tipos que producen el documento impreso de Acción de Personal.
      *
-     * Coincide con esAccionDePersonal() salvo por la subrogación, que queda
-     * fuera de aquella lista por un motivo de construcción —se crea con su
-     * propio servicio y no con el genérico, así que no necesita sus reglas de
-     * elegibilidad— y no porque no sea un acto formal. Lo es: el Art. 21 del
-     * Reglamento a la LOSEP la trata como tal, pasa por el flujo guardado,
-     * exige dictamen presupuestario y sella firmantes.
+     * Coincide con esAccionDePersonal() salvo por dos que quedan fuera de
+     * aquella lista por un motivo de construcción —no porque no sean actos
+     * formales—, y que por lo tanto hay que sumar a mano:
+     *
+     *  - **Subrogación**: se crea con su propio servicio y no con el genérico,
+     *    así que no necesita sus reglas de elegibilidad. Acto formal lo es: el
+     *    Art. 21 del Reglamento a la LOSEP la trata como tal, pasa por el flujo
+     *    guardado, exige dictamen presupuestario y sella firmantes.
+     *  - **Ingreso y Vinculación**: está fuera de esAccionDePersonal() porque
+     *    ahí vive la validación de elegibilidad por nombramiento vigente, y
+     *    quien ingresa todavía no tiene ninguno —incluirlo hacía fallar todo
+     *    ingreso con "el servidor no tiene un contrato vigente". Pero nace en
+     *    borrador, se suscribe, sella firmantes y recibe su correlativo
+     *    AP-AAAA-NNNN como cualquier otra.
+     *
+     * Hasta el 2026-09-27 el ingreso no estaba aquí, y era el único acto del
+     * módulo sin documento: la pantalla ofrecía el botón «PDF» —su estado y su
+     * tipo pasan el filtro de puedeDescargarPdf()— y la descarga respondía 422
+     * «"Ingreso" es un registro interno del expediente». La plantilla sí lo
+     * contemplaba desde el principio: accion-personal.blade.php imprime «Sin
+     * vínculo laboral previo — este es el primer ingreso del servidor».
      *
      * Los movimientos históricos genéricos —novedad de contrato, cambio de
      * puesto— siguen sin documento: son bitácora del expediente, no actos.
      */
     public function tieneDocumentoImprimible(): bool
     {
-        return $this->esAccionDePersonal() || $this === self::SUBROGACION;
+        return $this->esAccionDePersonal() || in_array($this, [
+            self::SUBROGACION,
+            self::INGRESO,
+        ], true);
     }
 
     /**

@@ -87,3 +87,105 @@ test('un servidor no puede listar los servidores de la institución', function (
         ->getJson('/api/v1/expediente/servidores')
         ->assertStatus(403);
 });
+
+/*
+| Las rutas de Acciones de Personal conceden 'asistente-uath' —registrar,
+| transicionar, corregir y la bandeja—, pero los controladores autorizan contra
+| ServidorPolicy, que hasta el 2026-09-27 solo aceptaba admin-uath, super-admin
+| o el titular. El asistente veía la bandeja (200, sin policy) y recibía 403 en
+| todo lo demás: la ruta y el policy se contradecían, y como el cajón de detalle
+| tampoco pintaba el error, lo que veía era un esqueleto que no terminaba nunca.
+*/
+test('asistente-uath puede trabajar las acciones de personal que sus rutas le conceden', function () {
+    Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
+    $asistente = User::factory()->create();
+    $asistente->assignRole('asistente-uath');
+    $this->actingAs($asistente, 'sanctum');
+
+    $movimiento = \App\Models\Expediente\MovimientoPersonal::create([
+        'servidor_id'     => $this->servidorAjeno->id,
+        'tipo_movimiento' => \App\Enums\TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,
+        'estado'          => \App\Enums\EstadoAccionPersonal::REGISTRADA,
+        'codigo_registro' => 'AP-2026-0500',
+        'fecha_registro'  => now(),
+        'descripcion'     => 'Licencia registrada',
+        'fecha_efectiva'  => '2026-08-01',
+    ]);
+
+    $this->getJson('/api/v1/expediente/movimientos')->assertOk();
+    $this->getJson("/api/v1/expediente/movimientos/{$movimiento->id}")->assertOk();
+    $this->getJson("/api/v1/expediente/movimientos/{$movimiento->id}/accion-personal-pdf")->assertOk();
+    $this->getJson("/api/v1/expediente/servidores/{$this->servidorAjeno->id}/movimientos")->assertOk();
+
+    $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}/transicionar", [
+        'estado' => 'notificada',
+    ])->assertOk();
+
+    $this->postJson("/api/v1/expediente/servidores/{$this->servidorAjeno->id}/movimientos", [
+        'tipo_movimiento' => \App\Enums\TipoMovimientoPersonal::NOVEDAD_CONTRATO->value,
+        'descripcion'     => 'Registro de bitácora',
+        'fecha_efectiva'  => '2026-09-01',
+    ])->assertCreated();
+});
+
+/*
+| El límite del cambio de arriba. 'asistente-uath' NO entra en crear(), y de ahí
+| sale la restricción de campos: UpdateServidorRequest da la ficha entera solo a
+| quien pasa `can('crear', Servidor::class)` y marca el resto como `prohibited`.
+*/
+test('asistente-uath edita el contacto de una ficha, no la cédula ni el régimen', function () {
+    Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
+    $asistente = User::factory()->create();
+    $asistente->assignRole('asistente-uath');
+    $this->actingAs($asistente, 'sanctum');
+
+    $this->putJson("/api/v1/expediente/servidores/{$this->servidorAjeno->id}", [
+        'telefono_celular' => '0988888888',
+    ])->assertOk();
+
+    $this->putJson("/api/v1/expediente/servidores/{$this->servidorAjeno->id}", [
+        'cedula' => '3333333333',
+    ])->assertStatus(422);
+
+    expect($this->servidorAjeno->fresh())
+        ->telefono_celular->toBe('0988888888')
+        ->cedula->toBe('2222222222');
+});
+
+test('un asistente-uath no puede crear fichas', function () {
+    Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
+    $asistente = User::factory()->create();
+    $asistente->assignRole('asistente-uath');
+
+    expect($asistente->can('crear', Servidor::class))->toBeFalse();
+});
+
+/*
+| El límite de la ampliación, por el lado de los documentos.
+|
+| Subir y borrar papeles del expediente no tenía middleware de rol y se
+| autorizaba solo con ServidorPolicy::actualizar, que también deja pasar al
+| propio titular. Al abrir ese policy a 'asistente-uath' para que pudiera
+| trabajar las acciones de personal, eso se habría extendido al expediente de
+| cualquiera, así que la escritura se ancla en la ruta: quien archiva un
+| documento es Talento Humano. Leer y descargar siguen por policy.
+*/
+test('solo admin-uath sube y borra documentos del expediente', function () {
+    Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
+    $asistente = User::factory()->create();
+    $asistente->assignRole('asistente-uath');
+
+    $base = "/api/v1/expediente/servidores/{$this->servidorAjeno->id}/documentos";
+
+    // El asistente lee el expediente —eso sí se le abrió— pero no lo escribe.
+    $this->actingAs($asistente, 'sanctum');
+    $this->getJson($base)->assertOk();
+    $this->postJson($base, [])->assertForbidden();
+    $this->deleteJson("{$base}/1")->assertForbidden();
+
+    // Y el titular tampoco mete papeles en su propia ficha.
+    $this->actingAs($this->usuario, 'sanctum');
+    $propio = "/api/v1/expediente/servidores/{$this->servidorPropio->id}/documentos";
+    $this->postJson($propio, [])->assertForbidden();
+    $this->deleteJson("{$propio}/1")->assertForbidden();
+});

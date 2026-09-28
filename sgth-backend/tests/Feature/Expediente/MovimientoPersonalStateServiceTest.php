@@ -4,6 +4,7 @@ namespace Tests\Feature\Expediente;
 
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\TipoMovimientoPersonal;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
@@ -441,4 +442,42 @@ test('el endpoint HTTP de descarga del PDF responde 422 (no 500) para un movimie
     $response = $this->getJson("/api/v1/expediente/movimientos/{$movimiento->id}/accion-personal-pdf");
 
     $response->assertStatus(422);
+});
+
+/*
+| El Ingreso y Vinculación es el acto central del módulo y hasta el 2026-09-27
+| era el único sin documento: tieneDocumentoImprimible() lo dejaba fuera porque
+| está fuera de esAccionDePersonal() —ahí vive la elegibilidad por nombramiento
+| vigente, que un ingreso no tiene—. La pantalla ofrecía el botón «PDF» y la
+| descarga respondía 422 «"Ingreso" es un registro interno del expediente»,
+| aunque la plantilla contempla el caso desde el principio.
+*/
+test('un Ingreso y Vinculación registrado genera su documento de Acción de Personal', function () {
+    $movimiento = crearMovimiento([
+        'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
+        'tipo_nombramiento_propuesto' => 'nombramiento_permanente',
+        'estado'                      => EstadoAccionPersonal::REGISTRADA,
+        'codigo_registro'             => 'AP-2026-0042',
+        'fecha_registro'              => now(),
+    ]);
+
+    $resultado = app(\App\Services\Expediente\AccionPersonalPdfService::class)
+        ->generarContent($movimiento->id);
+
+    expect($resultado)->toHaveKeys(['content', 'filename'])
+        ->and($resultado['filename'])->toBe('accion_personal_AP-2026-0042.pdf');
+});
+
+test('el endpoint HTTP entrega el PDF de un ingreso registrado', function () {
+    $movimiento = crearMovimiento([
+        'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
+        'tipo_nombramiento_propuesto' => 'nombramiento_permanente',
+        'estado'                      => EstadoAccionPersonal::REGISTRADA,
+        'codigo_registro'             => 'AP-2026-0043',
+        'fecha_registro'              => now(),
+    ]);
+
+    $this->getJson("/api/v1/expediente/movimientos/{$movimiento->id}/accion-personal-pdf")
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf');
 });

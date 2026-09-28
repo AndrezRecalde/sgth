@@ -479,3 +479,65 @@ test('el subtipo no se puede modificar una vez registrada la acción', function 
         'subtipo_movimiento' => SubtipoMovimientoPersonal::JUBILACION->value,
     ]))->toThrow(ReglaNegocioException::class, "No se puede modificar 'subtipo_movimiento'");
 });
+
+// ── Qué produce documento imprimible ────────────────────────────
+
+/*
+| Mapa completo, para que la deriva se vea. El frontend lo espeja en
+| `utils/estadoAccionPersonal.ts` (SIN_DOCUMENTO) y decide con él si ofrecer el
+| botón «PDF»: las dos listas tienen que decir lo mismo, o la pantalla ofrece
+| una descarga que responde 422.
+*/
+test('tieneDocumentoImprimible() cubre todo acto formal y ningún registro interno', function () {
+    $conDocumento = [
+        // Los ocho de esAccionDePersonal()…
+        TipoMovimientoPersonal::CAMBIO_DENOMINACION,
+        TipoMovimientoPersonal::PRESTACION_SERVICIOS,
+        TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO,
+        TipoMovimientoPersonal::COMISION_SIN_REMUNERACION,
+        TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION,
+        TipoMovimientoPersonal::INCREMENTO_REMUNERACION,
+        TipoMovimientoPersonal::CESACION_FUNCIONES,
+        TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO,
+        // …más los tipos planos legados que tienen subtipo equivalente…
+        TipoMovimientoPersonal::TRASLADO,
+        TipoMovimientoPersonal::TRASPASO,
+        TipoMovimientoPersonal::COMISION_SERVICIOS,
+        TipoMovimientoPersonal::DESTITUCION,
+        // …y los dos que se suman a mano en tieneDocumentoImprimible().
+        TipoMovimientoPersonal::SUBROGACION,
+        TipoMovimientoPersonal::INGRESO,
+    ];
+
+    // Bitácora del expediente: registran un hecho, no son actos administrativos
+    // con firmantes. Imprimirlos produciría un documento de apariencia oficial
+    // que nunca existió.
+    $sinDocumento = [
+        TipoMovimientoPersonal::NOVEDAD_CONTRATO,
+        TipoMovimientoPersonal::CAMBIO_PUESTO,
+        TipoMovimientoPersonal::CAMBIO_REGIMEN,
+        TipoMovimientoPersonal::EGRESO,
+    ];
+
+    // Sin tipos huérfanos: si mañana nace uno, esta prueba lo señala en vez de
+    // dejarlo caer en cualquiera de los dos lados por descuido.
+    expect(count($conDocumento) + count($sinDocumento))
+        ->toBe(count(TipoMovimientoPersonal::cases()));
+
+    foreach ($conDocumento as $tipo) {
+        expect($tipo->tieneDocumentoImprimible())->toBeTrue("Tipo '{$tipo->value}'");
+    }
+
+    foreach ($sinDocumento as $tipo) {
+        expect($tipo->tieneDocumentoImprimible())->toBeFalse("Tipo '{$tipo->value}'");
+    }
+});
+
+test('el ingreso sigue fuera de esAccionDePersonal(), donde vive la elegibilidad', function () {
+    // Si entrara ahí, validarElegibilidad() exigiría un nombramiento vigente y
+    // todo ingreso fallaría con «el servidor no tiene un contrato vigente»: es
+    // justo lo que no tiene quien ingresa. De ahí que el documento se sume
+    // aparte, como la subrogación.
+    expect(TipoMovimientoPersonal::INGRESO->esAccionDePersonal())->toBeFalse()
+        ->and(TipoMovimientoPersonal::INGRESO->tieneDocumentoImprimible())->toBeTrue();
+});
