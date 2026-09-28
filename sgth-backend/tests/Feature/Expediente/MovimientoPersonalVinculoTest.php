@@ -258,6 +258,183 @@ test('un traspaso reubica al servidor conservando el mismo contrato', function (
     expect($movimientosDelServidor->first()->tipo_movimiento->value)->toBe('traspaso');
 });
 
+// ── End-to-end: prestación de servicios (reubica sin subtipo) ────
+
+/*
+| La prestación de servicios es la misma figura que el traspaso repartida por
+| tipo de nombramiento: TH (2026-09-28) la describió como «prácticamente como un
+| traspaso pero se hace para servidores con nombramientos Provisionales,
+| Ocasionales, Servicios Profesionales, igualmente con su situación actual y
+| situación propuesta», y el traspaso solo aplica a permanentes.
+|
+| Hasta ese día no reubicaba a nadie: reubicar se decidía solo con el subtipo, y
+| este tipo no tiene. Se guardaba la acción, se registraba, y el contrato seguía
+| apuntando al puesto de siempre.
+*/
+test('una prestación de servicios sin puesto_destino_id no puede registrarse', function () {
+    $servidor = Servidor::create([
+        'user_id' => User::factory()->create()->id,
+        'cedula' => '1212121212', 'nombre' => 'Provisional', 'apellido' => 'SinPuesto',
+        'regimen_laboral' => 'losep',
+        'puesto_id' => $this->puestoA->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+    ]);
+
+    ContratoServidor::create([
+        'servidor_id' => $servidor->id,
+        'tipo_nombramiento' => 'nombramiento_provisional',
+        'numero_contrato' => 'CT-2022-0001',
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id' => $this->puestoA->id,
+        'fecha_inicio' => '2022-01-01',
+        'estado' => 'vigente',
+    ]);
+    $servidor->refresh();
+
+    $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
+        ->registrar($servidor->id, [
+            'tipo_movimiento' => TipoMovimientoPersonal::PRESTACION_SERVICIOS->value,
+            'descripcion'     => 'Prestación de servicios sin puesto propuesto',
+            'fecha_efectiva'  => '2026-08-01',
+        ]);
+
+    $movimiento = $this->stateService->transicionar($movimiento, EstadoAccionPersonal::SUSCRITA);
+
+    // El mensaje nombra el tipo porque no hay subtipo del que sacar la
+    // etiqueta: decía el nombre de otra cosa cuando caía al subtipo.
+    expect(fn () => $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA))
+        ->toThrow(
+            ReglaNegocioException::class,
+            "No se puede registrar 'Prestación de Servicios' sin especificar el puesto propuesto."
+        );
+});
+
+test('una prestación de servicios reubica al servidor conservando el mismo contrato', function () {
+    $servidor = Servidor::create([
+        'user_id' => User::factory()->create()->id,
+        'cedula' => '1313131313', 'nombre' => 'Provisional', 'apellido' => 'Reubicado',
+        'regimen_laboral' => 'losep',
+        'puesto_id' => $this->puestoA->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+    ]);
+
+    $contratoOriginal = ContratoServidor::create([
+        'servidor_id' => $servidor->id,
+        'tipo_nombramiento' => 'nombramiento_provisional',
+        'numero_contrato' => 'CT-2022-0002',
+        'resolucion_numero' => 'RES-2022-0031',
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id' => $this->puestoA->id,
+        'fecha_inicio' => '2022-01-01',
+        'remuneracion' => 986.00,
+        'estado' => 'vigente',
+    ]);
+    $servidor->refresh();
+
+    $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
+        ->registrar($servidor->id, [
+            'tipo_movimiento'   => TipoMovimientoPersonal::PRESTACION_SERVICIOS->value,
+            'descripcion'       => 'Prestación de servicios en el puesto B',
+            'fecha_efectiva'    => '2026-08-01',
+            'puesto_destino_id' => $this->puestoB->id,
+            'unidad_destino_id' => $this->unidad->id,
+        ]);
+
+    // La situación actual se congela al crear la acción, igual que en el
+    // traspaso: es la columna izquierda del documento impreso.
+    expect($movimiento->puesto_origen_id)->toBe($this->puestoA->id)
+        ->and($movimiento->unidad_origen_id)->toBe($this->unidad->id);
+
+    $movimiento = $this->stateService->transicionar($movimiento, EstadoAccionPersonal::SUSCRITA);
+    $registrado = $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA);
+
+    expect($registrado->estado)->toBe(EstadoAccionPersonal::REGISTRADA);
+
+    // Un solo contrato, el mismo, con su número, su resolución y su fecha de
+    // inicio: no se firma ningún instrumento nuevo, así que no nace otro.
+    expect(ContratoServidor::where('servidor_id', $servidor->id)->count())->toBe(1);
+
+    $contratoOriginal->refresh();
+    expect($contratoOriginal->estado->value)->toBe('vigente')
+        ->and($contratoOriginal->numero_contrato)->toBe('CT-2022-0002')
+        ->and($contratoOriginal->resolucion_numero)->toBe('RES-2022-0031')
+        ->and($contratoOriginal->fecha_inicio->toDateString())->toBe('2022-01-01')
+        ->and($contratoOriginal->puesto_id)->toBe($this->puestoB->id)
+        ->and($contratoOriginal->tipo_nombramiento->value)->toBe('nombramiento_provisional')
+        // Mismo grupo ocupacional, misma remuneración — supuesto tomado del
+        // traspaso y documentado en reestructurarDesdeMovimiento().
+        ->and((float) $contratoOriginal->remuneracion)->toBe(986.00);
+
+    $servidor->refresh();
+    expect($servidor->puesto_id)
+        ->toBe($servidor->contratoVigente->puesto_id)
+        ->toBe($this->puestoB->id);
+});
+
+test('una prestación de servicios de Servicios Profesionales no compite por la plaza', function () {
+    $puestoUnico = Puesto::create([
+        'codigo' => 'P-UNICO', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 1,
+    ]);
+
+    // La única plaza ya está tomada por un permanente.
+    $titular = Servidor::create([
+        'user_id' => User::factory()->create()->id,
+        'cedula' => '1414141414', 'nombre' => 'Titular', 'apellido' => 'DeLaPlaza',
+        'regimen_laboral' => 'losep',
+        'puesto_id' => $puestoUnico->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+    ]);
+
+    ContratoServidor::create([
+        'servidor_id' => $titular->id,
+        'tipo_nombramiento' => 'nombramiento_permanente',
+        'numero_contrato' => 'CT-2019-0050',
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id' => $puestoUnico->id,
+        'fecha_inicio' => '2019-01-01',
+        'estado' => 'vigente',
+    ]);
+
+    $profesional = Servidor::create([
+        'user_id' => User::factory()->create()->id,
+        'cedula' => '1515151515', 'nombre' => 'Servicios', 'apellido' => 'Profesionales',
+        'regimen_laboral' => 'servicios_profesionales',
+        'puesto_id' => $this->puestoA->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+    ]);
+
+    $contrato = ContratoServidor::create([
+        'servidor_id' => $profesional->id,
+        'tipo_nombramiento' => 'servicios_profesionales',
+        'numero_contrato' => 'CT-2025-0300',
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id' => $this->puestoA->id,
+        'fecha_inicio' => '2025-01-01',
+        'fecha_fin' => '2026-12-31',
+        'estado' => 'vigente',
+    ]);
+    $profesional->refresh();
+
+    $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
+        ->registrar($profesional->id, [
+            'tipo_movimiento'   => TipoMovimientoPersonal::PRESTACION_SERVICIOS->value,
+            'descripcion'       => 'Prestación de servicios al puesto único',
+            'fecha_efectiva'    => '2026-08-01',
+            'puesto_destino_id' => $puestoUnico->id,
+            'unidad_destino_id' => $this->unidad->id,
+        ]);
+
+    $movimiento = $this->stateService->transicionar($movimiento, EstadoAccionPersonal::SUSCRITA);
+    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA);
+
+    // Servicios Profesionales no ocupa plaza (TipoNombramiento::ocupaPlaza()),
+    // así que la plaza única del permanente no le estorba: es justamente el
+    // caso que la prestación de servicios tiene que poder resolver.
+    $contrato->refresh();
+    expect($contrato->puesto_id)->toBe($puestoUnico->id)
+        ->and($contrato->estado->value)->toBe('vigente');
+});
+
 // ── PUT /expediente/servidores/{id} rechaza puesto/unidad/tipo_nombramiento ──
 
 test('PUT servidores/{id} con puesto_id en el body responde 422', function () {

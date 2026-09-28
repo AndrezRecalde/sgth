@@ -333,6 +333,24 @@ class MovimientoPersonal extends Model
     }
 
     /**
+     * ¿Esta acción mueve al servidor a otro puesto dentro del mismo vínculo?
+     *
+     * La pregunta se responde por dos vías porque el modelo tiene dos niveles:
+     * el traspaso lo decide su subtipo, y la prestación de servicios su tipo,
+     * porque no tiene subtipo. Antes solo se miraba el subtipo, así que la
+     * prestación de servicios se registraba sin reubicar a nadie.
+     *
+     * Es el único sitio donde se decide: lo consultan tanto la exigencia de
+     * puesto de destino como la reubicación en sí, y el frontend lo espeja en
+     * `reubicaAlServidor()` para enseñar la columna de situación propuesta.
+     */
+    public function reubicaAlServidor(): bool
+    {
+        return $this->tipo_movimiento?->reubicaAlServidor()
+            || (bool) $this->subtipoEfectivo()?->modificaPuesto();
+    }
+
+    /**
      * Acciones que apartan temporalmente al servidor sin tocar su vínculo: las
      * comisiones de servicios y la licencia sin remuneración. El contrato sigue
      * vigente y la plaza ocupada, pero la persona no está — es lo que alimenta

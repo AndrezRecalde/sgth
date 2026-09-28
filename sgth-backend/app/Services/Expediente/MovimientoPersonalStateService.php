@@ -255,12 +255,13 @@ class MovimientoPersonalStateService
                     : ['puede_marcar' => $movimiento->puede_marcar]),
                 'estado'                   => 'vigente',
             ], $movimiento);
-        } elseif ($movimiento->subtipoEfectivo()?->modificaPuesto()) {
-            // El traspaso reubica dentro del mismo vínculo. Los otros tres
-            // subtipos del tipo paraguas no entran aquí: las comisiones son
-            // ausencias temporales y el servidor conserva su puesto, y el
-            // traslado es entre instituciones —ver modificaPuesto()—, así que
-            // no hay puesto de destino dentro del GAD al que moverlo.
+        } elseif ($movimiento->reubicaAlServidor()) {
+            // El traspaso y la prestación de servicios reubican dentro del
+            // mismo vínculo. Los otros tres subtipos del tipo paraguas no entran
+            // aquí: las comisiones son ausencias temporales y el servidor
+            // conserva su puesto, y el traslado es entre instituciones —ver
+            // modificaPuesto()—, así que no hay puesto de destino dentro del GAD
+            // al que moverlo.
             $this->contratoServidorService->reestructurarDesdeMovimiento($movimiento);
         } elseif ($movimiento->subtipoEfectivo()?->cierraVinculo()) {
             $this->cerrarVinculo($movimiento);
@@ -416,14 +417,19 @@ class MovimientoPersonalStateService
             $this->validarPlazoDelReemplazo($movimiento);
         }
 
-        // Solo los subtipos que reubican necesitan puesto destino. Una comisión
-        // de servicios comparte el tipo paraguas pero no mueve a nadie de
-        // puesto, así que exigírselo sería falso.
-        $subtipo = $movimiento->subtipoEfectivo();
+        // Solo lo que reubica necesita puesto destino. Una comisión de
+        // servicios comparte el tipo paraguas pero no mueve a nadie de puesto,
+        // así que exigírselo sería falso.
+        //
+        // La etiqueta sale del subtipo cuando lo hay y del tipo cuando no: la
+        // prestación de servicios reubica sin tener subtipo, y el mensaje decía
+        // el nombre de otra cosa.
+        if ($movimiento->reubicaAlServidor() && !$movimiento->puesto_destino_id) {
+            $etiqueta = $movimiento->subtipoEfectivo()?->etiqueta()
+                ?? $movimiento->tipo_movimiento->etiqueta();
 
-        if ($subtipo?->modificaPuesto() && !$movimiento->puesto_destino_id) {
             throw new ReglaNegocioException(
-                "No se puede registrar '{$subtipo->etiqueta()}' sin especificar el puesto propuesto."
+                "No se puede registrar '{$etiqueta}' sin especificar el puesto propuesto."
             );
         }
     }

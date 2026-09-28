@@ -127,11 +127,18 @@ enum TipoMovimientoPersonal: string
     }
 
     /**
-     * Tipos que, al registrarse, cierran el ContratoServidor vigente y
-     * crean uno nuevo con puesto/unidad propuestos (ver
-     * ContratoServidorService::reestructurarDesdeMovimiento()). Nunca
-     * true junto con creaVinculo() para el mismo tipo — probado en
-     * TipoMovimientoPersonalVinculoTest.
+     * Tipos que, al registrarse, reestructuran el ContratoServidor vigente:
+     * cambian su puesto y su unidad sin cerrarlo ni crear otro, porque la
+     * relación laboral no se interrumpe y no hay instrumento nuevo que firmar
+     * (ver ContratoServidorService::reestructurarDesdeMovimiento()).
+     *
+     * Nunca true junto con creaVinculo() para el mismo tipo — probado en
+     * MovimientoPersonalVinculoTest.
+     *
+     * Es un flag grueso, de tipo: CAMBIO_ADMINISTRATIVO está porque uno de sus
+     * subtipos reubica, no porque reubiquen todos —las comisiones no—. Quién
+     * reubica de verdad lo decide `MovimientoPersonal::reubicaAlServidor()`,
+     * que mira el tipo Y el subtipo.
      */
     public function modificaVinculo(): bool
     {
@@ -139,7 +146,25 @@ enum TipoMovimientoPersonal: string
             self::TRASLADO,
             self::TRASPASO,
             self::CAMBIO_ADMINISTRATIVO,
+            self::PRESTACION_SERVICIOS,
         ], true);
+    }
+
+    /**
+     * ¿Este tipo, por sí solo, reubica al servidor?
+     *
+     * Solo la prestación de servicios, que es el único que lo hace sin pasar
+     * por un subtipo: TH la describe como «prácticamente un traspaso, pero para
+     * nombramientos Provisionales, Ocasionales y Servicios Profesionales,
+     * igualmente con su situación actual y situación propuesta» (2026-09-28).
+     *
+     * Hasta entonces se registraba sin proponer nada y no movía a nadie: el
+     * formulario ni siquiera enseñaba la columna de situación propuesta, porque
+     * esa decisión se tomaba solo con el subtipo y este tipo no tiene.
+     */
+    public function reubicaAlServidor(): bool
+    {
+        return $this === self::PRESTACION_SERVICIOS;
     }
 
     /**

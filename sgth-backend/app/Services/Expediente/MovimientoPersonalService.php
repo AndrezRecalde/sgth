@@ -168,10 +168,10 @@ class MovimientoPersonalService
      * unidad del vínculo vigente.
      *
      * Es la columna "situación actual" del documento impreso, y desde que un
-     * traslado o traspaso actualizan el contrato en vez de duplicarlo, es
-     * también el único lugar donde queda constancia de dónde venía la persona
-     * — el contrato ya solo refleja dónde está ahora. Sin esto, el historial
-     * de movilidad se perdería.
+     * traspaso o una prestación de servicios actualizan el contrato en vez de
+     * duplicarlo, es también el único lugar donde queda constancia de dónde
+     * venía la persona — el contrato ya solo refleja dónde está ahora. Sin
+     * esto, el historial de movilidad se perdería.
      *
      * Un ingreso no tiene situación previa: se deja en null a propósito.
      */

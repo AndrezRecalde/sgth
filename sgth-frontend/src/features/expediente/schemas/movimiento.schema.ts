@@ -69,9 +69,13 @@ export const movimientoSchema = z.object({
     }
   }
 
-  // Traslado y traspaso reubican al servidor: sin puesto destino no hay
-  // situación propuesta que registrar, y el backend rechaza el registro.
-  if (reubicaAlServidor(data.subtipo_movimiento) && !data.puesto_destino_id) {
+  // El traspaso y la prestación de servicios reubican al servidor: sin puesto
+  // destino no hay situación propuesta que registrar, y el backend rechaza el
+  // registro.
+  if (
+    reubicaAlServidor(data.tipo_movimiento, data.subtipo_movimiento)
+    && !data.puesto_destino_id
+  ) {
     ctx.addIssue({
       path: ['puesto_destino_id'], code: 'custom',
       message: 'Indique el puesto al que será asignado',
