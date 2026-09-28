@@ -1,9 +1,9 @@
 'use client'
 
-import { Alert, Card, Group, SimpleGrid, Skeleton, Text } from '@mantine/core'
-import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
+import { Alert, Button, Card, Group, SimpleGrid, Skeleton, Stack, Text } from '@mantine/core'
+import { IconAlertTriangle, IconInfoCircle, IconRefresh } from '@tabler/icons-react'
 import { useFirmantesVigentes } from '../hooks/useFirmantes'
-import type { FirmanteVigente } from '@/types/api'
+import { getApiErrorMessage, type FirmanteVigente } from '@/types/api'
 import { StatusBadge } from '@/components/ui'
 
 function nombre(s?: { nombre?: string | null; apellido?: string | null } | null): string {
@@ -55,7 +55,7 @@ function Tarjeta({ firmante }: { firmante: FirmanteVigente }) {
  * en la acción y ya no cambian, aunque después rote la autoridad.
  */
 export function FirmantesPanel({ compacto = false }: { compacto?: boolean }) {
-  const { data: firmantes = [], isLoading } = useFirmantesVigentes()
+  const { data: firmantes = [], isLoading, error, refetch } = useFirmantesVigentes()
 
   if (isLoading) {
     return (
@@ -63,6 +63,39 @@ export function FirmantesPanel({ compacto = false }: { compacto?: boolean }) {
         <Skeleton height={110} radius="md" />
         <Skeleton height={110} radius="md" />
       </SimpleGrid>
+    )
+  }
+
+  /**
+   * El error se pinta. Antes se ignoraba, y como `firmantes` cae a `[]` la
+   * rejilla salía vacía sin más: dentro del formulario, debajo de «Firmarán este
+   * documento», eso se lee como «no firma nadie», que es lo contrario de lo que
+   * pasa —no se pudo consultar quién—.
+   */
+  if (error) {
+    return (
+      <Alert
+        variant="light"
+        color="red"
+        icon={<IconAlertTriangle size={16} />}
+        title="No se pudo consultar quién firmará"
+      >
+        <Stack gap="xs" align="flex-start">
+          <Text size="sm">
+            {getApiErrorMessage(error, 'No se pudo leer el organigrama.')} No
+            quiere decir que la acción no tenga firmantes: al suscribirla se
+            toman del organigrama y se sellan dentro de ella.
+          </Text>
+          <Button
+            size="compact-xs"
+            variant="light"
+            leftSection={<IconRefresh size={13} />}
+            onClick={() => refetch()}
+          >
+            Reintentar
+          </Button>
+        </Stack>
+      </Alert>
     )
   }
 
