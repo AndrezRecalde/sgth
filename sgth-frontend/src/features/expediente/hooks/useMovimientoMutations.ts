@@ -57,6 +57,10 @@ export function useMovimientoMutations() {
       // Una comisión de servicios o una licencia sin remuneración abren una
       // ausencia, y el panel que las lista no se enteraba.
       qc.invalidateQueries({ queryKey: ['ausencias-temporales'] })
+      // Registrar la acción de una subrogación es lo que la activa, y anularla
+      // la cancela: la pantalla de subrogaciones seguía diciendo «Pendiente»
+      // después de aprobarla, hasta que venciera su minuto de staleTime.
+      qc.invalidateQueries({ queryKey: ['subrogaciones-vigentes'] })
     },
     onError: (error) => {
       notificar.error(
