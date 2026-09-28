@@ -5324,22 +5324,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/expediente/subrogaciones/activas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["subrogacion.listarActivas"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/expediente/subrogaciones/vigentes": {
         parameters: {
             query?: never;
@@ -5363,6 +5347,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Historial de un servidor en ambos papeles. Lo abre quien administra o
+         *     audita, y el propio interesado: de eso se encarga el policy, porque
+         *     depende de qué servidor se pide y el middleware de la ruta no lo sabe
+         */
         get: operations["subrogacion.listarPorServidor"];
         put?: never;
         post?: never;
@@ -6645,6 +6634,17 @@ export interface components {
         /** CambiarContrasenaRequest */
         CambiarContrasenaRequest: {
             nueva_contrasena: string;
+        };
+        /**
+         * CancelarSubrogacionRequest
+         * @description El motivo por el que se cancela una subrogación o un encargo.
+         *
+         *     El tope de 500 es el mismo que pide `MotivoModal` en el frontend, que es el
+         *     modal con el que se escribe: sin él, el formulario aceptaba un texto que el
+         *     API no rechazaba pero que tampoco cabía en ninguna pantalla que lo muestre.
+         */
+        CancelarSubrogacionRequest: {
+            motivo: string;
         };
         /** Canton */
         Canton: {
@@ -8479,6 +8479,34 @@ export interface components {
             brechas_identificadas?: string | null;
             acciones_mejora?: string | null;
         };
+        /**
+         * RegistrarSubrogacionRequest
+         * @description Datos de una subrogación o encargo nuevos.
+         *
+         *     Sale del controlador, donde vivía como un `$request->validate()` con el
+         *     comentario «Aquí validamos básico» — y lo básico dejaba pasar un `motivo`
+         *     cualquiera: la columna se castea a `MotivoSubrogacion`, así que un valor
+         *     fuera de lista reventaba en el cast de Eloquent y el API respondía 500 en vez
+         *     de 422. `tipo`, al lado, sí estaba acotado.
+         *
+         *     Las reglas de negocio —quién puede ser titular, traslapes, la figura que
+         *     corresponde según el puesto— siguen en SubrogacionService: dependen del
+         *     estado de la base, no del formato de la petición.
+         */
+        RegistrarSubrogacionRequest: {
+            tipo: components["schemas"]["TipoSubrogacion"];
+            servidor_subrogante_id: number;
+            servidor_subrogado_id?: number | null;
+            unidad_administrativa_id: number;
+            puesto_subrogado_id: number;
+            /** Format: date-time */
+            fecha_inicio: string;
+            /** Format: date-time */
+            fecha_fin: string;
+            motivo: components["schemas"]["MotivoSubrogacion"];
+            resolucion_numero?: string | null;
+            observacion?: string | null;
+        };
         /** ReprogramarPlazoContratoRequest */
         ReprogramarPlazoContratoRequest: {
             /**
@@ -9702,7 +9730,6 @@ export interface components {
             fecha_fin: string;
             motivo: components["schemas"]["MotivoSubrogacion"];
             resolucion_numero: string | null;
-            documento_respaldo: string | null;
             estado: components["schemas"]["EstadoSubrogacion"];
             observacion: string | null;
             registrado_por: number;
@@ -26136,33 +26163,6 @@ export interface operations {
             };
         };
     };
-    "subrogacion.listarActivas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Subrogaciones activas";
-                        datos: Record<string, never>;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-        };
-    };
     "subrogacion.listarVigentes": {
         parameters: {
             query?: never;
@@ -26172,6 +26172,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /**
+             * @description `datos` y `meta` por separado, como el resto de los listados
+             *     paginados del expediente: la tabla necesita el total para dibujar su
+             *     paginador, y devolver el paginador entero metía sus enlaces dentro de
+             *     `datos`.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -26181,8 +26187,15 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Subrogaciones pendientes y activas";
-                        datos: Record<string, never>;
-                        meta: null;
+                        datos: {
+                            [key: string]: string;
+                        };
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                        };
                     };
                 };
             };
@@ -26228,22 +26241,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    /** @enum {string} */
-                    tipo: "subrogacion" | "encargo";
-                    servidor_subrogante_id: number;
-                    servidor_subrogado_id?: number | null;
-                    unidad_administrativa_id: number;
-                    puesto_subrogado_id: number;
-                    /** Format: date-time */
-                    fecha_inicio: string;
-                    /** Format: date-time */
-                    fecha_fin: string;
-                    motivo: string;
-                    resolucion_numero?: string | null;
-                    documento_respaldo?: string | null;
-                    observacion?: string | null;
-                };
+                "application/json": components["schemas"]["RegistrarSubrogacionRequest"];
             };
         };
         responses: {
@@ -26306,9 +26304,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    motivo: string;
-                };
+                "application/json": components["schemas"]["CancelarSubrogacionRequest"];
             };
         };
         responses: {
