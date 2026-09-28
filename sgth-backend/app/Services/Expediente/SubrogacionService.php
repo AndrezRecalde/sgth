@@ -431,25 +431,105 @@ class SubrogacionService implements SubrogacionServiceInterface
 
     public function cancelar(int $subrogacionId, string $motivo): Subrogacion
     {
-        $subrogacion = Subrogacion::findOrFail($subrogacionId);
+        return DB::transaction(function () use ($subrogacionId, $motivo) {
+            $subrogacion = Subrogacion::with('movimientoPersonal')->findOrFail($subrogacionId);
 
-        // Una pendiente también se cancela: es lo natural cuando Talento
-        // Humano se arrepiente antes de que la acción llegue a registrarse.
-        if (! in_array($subrogacion->estado, [
-            EstadoSubrogacion::PENDIENTE,
-            EstadoSubrogacion::ACTIVA,
-        ], true)) {
-            throw new ReglaNegocioException(
-                'Solo se pueden cancelar subrogaciones pendientes o activas.'
-            );
+            // Una pendiente también se cancela: es lo natural cuando Talento
+            // Humano se arrepiente antes de que la acción llegue a registrarse.
+            if (! in_array($subrogacion->estado, [
+                EstadoSubrogacion::PENDIENTE,
+                EstadoSubrogacion::ACTIVA,
+            ], true)) {
+                throw new ReglaNegocioException(
+                    'Solo se pueden cancelar subrogaciones pendientes o activas.'
+                );
+            }
+
+            $subrogacion->update([
+                'estado'      => EstadoSubrogacion::CANCELADA,
+                'observacion' => $this->conNota($subrogacion->observacion, "Cancelado: {$motivo}"),
+            ]);
+
+            $this->cerrarElActoQueLaRespaldaba($subrogacion, $motivo);
+
+            return $subrogacion;
+        });
+    }
+
+    /**
+     * Cancelar la subrogación también cierra su Acción de Personal.
+     *
+     * El enlace funcionaba en una sola dirección: anular la acción cancelaba la
+     * subrogación, pero cancelar la subrogación no tocaba la acción. El borrador
+     * se quedaba en la bandeja de Talento Humano para siempre, sin poder
+     * editarse —desde el 2026-09-28 una subrogación no se edita— y sin que nadie
+     * fuera a suscribir un acto cuyo objeto ya no existe.
+     *
+     * Qué se hace depende de hasta dónde llegó la acción, y esa es toda la
+     * regla:
+     *
+     * - BORRADOR o SUSCRITA (la subrogación estaba PENDIENTE): el acto todavía
+     *   no produjo efectos, así que se anula y desaparece de la bandeja,
+     *   heredando el motivo de la cancelación.
+     * - REGISTRADA o NOTIFICADA (la subrogación estaba ACTIVA): un acto
+     *   administrativo registrado no se borra, y el grafo de estados tampoco lo
+     *   permite. Queda constancia en el historial con el mismo criterio que la
+     *   finalización anticipada: sin categoría y ya en REGISTRADA, que es un
+     *   hecho consumado y no algo por aprobar.
+     *
+     * Aviso sobre esa constancia, para que nadie se apoye en más de lo que hay:
+     * `categoria` en null la distingue en los datos, pero HOY no la distingue
+     * en la interfaz. Ni `TipoMovimientoPersonal::tieneDocumentoImprimible()`
+     * —que decide por tipo, y subrogación imprime— ni `puedeDescargarPdf()` en
+     * el frontend miran la categoría, así que la fila sale en el historial con
+     * el botón de descargar PDF activo y genera un documento de Acción de
+     * Personal con los firmantes en blanco, porque nunca se suscribió. Ya pasa
+     * con la bitácora de `finalizar()`: esto no lo introduce, lo repite. El
+     * arreglo va en esa puerta, no aquí.
+     *
+     * Las subrogaciones anteriores al enlace (2026-08-04) no tienen acción: ahí
+     * no hay nada que cerrar.
+     */
+    private function cerrarElActoQueLaRespaldaba(Subrogacion $subrogacion, string $motivo): void
+    {
+        $movimiento = $subrogacion->movimientoPersonal;
+
+        if (! $movimiento) {
+            return;
         }
 
-        $subrogacion->update([
-            'estado'      => EstadoSubrogacion::CANCELADA,
-            'observacion' => trim($subrogacion->observacion . "\nCancelado: " . $motivo)
-        ]);
+        if (in_array($movimiento->estado, [
+            EstadoAccionPersonal::BORRADOR,
+            EstadoAccionPersonal::SUSCRITA,
+        ], true)) {
+            // El servicio de estados se resuelve aquí y no por el constructor:
+            // él ya depende de este servicio —llama a activarPorMovimiento() y a
+            // cancelarPorMovimiento()—, y pedirlo por inyección cerraría el
+            // círculo en el contenedor.
+            //
+            // Anular dispara aplicarAnulacion(), que a su vez llama a
+            // cancelarPorMovimiento(). No hay bucle: para entonces la
+            // subrogación ya está CANCELADA y ese método solo mira pendientes y
+            // activas, así que queda en no-op. Es deliberado, y hay una prueba
+            // que lo fija.
+            app(MovimientoPersonalStateService::class)->transicionar(
+                $movimiento,
+                EstadoAccionPersonal::ANULADA,
+                ['motivo_anulacion' => "Se canceló la subrogación que respaldaba. {$motivo}"],
+            );
 
-        return $subrogacion;
+            return;
+        }
+
+        MovimientoPersonal::create([
+            'servidor_id'     => $subrogacion->servidor_subrogante_id,
+            'tipo_movimiento' => 'subrogacion',
+            'estado'          => EstadoAccionPersonal::REGISTRADA,
+            'descripcion'     => "Cancelación de {$subrogacion->tipo->etiqueta()}: dejó de surtir "
+                ."efecto antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto. {$motivo}",
+            'fecha_efectiva'  => now()->toDateString(),
+            'autorizado_por'  => auth()->id(),
+        ]);
     }
 
     /**
