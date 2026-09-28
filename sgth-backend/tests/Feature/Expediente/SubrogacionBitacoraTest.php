@@ -10,6 +10,7 @@ use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
 use App\Models\User;
@@ -258,4 +259,128 @@ test('el historial del servidor también', function () {
         ->first()->toArray();
 
     expect($fila['registrado_por_usuario']['id'])->toBe($this->user->id);
+});
+
+// ── Cancelar cierra también su Acción de Personal ───────────────
+
+/**
+ * El enlace funcionaba en una sola dirección: anular la acción cancelaba la
+ * subrogación, pero cancelar la subrogación no tocaba la acción. El borrador se
+ * quedaba en la bandeja de Talento Humano para siempre —y desde el 2026-09-28
+ * ya no se puede ni editar—, esperando que alguien suscribiera un acto cuyo
+ * objeto no existe.
+ */
+test('cancelar una pendiente anula su acción en borrador', function () {
+    $subrogacion = ($this->registrar)();
+    $movimiento  = $subrogacion->movimientoPersonal;
+
+    expect($movimiento->estado)->toBe(EstadoAccionPersonal::BORRADOR);
+
+    $this->service->cancelar($subrogacion->id, 'El titular no viajó.');
+
+    expect($movimiento->fresh()->estado)->toBe(EstadoAccionPersonal::ANULADA)
+        ->and($movimiento->fresh()->motivo_anulacion)
+        ->toContain('Se canceló la subrogación')
+        ->toContain('El titular no viajó.');
+});
+
+test('también si la acción ya estaba suscrita pero sin registrar', function () {
+    $subrogacion = ($this->registrar)();
+    $movimiento  = $subrogacion->movimientoPersonal;
+
+    $movimiento->update(['dictamen_presupuestario_ref' => 'DICT-2026-001']);
+    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA, []);
+
+    // Suscrita sin registrar: la subrogación sigue pendiente.
+    expect($subrogacion->fresh()->estado)->toBe(EstadoSubrogacion::PENDIENTE);
+
+    $this->service->cancelar($subrogacion->id, 'Se resolvió de otra forma.');
+
+    expect($movimiento->fresh()->estado)->toBe(EstadoAccionPersonal::ANULADA);
+});
+
+/**
+ * Con la acción ya registrada no se anula nada: un acto administrativo
+ * registrado no se borra, y el grafo de estados tampoco lo permite
+ * (registrada → [notificada]). Queda constancia, con el mismo criterio que la
+ * finalización anticipada.
+ */
+test('cancelar una activa deja constancia en vez de anular el acto', function () {
+    $subrogacion = ($this->registrar)();
+    $movimiento  = $subrogacion->movimientoPersonal;
+
+    $movimiento->update(['dictamen_presupuestario_ref' => 'DICT-2026-001']);
+    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA, []);
+    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA, []);
+
+    expect($subrogacion->fresh()->estado)->toBe(EstadoSubrogacion::ACTIVA);
+
+    $antes = MovimientoPersonal::count();
+
+    $this->service->cancelar($subrogacion->id, 'El titular se reincorporó.');
+
+    $constancia = MovimientoPersonal::latest('id')->first();
+
+    expect(MovimientoPersonal::count())->toBe($antes + 1)
+        // El acto original no se toca.
+        ->and($movimiento->fresh()->estado)->toBe(EstadoAccionPersonal::REGISTRADA)
+        // Y la constancia es bitácora, no un acto por aprobar: sin categoría y
+        // ya registrada, el mismo criterio que la de `finalizar()`. (Ojo: hoy
+        // la puerta del PDF decide por tipo y no mira la categoría, así que la
+        // fila igual ofrece descargar un documento; eso se arregla en esa
+        // puerta, no aquí.)
+        ->and($constancia->categoria)->toBeNull()
+        ->and($constancia->estado)->toBe(EstadoAccionPersonal::REGISTRADA)
+        ->and($constancia->codigo_registro)->toBeNull()
+        ->and($constancia->descripcion)->toContain('Cancelación de Subrogación')
+        ->and($constancia->descripcion)->toContain('El titular se reincorporó.');
+});
+
+/**
+ * Anular la acción dispara `aplicarAnulacion()`, que llama a
+ * `cancelarPorMovimiento()`. No hay bucle porque para entonces la subrogación
+ * ya está CANCELADA y ese método solo mira pendientes y activas.
+ *
+ * El orden es la regla, y esta prueba lo fija: si se anulara la acción ANTES de
+ * marcar la subrogación, la cascada la encontraría viva y le escribiría su nota
+ * —«Cancelada automáticamente: se anuló la Acción de Personal que la
+ * respaldaba»—, y encima quedaría la de cancelar(): dos notas, y la primera
+ * invirtiendo la causa.
+ */
+test('anular la acción desde aquí no vuelve a cancelar la subrogación', function () {
+    $subrogacion = ($this->registrar)();
+
+    $this->service->cancelar($subrogacion->id, 'Cambio de planes.');
+
+    $lineas = ($this->cambiosDeEstado)($subrogacion);
+
+    expect($subrogacion->fresh()->estado)->toBe(EstadoSubrogacion::CANCELADA)
+        // Un solo cambio de estado: pendiente → cancelada. Si la cascada hubiera
+        // vuelto a entrar, habría dos.
+        ->and($lineas)->toHaveCount(1)
+        // Y la observación lleva el motivo escrito una sola vez, no el
+        // automático de la cascada encima.
+        ->and($subrogacion->fresh()->observacion)->toContain('Cancelado: Cambio de planes.')
+        ->and($subrogacion->fresh()->observacion)
+        ->not->toContain('Cancelada automáticamente');
+});
+
+test('una subrogación sin acción enlazada se cancela igual', function () {
+    $titular = ($this->servidorCon)($this->puesto->id);
+
+    $suelta = Subrogacion::create([
+        'tipo'                     => TipoSubrogacion::SUBROGACION->value,
+        'servidor_subrogante_id'   => ($this->servidorCon)()->id,
+        'servidor_subrogado_id'    => $titular->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_subrogado_id'      => $this->puesto->id,
+        'fecha_inicio'             => now()->toDateString(),
+        'fecha_fin'                => now()->addMonth()->toDateString(),
+        'motivo'                   => 'vacaciones',
+        'registrado_por'           => $this->user->id,
+    ]);
+
+    $this->service->cancelar($suelta->id, 'Anterior al enlace con la acción.');
+
+    expect($suelta->fresh()->estado)->toBe(EstadoSubrogacion::CANCELADA);
 });
