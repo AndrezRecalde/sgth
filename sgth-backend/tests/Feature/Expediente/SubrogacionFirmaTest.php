@@ -360,3 +360,94 @@ test('sin dictamen presupuestario la acción no puede suscribirse', function () 
 
     expect($subrogacion->fresh()->estado)->toBe(EstadoSubrogacion::PENDIENTE);
 });
+
+// ── Traslapes ───────────────────────────────────────────────────
+
+/**
+ * El control de traslapes miraba solo al subrogante, así que dos personas
+ * podían quedar subrogando el mismo puesto el mismo mes. Con las dos activas,
+ * quién firma lo decidía el `orderByDesc('fecha_inicio')->first()` de
+ * subroganteDe(): para un puesto de jefatura, la facultad de firmar repartida
+ * al azar entre dos personas sin que ningún acto lo diga.
+ */
+test('un puesto ya cubierto no admite una segunda subrogación en las mismas fechas', function () {
+    $titular = ($this->servidorCon)($this->puesto->id);
+    $primero = ($this->servidorCon)();
+    $segundo = ($this->servidorCon)();
+
+    ($this->registrarSubrogacion)($primero, $titular);
+
+    expect(fn () => ($this->registrarSubrogacion)($segundo, $titular))
+        ->toThrow(\App\Exceptions\ReglaNegocioException::class);
+
+    expect(Subrogacion::where('puesto_subrogado_id', $this->puesto->id)->count())->toBe(1);
+});
+
+test('el mensaje nombra el puesto y el plazo que ya está cubierto', function () {
+    $titular = ($this->servidorCon)($this->puesto->id);
+    ($this->registrarSubrogacion)(($this->servidorCon)(), $titular);
+
+    try {
+        ($this->registrarSubrogacion)(($this->servidorCon)(), $titular);
+        $this->fail('Se esperaba que la segunda subrogación fuera rechazada.');
+    } catch (\App\Exceptions\ReglaNegocioException $e) {
+        expect($e->getMessage())
+            ->toContain('Prefecto/a Provincial')
+            ->toContain(now()->subDay()->format('d/m/Y'));
+    }
+});
+
+test('el puesto vuelve a estar libre cuando la anterior se cancela', function () {
+    $titular = ($this->servidorCon)($this->puesto->id);
+    $primera = ($this->registrarSubrogacion)(($this->servidorCon)(), $titular);
+
+    $this->service->cancelar($primera->id, 'El titular no viajó.');
+
+    $segunda = ($this->registrarSubrogacion)(($this->servidorCon)(), $titular);
+
+    expect($segunda->estado)->toBe(EstadoSubrogacion::PENDIENTE);
+});
+
+test('otro puesto de la misma unidad no se estorba', function () {
+    $otroPuesto = Puesto::create([
+        'codigo' => 'P-DIR', 'unidad_administrativa_id' => $this->unidad->id,
+        'plazas' => 1, 'cargo_id' => Cargo::firstOrCreate(['nombre' => 'Director/a Financiero'])->id,
+        'partida_presupuestaria_id' => $this->partida->id,
+    ]);
+
+    $titularPref = ($this->servidorCon)($this->puesto->id);
+    $titularDir  = ($this->servidorCon)($otroPuesto->id);
+
+    ($this->registrarSubrogacion)(($this->servidorCon)(), $titularPref);
+
+    $segunda = $this->service->registrar([
+        'tipo'                     => TipoSubrogacion::SUBROGACION->value,
+        'servidor_subrogante_id'   => ($this->servidorCon)()->id,
+        'servidor_subrogado_id'    => $titularDir->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_subrogado_id'      => $otroPuesto->id,
+        'fecha_inicio'             => now()->subDay()->toDateString(),
+        'fecha_fin'                => now()->addMonth()->toDateString(),
+        'motivo'                   => 'vacaciones',
+    ]);
+
+    expect($segunda->puesto_subrogado_id)->toBe($otroPuesto->id);
+});
+
+test('un plazo posterior sobre el mismo puesto sí se registra', function () {
+    $titular = ($this->servidorCon)($this->puesto->id);
+    ($this->registrarSubrogacion)(($this->servidorCon)(), $titular);
+
+    $siguiente = $this->service->registrar([
+        'tipo'                     => TipoSubrogacion::SUBROGACION->value,
+        'servidor_subrogante_id'   => ($this->servidorCon)()->id,
+        'servidor_subrogado_id'    => $titular->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_subrogado_id'      => $this->puesto->id,
+        'fecha_inicio'             => now()->addMonths(2)->toDateString(),
+        'fecha_fin'                => now()->addMonths(3)->toDateString(),
+        'motivo'                   => 'vacaciones',
+    ]);
+
+    expect($siguiente->estado)->toBe(EstadoSubrogacion::PENDIENTE);
+});

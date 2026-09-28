@@ -34,30 +34,14 @@ class SubrogacionService implements SubrogacionServiceInterface
             throw new ReglaNegocioException("La fecha de fin debe ser estrictamente mayor a la fecha de inicio.");
         }
 
-        // 3. Validar que no exista otra subrogación activa para este subrogante que se traslape
-        // Cuentan también las pendientes: dos solicitudes traslapadas pasarían
-        // el control y al aprobarse dejarían a la persona subrogando dos
-        // puestos a la vez.
-        $existeTraslape = Subrogacion::where('servidor_subrogante_id', $datos['servidor_subrogante_id'])
-            ->whereIn('estado', [
-                EstadoSubrogacion::PENDIENTE->value,
-                EstadoSubrogacion::ACTIVA->value,
-            ])
-            ->where(function ($query) use ($datos) {
-                $query->whereBetween('fecha_inicio', [$datos['fecha_inicio'], $datos['fecha_fin']])
-                      ->orWhereBetween('fecha_fin', [$datos['fecha_inicio'], $datos['fecha_fin']])
-                      ->orWhere(function ($q) use ($datos) {
-                          $q->where('fecha_inicio', '<=', $datos['fecha_inicio'])
-                            ->where('fecha_fin', '>=', $datos['fecha_fin']);
-                      });
-            })->exists();
-
-        if ($existeTraslape) {
-            throw new ReglaNegocioException("El servidor ya cuenta con una subrogación/encargo activo en el rango de fechas indicado.");
-        }
-
-        // 4. Registro transaccional
+        // 3. Registro transaccional. Los traslapes se comprueban DENTRO de la
+        // transacción y bloqueando las filas que se leen, como en
+        // PermisoService: hacerlo antes de abrirla dejaba pasar dos peticiones
+        // simultáneas, que se validaban cada una contra un estado donde la otra
+        // todavía no existía.
         return DB::transaction(function () use ($datos) {
+            $this->validarSinTraslape($datos);
+
             // Nace PENDIENTE, no ACTIVA: hasta que su Acción de Personal se
             // registre, la subrogación no surte efecto. Crearla activa hacía
             // que el subrogante pudiera firmar de inmediato —
@@ -114,6 +98,68 @@ class SubrogacionService implements SubrogacionServiceInterface
 
             return $subrogacion;
         });
+    }
+
+    /**
+     * Nadie subroga dos puestos a la vez, y ningún puesto se subroga dos veces
+     * a la vez.
+     *
+     * Lo segundo faltaba: el control miraba solo `servidor_subrogante_id`, así
+     * que dos personas podían quedar subrogando el mismo puesto en el mismo
+     * período —comprobado— y entonces quién firma lo decidía el
+     * `orderByDesc('fecha_inicio')->first()` de
+     * FirmanteOrganigramaService::subroganteDe(), es decir, el azar del orden de
+     * inserción. Para un puesto de jefatura eso es la facultad de firmar
+     * repartida entre dos personas sin que ningún acto lo diga.
+     *
+     * Cuentan las PENDIENTES además de las activas: dos solicitudes traslapadas
+     * pasarían el control y al aprobarse dejarían el conflicto ya consumado.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function validarSinTraslape(array $datos): void
+    {
+        $enElRango = fn ($query) => $query
+            ->whereIn('estado', [
+                EstadoSubrogacion::PENDIENTE->value,
+                EstadoSubrogacion::ACTIVA->value,
+            ])
+            ->where(function ($q) use ($datos) {
+                $q->whereBetween('fecha_inicio', [$datos['fecha_inicio'], $datos['fecha_fin']])
+                  ->orWhereBetween('fecha_fin', [$datos['fecha_inicio'], $datos['fecha_fin']])
+                  ->orWhere(function ($interna) use ($datos) {
+                      $interna->where('fecha_inicio', '<=', $datos['fecha_inicio'])
+                              ->where('fecha_fin', '>=', $datos['fecha_fin']);
+                  });
+            });
+
+        $delSubrogante = Subrogacion::where('servidor_subrogante_id', $datos['servidor_subrogante_id'])
+            ->where($enElRango)
+            ->lockForUpdate()
+            ->exists();
+
+        if ($delSubrogante) {
+            throw new ReglaNegocioException(
+                'El servidor ya cuenta con una subrogación/encargo activo en el rango de fechas indicado.'
+            );
+        }
+
+        $delPuesto = Subrogacion::where('puesto_subrogado_id', $datos['puesto_subrogado_id'])
+            ->where($enElRango)
+            ->lockForUpdate()
+            ->first();
+
+        if ($delPuesto) {
+            $puesto = Puesto::with('cargo')->find($datos['puesto_subrogado_id']);
+            $nombrePuesto = $puesto?->cargo?->nombre ?? "#{$datos['puesto_subrogado_id']}";
+
+            throw new ReglaNegocioException(
+                "El puesto de {$nombrePuesto} ya está cubierto del "
+                .$delPuesto->fecha_inicio->format('d/m/Y').' al '
+                .$delPuesto->fecha_fin->format('d/m/Y')
+                .'. Finalice o cancele esa subrogación/encargo antes de registrar otro.'
+            );
+        }
     }
 
     /**
