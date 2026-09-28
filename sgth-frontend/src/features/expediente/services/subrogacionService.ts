@@ -3,11 +3,6 @@ import type { ApiResponse, Subrogacion, SubrogacionParams } from '@/types/api'
 import type { SubrogacionFormData } from '../schemas/subrogacion.schema'
 
 export const subrogacionService = {
-  listarActivas: (params?: SubrogacionParams) =>
-    api
-      .get<ApiResponse<Subrogacion[]>>('/expediente/subrogaciones/activas', { params })
-      .then((r) => r.data.datos ?? []),
-
   /** Pendientes de aprobación + activas: lo que la pantalla administra. */
   listarVigentes: (params?: SubrogacionParams) =>
     api

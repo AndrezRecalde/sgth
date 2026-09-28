@@ -295,20 +295,22 @@ test('una subrogación en borrador todavía no se imprime', function () {
 
 // ── Coherencia del estado nuevo ─────────────────────────────────
 
-test('el listado de activas no incluye las pendientes de aprobación', function () {
+test('quién ejerce hoy sale del organigrama, no de un listado aparte', function () {
     $titular    = ($this->servidorCon)($this->puesto->id);
     $subrogante = ($this->servidorCon)();
 
-    ($this->registrarSubrogacion)($subrogante, $titular);
+    $subrogacion = ($this->registrarSubrogacion)($subrogante, $titular);
 
-    expect($this->service->listarActivas())->toHaveCount(0);
+    // Pendiente: el organigrama sigue mostrando al titular.
+    expect($this->unidad->fresh()->load('subrogacionesVigentes')->subrogacionesVigentes)
+        ->toHaveCount(0);
+
+    $subrogacion->update(['estado' => EstadoSubrogacion::ACTIVA->value]);
+
+    expect($this->unidad->fresh()->load('subrogacionesVigentes')->subrogacionesVigentes)
+        ->toHaveCount(1);
 });
 
-/**
- * Contrapartida del test anterior: si listarActivas() fuera el único listado,
- * una subrogación recién registrada desaparecería de la pantalla y no habría
- * forma de seguir su aprobación ni de cancelarla.
- */
 test('el listado de la pantalla sí muestra las pendientes', function () {
     $titular    = ($this->servidorCon)($this->puesto->id);
     $subrogante = ($this->servidorCon)();

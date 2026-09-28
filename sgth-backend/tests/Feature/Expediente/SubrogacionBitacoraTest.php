@@ -231,3 +231,31 @@ test('registrar la acción de personal activa su subrogación, como antes', func
 
     expect($subrogacion->fresh()->estado)->toBe(EstadoSubrogacion::ACTIVA);
 });
+
+// ── Quién la registró ───────────────────────────────────────────
+
+/**
+ * `registrado_por` se guardaba desde la primera migración y no salía en ningún
+ * listado: no había forma de saber quién registró una subrogación sin abrir la
+ * base de datos. La relación se llama `registradoPorUsuario` porque Eloquent
+ * mezcla las relaciones encima de los atributos, y `registradoPor` habría
+ * pisado el id de la columna con el objeto del usuario.
+ */
+test('el listado dice quién registró cada subrogación, sin perder el id', function () {
+    ($this->registrar)();
+
+    $fila = $this->service->listarVigentes()->first()->toArray();
+
+    expect($fila['registrado_por'])->toBe($this->user->id)
+        ->and($fila['registrado_por_usuario']['id'])->toBe($this->user->id)
+        ->and($fila['registrado_por_usuario'])->toHaveKey('nombre_completo');
+});
+
+test('el historial del servidor también', function () {
+    $subrogacion = ($this->registrar)();
+
+    $fila = $this->service->listarPorServidor($subrogacion->servidor_subrogante_id)
+        ->first()->toArray();
+
+    expect($fila['registrado_por_usuario']['id'])->toBe($this->user->id);
+});

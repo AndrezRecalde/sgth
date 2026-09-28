@@ -821,7 +821,6 @@ export type Subrogacion = {
   fecha_fin: string
   motivo: MotivoSubrogacion
   resolucion_numero?: string | null
-  documento_respaldo?: string | null
   estado: EstadoSubrogacion
   observacion?: string | null
   registrado_por?: number | null
@@ -837,6 +836,12 @@ export type Subrogacion = {
     id: number
     estado?: string | null
     codigo_registro?: string | null
+  } | null
+  /** Quién la registró. Se guardaba desde el principio y no salía en ningún
+   *  listado: no había forma de saberlo sin abrir la base de datos. */
+  registrado_por_usuario?: {
+    id: number
+    nombre_completo?: string | null
   } | null
 }
 

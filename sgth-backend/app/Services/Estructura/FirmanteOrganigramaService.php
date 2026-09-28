@@ -2,7 +2,6 @@
 
 namespace App\Services\Estructura;
 
-use App\Enums\EstadoSubrogacion;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
@@ -71,13 +70,13 @@ class FirmanteOrganigramaService
 
     public function subroganteDe(int $puestoId, string $fecha): ?Servidor
     {
+        // El predicado «surte efecto ese día» vive en el scope del modelo, que
+        // es el único sitio donde se escribe. Aquí estaba copiado con una rama
+        // de más —`whereNull('fecha_fin')`— para una columna que es NOT NULL
+        // desde la primera migración: no podía ser verdad nunca.
         $subrogacion = Subrogacion::with('subrogante')
             ->where('puesto_subrogado_id', $puestoId)
-            ->where('estado', EstadoSubrogacion::ACTIVA->value)
-            ->whereDate('fecha_inicio', '<=', $fecha)
-            ->where(function ($q) use ($fecha) {
-                $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $fecha);
-            })
+            ->activaEnFecha($fecha)
             ->orderByDesc('fecha_inicio')
             ->first();
 

@@ -2,12 +2,10 @@
 
 namespace App\Services\Expediente;
 
-use App\Enums\EstadoSubrogacion;
 use App\Enums\RolFirmaAccionPersonal;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
-use App\Models\Expediente\Subrogacion;
 
 /**
  * Resuelve quién firma una Acción de Personal a partir del organigrama y sella

@@ -57,7 +57,6 @@ class SubrogacionService implements SubrogacionServiceInterface
                 'fecha_fin'                => $datos['fecha_fin'],
                 'motivo'                   => $datos['motivo'],
                 'resolucion_numero'        => $datos['resolucion_numero'] ?? null,
-                'documento_respaldo'       => $datos['documento_respaldo'] ?? null,
                 'observacion'              => $datos['observacion'] ?? null,
                 'estado'                   => EstadoSubrogacion::PENDIENTE,
                 'registrado_por'           => auth()->id(),
@@ -452,35 +451,19 @@ class SubrogacionService implements SubrogacionServiceInterface
         return $subrogacion;
     }
 
-    public function listarActivas(array $filtros = []): Collection
-    {
-        $query = Subrogacion::with([
-            'subrogante', 'subrogado', 'unidadAdministrativa', 'puestoSubrogado.cargo',
-        ])->where('estado', EstadoSubrogacion::ACTIVA)
-            ->where('fecha_inicio', '<=', now())
-            ->where('fecha_fin', '>=', now());
-
-        if (!empty($filtros['unidad_administrativa_id'])) {
-            $query->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']);
-        }
-
-        if (!empty($filtros['tipo'])) {
-            $query->where('tipo', $filtros['tipo']);
-        }
-
-        return $query->orderBy('fecha_inicio', 'desc')->get();
-    }
-
     /**
      * Lo que Talento Humano necesita ver en la pantalla de administración:
      * las que surten efecto y las que esperan que su Acción de Personal se
      * registre.
      *
-     * listarActivas() responde otra pregunta —¿quién está subrogando ahora
-     * mismo?— y por eso filtra por ventana de fechas y excluye pendientes. Con
-     * ella como único listado, una subrogación recién registrada desaparecía
-     * de la pantalla y no había forma de seguir su aprobación ni de
-     * cancelarla.
+     * Hubo un `listarActivas()` que respondía otra pregunta —¿quién está
+     * subrogando ahora mismo?—: filtraba por ventana de fechas y excluía las
+     * pendientes, así que una subrogación recién registrada desaparecía de la
+     * pantalla y no había forma de seguir su aprobación ni de cancelarla. Se
+     * retiró el 2026-09-28 junto con su endpoint: no lo consumía nadie, y a
+     * «quién ejerce hoy» responden `Subrogacion::activaEnFecha()` y la relación
+     * `UnidadAdministrativa::subrogacionesVigentes()`, que es la que pinta el
+     * organigrama.
      *
      * Las vencidas se excluyen por fecha, no solo por estado: caducarVencidas()
      * las cierra a diario, pero si el scheduler está caído la pantalla no puede
@@ -493,6 +476,10 @@ class SubrogacionService implements SubrogacionServiceInterface
         $query = Subrogacion::with([
             'subrogante', 'subrogado', 'unidadAdministrativa', 'puestoSubrogado.cargo',
             'movimientoPersonal:id,estado,codigo_registro',
+            // Quién la registró: se guardaba desde el principio y no salía en
+            // ningún listado, así que no había forma de saberlo sin abrir la BD.
+            'registradoPorUsuario:id,email,servidor_id',
+            'registradoPorUsuario.servidor:id,nombre,apellido',
         ])->whereIn('estado', [
             EstadoSubrogacion::PENDIENTE->value,
             EstadoSubrogacion::ACTIVA->value,
@@ -527,6 +514,10 @@ class SubrogacionService implements SubrogacionServiceInterface
         return Subrogacion::with([
             'subrogante', 'subrogado', 'unidadAdministrativa', 'puestoSubrogado.cargo',
             'movimientoPersonal:id,estado,codigo_registro',
+            // Quién la registró: se guardaba desde el principio y no salía en
+            // ningún listado, así que no había forma de saberlo sin abrir la BD.
+            'registradoPorUsuario:id,email,servidor_id',
+            'registradoPorUsuario.servidor:id,nombre,apellido',
         ])->where(fn ($q) => $q
             ->where('servidor_subrogante_id', $servidorId)
             ->orWhere('servidor_subrogado_id', $servidorId)
@@ -534,13 +525,5 @@ class SubrogacionService implements SubrogacionServiceInterface
             ->orderByDesc('fecha_inicio')
             ->orderByDesc('id')
             ->get();
-    }
-
-    public function verificarSubrogacionActiva(int $servidorId, int $unidadId): ?Subrogacion
-    {
-        return Subrogacion::where('servidor_subrogante_id', $servidorId)
-            ->where('unidad_administrativa_id', $unidadId)
-            ->activaEnFecha(now())
-            ->first();
     }
 }

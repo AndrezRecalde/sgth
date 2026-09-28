@@ -103,7 +103,6 @@ test('un servidor raso no lista las subrogaciones de la institución', function 
     ($this->comoRol)('servidor');
 
     $this->getJson('/api/v1/expediente/subrogaciones/vigentes')->assertForbidden();
-    $this->getJson('/api/v1/expediente/subrogaciones/activas')->assertForbidden();
 });
 
 test('un jefe de unidad tampoco: ver el módulo no viene con el subsistema', function () {
