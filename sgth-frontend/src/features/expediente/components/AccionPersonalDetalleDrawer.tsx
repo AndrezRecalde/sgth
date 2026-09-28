@@ -1,13 +1,14 @@
 'use client'
 
 import {
-  confirmar, DetailList, notificar, SectionHeading, SgthDrawer, StatusBadge,
+  confirmar, DataState, DetailList, ModalFooter, notificar, SectionHeading,
+  SgthDrawer, StatusBadge,
 } from '@/components/ui'
 import { useState } from 'react'
-import { Alert, Button, Divider, Grid, Group, Skeleton, Stack, Text } from '@mantine/core'
+import { Alert, Button, Grid, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  IconAlertTriangle, IconBan, IconCheck, IconFileDownload,
+  IconAlertTriangle, IconBan, IconFileDownload, IconFileOff,
   IconPencil, IconUserOff,
 } from '@tabler/icons-react'
 import { movimientoService } from '../services/movimientoService'
@@ -23,10 +24,10 @@ import {
 } from '../utils/estadoAccionPersonal'
 import {
   SUBTIPO_LABELS, esAusenciaTemporal, etiquetaTipoMovimiento, proponeSituacion,
-  tieneEfectoEconomico, type AccionSubtipo,
+  tieneEfectoEconomico,
 } from '../utils/taxonomiaAccionPersonal'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
-import type { EstadoAccionPersonal } from '@/types/api'
+import type { MovimientoPersonal } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
 import { formatFecha } from '@/lib/fecha'
 
@@ -46,7 +47,7 @@ function dinero(v?: string | number | null): string {
  * el formulario que completa los datos del vínculo.
  */
 export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: Props) {
-  const { data: m, isLoading } = useMovimiento(opened ? movimientoId : null)
+  const { data: m, isLoading, error, refetch } = useMovimiento(opened ? movimientoId : null)
   const { transicionar } = useMovimientoMutations()
 
   const [editarOpened, { open: abrirEditar, close: cerrarEditar }] = useDisclosure(false)
@@ -76,16 +77,19 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
     }
   }
 
-  const contenido = () => {
-    if (isLoading || !m) return <Skeleton height={420} radius="md" />
-
-    const mv = m
-    const estado = m.estado as EstadoAccionPersonal | undefined
+  const contenido = (m: MovimientoPersonal) => {
+    const estado = m.estado
     const posibles = estado ? TRANSICIONES[estado] : []
-    const avanzar = posibles.filter((e) => e !== 'anulada')
+    /**
+     * El grafo tiene un solo paso hacia adelante por estado —borrador→suscrita,
+     * suscrita→registrada, registrada→notificada—, así que esto es un estado o
+     * ninguno, nunca una lista. De ahí que el pie pueda tener un único botón
+     * principal.
+     */
+    const siguiente = posibles.find((e) => e !== 'anulada')
     const puedeAnular = posibles.includes('anulada')
     const esIngreso = m.tipo_movimiento === 'ingreso'
-    const subtipo = m.subtipo_movimiento as AccionSubtipo | null | undefined
+    const subtipo = m.subtipo_movimiento
     const propone = proponeSituacion(m.tipo_movimiento, subtipo)
     const ausencia = esAusenciaTemporal(m.tipo_movimiento, subtipo)
     const esSubrogacion = m.tipo_movimiento === 'subrogacion'
@@ -124,8 +128,8 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
       </Button>
     )
 
-    const nombres = [mv.servidor?.nombre, mv.servidor?.segundo_nombre].filter(Boolean).join(' ')
-    const apellidos = [mv.servidor?.apellido, mv.servidor?.segundo_apellido].filter(Boolean).join(' ')
+    const nombres = [m.servidor?.nombre, m.servidor?.segundo_nombre].filter(Boolean).join(' ')
+    const apellidos = [m.servidor?.apellido, m.servidor?.segundo_apellido].filter(Boolean).join(' ')
 
     return (
       <Stack gap="md">
@@ -136,7 +140,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             </Text>
             {m.subtipo_movimiento && (
               <Text size="sm" c="dimmed">
-                {SUBTIPO_LABELS[m.subtipo_movimiento as keyof typeof SUBTIPO_LABELS]}
+                {SUBTIPO_LABELS[m.subtipo_movimiento]}
               </Text>
             )}
           </div>
@@ -151,9 +155,9 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           <DetailList items={[
             {
               label: 'Servidor',
-              value: [mv.servidor?.apellido, mv.servidor?.nombre].filter(Boolean).join(' '),
+              value: [m.servidor?.apellido, m.servidor?.nombre].filter(Boolean).join(' '),
             },
-            { label: 'Cédula', value: mv.servidor?.cedula },
+            { label: 'Cédula', value: m.servidor?.cedula },
             { label: 'Rige desde', value: formatFecha(m.fecha_efectiva) },
             { label: 'Código', value: m.codigo_registro },
           ]} />
@@ -184,12 +188,12 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                 <DetailList columnas={1} items={[
                   { label: 'Apellidos', value: apellidos },
                   { label: 'Nombres', value: nombres },
-                  { label: 'Cédula', value: mv.servidor?.cedula },
-                  { label: 'Papeleta de votación', value: mv.servidor?.numero_papeleta_votacion },
-                  { label: 'Unidad', value: mv.unidad_origen?.nombre },
-                  { label: 'Puesto', value: mv.puesto_origen?.cargo?.nombre },
+                  { label: 'Cédula', value: m.servidor?.cedula },
+                  { label: 'Papeleta de votación', value: m.servidor?.numero_papeleta_votacion },
+                  { label: 'Unidad', value: m.unidad_origen?.nombre },
+                  { label: 'Puesto', value: m.puesto_origen?.cargo?.nombre },
                   { label: 'R.M.U.', value: dinero(m.remuneracion_origen) },
-                  { label: 'Partida', value: mv.partida_origen?.codigo },
+                  { label: 'Partida', value: m.partida_origen?.codigo },
                 ]} />
               )}
 
@@ -210,8 +214,8 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                   mb="xs"
                 />
                 <DetailList columnas={1} items={[
-                  { label: 'Unidad', value: mv.unidad_destino?.nombre },
-                  { label: 'Puesto', value: mv.puesto_destino?.cargo?.nombre },
+                  { label: 'Unidad', value: m.unidad_destino?.nombre },
+                  { label: 'Puesto', value: m.puesto_destino?.cargo?.nombre },
                   ...(esSubrogacion
                     ? []
                     : [{ label: 'Lugar de trabajo', value: m.lugar_trabajo }]),
@@ -219,8 +223,8 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                     label: 'Partida',
                     // La de la acción manda; si Talento Humano no fijó
                     // ninguna, rige la del puesto de destino.
-                    value: mv.partida_presupuestaria?.codigo
-                      ?? mv.puesto_destino?.partida_presupuestaria?.codigo,
+                    value: m.partida_presupuestaria?.codigo
+                      ?? m.puesto_destino?.partida_presupuestaria?.codigo,
                   },
                   {
                     label: esSubrogacion ? 'R.M.U. del puesto' : 'R.M.U. propuesta',
@@ -254,7 +258,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                     label: 'Hasta',
                     value: m.fecha_fin ? formatFecha(m.fecha_fin) : 'Sin fecha de fin',
                   },
-                  { label: 'Destino', value: mv.unidad_destino?.nombre },
+                  { label: 'Destino', value: m.unidad_destino?.nombre },
                 ]} />
                 <Text size="xs" c="dimmed" mt="xs">
                   El servidor conserva su puesto y su plaza; regresa al vencer
@@ -297,7 +301,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             {
               label: 'Dictamen médico',
               value: m.requiere_dictamen_medico
-                ? (mv.solicitud_certificacion?.dictamen ?? 'Pendiente')
+                ? (m.solicitud_certificacion?.dictamen ?? 'Pendiente')
                 : 'No requiere',
             },
             ...(m.caucionado
@@ -325,15 +329,15 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           </BloqueDetalle>
         )}
 
-        {mv.cubre_movimiento && (
-          <Alert variant="light" color="amethyst" icon={<IconUserOff size={16} />}>
+        {m.cubre_movimiento && (
+          <Alert variant="light" color="ocean" icon={<IconUserOff size={16} />}>
             Contratación de reemplazo: cubre la ausencia de{' '}
             <strong>
-              {[mv.cubre_movimiento.servidor?.apellido, mv.cubre_movimiento.servidor?.nombre]
+              {[m.cubre_movimiento.servidor?.apellido, m.cubre_movimiento.servidor?.nombre]
                 .filter(Boolean).join(' ') || 'un servidor'}
             </strong>
-            {mv.cubre_movimiento.fecha_fin
-              ? `, que regresa el ${formatFecha(mv.cubre_movimiento.fecha_fin)}.`
+            {m.cubre_movimiento.fecha_fin
+              ? `, que regresa el ${formatFecha(m.cubre_movimiento.fecha_fin)}.`
               : '.'}{' '}
             No consume plaza: la sigue ocupando el titular.
           </Alert>
@@ -346,68 +350,72 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           </Alert>
         )}
 
-        <Divider />
+        {/* El pie va en `ModalFooter`, que es el del catálogo y es pegajoso
+            también en un cajón: antes era un `Group` escrito a mano —anidado
+            dentro de otro— y en un expediente largo los botones se iban debajo
+            del último bloque.
 
-        {/* La barra inferior queda solo para lo que hace avanzar el trámite.
-            Editar vive junto a los datos que corrige. */}
-        <Group justify="flex-end">
-          <Group>
-            {puedeDescargarPdf(estado, m.tipo_movimiento) && (
-              <Button
-                variant="subtle"
-                leftSection={<IconFileDownload size={14} />}
-                loading={descargando}
-                onClick={descargarPdf}
-              >
-                PDF
-              </Button>
-            )}
+            Queda solo para lo que hace avanzar el trámite: editar vive junto a
+            los datos que corrige. A la izquierda lo secundario —el PDF— y lo
+            destructivo; a la derecha el único paso hacia adelante que el grafo
+            permite desde este estado. */}
+        <ModalFooter
+          onCancel={onClose}
+          cancelLabel="Cerrar"
+          sinPrincipal={!siguiente}
+          submitLabel={siguiente ? `Pasar a ${ESTADO_LABELS[siguiente]}` : undefined}
+          submitting={transicionar.isPending}
+          onSubmit={siguiente
+            ? () => {
+              // Un ingreso que pasa a registrada crea el contrato: se
+              // completan primero sus datos en vez de fallar después.
+              if (siguiente === 'registrada' && requiereCompletarVinculo(estado, m.tipo_movimiento)) {
+                abrirAprobar()
+                return
+              }
+              // Mismo criterio para el dictamen presupuestario: el backend
+              // rechaza suscribir sin él, así que se pide antes en vez de
+              // dejar que la transición falle.
+              if (siguiente === 'suscrita' && tieneEfectoEconomico(m.tipo_movimiento)) {
+                abrirDictamen()
+                return
+              }
+              transicionar.mutate({ id: Number(m.id), estado: siguiente })
+            }
+            : undefined}
+          leftSection={
+            <>
+              {puedeDescargarPdf(estado, m.tipo_movimiento) && (
+                <Button
+                  variant="subtle"
+                  leftSection={<IconFileDownload size={14} />}
+                  loading={descargando}
+                  onClick={descargarPdf}
+                >
+                  PDF
+                </Button>
+              )}
 
-            {puedeAnular && (
-              <Button
-                variant="subtle"
-                color="red"
-                leftSection={<IconBan size={14} />}
-                onClick={() => confirmar({
-                  title:   'Anular acción de personal',
-                  message: 'Se anulará esta acción de personal y no podrá reactivarse.',
-                  destructiva: true,
-                  confirmLabel: 'Anular',
-                  onConfirm: () =>
-                    transicionar.mutate({ id: Number(m.id), estado: 'anulada' }, { onSuccess: onClose }),
-                })}
-              >
-                Anular
-              </Button>
-            )}
-
-            {avanzar.map((destino) => (
-              <Button
-                key={destino}
-                leftSection={<IconCheck size={14} />}
-                loading={transicionar.isPending}
-                onClick={() => {
-                  // Un ingreso que pasa a registrada crea el contrato: se
-                  // completan primero sus datos en vez de fallar después.
-                  if (destino === 'registrada' && requiereCompletarVinculo(estado, m.tipo_movimiento)) {
-                    abrirAprobar()
-                    return
-                  }
-                  // Mismo criterio para el dictamen presupuestario: el backend
-                  // rechaza suscribir sin él, así que se pide antes en vez de
-                  // dejar que la transición falle.
-                  if (destino === 'suscrita' && tieneEfectoEconomico(m.tipo_movimiento)) {
-                    abrirDictamen()
-                    return
-                  }
-                  transicionar.mutate({ id: Number(m.id), estado: destino })
-                }}
-              >
-                Pasar a {ESTADO_LABELS[destino]}
-              </Button>
-            ))}
-          </Group>
-        </Group>
+              {puedeAnular && (
+                <Button
+                  variant="subtle"
+                  color="red"
+                  leftSection={<IconBan size={14} />}
+                  onClick={() => confirmar({
+                    title:   'Anular acción de personal',
+                    message: 'Se anulará esta acción de personal y no podrá reactivarse.',
+                    destructiva: true,
+                    confirmLabel: 'Anular',
+                    onConfirm: () =>
+                      transicionar.mutate({ id: Number(m.id), estado: 'anulada' }, { onSuccess: onClose }),
+                  })}
+                >
+                  Anular
+                </Button>
+              )}
+            </>
+          }
+        />
 
         {/* El mismo formulario con el que se registró la acción, en modo
             edición: un solo sitio donde corregir cada campo. */}
@@ -443,7 +451,27 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
       title="Acción de personal"
       ancho="lg"
     >
-      {contenido()}
+      {/* Los cuatro estados, no solo el normal.
+          Antes era `if (isLoading || !m) return <Skeleton />`: con la consulta
+          caída —un 403, un 500— `isLoading` es falso y `data` indefinido, así
+          que el cajón se quedaba con el esqueleto para siempre y sin decir por
+          qué. Le pasaba en particular a asistente-uath, que veía la bandeja y
+          recibía 403 en el detalle: lo que veía era una caja que cargaba sin fin. */}
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudo cargar la acción de personal"
+        onRetry={refetch}
+        skeletonRows={8}
+        empty={!m}
+        emptyProps={{
+          icon: IconFileOff,
+          title: 'No se encontró la acción de personal',
+          description: 'Puede haber sido anulada o corregida por otro registro. Vuelva a la bandeja y ábrala desde allí.',
+        }}
+      >
+        {m && contenido(m)}
+      </DataState>
     </SgthDrawer>
   )
 }
