@@ -11,11 +11,19 @@ import { SubrogacionModal } from '@/features/expediente/components/SubrogacionMo
 import { CancelarSubrogacionModal } from '@/features/expediente/components/CancelarSubrogacionModal'
 import { getSubrogacionColumns } from '@/features/expediente/components/subrogaciones.columns'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useAuth } from '@/hooks/useAuth'
+import { TIPO_OPTIONS } from '@/features/expediente/utils/subrogaciones'
 import type { Subrogacion, TipoSubrogacion, UnidadConRelaciones } from '@/types/api'
 import { DataState, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
 
 export function SubrogacionesView() {
   const contained = useContainedInput()
+  const { hasRole } = useAuth()
+
+  // Quien solo consulta —auditoría y máxima autoridad— ve el listado sin las
+  // acciones: el backend las reserva a UATH, así que ofrecerlas era prometer
+  // un 403.
+  const puedeAdministrar = hasRole('admin-uath') || hasRole('asistente-uath') || hasRole('admin-ti')
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [cancelarOpened, { open: openCancelar, close: closeCancelar }] = useDisclosure(false)
   const [cancelarId, setCancelarId] = useState<number | null>(null)
@@ -38,6 +46,7 @@ export function SubrogacionesView() {
   const columns = getSubrogacionColumns({
     onFinalizar: (id) => finalizar.mutate(id),
     onCancelar: (id) => { setCancelarId(id); openCancelar() },
+    puedeAdministrar,
   })
 
   return (
@@ -71,10 +80,7 @@ export function SubrogacionesView() {
         <Select
           label="Tipo"
           placeholder="Todos"
-          data={[
-            { value: 'subrogacion', label: 'Subrogación' },
-            { value: 'encargo', label: 'Encargo' },
-          ]}
+          data={TIPO_OPTIONS}
           clearable
           {...contained}
           value={tipo}

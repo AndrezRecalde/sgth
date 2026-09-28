@@ -22,20 +22,9 @@ import {
 import type { UnidadConRelaciones, PuestoConRelaciones, ServidorConRelaciones } from '@/types/api'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import { BloqueDetalle } from './BloqueDetalle'
-
-const TIPO_OPTIONS = [
-  { value: 'subrogacion', label: 'Subrogación' },
-  { value: 'encargo',     label: 'Encargo' },
-]
-
-const MOTIVO_OPTIONS = [
-  { value: 'vacaciones',          label: 'Vacaciones' },
-  { value: 'comision_servicios',  label: 'Comisión de Servicios' },
-  { value: 'enfermedad',          label: 'Enfermedad' },
-  { value: 'licencia',            label: 'Licencia' },
-  { value: 'encargo_vacante',     label: 'Encargo por Vacante' },
-  { value: 'otro',                label: 'Otro' },
-]
+import {
+  MOTIVO_POR_DEFECTO, TIPO_OPTIONS, motivosPara,
+} from '../utils/subrogaciones'
 
 /**
  * Los tres selectores arrancan sin valor. El esquema los exige al enviar,
@@ -121,11 +110,17 @@ export function SubrogacionModal({ opened, onClose }: Props) {
    * reemplazar, y en subrogación el titular vuelve a ser el del puesto.
    */
   const elegirTipo = (valor: string) => {
-    setValue('tipo', valor as 'subrogacion' | 'encargo')
+    const figura = valor as 'subrogacion' | 'encargo'
+
+    setValue('tipo', figura)
     setValue(
       'servidor_subrogado_id',
-      valor === 'encargo' ? null : (ocupanteDe(puestoSelId)?.id ?? null),
+      figura === 'encargo' ? null : (ocupanteDe(puestoSelId)?.id ?? null),
     )
+    // El motivo acompaña a la figura: se quedaba en «Vacaciones» al pasar a
+    // encargo, así que el documento salía motivado por las vacaciones de un
+    // titular que no existe.
+    setValue('motivo', MOTIVO_POR_DEFECTO[figura])
   }
 
   // La figura la determina el puesto, no quien llena el formulario: un puesto
@@ -354,7 +349,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
           render={({ field }) => (
             <Select
               label="Motivo"
-              data={MOTIVO_OPTIONS}
+              data={motivosPara(tipo)}
               {...contained}
               value={field.value}
               onChange={(v) => field.onChange(v ?? 'otro')}
