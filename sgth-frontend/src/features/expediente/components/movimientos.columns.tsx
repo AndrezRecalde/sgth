@@ -94,12 +94,12 @@ export const getMovimientoColumns = ({
             onClick: () => onVerDetalle(m),
           },
           {
-            label: puedeDescargarPdf(m.estado, m.tipo_movimiento)
+            label: puedeDescargarPdf(m)
               ? 'Descargar PDF de Acción de Personal'
               : 'Sin documento imprimible',
             icon: <IconFileDownload size={14} />,
             disabled: descargandoId === Number(m.id)
-              || !puedeDescargarPdf(m.estado, m.tipo_movimiento),
+              || !puedeDescargarPdf(m),
             onClick: () => onDescargarPdf(m),
           },
         ]}
