@@ -34556,53 +34556,6 @@
                 }
             }
         },
-        "/v1/expediente/subrogaciones/activas": {
-            "get": {
-                "operationId": "subrogacion.listarActivas",
-                "tags": [
-                    "Subrogacion"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Subrogaciones activas"
-                                        },
-                                        "datos": {
-                                            "type": "object"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/v1/expediente/subrogaciones/vigentes": {
             "get": {
                 "operationId": "subrogacion.listarVigentes",
@@ -34611,7 +34564,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "`datos` y `meta` por separado, como el resto de los listados\npaginados del expediente: la tabla necesita el total para dibujar su\npaginador, y devolver el paginador entero met\u00eda sus enlaces dentro de\n`datos`.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -34625,10 +34578,33 @@
                                             "const": "Subrogaciones pendientes y activas"
                                         },
                                         "datos": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "integer"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina"
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -34653,6 +34629,7 @@
         "/v1/expediente/subrogaciones/servidor/{servidorId}": {
             "get": {
                 "operationId": "subrogacion.listarPorServidor",
+                "summary": "Historial de un servidor en ambos papeles. Lo abre quien administra o\naudita, y el propio interesado: de eso se encarga el policy, porque\ndepende de qu\u00e9 servidor se pide y el middleware de la ruta no lo sabe",
                 "tags": [
                     "Subrogacion"
                 ],
@@ -34718,69 +34695,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "tipo": {
-                                        "type": "string",
-                                        "enum": [
-                                            "subrogacion",
-                                            "encargo"
-                                        ]
-                                    },
-                                    "servidor_subrogante_id": {
-                                        "type": "integer"
-                                    },
-                                    "servidor_subrogado_id": {
-                                        "type": [
-                                            "integer",
-                                            "null"
-                                        ]
-                                    },
-                                    "unidad_administrativa_id": {
-                                        "type": "integer"
-                                    },
-                                    "puesto_subrogado_id": {
-                                        "type": "integer"
-                                    },
-                                    "fecha_inicio": {
-                                        "type": "string",
-                                        "format": "date-time"
-                                    },
-                                    "fecha_fin": {
-                                        "type": "string",
-                                        "format": "date-time"
-                                    },
-                                    "motivo": {
-                                        "type": "string"
-                                    },
-                                    "resolucion_numero": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
-                                    },
-                                    "documento_respaldo": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
-                                    },
-                                    "observacion": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "tipo",
-                                    "servidor_subrogante_id",
-                                    "unidad_administrativa_id",
-                                    "puesto_subrogado_id",
-                                    "fecha_inicio",
-                                    "fecha_fin",
-                                    "motivo"
-                                ]
+                                "$ref": "#/components/schemas/RegistrarSubrogacionRequest"
                             }
                         }
                     }
@@ -34820,11 +34735,11 @@
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -34907,16 +34822,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "motivo": {
-                                        "type": "string",
-                                        "minLength": 5
-                                    }
-                                },
-                                "required": [
-                                    "motivo"
-                                ]
+                                "$ref": "#/components/schemas/CancelarSubrogacionRequest"
                             }
                         }
                     }
@@ -34956,11 +34862,11 @@
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -41475,6 +41381,21 @@
                     "nueva_contrasena"
                 ],
                 "title": "CambiarContrasenaRequest"
+            },
+            "CancelarSubrogacionRequest": {
+                "type": "object",
+                "description": "El motivo por el que se cancela una subrogaci\u00f3n o un encargo.\n\nEl tope de 500 es el mismo que pide `MotivoModal` en el frontend, que es el\nmodal con el que se escribe: sin \u00e9l, el formulario aceptaba un texto que el\nAPI no rechazaba pero que tampoco cab\u00eda en ninguna pantalla que lo muestre.",
+                "properties": {
+                    "motivo": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "motivo"
+                ],
+                "title": "CancelarSubrogacionRequest"
             },
             "Canton": {
                 "type": "object",
@@ -48736,6 +48657,65 @@
                 ],
                 "title": "RegistrarResultadoRequest"
             },
+            "RegistrarSubrogacionRequest": {
+                "type": "object",
+                "description": "Datos de una subrogaci\u00f3n o encargo nuevos.\n\nSale del controlador, donde viv\u00eda como un `$request->validate()` con el\ncomentario \u00abAqu\u00ed validamos b\u00e1sico\u00bb \u2014 y lo b\u00e1sico dejaba pasar un `motivo`\ncualquiera: la columna se castea a `MotivoSubrogacion`, as\u00ed que un valor\nfuera de lista reventaba en el cast de Eloquent y el API respond\u00eda 500 en vez\nde 422. `tipo`, al lado, s\u00ed estaba acotado.\n\nLas reglas de negocio \u2014qui\u00e9n puede ser titular, traslapes, la figura que\ncorresponde seg\u00fan el puesto\u2014 siguen en SubrogacionService: dependen del\nestado de la base, no del formato de la petici\u00f3n.",
+                "properties": {
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoSubrogacion"
+                    },
+                    "servidor_subrogante_id": {
+                        "type": "integer"
+                    },
+                    "servidor_subrogado_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "unidad_administrativa_id": {
+                        "type": "integer"
+                    },
+                    "puesto_subrogado_id": {
+                        "type": "integer"
+                    },
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "motivo": {
+                        "$ref": "#/components/schemas/MotivoSubrogacion"
+                    },
+                    "resolucion_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "tipo",
+                    "servidor_subrogante_id",
+                    "unidad_administrativa_id",
+                    "puesto_subrogado_id",
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "motivo"
+                ],
+                "title": "RegistrarSubrogacionRequest"
+            },
             "ReprogramarPlazoContratoRequest": {
                 "type": "object",
                 "properties": {
@@ -53643,12 +53623,6 @@
                             "null"
                         ]
                     },
-                    "documento_respaldo": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
                     "estado": {
                         "$ref": "#/components/schemas/EstadoSubrogacion"
                     },
@@ -53693,7 +53667,6 @@
                     "fecha_fin",
                     "motivo",
                     "resolucion_numero",
-                    "documento_respaldo",
                     "estado",
                     "observacion",
                     "registrado_por",
