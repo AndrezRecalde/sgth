@@ -328,15 +328,29 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // inactivo con su vínculo cerrado.
         Route::apiResource('servidores', ServidorController::class)->except(['store', 'destroy']);
 
+        // Documentos del expediente. Leer y descargar se autorizan por
+        // ServidorPolicy::ver —el titular ve los suyos, Talento Humano los de
+        // todos—, pero SUBIR y BORRAR piden rol explícito.
+        //
+        // Hasta el 2026-09-27 la escritura no tenía middleware y se autorizaba
+        // solo con ServidorPolicy::actualizar, que también deja pasar al propio
+        // titular: cualquiera podía meter o quitar papeles de su propio
+        // expediente por API, aunque ninguna pantalla lo ofrezca. Al ampliar ese
+        // policy a 'asistente-uath' —para que pudiera trabajar las acciones de
+        // personal— eso se habría extendido al expediente de cualquiera, así que
+        // la escritura se ancla aquí: quien archiva un documento en el
+        // expediente es Talento Humano.
         Route::prefix('servidores/{servidorId}')->group(function () {
             Route::get('documentos',
                 [DocumentoServidorController::class, 'index'])
                 ->name('documentos.index');
             Route::post('documentos',
                 [DocumentoServidorController::class, 'store'])
+                ->middleware('role:admin-uath')
                 ->name('documentos.store');
             Route::delete('documentos/{documentoId}',
                 [DocumentoServidorController::class, 'destroy'])
+                ->middleware('role:admin-uath')
                 ->name('documentos.destroy');
             Route::get('documentos/{documentoId}/descargar',
                 [DocumentoServidorController::class, 'descargar'])

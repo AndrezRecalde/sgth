@@ -159,3 +159,33 @@ test('un asistente-uath no puede crear fichas', function () {
 
     expect($asistente->can('crear', Servidor::class))->toBeFalse();
 });
+
+/*
+| El límite de la ampliación, por el lado de los documentos.
+|
+| Subir y borrar papeles del expediente no tenía middleware de rol y se
+| autorizaba solo con ServidorPolicy::actualizar, que también deja pasar al
+| propio titular. Al abrir ese policy a 'asistente-uath' para que pudiera
+| trabajar las acciones de personal, eso se habría extendido al expediente de
+| cualquiera, así que la escritura se ancla en la ruta: quien archiva un
+| documento es Talento Humano. Leer y descargar siguen por policy.
+*/
+test('solo admin-uath sube y borra documentos del expediente', function () {
+    Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
+    $asistente = User::factory()->create();
+    $asistente->assignRole('asistente-uath');
+
+    $base = "/api/v1/expediente/servidores/{$this->servidorAjeno->id}/documentos";
+
+    // El asistente lee el expediente —eso sí se le abrió— pero no lo escribe.
+    $this->actingAs($asistente, 'sanctum');
+    $this->getJson($base)->assertOk();
+    $this->postJson($base, [])->assertForbidden();
+    $this->deleteJson("{$base}/1")->assertForbidden();
+
+    // Y el titular tampoco mete papeles en su propia ficha.
+    $this->actingAs($this->usuario, 'sanctum');
+    $propio = "/api/v1/expediente/servidores/{$this->servidorPropio->id}/documentos";
+    $this->postJson($propio, [])->assertForbidden();
+    $this->deleteJson("{$propio}/1")->assertForbidden();
+});
