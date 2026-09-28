@@ -51,14 +51,19 @@ beforeEach(function () {
         'modalidad_anticipo' => 'total',
     ]);
 
-    $tipo = fn (string $codigo, string $vehiculo, bool $autoriza = false) => CatalogoTransporte::create([
+    // `orden` explícito: el endpoint ordena por esa columna, que tiene
+    // `default(0)`, así que sin esto los tres tipos empatan y el desempate lo
+    // decide Postgres. La prueba de más abajo afirma el orden en que salen —y
+    // hace bien, porque ese orden es el que ve el formulario de tramo—, pero
+    // estaba afirmando un orden que la consulta no garantizaba.
+    $tipo = fn (string $codigo, string $vehiculo, int $orden, bool $autoriza = false) => CatalogoTransporte::create([
         'nombre' => ucfirst($codigo), 'codigo' => $codigo, 'tipo_vehiculo' => $vehiculo,
-        'requiere_autorizacion' => $autoriza, 'activo' => true,
+        'requiere_autorizacion' => $autoriza, 'activo' => true, 'orden' => $orden,
     ]);
 
-    $this->bus = $tipo('bus', 'terrestre');
-    $this->avion = $tipo('avion', 'aereo', true);
-    $this->institucional = $tipo('vehiculo_institucional', 'terrestre');
+    $this->bus = $tipo('bus', 'terrestre', 1);
+    $this->avion = $tipo('avion', 'aereo', 2, true);
+    $this->institucional = $tipo('vehiculo_institucional', 'terrestre', 3);
 
     $this->cooperativa = EmpresaTransporte::create(['catalogo_transporte_id' => $this->bus->id, 'nombre' => 'Trans Esmeraldas', 'codigo' => 'TE']);
     $this->aerolinea = EmpresaTransporte::create(['catalogo_transporte_id' => $this->avion->id, 'nombre' => 'LATAM', 'codigo' => 'LA']);
