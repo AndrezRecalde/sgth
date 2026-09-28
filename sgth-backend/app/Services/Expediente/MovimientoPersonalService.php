@@ -102,6 +102,26 @@ class MovimientoPersonalService
             );
         }
 
+        // La acción de una subrogación es el reflejo de una fila en
+        // `subrogaciones`, y este método solo escribe el movimiento. Editar aquí
+        // las fechas o el puesto dejaba a los dos registros diciendo cosas
+        // distintas: uno manda el documento impreso y el otro —vía
+        // FirmanteOrganigramaService::subroganteDe(), que lee `subrogaciones`—
+        // decide quién puede firmar.
+        //
+        // La regla existía desde el 2026-09-26, pero solo en la pantalla
+        // (`AccionBotonEditar` esconde el botón y el modal no ofrece el tipo).
+        // La ruta pide únicamente `role:admin-uath`, así que se alcanzaba sin
+        // pasar por ninguna pantalla. Se corrige cancelando la subrogación y
+        // registrándola de nuevo, que es lo que ya dice la interfaz.
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION) {
+            throw new ReglaNegocioException(
+                'Una subrogación o encargo no se edita: sus datos viven también en '
+                    .'el registro de subrogaciones, que es el que decide quién firma. '
+                    .'Cancélela y regístrela de nuevo.'
+            );
+        }
+
         // La marcación se vuelve a resolver siempre que la edición toque el
         // nombramiento o la casilla, y se evalúa sobre el resultado de la
         // edición —no sobre lo que vino—, porque es parcial y puede traer uno
