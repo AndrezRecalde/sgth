@@ -45,9 +45,27 @@ class AccionPersonalPdfService
             );
         }
 
-        if (!in_array($movimiento->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)) {
+        /*
+        | ANULADA entró el 2026-09-29, con el resto de la anulación de actos ya
+        | registrados. Un acto que existió y se anuló sigue teniendo documento:
+        | lo que cambia es que el papel debe decir que está sin efecto. Negarle
+        | el PDF dejaba a Talento Humano con un correlativo emitido, muy
+        | probablemente ya impreso y entregado, y ninguna forma de emitir la
+        | versión que lo desmiente.
+        |
+        | El guard del correlativo, más abajo, es el que separa lo anulado que
+        | llegó a registrarse de lo anulado en borrador, que nunca fue nada.
+        */
+        $imprimibles = [
+            EstadoAccionPersonal::REGISTRADA,
+            EstadoAccionPersonal::NOTIFICADA,
+            EstadoAccionPersonal::ANULADA,
+        ];
+
+        if (!in_array($movimiento->estado, $imprimibles, true)) {
             throw new ReglaNegocioException(
-                'Solo se puede generar el PDF de Acción de Personal para movimientos en estado registrada o notificada.'
+                'Solo se puede generar el PDF de Acción de Personal para movimientos en '
+                    .'estado registrada, notificada o anulada.'
             );
         }
 
@@ -83,6 +101,7 @@ class AccionPersonalPdfService
 
         $pdf = Pdf::loadView('pdf.expediente.accion-personal', [
             'movimiento'   => $movimiento,
+            'anulada'      => $movimiento->estado === EstadoAccionPersonal::ANULADA,
             'servidor'     => $movimiento->servidor,
             'firmaAutoridad' => $this->firma($movimiento, 'firmante_autoridad', RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA),
             'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
@@ -95,6 +114,9 @@ class AccionPersonalPdfService
             // acción; 'codigo' es un campo libre que casi nunca se llena.
             'filename' => 'accion_personal_'
                 .($movimiento->codigo_registro ?: $movimiento->codigo ?: $movimiento->id)
+                // Para que el archivo anulado no se confunda con el vigente en
+                // la carpeta de quien descarga los dos.
+                .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '')
                 .'.pdf',
         ];
     }

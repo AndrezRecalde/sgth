@@ -290,7 +290,7 @@ test('una subrogación en borrador todavía no se imprime', function () {
 
     expect(fn () => app(\App\Services\Expediente\AccionPersonalPdfService::class)
         ->generarContent($subrogacion->movimiento_personal_id))
-        ->toThrow(\App\Exceptions\ReglaNegocioException::class, 'registrada o notificada');
+        ->toThrow(\App\Exceptions\ReglaNegocioException::class, 'registrada, notificada o anulada');
 });
 
 // ── Coherencia del estado nuevo ─────────────────────────────────

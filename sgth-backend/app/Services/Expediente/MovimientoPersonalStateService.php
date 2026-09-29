@@ -7,6 +7,7 @@ use App\Enums\PartidaPorModalidad;
 use App\Enums\TipoMovimientoPersonal;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
+use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use Illuminate\Support\Facades\DB;
@@ -23,15 +24,26 @@ class MovimientoPersonalStateService
 
     /**
      * Grafo de transiciones permitidas. No es "cualquier estado hacia
-     * adelante": REGISTRADA solo se alcanza desde SUSCRITA, y ANULADA
-     * solo desde estados anteriores a REGISTRADA. NOTIFICADA y ANULADA
-     * son terminales.
+     * adelante": REGISTRADA solo se alcanza desde SUSCRITA. ANULADA es el
+     * único estado terminal.
+     *
+     * Anular desde REGISTRADA y desde NOTIFICADA se abrió el 2026-09-29. Antes
+     * solo se podía anular lo que aún no había surtido efecto, y eso dejaba a
+     * Talento Humano sin ninguna salida cuando el error aparecía después: la
+     * acción ya no se editaba —guarda de inmutabilidad—, ya no se anulaba, y lo
+     * único que existía era `corregir()`, que emitía un SEGUNDO documento con
+     * otro correlativo dejando el primero vigente. Preguntado, TH dijo que lo
+     * correcto es anular y emitir uno nuevo, no enmendar.
+     *
+     * Anular después de registrar no es un cambio de estado a secas: hay que
+     * deshacer lo que el registro hizo sobre el vínculo. De eso se ocupa
+     * `revertirEfectoSobreElVinculo()`.
      */
     private const TRANSICIONES = [
         'borrador'   => ['suscrita', 'anulada'],
         'suscrita'   => ['registrada', 'anulada'],
-        'registrada' => ['notificada'],
-        'notificada' => [],
+        'registrada' => ['notificada', 'anulada'],
+        'notificada' => ['anulada'],
         'anulada'    => [],
     ];
 
@@ -64,46 +76,6 @@ class MovimientoPersonalStateService
 
             return $movimiento->fresh();
         });
-    }
-
-    /**
-     * Un movimiento en REGISTRADA o NOTIFICADA no se edita: crea uno nuevo
-     * que referencia al original vía corrige_a_id, copiando los campos
-     * relevantes para que el usuario solo edite lo que cambió. El
-     * original permanece visible y sin cambios.
-     */
-    public function corregir(MovimientoPersonal $original, array $cambios): MovimientoPersonal
-    {
-        if (!in_array($original->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)) {
-            throw new ReglaNegocioException(
-                'Solo se puede corregir un movimiento en estado registrada o notificada.'
-            );
-        }
-
-        $camposCopiables = [
-            'servidor_id', 'tipo_movimiento', 'subtipo_movimiento',
-            'requiere_dictamen_medico', 'movimiento_previo_id',
-            'categoria', 'codigo', 'descripcion',
-            'fecha_efectiva', 'fecha_inicio', 'fecha_fin',
-            'unidad_origen_id', 'unidad_destino_id', 'puesto_origen_id', 'puesto_destino_id',
-            'resolucion_numero', 'documento_respaldo', 'observacion', 'lugar_trabajo',
-            'caucionado', 'caucion_numero', 'caucion_fecha',
-        ];
-
-        $datosBase = collect($original->getAttributes())->only($camposCopiables)->toArray();
-
-        $datos = array_merge($datosBase, $cambios, [
-            'corrige_a_id'                => $original->id,
-            'estado'                      => EstadoAccionPersonal::BORRADOR,
-            'codigo_registro'             => null,
-            'fecha_registro'              => null,
-            'dictamen_presupuestario_ref' => null,
-            'notificado_por'              => null,
-            'fecha_notificacion'          => null,
-            'autorizado_por'              => auth()->id(),
-        ]);
-
-        return MovimientoPersonal::create($datos);
     }
 
     private function assertTransicionPermitida(EstadoAccionPersonal $origen, EstadoAccionPersonal $destino): void
@@ -293,7 +265,160 @@ class MovimientoPersonalStateService
         if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION) {
             $this->subrogacionService->cancelarPorMovimiento($movimiento);
         }
+
+        // Y si ya estaba registrada, deshacer lo que el registro hizo sobre el
+        // vínculo: anular un acto que ya surtió efecto no es solo cambiarle el
+        // estado a la fila.
+        $this->revertirEfectoSobreElVinculo($movimiento);
     }
+
+    /**
+     * Deshace sobre el vínculo lo que hizo `aplicarRegistro()`.
+     *
+     * Solo corre si la acción llegó a registrarse —el correlativo es la prueba
+     * de que pasó por ahí—; anular un borrador o algo suscrito no tiene nada
+     * que revertir, que es como funcionaba hasta ahora.
+     *
+     * Es el espejo exacto de `aplicarRegistro()`, rama por rama, y pregunta lo
+     * mismo que aquél a través de `MovimientoPersonal::tocaElVinculo()`. Si se
+     * añade un tipo que toque el vínculo al registrarse, hay que añadirlo
+     * también aquí, o su anulación dejará el contrato diciendo algo que ningún
+     * acto respalda.
+     */
+    private function revertirEfectoSobreElVinculo(MovimientoPersonal $movimiento): void
+    {
+        if (blank($movimiento->codigo_registro) || ! $movimiento->tocaElVinculo()) {
+            return;
+        }
+
+        $this->assertEsLaUltimaQueTocaElVinculo($movimiento);
+
+        if ($movimiento->tipo_movimiento->creaVinculo()) {
+            $this->deshacerVinculoCreado($movimiento);
+            return;
+        }
+
+        if ($movimiento->reubicaAlServidor()) {
+            $this->devolverAlPuestoDeOrigen($movimiento);
+            return;
+        }
+
+        $this->deshacerCierreDeVinculo($movimiento);
+    }
+
+    /**
+     * Anular el ingreso que creó un vínculo borra ese vínculo.
+     *
+     * No lo «cierra»: cerrarlo dejaría en el expediente un contrato terminado
+     * que afirma que la persona estuvo vinculada y dejó de estarlo, y eso no
+     * ocurrió — el acto que lo creó quedó sin efecto, así que el vínculo nunca
+     * debió existir. El borrado es lógico (SoftDeletes), de modo que la fila
+     * sigue ahí para auditoría junto al registro de la anulación.
+     *
+     * Un ingreso nunca cierra el vínculo anterior de nadie
+     * (`assertSinVinculoVigente`), así que aquí no hay nada que reabrir.
+     */
+    private function deshacerVinculoCreado(MovimientoPersonal $movimiento): void
+    {
+        $contrato = ContratoServidor::where('movimiento_origen_id', $movimiento->id)->first();
+
+        if (! $contrato) {
+            throw new ReglaNegocioException(
+                'No se encuentra el vínculo que creó esta acción, así que anularla dejaría '
+                    .'el expediente a medias. Revíselo con la Dirección de Talento Humano.'
+            );
+        }
+
+        $servidorId = $contrato->servidor_id;
+        $contrato->delete();
+
+        $this->contratoServidorService->sincronizarPuestoDesdeVinculo($servidorId);
+    }
+
+    /**
+     * Anular una cesación devuelve a la vida el vínculo que cerró.
+     */
+    private function deshacerCierreDeVinculo(MovimientoPersonal $movimiento): void
+    {
+        $contrato = ContratoServidor::where('movimiento_cierre_id', $movimiento->id)->first();
+
+        if (! $contrato) {
+            throw new ReglaNegocioException(
+                'No se encuentra el vínculo que cerró esta acción, así que anularla no '
+                    .'devolvería al servidor a su situación anterior. Revíselo con la '
+                    .'Dirección de Talento Humano.'
+            );
+        }
+
+        $this->contratoServidorService->reabrirPorAnulacion($contrato);
+    }
+
+    /**
+     * Anular un traspaso o una prestación de servicios devuelve al servidor al
+     * puesto del que venía.
+     *
+     * El origen no se deduce: está congelado en la propia acción desde que se
+     * creó (`MovimientoPersonalService::capturarSituacionActual()`), y es la
+     * columna «situación actual» del documento impreso.
+     */
+    private function devolverAlPuestoDeOrigen(MovimientoPersonal $movimiento): void
+    {
+        $contrato = Servidor::with('contratoVigente')
+            ->find($movimiento->servidor_id)?->contratoVigente;
+
+        if (! $contrato || ! $movimiento->puesto_origen_id) {
+            throw new ReglaNegocioException(
+                'No se puede devolver al servidor a su puesto anterior: falta el vínculo '
+                    .'vigente o la situación de origen de esta acción.'
+            );
+        }
+
+        $contrato->update([
+            'puesto_id'                => $movimiento->puesto_origen_id,
+            'unidad_administrativa_id' => $movimiento->unidad_origen_id
+                ?? $contrato->unidad_administrativa_id,
+        ]);
+
+        $this->contratoServidorService->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);
+    }
+
+    /**
+     * No se anula una acción que otra posterior ya dio por supuesta.
+     *
+     * Revertir mira el estado de HOY del vínculo, no el de entonces: si al
+     * traspaso de marzo le siguió otro en julio, deshacer el de marzo
+     * devolvería al servidor al puesto de enero y borraría de hecho el de
+     * julio, que sigue registrado y con su documento firmado. Igual con una
+     * cesación seguida de un ingreso nuevo.
+     *
+     * Se anula de la última hacia atrás. Quien quiera deshacer la de marzo
+     * tiene que anular antes la de julio: es más trabajo y es lo correcto,
+     * porque cada acto que se deshace deja su propia constancia.
+     */
+    private function assertEsLaUltimaQueTocaElVinculo(MovimientoPersonal $movimiento): void
+    {
+        $ultima = MovimientoPersonal::where('servidor_id', $movimiento->servidor_id)
+            ->whereNotNull('codigo_registro')
+            ->whereIn('estado', [
+                EstadoAccionPersonal::REGISTRADA->value,
+                EstadoAccionPersonal::NOTIFICADA->value,
+            ])
+            // `fecha_registro` es una fecha sin hora, así que dos del mismo día
+            // empatan; el id desempata por orden de creación.
+            ->orderByDesc('fecha_registro')
+            ->orderByDesc('id')
+            ->get()
+            ->first(fn (MovimientoPersonal $otro) => $otro->tocaElVinculo());
+
+        if ($ultima && $ultima->id !== $movimiento->id) {
+            throw new ReglaNegocioException(
+                'No se puede anular esta acción: después de ella se registró '
+                    ."'{$ultima->codigo_registro}', que también afecta al vínculo del "
+                    .'servidor. Anule primero la más reciente.'
+            );
+        }
+    }
+
 
     /**
      * Un ingreso ya no cierra por su cuenta el vínculo vigente del servidor.
@@ -338,6 +463,10 @@ class MovimientoPersonalStateService
         $this->contratoServidorService->cerrar($servidor->contratoVigente, [
             'motivo_fin' => $subtipo->etiqueta().' — Acción de Personal #'.$movimiento->id.'.',
             'fecha_fin'  => $movimiento->fecha_efectiva?->toDateString() ?? now()->toDateString(),
+            // Qué acto lo cerró, para poder reabrirlo si se anula. El texto de
+            // `motivo_fin` ya lo decía, pero un texto no es algo contra lo que
+            // consultar.
+            'movimiento_cierre_id' => $movimiento->id,
         ]);
     }
 

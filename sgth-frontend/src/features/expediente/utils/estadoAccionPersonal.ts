@@ -21,12 +21,18 @@ export const TONO_ACCION: Record<EstadoAccionPersonal, SemanticTone> = {
  * Espeja MovimientoPersonalStateService::TRANSICIONES. Los estados
  * intermedios 'informe_uath' y 'dictamen_presupuestario' se retiraron: no
  * capturaban ningún dato y el flujo real no los usa.
+ *
+ * Anular desde 'registrada' y desde 'notificada' se abrió el 2026-09-29. Antes
+ * solo se anulaba lo que aún no había surtido efecto, y cuando el error
+ * aparecía después —que es cuando aparece, al leer el documento impreso— no
+ * había ninguna salida: el botón decía «Solo se edita en borrador» y ahí
+ * terminaba. TH: lo correcto es anular y emitir uno nuevo.
  */
 export const TRANSICIONES: Record<EstadoAccionPersonal, EstadoAccionPersonal[]> = {
   borrador: ['suscrita', 'anulada'],
   suscrita: ['registrada', 'anulada'],
-  registrada: ['notificada'],
-  notificada: [],
+  registrada: ['notificada', 'anulada'],
+  notificada: ['anulada'],
   anulada: [],
 }
 
@@ -72,7 +78,13 @@ export function puedeDescargarPdf(movimiento: {
   if (tipo && SIN_DOCUMENTO.includes(tipo)) return false
   if (!correlativo) return false
 
-  return estado === 'registrada' || estado === 'notificada'
+  // 'anulada' entró el 2026-09-29: un acto que existió y se anuló sigue
+  // teniendo documento, con su sello. Negárselo dejaba a Talento Humano con un
+  // correlativo emitido —muy probablemente ya impreso y entregado— y ninguna
+  // forma de sacar la versión que lo desmiente. El correlativo, que se exige
+  // arriba, es lo que separa lo anulado que llegó a registrarse de lo anulado
+  // en borrador, que nunca fue nada.
+  return estado === 'registrada' || estado === 'notificada' || estado === 'anulada'
 }
 
 /**

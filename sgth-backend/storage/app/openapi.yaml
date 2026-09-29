@@ -22866,79 +22866,6 @@
                 }
             }
         },
-        "/v1/expediente/movimientos/{movimiento}/corregir": {
-            "post": {
-                "operationId": "movimientoPersonal.corregir",
-                "tags": [
-                    "MovimientoPersonal"
-                ],
-                "parameters": [
-                    {
-                        "name": "movimiento",
-                        "in": "path",
-                        "required": true,
-                        "description": "The movimiento ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CorregirMovimientoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Correcci\u00f3n registrada con \u00e9xito."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/MovimientoPersonalResource"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
         "/v1/nomina": {
             "get": {
                 "operationId": "nomina.index",
@@ -42543,6 +42470,18 @@
                             "null"
                         ]
                     },
+                    "movimiento_origen_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "movimiento_cierre_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
                     "rau": {
                         "type": "string"
                     }
@@ -42568,6 +42507,8 @@
                     "cubre_movimiento_id",
                     "origen",
                     "partida_presupuestaria_id",
+                    "movimiento_origen_id",
+                    "movimiento_cierre_id",
                     "rau"
                 ],
                 "title": "ContratoServidor"
@@ -42689,76 +42630,6 @@
                     "es_contenedor_permanente"
                 ],
                 "title": "Convocatoria"
-            },
-            "CorregirMovimientoRequest": {
-                "type": "object",
-                "properties": {
-                    "tipo_movimiento": {
-                        "$ref": "#/components/schemas/TipoMovimientoPersonal"
-                    },
-                    "categoria": {
-                        "$ref": "#/components/schemas/CategoriaEventoVinculo"
-                    },
-                    "descripcion": {
-                        "type": "string"
-                    },
-                    "fecha_efectiva": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "fecha_inicio": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "fecha_fin": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "unidad_origen_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "unidad_destino_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "puesto_origen_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "puesto_destino_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "resolucion_numero": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
-                    },
-                    "observacion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "title": "CorregirMovimientoRequest"
             },
             "CriterioEvaluacion": {
                 "type": "object",
@@ -46116,12 +45987,6 @@
                             "null"
                         ]
                     },
-                    "corrige_a_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
                     "notificado_por": {
                         "type": [
                             "integer",
@@ -46302,7 +46167,6 @@
                     "codigo_registro",
                     "fecha_registro",
                     "dictamen_presupuestario_ref",
-                    "corrige_a_id",
                     "notificado_por",
                     "fecha_notificacion",
                     "tipo_nombramiento_propuesto",
@@ -46475,12 +46339,6 @@
                         ]
                     },
                     "movimiento_previo_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "corrige_a_id": {
                         "type": [
                             "integer",
                             "null"
@@ -46824,7 +46682,6 @@
                     "remuneracion_origen",
                     "partida_origen_id",
                     "movimiento_previo_id",
-                    "corrige_a_id",
                     "cubre_movimiento_id",
                     "codigo",
                     "codigo_registro",

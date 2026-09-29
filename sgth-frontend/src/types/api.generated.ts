@@ -3685,22 +3685,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/expediente/movimientos/{movimiento}/corregir": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["movimientoPersonal.corregir"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/nomina": {
         parameters: {
             query?: never;
@@ -6939,6 +6923,8 @@ export interface components {
             cubre_movimiento_id: number | null;
             origen: components["schemas"]["OrigenVinculo"];
             partida_presupuestaria_id: number | null;
+            movimiento_origen_id: number | null;
+            movimiento_cierre_id: number | null;
             rau: string;
         };
         /** Convocatoria */
@@ -6967,24 +6953,6 @@ export interface components {
             tipo_proceso: components["schemas"]["TipoProcesoConvocatoria"];
             tipo_nombramiento_previsto: components["schemas"]["TipoNombramiento"] | null;
             es_contenedor_permanente: boolean;
-        };
-        /** CorregirMovimientoRequest */
-        CorregirMovimientoRequest: {
-            tipo_movimiento?: components["schemas"]["TipoMovimientoPersonal"];
-            categoria?: components["schemas"]["CategoriaEventoVinculo"];
-            descripcion?: string;
-            /** Format: date-time */
-            fecha_efectiva?: string;
-            /** Format: date-time */
-            fecha_inicio?: string | null;
-            /** Format: date-time */
-            fecha_fin?: string | null;
-            unidad_origen_id?: number | null;
-            unidad_destino_id?: number | null;
-            puesto_origen_id?: number | null;
-            puesto_destino_id?: number | null;
-            resolucion_numero?: string | null;
-            observacion?: string | null;
         };
         /** CriterioEvaluacion */
         CriterioEvaluacion: {
@@ -7852,7 +7820,6 @@ export interface components {
             /** Format: date-time */
             fecha_registro: string | null;
             dictamen_presupuestario_ref: string | null;
-            corrige_a_id: number | null;
             notificado_por: number | null;
             fecha_notificacion: string | null;
             tipo_nombramiento_propuesto: components["schemas"]["TipoNombramiento"] | null;
@@ -7916,7 +7883,6 @@ export interface components {
             remuneracion_origen: string | null;
             partida_origen_id: number | null;
             movimiento_previo_id: number | null;
-            corrige_a_id: number | null;
             /** @description Ausencia temporal que este ingreso viene a cubrir. */
             cubre_movimiento_id: number | null;
             codigo: string | null;
@@ -21172,42 +21138,6 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Transición aplicada con éxito.";
-                        datos: components["schemas"]["MovimientoPersonalResource"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-            404: components["responses"]["ModelNotFoundException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "movimientoPersonal.corregir": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The movimiento ID */
-                movimiento: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["CorregirMovimientoRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Corrección registrada con éxito.";
                         datos: components["schemas"]["MovimientoPersonalResource"];
                         meta: null;
                     };

@@ -95,11 +95,15 @@ dataset('grafo_transiciones', function () {
     // Espeja MovimientoPersonalStateService::TRANSICIONES. Los estados
     // intermedios 'informe_uath' y 'dictamen_presupuestario' se retiraron el
     // 2026-07-29 por no capturar ningún dato.
+    // Anular desde 'registrada' y 'notificada' se abrió el 2026-09-29: un acto
+    // ya registrado con un error no tenía ninguna salida, y TH dijo que lo
+    // correcto es anularlo y emitir uno nuevo. Lo que la anulación deshace
+    // sobre el vínculo lo cubre AnularAccionRegistradaTest.
     $permitidas = [
         'borrador'   => ['suscrita', 'anulada'],
         'suscrita'   => ['registrada', 'anulada'],
-        'registrada' => ['notificada'],
-        'notificada' => [],
+        'registrada' => ['notificada', 'anulada'],
+        'notificada' => ['anulada'],
         'anulada'    => [],
     ];
     $estados = array_keys($permitidas);
@@ -249,13 +253,22 @@ test('un evento registrado no permite modificar fecha_registro ni codigo_registr
         ->toThrow(ReglaNegocioException::class);
 });
 
-test('un evento registrado no permite saltarse el flujo cambiando estado por update() directo', function () {
+/*
+| Desde un evento registrado solo hay dos salidas: notificarlo o dejarlo sin
+| efecto. Volver a borrador o a suscrita sería reabrir un acto que ya existe.
+|
+| ANULADA dejó de estar en esta lista el 2026-09-29: ahora es una salida
+| legítima. Lo que la guarda del modelo impide es llegar a ella sin pasar por el
+| servicio de estados, que es quien deshace el efecto sobre el vínculo — pero
+| eso no lo decide el modelo, así que aquí solo queda lo que sigue prohibido.
+*/
+test('un evento registrado no puede volver hacia atrás con un update() directo', function () {
     $movimiento = crearMovimiento(['estado' => EstadoAccionPersonal::REGISTRADA]);
 
-    expect(fn () => $movimiento->update(['estado' => EstadoAccionPersonal::ANULADA]))
+    expect(fn () => $movimiento->update(['estado' => EstadoAccionPersonal::BORRADOR]))
         ->toThrow(ReglaNegocioException::class);
 
-    expect(fn () => $movimiento->update(['estado' => EstadoAccionPersonal::BORRADOR]))
+    expect(fn () => $movimiento->update(['estado' => EstadoAccionPersonal::SUSCRITA]))
         ->toThrow(ReglaNegocioException::class);
 });
 
@@ -272,36 +285,6 @@ test('un evento notificado tampoco permite cambiar de estado por update() direct
 
     expect(fn () => $movimiento->update(['estado' => EstadoAccionPersonal::REGISTRADA]))
         ->toThrow(ReglaNegocioException::class);
-});
-
-// ── Endpoint de corrección ────────────────────────────────────────
-
-test('no se puede corregir un movimiento que aún no está registrado', function () {
-    $movimiento = crearMovimiento(['estado' => EstadoAccionPersonal::BORRADOR]);
-
-    expect(fn () => $this->stateService->corregir($movimiento, ['descripcion' => 'Corrección']))
-        ->toThrow(ReglaNegocioException::class);
-});
-
-test('corregir crea un nuevo movimiento con corrige_a_id y deja el original intacto', function () {
-    $original = crearMovimiento([
-        'estado' => EstadoAccionPersonal::REGISTRADA,
-        'codigo_registro' => 'AP-2026-0001',
-        'fecha_registro' => now(),
-        'descripcion' => 'Descripción original',
-    ]);
-
-    $corregido = $this->stateService->corregir($original, ['descripcion' => 'Descripción corregida']);
-
-    expect($corregido->corrige_a_id)->toBe($original->id);
-    expect($corregido->estado)->toBe(EstadoAccionPersonal::BORRADOR);
-    expect($corregido->descripcion)->toBe('Descripción corregida');
-    expect($corregido->codigo_registro)->toBeNull();
-    expect($corregido->servidor_id)->toBe($original->servidor_id);
-
-    $original->refresh();
-    expect($original->descripcion)->toBe('Descripción original');
-    expect($original->estado)->toBe(EstadoAccionPersonal::REGISTRADA);
 });
 
 // ── Quién nace en borrador vs. quién sigue naciendo registrada ───
@@ -529,20 +512,6 @@ test('un motivo de menos de cinco caracteres no pasa', function () {
         'estado'           => 'anulada',
         'motivo_anulacion' => 'no',
     ])->assertStatus(422)->assertJsonStructure(['errores' => ['motivo_anulacion']]);
-});
-
-test('una corrección no arrastra el motivo de anulación del original', function () {
-    $movimiento = crearMovimiento([
-        'estado'           => EstadoAccionPersonal::REGISTRADA,
-        'codigo_registro'  => 'AP-2026-0900',
-        'fecha_registro'   => now(),
-        'motivo_anulacion' => 'Motivo de una anulación anterior',
-    ]);
-
-    $corregido = app(MovimientoPersonalStateService::class)
-        ->corregir($movimiento, ['descripcion' => 'Corregido']);
-
-    expect($corregido->motivo_anulacion)->toBeNull();
 });
 
 // ── La constancia no es un acto: no tiene documento ─────────────

@@ -90,7 +90,7 @@ test('un servidor no puede listar los servidores de la institución', function (
 
 /*
 | Las rutas de Acciones de Personal conceden 'asistente-uath' —registrar,
-| transicionar, corregir y la bandeja—, pero los controladores autorizan contra
+| transicionar y la bandeja—, pero los controladores autorizan contra
 | ServidorPolicy, que hasta el 2026-09-27 solo aceptaba admin-uath, super-admin
 | o el titular. El asistente veía la bandeja (200, sin policy) y recibía 403 en
 | todo lo demás: la ruta y el policy se contradecían, y como el cajón de detalle

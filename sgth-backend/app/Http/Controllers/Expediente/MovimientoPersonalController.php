@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Expediente\CorregirMovimientoRequest;
 use App\Http\Requests\Expediente\StoreMovimientoPersonalRequest;
 use App\Http\Requests\Expediente\TransicionarMovimientoRequest;
 use App\Http\Requests\Expediente\UpdateMovimientoPersonalRequest;
@@ -158,20 +157,6 @@ class MovimientoPersonalController extends Controller
         return ApiResponse::ok(
             new MovimientoPersonalResource($actualizado),
             'Transición aplicada con éxito.'
-        );
-    }
-
-    public function corregir(
-        CorregirMovimientoRequest $request,
-        MovimientoPersonal $movimiento
-    ): JsonResponse {
-        $this->authorize('actualizar', $movimiento->servidor);
-
-        $corregido = $this->stateService->corregir($movimiento, $request->validated());
-
-        return ApiResponse::created(
-            new MovimientoPersonalResource($corregido),
-            'Corrección registrada con éxito.'
         );
     }
 }
