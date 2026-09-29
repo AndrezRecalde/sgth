@@ -712,7 +712,6 @@ export type MovimientoPersonal = {
   codigo_registro?: string | null
   fecha_registro?: string | null
   dictamen_presupuestario_ref?: string | null
-  corrige_a_id?: number | null
   descripcion: string
   fecha_efectiva: string
   fecha_inicio?: string | null

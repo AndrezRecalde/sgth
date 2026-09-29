@@ -56,7 +56,6 @@ class MovimientoPersonalResource extends JsonResource
             'partida_origen_id'   => $this->partida_origen_id,
 
             'movimiento_previo_id' => $this->movimiento_previo_id,
-            'corrige_a_id'         => $this->corrige_a_id,
             /** Ausencia temporal que este ingreso viene a cubrir. */
             'cubre_movimiento_id'  => $this->cubre_movimiento_id,
 

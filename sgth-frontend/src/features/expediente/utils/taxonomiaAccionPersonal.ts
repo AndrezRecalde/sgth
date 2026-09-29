@@ -294,6 +294,43 @@ export function proponeSituacion(
   return tipo === 'ingreso' || tipo === 'subrogacion' || reubicaAlServidor(tipo, subtipo)
 }
 
+/**
+ * Espeja SubtipoMovimientoPersonal::cierraVinculo(): las cesaciones terminan la
+ * relación laboral al registrarse.
+ */
+const CIERRAN_EL_VINCULO: AccionSubtipo[] = [
+  'renuncia', 'destitucion', 'jubilacion', 'incapacidad', 'contrato_finalizado',
+  'visto_bueno',
+]
+
+/**
+ * ¿Registrar esta acción cambia algo en el vínculo del servidor?
+ *
+ * Espeja `MovimientoPersonal::tocaElVinculo()`: crea el vínculo, reubica dentro
+ * de él, o lo cierra. El resto —comisiones, licencias, sanciones, cambios de
+ * denominación, incrementos— se registra sin tocarlo.
+ *
+ * Aquí sirve para una sola cosa: avisar, antes de anular algo ya registrado, de
+ * que se va a deshacer su efecto y el servidor volverá a su situación anterior.
+ *
+ * Los dos tipos planos legados se nombran a mano porque el backend los resuelve
+ * con `subtipoEquivalente()` y aquí no hay ese mapa: no se crean desde el
+ * formulario, pero sí aparecen en el historial de expedientes migrados, y sin
+ * ellos el aviso callaría justo donde más falta hace.
+ */
+export function tocaElVinculo(movimiento: {
+  tipo_movimiento?: TipoMovimientoPersonal | null
+  subtipo_movimiento?: AccionSubtipo | null
+}): boolean {
+  const { tipo_movimiento: tipo, subtipo_movimiento: subtipo } = movimiento
+
+  return tipo === 'ingreso'
+    || tipo === 'traspaso'
+    || tipo === 'destitucion'
+    || reubicaAlServidor(tipo, subtipo)
+    || (!!subtipo && CIERRAN_EL_VINCULO.includes(subtipo))
+}
+
 /** Acciones que apartan temporalmente al servidor: lo suyo es el período. */
 export function esAusenciaTemporal(
   tipo?: TipoMovimientoPersonal | null,

@@ -51,7 +51,6 @@ class MovimientoPersonal extends Model
                 // Por qué se anuló: es la justificación de un acto sobre otro
                 // acto, así que va al registro de auditoría con el resto.
                 'motivo_anulacion',
-                'corrige_a_id',
                 'fecha_suscripcion',
                 'firmante_autoridad_nombre',
                 'firmante_th_nombre',
@@ -63,9 +62,7 @@ class MovimientoPersonal extends Model
     public function getDescriptionForEvent(string $eventName): string
     {
         return match ($eventName) {
-            'created' => $this->corrige_a_id !== null
-                ? 'Corrección de acción de personal registrada'
-                : 'Acción de personal creada',
+            'created' => 'Acción de personal creada',
             'updated' => 'Transición de estado de la acción de personal',
             default   => $eventName,
         };
@@ -73,11 +70,11 @@ class MovimientoPersonal extends Model
 
     /**
      * Guarda de inmutabilidad: una vez REGISTRADA (o NOTIFICADA), no se
-     * puede modificar tipo_movimiento, fecha_registro ni codigo_registro,
-     * y el estado no puede cambiar salvo el único paso legítimo hacia
-     * NOTIFICADA. Corre para cualquier update(), no solo el de
-     * MovimientoPersonalStateService — una corrección real es un registro
-     * nuevo con corrige_a_id, nunca un UPDATE sobre este.
+     * puede modificar tipo_movimiento, fecha_registro ni codigo_registro, y el
+     * estado solo puede avanzar a NOTIFICADA o quedar en ANULADA. Corre para
+     * cualquier update(), no solo el de MovimientoPersonalStateService: un acto
+     * registrado con un error se anula y se emite uno nuevo, nunca se reescribe
+     * este.
      */
     protected static function booted(): void
     {
@@ -110,13 +107,31 @@ class MovimientoPersonal extends Model
                 }
             }
 
+            /*
+            | Los dos únicos pasos legítimos desde aquí: seguir adelante hacia
+            | NOTIFICADA, o quedar sin efecto.
+            |
+            | ANULADA se añadió el 2026-09-29. Antes la única salida era
+            | notificar, y un acto registrado con un error no tenía ninguna:
+            | ni se editaba —lo de arriba— ni se anulaba, así que el único
+            | recurso era `corregir()`, que emitía un segundo documento con
+            | otro correlativo y dejaba el primero vigente. TH: lo correcto es
+            | anular y emitir uno nuevo.
+            |
+            | Esto solo levanta el candado del modelo. Qué se puede anular y
+            | cómo se deshace su efecto sobre el vínculo lo decide
+            | MovimientoPersonalStateService, que es quien conoce el grafo.
+            */
             if ($movimiento->isDirty('estado')) {
-                $permitido = $estadoOriginal === EstadoAccionPersonal::REGISTRADA
-                    && $movimiento->estado === EstadoAccionPersonal::NOTIFICADA;
+                $destinosPermitidos = [
+                    EstadoAccionPersonal::NOTIFICADA,
+                    EstadoAccionPersonal::ANULADA,
+                ];
 
-                if (!$permitido) {
+                if (!in_array($movimiento->estado, $destinosPermitidos, true)) {
                     throw new ReglaNegocioException(
-                        "No se puede cambiar el estado de un evento en '{$estadoOriginal->etiqueta()}'."
+                        "No se puede cambiar el estado de un evento en '{$estadoOriginal->etiqueta()}'"
+                            ." a '{$movimiento->estado->etiqueta()}'."
                     );
                 }
             }
@@ -149,7 +164,6 @@ class MovimientoPersonal extends Model
         'firmante_th_cargo',
         'firmante_th_cedula',
         'dictamen_presupuestario_ref',
-        'corrige_a_id',
         'movimiento_previo_id',
         'cubre_movimiento_id',
         'descripcion',
@@ -201,20 +215,6 @@ class MovimientoPersonal extends Model
     public function servidor(): BelongsTo
     {
         return $this->belongsTo(Servidor::class);
-    }
-
-    /**
-     * El evento original que este registro rectifica (nunca se edita el
-     * original: se crea uno nuevo que lo referencia).
-     */
-    public function corrigeA(): BelongsTo
-    {
-        return $this->belongsTo(MovimientoPersonal::class, 'corrige_a_id');
-    }
-
-    public function correcciones(): HasMany
-    {
-        return $this->hasMany(MovimientoPersonal::class, 'corrige_a_id');
     }
 
     /**
@@ -348,6 +348,26 @@ class MovimientoPersonal extends Model
     {
         return $this->tipo_movimiento?->reubicaAlServidor()
             || (bool) $this->subtipoEfectivo()?->modificaPuesto();
+    }
+
+    /**
+     * ¿Registrar esta acción cambia algo en el ContratoServidor?
+     *
+     * Las tres ramas de `MovimientoPersonalStateService::aplicarRegistro()`,
+     * en una sola pregunta: crea el vínculo, reubica dentro de él, o lo cierra.
+     * El resto de acciones —comisiones, licencias, sanciones, cambios de
+     * denominación, incrementos— se registran sin tocarlo.
+     *
+     * Existe para que anular pregunte exactamente lo mismo que registrar: la
+     * reversión tiene las mismas tres ramas, y si un día se añade un tipo que
+     * toque el vínculo y solo se actualiza una de las dos listas, su anulación
+     * dejaría el contrato afirmando algo que ningún acto respalda.
+     */
+    public function tocaElVinculo(): bool
+    {
+        return (bool) $this->tipo_movimiento?->creaVinculo()
+            || $this->reubicaAlServidor()
+            || (bool) $this->subtipoEfectivo()?->cierraVinculo();
     }
 
     /**

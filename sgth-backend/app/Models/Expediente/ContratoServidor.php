@@ -32,6 +32,8 @@ class ContratoServidor extends Model
         'unidad_administrativa_id',
         'puesto_id',
         'cubre_movimiento_id',
+        'movimiento_origen_id',
+        'movimiento_cierre_id',
         'fecha_inicio',
         'fecha_fin',
         'motivo_fin',
@@ -112,6 +114,25 @@ class ContratoServidor extends Model
     public function esReemplazo(): bool
     {
         return $this->cubre_movimiento_id !== null;
+    }
+
+    /**
+     * La acción de personal que dio origen a este vínculo, y la que lo cerró.
+     *
+     * Existen para poder deshacer: anular una acción ya registrada tiene que
+     * revertir su efecto, y sin estos enlaces no había forma de saber qué
+     * contrato había nacido de un ingreso concreto ni cuál había cerrado una
+     * cesación concreta. Las dos van en null cuando no aplica — un contrato de
+     * carga inicial no nació de ninguna acción, y uno vigente no está cerrado.
+     */
+    public function movimientoOrigen(): BelongsTo
+    {
+        return $this->belongsTo(MovimientoPersonal::class, 'movimiento_origen_id');
+    }
+
+    public function movimientoCierre(): BelongsTo
+    {
+        return $this->belongsTo(MovimientoPersonal::class, 'movimiento_cierre_id');
     }
 
     public function scopeVigente(Builder $query): Builder

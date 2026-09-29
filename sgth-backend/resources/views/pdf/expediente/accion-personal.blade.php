@@ -214,6 +214,38 @@
         }
 
         .page-break { page-break-before: always; }
+
+        /* ── Sello de anulación ────────────────────────────────── */
+        /* Un acto anulado sigue teniendo documento: lo que cambia es que el
+           papel tiene que decir, sin que haya que buscarlo, que está sin
+           efecto. El sello va en el cuerpo y no en un `position: fixed`
+           rotado: dompdf no rota texto de forma fiable, y un fijo mal
+           colocado se sale de la hoja. */
+        .anulada {
+            border: 2.5px solid #a3161b;
+            background: #fdf2f2;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+        .anulada .sello {
+            font-size: 17px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #a3161b;
+            text-transform: uppercase;
+            margin: 0 0 4px 0;
+        }
+        .anulada .detalle {
+            font-size: 10px;
+            color: #6b2226;
+            margin: 0;
+        }
+        .anulada .motivo {
+            font-size: 10.5px;
+            color: #1c2321;
+            margin: 6px 0 0 0;
+            text-align: justify;
+        }
     </style>
 </head>
 <body>
@@ -295,6 +327,19 @@
         </td>
     </tr>
 </table>
+
+@if($anulada ?? false)
+    <div class="anulada">
+        <p class="sello">Acción de personal anulada</p>
+        <p class="detalle">
+            Este documento quedó sin efecto y no surte ninguna consecuencia
+            jurídica ni administrativa.
+        </p>
+        @if($movimiento->motivo_anulacion)
+            <p class="motivo"><strong>Motivo:</strong> {{ $movimiento->motivo_anulacion }}</p>
+        @endif
+    </div>
+@endif
 
 <div class="titulo">
     <div class="supra">Acción de Personal</div>

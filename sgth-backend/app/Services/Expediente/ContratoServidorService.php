@@ -244,6 +244,12 @@ class ContratoServidorService
         $data['fecha_fin'] = $this->resolverFechaFin($data);
         $data['puede_marcar'] = $this->resolverPuedeMarcar($data);
 
+        // De qué acción nació este vínculo. Sin esto, anular el ingreso que lo
+        // creó no tendría forma de saber qué contrato deshacer.
+        if ($movimientoOrigen !== null) {
+            $data['movimiento_origen_id'] ??= $movimientoOrigen->id;
+        }
+
         if (isset($data['archivo_contrato'])
             && $data['archivo_contrato'] instanceof UploadedFile) {
             $data['documento_ruta'] = $data['archivo_contrato']
@@ -291,7 +297,50 @@ class ContratoServidorService
             'estado'     => EstadoContrato::TERMINADO,
             'fecha_fin'  => $fechaFin,
             'motivo_fin' => $data['motivo_fin'],
+            // Qué acción lo cerró, para poder reabrirlo si se anula. Va aquí y
+            // no solo dentro del texto de `motivo_fin` —«Renuncia — Acción de
+            // Personal #47.»—, que no es algo contra lo que consultar.
+            'movimiento_cierre_id' => $data['movimiento_cierre_id'] ?? null,
         ]);
+
+        return $contrato->fresh(['puesto.cargo', 'unidadAdministrativa']);
+    }
+
+    /**
+     * Deshace un cierre: el contrato vuelve a estar vigente, sin fecha de fin
+     * ni motivo.
+     *
+     * La única razón legítima para esto es que se anule la acción de personal
+     * que lo cerró — el acto que la respaldaba dejó de existir, así que su
+     * efecto tampoco puede quedar en pie. No es «reabrir un vínculo»: el
+     * vínculo nunca se interrumpió, se había anotado un cierre que no debía
+     * estar. Por eso no es una operación que la UI ofrezca por su cuenta y
+     * solo la llama MovimientoPersonalStateService al anular.
+     */
+    public function reabrirPorAnulacion(ContratoServidor $contrato): ContratoServidor
+    {
+        /*
+        | La fecha de fin no se pone en null sin más: `cerrar()` la sobreescribe
+        | con la fecha efectiva de la cesación, así que el plazo original ya no
+        | está ahí. Se recupera de la acción que creó el vínculo —que es lo que
+        | `movimiento_origen_id` permite—, y si el contrato es de carga inicial
+        | y no tiene acción, se vuelve a derivar como al darlo de alta: null
+        | para los indefinidos, el fin del año calendario para Servicios
+        | Profesionales.
+        */
+        $plazoPactado = $contrato->movimientoOrigen?->fecha_fin_propuesta?->toDateString();
+
+        $contrato->update([
+            'estado'               => EstadoContrato::VIGENTE,
+            'fecha_fin'            => $plazoPactado ?? $this->resolverFechaFin([
+                'tipo_nombramiento' => $contrato->tipo_nombramiento,
+                'fecha_inicio'      => $contrato->fecha_inicio?->toDateString(),
+            ]),
+            'motivo_fin'           => null,
+            'movimiento_cierre_id' => null,
+        ]);
+
+        $this->sincronizarPuestoDesdeVinculo($contrato->servidor_id);
 
         return $contrato->fresh(['puesto.cargo', 'unidadAdministrativa']);
     }

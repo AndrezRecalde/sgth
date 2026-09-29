@@ -390,8 +390,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath');
         Route::put('movimientos/{movimiento}/transicionar', [MovimientoPersonalController::class, 'transicionar'])
             ->middleware('role:admin-uath|asistente-uath');
-        Route::post('movimientos/{movimiento}/corregir', [MovimientoPersonalController::class, 'corregir'])
-            ->middleware('role:admin-uath|asistente-uath');
 
         // El certificado laboral lo emite Talento Humano, nunca el propio
         // servidor: así lo pidió la UATH el 2026-09-25 —quieren decidir ellos

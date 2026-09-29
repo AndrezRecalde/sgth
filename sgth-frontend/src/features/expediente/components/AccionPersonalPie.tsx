@@ -11,7 +11,7 @@ import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import {
   ESTADO_LABELS, TRANSICIONES, puedeDescargarPdf, requiereCompletarVinculo,
 } from '../utils/estadoAccionPersonal'
-import { tieneEfectoEconomico } from '../utils/taxonomiaAccionPersonal'
+import { tieneEfectoEconomico, tocaElVinculo } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
 
@@ -116,7 +116,14 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
   | `confirmar()` de sí o no, y anular un acto administrativo no dejaba ni una
   | línea que explicara la decisión: el expediente se quedaba con una acción en
   | 'anulada' y nadie sabía por qué. El backend lo exige con `required_if`.
+  |
+  | Desde que se puede anular lo ya registrado, el aviso distingue los dos
+  | casos: anular un borrador no deshace nada, y anular un acto registrado SÍ
+  | revierte lo que hizo sobre el vínculo del servidor. Quien anula tiene que
+  | saber cuál de las dos cosas está a punto de pasar.
   */
+  const yaSurtioEfecto = Boolean(m.codigo_registro) && tocaElVinculo(m)
+
   return (
     <>
       {pie}
@@ -129,6 +136,13 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
           <>
             Se anulará {m.codigo_registro ? <b>{m.codigo_registro}</b> : 'esta acción de personal'}
             {' '}y no podrá reactivarse. El motivo queda en el expediente.
+            {yaSurtioEfecto && (
+              <>
+                {' '}Como ya está registrada, <b>se deshará su efecto sobre el vínculo
+                del servidor</b> y volverá a la situación anterior. Si lo que
+                quiere es rectificar, anule esta y registre una nueva.
+              </>
+            )}
           </>
         }
         confirmLabel="Anular"
