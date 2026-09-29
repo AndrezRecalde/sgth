@@ -275,6 +275,10 @@ enum TipoMovimientoPersonal: string
      * - Licencia sin remuneración: Permanente, Código de Trabajo o
      *   Elección Popular.
      *
+     * Y una añadida el 2026-09-29: Libre Nombramiento y Remoción tiene las
+     * mismas acciones que Servicios Ocasionales. Con las reglas de arriba se
+     * quedaba sin ninguna, y preguntado por eso TH lo equiparó al ocasional.
+     *
      * Los tipos con subtipo (cambio administrativo, régimen disciplinario,
      * cesación de funciones) no deciden aquí: delegan en
      * SubtipoMovimientoPersonal::elegiblePara(), porque es el subtipo el que
@@ -290,15 +294,24 @@ enum TipoMovimientoPersonal: string
         return match ($this) {
             self::CAMBIO_DENOMINACION =>
                 $tipo === TipoNombramiento::CODIGO_TRABAJO,
-            // Las tres que nombró TH (2026-09-28), enumeradas. Antes era
+            // Las tres que nombró TH (2026-09-28), enumeradas, más Libre
+            // Nombramiento y Remoción (2026-09-29). Antes era
             // `esLosep() && !== PERMANENTE`, que daba un conjunto parecido pero
             // no el mismo: dejaba fuera Servicios Profesionales —porque
-            // esLosep() es falso para el contrato civil— y colaba Libre
-            // Nombramiento y Elección Popular, que TH no incluye.
+            // esLosep() es falso para el contrato civil— y colaba Elección
+            // Popular, que TH no incluye.
+            //
+            // Libre Nombramiento no estaba en aquella enumeración, y por eso se
+            // quedaba sin ninguna acción disponible. Preguntado, TH dijo que
+            // «es similar a un nombramiento ocasional, es decir tener las
+            // acciones que tiene este último», y el ocasional la tiene. Es lo
+            // único de esta respuesta que choca con la lista del 2026-09-28:
+            // conviene que TH lo confirme viéndolo en pantalla.
             self::PRESTACION_SERVICIOS => in_array($tipo, [
                 TipoNombramiento::PROVISIONAL,
                 TipoNombramiento::SERVICIOS_OCASIONALES,
                 TipoNombramiento::SERVICIOS_PROFESIONALES,
+                TipoNombramiento::LIBRE_NOMBRAMIENTO,
             ], true),
             self::CAMBIO_ADMINISTRATIVO =>
                 $tipo === TipoNombramiento::PERMANENTE,
