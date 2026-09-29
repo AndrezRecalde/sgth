@@ -1,7 +1,9 @@
 <?php
 namespace App\Services\Asistencia;
 
+use App\Enums\EstadoPermiso;
 use App\Enums\RegimenLaboral;
+use App\Enums\TipoPermiso;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Asistencia\PermisoDescuento;
@@ -806,70 +808,23 @@ class PeriodoVacacionService
     }
 
     /**
-     * Obtiene el resumen de períodos de un servidor.
+     * Resumen de períodos de un servidor: qué generó cada uno, de dónde
+     * salieron los días gozados y cómo va contra su tope.
      */
     public function resumen(int $servidorId): array
     {
+        $servidor = Servidor::findOrFail($servidorId);
+
         $periodos = PeriodoVacacion::where('servidor_id', $servidorId)
             ->orderByDesc('anio')
             ->get();
 
-        // Calcular desglose por período
-        $periodos->each(function ($periodo) use ($servidorId) {
-            $anioInicio = \Carbon\Carbon::parse(
-                $periodo->fecha_inicio_periodo
-            )->startOfDay();
-            $anioFin = \Carbon\Carbon::parse(
-                $periodo->fecha_fin_periodo
-            )->endOfDay();
-
-            // Días de vacaciones que salieron de ESTE período. Se leen del
-            // registro de descuentos: desde que el descuento se reparte entre
-            // períodos, la fecha de la vacación ya no dice de cuál salió.
-            $diasRegistrados = (float) VacacionDescuento::where('periodo_vacacion_id', $periodo->id)
-                ->whereNull('devuelto_en')
-                ->sum('dias');
-
-            // Las aprobadas antes de que existiera ese registro se descontaban
-            // del período de su año, así que se siguen atribuyendo por fecha.
-            $diasSinRegistro = (float) Vacacion::where('servidor_id', $servidorId)
-                ->whereIn('estado', ['aprobada', 'gozada'])
-                ->whereBetween('fecha_inicio', [$anioInicio, $anioFin])
-                ->whereIn('motivo', [
-                    'vacaciones_anuales',
-                    'permiso_cargo_vacaciones',
-                ])
-                ->whereDoesntHave('descuentos')
-                ->sum('dias_solicitados');
-
-            $diasVacaciones = $diasRegistrados + $diasSinRegistro;
-
-            // Días por permisos personales en ese período (horas/8)
-            $minutosPermisos = \App\Models\Asistencia\PermisoServidor
-                ::where('servidor_id', $servidorId)
-                ->where('tipo', 'personal')
-                ->whereNotIn('estado', ['anulado', 'pendiente'])
-                ->whereBetween('fecha', [$anioInicio, $anioFin])
-                ->get()
-                ->sum(function ($p) {
-                    $hi = substr((string)$p->getRawOriginal('hora_inicio'), 0, 5);
-                    $hf = substr((string)$p->getRawOriginal('hora_fin'), 0, 5);
-                    [$hI, $mI] = array_map('intval', explode(':', $hi));
-                    [$hF, $mF] = array_map('intval', explode(':', $hf));
-                    return ($hF * 60 + $mF) - ($hI * 60 + $mI);
-                });
-
-            $diasPermisos = round($minutosPermisos / 480, 4);
-
-            // Asignar atributos dinámicos al período
-            $periodo->dias_vacaciones_aprobadas = round((float)$diasVacaciones, 2);
-            $periodo->dias_permisos_personales  = $diasPermisos;
-        });
+        $this->repartirConsumoEntrePeriodos($servidor, $periodos);
 
         // La alerta mira el tope del régimen del servidor. Antes era «45 días»
         // para todos, con el mensaje del tope LOSEP también para el Código del
         // Trabajo, cuyo tope es otro.
-        $tope = app(TopeAcumulacionService::class)->estado(Servidor::findOrFail($servidorId));
+        $tope = app(TopeAcumulacionService::class)->estado($servidor);
 
         return [
             'periodos'                   => $periodos,
@@ -884,5 +839,160 @@ class PeriodoVacacionService
                 $periodos->sum('dias_permisos_personales'), 4
             ),
         ];
+    }
+
+    /**
+     * Anota en cada período cuántos días le tomaron las vacaciones y cuántos
+     * los permisos personales.
+     *
+     * Los dos se leen de los registros de descuento —`vacacion_descuentos` y
+     * `permiso_descuentos`—, que es lo único que dice de qué período salió cada
+     * día: el descuento se reparte del período más antiguo al más nuevo, así
+     * que la fecha de la solicitud no lo dice.
+     *
+     * Los permisos se atribuían por fecha, y eso traía tres errores a la vez:
+     *
+     * - Contaba los rechazados y las faltas injustificadas. Los dos estados
+     *   salen de «pendiente» sin pasar por la confirmación, que es lo único que
+     *   descuenta: la pantalla mostraba como gastados días que seguían en el
+     *   saldo.
+     * - Contaba los del Código del Trabajo, que no descuentan de vacaciones
+     *   (`PermisoService::descuentaVacaciones()` es solo LOSEP).
+     * - Atribuía las horas al año del permiso y no al período del que de
+     *   verdad salieron.
+     *
+     * Con los registros de descuento los tres desaparecen de una vez, porque
+     * un permiso que no descontó no tiene fila que sumar. Queda la atribución
+     * por fecha solo para lo anterior a esos registros —vacaciones de antes del
+     * 2026-09-10 y permisos de antes del 2026-09-11—, que se descontaba entero
+     * del período de su año.
+     *
+     * Antes esto hacía tres consultas por período más un `get()` de permisos
+     * cuyos minutos se sumaban en PHP: con ocho años de historial eran unas
+     * veinticinco consultas para una pantalla de solo lectura. Ahora son cuatro,
+     * pase lo que pase.
+     *
+     * @param  EloquentCollection<int, PeriodoVacacion>  $periodos
+     */
+    private function repartirConsumoEntrePeriodos(
+        Servidor $servidor,
+        EloquentCollection $periodos
+    ): void {
+        if ($periodos->isEmpty()) {
+            return;
+        }
+
+        $ids = $periodos->pluck('id');
+
+        $vacacionesPorPeriodo = $this->descuentosPorPeriodo(VacacionDescuento::query(), $ids);
+        $permisosPorPeriodo   = $this->descuentosPorPeriodo(PermisoDescuento::query(), $ids);
+
+        $vacacionesSinRegistro = $this->vacacionesSinRegistro($servidor->id);
+        $permisosSinRegistro   = $this->permisosSinRegistro($servidor);
+
+        foreach ($periodos as $periodo) {
+            $desde = Carbon::parse($periodo->fecha_inicio_periodo)->startOfDay();
+            $hasta = Carbon::parse($periodo->fecha_fin_periodo)->endOfDay();
+
+            $dentro = fn (Collection $filas, string $campo): Collection => $filas
+                ->filter(fn ($fila) => Carbon::parse($fila->$campo)->betweenIncluded($desde, $hasta));
+
+            $diasVacaciones = ($vacacionesPorPeriodo[$periodo->id] ?? 0.0)
+                + (float) $dentro($vacacionesSinRegistro, 'fecha_inicio')->sum('dias_solicitados');
+
+            $minutosPermisos = (int) $dentro($permisosSinRegistro, 'fecha')->sum(
+                fn ($p) => max(0, JornadaLaboral::minutosEntre(
+                    (string) $p->getRawOriginal('hora_inicio'),
+                    (string) $p->getRawOriginal('hora_fin'),
+                ))
+            );
+
+            $diasPermisos = ($permisosPorPeriodo[$periodo->id] ?? 0.0)
+                + JornadaLaboral::aDias($minutosPermisos);
+
+            $periodo->dias_vacaciones_aprobadas = round($diasVacaciones, 2);
+            $periodo->dias_permisos_personales  = round($diasPermisos, 4);
+        }
+    }
+
+    /**
+     * Días vivos que cada período le prestó, en una sola consulta.
+     *
+     * Solo los tramos no devueltos: al anular una vacación o revertir la
+     * confirmación de un permiso, su tramo se marca `devuelto_en` y esos días
+     * vuelven al saldo, así que ya no cuentan como gastados.
+     *
+     * @param  \Illuminate\Support\Collection<int, int>  $periodoIds
+     * @return \Illuminate\Support\Collection<int, float>  indexada por período
+     */
+    private function descuentosPorPeriodo(
+        \Illuminate\Database\Eloquent\Builder $consulta,
+        Collection $periodoIds
+    ): Collection {
+        return $consulta
+            ->whereIn('periodo_vacacion_id', $periodoIds)
+            ->whereNull('devuelto_en')
+            ->groupBy('periodo_vacacion_id')
+            ->selectRaw('periodo_vacacion_id, SUM(dias) AS dias')
+            ->pluck('dias', 'periodo_vacacion_id')
+            ->map(fn ($dias) => (float) $dias);
+    }
+
+    /**
+     * Vacaciones gozadas antes de que se anotaran los tramos: entonces todo
+     * salía del período de su año, y ahí se siguen atribuyendo.
+     *
+     * @return Collection<int, Vacacion>
+     */
+    private function vacacionesSinRegistro(int $servidorId): Collection
+    {
+        return Vacacion::where('servidor_id', $servidorId)
+            ->whereIn('estado', ['aprobada', 'gozada'])
+            ->whereIn('motivo', ['vacaciones_anuales', 'permiso_cargo_vacaciones'])
+            ->whereDoesntHave('descuentos')
+            ->get(['fecha_inicio', 'dias_solicitados'])
+            ->toBase();
+    }
+
+    /**
+     * Permisos personales que descontaron antes de que se anotaran los tramos.
+     *
+     * Se piden los mismos tres requisitos que exige el descuento —personal,
+     * LOSEP y confirmado—, porque aquí no hay tramo que lo demuestre. De ahí el
+     * corte por régimen: si el servidor no es LOSEP, su permiso no descontó
+     * nunca y no hay nada que atribuir.
+     *
+     * @return Collection<int, PermisoServidor>
+     */
+    private function permisosSinRegistro(Servidor $servidor): Collection
+    {
+        if (! $this->descuentaPermisosDeVacaciones($servidor)) {
+            return collect();
+        }
+
+        return PermisoServidor::where('servidor_id', $servidor->id)
+            ->where('tipo', TipoPermiso::PERSONAL->value)
+            ->whereIn('estado', [
+                EstadoPermiso::ACTIVO->value,
+                EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value,
+            ])
+            ->whereDoesntHave('descuentos')
+            ->get(['fecha', 'hora_inicio', 'hora_fin'])
+            ->toBase();
+    }
+
+    /**
+     * ¿Los permisos personales de este servidor descuentan de sus vacaciones?
+     *
+     * Espeja `PermisoService::descuentaVacaciones()`: solo LOSEP. El Código del
+     * Trabajo se rige por su contrato colectivo.
+     */
+    private function descuentaPermisosDeVacaciones(Servidor $servidor): bool
+    {
+        $regimen = $servidor->regimen_laboral instanceof RegimenLaboral
+            ? $servidor->regimen_laboral
+            : RegimenLaboral::tryFrom((string) ($servidor->regimen_laboral ?? 'losep'));
+
+        return $regimen === RegimenLaboral::LOSEP;
     }
 }
