@@ -99,10 +99,20 @@ beforeEach(function () {
         ]);
     };
 
+    /*
+    | `orderBy('id')` no es decoración: sin ORDER BY, PostgreSQL devuelve las
+    | filas en el orden que le convenga, y los tests que miran `->first()` o
+    | `->last()` dependían de que coincidiera con el de inserción. En local
+    | coincidía; en CI no, y «caducar por vencimiento también» fallaba de forma
+    | intermitente leyendo la línea de la activación en lugar de la de la
+    | caducidad ('pendiente' donde esperaba 'activa'). La bitácora es una
+    | secuencia y hay que pedirla como tal.
+    */
     $this->cambiosDeEstado = fn (Subrogacion $s) => Activity::query()
         ->where('subject_type', Subrogacion::class)
         ->where('subject_id', $s->id)
         ->where('description', 'cambió de estado')
+        ->orderBy('id')
         ->get();
 });
 
