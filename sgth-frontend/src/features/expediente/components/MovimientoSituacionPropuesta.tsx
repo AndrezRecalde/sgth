@@ -5,7 +5,7 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import { usePuestos } from '@/features/estructura/hooks/usePuestos'
+import { usePuestosDeUnidad } from '@/features/estructura/hooks/usePuestosDeUnidad'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
 import { esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
@@ -38,11 +38,9 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
 
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
 
-  const { data: puestosData } = usePuestos(
-    unidadDestinoId ? { unidad_administrativa_id: Number(unidadDestinoId), per_page: 100 } : undefined,
-  )
-  const puestos = puestosData?.data ?? []
-  const puestosTruncados = (puestosData?.total ?? 0) > puestos.length
+  const {
+    puestos, descripcionRecorte, searchValue, onSearchChange,
+  } = usePuestosDeUnidad(unidadDestinoId, { seleccionadoId: puestoDestinoId })
 
   /**
    * Qué régimen decide si la R.M.U. se hereda o se teclea.
@@ -108,19 +106,18 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
           render={({ field }) => (
             <Select
               label="Puesto"
-              // El listado pide 100 por página. Si la unidad tuviera más, antes
-              // se recortaba en silencio y el puesto que falta era
-              // indistinguible de uno que no existe. El día que esto aparezca,
-              // el arreglo de fondo es una búsqueda del lado del servidor: el
-              // endpoint de puestos todavía no acepta `search`.
-              description={puestosTruncados
-                ? `Se muestran ${puestos.length} de ${puestosData?.total} puestos de la unidad.`
-                : undefined}
+              // El listado pide 100 por página, y si la unidad tuviera más se
+              // recortaba en silencio: el puesto que falta era indistinguible
+              // de uno que no existe. Ya no es un callejón — lo que se teclea
+              // viaja como `search` al servidor.
+              description={descripcionRecorte}
               placeholder={unidadDestinoId ? 'Seleccionar' : 'Elija primero la unidad'}
               data={puestos.map((p) => ({
                 value: String(p.id), label: p.cargo?.nombre ?? `Puesto ${p.id}`,
               }))}
               searchable
+              searchValue={searchValue}
+              onSearchChange={onSearchChange}
               disabled={!unidadDestinoId}
               value={field.value ? String(field.value) : null}
               onChange={(v) => {
