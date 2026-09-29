@@ -28,6 +28,38 @@
              fallaban las diez que usan caché etiquetada, porque ese almacén no
              soporta etiquetas. -->
         <env name="CACHE_STORE" value="array" />
+        <!-- Telescope y Pulse apagados en pruebas. Los dos vienen con
+             `env('…_ENABLED', true)`, así que estaban ACTIVOS y grababan
+             mientras corría la suite.
+
+             Eso es lo que llevaba desde el 2026-09-25 tumbando la integración
+             continua de forma intermitente con `SQLSTATE[25P02]`, y siempre
+             en `UsuarioFeatureTest`, que no tiene nada que ver: es el primer
+             test de Feature y ahí es donde `RefreshDatabase` dispara el
+             `migrate:fresh`. El volcado del log del servidor (#210) lo enseñó
+             en su primer uso:
+
+               ERROR:  relation "telescope_monitoring" does not exist
+               STATEMENT:  select "tag" from "telescope_monitoring"
+               ERROR:  current transaction is aborted, commands ignored…
+               STATEMENT:  alter table "password_reset_tokens" add primary key
+
+             Telescope consulta su propia tabla en mitad de la reconstrucción
+             del esquema, cuando acaba de ser eliminada y todavía no existe.
+             Ese SELECT aborta la transacción de las migraciones, y a partir de
+             ahí PostgreSQL rechaza todo lo demás con 25P02 — de ahí que la
+             sentencia acusada cambiara cada vez: era la siguiente que pasaba.
+
+             Intermitente porque solo revienta si a Telescope o a Pulse les toca
+             escribir dentro de esa ventana.
+
+             Y va `(false)` y no `false`: PHPUnit se come el literal `false` y
+             la variable llega como cadena VACÍA. Funcionaría por accidente
+             —'' es falsy—, pero `config()` devolvería '' en vez de un
+             booleano. Con los paréntesis, `Env::get` lo convierte de verdad.
+             Comprobado con las tres formas. -->
+        <env name="TELESCOPE_ENABLED" value="(false)" />
+        <env name="PULSE_ENABLED" value="(false)" />
         <env name="QUEUE_CONNECTION" value="sync" />
         <env name="SESSION_DRIVER" value="array" />
         <env name="SANCTUM_STATEFUL_DOMAINS" value="localhost" />
