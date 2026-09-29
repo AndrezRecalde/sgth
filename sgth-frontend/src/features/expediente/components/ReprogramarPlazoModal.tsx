@@ -135,6 +135,7 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
           label="Motivo"
           placeholder="Ej. Prórroga autorizada mediante memorando DTH-2026-0184"
           description="Queda en el registro de auditoría junto con la fecha anterior y quién hizo el cambio."
+          autosize
           minRows={3}
           {...contained}
           value={motivo}
