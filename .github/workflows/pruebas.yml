@@ -105,6 +105,77 @@ jobs:
       - name: Pruebas
         run: ./vendor/bin/pest
 
+      # ── Cuando el job cae, quién falló de verdad ────────────────────
+      #
+      # El backend cae de vez en cuando con `SQLSTATE[25P02]: current
+      # transaction is aborted` durante la construcción del esquema, y siempre
+      # se lo lleva `UsuarioFeatureTest`, que no tiene nada que ver: es el
+      # primer test de Feature de la suite, y ahí es donde `RefreshDatabase`
+      # dispara el `migrate:fresh`.
+      #
+      # `25P02` no es el error original. Significa que ALGO ANTERIOR de esa
+      # transacción falló y PostgreSQL rechaza el resto hasta el ROLLBACK, así
+      # que la sentencia que sale acusada es solo la siguiente que pasó por
+      # ahí — por eso cambia entre ocurrencias: `password_reset_tokens add
+      # primary key` el 27-09, `users_email_unique` el 28-09,
+      # `role_has_permissions_..._foreign` el 25-09.
+      #
+      # El primer error sí queda en el log del SERVIDOR, que en la imagen
+      # oficial va a la salida estándar del contenedor: PostgreSQL registra por
+      # defecto los ERROR y, con `log_min_error_statement = error`, también la
+      # sentencia que los provocó. Esto lo vuelca para no tener que volver a
+      # adivinar. Reejecutar sigue siendo la salida rápida; esto es para la
+      # próxima vez que haya que entenderlo.
+      - name: Log de PostgreSQL cuando el job falla
+        if: failure()
+        # El volcado no puede tumbar el job por su cuenta: ya está caído y lo
+        # que interesa es leerlo.
+        continue-on-error: true
+        # `bash` a secas y no el `bash -e` que Actions pone por defecto: aquí
+        # ninguna línea debe cortar el volcado, y un `grep` sin coincidencias
+        # devuelve 1 sin que eso sea un problema.
+        shell: bash
+        run: |
+          contenedor=$(docker ps -a --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -1)
+
+          if [ -z "$contenedor" ]; then
+            # Por si la imagen del servicio cambia de versión y el filtro por
+            # `ancestor` deja de acertar.
+            contenedor=$(docker ps -a --format '{{.ID}} {{.Image}}' | grep -i postgres | head -1 | cut -d' ' -f1)
+          fi
+
+          if [ -z "$contenedor" ]; then
+            echo 'No se encontró el contenedor de PostgreSQL.'
+            exit 0
+          fi
+
+          registro=$(docker logs "$contenedor" 2>&1)
+
+          echo '::group::Errores del servidor PostgreSQL'
+          # El PRIMERO de la lista es el que importa: es el que abortó la
+          # transacción, y los `25P02` que vienen detrás son su eco.
+          #
+          # El resultado se guarda antes de imprimirlo: en una tubería el estado
+          # de salida es el del último mandato, así que un `grep | head || echo`
+          # no llegaría nunca al `echo` aunque no hubiera ni una coincidencia.
+          # `-A 2` porque el valor está en las dos líneas siguientes: PostgreSQL
+          # pone el `DETAIL:` y, sobre todo, el `STATEMENT:` que provocó el
+          # error debajo de él. Sin eso se ve que hubo un fallo pero no cuál.
+          errores=$(printf '%s\n' "$registro" | grep -n -A 2 -E 'ERROR:|FATAL:|PANIC:|deadlock|could not' | head -90)
+
+          if [ -n "$errores" ]; then
+            printf '%s\n' "$errores"
+          else
+            echo 'El servidor no registró ningún error.'
+            echo 'Si el job cayó con 25P02, el primer fallo pudo ser del cliente y no'
+            echo 'del servidor: revise entonces las últimas líneas de aquí abajo.'
+          fi
+          echo '::endgroup::'
+
+          echo '::group::Últimas 300 líneas del servidor PostgreSQL'
+          printf '%s\n' "$registro" | tail -300
+          echo '::endgroup::'
+
   frontend:
     name: Frontend · tipos, lint y build
     runs-on: ubuntu-latest
