@@ -6,11 +6,11 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import { usePuestos } from '@/features/estructura/hooks/usePuestos'
+import { usePuestosDeUnidad } from '@/features/estructura/hooks/usePuestosDeUnidad'
 import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
 import { admiteMarcacion, esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { VinculacionInicialFormData } from '../schemas/vinculacionInicial.schema'
-import type { PuestoConRelaciones, UnidadConRelaciones } from '@/types/api'
+import type { UnidadConRelaciones } from '@/types/api'
 import { toDateValue, fromDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
 const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
@@ -31,10 +31,9 @@ export function VinculacionInicialFormVinculo() {
   const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 })
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
 
-  const { data: puestosData } = usePuestos(
-    unidadId ? { unidad_administrativa_id: Number(unidadId), per_page: 100 } : undefined,
-  )
-  const puestos = (puestosData?.data ?? []) as PuestoConRelaciones[]
+  const {
+    puestos, descripcionRecorte, searchValue, onSearchChange,
+  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId })
 
   const puestoSel = puestos.find((p) => p.id === Number(puestoId))
   const rmuPuesto = puestoSel?.rmu ? Number(puestoSel.rmu) : null
@@ -102,9 +101,12 @@ export function VinculacionInicialFormVinculo() {
           render={({ field }) => (
             <Select
               label="Puesto"
+              description={descripcionRecorte}
               placeholder={unidadId ? 'Seleccionar' : 'Elija primero la unidad'}
               data={puestos.map((p) => ({ value: String(p.id), label: p.cargo?.nombre ?? `Puesto ${p.id}` }))}
               searchable
+              searchValue={searchValue}
+              onSearchChange={onSearchChange}
               disabled={!unidadId}
               value={field.value ? String(field.value) : null}
               onChange={(v) => {

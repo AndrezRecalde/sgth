@@ -73,11 +73,19 @@ export function BuscarPuestoSelect({
   // las peticiones, no el vaciado de la lista.
   const termino = escrito.length < 2 ? '' : escritoConRetardo
 
+  /*
+  | Hasta el 2026-09-28 esto no buscaba nada: `EstructuraService::listarPuestos()`
+  | descartaba `search` en silencio, así que el desplegable devolvía siempre los
+  | diez primeros puestos de la institución por orden alfabético, escribiera uno
+  | lo que escribiera. Como nunca salía vacío, parecía funcionar.
+  |
+  | `all: false` se va con ello: tampoco lo leía nadie.
+  */
   const { data: puestos = [], isFetching } = useQuery({
     queryKey: ['estructura', 'puestos', 'buscar', termino],
     queryFn: async () => {
       const res = await api.get('/estructura/puestos', {
-        params: { search: termino, per_page: 10, all: false },
+        params: { search: termino, per_page: 10 },
       })
       const datos = res.data?.datos
       const items: Puesto[] = Array.isArray(datos)
@@ -118,7 +126,7 @@ export function BuscarPuestoSelect({
           required={required}
           error={error}
           description={description}
-          placeholder="Buscar puesto por nombre del cargo..."
+          placeholder="Buscar por cargo o unidad..."
           rightSection={buscando
             ? <Loader size="xs" />
             : <Combobox.Chevron />}

@@ -366,6 +366,26 @@ final class EstructuraService implements EstructuraServiceInterface
 
     // ── GESTIÓN DE PUESTOS ───────────────────────────────────────────────────
 
+    /**
+     * Listado de puestos con los filtros del catálogo y de los selectores.
+     *
+     * `search` busca en el nombre del cargo, en su denominación genérica y en
+     * el nombre de la unidad: es lo que el desplegable enseña de cada puesto.
+     * (El puesto no tiene código propio — la columna se fue cuando la
+     * denominación pasó a ser la relación `cargo`.)
+     *
+     * Faltaba, y no era un filtro de menos: `BuscarPuestoSelect` lo mandaba
+     * desde cinco pantallas —convocatoria nueva, inscribir postulante, asignar
+     * EPP por puesto, reporte de EPP y riesgo laboral— y aquí se descartaba en
+     * silencio, así que el buscador devolvía siempre los diez primeros puestos
+     * de la institución por orden alfabético, escribiera uno lo que escribiera.
+     * Parecía funcionar.
+     *
+     * Cada palabra tiene que aparecer en alguna de las columnas, igual que en
+     * ExpedienteService::filtrarServidores(): así «analista tecnología»
+     * distingue entre los analistas de dos direcciones, que es justo lo que
+     * hace falta cuando la búsqueda abarca la institución entera.
+     */
     public function listarPuestos(array $filtros): LengthAwarePaginator
     {
         return Puesto::query()
@@ -376,6 +396,14 @@ final class EstructuraService implements EstructuraServiceInterface
                 'contratosVigentes.servidor:id,cedula,nombre,segundo_nombre,apellido,segundo_apellido',
             ])
             ->leftJoin('cargos', 'cargos.id', '=', 'puestos.cargo_id')
+            // Para buscar por unidad sin cargar la relación: ambos son
+            // «muchos a uno», así que ninguno multiplica filas.
+            ->leftJoin(
+                'unidades_administrativas',
+                'unidades_administrativas.id',
+                '=',
+                'puestos.unidad_administrativa_id'
+            )
             ->select('puestos.*')
             ->when(
                 isset($filtros['unidad_administrativa_id']),
@@ -395,6 +423,21 @@ final class EstructuraService implements EstructuraServiceInterface
             ->when(
                 isset($filtros['activo']),
                 fn($q) => $q->where('puestos.activo', $filtros['activo'])
+            )
+            ->when(
+                filled($filtros['search'] ?? null),
+                function ($q) use ($filtros) {
+                    foreach (preg_split('/\s+/', trim($filtros['search'])) as $palabra) {
+                        if ($palabra === '') {
+                            continue;
+                        }
+
+                        $q->where(fn($sub) => $sub
+                            ->where('cargos.nombre', 'ilike', "%{$palabra}%")
+                            ->orWhere('cargos.denominacion_generica', 'ilike', "%{$palabra}%")
+                            ->orWhere('unidades_administrativas.nombre', 'ilike', "%{$palabra}%"));
+                    }
+                }
             )
             ->orderBy('cargos.nombre', 'asc')
             ->paginate($filtros['per_page'] ?? 15);
