@@ -106,6 +106,29 @@
   font-size: var(--mantine-font-size-md);
 }
 
+/*
+| Un `Textarea` crece con su contenido, así que no puede heredar la altura fija
+| de arriba: la respetaba al pie de la letra y se dibujaba de UNA sola línea,
+| con `minRows` puesto y sin efecto. Son 65 en la aplicación y estaban todos
+| igual.
+|
+| No saltaba a la vista porque el campo funciona —se escribe, se desplaza y se
+| guarda—: lo que faltaba era sitio para leer lo que uno lleva escrito. Lo
+| encontró Talento Humano usando el formulario de Acción de Personal, pidiendo
+| que «Explicación» fuese un textarea. Ya lo era.
+|
+| `min-height` conserva el alto del patrón cuando está vacío, para que un
+| textarea vacío no quede más bajo que los campos de al lado.
+*/
+textarea.input {
+  height: auto;
+  min-height: 48px;
+}
+
+textarea.inputCompact {
+  min-height: 40px;
+}
+
 /* ── Variante compacta ─────────────────────────────────────
    Para barras de filtros y formularios en línea, donde el campo convive
    con botones y no necesita el aire del formulario de captura.

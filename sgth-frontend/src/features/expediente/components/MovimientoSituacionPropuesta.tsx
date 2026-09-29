@@ -1,6 +1,6 @@
 'use client'
 
-import { NumberInput, Select, Stack, TextInput } from '@mantine/core'
+import { NumberInput, Select, Stack } from '@mantine/core'
 import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -9,6 +9,7 @@ import { usePuestosDeUnidad } from '@/features/estructura/hooks/usePuestosDeUnid
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
 import { esLosep, remuneracionEsHeredada } from '../utils/nombramiento'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
+import { opcionesLugarDeTrabajo } from '../utils/lugaresDeTrabajo'
 import { BloqueDetalle } from './BloqueDetalle'
 import { MovimientoDatosContratacion } from './MovimientoDatosContratacion'
 
@@ -30,7 +31,7 @@ interface Props {
  */
 export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento }: Props) {
   const contained = useContainedInput()
-  const { control, register, setValue, formState: { errors } } = form
+  const { control, setValue, formState: { errors } } = form
 
   const unidadDestinoId = useWatch({ control, name: 'unidad_destino_id' })
   const puestoDestinoId = useWatch({ control, name: 'puesto_destino_id' })
@@ -140,12 +141,25 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
           )}
         />
 
-        <TextInput
-          label="Lugar de trabajo"
-          placeholder="Ej: Esmeraldas"
-          error={errors.lugar_trabajo?.message}
-          {...contained}
-          {...register('lugar_trabajo')}
+        {/* La institución tiene tres lugares y nada más (TH, 2026-09-29). Era
+            texto libre, y lo que se escribiera ahí salía impreso en el
+            documento: «Esmeraldas» es lo que quedó guardado de esa época. */}
+        <Controller
+          name="lugar_trabajo"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Lugar de trabajo"
+              placeholder="Seleccionar"
+              data={opcionesLugarDeTrabajo(field.value)}
+              searchable
+              clearable
+              value={field.value || null}
+              onChange={(v) => field.onChange(v ?? '')}
+              error={errors.lugar_trabajo?.message}
+              {...contained}
+            />
+          )}
         />
 
         <Controller

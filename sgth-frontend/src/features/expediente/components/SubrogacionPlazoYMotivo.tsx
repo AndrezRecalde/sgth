@@ -81,6 +81,7 @@ export function SubrogacionPlazoYMotivo({
       <Textarea
         label="Observación"
         placeholder="Opcional"
+        autosize
         minRows={2}
         {...contained}
         {...register('observacion')}

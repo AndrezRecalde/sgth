@@ -37,6 +37,7 @@ export function MovimientoDatosDelActo({
       <Textarea
         label="Explicación"
         placeholder="Detalle y justificación de la acción de personal"
+        autosize
         minRows={3}
         {...contained}
         {...register('descripcion')}
@@ -168,6 +169,7 @@ export function MovimientoDatosDelActo({
       <Textarea
         label="Observación"
         placeholder="Opcional"
+        autosize
         minRows={2}
         error={errors.observacion?.message}
         {...contained}
