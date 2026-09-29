@@ -621,11 +621,10 @@ class ContratoServidorService
      * decremento. La partida presupuestaria sí acompaña al puesto, porque
      * cuelga de él y no del contrato.
      *
-     * Para la prestación de servicios se asume lo mismo, y es un supuesto sin
-     * confirmar: TH la describió como «prácticamente como un traspaso»
-     * (2026-09-28) sin pronunciarse sobre la remuneración. Si resultara que sí
-     * puede cambiar, lo que hay que tocar es este método —y el formulario ya
-     * captura `remuneracion_propuesta`, así que el dato está.
+     * En la prestación de servicios tampoco, y ya no es un supuesto: se quedó
+     * pendiente al implementarla —TH la había descrito como «prácticamente
+     * como un traspaso» sin pronunciarse sobre la remuneración— y el
+     * 2026-09-29 confirmaron que no cambia.
      */
     public function reestructurarDesdeMovimiento(MovimientoPersonal $movimiento): void
     {

@@ -160,25 +160,55 @@ dataset('matriz de elegibilidad', [
         SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION,
         [TipoNombramiento::PERMANENTE],
     ],
-    'sanción disciplinaria → permanente, provisional y ocasional' => [
+    'sanción disciplinaria → permanente, provisional, ocasional y libre nombramiento' => [
         SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA,
-        [TipoNombramiento::PERMANENTE, TipoNombramiento::PROVISIONAL, TipoNombramiento::SERVICIOS_OCASIONALES],
+        [
+            TipoNombramiento::PERMANENTE,
+            TipoNombramiento::PROVISIONAL,
+            TipoNombramiento::SERVICIOS_OCASIONALES,
+            // TH equiparó Libre Nombramiento al ocasional el 2026-09-29.
+            TipoNombramiento::LIBRE_NOMBRAMIENTO,
+        ],
     ],
-    'renuncia → permanente, provisional y ocasional' => [
+    'renuncia → permanente, provisional, ocasional y libre nombramiento' => [
         SubtipoMovimientoPersonal::RENUNCIA,
-        [TipoNombramiento::PERMANENTE, TipoNombramiento::PROVISIONAL, TipoNombramiento::SERVICIOS_OCASIONALES],
+        [
+            TipoNombramiento::PERMANENTE,
+            TipoNombramiento::PROVISIONAL,
+            TipoNombramiento::SERVICIOS_OCASIONALES,
+            // TH equiparó Libre Nombramiento al ocasional el 2026-09-29.
+            TipoNombramiento::LIBRE_NOMBRAMIENTO,
+        ],
     ],
-    'destitución → permanente, provisional y ocasional' => [
+    'destitución → permanente, provisional, ocasional y libre nombramiento' => [
         SubtipoMovimientoPersonal::DESTITUCION,
-        [TipoNombramiento::PERMANENTE, TipoNombramiento::PROVISIONAL, TipoNombramiento::SERVICIOS_OCASIONALES],
+        [
+            TipoNombramiento::PERMANENTE,
+            TipoNombramiento::PROVISIONAL,
+            TipoNombramiento::SERVICIOS_OCASIONALES,
+            // TH equiparó Libre Nombramiento al ocasional el 2026-09-29.
+            TipoNombramiento::LIBRE_NOMBRAMIENTO,
+        ],
     ],
-    'jubilación → permanente, provisional y ocasional' => [
+    'jubilación → permanente, provisional, ocasional y libre nombramiento' => [
         SubtipoMovimientoPersonal::JUBILACION,
-        [TipoNombramiento::PERMANENTE, TipoNombramiento::PROVISIONAL, TipoNombramiento::SERVICIOS_OCASIONALES],
+        [
+            TipoNombramiento::PERMANENTE,
+            TipoNombramiento::PROVISIONAL,
+            TipoNombramiento::SERVICIOS_OCASIONALES,
+            // TH equiparó Libre Nombramiento al ocasional el 2026-09-29.
+            TipoNombramiento::LIBRE_NOMBRAMIENTO,
+        ],
     ],
-    'incapacidad → permanente, provisional y ocasional' => [
+    'incapacidad → permanente, provisional, ocasional y libre nombramiento' => [
         SubtipoMovimientoPersonal::INCAPACIDAD,
-        [TipoNombramiento::PERMANENTE, TipoNombramiento::PROVISIONAL, TipoNombramiento::SERVICIOS_OCASIONALES],
+        [
+            TipoNombramiento::PERMANENTE,
+            TipoNombramiento::PROVISIONAL,
+            TipoNombramiento::SERVICIOS_OCASIONALES,
+            // TH equiparó Libre Nombramiento al ocasional el 2026-09-29.
+            TipoNombramiento::LIBRE_NOMBRAMIENTO,
+        ],
     ],
     'contrato finalizado → solo servicios profesionales' => [
         SubtipoMovimientoPersonal::CONTRATO_FINALIZADO,
@@ -557,16 +587,66 @@ test('el incremento de remuneración es solo para obreros', function () {
     }
 });
 
-test('la prestación de servicios es para provisionales, ocasionales y servicios profesionales', function () {
+test('la prestación de servicios es para provisionales, ocasionales, servicios profesionales y libre nombramiento', function () {
     $elegibles = [
         TipoNombramiento::PROVISIONAL,
         TipoNombramiento::SERVICIOS_OCASIONALES,
         TipoNombramiento::SERVICIOS_PROFESIONALES,
+        // Añadido el 2026-09-29 junto con el resto de lo que TH equipara al
+        // ocasional; ver el test de abajo.
+        TipoNombramiento::LIBRE_NOMBRAMIENTO,
     ];
 
     foreach (TipoNombramiento::cases() as $nombramiento) {
         expect(TipoMovimientoPersonal::PRESTACION_SERVICIOS->elegiblePara($nombramiento))
             ->toBe(in_array($nombramiento, $elegibles, true), $nombramiento->value);
+    }
+});
+
+// ── Libre Nombramiento y Remoción (TH, 2026-09-29) ──────────────
+
+/*
+| Las reglas del 2026-09-28 dejaban a Libre Nombramiento y Remoción sin NINGUNA
+| acción de personal disponible: no aparecía en ninguna de las listas. Podía ser
+| correcto por la naturaleza de la figura, así que se preguntó, y TH respondió
+| que «es similar a un nombramiento ocasional, es decir tener las acciones que
+| tiene este último».
+|
+| El test no enumera: compara contra el ocasional. Así, el día que cambie una
+| regla del ocasional, esto falla si alguien no movió la de al lado — que es
+| justo la forma en que las dos listas se separarían sin que nadie lo note.
+*/
+test('libre nombramiento tiene exactamente las mismas acciones que un ocasional', function () {
+    foreach (TipoMovimientoPersonal::cases() as $tipo) {
+        expect($tipo->elegiblePara(TipoNombramiento::LIBRE_NOMBRAMIENTO))
+            ->toBe($tipo->elegiblePara(TipoNombramiento::SERVICIOS_OCASIONALES), $tipo->value);
+    }
+
+    foreach (SubtipoMovimientoPersonal::cases() as $subtipo) {
+        expect($subtipo->elegiblePara(TipoNombramiento::LIBRE_NOMBRAMIENTO))
+            ->toBe($subtipo->elegiblePara(TipoNombramiento::SERVICIOS_OCASIONALES), $subtipo->value);
+    }
+});
+
+/*
+| Y la comprobación de fondo: que ningún nombramiento se quede sin nada que
+| registrar. Es la pregunta que destapó lo de Libre Nombramiento, y sin un test
+| la siguiente regla que TH ajuste puede volver a dejar a alguien fuera en
+| silencio — las listas son seis y se editan de una en una.
+|
+| Elección Popular queda fuera del barrido a propósito: solo tiene licencia sin
+| remuneración, y eso es deliberado.
+*/
+test('ningún tipo de nombramiento se queda sin acciones de personal', function () {
+    foreach (TipoNombramiento::cases() as $nombramiento) {
+        $disponibles = array_filter(
+            TipoMovimientoPersonal::cases(),
+            fn (TipoMovimientoPersonal $tipo) => $tipo->elegiblePara($nombramiento),
+        );
+
+        expect($disponibles)->not->toBeEmpty(
+            "El nombramiento '{$nombramiento->value}' no tiene ninguna acción de personal disponible."
+        );
     }
 });
 

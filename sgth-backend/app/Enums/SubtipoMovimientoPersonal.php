@@ -67,10 +67,18 @@ enum SubtipoMovimientoPersonal: string
     /** @return list<TipoNombramiento> */
     public function nombramientosElegibles(): array
     {
-        $carrera = [
+        // Quienes pueden ser sancionados y cesados por la vía de la LOSEP.
+        //
+        // Libre Nombramiento y Remoción entró el 2026-09-29: al preguntarle a
+        // TH si era correcto que se quedara sin NINGUNA acción de personal
+        // disponible —consecuencia de las reglas del 2026-09-28— respondieron
+        // que «es similar a un nombramiento ocasional, es decir tener las
+        // acciones que tiene este último». Se le da exactamente eso.
+        $conSancionYCesacionLosep = [
             TipoNombramiento::PERMANENTE,
             TipoNombramiento::PROVISIONAL,
             TipoNombramiento::SERVICIOS_OCASIONALES,
+            TipoNombramiento::LIBRE_NOMBRAMIENTO,
         ];
 
         return match ($this) {
@@ -83,7 +91,7 @@ enum SubtipoMovimientoPersonal: string
             self::RENUNCIA,
             self::DESTITUCION,
             self::JUBILACION,
-            self::INCAPACIDAD => $carrera,
+            self::INCAPACIDAD => $conSancionYCesacionLosep,
 
             self::CONTRATO_FINALIZADO => [TipoNombramiento::SERVICIOS_PROFESIONALES],
 

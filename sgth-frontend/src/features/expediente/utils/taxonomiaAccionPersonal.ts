@@ -153,7 +153,20 @@ export const SUBTIPOS_POR_TIPO: Partial<Record<AccionTipo, AccionSubtipo[]>> = {
   ],
 }
 
-const CARRERA = ['nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales']
+/**
+ * Quienes pueden ser sancionados y cesados por la vía de la LOSEP.
+ *
+ * Libre Nombramiento y Remoción entró el 2026-09-29: al preguntarle a TH si era
+ * correcto que se quedara sin NINGUNA acción disponible —consecuencia de las
+ * reglas del 2026-09-28— respondieron que «es similar a un nombramiento
+ * ocasional, es decir tener las acciones que tiene este último».
+ */
+const CON_SANCION_Y_CESACION_LOSEP = [
+  'nombramiento_permanente',
+  'nombramiento_provisional',
+  'servicios_ocasionales',
+  'libre_nombramiento_remocion',
+]
 
 /** Espeja SubtipoMovimientoPersonal::nombramientosElegibles(). */
 const NOMBRAMIENTOS_POR_SUBTIPO: Record<AccionSubtipo, string[]> = {
@@ -161,11 +174,11 @@ const NOMBRAMIENTOS_POR_SUBTIPO: Record<AccionSubtipo, string[]> = {
   traspaso: ['nombramiento_permanente'],
   comision_con_remuneracion: ['nombramiento_permanente'],
   comision_sin_remuneracion: ['nombramiento_permanente'],
-  sancion_disciplinaria: CARRERA,
-  renuncia: CARRERA,
-  destitucion: CARRERA,
-  jubilacion: CARRERA,
-  incapacidad: CARRERA,
+  sancion_disciplinaria: CON_SANCION_Y_CESACION_LOSEP,
+  renuncia: CON_SANCION_Y_CESACION_LOSEP,
+  destitucion: CON_SANCION_Y_CESACION_LOSEP,
+  jubilacion: CON_SANCION_Y_CESACION_LOSEP,
+  incapacidad: CON_SANCION_Y_CESACION_LOSEP,
   contrato_finalizado: ['servicios_profesionales'],
   visto_bueno: ['codigo_trabajo'],
 }
@@ -181,6 +194,9 @@ const NOMBRAMIENTOS_POR_TIPO_SIMPLE: Partial<Record<AccionTipo, string[]>> = {
     'nombramiento_provisional',
     'servicios_ocasionales',
     'servicios_profesionales',
+    // 2026-09-29. Es lo único de la respuesta de TH sobre Libre Nombramiento
+    // que choca con la enumeración del 2026-09-28, donde no figuraba.
+    'libre_nombramiento_remocion',
   ],
   licencia_sin_remuneracion: [
     'nombramiento_permanente',
