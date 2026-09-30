@@ -60,7 +60,9 @@ export function getConsolidadoColumns(totales?: Totales): DataTableColumn<Consol
       textAlign: 'right',
       width: 110,
       render: ({ tiempo_total }) => <Text size="sm" ff="monospace" fw={500}>{tiempo_total}</Text>,
-      footer: totales && pie('—'),
+      // Era un guion teniendo los minutos en la columna de al lado, y es la
+      // cifra que Talento Humano lee al cerrar el mes.
+      footer: totales && pie(totales.tiempo_total),
     },
     {
       accessor: 'total_dias',

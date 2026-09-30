@@ -96,7 +96,7 @@
     </td>
     <td class="title-cell">
       <div class="inst">
-        Gobierno Autonomo Descentralizado de la Provincia de Esmeraldas
+        Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas
       </div>
       <div class="doc-title">
         Consolidado de Permisos — Tipo: {{ $tipo }}
@@ -106,7 +106,7 @@
 </table>
 
 <div class="filtros">
-  Periodo: <span>{{ $fechaInicio }}</span>
+  Período: <span>{{ $fechaInicio }}</span>
   al <span>{{ $fechaFin }}</span>
   &nbsp;|&nbsp;
   Generado: <span>{{ now()->format('d/m/Y H:i') }}</span>
@@ -117,13 +117,13 @@
 <table class="data">
   <thead>
     <tr>
-      <th width="10%">Cedula</th>
+      <th width="10%">Cédula</th>
       <th width="28%">Servidor</th>
       <th width="28%">Unidad Administrativa</th>
       <th class="right" width="10%">Permisos</th>
       <th class="right" width="10%">Minutos</th>
       <th class="right" width="7%">Tiempo</th>
-      <th class="right" width="7%">Dias</th>
+      <th class="right" width="7%">Días</th>
     </tr>
   </thead>
   <tbody>
@@ -135,12 +135,12 @@
       <td class="right">{{ $fila['total_permisos'] }}</td>
       <td class="right">{{ $fila['total_minutos'] }}</td>
       <td class="right">{{ $fila['tiempo_total'] }}</td>
-      <td class="right">{{ $fila['total_dias'] }}</td>
+      <td class="right">{{ number_format($fila['total_dias'], 2) }}</td>
     </tr>
     @empty
     <tr>
       <td colspan="7" style="text-align:center; color:#999; padding:15px;">
-        Sin registros en el periodo seleccionado.
+        Sin registros en el período seleccionado.
       </td>
     </tr>
     @endforelse
@@ -152,8 +152,8 @@
       </td>
       <td class="right">{{ $totales['total_permisos'] }}</td>
       <td class="right">{{ $totales['total_minutos'] }}</td>
-      <td class="right">—</td>
-      <td class="right">{{ $totales['total_dias'] }}</td>
+      <td class="right">{{ $totales['tiempo_total'] }}</td>
+      <td class="right">{{ number_format($totales['total_dias'], 2) }}</td>
     </tr>
     @endif
   </tbody>

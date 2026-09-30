@@ -1622,6 +1622,8 @@ export type ConsolidadoPermisoResponse = {
   totales: {
     total_permisos: number
     total_minutos:  number
+    /** El total de horas en `HH:MM`, sin tope de 24. */
+    tiempo_total:   string
     total_dias:     number
   }
   filtros: {
