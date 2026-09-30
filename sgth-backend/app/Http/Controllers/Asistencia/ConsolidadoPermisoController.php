@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Asistencia;
 use App\Enums\TipoPermiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Services\Asistencia\ConsolidadoPermisoService;
 use Carbon\Carbon;
@@ -28,16 +29,17 @@ class ConsolidadoPermisoController extends Controller
 
     public function consolidado(Request $request): JsonResponse
     {
-        ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo, 'servidor' => $servidor]
-            = $this->filtros($request);
+        ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo,
+         'servidor' => $servidor, 'unidad' => $unidad] = $this->filtros($request);
 
         return ApiResponse::ok(
-            array_merge($this->servicio->generar($inicio, $fin, $tipo, $servidor?->id), [
+            array_merge($this->servicio->generar($inicio, $fin, $tipo, $servidor?->id, $unidad?->id), [
                 'filtros' => [
                     'fecha_inicio' => $inicio,
                     'fecha_fin'    => $fin,
                     'tipo'         => $tipo,
                     'servidor_id'  => $servidor?->id,
+                    'unidad_administrativa_id' => $unidad?->id,
                 ],
             ]),
             'Consolidado de permisos'
@@ -46,11 +48,11 @@ class ConsolidadoPermisoController extends Controller
 
     public function exportarExcel(Request $request): mixed
     {
-        ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo, 'servidor' => $servidor]
-            = $this->filtros($request);
+        ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo,
+         'servidor' => $servidor, 'unidad' => $unidad] = $this->filtros($request);
 
         $filas = $this->servicio->paraExcel(
-            $this->servicio->generar($inicio, $fin, $tipo, $servidor?->id)['consolidado']
+            $this->servicio->generar($inicio, $fin, $tipo, $servidor?->id, $unidad?->id)['consolidado']
         );
 
         $headers = [
@@ -79,10 +81,10 @@ class ConsolidadoPermisoController extends Controller
 
     public function exportarPdf(Request $request): mixed
     {
-        ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo, 'servidor' => $servidor]
-            = $this->filtros($request);
+        ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo,
+         'servidor' => $servidor, 'unidad' => $unidad] = $this->filtros($request);
 
-        $datos = $this->servicio->generar($inicio, $fin, $tipo, $servidor?->id);
+        $datos = $this->servicio->generar($inicio, $fin, $tipo, $servidor?->id, $unidad?->id);
 
         $pdf = app('dompdf.wrapper')
             ->setPaper('letter', 'landscape')
@@ -97,6 +99,7 @@ class ConsolidadoPermisoController extends Controller
                 'servidor'    => $servidor
                     ? mb_strtoupper(trim("{$servidor->apellido} {$servidor->segundo_apellido} {$servidor->nombre} {$servidor->segundo_nombre}"), 'UTF-8')
                     : null,
+                'unidad'      => $unidad?->nombre,
             ]);
 
         return $pdf->download(
@@ -111,7 +114,7 @@ class ConsolidadoPermisoController extends Controller
      * en tres sitios es una invitación a cruzar dos de ellos sin que nada se
      * queje.
      *
-     * @return array{inicio: string, fin: string, tipo: string, servidor: ?Servidor}
+     * @return array{inicio: string, fin: string, tipo: string, servidor: ?Servidor, unidad: ?UnidadAdministrativa}
      */
     private function filtros(Request $request): array
     {
@@ -124,6 +127,8 @@ class ConsolidadoPermisoController extends Controller
             // Opcional: sin él, el informe es de toda la institución; con él,
             // de una sola persona.
             'servidor_id'  => ['nullable', 'integer', 'exists:servidores,id'],
+            // Opcional: la unidad y todo lo que cuelga de ella.
+            'unidad_administrativa_id' => ['nullable', 'integer', 'exists:unidades_administrativas,id'],
         ]);
 
         $inicio = Carbon::parse($validado['fecha_inicio']);
@@ -138,13 +143,23 @@ class ConsolidadoPermisoController extends Controller
             ]);
         }
 
+        $servidor = isset($validado['servidor_id'])
+            ? Servidor::find($validado['servidor_id'])
+            : null;
+
+        // El servidor manda: elegida una persona, la unidad ya no puede
+        // recortar nada util --solo dejar el informe en blanco si no es la
+        // suya--, asi que se ignora. El frontend ademas deshabilita el campo.
+        $unidad = $servidor === null && isset($validado['unidad_administrativa_id'])
+            ? UnidadAdministrativa::find($validado['unidad_administrativa_id'])
+            : null;
+
         return [
             'inicio'   => $inicio->toDateString(),
             'fin'      => $fin->toDateString(),
             'tipo'     => $validado['tipo'] ?? 'personal',
-            'servidor' => isset($validado['servidor_id'])
-                ? Servidor::find($validado['servidor_id'])
-                : null,
+            'servidor' => $servidor,
+            'unidad'   => $unidad,
         ];
     }
 }

@@ -116,6 +116,12 @@
          «Total servidores: 1» no lo dice. --}}
     Servidor: <span>{{ $servidor }}</span>
   @else
+    @if($unidad ?? null)
+      {{-- Incluye las unidades que cuelgan de ella, así que el total de
+           servidores sigue importando. --}}
+      Unidad: <span>{{ $unidad }}</span>
+      &nbsp;|&nbsp;
+    @endif
     Total servidores: <span>{{ count($consolidado) }}</span>
   @endif
 </div>

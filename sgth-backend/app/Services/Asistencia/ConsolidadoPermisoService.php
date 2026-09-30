@@ -3,6 +3,7 @@
 namespace App\Services\Asistencia;
 
 use App\Models\Asistencia\PermisoServidor;
+use App\Services\Estructura\ArbolUnidades;
 use Illuminate\Support\Collection;
 
 /**
@@ -42,9 +43,10 @@ class ConsolidadoPermisoService
         string $fechaInicio,
         string $fechaFin,
         string $tipo,
-        ?int $servidorId = null
+        ?int $servidorId = null,
+        ?int $unidadId = null
     ): array {
-        $consolidado = $this->filas($fechaInicio, $fechaFin, $tipo, $servidorId);
+        $consolidado = $this->filas($fechaInicio, $fechaFin, $tipo, $servidorId, $unidadId);
 
         $minutos = (int) $consolidado->sum('total_minutos');
 
@@ -64,7 +66,8 @@ class ConsolidadoPermisoService
     }
 
     /**
-     * Una fila por servidor, ya sumada por la base. Con `$servidorId`, una sola.
+     * Una fila por servidor, ya sumada por la base. Con `$servidorId`, una sola;
+     * con `$unidadId`, las de esa unidad y las de todo lo que cuelga de ella.
      *
      * `hora_fin - hora_inicio` entre dos columnas `time` da un intervalo en
      * PostgreSQL; `EXTRACT(EPOCH FROM ...)` lo pasa a segundos. Es la misma
@@ -85,7 +88,8 @@ class ConsolidadoPermisoService
         string $fechaInicio,
         string $fechaFin,
         string $tipo,
-        ?int $servidorId = null
+        ?int $servidorId = null,
+        ?int $unidadId = null
     ): Collection {
         return PermisoServidor::query()
             ->join('servidores', 'servidores.id', '=', 'permisos_servidor.servidor_id')
@@ -98,6 +102,13 @@ class ConsolidadoPermisoService
             ->whereIn('permisos_servidor.estado', self::ESTADOS_CONCEDIDOS)
             // Opcional: sin servidor, el informe es de toda la institución.
             ->when($servidorId, fn ($q) => $q->where('servidores.id', $servidorId))
+            // La unidad incluye lo que cuelga de ella: filtrar por una
+            // dirección tiene que traer a sus jefaturas y subprocesos, o el
+            // informe sale más corto sin decir por qué.
+            ->when($unidadId, fn ($q) => $q->whereIn(
+                'servidores.unidad_administrativa_id',
+                ArbolUnidades::conDescendientes($unidadId)
+            ))
             ->groupBy(
                 'servidores.id',
                 'servidores.cedula',

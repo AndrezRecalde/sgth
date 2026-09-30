@@ -10,6 +10,8 @@ export interface ParamsConsolidado {
   tipo:         string
   /** Opcional: sin él, el informe es de toda la institución. */
   servidor_id?: number
+  /** Opcional: la unidad y todo lo que cuelga de ella. */
+  unidad_administrativa_id?: number
 }
 
 type Formato = 'excel' | 'pdf'
@@ -56,7 +58,11 @@ export function useExportarConsolidado() {
       // `guardarArchivo` y no las mismas líneas a mano: aquí se revocaba la
       // URL del blob en el acto, justo después del `click()`, y en Firefox eso
       // cancela la descarga. El enlace tampoco llegaba a entrar en el DOM.
-      const sufijo = params.servidor_id ? `_servidor-${params.servidor_id}` : ''
+      const sufijo = params.servidor_id
+        ? `_servidor-${params.servidor_id}`
+        : params.unidad_administrativa_id
+          ? `_unidad-${params.unidad_administrativa_id}`
+          : ''
 
       guardarArchivo(
         blob,

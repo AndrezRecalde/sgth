@@ -56,6 +56,12 @@ export function ConsolidadoPermisosTab() {
       tipo: filtros.tipo,
       // `undefined` y no `null`: así el parámetro no viaja cuando no se filtra.
       servidor_id: filtros.servidorId ?? undefined,
+      // El servidor manda: con una persona elegida, la unidad no se envía.
+      unidad_administrativa_id: filtros.servidorId
+        ? undefined
+        : filtros.unidadId
+          ? Number(filtros.unidadId)
+          : undefined,
     };
 
     const mismosFiltros =
@@ -63,7 +69,8 @@ export function ConsolidadoPermisosTab() {
       consultados.fecha_inicio === pedidos.fecha_inicio &&
       consultados.fecha_fin === pedidos.fecha_fin &&
       consultados.tipo === pedidos.tipo &&
-      consultados.servidor_id === pedidos.servidor_id;
+      consultados.servidor_id === pedidos.servidor_id &&
+      consultados.unidad_administrativa_id === pedidos.unidad_administrativa_id;
 
     setConsultados(pedidos);
 
@@ -128,10 +135,14 @@ export function ConsolidadoPermisosTab() {
             icon: IconClipboardList,
             title: consultados.servidor_id
               ? "Este servidor no tiene permisos en el período"
-              : "Sin permisos en el período",
+              : consultados.unidad_administrativa_id
+                ? "Esta unidad no tiene permisos en el período"
+                : "Sin permisos en el período",
             description: consultados.servidor_id
               ? "No registró permisos de ese tipo entre las fechas elegidas. Pruebe con otro rango, otro tipo, o quite el servidor para ver a toda la institución."
-              : "No hay permisos de ese tipo entre las fechas elegidas. Pruebe con otro rango o tipo.",
+              : consultados.unidad_administrativa_id
+                ? "Nadie de esa unidad ni de las que cuelgan de ella registró permisos de ese tipo entre las fechas elegidas. Pruebe con otro rango, otro tipo, o quite la unidad."
+                : "No hay permisos de ese tipo entre las fechas elegidas. Pruebe con otro rango o tipo.",
           }}
         >
           <SgthTable
