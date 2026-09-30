@@ -41,6 +41,22 @@ export const TIPO_OPCIONES = [
   { value: 'calamidad',  label: 'Calamidad doméstica' },
 ]
 
+/**
+ * Los tipos por los que se filtra el consolidado.
+ *
+ * `TIPO_OPCIONES` no vale aquí: lleva «(máx. 4 horas)» en Personal, que es una
+ * regla de quien registra, no de quien consulta un informe. Pero vive junto a
+ * las demás y no dentro del filtro, que es donde estaba: el mismo tipo llegó a
+ * llamarse de cuatro formas distintas entre el registro, el consolidado y el
+ * PDF.
+ */
+export const TIPO_OPCIONES_CONSOLIDADO = [
+  { value: 'personal',   label: 'Personal' },
+  { value: 'oficial',    label: 'Oficial' },
+  { value: 'enfermedad', label: 'Por enfermedad' },
+  { value: 'calamidad',  label: 'Calamidad doméstica' },
+]
+
 /** Los estados por los que se filtra, en el orden del flujo. */
 export const FILTROS_ESTADO = [
   'todos',
