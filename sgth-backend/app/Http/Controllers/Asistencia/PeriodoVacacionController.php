@@ -19,6 +19,20 @@ use Illuminate\Http\Request;
  */
 class PeriodoVacacionController extends Controller
 {
+    /**
+     * El año, siempre validado igual en los cuatro endpoints que lo reciben.
+     *
+     * `generar` y `generar-todos` no lo validaban: hacían `(int) input('anio')`,
+     * así que `"hola"` pasaba como 0 y `-5` como -5. La operación masiva recorre
+     * la plantilla entera, de modo que un año inventado abría un período del año
+     * cero a cada servidor activo. El 2020-2035 solo existía en el campo del
+     * frontend, que es exactamente donde una validación no sirve de nada.
+     *
+     * El margen es holgado a propósito: hay que poder corregir un período viejo
+     * y abrir el del año que viene.
+     */
+    private const REGLA_ANIO = ['integer', 'min:2000', 'max:2100'];
+
     public function __construct(
         private PeriodoVacacionService $periodoService,
         private TopeAcumulacionService $tope,
@@ -42,9 +56,10 @@ class PeriodoVacacionController extends Controller
     {
         $this->authorize('gestionarPeriodos', Vacacion::class);
 
-        $anio    = $request->input('anio', now()->year);
+        $anio = $this->anioPedido($request);
+
         $servidor = Servidor::findOrFail($servidorId);
-        $periodo  = $this->periodoService->generarPeriodo($servidor, (int)$anio);
+        $periodo  = $this->periodoService->generarPeriodo($servidor, $anio);
 
         return ApiResponse::ok($periodo, "Período {$anio} generado correctamente.");
     }
@@ -61,7 +76,7 @@ class PeriodoVacacionController extends Controller
         $this->authorize('gestionarPeriodos', Vacacion::class);
 
         $datos = $request->validate([
-            'anio' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'anio' => ['required', ...self::REGLA_ANIO],
         ]);
 
         $servidor = Servidor::findOrFail($servidorId);
@@ -93,7 +108,7 @@ class PeriodoVacacionController extends Controller
         $this->authorize('gestionarPeriodos', Vacacion::class);
 
         $datos = $request->validate([
-            'anio' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'anio' => ['required', ...self::REGLA_ANIO],
         ]);
 
         $servidor = Servidor::findOrFail($servidorId);
@@ -141,8 +156,8 @@ class PeriodoVacacionController extends Controller
     {
         $this->authorize('gestionarPeriodos', Vacacion::class);
 
-        $anio      = $request->input('anio', now()->year);
-        $resultados = $this->periodoService->generarPeriodosAnuales((int)$anio);
+        $anio       = $this->anioPedido($request);
+        $resultados = $this->periodoService->generarPeriodosAnuales($anio);
 
         return ApiResponse::ok(
             ['generados' => $resultados->count()],
@@ -183,5 +198,20 @@ class PeriodoVacacionController extends Controller
             number_format($resultado['saldo_despues'], 2),
             number_format($resultado['tope'], 2)
         ));
+    }
+
+    /**
+     * El año que se pide generar, o el corriente si no viene ninguno.
+     *
+     * Se valida aunque sea opcional: lo que llega mal se rechaza con su mensaje
+     * en vez de convertirse en un cero silencioso.
+     */
+    private function anioPedido(Request $request): int
+    {
+        $datos = $request->validate([
+            'anio' => ['nullable', ...self::REGLA_ANIO],
+        ]);
+
+        return (int) ($datos['anio'] ?? now()->year);
     }
 }
