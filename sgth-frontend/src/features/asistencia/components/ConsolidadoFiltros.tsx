@@ -5,9 +5,11 @@ import { DatePickerInput } from '@mantine/dates'
 import { IconSearch } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useUnidades } from '@/features/estructura/hooks/useUnidades'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { TIPO_OPCIONES_CONSOLIDADO } from './permisos.constants'
+import type { UnidadConRelaciones } from '@/types/api'
 
 export interface FiltrosConsolidado {
   fechaInicio: string | null
@@ -15,6 +17,8 @@ export interface FiltrosConsolidado {
   tipo:        string
   /** Sin servidor, el informe es de toda la institución. */
   servidorId:  number | null
+  /** La unidad y todo lo que cuelga de ella. El servidor manda sobre esto. */
+  unidadId:    string | null
 }
 
 export const FILTROS_INICIALES_CONSOLIDADO: FiltrosConsolidado = {
@@ -22,6 +26,7 @@ export const FILTROS_INICIALES_CONSOLIDADO: FiltrosConsolidado = {
   fechaFin:    null,
   tipo:        'personal',
   servidorId:  null,
+  unidadId:    null,
 }
 
 interface Props {
@@ -39,6 +44,12 @@ export function ConsolidadoFiltros({
   filtros, onCambiar, onConsultar, puedeConsultar, consultando, acciones,
 }: Props) {
   const contained = useContainedInput('sm')
+  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+
+  const unidadOptions = ((unidadesRaw ?? []) as UnidadConRelaciones[]).map((u) => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
+  }))
 
   return (
     <Toolbar
@@ -99,6 +110,24 @@ export function ConsolidadoFiltros({
         label="Servidor (opcional)"
         value={filtros.servidorId}
         onChange={(id) => onCambiar({ servidorId: id })}
+      />
+
+      {/* Incluye las unidades que cuelgan de la elegida: eso lo resuelve el
+          backend, porque la tabla solo trae el NOMBRE de la unidad.
+
+          Se deshabilita con un servidor elegido: ahí ya no puede recortar nada
+          útil, solo dejar el informe en blanco si no es la suya. */}
+      <Select
+        label="Unidad administrativa (opcional)"
+        placeholder={filtros.servidorId ? 'Manda el servidor elegido' : 'Todas'}
+        data={unidadOptions}
+        searchable
+        clearable
+        disabled={!!filtros.servidorId}
+        {...contained}
+        value={filtros.servidorId ? null : filtros.unidadId}
+        onChange={(v) => onCambiar({ unidadId: v })}
+        style={{ minWidth: 240 }}
       />
     </Toolbar>
   )

@@ -403,3 +403,119 @@ test('el PDF filtrado se genera', function () {
 
     expect($respuesta->headers->get('content-type'))->toContain('application/pdf');
 });
+
+// ── El filtro por unidad ─────────────────────────────────────────
+
+/*
+| La unidad incluye lo que cuelga de ella.
+|
+| El consolidado muestra el NOMBRE de la unidad, que sale de un join, así que
+| un filtro hecho en el navegador solo podría comparar esa cadena y dejaría
+| fuera a los servidores de las unidades hijas. Filtrar por una dirección tiene
+| que traer a sus jefaturas y subprocesos, que es lo que Talento Humano pide
+| para cerrar el mes, y eso solo lo sabe el backend.
+*/
+test('filtrar por una dirección incluye a las unidades que cuelgan de ella', function () {
+    $hija = unidadDePrueba([
+        'nombre' => 'Jefatura de Tesorería',
+        'nivel' => 2,
+        'unidad_padre_id' => $this->unidad->id,
+    ]);
+
+    $deLaHija = Servidor::create([
+        'cedula' => '0808888883', 'nombre' => 'Carla', 'apellido' => 'Hija',
+        'puesto_id' => puestoDePrueba($hija)->id,
+        'unidad_administrativa_id' => $hija->id,
+        'regimen_laboral' => RegimenLaboral::LOSEP, 'estado' => true,
+    ]);
+
+    // Ana está en la dirección; Carla, en la jefatura que cuelga de ella.
+    permisoConcedido($this->ana, 'PER-2026-C0100', '08:00', '10:00'); // 120
+    permisoConcedido($deLaHija,  'PER-2026-C0101', '08:00', '09:00'); //  60
+
+    $respuesta = consultarConsolidado([
+        'unidad_administrativa_id' => $this->unidad->id,
+    ])->assertStatus(200);
+
+    $cedulas = collect($respuesta->json('datos.consolidado'))->pluck('cedula')->all();
+
+    expect($cedulas)->toContain('0808888881')   // la de la dirección
+        ->and($cedulas)->toContain('0808888883') // la de la jefatura hija
+        ->and($respuesta->json('datos.totales.total_minutos'))->toBe(180);
+});
+
+test('filtrar por la unidad hija no arrastra a la madre', function () {
+    $hija = unidadDePrueba([
+        'nombre' => 'Jefatura de Tesorería',
+        'nivel' => 2,
+        'unidad_padre_id' => $this->unidad->id,
+    ]);
+
+    $deLaHija = Servidor::create([
+        'cedula' => '0808888884', 'nombre' => 'Diego', 'apellido' => 'Hijo',
+        'puesto_id' => puestoDePrueba($hija)->id,
+        'unidad_administrativa_id' => $hija->id,
+        'regimen_laboral' => RegimenLaboral::LOSEP, 'estado' => true,
+    ]);
+
+    permisoConcedido($this->ana, 'PER-2026-C0102', '08:00', '10:00');
+    permisoConcedido($deLaHija,  'PER-2026-C0103', '08:00', '09:00');
+
+    $cedulas = collect(
+        consultarConsolidado(['unidad_administrativa_id' => $hija->id])
+            ->assertStatus(200)
+            ->json('datos.consolidado')
+    )->pluck('cedula')->all();
+
+    expect($cedulas)->toBe(['0808888884']);
+});
+
+test('una unidad que no existe se rechaza', function () {
+    consultarConsolidado(['unidad_administrativa_id' => 999999])
+        ->assertStatus(422)
+        ->assertJsonStructure(['errores' => ['unidad_administrativa_id']]);
+});
+
+test('el servidor manda sobre la unidad', function () {
+    $otra = unidadDePrueba(['nombre' => 'Dirección Ajena', 'nivel' => 1]);
+
+    permisoConcedido($this->ana, 'PER-2026-C0104', '08:00', '10:00');
+
+    // Ana no está en «Dirección Ajena». Si los dos filtros se combinaran, el
+    // informe saldría vacío; el servidor manda y la unidad se ignora.
+    $filas = consultarConsolidado([
+        'servidor_id' => $this->ana->id,
+        'unidad_administrativa_id' => $otra->id,
+    ])->assertStatus(200)->json('datos.consolidado');
+
+    expect($filas)->toHaveCount(1)
+        ->and($filas[0]['cedula'])->toBe('0808888881');
+});
+
+test('la exportación respeta el filtro por unidad', function () {
+    $otra = unidadDePrueba(['nombre' => 'Dirección Ajena', 'nivel' => 1]);
+
+    $ajeno = Servidor::create([
+        'cedula' => '0808888885', 'nombre' => 'Elena', 'apellido' => 'Ajena',
+        'puesto_id' => puestoDePrueba($otra)->id,
+        'unidad_administrativa_id' => $otra->id,
+        'regimen_laboral' => RegimenLaboral::LOSEP, 'estado' => true,
+    ]);
+
+    permisoConcedido($this->ana, 'PER-2026-C0105', '08:00', '10:00');
+    permisoConcedido($ajeno,     'PER-2026-C0106', '08:00', '09:00');
+
+    $params = http_build_query([
+        'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
+        'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+        'unidad_administrativa_id' => $this->unidad->id,
+    ]);
+
+    $csv = $this->actingAs($this->uath, 'sanctum')
+        ->get("/api/v1/asistencia/consolidado-permisos/exportar-excel?{$params}")
+        ->assertStatus(200)
+        ->streamedContent();
+
+    expect($csv)->toContain('0808888881')
+        ->and($csv)->not->toContain('0808888885');
+});

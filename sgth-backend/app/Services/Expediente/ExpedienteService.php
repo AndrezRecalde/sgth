@@ -5,11 +5,11 @@ namespace App\Services\Expediente;
 use App\Contracts\Expediente\ExpedienteServiceInterface;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
-use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\DocumentoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Services\Estructura\ArbolUnidades;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -23,37 +23,6 @@ class ExpedienteService implements ExpedienteServiceInterface
     private const COLUMNAS_BUSQUEDA = [
         'cedula', 'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido',
     ];
-
-    /**
-     * La unidad pedida y todo lo que cuelga de ella. El organigrama tiene tres
-     * niveles y unas decenas de filas, así que se recorre en memoria con una
-     * sola consulta en vez de una recursiva por nivel.
-     *
-     * @return list<int>
-     */
-    private function unidadConDescendientes(int $unidadId): array
-    {
-        $porPadre = UnidadAdministrativa::query()
-            ->select('id', 'unidad_padre_id')
-            ->get()
-            ->groupBy('unidad_padre_id');
-
-        $ids = [];
-        $pendientes = [$unidadId];
-
-        while ($pendientes) {
-            $actual = array_pop($pendientes);
-            if (in_array($actual, $ids, true)) {
-                continue;
-            }
-            $ids[] = $actual;
-            foreach ($porPadre->get($actual, collect()) as $hija) {
-                $pendientes[] = (int) $hija->id;
-            }
-        }
-
-        return $ids;
-    }
 
     /**
      * Crea la ficha personal del servidor. Nada más.
@@ -330,7 +299,7 @@ class ExpedienteService implements ExpedienteServiceInterface
         if (!empty($filtros['unidad_administrativa_id'])) {
             $query->whereIn(
                 'unidad_administrativa_id',
-                $this->unidadConDescendientes((int) $filtros['unidad_administrativa_id']),
+                ArbolUnidades::conDescendientes((int) $filtros['unidad_administrativa_id']),
             );
         }
 
