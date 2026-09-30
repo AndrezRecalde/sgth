@@ -225,3 +225,101 @@ test('la exportación a PDF se genera', function () {
 
     expect($respuesta->headers->get('content-type'))->toContain('application/pdf');
 });
+
+// ── Quién puede pedirlo ──────────────────────────────────────────
+
+/*
+| El informe dice, de toda la institución, quién se ausenta y cuánto. Estuvo
+| abierto a cualquier usuario autenticado —un servidor raso podía descargarlo
+| en Excel— hasta que se cerró con `ver-permisos-todos`.
+|
+| Aquel arreglo no dejó ninguna prueba detrás, así que hoy quitar el middleware
+| no rompe nada visible. Esto no destapa un fallo: lo sostiene.
+*/
+test('sin el permiso no se consulta ni se exporta', function () {
+    $raso = User::create([
+        'email' => 'raso@example.com', 'usuario_ti' => 'raso_u',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $raso->assignRole('servidor');
+
+    $params = http_build_query([
+        'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
+        'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+    ]);
+
+    foreach ([
+        '/api/v1/asistencia/consolidado-permisos',
+        '/api/v1/asistencia/consolidado-permisos/exportar-excel',
+        '/api/v1/asistencia/consolidado-permisos/exportar-pdf',
+    ] as $ruta) {
+        $this->actingAs($raso, 'sanctum')
+            ->getJson("{$ruta}?{$params}")
+            ->assertStatus(403);
+    }
+});
+
+test('con el permiso sí', function () {
+    permisoConcedido($this->ana, 'PER-2026-C0060', '08:00', '10:00');
+
+    consultarConsolidado()->assertStatus(200);
+});
+
+// ── El orden y el rango ──────────────────────────────────────────
+
+/*
+| Dos servidores que se llaman igual quedaban en un orden que Postgres no
+| promete: `ORDER BY apellido, nombre` sin desempate. Dos exportaciones del
+| mismo período podían traer las filas cambiadas de sitio en un informe que se
+| firma. El id las ordena.
+|
+| Es una prueba de guarda, no una reproducción: con dos filas el motor devuelve
+| el mismo orden con desempate y sin él, y no se puede forzar de forma fiable a
+| que no lo haga. Lo que fija es la intención —el orden lo decide el id— para
+| que quitar ese `orderBy` se note aquí y no en un informe firmado.
+*/
+test('dos servidores homónimos salen siempre en el mismo orden', function () {
+    $unidad = $this->unidad;
+
+    $gemelos = collect(range(1, 2))->map(fn ($i) => Servidor::create([
+        'cedula' => '08077777'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+        'nombre' => 'Juan', 'apellido' => 'Perez',
+        'puesto_id' => puestoDePrueba($unidad)->id,
+        'unidad_administrativa_id' => $unidad->id,
+        'regimen_laboral' => RegimenLaboral::LOSEP, 'estado' => true,
+    ]));
+
+    foreach ($gemelos as $i => $servidor) {
+        permisoConcedido($servidor, 'PER-2026-C007'.$i, '08:00', '09:00');
+    }
+
+    $esperado = $gemelos->sortBy('id')->pluck('cedula')->values()->all();
+
+    foreach (range(1, 3) as $_) {
+        $filas = collect(consultarConsolidado()->json('datos.consolidado'))
+            ->whereIn('cedula', $esperado)
+            ->pluck('cedula')
+            ->values()
+            ->all();
+
+        expect($filas)->toBe($esperado);
+    }
+});
+
+test('un rango de más de cinco años se rechaza', function () {
+    consultarConsolidado([
+        'fecha_inicio' => '1900-01-01',
+        'fecha_fin'    => '2100-12-31',
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('errores.fecha_fin.0', 'El consolidado abarca como máximo 5 años; el rango pedido es mayor.');
+});
+
+test('un rango largo pero razonable pasa', function () {
+    permisoConcedido($this->ana, 'PER-2026-C0080', '08:00', '10:00');
+
+    consultarConsolidado([
+        'fecha_inicio' => Carbon::today()->subYears(2)->toDateString(),
+        'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+    ])->assertStatus(200);
+});
