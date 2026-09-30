@@ -111,7 +111,13 @@
   &nbsp;|&nbsp;
   Generado: <span>{{ now()->format('d/m/Y H:i') }}</span>
   &nbsp;|&nbsp;
-  Total servidores: <span>{{ count($consolidado) }}</span>
+  @if($servidor ?? null)
+    {{-- Filtrado por una persona: el informe tiene que decir de quién es, y
+         «Total servidores: 1» no lo dice. --}}
+    Servidor: <span>{{ $servidor }}</span>
+  @else
+    Total servidores: <span>{{ count($consolidado) }}</span>
+  @endif
 </div>
 
 <table class="data">

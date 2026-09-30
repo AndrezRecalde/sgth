@@ -38,9 +38,13 @@ class ConsolidadoPermisoService
     /**
      * @return array{consolidado: Collection<int, array<string, mixed>>, totales: array<string, mixed>}
      */
-    public function generar(string $fechaInicio, string $fechaFin, string $tipo): array
-    {
-        $consolidado = $this->filas($fechaInicio, $fechaFin, $tipo);
+    public function generar(
+        string $fechaInicio,
+        string $fechaFin,
+        string $tipo,
+        ?int $servidorId = null
+    ): array {
+        $consolidado = $this->filas($fechaInicio, $fechaFin, $tipo, $servidorId);
 
         $minutos = (int) $consolidado->sum('total_minutos');
 
@@ -60,7 +64,7 @@ class ConsolidadoPermisoService
     }
 
     /**
-     * Una fila por servidor, ya sumada por la base.
+     * Una fila por servidor, ya sumada por la base. Con `$servidorId`, una sola.
      *
      * `hora_fin - hora_inicio` entre dos columnas `time` da un intervalo en
      * PostgreSQL; `EXTRACT(EPOCH FROM ...)` lo pasa a segundos. Es la misma
@@ -77,8 +81,12 @@ class ConsolidadoPermisoService
      *
      * @return Collection<int, array<string, mixed>>
      */
-    private function filas(string $fechaInicio, string $fechaFin, string $tipo): Collection
-    {
+    private function filas(
+        string $fechaInicio,
+        string $fechaFin,
+        string $tipo,
+        ?int $servidorId = null
+    ): Collection {
         return PermisoServidor::query()
             ->join('servidores', 'servidores.id', '=', 'permisos_servidor.servidor_id')
             ->leftJoin(
@@ -88,6 +96,8 @@ class ConsolidadoPermisoService
             ->whereBetween('permisos_servidor.fecha', [$fechaInicio, $fechaFin])
             ->where('permisos_servidor.tipo', $tipo)
             ->whereIn('permisos_servidor.estado', self::ESTADOS_CONCEDIDOS)
+            // Opcional: sin servidor, el informe es de toda la institución.
+            ->when($servidorId, fn ($q) => $q->where('servidores.id', $servidorId))
             ->groupBy(
                 'servidores.id',
                 'servidores.cedula',
