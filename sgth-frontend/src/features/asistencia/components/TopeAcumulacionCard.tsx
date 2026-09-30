@@ -1,20 +1,19 @@
-"use client";
+'use client'
 
-import { Card, Stack, Text } from "@mantine/core";
-import { IconHourglassEmpty } from "@tabler/icons-react";
-import type { DataTableColumn } from "mantine-datatable";
+import { useState } from 'react'
+import { IconHourglassEmpty } from '@tabler/icons-react'
 import {
   DataState,
+  PAGINACION_ES,
+  SectionCard,
   SgthTable,
-  StatusBadge,
-  TableActions,
   confirmar,
-} from "@/components/ui";
-import { useAuth } from "@/hooks/useAuth";
-import { REGIMEN_LABELS } from "@/lib/regimen";
-import { useServidoresSobreTope } from "../hooks/useServidoresSobreTope";
-import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
-import type { ServidorSobreTope } from "@/types/api";
+} from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
+import { getServidoresSobreTopeColumns } from './servidoresSobreTope.columns'
+import { useServidoresSobreTope } from '../hooks/useServidoresSobreTope'
+import { usePeriodosMutations } from '../hooks/usePeriodosMutations'
+import type { ServidorSobreTope } from '@/types/api'
 
 /*
 | Quién está cerca de su tope de acumulación o lo pasa.
@@ -24,124 +23,81 @@ import type { ServidorSobreTope } from "@/types/api";
 | servidor, y queda en la bitácora.
 */
 
-const dias = (n: number) => `${n.toFixed(2)} días`;
+/** El mismo tamaño de página que el resto de los listados del sistema. */
+const POR_PAGINA = 15
+
+const dias = (n: number) => `${n.toFixed(2)} días`
 
 export function TopeAcumulacionCard() {
-  const { hasPermiso } = useAuth();
-  const puedeVencer = hasPermiso("gestionar-vacaciones");
+  const { hasPermiso } = useAuth()
+  const puedeVencer = hasPermiso('gestionar-vacaciones')
 
-  const { data, isLoading, error } = useServidoresSobreTope();
-  const { vencerExcedente } = usePeriodosMutations();
-  const filas = data ?? [];
+  const [pagina, setPagina] = useState(1)
+
+  const { data, isLoading, error, refetch } = useServidoresSobreTope()
+  const { vencerExcedente } = usePeriodosMutations()
+  const filas = data ?? []
+
+  // El endpoint devuelve la lista institucional completa sin paginar, así que
+  // se pagina aquí: son las personas por encima del 75 % de su tope, y cuántas
+  // sean depende del año, no de un filtro. Sin paginador la tarjeta crecía sin
+  // freno y empujaba el resto de la pantalla fuera de la vista.
+  const visibles = filas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
 
   const pedirVencimiento = (f: ServidorSobreTope) =>
     confirmar({
-      title: "Vencer el excedente",
+      title: 'Vencer el excedente',
       message: (
         <>
-          <b>{f.nombre}</b> tiene <b>{dias(f.saldo)}</b> y su tope es de{" "}
+          <b>{f.nombre}</b> tiene <b>{dias(f.saldo)}</b> y su tope es de{' '}
           {dias(f.tope)}. Vencerán <b>{dias(f.excedente)}</b>, tomados de sus
-          períodos más antiguos, y el saldo quedará en {dias(f.tope)}. Los
-          días vencidos no se recuperan con una regeneración. Queda registrado
-          en la bitácora.
+          períodos más antiguos, y el saldo quedará en {dias(f.tope)}. Los días
+          vencidos no se recuperan con una regeneración. Queda registrado en la
+          bitácora.
         </>
       ),
-      confirmLabel: "Vencer",
+      confirmLabel: 'Vencer',
       destructiva: true,
       onConfirm: () => vencerExcedente.mutate(f.servidor_id),
-    });
+    })
 
-  const columns: DataTableColumn<ServidorSobreTope>[] = [
-    {
-      accessor: "nombre",
-      title: "Servidor",
-      render: ({ nombre, cedula, unidad }) => (
-        <Stack gap={0}>
-          <Text size="sm">{nombre}</Text>
-          <Text size="xs" c="dimmed">
-            {cedula}
-            {unidad ? ` · ${unidad}` : ""}
-          </Text>
-        </Stack>
-      ),
-    },
-    {
-      accessor: "regimen",
-      title: "Régimen",
-      width: 150,
-      render: ({ regimen }) => (
-        <StatusBadge>
-          {REGIMEN_LABELS[regimen] ?? regimen}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: "saldo",
-      title: "Saldo",
-      width: 100,
-      render: ({ saldo }) => <Text size="sm">{saldo.toFixed(2)}</Text>,
-    },
-    {
-      accessor: "tope",
-      title: "Tope",
-      width: 90,
-      render: ({ tope }) => <Text size="sm">{tope.toFixed(2)}</Text>,
-    },
-    {
-      accessor: "excedente",
-      title: "Excedente",
-      width: 110,
-      render: ({ excedente }) => (
-        <Text size="sm" fw={600} c={excedente > 0 ? "red" : "dimmed"}>
-          {excedente > 0 ? excedente.toFixed(2) : "—"}
-        </Text>
-      ),
-    },
-    {
-      accessor: "acciones",
-      title: "",
-      width: 50,
-      render: (fila) => (
-        <TableActions
-          actions={[
-            {
-              label: "Vencer excedente",
-              icon: <IconHourglassEmpty size={14} />,
-              color: "red",
-              hidden: !puedeVencer || fila.excedente <= 0,
-              onClick: () => pedirVencimiento(fila),
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const columnas = getServidoresSobreTopeColumns({
+    puedeVencer,
+    onVencer: pedirVencimiento,
+  })
 
   return (
-    <Card withBorder radius="md" p="md">
-      <Stack gap={4} mb="sm">
-        <Text fw={600} size="sm">
-          Tope de acumulación
-        </Text>
-        <Text size="xs" c="dimmed">
-          LOSEP: 60 días. Código del Trabajo: tres años de lo que genera el
-          servidor. Se listan desde el 75 % del tope; el excedente no vence
-          hasta que Talento Humano lo decide.
-        </Text>
-      </Stack>
-
+    <SectionCard
+      title="Tope de acumulación"
+      description="LOSEP: 60 días. Código del Trabajo: tres años de lo que genera el servidor. Se listan desde el 75 % del tope; el excedente no vence hasta que Talento Humano lo decide."
+    >
       <DataState
         loading={isLoading}
         error={error}
         empty={!filas.length}
+        page={pagina}
+        errorTitle="No se pudo cargar el seguimiento del tope"
+        errorHint="No quiere decir que nadie esté cerca de su tope: no se pudo consultar."
+        onRetry={() => void refetch()}
+        skeletonRows={3}
         emptyProps={{
           icon: IconHourglassEmpty,
-          title: "Nadie está cerca de su tope",
-          description: "Ningún servidor activo llega al 75 % de su tope de acumulación.",
+          title: 'Nadie está cerca de su tope',
+          description: 'Ningún servidor activo llega al 75 % de su tope de acumulación.',
         }}
       >
-        <SgthTable records={filas} columns={columns} idAccessor="servidor_id" minHeight={120} />
+        <SgthTable
+          {...PAGINACION_ES}
+          records={visibles}
+          columns={columnas}
+          idAccessor="servidor_id"
+          minHeight={120}
+          totalRecords={filas.length}
+          recordsPerPage={POR_PAGINA}
+          page={pagina}
+          onPageChange={setPagina}
+        />
       </DataState>
-    </Card>
-  );
+    </SectionCard>
+  )
 }
