@@ -14,6 +14,7 @@ use App\Models\Sso\EvaluacionPsicosocial;
 use App\Models\Sso\RespuestaAssist;
 use App\Models\Sso\RespuestaPsicosocial;
 use App\Models\Sso\RiesgoLaboral;
+use App\Services\Asistencia\JornadaLaboral;
 use Carbon\Carbon;
 
 final class DashboardSsoService
@@ -148,8 +149,9 @@ final class DashboardSsoService
         return [
             'total_permisos' => (int) $fila->total,
             'servidores_afectados' => (int) $fila->servidores,
-            // 480 minutos es la jornada de ocho horas.
-            'total_dias' => round(((float) $fila->minutos) / 480, 2),
+            // La jornada vive en `JornadaLaboral`; aquí se presenta con dos
+            // decimales y no con cuatro, que es lo que pide un consolidado.
+            'total_dias' => JornadaLaboral::aDias((float) $fila->minutos, 2),
         ];
     }
 
