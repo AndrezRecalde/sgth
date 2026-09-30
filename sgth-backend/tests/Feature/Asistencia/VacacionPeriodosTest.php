@@ -3,10 +3,10 @@
 /*
 | El descuento de una vacación se reparte entre los períodos abiertos.
 |
-| `descontarDias()` tocaba solo el período del año de la vacación: si no
-| alcanzaba, el resto se perdía, aunque la solicitud hubiera pasado el control
-| de saldo gracias a los años anteriores. Con 10 días de un año y 15 del
-| siguiente, gozar 20 dejaba 10 en vez de 5.
+| Antes se tocaba solo el período del año de la vacación: si no alcanzaba, el
+| resto se perdía, aunque la solicitud hubiera pasado el control de saldo
+| gracias a los años anteriores. Con 10 días de un año y 15 del siguiente,
+| gozar 20 dejaba 10 en vez de 5.
 |
 | Ahora se gasta del período más antiguo al más nuevo, sin tocar años
 | posteriores al de la vacación, y cada tramo queda anotado.
@@ -121,7 +121,12 @@ test('el caso de la auditoría: gozar 20 de 25 deja 5, no 10', function () {
     [, $respuesta] = ($this->aprobarDias)(20);
     $respuesta->assertOk();
 
-    expect(app(PeriodoVacacionService::class)->saldoTotal($this->servidor->id))->toBe(5.0);
+    // `saldoHasta()` y no `saldoTotal()`: los períodos de esta prueba son del
+    // año que viene, y desde que el saldo mostrado usa el mismo horizonte que
+    // la aprobación, `saldoTotal()` mide lo ganado HASTA HOY. Lo que se
+    // comprueba aquí es el reparto entre períodos, no el horizonte.
+    expect(app(PeriodoVacacionService::class)->saldoHasta($this->servidor->id, $this->anio))
+        ->toBe(5.0);
 });
 
 test('cada período anota lo que se le tomó', function () {

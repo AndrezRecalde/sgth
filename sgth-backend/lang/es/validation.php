@@ -257,6 +257,7 @@ return [
         'puesto_subrogado_id' => 'puesto a subrogar',
 
         // Fechas y estados comunes
+        'anio' => 'año',
         'fecha' => 'fecha',
         'fecha_inicio' => 'fecha de inicio',
         'fecha_fin' => 'fecha de fin',

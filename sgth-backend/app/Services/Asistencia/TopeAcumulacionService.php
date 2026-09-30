@@ -50,6 +50,10 @@ class TopeAcumulacionService
             RegimenLaboral::LOSEP, null             => self::TOPE_LOSEP,
             RegimenLaboral::CODIGO_TRABAJO          => $this->topeCodigoTrabajo(
                 PeriodoVacacion::where('servidor_id', $servidor->id)
+                    // Sin cumplir todavía no cuenta: un período generado por
+                    // adelantado para 2035 trae la antigüedad de 2035, y con
+                    // ella el tope del servidor subía años antes de tocarle.
+                    ->where('anio', '<=', $this->anioCorriente())
                     ->orderByDesc('anio')
                     ->value('dias_generados')
             ),
@@ -64,6 +68,8 @@ class TopeAcumulacionService
      */
     public function estado(Servidor $servidor): array
     {
+        // `saldoTotal()` ya no cuenta los períodos de años futuros: mide lo
+        // ganado hasta hoy, que es justo lo que se acumula contra el tope.
         $saldo = $this->periodos->saldoTotal($servidor->id);
         $tope  = $this->topePara($servidor);
 
@@ -89,6 +95,9 @@ class TopeAcumulacionService
             ->join('servidores as s', 's.id', '=', 'p.servidor_id')
             ->where('s.estado', true)
             ->where('p.estado', 'abierto')
+            // Igual que `estado()`: lo acumulado es lo de este año y lo de
+            // antes. Un período generado por adelantado no se ha ganado.
+            ->where('p.anio', '<=', $this->anioCorriente())
             ->whereNotIn('s.regimen_laboral', RegimenLaboral::valoresSinVacaciones())
             ->whereNull('s.deleted_at')
             ->groupBy('p.servidor_id', 's.regimen_laboral')
@@ -103,7 +112,10 @@ class TopeAcumulacionService
 
         $generadoPorAnio = DB::table('periodos_vacaciones as p')
             ->whereIn('p.servidor_id', $idsCodigoTrabajo)
-            ->whereRaw('p.anio = (SELECT MAX(anio) FROM periodos_vacaciones WHERE servidor_id = p.servidor_id)')
+            ->whereRaw(
+                'p.anio = (SELECT MAX(anio) FROM periodos_vacaciones WHERE servidor_id = p.servidor_id AND anio <= ?)',
+                [$this->anioCorriente()]
+            )
             ->pluck('p.dias_generados', 'p.servidor_id');
 
         $filas = $saldos
@@ -165,8 +177,13 @@ class TopeAcumulacionService
     public function vencerExcedente(Servidor $servidor, User $usuario): array
     {
         return DB::transaction(function () use ($servidor, $usuario) {
+            // Solo los períodos ya cumplidos: son los que forman el acumulado
+            // que se mide contra el tope, y de los que por tanto puede salir el
+            // excedente. Vencer días de un período futuro sería quitar algo que
+            // todavía no se ha ganado.
             $abiertos = PeriodoVacacion::where('servidor_id', $servidor->id)
                 ->where('estado', 'abierto')
+                ->where('anio', '<=', $this->anioCorriente())
                 ->orderBy('anio')
                 ->lockForUpdate()
                 ->get();
@@ -230,6 +247,12 @@ class TopeAcumulacionService
 
             return $resultado;
         });
+    }
+
+    /** El año en curso, que es hasta donde se ha ganado algo. */
+    private function anioCorriente(): int
+    {
+        return (int) now()->year;
     }
 
     private function topeCodigoTrabajo(mixed $diasPorAnio): ?float

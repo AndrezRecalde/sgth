@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Estructura\UnidadAdministrativa;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 // Aquí colgaba un `#[ObservedBy(PermisoServidorObserver::class)]` cuyo observer
@@ -107,5 +108,19 @@ class PermisoServidor extends Model
     public function creadoPor(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'creado_por');
+    }
+
+    /**
+     * De qué períodos de vacaciones salieron sus horas, y cuántas de cada uno.
+     *
+     * Solo los permisos personales de un servidor LOSEP descuentan, y solo al
+     * confirmarse: un permiso rechazado o vencido no tiene ninguna fila aquí.
+     * Es por eso la única fuente fiable de qué consumió un permiso — la fecha
+     * no lo dice, porque el descuento se reparte del período más antiguo al
+     * más nuevo.
+     */
+    public function descuentos(): HasMany
+    {
+        return $this->hasMany(PermisoDescuento::class, 'permiso_servidor_id');
     }
 }

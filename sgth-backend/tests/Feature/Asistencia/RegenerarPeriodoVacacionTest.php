@@ -40,11 +40,32 @@ beforeEach(function () {
     ]);
 
     $this->servicio = app(PeriodoVacacionService::class);
+
+    /*
+    | Marcar días como gozados en el período de un año.
+    |
+    | Lo hacía `PeriodoVacacionService::descontarDias()`, que se borró por no
+    | tener ningún llamador en producción: el descuento de verdad se reparte
+    | entre períodos y anota cada tramo. Estas pruebas no comprueban el
+    | descuento, solo necesitan un período con consumo para regenerarlo, así
+    | que el montaje se hace aquí en vez de mantener vivo un método para ello.
+    */
+    $this->gozar = function (int $anio, float $dias) {
+        $periodo = PeriodoVacacion::where('servidor_id', $this->servidor->id)
+            ->where('anio', $anio)
+            ->where('estado', 'abierto')
+            ->firstOrFail();
+
+        $periodo->dias_utilizados = (float) $periodo->dias_utilizados + $dias;
+        $periodo->recalcularSaldo();
+        $periodo->saldo_acumulado = max(0, (float) $periodo->saldo_acumulado - $dias);
+        $periodo->save();
+    };
 });
 
 test('regenerar conserva los días ya gozados', function () {
     $this->servicio->generarPeriodo($this->servidor, 2026);
-    $this->servicio->descontarDias($this->servidor->id, 6, 2026);
+    ($this->gozar)(2026, 6);
 
     $antes = PeriodoVacacion::where('servidor_id', $this->servidor->id)->firstOrFail();
     expect((float) $antes->dias_utilizados)->toBe(6.0);
@@ -60,7 +81,7 @@ test('regenerar conserva los días ya gozados', function () {
 
 test('regenerar sí recalcula lo generado cuando cambia el régimen', function () {
     $this->servicio->generarPeriodo($this->servidor, 2026);
-    $this->servicio->descontarDias($this->servidor->id, 5, 2026);
+    ($this->gozar)(2026, 5);
 
     // Un contrato civil no genera vacaciones. Lo gozado sigue siendo un hecho.
     $this->servidor->update(['regimen_laboral' => 'servicios_profesionales']);
@@ -70,7 +91,7 @@ test('regenerar sí recalcula lo generado cuando cambia el régimen', function (
 
     expect((float) $periodo->dias_generados)->toBe(0.0)
         ->and((float) $periodo->dias_utilizados)->toBe(5.0)
-        // Se acota a cero, como hace descontarDias(), en vez de quedar en -5.
+        // Se acota a cero, como hace el descuento, en vez de quedar en -5.
         ->and((float) $periodo->dias_saldo)->toBe(0.0);
 });
 
@@ -96,7 +117,7 @@ test('regenerar no reabre un período cerrado', function () {
 
 test('el acumulado descuenta lo gozado en vez de sumar lo generado', function () {
     $this->servicio->generarPeriodo($this->servidor, 2026);
-    $this->servicio->descontarDias($this->servidor->id, 4, 2026);
+    ($this->gozar)(2026, 4);
 
     $this->servicio->generarPeriodo($this->servidor, 2026);
     $periodo = PeriodoVacacion::where('servidor_id', $this->servidor->id)->firstOrFail();
@@ -109,7 +130,7 @@ test('el acumulado descuenta lo gozado en vez de sumar lo generado', function ()
 
 test('regenerar no recalcula un período cerrado', function () {
     $this->servicio->generarPeriodo($this->servidor->fresh(), 2025);
-    $this->servicio->descontarDias($this->servidor->id, 20, 2025);
+    ($this->gozar)(2025, 20);
 
     $periodo = PeriodoVacacion::where('servidor_id', $this->servidor->id)
         ->where('anio', 2025)->firstOrFail();
@@ -177,7 +198,7 @@ test('la previsualización anuncia el mismo saldo que después se guarda', funct
     // Si el diálogo promete un saldo y forzar deja otro, la confirmación
     // informada deja de serlo. Este test ata las dos cifras.
     $this->servicio->generarPeriodo($this->servidor->fresh(), 2025);
-    $this->servicio->descontarDias($this->servidor->id, 4, 2025);
+    ($this->gozar)(2025, 4);
 
     PeriodoVacacion::where('servidor_id', $this->servidor->id)
         ->where('anio', 2025)->update(['estado' => 'cerrado']);
@@ -230,9 +251,9 @@ test('«generar todos» salta a los regímenes sin vacaciones', function () {
     $this->servidor->update(['regimen_laboral' => 'servicios_profesionales']);
 
     // No lanza: la generación masiva es de rutina y los filtra en la consulta.
-    $resultados = $this->servicio->generarPeriodosAnuales(2026);
+    $generados = $this->servicio->generarPeriodosAnuales(2026);
 
-    expect($resultados)->toHaveCount(0)
+    expect($generados)->toBe(0)
         ->and(PeriodoVacacion::where('servidor_id', $this->servidor->id)->count())->toBe(0);
 });
 
@@ -240,7 +261,7 @@ test('el período que ya existía sí se recalcula al cambiar de régimen', func
     // El corte es solo para períodos NUEVOS. Quien estuvo bajo otro régimen y
     // gozó días conserva su período: eso ocurrió y no se borra.
     $this->servicio->generarPeriodo($this->servidor, 2026);
-    $this->servicio->descontarDias($this->servidor->id, 3, 2026);
+    ($this->gozar)(2026, 3);
 
     $this->servidor->update(['regimen_laboral' => 'servicios_profesionales']);
     $periodo = $this->servicio->generarPeriodo($this->servidor->fresh(), 2026);
