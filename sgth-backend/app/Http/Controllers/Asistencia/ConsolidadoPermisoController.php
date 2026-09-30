@@ -9,9 +9,20 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ConsolidadoPermisoController extends Controller
 {
+    /**
+     * Años que puede abarcar un consolidado.
+     *
+     * El rango solo se validaba como «dos fechas, la segunda no anterior a la
+     * primera», así que de 1900 a 2100 pasaba y recorría la tabla entera. Un
+     * consolidado se hace por mes o por año; cinco es holgado de sobra y corta
+     * el barrido absurdo.
+     */
+    private const MAXIMO_ANIOS = 5;
+
     public function __construct(private ConsolidadoPermisoService $servicio) {}
 
     public function consolidado(Request $request): JsonResponse
@@ -98,9 +109,21 @@ class ConsolidadoPermisoController extends Controller
             'tipo'         => ['nullable', 'string', Rule::in(TipoPermiso::valores())],
         ]);
 
+        $inicio = Carbon::parse($validado['fecha_inicio']);
+        $fin    = Carbon::parse($validado['fecha_fin']);
+
+        if ($inicio->diffInYears($fin) >= self::MAXIMO_ANIOS) {
+            throw ValidationException::withMessages([
+                'fecha_fin' => sprintf(
+                    'El consolidado abarca como máximo %d años; el rango pedido es mayor.',
+                    self::MAXIMO_ANIOS
+                ),
+            ]);
+        }
+
         return [
-            Carbon::parse($validado['fecha_inicio'])->toDateString(),
-            Carbon::parse($validado['fecha_fin'])->toDateString(),
+            $inicio->toDateString(),
+            $fin->toDateString(),
             $validado['tipo'] ?? 'personal',
         ];
     }

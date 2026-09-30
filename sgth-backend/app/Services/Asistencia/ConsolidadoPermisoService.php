@@ -23,9 +23,6 @@ use Illuminate\Support\Collection;
  */
 class ConsolidadoPermisoService
 {
-    /** Jornada completa, en minutos. */
-    private const MINUTOS_JORNADA = 480;
-
     /**
      * Los estados que cuentan como tiempo de permiso concedido.
      *
@@ -102,6 +99,11 @@ class ConsolidadoPermisoService
             )
             ->orderBy('servidores.apellido')
             ->orderBy('servidores.nombre')
+            // El id desempata. Sin él, dos servidores que se llaman igual
+            // quedan en un orden que Postgres no promete, así que dos
+            // exportaciones del mismo período pueden traer las filas
+            // cambiadas de sitio en un informe que se firma.
+            ->orderBy('servidores.id')
             ->selectRaw(<<<'SQL'
                 servidores.id                    as servidor_id,
                 servidores.cedula                as cedula,
@@ -141,7 +143,7 @@ class ConsolidadoPermisoService
             'total_permisos'  => (int) $fila->total_permisos,
             'total_minutos'   => $minutos,
             'tiempo_total'    => $this->comoHoras($minutos),
-            'total_dias'      => round($minutos / self::MINUTOS_JORNADA, 2),
+            'total_dias'      => JornadaLaboral::aDias($minutos, 2),
         ];
     }
 
