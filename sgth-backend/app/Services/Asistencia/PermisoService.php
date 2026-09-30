@@ -19,8 +19,13 @@ class PermisoService implements PermisoServiceInterface
 {
     use DiasHabilesHelper;
 
-    /** Jornada completa, en minutos: 8 horas. */
-    private const MINUTOS_JORNADA = 480;
+    /**
+     * Jornada completa, en minutos: 8 horas.
+     *
+     * El número vive en `JornadaLaboral`, que es de donde lo lee también el
+     * resumen de períodos: el 480 estaba escrito en los dos sitios.
+     */
+    private const MINUTOS_JORNADA = JornadaLaboral::MINUTOS;
 
     /** Tope diario de los permisos personales, en minutos. */
     private const MINUTOS_MAX_PERSONAL_DIA = 240;
@@ -707,14 +712,12 @@ class PermisoService implements PermisoServiceInterface
     /** `"08:30:00"` o `"08:30"` → 510. */
     private function aMinutos(string $hora): int
     {
-        [$h, $m] = array_map('intval', explode(':', substr($hora, 0, 5)));
-
-        return $h * 60 + $m;
+        return JornadaLaboral::aMinutos($hora);
     }
 
     private function aDias(int $minutos): float
     {
-        return round($minutos / self::MINUTOS_JORNADA, 4);
+        return JornadaLaboral::aDias($minutos);
     }
 
     private function enHoras(int $minutos): string

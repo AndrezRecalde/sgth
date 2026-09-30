@@ -1523,7 +1523,6 @@ export type Vacacion = {
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null
   persona_reemplaza_id?: number | null
-  periodo_vacacion_id?:  number | null
   persona_reemplaza?:    ServidorConRelaciones | null
   periodo_vacacion?:     PeriodoVacacion | null
   anulado_por?:          number | null
@@ -1549,7 +1548,6 @@ export type PeriodoVacacion = {
   dias_saldo:           number | string
   saldo_acumulado:      number | string
   estado:               'abierto' | 'cerrado' | 'vencido'
-  alerta_enviada:       boolean
   servidor?:            ServidorConRelaciones
   dias_vacaciones_aprobadas?: number | null
   dias_permisos_personales?:  number | null
