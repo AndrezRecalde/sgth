@@ -6,7 +6,6 @@ import {
   Group,
   Button,
   Text,
-  Select,
   NumberInput,
   Alert,
   Grid,
@@ -21,15 +20,13 @@ import {
   IconInfoCircle,
   IconRefreshAlert,
 } from "@tabler/icons-react";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { useServidores } from "@/features/expediente/hooks/useServidores";
+import { BuscarServidorSelect } from "@/features/expediente/components/BuscarServidorSelect";
 import { usePeriodosVacaciones } from "../hooks/usePeriodosVacaciones";
 import { usePeriodosMutations } from "../hooks/usePeriodosMutations";
 import { TopeAcumulacionCard } from "./TopeAcumulacionCard";
-import { SectionHeading, SgthTable, StatusBadge, TableActions, Toolbar, confirmar } from "@/components/ui";
+import { SectionHeading, SgthTable, StatusBadge, TableActions, Toolbar, confirmar, notificar } from "@/components/ui";
 import { SEMANTIC_COLOR, type SemanticTone } from "@/config/design.tokens";
 import type {
-  ServidorConRelaciones,
   PeriodoVacacion,
   PrevisualizacionRecalculo,
 } from "@/types/api";
@@ -48,21 +45,8 @@ function formatDias(v: number | string | null | undefined): string {
 }
 
 export function PeriodosVacacionesTab() {
-  const contained = useContainedInput("sm");
   const [servidorSelId, setServidorSelId] = useState<number | null>(null);
   const [anio, setAnio] = useState<number>(new Date().getFullYear());
-
-  const { data: servidoresData } = useServidores({ per_page: 200 });
-  const servidores = (servidoresData?.data ?? []) as ServidorConRelaciones[];
-
-  // Los regímenes sin vacaciones no se ofrecen: no es que su período salga en
-  // cero, es que no les corresponde uno. El backend rechaza la generación.
-  const servidorOptions = servidores
-    .filter((s) => generaVacaciones(s.regimen_laboral))
-    .map((s) => ({
-      value: String(s.id),
-      label: `${[s.apellido, s.nombre].filter(Boolean).join(" ")} — ${s.cedula}`,
-    }));
 
   const { data: resumen, isLoading } = usePeriodosVacaciones(servidorSelId);
 
@@ -410,19 +394,32 @@ export function PeriodosVacacionesTab() {
         </Button>
         }
       >
-        <Select
+        {/*
+          | Busca contra el servidor, como el resto de selectores de personas.
+          |
+          | Antes traía las primeras 200 por `per_page` y filtraba en el
+          | navegador. El backend ordena por apellido, así que de la 201 en
+          | adelante no se podía elegir a nadie: se escribía el apellido, el
+          | desplegable decía que no había resultados, y no había forma de
+          | llegar al resumen de esa persona.
+        */}
+        <BuscarServidorSelect
           label="Servidor"
-          clearable
-          searchable
-          placeholder="Buscar servidor"
-          data={servidorOptions}
-          {...contained}
-          value={servidorSelId ? String(servidorSelId) : null}
-          onChange={(v) => setServidorSelId(v ? Number(v) : null)}
-          // Ancho para que quepa "APELLIDO NOMBRE — cédula" sin cortar, pero
-          // como techo y no como piso: un mínimo de 420 no cabe en la barra de
-          // un teléfono y se desbordaba fuera de la tarjeta.
-          style={{ width: 420, maxWidth: "100%" }}
+          value={servidorSelId}
+          onChange={setServidorSelId}
+          onSelect={(servidor) => {
+            // Los regímenes sin vacaciones no tienen período: no es que el suyo
+            // salga en cero, es que no les corresponde uno. El backend rechaza
+            // la generación igual; esto lo dice antes de intentarlo, que es lo
+            // que hacía el filtro de la lista anterior.
+            if (!generaVacaciones(servidor.regimen_laboral)) {
+              notificar.aviso(
+                "Este régimen no genera vacaciones",
+                "Un contrato de servicios profesionales no tiene jornada ni relación de dependencia, así que no le corresponde un período.",
+              );
+              setServidorSelId(null);
+            }
+          }}
         />
       </Toolbar>
 
