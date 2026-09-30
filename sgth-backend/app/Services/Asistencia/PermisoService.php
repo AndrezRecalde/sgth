@@ -651,8 +651,12 @@ class PermisoService implements PermisoServiceInterface
     /**
      * Días de vacaciones que consume un permiso ya guardado, o 0 si no consume.
      *
-     * Solo los permisos PERSONAL de servidores LOSEP descuentan: el Código del
-     * Trabajo se rige por su contrato colectivo.
+     * Solo los permisos PERSONAL descuentan, y solo de quien accede al módulo.
+     *
+     * Hasta el 2026-09-30 esto era «solo LOSEP», porque el Código del Trabajo
+     * ni siquiera podía pedir permisos. Al abrirles el módulo, Talento Humano
+     * confirmó que su permiso personal se descuenta igual: es la misma bolsa
+     * de vacaciones, que el Código del Trabajo también genera.
      */
     private function diasVacacionalesQueConsume(PermisoServidor $permiso): float
     {
@@ -675,10 +679,12 @@ class PermisoService implements PermisoServiceInterface
     private function descuentaVacaciones(Servidor $servidor): bool
     {
         $regimen = $servidor->regimen_laboral instanceof \App\Enums\RegimenLaboral
-            ? $servidor->regimen_laboral->value
-            : (string) ($servidor->regimen_laboral ?? 'losep');
+            ? $servidor->regimen_laboral
+            : \App\Enums\RegimenLaboral::tryFrom(
+                (string) ($servidor->regimen_laboral ?? 'losep')
+            );
 
-        return $regimen === \App\Enums\RegimenLaboral::LOSEP->value;
+        return $regimen?->accedeAPermisos() ?? false;
     }
 
     private function exigirEstado(PermisoServidor $permiso, array $permitidos, string $mensaje): void

@@ -69,12 +69,16 @@ enum RegimenLaboral: string
     /**
      * ¿Accede al módulo de permisos?
      *
-     * Solo LOSEP. Los obreros del Código del Trabajo se rigen por su propio
-     * contrato colectivo y los servicios profesionales no tienen jornada que
-     * permisar.
+     * LOSEP y Código del Trabajo. Servicios profesionales no: es un contrato
+     * civil, sin relación de dependencia ni jornada que permisar.
+     *
+     * El Código del Trabajo estuvo fuera hasta el 2026-09-30. Talento Humano
+     * confirmó que sí debe entrar: los obreros con marcación habilitada piden
+     * permisos igual que el resto, y su permiso personal les descuenta de
+     * vacaciones como a un LOSEP.
      */
     public function accedeAPermisos(): bool
     {
-        return $this === self::LOSEP;
+        return in_array($this, [self::LOSEP, self::CODIGO_TRABAJO], true);
     }
 }
