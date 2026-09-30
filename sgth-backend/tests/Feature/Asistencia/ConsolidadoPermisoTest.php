@@ -323,3 +323,83 @@ test('un rango largo pero razonable pasa', function () {
         'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
     ])->assertStatus(200);
 });
+
+// ── El filtro por servidor ───────────────────────────────────────
+
+/*
+| Sin `servidor_id` el informe es de toda la institución; con él, de una sola
+| persona: la tabla, los totales y las dos exportaciones. Que el archivo diga
+| lo mismo que la pantalla es el punto del filtro.
+*/
+test('con servidor_id el informe es de esa persona y de nadie más', function () {
+    permisoConcedido($this->ana,  'PER-2026-C0090', '08:00', '12:00'); // 240
+    permisoConcedido($this->beto, 'PER-2026-C0091', '08:00', '10:00'); // 120
+
+    $respuesta = consultarConsolidado(['servidor_id' => $this->ana->id])->assertStatus(200);
+
+    $filas   = $respuesta->json('datos.consolidado');
+    $totales = $respuesta->json('datos.totales');
+
+    expect($filas)->toHaveCount(1)
+        ->and($filas[0]['cedula'])->toBe('0808888881')
+        ->and($totales['total_minutos'])->toBe(240)
+        ->and($totales['total_permisos'])->toBe(1)
+        ->and($totales['tiempo_total'])->toBe('04:00');
+});
+
+test('sin servidor_id siguen saliendo todos', function () {
+    permisoConcedido($this->ana,  'PER-2026-C0092', '08:00', '12:00');
+    permisoConcedido($this->beto, 'PER-2026-C0093', '08:00', '10:00');
+
+    expect(consultarConsolidado()->json('datos.consolidado'))->toHaveCount(2);
+});
+
+test('un servidor sin permisos en el rango devuelve vacío, no un error', function () {
+    permisoConcedido($this->beto, 'PER-2026-C0094', '08:00', '10:00');
+
+    $respuesta = consultarConsolidado(['servidor_id' => $this->ana->id])->assertStatus(200);
+
+    expect($respuesta->json('datos.consolidado'))->toBe([])
+        ->and($respuesta->json('datos.totales.total_minutos'))->toBe(0);
+});
+
+test('un servidor que no existe se rechaza', function () {
+    consultarConsolidado(['servidor_id' => 999999])
+        ->assertStatus(422)
+        ->assertJsonStructure(['errores' => ['servidor_id']]);
+});
+
+test('la exportación respeta el filtro, para que el archivo diga lo que la pantalla', function () {
+    permisoConcedido($this->ana,  'PER-2026-C0095', '08:00', '12:00');
+    permisoConcedido($this->beto, 'PER-2026-C0096', '08:00', '10:00');
+
+    $params = http_build_query([
+        'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
+        'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+        'servidor_id'  => $this->ana->id,
+    ]);
+
+    $csv = $this->actingAs($this->uath, 'sanctum')
+        ->get("/api/v1/asistencia/consolidado-permisos/exportar-excel?{$params}")
+        ->assertStatus(200)
+        ->streamedContent();
+
+    expect($csv)->toContain('0808888881')
+        ->and($csv)->not->toContain('0808888882');
+});
+
+test('el PDF filtrado se genera', function () {
+    permisoConcedido($this->ana, 'PER-2026-C0097', '08:00', '10:00');
+
+    $params = http_build_query([
+        'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
+        'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+        'servidor_id'  => $this->ana->id,
+    ]);
+
+    $respuesta = $this->actingAs($this->uath, 'sanctum')
+        ->get("/api/v1/asistencia/consolidado-permisos/exportar-pdf?{$params}")
+        ->assertStatus(200);
+
+    expect($respuesta->headers->get('content-type'))->toContain('application/pdf');
+});

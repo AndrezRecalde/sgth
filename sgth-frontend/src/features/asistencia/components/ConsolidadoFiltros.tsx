@@ -6,18 +6,22 @@ import { IconSearch } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
+import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { TIPO_OPCIONES_CONSOLIDADO } from './permisos.constants'
 
 export interface FiltrosConsolidado {
   fechaInicio: string | null
   fechaFin:    string | null
   tipo:        string
+  /** Sin servidor, el informe es de toda la institución. */
+  servidorId:  number | null
 }
 
 export const FILTROS_INICIALES_CONSOLIDADO: FiltrosConsolidado = {
   fechaInicio: null,
   fechaFin:    null,
   tipo:        'personal',
+  servidorId:  null,
 }
 
 interface Props {
@@ -87,6 +91,14 @@ export function ConsolidadoFiltros({
         value={filtros.tipo}
         onChange={(v) => onCambiar({ tipo: v ?? 'personal' })}
         style={{ minWidth: 200 }}
+      />
+
+      {/* Opcional: vacío, el informe es de toda la institución; con alguien,
+          de esa persona, y las exportaciones lo respetan. */}
+      <BuscarServidorSelect
+        label="Servidor (opcional)"
+        value={filtros.servidorId}
+        onChange={(id) => onCambiar({ servidorId: id })}
       />
     </Toolbar>
   )

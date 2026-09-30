@@ -54,13 +54,16 @@ export function ConsolidadoPermisosTab() {
       fecha_inicio: filtros.fechaInicio ?? "",
       fecha_fin: filtros.fechaFin ?? "",
       tipo: filtros.tipo,
+      // `undefined` y no `null`: así el parámetro no viaja cuando no se filtra.
+      servidor_id: filtros.servidorId ?? undefined,
     };
 
     const mismosFiltros =
       consultados !== null &&
       consultados.fecha_inicio === pedidos.fecha_inicio &&
       consultados.fecha_fin === pedidos.fecha_fin &&
-      consultados.tipo === pedidos.tipo;
+      consultados.tipo === pedidos.tipo &&
+      consultados.servidor_id === pedidos.servidor_id;
 
     setConsultados(pedidos);
 
@@ -123,9 +126,12 @@ export function ConsolidadoPermisosTab() {
           empty={!consolidado.length}
           emptyProps={{
             icon: IconClipboardList,
-            title: "Sin permisos en el período",
-            description:
-              "No hay permisos de ese tipo entre las fechas elegidas. Prueba con otro rango o tipo.",
+            title: consultados.servidor_id
+              ? "Este servidor no tiene permisos en el período"
+              : "Sin permisos en el período",
+            description: consultados.servidor_id
+              ? "No registró permisos de ese tipo entre las fechas elegidas. Pruebe con otro rango, otro tipo, o quite el servidor para ver a toda la institución."
+              : "No hay permisos de ese tipo entre las fechas elegidas. Pruebe con otro rango o tipo.",
           }}
         >
           <SgthTable
