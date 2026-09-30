@@ -1,22 +1,17 @@
 <?php
 namespace App\Http\Controllers\Asistencia;
 
+use App\Enums\TipoPermiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Services\Asistencia\ConsolidadoPermisoService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 
 class ConsolidadoPermisoController extends Controller
 {
-    private const TIPO_ETIQUETAS = [
-        'personal'   => 'Personal',
-        'oficial'    => 'Oficial',
-        'enfermedad' => 'Por Enfermedad',
-        'calamidad'  => 'Calamidad Domestica',
-    ];
-
     public function __construct(private ConsolidadoPermisoService $servicio) {}
 
     public function consolidado(Request $request): JsonResponse
@@ -80,7 +75,7 @@ class ConsolidadoPermisoController extends Controller
                 'totales'     => $datos['totales'],
                 'fechaInicio' => Carbon::parse($inicio)->format('d/m/Y'),
                 'fechaFin'    => Carbon::parse($fin)->format('d/m/Y'),
-                'tipo'        => self::TIPO_ETIQUETAS[$tipo] ?? $tipo,
+                'tipo'        => TipoPermiso::from($tipo)->etiqueta(),
             ]);
 
         return $pdf->download(
@@ -98,7 +93,9 @@ class ConsolidadoPermisoController extends Controller
         $validado = $request->validate([
             'fecha_inicio' => 'required|date',
             'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
-            'tipo'         => 'nullable|string|in:personal,oficial,enfermedad,calamidad',
+            // Del enum y no a mano, como hace `StorePermisoServidorRequest`:
+            // un tipo nuevo tendría que acordarse de aparecer aquí.
+            'tipo'         => ['nullable', 'string', Rule::in(TipoPermiso::valores())],
         ]);
 
         return [

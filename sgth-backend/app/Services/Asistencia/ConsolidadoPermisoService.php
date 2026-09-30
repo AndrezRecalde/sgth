@@ -45,11 +45,18 @@ class ConsolidadoPermisoService
     {
         $consolidado = $this->filas($fechaInicio, $fechaFin, $tipo);
 
+        $minutos = (int) $consolidado->sum('total_minutos');
+
         return [
             'consolidado' => $consolidado,
             'totales' => [
                 'total_permisos' => $consolidado->sum('total_permisos'),
-                'total_minutos'  => $consolidado->sum('total_minutos'),
+                'total_minutos'  => $minutos,
+                // El pie de la columna «Tiempo» era un guion, en la tabla y en
+                // el PDF, teniendo los minutos justo al lado. Es la cifra que
+                // Talento Humano lee al cerrar el mes: cuántas horas de
+                // ausencia suma el período.
+                'tiempo_total'   => $this->comoHoras($minutos),
                 'total_dias'     => round($consolidado->sum('total_dias'), 2),
             ],
         ];
@@ -133,9 +140,15 @@ class ConsolidadoPermisoService
             'unidad'          => $fila->unidad ?? '—',
             'total_permisos'  => (int) $fila->total_permisos,
             'total_minutos'   => $minutos,
-            'tiempo_total'    => sprintf('%02d:%02d', intdiv($minutos, 60), $minutos % 60),
+            'tiempo_total'    => $this->comoHoras($minutos),
             'total_dias'      => round($minutos / self::MINUTOS_JORNADA, 2),
         ];
+    }
+
+    /** Minutos a `HH:MM`, sin tope de 24 horas: un total puede pasar de mil. */
+    private function comoHoras(int $minutos): string
+    {
+        return sprintf('%02d:%02d', intdiv($minutos, 60), $minutos % 60);
     }
 
     /**

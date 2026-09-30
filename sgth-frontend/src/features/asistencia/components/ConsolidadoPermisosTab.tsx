@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Stack } from "@mantine/core";
 import {
+  IconCalendarSearch,
   IconClipboardList,
   IconFileDownload,
   IconFileTypeCsv,
-  IconInfoCircle,
 } from "@tabler/icons-react";
-import { DataState, SgthTable } from "@/components/ui";
+import { DataState, EmptyState, SgthTable } from "@/components/ui";
 import {
   ConsolidadoFiltros,
   FILTROS_INICIALES_CONSOLIDADO,
@@ -83,41 +83,39 @@ export function ConsolidadoPermisosTab() {
         puedeConsultar={puedeConsultar}
         consultando={isFetching}
         onConsultar={consultar}
+        /* Se exporta lo consultado, no lo que haya en los filtros: si no,
+           cambiar una fecha sin consultar descargaría un período distinto del
+           que la pantalla está mostrando. */
+        acciones={
+          consultados && consolidado.length > 0 ? (
+            <>
+              <Button
+                variant="light"
+                leftSection={<IconFileTypeCsv size={16} />}
+                loading={exportando === "excel"}
+                onClick={() => exportar("excel", consultados)}
+              >
+                Exportar CSV
+              </Button>
+              <Button
+                variant="light"
+                leftSection={<IconFileDownload size={16} />}
+                loading={exportando === "pdf"}
+                onClick={() => exportar("pdf", consultados)}
+              >
+                Exportar PDF
+              </Button>
+            </>
+          ) : null
+        }
       />
 
-      {/* Se exporta lo consultado, no lo que haya en los filtros: si no,
-          cambiar una fecha sin consultar descargaba un período distinto del
-          que la pantalla está mostrando. */}
-      {consultados && consolidado.length > 0 && (
-        <Group justify="flex-end" gap="sm">
-          <Button
-            variant="light"
-            size="xs"
-            leftSection={<IconFileTypeCsv size={14} />}
-            loading={exportando === "excel"}
-            onClick={() => exportar("excel", consultados)}
-          >
-            Exportar Excel (CSV)
-          </Button>
-          <Button
-            variant="light"
-            size="xs"
-            leftSection={<IconFileDownload size={14} />}
-            loading={exportando === "pdf"}
-            onClick={() => exportar("pdf", consultados)}
-          >
-            Exportar PDF
-          </Button>
-        </Group>
-      )}
-
       {!consultados ? (
-        <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
-          <Text size="sm">
-            Selecciona un rango de fechas y el tipo de permiso, luego presiona
-            Consultar.
-          </Text>
-        </Alert>
+        <EmptyState
+          icon={IconCalendarSearch}
+          title="Ningún período consultado"
+          description="Elija un rango de fechas y el tipo de permiso, y pulse Consultar para ver cuántos permisos tiene cada servidor."
+        />
       ) : (
         <DataState
           loading={isFetching}
