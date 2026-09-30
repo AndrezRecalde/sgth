@@ -15,6 +15,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { asistenciaService } from '@/features/asistencia/services/asistenciaService'
+import { guardarArchivo } from '@/lib/archivo'
 import { fromDateValue } from '@/lib/fecha'
 import { DataState, notificar, SgthTable } from '@/components/ui'
 import { getConsolidadoColumns } from '@/features/asistencia/components/consolidado.columns'
@@ -63,13 +64,11 @@ export function AusentismoTab() {
         : await asistenciaService.consolidado.exportarPdf(params)
 
       const ext = formato === 'excel' ? 'csv' : 'pdf'
-      const filename = `ausentismo_enfermedad_${fromDateValue(fechaInicio)}.${ext}`
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      link.click()
-      URL.revokeObjectURL(url)
+
+      // `guardarArchivo` y no las mismas líneas a mano: aquí se revocaba la URL
+      // del blob en el acto, justo después del `click()`, y en Firefox eso
+      // cancela la descarga.
+      guardarArchivo(blob, `ausentismo_enfermedad_${fromDateValue(fechaInicio)}.${ext}`)
 
       progreso.exito('Archivo descargado', `Consolidado exportado como ${ext.toUpperCase()}.`)
     } catch {

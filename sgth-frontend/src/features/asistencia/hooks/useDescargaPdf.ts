@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { notificar } from '@/components/ui'
+import { guardarArchivo } from '@/lib/archivo'
 
 interface Config {
   /** Prefijo del id de notificación y del archivo: `permiso`, `vacacion`. */
@@ -16,6 +17,10 @@ interface Config {
  * permisos, en el paso final de su modal y en el listado de vacaciones. Cada
  * copia armaba el `blob`, el enlace temporal y las tres notificaciones a mano.
  *
+ * La entrega del archivo va por `guardarArchivo()`: aquí se revocaba la URL del
+ * blob en el acto, justo después del `click()`, y en Firefox eso cancela la
+ * descarga.
+ *
  * `exportandoId` es el id que está descargándose, o null. Los listados lo usan
  * para cambiar la etiqueta de la fila mientras tanto.
  */
@@ -29,13 +34,8 @@ export function useDescargaPdf({ recurso, articulo, descargar }: Config) {
 
     try {
       const blob = await descargar(id)
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
 
-      link.href = url
-      link.download = `${recurso}_${nombre ?? id}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
+      guardarArchivo(blob, `${recurso}_${nombre ?? id}.pdf`)
 
       progreso.exito('PDF descargado', `Se exportó ${articulo} correctamente.`)
     } catch {
