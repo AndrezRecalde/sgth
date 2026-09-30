@@ -519,3 +519,87 @@ test('la exportación respeta el filtro por unidad', function () {
     expect($csv)->toContain('0808888881')
         ->and($csv)->not->toContain('0808888885');
 });
+
+// ── El filtro por marcación ──────────────────────────────────────
+
+/*
+| Solo entran los servidores con la marcación habilitada... salvo en enfermedad.
+|
+| Regla de Talento Humano: el consolidado lo componen los servidores —LOSEP y
+| Código del Trabajo— de cualquier nombramiento que marque, excepto Libre
+| Nombramiento y Remoción y Elección Popular. Esa excepción no hace falta
+| programarla: `TipoNombramiento::admiteMarcacion()` ya se la niega a los dos y
+| el backend fuerza `puede_marcar` a falso, así que queda una sola condición.
+|
+| Enfermedad va exenta porque su consolidado alimenta el indicador de
+| Ausentismo por Enfermedad de Riesgos Laborales: dejar fuera a un enfermo por
+| no marcar subestimaría el ausentismo institucional.
+*/
+test('sin marcación habilitada no sale en el consolidado', function () {
+    $this->ana->update(['puede_marcar' => false]);
+    $this->beto->update(['puede_marcar' => true]);
+
+    permisoConcedido($this->ana,  'PER-2026-C0110', '08:00', '10:00');
+    permisoConcedido($this->beto, 'PER-2026-C0111', '08:00', '09:00');
+
+    $cedulas = collect(consultarConsolidado()->assertStatus(200)->json('datos.consolidado'))
+        ->pluck('cedula')->all();
+
+    expect($cedulas)->toBe(['0808888882']);
+});
+
+test('con marcación habilitada sí', function () {
+    $this->ana->update(['puede_marcar' => true]);
+
+    permisoConcedido($this->ana, 'PER-2026-C0112', '08:00', '10:00');
+
+    $cedulas = collect(consultarConsolidado()->assertStatus(200)->json('datos.consolidado'))
+        ->pluck('cedula')->all();
+
+    expect($cedulas)->toBe(['0808888881']);
+});
+
+test('los totales tampoco cuentan a quien no marca', function () {
+    $this->ana->update(['puede_marcar' => false]);
+    $this->beto->update(['puede_marcar' => true]);
+
+    permisoConcedido($this->ana,  'PER-2026-C0113', '08:00', '12:00'); // 240, fuera
+    permisoConcedido($this->beto, 'PER-2026-C0114', '08:00', '10:00'); // 120, dentro
+
+    expect(consultarConsolidado()->json('datos.totales.total_minutos'))->toBe(120);
+});
+
+test('en ENFERMEDAD el filtro no aplica: el enfermo cuenta aunque no marque', function () {
+    $this->ana->update(['puede_marcar' => false]);
+
+    permisoConcedido($this->ana, 'PER-2026-C0115', '08:00', '10:00',
+        EstadoPermiso::ACTIVO, TipoPermiso::ENFERMEDAD);
+
+    $filas = consultarConsolidado(['tipo' => 'enfermedad'])
+        ->assertStatus(200)
+        ->json('datos.consolidado');
+
+    expect(collect($filas)->pluck('cedula')->all())->toBe(['0808888881'])
+        ->and(collect($filas)->first()['total_minutos'])->toBe(120);
+});
+
+test('y la exportación respeta el filtro de marcación', function () {
+    $this->ana->update(['puede_marcar' => false]);
+    $this->beto->update(['puede_marcar' => true]);
+
+    permisoConcedido($this->ana,  'PER-2026-C0116', '08:00', '10:00');
+    permisoConcedido($this->beto, 'PER-2026-C0117', '08:00', '09:00');
+
+    $params = http_build_query([
+        'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
+        'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+    ]);
+
+    $csv = $this->actingAs($this->uath, 'sanctum')
+        ->get("/api/v1/asistencia/consolidado-permisos/exportar-excel?{$params}")
+        ->assertStatus(200)
+        ->streamedContent();
+
+    expect($csv)->toContain('0808888882')
+        ->and($csv)->not->toContain('0808888881');
+});

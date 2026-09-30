@@ -2,6 +2,7 @@
 
 namespace App\Services\Asistencia;
 
+use App\Enums\TipoPermiso;
 use App\Models\Asistencia\PermisoServidor;
 use App\Services\Estructura\ArbolUnidades;
 use Illuminate\Support\Collection;
@@ -102,6 +103,26 @@ class ConsolidadoPermisoService
             ->whereIn('permisos_servidor.estado', self::ESTADOS_CONCEDIDOS)
             // Opcional: sin servidor, el informe es de toda la institución.
             ->when($servidorId, fn ($q) => $q->where('servidores.id', $servidorId))
+            /*
+            | Solo quien tiene la marcación habilitada, salvo en enfermedad.
+            |
+            | Regla de Talento Humano: el consolidado lo componen los servidores
+            | —LOSEP y Código del Trabajo— de cualquier nombramiento que marque,
+            | excepto Libre Nombramiento y Remoción y Elección Popular. Esa
+            | excepción no hace falta programarla: `TipoNombramiento::admiteMarcacion()`
+            | ya se la niega a los dos, y el backend fuerza `puede_marcar` a falso.
+            | Queda entonces una sola condición.
+            |
+            | ENFERMEDAD va exenta. Su consolidado alimenta el indicador de
+            | Ausentismo por Enfermedad de Riesgos Laborales, y ahí dejar fuera a
+            | un enfermo por no marcar subestimaría el ausentismo institucional:
+            | la ausencia existió, marque o no. Además esos permisos no los pide
+            | el servidor, los crea el certificado médico del dispensario.
+            */
+            ->when(
+                $tipo !== TipoPermiso::ENFERMEDAD->value,
+                fn ($q) => $q->where('servidores.puede_marcar', true)
+            )
             // La unidad incluye lo que cuelga de ella: filtrar por una
             // dirección tiene que traer a sus jefaturas y subprocesos, o el
             // informe sale más corto sin decir por qué.
