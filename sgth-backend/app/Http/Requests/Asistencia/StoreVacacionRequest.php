@@ -23,7 +23,10 @@ class StoreVacacionRequest extends FormRequest
             'observacion'      => 'nullable|string|max:500',
             'unidad_administrativa_id' => 'nullable|exists:unidades_administrativas,id',
             'persona_reemplaza_id' => 'nullable|exists:servidores,id',
-            'periodo_vacacion_id'  => 'nullable|exists:periodos_vacaciones,id',
+            // Aquí se aceptaba `periodo_vacacion_id`, que el cliente podía
+            // mandar y ningún servicio leía nunca: de qué períodos salen los
+            // días lo decide el reparto al aprobar, y queda en
+            // `vacacion_descuentos`.
         ];
     }
 }

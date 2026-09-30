@@ -318,41 +318,11 @@ class PeriodoVacacionService
     }
 
     /**
-     * Descuenta días de un período al aprobar una vacación.
-     */
-    public function descontarDias(
-        int $servidorId,
-        float $dias,
-        int $anio
-    ): void {
-        $periodo = PeriodoVacacion::where('servidor_id', $servidorId)
-            ->where('anio', $anio)
-            ->where('estado', 'abierto')
-            ->first();
-
-        if (!$periodo) return;
-
-        $periodo->dias_utilizados += $dias;
-        $periodo->recalcularSaldo();
-        $periodo->saldo_acumulado  = max(0, $periodo->saldo_acumulado - $dias);
-
-        // Verificar alerta LOSEP
-        if ($periodo->debeAlertarLosep()) {
-            $periodo->alerta_enviada = true;
-            // Aquí se podría disparar un evento/notification
-        }
-
-        $periodo->save();
-    }
-
-    /**
      * El período abierto de un año, o null si no hay ninguno.
      *
-     * `descontarDias()` hace `return` en silencio cuando no lo encuentra, que
-     * es correcto para una vacación ya aprobada —no se va a deshacer por eso—
-     * pero deja un agujero en permisos: el permiso personal se concede, no
-     * descuenta nada, y las horas desaparecen. Quien necesite decidir *antes*
-     * de conceder pregunta aquí.
+     * Quien necesite decidir *antes* de conceder un permiso pregunta aquí: un
+     * permiso personal que se concede sin período del que descontar se concede
+     * gratis, y las horas desaparecen.
      */
     public function periodoAbierto(int $servidorId, int $anio): ?PeriodoVacacion
     {
@@ -363,17 +333,16 @@ class PeriodoVacacionService
     }
 
     /**
-     * Devuelve días a un período: el inverso exacto de `descontarDias()`.
+     * Devuelve días a un período de un año concreto.
      *
-     * Hace falta para deshacer una confirmación de permiso hecha por error;
-     * hasta ahora el descuento era un camino de una sola dirección.
+     * Solo la usa la rama antigua de `devolverDePermiso()`: la de los permisos
+     * confirmados antes de que existiera `permiso_descuentos`, cuando todo
+     * salía del período del año del permiso. Lo de ahora se devuelve tramo por
+     * tramo, con `devolverTramos()`.
      *
-     * Ojo con `saldo_acumulado`: al descontar se le aplica un `max(0, ...)`,
-     * así que si ya estaba en cero el descuento no se registró ahí y esta
-     * devolución lo sube. La asimetría viene del modelo de períodos, no de
-     * aquí — y de que un permiso descuente a la vez de `dias_utilizados` y de
-     * `saldo_acumulado`, que parece contarlo dos veces. Se respeta el
-     * comportamiento existente en vez de corregirlo de paso.
+     * Ojo con `saldo_acumulado`: lo sube sin haberlo bajado necesariamente al
+     * descontar. La asimetría viene del modelo de períodos y se respeta en vez
+     * de corregirla de paso.
      */
     public function devolverDias(
         int $servidorId,
@@ -463,10 +432,10 @@ class PeriodoVacacionService
      * Descuenta los días de una vacación que se aprueba, del período más
      * antiguo al más nuevo.
      *
-     * `descontarDias()` tocaba solo el período del año de la vacación: si ese
-     * período no alcanzaba, el resto se perdía, aunque hubiera saldo de años
-     * anteriores —y era ese saldo el que había dejado pasar la solicitud—.
-     * Gozar 20 días con 10 de un año y 15 del siguiente dejaba 10 en vez de 5.
+     * Antes se tocaba solo el período del año de la vacación: si ese período no
+     * alcanzaba, el resto se perdía, aunque hubiera saldo de años anteriores —y
+     * era ese saldo el que había dejado pasar la solicitud—. Gozar 20 días con
+     * 10 de un año y 15 del siguiente dejaba 10 en vez de 5.
      *
      * Primero se gasta lo más antiguo: es lo que está más cerca de vencer, y
      * lo que se acumula contra el tope. Cada tramo queda anotado en

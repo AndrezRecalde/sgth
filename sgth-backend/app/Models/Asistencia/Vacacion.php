@@ -38,7 +38,6 @@ class Vacacion extends Model
         'creado_por',
         'unidad_administrativa_id',
         'persona_reemplaza_id',
-        'periodo_vacacion_id',
         'observacion',
         'anulado_por',
         'anulado_en',
@@ -115,13 +114,12 @@ class Vacacion extends Model
         return $this->belongsTo(Servidor::class, 'persona_reemplaza_id');
     }
 
-    public function periodoVacacion(): BelongsTo
-    {
-        return $this->belongsTo(PeriodoVacacion::class, 'periodo_vacacion_id');
-    }
-
     /**
      * De qué períodos salieron sus días, y cuántos de cada uno.
+     *
+     * Aquí estaba también `periodoVacacion()`, un `belongsTo` a un solo
+     * período: dejó de tener sentido cuando el descuento pasó a repartirse, y
+     * nunca devolvió nada porque nada escribió esa columna.
      */
     public function descuentos(): HasMany
     {

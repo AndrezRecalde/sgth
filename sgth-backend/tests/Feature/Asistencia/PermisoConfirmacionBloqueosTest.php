@@ -6,8 +6,8 @@
 |
 | - Un permiso pendiente no reserva horas. Dos que pasaron el control de saldo
 |   al registrarse, cada uno por su lado, se confirmaban los dos aunque juntos
-|   lo superaran: `descontarDias()` recorta a cero y el período quedaba con más
-|   días usados que generados (reproducido en la auditoría del módulo).
+|   lo superaran: el descuento de entonces recortaba a cero y el período quedaba
+|   con más días usados que generados (reproducido en la auditoría del módulo).
 | - Un permiso con el plazo vencido se podía confirmar mientras el job no lo
 |   hubiera marcado todavía.
 | - Anular y el job de vencimiento leían y guardaban sin bloquear la fila, así
