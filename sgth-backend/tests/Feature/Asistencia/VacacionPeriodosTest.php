@@ -121,7 +121,12 @@ test('el caso de la auditoría: gozar 20 de 25 deja 5, no 10', function () {
     [, $respuesta] = ($this->aprobarDias)(20);
     $respuesta->assertOk();
 
-    expect(app(PeriodoVacacionService::class)->saldoTotal($this->servidor->id))->toBe(5.0);
+    // `saldoHasta()` y no `saldoTotal()`: los períodos de esta prueba son del
+    // año que viene, y desde que el saldo mostrado usa el mismo horizonte que
+    // la aprobación, `saldoTotal()` mide lo ganado HASTA HOY. Lo que se
+    // comprueba aquí es el reparto entre períodos, no el horizonte.
+    expect(app(PeriodoVacacionService::class)->saldoHasta($this->servidor->id, $this->anio))
+        ->toBe(5.0);
 });
 
 test('cada período anota lo que se le tomó', function () {

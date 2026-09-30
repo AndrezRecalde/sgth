@@ -392,14 +392,27 @@ class PeriodoVacacionService
     }
 
     /**
-     * Devuelve el saldo total disponible del servidor
-     * sumando todos los períodos abiertos.
+     * El saldo disponible HOY: los períodos abiertos de este año y de antes.
+     *
+     * Sumaba todos los períodos abiertos, los de años futuros incluidos, y de
+     * ahí salían dos cosas malas.
+     *
+     * La grave: el tope de acumulación se mide sobre este saldo, y vencer el
+     * excedente quita días de los períodos MÁS ANTIGUOS. Un período generado por
+     * adelantado inflaba el acumulado, podía inventar un excedente, y al
+     * vencerlo se perdían días reales —ya ganados— por otros que todavía no lo
+     * estaban. Vencer no se deshace.
+     *
+     * La cotidiana: el portal decía «tiene 85 días» y, al pedir vacaciones para
+     * hoy, la solicitud se rechazaba por saldo insuficiente. Quien aprueba mira
+     * `saldoHasta()`, que nunca contó los períodos futuros, con su motivo
+     * escrito: esos días todavía no se han ganado, aunque alguien haya generado
+     * el período por adelantado. Ahora lo que se muestra y lo que se permite
+     * dicen lo mismo.
      */
     public function saldoTotal(int $servidorId): float
     {
-        return (float) PeriodoVacacion::where('servidor_id', $servidorId)
-            ->where('estado', 'abierto')
-            ->sum('dias_saldo');
+        return $this->saldoHasta($servidorId, (int) now()->year);
     }
 
     /**
