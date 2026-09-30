@@ -1,19 +1,19 @@
 <?php
 
+use App\Jobs\Asistencia\VencerPermisosJob;
+use App\Jobs\Dispensario\VerificarAlertasInventarioJob;
+use App\Jobs\GenerarPeriodosAnualesJob;
+use App\Jobs\Helpdesk\EnviarAlertaSlaJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-use Illuminate\Support\Facades\Schedule;
-use App\Jobs\Dispensario\VerificarAlertasInventarioJob;
-
 // Tarea 8: Alertas Dispensario
 Schedule::job(new VerificarAlertasInventarioJob)->dailyAt('06:00');
-
-use App\Jobs\Helpdesk\EnviarAlertaSlaJob;
 
 // Tarea 4 (Sprint 10): Alertas de SLA Helpdesk cada 15 minutos
 Schedule::job(new EnviarAlertaSlaJob)->everyFifteenMinutes();
@@ -80,8 +80,6 @@ Schedule::command('sgth:viaticos:avanzar-estados')
     ->onOneServer()
     ->withoutOverlapping();
 
-use App\Jobs\Asistencia\VencerPermisosJob;
-
 // Las 72 horas laborables del Art. 33 de la LOSEP: el permiso cuyo respaldo
 // físico no llegó a Recepción dentro del plazo pasa a falta injustificada.
 //
@@ -95,11 +93,14 @@ Schedule::job(new VencerPermisosJob)
     ->dailyAt('06:15')
     ->onOneServer();
 
-use App\Jobs\GenerarPeriodosAnualesJob;
-
 Schedule::call(function () {
     GenerarPeriodosAnualesJob::dispatch(now()->year);
 })->yearlyOn(1, 1, '00:00')
   ->name('generar-periodos-vacaciones')
-  ->withoutOverlapping();
+  ->withoutOverlapping()
+  // `withoutOverlapping()` solo impide que se pise consigo misma en la MISMA
+  // máquina. Sin esto, con más de un servidor corriendo el planificador, cada
+  // uno abriría los períodos de la plantilla entera el 1 de enero. El de
+  // permisos ya lo lleva.
+  ->onOneServer();
 

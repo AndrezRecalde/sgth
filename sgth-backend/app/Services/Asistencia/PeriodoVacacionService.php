@@ -11,10 +11,17 @@ use App\Models\Asistencia\VacacionDescuento;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
 
 class PeriodoVacacionService
 {
+    /**
+     * Servidores por lote en la generación masiva.
+     *
+     * Ni tan pocos que la consulta se repita mil veces, ni tantos que volvamos
+     * a tener media plantilla en memoria.
+     */
+    private const SERVIDORES_POR_LOTE = 200;
+
     /**
      * Calcula los días generados según régimen y antigüedad.
      */
@@ -287,32 +294,42 @@ class PeriodoVacacionService
     }
 
     /**
-     * Genera períodos para todos los servidores activos.
-     * Llamado por el job anual.
+     * Genera los períodos de todos los servidores activos. Devuelve cuántos.
+     *
+     * Los regímenes que no generan vacaciones se excluyen en la consulta: la
+     * generación masiva es de rutina y no puede ir lanzando una excepción por
+     * cada contrato civil de la plantilla.
+     *
+     * Va por lotes y devuelve un número, no los modelos. Antes cargaba la
+     * plantilla entera con un `->get()` y además iba acumulando cada período
+     * creado en una colección que nadie leía: los dos únicos llamadores —el
+     * endpoint y el job anual— solo preguntan cuántos. Con mil servidores eso
+     * eran dos mil modelos vivos a la vez para devolver un entero, y el
+     * endpoint lo hace dentro de una petición web.
      */
-    public function generarPeriodosAnuales(int $anio): Collection
+    public function generarPeriodosAnuales(int $anio): int
     {
-        // Se excluyen en la consulta los regímenes que no generan vacaciones:
-        // la generación masiva es de rutina y no puede ir lanzando excepciones
-        // por cada contrato civil de la plantilla.
-        $servidores = Servidor::where('estado', true)
+        $generados = 0;
+
+        Servidor::where('estado', true)
             ->whereNotIn('regimen_laboral', RegimenLaboral::valoresSinVacaciones())
-            ->get();
-        $resultados = collect();
+            ->chunkById(self::SERVIDORES_POR_LOTE, function (EloquentCollection $servidores) use ($anio, &$generados) {
+                foreach ($servidores as $servidor) {
+                    try {
+                        $this->generarPeriodo($servidor, $anio);
+                        $generados++;
+                    } catch (\Exception $e) {
+                        // Un servidor con datos incompletos no puede parar la
+                        // generación de los demás.
+                        \Log::error(
+                            "Error generando período {$anio} servidor {$servidor->id}: "
+                            .$e->getMessage()
+                        );
+                    }
+                }
+            });
 
-        foreach ($servidores as $servidor) {
-            try {
-                $periodo = $this->generarPeriodo($servidor, $anio);
-                $resultados->push($periodo);
-            } catch (\Exception $e) {
-                \Log::error(
-                    "Error generando período {$anio} servidor {$servidor->id}: " .
-                    $e->getMessage()
-                );
-            }
-        }
-
-        return $resultados;
+        return $generados;
     }
 
     /**

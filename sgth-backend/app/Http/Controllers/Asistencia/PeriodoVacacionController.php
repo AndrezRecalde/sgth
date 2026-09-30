@@ -142,11 +142,11 @@ class PeriodoVacacionController extends Controller
         $this->authorize('gestionarPeriodos', Vacacion::class);
 
         $anio      = $request->input('anio', now()->year);
-        $resultados = $this->periodoService->generarPeriodosAnuales((int)$anio);
+        $generados = $this->periodoService->generarPeriodosAnuales((int)$anio);
 
         return ApiResponse::ok(
-            ['generados' => $resultados->count()],
-            "Períodos {$anio} generados para {$resultados->count()} servidores."
+            ['generados' => $generados],
+            "Períodos {$anio} generados para {$generados} servidores."
         );
     }
 

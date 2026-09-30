@@ -20,7 +20,7 @@ class GenerarPeriodosAnualesJob implements ShouldQueue
     public function handle(PeriodoVacacionService $service): void
     {
         Log::info("Generando períodos de vacaciones para el año {$this->anio}");
-        $resultados = $service->generarPeriodosAnuales($this->anio);
-        Log::info("Períodos generados: {$resultados->count()}");
+        $generados = $service->generarPeriodosAnuales($this->anio);
+        Log::info("Períodos generados: {$generados}");
     }
 }
