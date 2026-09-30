@@ -251,9 +251,9 @@ test('«generar todos» salta a los regímenes sin vacaciones', function () {
     $this->servidor->update(['regimen_laboral' => 'servicios_profesionales']);
 
     // No lanza: la generación masiva es de rutina y los filtra en la consulta.
-    $resultados = $this->servicio->generarPeriodosAnuales(2026);
+    $generados = $this->servicio->generarPeriodosAnuales(2026);
 
-    expect($resultados)->toHaveCount(0)
+    expect($generados)->toBe(0)
         ->and(PeriodoVacacion::where('servidor_id', $this->servidor->id)->count())->toBe(0);
 });
 
