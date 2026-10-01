@@ -5,14 +5,11 @@ namespace App\Models\Disciplinario;
 use App\Enums\TipoFalta;
 use App\Enums\TipoSancion;
 use App\Models\User;
-use App\Observers\Disciplinario\SancionDisciplinariaObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[ObservedBy(SancionDisciplinariaObserver::class)]
 class SancionDisciplinaria extends Model
 {
     use HasFactory, SoftDeletes;

@@ -30,16 +30,4 @@ enum EstadoVistoBueno: string
             self::IMPUGNADO        => 'Impugnado',
         };
     }
-
-    /** El trámite terminó y ya no admite más transiciones. */
-    public function esTerminal(): bool
-    {
-        return in_array($this, [self::DESISTIDO, self::IMPUGNADO], true);
-    }
-
-    /** Estados en los que el Inspector ya emitió resolución. */
-    public function esResuelto(): bool
-    {
-        return in_array($this, [self::CONCEDIDO, self::NEGADO], true);
-    }
 }
