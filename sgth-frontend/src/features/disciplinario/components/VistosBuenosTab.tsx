@@ -5,7 +5,9 @@ import { Button, Select, Stack, Text, Tooltip } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconFileCheck, IconPencil, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, SgthTable, StatusBadge, TableActions, Toolbar } from '@/components/ui'
+import {
+  DataState, PAGINACION_ES, SgthTable, StatusBadge, TableActions, Toolbar,
+} from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useVistosBuenos } from '../hooks/useDisciplinario'
 import { VistoBuenoModal } from './VistoBuenoModal'
@@ -24,16 +26,29 @@ import type { EstadoVistoBueno, VistoBueno } from '@/types/api'
 const ESTADO_OPTIONS = (Object.keys(ESTADO_VISTO_BUENO_LABELS) as EstadoVistoBueno[])
   .map((e) => ({ value: e, label: ESTADO_VISTO_BUENO_LABELS[e] }))
 
+const POR_PAGINA = 15
+
 export function VistosBuenosTab() {
   const contained = useContainedInput()
   const [estado, setEstado] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
   const [seleccionado, setSeleccionado] = useState<VistoBueno | null>(null)
   const [crearOpened, { open: openCrear, close: closeCrear }] = useDisclosure(false)
   const [editarOpened, { open: openEditar, close: closeEditar }] = useDisclosure(false)
 
-  const { data, isLoading, error } = useVistosBuenos(
-    estado ? { estado: estado as EstadoVistoBueno } : undefined,
-  )
+  // Cambiar el filtro sin volver a la primera página consultaría esa misma
+  // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
+  // saldría en blanco aunque hubiera coincidencias.
+  const cambiarEstado = (valor: string | null) => {
+    setEstado(valor)
+    setPage(1)
+  }
+
+  const { data, isLoading, error } = useVistosBuenos({
+    estado: (estado as EstadoVistoBueno | null) ?? undefined,
+    page,
+    per_page: POR_PAGINA,
+  })
   const tramites = data?.data ?? []
 
   const abrirTransicion = (tramite: VistoBueno) => {
@@ -137,7 +152,7 @@ export function VistosBuenosTab() {
           placeholder="Todos"
           data={ESTADO_OPTIONS}
           value={estado}
-          onChange={setEstado}
+          onChange={cambiarEstado}
           clearable
           {...contained}
           style={{ minWidth: 240 }}
@@ -157,8 +172,13 @@ export function VistosBuenosTab() {
         }}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={tramites}
           columns={columns}
+          totalRecords={data?.total ?? tramites.length}
+          recordsPerPage={POR_PAGINA}
+          page={page}
+          onPageChange={setPage}
           minHeight={200}
         />
       </DataState>

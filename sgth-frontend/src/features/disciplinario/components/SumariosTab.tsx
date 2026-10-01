@@ -5,7 +5,9 @@ import { Button, Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconArrowRight, IconGavel, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, SgthTable, StatusBadge, TableActions, Toolbar } from '@/components/ui'
+import {
+  DataState, PAGINACION_ES, SgthTable, StatusBadge, TableActions, Toolbar,
+} from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSumarios } from '../hooks/useDisciplinario'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
@@ -23,14 +25,27 @@ import type { EstadoSumario, Sumario } from '@/types/api'
 const ESTADO_OPTIONS = (Object.keys(ESTADO_SUMARIO_LABELS) as EstadoSumario[])
   .map((e) => ({ value: e, label: ESTADO_SUMARIO_LABELS[e] }))
 
+const POR_PAGINA = 15
+
 export function SumariosTab() {
   const contained = useContainedInput()
   const [estado, setEstado] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
   const [modalOpened, { open, close }] = useDisclosure(false)
 
-  const { data, isLoading, error } = useSumarios(
-    estado ? { estado: estado as EstadoSumario } : undefined,
-  )
+  // Cambiar el filtro sin volver a la primera página consultaría esa misma
+  // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
+  // saldría en blanco aunque hubiera coincidencias.
+  const cambiarEstado = (valor: string | null) => {
+    setEstado(valor)
+    setPage(1)
+  }
+
+  const { data, isLoading, error } = useSumarios({
+    estado: (estado as EstadoSumario | null) ?? undefined,
+    page,
+    per_page: POR_PAGINA,
+  })
   const sumarios = data?.data ?? []
 
   const { avanzarSumario } = useDisciplinarioMutations()
@@ -128,7 +143,7 @@ export function SumariosTab() {
           placeholder="Todos"
           data={ESTADO_OPTIONS}
           value={estado}
-          onChange={setEstado}
+          onChange={cambiarEstado}
           clearable
           {...contained}
           style={{ minWidth: 240 }}
@@ -148,8 +163,13 @@ export function SumariosTab() {
         }}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={sumarios}
           columns={columns}
+          totalRecords={data?.total ?? sumarios.length}
+          recordsPerPage={POR_PAGINA}
+          page={page}
+          onPageChange={setPage}
           minHeight={200}
         />
       </DataState>
