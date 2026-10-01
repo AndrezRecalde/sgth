@@ -35,8 +35,30 @@ Schedule::job(new EnviarAlertaSlaJob)->everyFifteenMinutes();
 //
 // Schedule::command('lotaip:generar-reportes')->dailyAt('01:00');
 
-// Plazos del Art. 183 del Código del Trabajo en los trámites de visto bueno
-Schedule::command('sgth:visto-bueno:control-plazos')->weekdays()->dailyAt('07:00');
+// Plazos del Art. 183 del Código del Trabajo en los trámites de visto bueno.
+// `onOneServer()` como sus cinco vecinos: solo escribe avisos en el log, pero
+// con dos máquinas corriendo el planificador los escribía dos veces.
+Schedule::command('sgth:visto-bueno:control-plazos')
+    ->weekdays()
+    ->dailyAt('07:00')
+    ->onOneServer();
+
+// Plazos procesales del sumario administrativo (LOSEP): notificación dentro de
+// 3 días hábiles de la apertura, resolución dentro de 10 desde el informe.
+//
+// El comando existía desde el primer sprint del módulo y nunca se programó, así
+// que el control solo corría cuando alguien lo lanzaba a mano: en producción
+// ningún sumario avisaba jamás de haber caducado, y la caducidad de un sumario
+// es la que deja sin efecto la sanción. Es el mismo caso de `VencerPermisosJob`
+// anotado más abajo.
+//
+// En días laborables porque los plazos se cuentan en días hábiles: un sábado no
+// vence nada y no hay nada que revisar. A las 07:15 para no pisarse con el de
+// visto bueno.
+Schedule::command('sgth:disciplinario:control-plazos')
+    ->weekdays()
+    ->dailyAt('07:15')
+    ->onOneServer();
 
 // Vencimiento de contratos de Servicios Profesionales: genera la cesación en
 // borrador para que Talento Humano la revise. Nada se da de baja sin aprobación.
