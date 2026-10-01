@@ -136,16 +136,25 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
             ]);
 
             // Regla de Negocio: Si la sanción es Destitución, registrar el egreso.
+            //
+            // En BORRADOR, y sin tocar al servidor. El vínculo lo cierra la
+            // acción de personal al registrarse (MovimientoPersonalStateService
+            // ::cerrarVinculo), que es también la única que sabe reabrirlo si
+            // alguien la anula. Desactivar aquí al servidor lo sacaba de la
+            // nómina y de la generación de períodos de vacaciones —las dos
+            // consultan `Servidor::where('estado', true)`— mientras el acto
+            // todavía era un borrador que Talento Humano podía rechazar, y
+            // anularlo no lo devolvía: `deshacerCierreDeVinculo()` reabre el
+            // contrato, pero nadie vuelve a poner `estado = true` porque en el
+            // flujo normal nadie lo había puesto en false. La vía del visto
+            // bueno, mismo resultado y mismo régimen de aprobación, nunca lo
+            // tocó.
             if ($datosSancion['tipo_sancion'] === TipoSancion::DESTITUCION->value) {
-                $servidor = Servidor::findOrFail($sumario->servidor_id);
-                $servidor->estado = false;
-                $servidor->save();
-
                 // La destitución es una cesación de funciones cuyo subtipo es
                 // 'destitucion' — el sumario es su causa, no su tipo. Se
                 // registra así desde la taxonomía de dos niveles; el tipo
                 // plano 'destitucion' queda solo para el histórico anterior.
-                $this->movimientoPersonalService->registrar($servidor->id, [
+                $this->movimientoPersonalService->registrar($sumario->servidor_id, [
                     'tipo_movimiento'    => TipoMovimientoPersonal::CESACION_FUNCIONES->value,
                     'subtipo_movimiento' => SubtipoMovimientoPersonal::DESTITUCION->value,
                     'descripcion'        => 'Destitución por sanción disciplinaria en Sumario Administrativo #' . $sumario->id,

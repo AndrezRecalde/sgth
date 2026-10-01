@@ -367,4 +367,41 @@ test('la destitución por sumario genera la cesación con subtipo destitución',
     expect($movimiento->tipo_movimiento)->toBe(TipoMovimientoPersonal::CESACION_FUNCIONES)
         ->and($movimiento->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::DESTITUCION)
         ->and($movimiento->estado)->toBe(EstadoAccionPersonal::BORRADOR);
+
+    // El mismo contrato que para el visto bueno: la cesación nace en borrador y
+    // el servidor sigue activo y vinculado hasta que Talento Humano la
+    // registre. Mientras el acto es un borrador, el servidor cobra.
+    expect($servidor->fresh()->estado)->toBeTrue()
+        ->and($servidor->fresh()->contratoVigente)->not->toBeNull();
+});
+
+test('registrar la destitución cierra el vínculo del servidor', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+
+    $sumario = Sumario::create([
+        'servidor_id'    => $servidor->id,
+        'motivo'         => 'Falta grave',
+        'estado'         => EstadoSumario::CON_INFORME,
+        'fecha_apertura' => now()->subMonth()->toDateString(),
+        'notificado_sn'  => true,
+    ]);
+
+    $this->disciplinarioService->resolverSumario($sumario->id, [
+        'tipo_falta'     => 'grave',
+        'tipo_sancion'   => TipoSancion::DESTITUCION->value,
+        'fecha_efectiva' => now()->toDateString(),
+    ], $this->user->id);
+
+    $movimiento = \App\Models\Expediente\MovimientoPersonal::where('servidor_id', $servidor->id)
+        ->latest('id')
+        ->first();
+
+    $movimiento = $this->stateService->transicionar($movimiento, EstadoAccionPersonal::SUSCRITA);
+    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA);
+
+    $contrato = ContratoServidor::where('servidor_id', $servidor->id)->first();
+
+    expect($servidor->fresh()->contratoVigente)->toBeNull()
+        ->and($contrato->estado->value)->toBe('terminado')
+        ->and($contrato->motivo_fin)->toContain('Destitución');
 });
