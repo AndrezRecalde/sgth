@@ -26,7 +26,12 @@ final class VistoBuenoController extends Controller
         ])
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
-            ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_solicitud', $request->integer('anio')))
+            // `whereYear` envuelve la columna en una función y deja el índice
+            // sin usar; el rango del año sí lo aprovecha.
+            ->when($request->filled('anio'), function ($q) use ($request) {
+                $anio = $request->integer('anio');
+                $q->whereBetween('fecha_solicitud', ["{$anio}-01-01", "{$anio}-12-31"]);
+            })
             // `fecha_solicitud` es una fecha sin hora: sin desempatar por `id`,
             // dos trámites del mismo día quedaban en orden indeterminado y al
             // paginar una fila podía repetirse o perderse.

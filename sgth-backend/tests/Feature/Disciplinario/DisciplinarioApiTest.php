@@ -341,6 +341,38 @@ test('un visto bueno no se solicita con fecha futura', function () {
         );
 });
 
+test('el filtro por año recorta el listado al rango del año', function () {
+    Sumario::create([
+        'servidor_id'    => ($this->servidor)(101)->id,
+        'motivo'         => 'Del año pasado',
+        'estado'         => EstadoSumario::CERRADO,
+        'fecha_apertura' => '2025-12-31',
+        'notificado_sn'  => true,
+    ]);
+    Sumario::create([
+        'servidor_id'    => ($this->servidor)(102)->id,
+        'motivo'         => 'De este año, el primer día',
+        'estado'         => EstadoSumario::ABIERTO,
+        'fecha_apertura' => '2026-01-01',
+        'notificado_sn'  => false,
+    ]);
+    Sumario::create([
+        'servidor_id'    => ($this->servidor)(103)->id,
+        'motivo'         => 'De este año, el último día',
+        'estado'         => EstadoSumario::ABIERTO,
+        'fecha_apertura' => '2026-12-31',
+        'notificado_sn'  => false,
+    ]);
+
+    // Los bordes del año entran: el rango se arma cerrado por los dos lados.
+    $pagina = $this->actingAs($this->admin, 'sanctum')
+        ->getJson('/api/v1/disciplinario/sumarios?anio=2026')
+        ->assertStatus(200)
+        ->json('datos');
+
+    expect($pagina['total'])->toBe(2);
+});
+
 test('el filtro por estado recorta el listado y el total', function () {
     abrirSumarios($this->servidor, 4);
 
