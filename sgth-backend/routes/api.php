@@ -1085,7 +1085,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('epp-entregas', [EppEntregaController::class, 'store']);
 
                 Route::post('horas-trabajadas', [HorasTrabajadasController::class, 'store']);
-                Route::put('horas-trabajadas/{id}', [HorasTrabajadasController::class, 'update']);
+                // Sin PUT a propósito: `registrarHorasTrabajadas` rechaza el
+                // duplicado porque ese total es el denominador de los tres
+                // índices del CD 513, y pisarlo movía los tres sin dejar
+                // rastro. El PUT hacía exactamente eso, y no lo llamaba
+                // ninguna pantalla. Para corregir un período se borra y se
+                // vuelve a cargar, que sí es una decisión deliberada.
                 Route::delete('horas-trabajadas/{id}', [HorasTrabajadasController::class, 'destroy']);
 
                 Route::post('normativa-legal', [NormativaLegalSsoController::class, 'store']);
