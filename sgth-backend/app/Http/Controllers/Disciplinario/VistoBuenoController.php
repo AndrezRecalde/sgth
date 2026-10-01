@@ -27,10 +27,14 @@ final class VistoBuenoController extends Controller
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
             ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_solicitud', $request->integer('anio')))
-            ->orderByDesc('fecha_solicitud');
+            // `fecha_solicitud` es una fecha sin hora: sin desempatar por `id`,
+            // dos trámites del mismo día quedaban en orden indeterminado y al
+            // paginar una fila podía repetirse o perderse.
+            ->orderByDesc('fecha_solicitud')
+            ->orderByDesc('id');
 
         return ApiResponse::ok(
-            $query->paginate($request->integer('per_page', 20)),
+            $query->paginate($request->integer('per_page', 15)),
             'Trámites de visto bueno.'
         );
     }

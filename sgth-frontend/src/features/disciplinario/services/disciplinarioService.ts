@@ -3,18 +3,18 @@ import type {
   ApiResponse,
   EstadoSumario,
   EstadoVistoBueno,
+  PaginatedResponse,
   Sumario,
   SumarioFormData,
   VistoBueno,
   VistoBuenoFormData,
 } from '@/types/api'
 
-type Paginado<T> = { data: T[]; total?: number }
-
 export type SumarioParams = {
   estado?: EstadoSumario
   servidor_id?: number
   anio?: number
+  page?: number
   per_page?: number
 }
 
@@ -22,6 +22,7 @@ export type VistoBuenoParams = {
   estado?: EstadoVistoBueno
   servidor_id?: number
   anio?: number
+  page?: number
   per_page?: number
 }
 
@@ -46,7 +47,7 @@ const BASE = '/disciplinario'
 
 export const disciplinarioService = {
   listarSumarios: (params?: SumarioParams) =>
-    api.get<ApiResponse<Paginado<Sumario>>>(
+    api.get<ApiResponse<PaginatedResponse<Sumario>>>(
       `${BASE}/sumarios`, { params }
     ).then(r => r.data.datos),
 
@@ -57,7 +58,7 @@ export const disciplinarioService = {
     api.put<ApiResponse<Sumario>>(`${BASE}/sumarios/${id}/avanzar`, data).then(r => r.data.datos),
 
   listarVistosBuenos: (params?: VistoBuenoParams) =>
-    api.get<ApiResponse<Paginado<VistoBueno>>>(
+    api.get<ApiResponse<PaginatedResponse<VistoBueno>>>(
       `${BASE}/vistos-buenos`, { params }
     ).then(r => r.data.datos),
 

@@ -25,10 +25,15 @@ class DisciplinarioController extends Controller
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
             ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_apertura', $request->integer('anio')))
-            ->orderByDesc('fecha_apertura');
+            // El desempate por `id` no es decorativo: `fecha_apertura` es una
+            // fecha sin hora, así que dos sumarios abiertos el mismo día
+            // quedaban en orden indeterminado y al paginar una fila podía
+            // repetirse en dos páginas o no salir en ninguna.
+            ->orderByDesc('fecha_apertura')
+            ->orderByDesc('id');
 
         return ApiResponse::ok(
-            $query->paginate($request->integer('per_page', 20)),
+            $query->paginate($request->integer('per_page', 15)),
             'Sumarios administrativos.'
         );
     }
