@@ -1,18 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  Alert, Select, Stack, TextInput, Textarea,
-} from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { Alert, Select, Stack, TextInput, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconInfoCircle } from '@tabler/icons-react'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { FormModal, notificar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import { fromDateValue, toDateValue } from '@/lib/fecha'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
+import { vistoBuenoSchema, type VistoBuenoFormValues } from '../schemas/vistoBueno.schema'
 import { CAUSAL_LABELS, CAUSAL_NUMERAL } from '../utils/etiquetas'
 import type { CausalVistoBueno } from '@/types/api'
-import { fromDateValueOrNull } from '@/lib/fecha'
 
 interface Props {
   opened: boolean
@@ -27,59 +28,65 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
   const { crearVistoBueno } = useDisciplinarioMutations()
 
-  const [servidorId, setServidorId] = useState<number | null>(null)
-  const [causal, setCausal] = useState<CausalVistoBueno | null>(null)
-  const [hechos, setHechos] = useState('')
-  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
-  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
-  // dos formas, que es lo que `fromDateValue` sabe leer.
-  const [fechaSolicitud, setFechaSolicitud] = useState<Date | string | null>(new Date())
-  const [numeroTramite, setNumeroTramite] = useState('')
-  const [inspectoria, setInspectoria] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors },
+  } = useForm<VistoBuenoFormValues>({
+    // `servidor_id` y `causal` se omiten: los elige quien solicita (regla 09).
+    resolver: zodResolver(vistoBuenoSchema),
+    defaultValues: {
+      hechos: '',
+      fecha_solicitud: fromDateValue(new Date()),
+      numero_tramite_mdt: '',
+      inspectoria: '',
+    },
+  })
 
-  const limpiar = () => {
-    setServidorId(null)
-    setCausal(null)
-    setHechos('')
-    setFechaSolicitud(new Date())
-    setNumeroTramite('')
-    setInspectoria('')
-    setError(null)
-  }
-
-  const handleClose = () => {
-    limpiar()
+  const cerrar = () => {
+    reset()
     onClose()
   }
 
-  const submit = () => {
-    if (!servidorId) return setError('Seleccione al trabajador.')
-    if (!causal) return setError('Indique la causal del Art. 172.')
-    if (hechos.trim().length < 5) return setError('Relate el fundamento de hecho de la solicitud.')
-    if (!fechaSolicitud) return setError('Indique la fecha de la solicitud.')
-
-    setError(null)
-
-    crearVistoBueno
-      .mutateAsync({
-        servidor_id: servidorId,
-        causal,
-        hechos: hechos.trim(),
-        fecha_solicitud: fromDateValueOrNull(fechaSolicitud)!,
-        numero_tramite_mdt: numeroTramite.trim() || null,
-        inspectoria: inspectoria.trim() || null,
+  const guardar = async (valores: VistoBuenoFormValues) => {
+    try {
+      await crearVistoBueno.mutateAsync({
+        ...valores,
+        numero_tramite_mdt: valores.numero_tramite_mdt.trim() || null,
+        inspectoria: valores.inspectoria.trim() || null,
       })
-      .then(handleClose)
-      .catch(() => {})
+      cerrar()
+    } catch (error) {
+      const campos = erroresDeCampo(error)
+      if (!campos) return // el hook ya lo notificó
+
+      const sinCampo: string[] = []
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        if (campo in vistoBuenoSchema.shape) {
+          setError(campo as keyof VistoBuenoFormValues, { message: mensaje })
+        } else {
+          sinCampo.push(mensaje)
+        }
+      }
+
+      if (sinCampo.length) {
+        notificar.error('No se pudo solicitar el visto bueno', sinCampo.join(' '))
+      }
+    }
   }
 
   return (
-    <SgthModal
+    <FormModal
       opened={opened}
-      onClose={handleClose}
+      onClose={cerrar}
       title="Solicitar visto bueno"
-      size="lg"
+      onSubmit={handleSubmit(guardar)}
+      submitLabel="Registrar solicitud"
+      submitting={crearVistoBueno.isPending}
+      closeOnClickOutside={false}
     >
       <Stack gap="sm">
         <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
@@ -88,65 +95,78 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
           Ministerio. Solo aplica a obreros bajo Código del Trabajo.
         </Alert>
 
-        <BuscarServidorSelect
-          label="Trabajador"
-          value={servidorId}
-          onChange={setServidorId}
-          required
+        <Controller
+          name="servidor_id"
+          control={control}
+          render={({ field }) => (
+            <BuscarServidorSelect
+              label="Trabajador"
+              required
+              error={errors.servidor_id?.message}
+              value={field.value ?? null}
+              onChange={field.onChange}
+            />
+          )}
         />
 
-        <Select
-          label="Causal (Art. 172 del Código del Trabajo)"
-          placeholder="Seleccione la causal invocada"
-          data={CAUSAL_OPTIONS}
-          value={causal}
-          onChange={(v) => setCausal(v as CausalVistoBueno | null)}
-          searchable
-          {...contained}
+        <Controller
+          name="causal"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Causal (Art. 172 del Código del Trabajo)"
+              placeholder="Seleccione la causal invocada"
+              data={CAUSAL_OPTIONS}
+              searchable
+              error={errors.causal?.message}
+              {...contained}
+              value={field.value ?? null}
+              onChange={field.onChange}
+            />
+          )}
         />
 
         <Textarea
           label="Fundamento de hecho"
           placeholder="Relate los hechos que sustentan la solicitud"
           rows={4}
-          value={hechos}
-          onChange={(e) => setHechos(e.currentTarget.value)}
+          error={errors.hechos?.message}
           {...contained}
+          {...register('hechos')}
         />
 
-        <DatePickerInput
-          label="Fecha de presentación de la solicitud"
-          value={fechaSolicitud}
-          onChange={(v) => setFechaSolicitud(v)}
-          valueFormat="DD/MM/YYYY"
-          {...contained}
+        <Controller
+          name="fecha_solicitud"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Fecha de presentación de la solicitud"
+              valueFormat="DD/MM/YYYY"
+              error={errors.fecha_solicitud?.message}
+              {...contained}
+              value={toDateValue(field.value)}
+              onChange={(v) => field.onChange(fromDateValue(v))}
+            />
+          )}
         />
 
         <TextInput
           label="Número de trámite del Ministerio del Trabajo"
           description="Opcional: puede registrarse después, al notificarse el trámite."
           placeholder="Ej: MDT-VB-2026-0042"
-          value={numeroTramite}
-          onChange={(e) => setNumeroTramite(e.currentTarget.value)}
+          error={errors.numero_tramite_mdt?.message}
           {...contained}
+          {...register('numero_tramite_mdt')}
         />
 
         <TextInput
           label="Inspectoría"
           placeholder="Ej: Inspectoría del Trabajo de Esmeraldas"
-          value={inspectoria}
-          onChange={(e) => setInspectoria(e.currentTarget.value)}
+          error={errors.inspectoria?.message}
           {...contained}
+          {...register('inspectoria')}
         />
-
-        {error && <Alert variant="light" color="red">{error}</Alert>}
       </Stack>
-      <ModalFooter
-        onCancel={handleClose}
-        submitLabel="Registrar solicitud"
-        submitting={crearVistoBueno.isPending}
-        onSubmit={submit}
-      />
-    </SgthModal>
+    </FormModal>
   )
 }
