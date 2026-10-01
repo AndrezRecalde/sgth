@@ -175,6 +175,10 @@ class VistoBuenoService
                 $this->generarCesacion($vistoBueno);
             }
 
+            if ($destino === EstadoVistoBueno::IMPUGNADO) {
+                $this->anotarImpugnacionEnLaCesacion($vistoBueno);
+            }
+
             return $vistoBueno->fresh(['servidor', 'movimientoPersonal']);
         });
     }
@@ -278,5 +282,41 @@ class VistoBuenoService
 
         $vistoBueno->movimiento_personal_id = $movimiento->id;
         $vistoBueno->save();
+    }
+
+    /**
+     * Impugnado el visto bueno, la cesación generada SIGUE EN PIE: la
+     * impugnación no deja sin efecto la resolución del Inspector, y si procede
+     * suspenderla es Talento Humano quien lo decide con el expediente delante.
+     *
+     * Lo que no puede pasar es que la registre sin saberlo, y es lo que
+     * ocurría: el borrador se quedaba en la bandeja de acciones de personal
+     * sin una sola señal de que el trabajador había impugnado, y registrarla
+     * cierra el vínculo. Así que la señal se deja donde Talento Humano mira,
+     * en la descripción de la acción, y además en el log.
+     */
+    private function anotarImpugnacionEnLaCesacion(VistoBueno $vistoBueno): void
+    {
+        $movimiento = $vistoBueno->movimientoPersonal;
+
+        // Impugnar un visto bueno NEGADO no tiene cesación que anotar: no se
+        // generó ninguna.
+        if (!$movimiento) {
+            return;
+        }
+
+        $aviso = ' IMPUGNADO por el trabajador: revísese con Asesoría Jurídica '
+            .'antes de continuar con esta cesación.';
+
+        if (!str_contains((string) $movimiento->descripcion, 'IMPUGNADO')) {
+            $movimiento->descripcion = $movimiento->descripcion.$aviso;
+            $movimiento->save();
+        }
+
+        Log::warning(
+            "Visto bueno #{$vistoBueno->id} impugnado. La Cesación de Funciones "
+                ."#{$movimiento->id} queda en '{$movimiento->estado->value}': "
+                .'revisar con Asesoría Jurídica.'
+        );
     }
 }

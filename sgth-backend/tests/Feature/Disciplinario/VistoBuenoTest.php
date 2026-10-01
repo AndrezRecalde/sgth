@@ -243,6 +243,52 @@ test('registrar la cesación generada cierra el vínculo del obrero', function (
         ->and($contrato->motivo_fin)->toContain('Visto Bueno');
 });
 
+test('impugnar el visto bueno deja la cesación avisada, no borrada', function () {
+    $obrero  = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
+    $tramite = ($this->solicitarVistoBueno)($obrero);
+
+    $tramite = $this->vistoBuenoService->transicionar($tramite, EstadoVistoBueno::NOTIFICADO, [], $this->user->id);
+    $tramite = $this->vistoBuenoService->transicionar($tramite, EstadoVistoBueno::EN_INVESTIGACION, [], $this->user->id);
+    $tramite = $this->vistoBuenoService->transicionar($tramite, EstadoVistoBueno::CONCEDIDO, [
+        'resolucion_detalle' => 'Concedido.',
+    ], $this->user->id);
+
+    $cesacion = $tramite->movimientoPersonal;
+
+    $tramite = $this->vistoBuenoService->transicionar(
+        $tramite, EstadoVistoBueno::IMPUGNADO, [], $this->user->id
+    );
+
+    // La impugnación no deja sin efecto la resolución del Inspector: la
+    // cesación sigue en pie. Lo que no puede es seguir sin aviso en la bandeja
+    // de Talento Humano, que es lo que pasaba.
+    expect($tramite->estado)->toBe(EstadoVistoBueno::IMPUGNADO)
+        ->and($cesacion->fresh())->not->toBeNull()
+        ->and($cesacion->fresh()->estado)->toBe(EstadoAccionPersonal::BORRADOR)
+        ->and($cesacion->fresh()->descripcion)->toContain('IMPUGNADO');
+});
+
+test('impugnar un visto bueno negado no toca ninguna acción de personal', function () {
+    $obrero  = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
+    $tramite = ($this->solicitarVistoBueno)($obrero);
+
+    $tramite = $this->vistoBuenoService->transicionar($tramite, EstadoVistoBueno::NOTIFICADO, [], $this->user->id);
+    $tramite = $this->vistoBuenoService->transicionar($tramite, EstadoVistoBueno::EN_INVESTIGACION, [], $this->user->id);
+    $tramite = $this->vistoBuenoService->transicionar($tramite, EstadoVistoBueno::NEGADO, [
+        'resolucion_detalle' => 'Negado.',
+    ], $this->user->id);
+
+    $tramite = $this->vistoBuenoService->transicionar(
+        $tramite, EstadoVistoBueno::IMPUGNADO, [], $this->user->id
+    );
+
+    expect($tramite->estado)->toBe(EstadoVistoBueno::IMPUGNADO)
+        ->and($tramite->movimiento_personal_id)->toBeNull()
+        ->and(\App\Models\Expediente\MovimientoPersonal::where('servidor_id', $obrero->id)
+            ->where('tipo_movimiento', TipoMovimientoPersonal::CESACION_FUNCIONES)
+            ->exists())->toBeFalse();
+});
+
 test('negar el visto bueno no genera ninguna acción de personal', function () {
     $obrero  = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
     $tramite = ($this->solicitarVistoBueno)($obrero);
