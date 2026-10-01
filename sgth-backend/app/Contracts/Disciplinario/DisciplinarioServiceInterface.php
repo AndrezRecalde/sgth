@@ -24,7 +24,10 @@ interface DisciplinarioServiceInterface
     public function resolverSumario(int $sumarioId, array $datosSancion, int $userId): Sumario;
 
     /**
-     * Verifica los plazos procesales legales de todos los sumarios abiertos y alerta a la UATH.
+     * Verifica los plazos procesales legales de todos los sumarios abiertos y
+     * devuelve los que se excedieron, además de registrarlos en el log.
+     *
+     * @return list<array{sumario_id:int, servidor_id:int, plazo:string, fecha_limite:string, dias_vencido:int, grave:bool}>
      */
-    public function controlarPlazosLegales(): void;
+    public function controlarPlazosLegales(): array;
 }

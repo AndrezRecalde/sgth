@@ -14,6 +14,9 @@ import { useSumarios } from '../hooks/useDisciplinario'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
 import { SumarioModal } from './SumarioModal'
 import { ResolverSumarioModal } from './ResolverSumarioModal'
+import {
+  AvanzarHitoModal, esHitoConFecha, type HitoConFecha,
+} from './AvanzarHitoModal'
 import { columnasSumario } from './sumarios.columns'
 import {
   ESTADO_SUMARIO_LABELS,
@@ -36,6 +39,8 @@ export function SumariosTab() {
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [aResolver, setAResolver] = useState<Sumario | null>(null)
   const [resolverOpened, { open: openResolver, close: closeResolver }] = useDisclosure(false)
+  const [aAvanzar, setAAvanzar] = useState<{ sumario: Sumario; destino: HitoConFecha } | null>(null)
+  const [avanzarOpened, { open: openAvanzar, close: closeAvanzar }] = useDisclosure(false)
 
   // Cambiar el filtro sin volver a la primera página consultaría esa misma
   // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
@@ -57,6 +62,11 @@ export function SumariosTab() {
   const abrirResolucion = (sumario: Sumario) => {
     setAResolver(sumario)
     openResolver()
+  }
+
+  const abrirAvance = (sumario: Sumario, destino: HitoConFecha) => {
+    setAAvanzar({ sumario, destino })
+    openAvanzar()
   }
 
   const cerrar = (sumario: Sumario) => confirmar({
@@ -86,14 +96,11 @@ export function SumariosTab() {
 
     return [
       {
+        // Cada hito pide su fecha, que es de donde salen los plazos legales.
         label: siguiente ? `Avanzar a ${ESTADO_SUMARIO_LABELS[siguiente]}` : 'Avanzar',
         icon: <IconArrowRight size={14} />,
-        hidden: !siguiente,
-        disabled: avanzarSumario.isPending,
-        onClick: () => siguiente && avanzarSumario.mutate({
-          id: s.id,
-          data: { estado: siguiente },
-        }),
+        hidden: !siguiente || !esHitoConFecha(siguiente),
+        onClick: () => siguiente && esHitoConFecha(siguiente) && abrirAvance(s, siguiente),
       },
       {
         label: 'Resolver e imponer sanción',
@@ -175,6 +182,12 @@ export function SumariosTab() {
         opened={resolverOpened}
         onClose={closeResolver}
         sumario={aResolver}
+      />
+      <AvanzarHitoModal
+        opened={avanzarOpened}
+        onClose={closeAvanzar}
+        sumario={aAvanzar?.sumario ?? null}
+        destino={aAvanzar?.destino ?? null}
       />
     </Stack>
   )

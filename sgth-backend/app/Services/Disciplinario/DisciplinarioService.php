@@ -32,6 +32,16 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
      * se avanza hito por hito, y RESUELTO se alcanza solo vía
      * resolverSumario(), que es donde se aplica la sanción.
      */
+    /**
+     * Los plazos procesales del sumario, en días hábiles. Son los que la
+     * migración de `sumarios` anota columna por columna, y hasta ahora vivían
+     * como números sueltos dentro del control de plazos.
+     */
+    private const DIAS_HABILES_NOTIFICACION = 3;
+    private const DIAS_HABILES_PRUEBA       = 5;
+    private const DIAS_HABILES_INFORME      = 3;
+    private const DIAS_HABILES_RESOLUCION   = 10;
+
     private const TRANSICIONES_SUMARIO = [
         'abierto'        => ['en_instruccion', 'cerrado'],
         'en_instruccion' => ['en_prueba', 'cerrado'],
@@ -89,7 +99,7 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         // de plazos legales de controlarPlazosLegales().
         match ($destino) {
             EstadoSumario::EN_INSTRUCCION => $this->marcarNotificacion($sumario, $datos),
-            EstadoSumario::EN_PRUEBA      => $sumario->fecha_termino_prueba = $datos['fecha_termino_prueba'] ?? null,
+            EstadoSumario::EN_PRUEBA      => $this->marcarTerminoDePrueba($sumario, $datos),
             EstadoSumario::CON_INFORME    => $sumario->fecha_informe = $datos['fecha_informe'] ?? now()->toDateString(),
             default                       => null,
         };
@@ -105,6 +115,29 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
     {
         $sumario->notificado_sn      = true;
         $sumario->fecha_notificacion = $datos['fecha_notificacion'] ?? now()->toDateString();
+    }
+
+    /**
+     * Abierto el período de prueba, su término queda fijado: si no viene en la
+     * petición se cuentan los 5 días hábiles desde la notificación.
+     *
+     * Antes era `$datos['fecha_termino_prueba'] ?? null`, y la pantalla solo
+     * manda el estado, así que la columna quedaba NULL siempre: el plazo que
+     * la propia migración documenta no se registraba ni se podía vigilar.
+     */
+    private function marcarTerminoDePrueba(Sumario $sumario, array $datos): void
+    {
+        if (!empty($datos['fecha_termino_prueba'])) {
+            $sumario->fecha_termino_prueba = $datos['fecha_termino_prueba'];
+
+            return;
+        }
+
+        $desde = $sumario->fecha_notificacion ?? $sumario->fecha_apertura;
+
+        $sumario->fecha_termino_prueba = $this
+            ->calcularDiasHabiles(Carbon::parse($desde), self::DIAS_HABILES_PRUEBA)
+            ->toDateString();
     }
 
     public function resolverSumario(int $sumarioId, array $datosSancion, int $userId): Sumario
@@ -217,32 +250,101 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         }
     }
 
-    public function controlarPlazosLegales(): void
+    /**
+     * Sumarios que excedieron un plazo procesal. Devuelve el detalle en vez de
+     * solo escribirlo en el log, como el control de los vistos buenos, para
+     * que el comando pueda enseñarlo y la API llegue a mostrarlo.
+     *
+     * Vigila los cuatro plazos que la migración documenta, no dos: antes el
+     * término del período de prueba y el plazo del informe no se comprobaban
+     * —de hecho `fecha_termino_prueba` no se llegaba a guardar—, así que un
+     * expediente podía quedarse en prueba indefinidamente sin que nada lo
+     * advirtiera.
+     *
+     * @return list<array{sumario_id:int, servidor_id:int, plazo:string, fecha_limite:string, dias_vencido:int, grave:bool}>
+     */
+    public function controlarPlazosLegales(): array
     {
-        $hoy = Carbon::today();
+        $hoy     = Carbon::today();
+        $alertas = [];
 
-        // 1. Control de Notificación: 3 días hábiles desde apertura
-        $sumariosSinNotificar = Sumario::where('estado', EstadoSumario::ABIERTO)
+        // 1. Notificación al sumariado: 3 días hábiles desde la apertura.
+        $sinNotificar = Sumario::where('estado', EstadoSumario::ABIERTO)
             ->where('notificado_sn', false)
-            ->get();
+            ->get(['id', 'servidor_id', 'fecha_apertura']);
 
-        foreach ($sumariosSinNotificar as $sumario) {
-            $fechaLimiteNotificacion = $this->calcularDiasHabiles(Carbon::parse($sumario->fecha_apertura), 3);
-            if ($hoy->gt($fechaLimiteNotificacion)) {
-                Log::warning("Sumario #{$sumario->id} ha excedido el plazo legal de notificación de 3 días hábiles. Fecha límite era: {$fechaLimiteNotificacion->toDateString()}");
+        foreach ($sinNotificar as $sumario) {
+            $limite = $this->calcularDiasHabiles(
+                Carbon::parse($sumario->fecha_apertura),
+                self::DIAS_HABILES_NOTIFICACION
+            );
+
+            if ($hoy->gt($limite)) {
+                $alertas[] = $this->alerta($sumario, 'notificacion', $limite, $hoy, false);
             }
         }
 
-        // 2. Control de Resolución: 10 días hábiles desde el informe
-        $sumariosConInforme = Sumario::where('estado', EstadoSumario::CON_INFORME)
+        // 2. Informe del instructor: 3 días hábiles desde el término de la
+        //    prueba. Mientras el sumario siga en prueba, el informe no está.
+        $enPrueba = Sumario::where('estado', EstadoSumario::EN_PRUEBA)
+            ->whereNotNull('fecha_termino_prueba')
+            ->get(['id', 'servidor_id', 'fecha_termino_prueba']);
+
+        foreach ($enPrueba as $sumario) {
+            $limite = $this->calcularDiasHabiles(
+                Carbon::parse($sumario->fecha_termino_prueba),
+                self::DIAS_HABILES_INFORME
+            );
+
+            if ($hoy->gt($limite)) {
+                $alertas[] = $this->alerta($sumario, 'informe', $limite, $hoy, false);
+            }
+        }
+
+        // 3. Resolución: 10 días hábiles desde el informe. Pasado el plazo, el
+        //    sumario puede caducar y la sanción quedarse sin efecto.
+        $conInforme = Sumario::where('estado', EstadoSumario::CON_INFORME)
             ->whereNotNull('fecha_informe')
-            ->get();
+            ->get(['id', 'servidor_id', 'fecha_informe']);
 
-        foreach ($sumariosConInforme as $sumario) {
-            $fechaLimiteResolucion = $this->calcularDiasHabiles(Carbon::parse($sumario->fecha_informe), 10);
-            if ($hoy->gt($fechaLimiteResolucion)) {
-                Log::error("ALERTA LEGAL: Sumario #{$sumario->id} ha excedido el plazo de resolución de 10 días hábiles desde el informe. Fecha límite era: {$fechaLimiteResolucion->toDateString()}. Riesgo de caducidad.");
+        foreach ($conInforme as $sumario) {
+            $limite = $this->calcularDiasHabiles(
+                Carbon::parse($sumario->fecha_informe),
+                self::DIAS_HABILES_RESOLUCION
+            );
+
+            if ($hoy->gt($limite)) {
+                $alertas[] = $this->alerta($sumario, 'resolucion', $limite, $hoy, true);
             }
         }
+
+        foreach ($alertas as $alerta) {
+            $mensaje = "Sumario #{$alerta['sumario_id']} excedió el plazo de {$alerta['plazo']} "
+                ."(límite {$alerta['fecha_limite']}, {$alerta['dias_vencido']} día(s) de retraso).";
+
+            $alerta['grave']
+                ? Log::error("ALERTA LEGAL: {$mensaje} Riesgo de caducidad.")
+                : Log::warning($mensaje);
+        }
+
+        return $alertas;
+    }
+
+    /** @return array{sumario_id:int, servidor_id:int, plazo:string, fecha_limite:string, dias_vencido:int, grave:bool} */
+    private function alerta(
+        Sumario $sumario,
+        string $plazo,
+        Carbon $limite,
+        Carbon $hoy,
+        bool $grave
+    ): array {
+        return [
+            'sumario_id'   => $sumario->id,
+            'servidor_id'  => $sumario->servidor_id,
+            'plazo'        => $plazo,
+            'fecha_limite' => $limite->toDateString(),
+            'dias_vencido' => (int) $limite->diffInDays($hoy),
+            'grave'        => $grave,
+        ];
     }
 }

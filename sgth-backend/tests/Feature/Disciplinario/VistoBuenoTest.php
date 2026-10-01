@@ -315,12 +315,110 @@ test('el sumario avanza hito por hito y registra sus fechas', function () {
     $sumario = $this->disciplinarioService->avanzarSumario(
         $sumario, EstadoSumario::EN_PRUEBA->value, [], $this->user->id
     );
+
+    // Sin fecha en la petición, el término del período de prueba se calcula:
+    // 5 días hábiles desde la notificación. Antes esta columna quedaba NULL.
+    expect($sumario->fecha_termino_prueba)->not->toBeNull()
+        ->and($sumario->fecha_termino_prueba->gt($sumario->fecha_notificacion))->toBeTrue();
+
     $sumario = $this->disciplinarioService->avanzarSumario(
         $sumario, EstadoSumario::CON_INFORME->value, [], $this->user->id
     );
 
     expect($sumario->estado)->toBe(EstadoSumario::CON_INFORME)
         ->and($sumario->fecha_informe)->not->toBeNull();
+});
+
+test('el término del período de prueba se puede fijar a mano', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+
+    $sumario = $this->disciplinarioService->abrirSumario($servidor->id, [
+        'motivo' => 'Presunta falta grave',
+    ], $this->user->id);
+
+    $sumario = $this->disciplinarioService->avanzarSumario(
+        $sumario, EstadoSumario::EN_INSTRUCCION->value, [], $this->user->id
+    );
+    $sumario = $this->disciplinarioService->avanzarSumario(
+        $sumario,
+        EstadoSumario::EN_PRUEBA->value,
+        ['fecha_termino_prueba' => '2026-12-15'],
+        $this->user->id
+    );
+
+    expect($sumario->fecha_termino_prueba->toDateString())->toBe('2026-12-15');
+});
+
+// ── Sumario: control de plazos ──────────────────────────────────
+
+test('un sumario sin notificar dentro del plazo aparece en las alertas', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+
+    $sumario = Sumario::create([
+        'servidor_id'    => $servidor->id,
+        'motivo'         => 'Presunta falta grave',
+        'estado'         => EstadoSumario::ABIERTO,
+        'fecha_apertura' => now()->subMonth()->toDateString(),
+        'notificado_sn'  => false,
+    ]);
+
+    $alertas = $this->disciplinarioService->controlarPlazosLegales();
+
+    expect($alertas)->toHaveCount(1)
+        ->and($alertas[0]['sumario_id'])->toBe($sumario->id)
+        ->and($alertas[0]['plazo'])->toBe('notificacion')
+        ->and($alertas[0]['grave'])->toBeFalse();
+});
+
+test('un sumario recién abierto no genera alerta', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+
+    $this->disciplinarioService->abrirSumario($servidor->id, [
+        'motivo' => 'Presunta falta grave',
+    ], $this->user->id);
+
+    expect($this->disciplinarioService->controlarPlazosLegales())->toBeEmpty();
+});
+
+test('el informe atrasado desde el término de la prueba aparece en las alertas', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+
+    $sumario = Sumario::create([
+        'servidor_id'          => $servidor->id,
+        'motivo'               => 'Presunta falta grave',
+        'estado'               => EstadoSumario::EN_PRUEBA,
+        'fecha_apertura'       => now()->subMonths(2)->toDateString(),
+        'notificado_sn'        => true,
+        'fecha_notificacion'   => now()->subMonths(2)->toDateString(),
+        'fecha_termino_prueba' => now()->subMonth()->toDateString(),
+    ]);
+
+    $alertas = $this->disciplinarioService->controlarPlazosLegales();
+
+    // El plazo del informe no se vigilaba: un expediente podía quedarse en
+    // prueba indefinidamente sin que nada lo advirtiera.
+    expect($alertas)->toHaveCount(1)
+        ->and($alertas[0]['sumario_id'])->toBe($sumario->id)
+        ->and($alertas[0]['plazo'])->toBe('informe');
+});
+
+test('la resolución atrasada se marca como riesgo de caducidad', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+
+    Sumario::create([
+        'servidor_id'    => $servidor->id,
+        'motivo'         => 'Presunta falta grave',
+        'estado'         => EstadoSumario::CON_INFORME,
+        'fecha_apertura' => now()->subMonths(3)->toDateString(),
+        'notificado_sn'  => true,
+        'fecha_informe'  => now()->subMonths(2)->toDateString(),
+    ]);
+
+    $alertas = $this->disciplinarioService->controlarPlazosLegales();
+
+    expect($alertas)->toHaveCount(1)
+        ->and($alertas[0]['plazo'])->toBe('resolucion')
+        ->and($alertas[0]['grave'])->toBeTrue();
 });
 
 test('el sumario no puede saltarse hitos procesales', function () {
