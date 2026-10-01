@@ -1,20 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { Box, Button, Group, Text } from '@mantine/core'
+import { Button, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconReportAnalytics, IconTruckDelivery } from '@tabler/icons-react'
-import { useEppEntregas } from '../hooks/useEppEntregas'
-import { RegistrarEntregaEppModal } from './RegistrarEntregaEppModal'
-import { ReporteEppModal } from './ReporteEppModal'
-import { MOTIVO_ENTREGA_OPTIONS } from '../schemas/eppEntrega.schema'
+import { useEppEntregas } from '@/features/sso/hooks/useEppEntregas'
+import { RegistrarEntregaEppModal } from '@/features/sso/components/RegistrarEntregaEppModal'
+import { ReporteEppModal } from '@/features/sso/components/ReporteEppModal'
+import { MOTIVO_ENTREGA_OPTIONS } from '@/features/sso/schemas/eppEntrega.schema'
 import { formatFecha } from '@/lib/fecha'
-import type { EppEntrega } from '../services/tipos'
+import type { EppEntrega } from '@/features/sso/services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, SgthTable, StatusBadge } from '@/components/ui'
+import { DataState, PageHeader, PageShell, SgthTable, StatusBadge } from '@/components/ui'
 
-export function EntregasEppTab() {
+export function EntregasEppView() {
   const [page, setPage] = useState(1)
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [reporteOpened, { open: openReporte, close: closeReporte }] = useDisclosure(false)
@@ -66,25 +66,34 @@ export function EntregasEppTab() {
   ]
 
   return (
-    <Box>
-      <Group justify="flex-end" mb="md">
-        <Button
-          leftSection={<IconReportAnalytics size={16} />}
-          variant="default"
-          onClick={openReporte}
-        >
-          Lista de EPP entregados
-        </Button>
-        {puedeGestionar && (
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={open}
-          >
-            Registrar movimiento
-          </Button>
-        )}
-      </Group>
+    <PageShell>
+      <PageHeader
+        title="Entregas de EPP"
+        description="Bitácora de entregas, devoluciones y reposiciones de equipo de protección"
+        // La acción principal de la pantalla va aquí y no flotando sobre la
+        // tabla, que es donde estaba (regla 05). El reporte lo ve cualquiera
+        // que entre al módulo; registrar un movimiento, solo quien gestiona.
+        actions={
+          <>
+            <Button
+              leftSection={<IconReportAnalytics size={16} />}
+              variant="default"
+              onClick={openReporte}
+            >
+              Lista de EPP entregados
+            </Button>
+            {puedeGestionar && (
+              <Button
+                leftSection={<IconPlus size={16} />}
+                variant="light"
+                onClick={open}
+              >
+                Registrar movimiento
+              </Button>
+            )}
+          </>
+        }
+      />
       <DataState
         loading={isLoading}
         error={error}
@@ -122,6 +131,6 @@ export function EntregasEppTab() {
         opened={reporteOpened}
         onClose={closeReporte}
       />
-    </Box>
+    </PageShell>
   )
 }

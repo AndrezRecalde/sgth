@@ -1,8 +1,8 @@
 'use client'
 
-import { confirmar, notificar } from '@/components/ui'
+import { confirmar, notificar, PageHeader, PageShell } from '@/components/ui'
 import { useState } from 'react'
-import { Group, Button, Text, Stack } from '@mantine/core'
+import { Button, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
@@ -10,13 +10,13 @@ import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
 import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
-import { useCampaniasAssist, useAssistMutations } from '../hooks/useAssist'
-import { CrearCampaniaAssistModal } from './CrearCampaniaAssistModal'
-import { ResultadosAssistModal } from './ResultadosAssistModal'
-import type { CampaniaAssist } from '../services/assistService'
+import { useCampaniasAssist, useAssistMutations } from '@/features/sso/hooks/useAssist'
+import { CrearCampaniaAssistModal } from '@/features/sso/components/CrearCampaniaAssistModal'
+import { ResultadosAssistModal } from '@/features/sso/components/ResultadosAssistModal'
+import type { CampaniaAssist } from '@/features/sso/services/assistService'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function AssistCampaniasTab() {
+export function AssistCampaniasView() {
   const { data: campanias = [], isLoading, error } = useCampaniasAssist()
   // Las acciones siguen la misma matriz que la API: el módulo se abre con
   // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
@@ -122,18 +122,20 @@ export function AssistCampaniasTab() {
   ]
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" mb="md">
-        <Text size="sm" c="dimmed">
-          Tamizaje anónimo de consumo de sustancias (ASSIST v3.1, OMS/OPS) — Fase 4 del programa de
-          prevención de drogas.
-        </Text>
-        {puedeGestionar && (
-          <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
-            Nueva campaña
-          </Button>
-        )}
-      </Group>
+    <PageShell>
+      <PageHeader
+        title="Tamizaje ASSIST"
+        description="Campañas de tamizaje anónimo de consumo de sustancias (ASSIST v3.1, OMS/OPS) y sus resultados"
+        // El texto que describía la pantalla vivía en un `Text` suelto sobre
+        // la tabla; su sitio es la descripción de la cabecera. Y el botón
+        // `variant="light"`, como el resto de acciones principales del
+        // sistema: era el único del módulo en `filled` (regla 06).
+        actions={puedeGestionar ? (
+        <Button leftSection={<IconPlus size={16} />} variant="light" onClick={openCrear}>
+          Nueva campaña
+        </Button>
+        ) : undefined}
+      />
 
       <DataState
         loading={isLoading}
@@ -158,6 +160,6 @@ export function AssistCampaniasTab() {
         onClose={() => { setCampaniaSeleccionada(null); closeResultados() }}
         campaniaId={campaniaSeleccionada}
       />
-    </Stack>
+    </PageShell>
   )
 }

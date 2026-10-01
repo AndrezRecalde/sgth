@@ -1,8 +1,8 @@
 'use client'
 
-import { confirmar, notificar } from '@/components/ui'
+import { confirmar, notificar, PageHeader, PageShell } from '@/components/ui'
 import { useState } from 'react'
-import { Group, Button, Text, Stack } from '@mantine/core'
+import { Button, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
@@ -10,13 +10,13 @@ import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
 import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
-import { useCampaniasPsicosocial, usePsicosocialMutations } from '../hooks/usePsicosocial'
-import { CrearCampaniaPsicosocialModal } from './CrearCampaniaPsicosocialModal'
-import { ResultadosPsicosocialesModal } from './ResultadosPsicosocialesModal'
-import type { CampaniaPsicosocial } from '../services/psicosocialService'
+import { useCampaniasPsicosocial, usePsicosocialMutations } from '@/features/sso/hooks/usePsicosocial'
+import { CrearCampaniaPsicosocialModal } from '@/features/sso/components/CrearCampaniaPsicosocialModal'
+import { ResultadosPsicosocialesModal } from '@/features/sso/components/ResultadosPsicosocialesModal'
+import type { CampaniaPsicosocial } from '@/features/sso/services/psicosocialService'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function CampaniasPsicosocialTab() {
+export function CampaniasPsicosocialView() {
   const { data: campanias = [], isLoading, error } = useCampaniasPsicosocial()
   // Las acciones siguen la misma matriz que la API: el módulo se abre con
   // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
@@ -122,17 +122,20 @@ export function CampaniasPsicosocialTab() {
   ]
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" mb="md">
-        <Text size="sm" c="dimmed">
-          Cuestionario anónimo de evaluación de riesgo psicosocial (Ministerio del Trabajo, 58 ítems).
-        </Text>
-        {puedeGestionar && (
-          <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
-            Nueva campaña
-          </Button>
-        )}
-      </Group>
+    <PageShell>
+      <PageHeader
+        title="Evaluación Psicosocial"
+        description="Campañas del cuestionario anónimo del Ministerio del Trabajo (58 ítems) y sus resultados"
+        // El texto que describía la pantalla vivía en un `Text` suelto sobre
+        // la tabla; su sitio es la descripción de la cabecera. Y el botón
+        // `variant="light"`, como el resto de acciones principales del
+        // sistema: era el único del módulo en `filled` (regla 06).
+        actions={puedeGestionar ? (
+        <Button leftSection={<IconPlus size={16} />} variant="light" onClick={openCrear}>
+          Nueva campaña
+        </Button>
+        ) : undefined}
+      />
 
       <DataState
         loading={isLoading}
@@ -157,6 +160,6 @@ export function CampaniasPsicosocialTab() {
         onClose={() => { setCampaniaSeleccionada(null); closeResultados() }}
         campaniaId={campaniaSeleccionada}
       />
-    </Stack>
+    </PageShell>
   )
 }

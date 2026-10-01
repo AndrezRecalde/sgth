@@ -1,24 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { Group, TextInput, Button, Text, Alert, Accordion, Stack } from '@mantine/core'
+import { Group, TextInput, Button, Text, Alert, Accordion } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import {
   IconSearch, IconList, IconAlertCircle, IconEdit, IconChecklist,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { DataState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
-import { useListaSeguimientoPrograma } from '../hooks/useProgramaDrogas'
-import { CatalogoActividadesProgramaModal } from './CatalogoActividadesProgramaModal'
-import { RegistrarSeguimientoProgramaModal } from './RegistrarSeguimientoProgramaModal'
-import { TONO_ACTIVIDAD_PROGRAMA, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '../schemas/programaDrogas.schema'
-import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
+import { DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
+import { useListaSeguimientoPrograma } from '@/features/sso/hooks/useProgramaDrogas'
+import { CatalogoActividadesProgramaModal } from '@/features/sso/components/CatalogoActividadesProgramaModal'
+import { RegistrarSeguimientoProgramaModal } from '@/features/sso/components/RegistrarSeguimientoProgramaModal'
+import { TONO_ACTIVIDAD_PROGRAMA, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '@/features/sso/schemas/programaDrogas.schema'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
 import { formatFecha } from '@/lib/fecha'
-import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
+import type { FilaSeguimientoPrograma } from '@/features/sso/services/programaDrogasService'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function ProgramaDrogasTab() {
+export function ProgramaDrogasView() {
   const contained = useContainedInput()
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
@@ -74,23 +74,29 @@ export function ProgramaDrogasTab() {
   ]
 
   return (
-    <Stack gap="md">
+    <PageShell>
+      <PageHeader
+        title="Programa de Prevención de Drogas"
+        description="Matriz de seguimiento de las seis fases del programa (Instructivo MDT-MSP-2019-038)"
+        // El catálogo sale de la `Toolbar`: las acciones de la barra son las
+        // ligadas al filtro —aquí, Consultar—, y abrir el catálogo es la
+        // acción principal de la pantalla (regla 06).
+        actions={puedeGestionar ? (
+          <Button leftSection={<IconList size={16} />} variant="light" onClick={openCatalogo}>
+            Catálogo de actividades
+          </Button>
+        ) : undefined}
+      />
+
       <Toolbar
         actions={
-          <>
-            <Button
-              leftSection={<IconSearch size={16} />}
-              onClick={handleConsultar}
-              disabled={!esPeriodoValido(periodoInput)}
-            >
-              Consultar
-            </Button>
-            {puedeGestionar && (
-              <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
-                Catálogo de actividades
-              </Button>
-            )}
-          </>
+          <Button
+            leftSection={<IconSearch size={16} />}
+            onClick={handleConsultar}
+            disabled={!esPeriodoValido(periodoInput)}
+          >
+            Consultar
+          </Button>
         }
       >
           <TextInput
@@ -178,6 +184,6 @@ export function ProgramaDrogasTab() {
         fila={filaSeleccionada}
         periodo={periodo ?? ''}
       />
-    </Stack>
+    </PageShell>
   )
 }

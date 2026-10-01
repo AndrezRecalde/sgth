@@ -12,13 +12,15 @@ import {
   IconAlertTriangle, IconBed, IconClipboardList, IconSchool, IconHelmet,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useIndicadoresReactivos, useIndicadoresProactivos } from '../hooks/useIndicadoresSso'
-import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
-import { GestionarHorasTrabajadasModal } from './GestionarHorasTrabajadasModal'
-import { DataState, StatCard } from '@/components/ui'
+import { useIndicadoresReactivos, useIndicadoresProactivos } from '@/features/sso/hooks/useIndicadoresSso'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
+import { GestionarHorasTrabajadasModal } from '@/features/sso/components/GestionarHorasTrabajadasModal'
+import { DataState, PageHeader, PageShell, StatCard, Toolbar } from '@/components/ui'
 
-export function IndicadoresSsoTab() {
-  const contained = useContainedInput()
+export function IndicadoresSsoView() {
+  // La variante compacta de 40 px: es una barra de filtros, no un
+  // formulario de captura (regla 06).
+  const compacto = useContainedInput('sm')
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
   const [horasOpened, { open: openHoras, close: closeHoras }] = useDisclosure(false)
@@ -46,17 +48,23 @@ export function IndicadoresSsoTab() {
   }
 
   return (
-    <Box>
-      <Group justify="space-between" mb="md" align="flex-end">
-        <Group align="flex-end">
-          <TextInput
-            label="Período"
-            placeholder={EJEMPLO_PERIODO}
-            description={AYUDA_PERIODO}
-            {...contained}
-            value={periodoInput}
-            onChange={(e) => setPeriodoInput(e.currentTarget.value)}
-          />
+    <PageShell>
+      <PageHeader
+        title="Indicadores SSO"
+        description="Índices reactivos del CD 513 e índices proactivos del período"
+        // Cargar las horas es la acción principal de la pantalla; «Consultar»
+        // pertenece al filtro y se queda en la `Toolbar` (regla 06).
+        actions={puedeGestionar ? (
+          <Button leftSection={<IconClock size={16} />} variant="light" onClick={openHoras}>
+            Horas trabajadas
+          </Button>
+        ) : undefined}
+      />
+
+      {/* En `Toolbar` y no en un `Group` escrito a mano, con la variante
+          compacta de 40 px que la regla 06 pide para las barras de filtro. */}
+      <Toolbar
+        actions={
           <Button
             leftSection={<IconSearch size={16} />}
             onClick={handleConsultar}
@@ -64,13 +72,17 @@ export function IndicadoresSsoTab() {
           >
             Consultar
           </Button>
-        </Group>
-        {puedeGestionar && (
-          <Button leftSection={<IconClock size={16} />} variant="default" onClick={openHoras}>
-            Horas trabajadas
-          </Button>
-        )}
-      </Group>
+        }
+      >
+        <TextInput
+          label="Período"
+          placeholder={EJEMPLO_PERIODO}
+          description={AYUDA_PERIODO}
+          {...compacto}
+          value={periodoInput}
+          onChange={(e) => setPeriodoInput(e.currentTarget.value)}
+        />
+      </Toolbar>
 
       {!periodo && (
         <Alert icon={<IconAlertCircle size={18} />} color="ocean" variant="light">
@@ -181,6 +193,6 @@ export function IndicadoresSsoTab() {
       )}
 
       <GestionarHorasTrabajadasModal opened={horasOpened} onClose={closeHoras} />
-    </Box>
+    </PageShell>
   )
 }
