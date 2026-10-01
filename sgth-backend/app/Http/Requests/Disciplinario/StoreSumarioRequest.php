@@ -16,7 +16,10 @@ class StoreSumarioRequest extends FormRequest
         return [
             'servidor_id'    => ['required', 'integer', 'exists:servidores,id'],
             'motivo'         => ['required', 'string', 'max:2000'],
-            'fecha_apertura' => ['nullable', 'date'],
+            // Un sumario no se abre en el futuro, y si se abriera, el límite
+            // de notificación quedaría también en el futuro y
+            // `controlarPlazosLegales()` no lo vería caducar nunca.
+            'fecha_apertura' => ['nullable', 'date', 'before_or_equal:today'],
         ];
     }
 
@@ -25,6 +28,7 @@ class StoreSumarioRequest extends FormRequest
         return [
             'servidor_id.required' => 'Seleccione el servidor sumariado.',
             'motivo.required'      => 'El motivo del sumario es obligatorio.',
+            'fecha_apertura.before_or_equal' => 'El sumario no puede abrirse con una fecha futura.',
         ];
     }
 }

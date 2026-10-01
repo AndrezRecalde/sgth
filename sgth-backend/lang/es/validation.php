@@ -275,6 +275,25 @@ return [
         'documento' => 'documento',
         'archivo' => 'archivo',
 
+        // Régimen disciplinario
+        'tipo_falta' => 'gravedad de la falta',
+        'tipo_sancion' => 'sanción',
+        'porcentaje_multa' => 'porcentaje de la multa',
+        'dias_suspension' => 'días de suspensión',
+        'fecha_apertura' => 'fecha de apertura',
+        'fecha_solicitud' => 'fecha de la solicitud',
+        'fecha_notificacion' => 'fecha de notificación',
+        'fecha_resolucion' => 'fecha de la resolución',
+        'fecha_informe' => 'fecha del informe',
+        'fecha_termino_prueba' => 'fecha de término del período de prueba',
+        'causal' => 'causal del Art. 172 del Código del Trabajo',
+        'hechos' => 'fundamento de hecho',
+        'resolucion_detalle' => 'detalle de la resolución del Inspector',
+        'numero_tramite_mdt' => 'número de trámite del Ministerio del Trabajo',
+        'inspectoria' => 'inspectoría',
+        'inspector_nombre' => 'nombre del Inspector',
+        'documento_respaldo' => 'documento de respaldo',
+
         // Salud y dispensario
         'tiene_discapacidad' => 'condición de discapacidad',
         'tiene_enfermedad_catastrofica' => 'condición de enfermedad catastrófica',

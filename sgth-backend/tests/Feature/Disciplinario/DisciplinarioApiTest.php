@@ -88,6 +88,19 @@ function abrirSumarios(callable $servidorDe, int $cuantos): void
     }
 }
 
+/** Un sumario listo para resolver: con el informe del instructor presentado. */
+function sumarioConInforme(callable $servidorDe, int $n): Sumario
+{
+    return Sumario::create([
+        'servidor_id'    => $servidorDe($n)->id,
+        'motivo'         => "Sumario a resolver $n",
+        'estado'         => EstadoSumario::CON_INFORME,
+        'fecha_apertura' => '2026-02-02',
+        'notificado_sn'  => true,
+        'fecha_informe'  => '2026-02-20',
+    ]);
+}
+
 test('el listado de sumarios pagina de 15 en 15 por defecto', function () {
     abrirSumarios($this->servidor, 20);
 
@@ -189,6 +202,143 @@ test('un sumario ya resuelto no se vuelve a resolver', function () {
             'tipo_sancion' => 'amonestacion_escrita',
         ])
         ->assertStatus(422);
+});
+
+test('un sumario apelado no se vuelve a resolver', function () {
+    $sumario = Sumario::create([
+        'servidor_id'    => ($this->servidor)(92)->id,
+        'motivo'         => 'Falta grave',
+        'estado'         => EstadoSumario::APELADO,
+        'fecha_apertura' => '2026-02-02',
+        'notificado_sn'  => true,
+    ]);
+
+    // Antes pasaba el guard de estado y moría en el índice único de
+    // `sanciones_disciplinarias.sumario_id` con un error de SQL.
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'   => 'grave',
+            'tipo_sancion' => 'amonestacion_escrita',
+        ])
+        ->assertStatus(422);
+
+    expect($sumario->fresh()->estado)->toBe(EstadoSumario::APELADO)
+        ->and($sumario->fresh()->sancion)->toBeNull();
+});
+
+// ── Validación de la sanción ────────────────────────────────────
+
+test('una multa sin porcentaje se rechaza con el error en su campo', function () {
+    $sumario = sumarioConInforme($this->servidor, 93);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'   => 'grave',
+            'tipo_sancion' => 'multa',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('errores.porcentaje_multa.0', 'Una multa necesita su porcentaje de la remuneración.');
+});
+
+test('una suspensión sin días se rechaza con el error en su campo', function () {
+    $sumario = sumarioConInforme($this->servidor, 94);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'   => 'grave',
+            'tipo_sancion' => 'suspension',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('errores.dias_suspension.0', 'Una suspensión necesita sus días.');
+});
+
+test('no se guardan días de suspensión en una multa', function () {
+    $sumario = sumarioConInforme($this->servidor, 95);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'       => 'grave',
+            'tipo_sancion'     => 'multa',
+            'porcentaje_multa' => 5,
+            'dias_suspension'  => 10,
+        ])
+        ->assertStatus(422)
+        // El API nombra el saco de errores `errores`, no `errors`, así que
+        // `assertJsonValidationErrors` no lo encuentra.
+        ->assertJsonStructure(['errores' => ['dias_suspension']]);
+});
+
+test('los topes del Art. 43 de la LOSEP se respetan', function () {
+    $sumario = sumarioConInforme($this->servidor, 96);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'       => 'muy_grave',
+            'tipo_sancion'     => 'multa',
+            'porcentaje_multa' => 15,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'errores.porcentaje_multa.0',
+            'La multa no puede exceder el 10% de la remuneración según el Art. 43 de la LOSEP.'
+        );
+
+    $otro = sumarioConInforme($this->servidor, 97);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$otro->id}/resolver", [
+            'tipo_falta'      => 'muy_grave',
+            'tipo_sancion'    => 'suspension',
+            'dias_suspension' => 45,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'errores.dias_suspension.0',
+            'La suspensión no puede exceder los 30 días según el Art. 43 de la LOSEP.'
+        );
+});
+
+test('el error de un catálogo nombra el campo en español', function () {
+    $sumario = sumarioConInforme($this->servidor, 98);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'   => 'gravisima',
+            'tipo_sancion' => 'amonestacion_escrita',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'errores.tipo_falta.0',
+            'El valor del campo gravedad de la falta no está en el catálogo.'
+        );
+});
+
+// ── Fechas ──────────────────────────────────────────────────────
+
+test('un sumario no se abre con fecha futura', function () {
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson('/api/v1/disciplinario/sumarios', [
+            'servidor_id'    => ($this->servidor)(99)->id,
+            'motivo'         => 'Motivo cualquiera',
+            'fecha_apertura' => now()->addWeek()->toDateString(),
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('errores.fecha_apertura.0', 'El sumario no puede abrirse con una fecha futura.');
+});
+
+test('un visto bueno no se solicita con fecha futura', function () {
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson('/api/v1/disciplinario/vistos-buenos', [
+            'servidor_id'     => ($this->servidor)(100)->id,
+            'causal'          => 'indisciplina_desobediencia',
+            'hechos'          => 'Desobediencia reiterada a los reglamentos internos.',
+            'fecha_solicitud' => now()->addWeek()->toDateString(),
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'errores.fecha_solicitud.0',
+            'La solicitud no puede presentarse con una fecha futura.'
+        );
 });
 
 test('el filtro por estado recorta el listado y el total', function () {
