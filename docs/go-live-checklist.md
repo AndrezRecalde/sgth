@@ -42,7 +42,7 @@
 □ scheduler corriendo con restart:unless-stopped
 □ php artisan queue:restart ejecutado tras deploy
 □ Verificar que jobs de nómina procesan correctamente
-□ php artisan schedule:list muestra las 9 tareas registradas
+□ php artisan schedule:list muestra las 11 tareas registradas
   (si el número no cuadra, manda schedule:list y no este documento;
   docs/scheduler.md las lista una por una)
 □ Logs del contenedor scheduler muestran ejecuciones cada minuto
@@ -86,21 +86,55 @@
   (o POST /api/v1/asistencia/periodos-vacaciones/generar-todos
   con {"anio": <año>})
   Sin esto no se puede confirmar ningún permiso PERSONAL de un
-  servidor LOSEP: esas horas se descuentan del saldo de vacaciones,
-  y sin período abierto no hay de dónde descontarlas. Recepción ve
-  el rechazo, el permiso se queda en pendiente, y pasados los tres
-  días hábiles de plazo VencerPermisosJob lo marca como falta
-  injustificada.
+  servidor LOSEP ni del Código del Trabajo: esas horas se descuentan
+  del saldo de vacaciones, y sin período abierto no hay de dónde
+  descontarlas. Recepción ve el rechazo, el permiso se queda en
+  pendiente, y pasados los tres días hábiles de plazo
+  VencerPermisosJob lo marca como falta injustificada.
+  El Código del Trabajo entró aquí el 2026-09-30 (#225): antes ni
+  siquiera podía pedir permisos, así que sus períodos no hacían falta
+  para esto. Ahora sí.
   La tarea generar-periodos-vacaciones solo corre el 1 de enero, así
   que si el go-live cae cualquier otro día hay que hacerlo a mano
   esta vez.
   Se puede repetir sin miedo: no fuerza nada, deja intactos los
   períodos ya cerrados, y omite a los regímenes que no generan
   vacaciones.
-□ Verificado sobre un servidor LOSEP real: crear un permiso PERSONAL
-  y confirmarlo. Es lo que prueba que el punto anterior quedó bien;
-  la lista de períodos puede verse llena y aun así faltar el del año
-  en curso para quien ingresó hace poco.
+□ Verificado sobre un servidor LOSEP real Y sobre uno del Código del
+  Trabajo: crear un permiso PERSONAL y confirmarlo. Es lo que prueba
+  que el punto anterior quedó bien; la lista de períodos puede verse
+  llena y aun así faltar el del año en curso para quien ingresó hace
+  poco. Los dos regímenes se comprueban por separado porque el del
+  Código del Trabajo es nuevo y nadie lo ha ejercido todavía.
+
+## AVISAR ANTES DE ABRIR — cambios que sorprenden
+Dos cambios del 2026-09-30 alteran lo que la gente ya daba por sabido.
+Ninguno es un fallo: los dos los pidió Talento Humano. Pero si nadie
+los anuncia, el primer día se leen como si el sistema se hubiera roto.
+
+□ Los obreros del Código del Trabajo empiezan a consumir saldo de
+  vacaciones con sus permisos personales (#225)
+  Hasta ahora no podían ni pedirlos. Desde el despliegue piden como
+  cualquiera, y cada permiso PERSONAL les descuenta del saldo igual
+  que a un LOSEP: se les exige período abierto y saldo suficiente, y
+  sin eso Recepción no puede confirmar.
+  Avisar a Talento Humano y a Recepción ANTES de abrir, no cuando
+  alguien se quede en ventanilla con el papel en la mano.
+
+□ El Consolidado de permisos deja de contar a quien no marca (#226)
+  Desde el despliegue solo salen los servidores con la marcación
+  habilitada, en Personal, Oficial y Calamidad. Enfermedad queda
+  exenta a propósito: ese informe alimenta el indicador de Ausentismo
+  por Enfermedad de Riesgos Laborales, y la ausencia existió marque o
+  no.
+  Consecuencia concreta: un LOSEP con la marcación apagada que SÍ
+  aparecía antes deja de aparecer, también al volver a sacar un mes
+  ya cerrado. Quien compare con un consolidado impreso antes del
+  despliegue no va a cuadrar, y el informe no explica por qué.
+  Vale la pena mirar cuántos son antes de abrir:
+    SELECT COUNT(*) FROM servidores
+    WHERE estado = true AND puede_marcar = false
+      AND regimen_laboral IN ('losep','codigo_trabajo');
 
 ## CAPACITACIÓN
 □ Personal de TI capacitado en administración del sistema
