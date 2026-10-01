@@ -142,6 +142,55 @@ test('el listado de vistos buenos pagina de 15 en 15 por defecto', function () {
         ->and($pagina['data'])->toHaveCount(15);
 });
 
+// ── Resolución ──────────────────────────────────────────────────
+
+test('resolver un sumario por HTTP impone la sanción y lo deja resuelto', function () {
+    $sumario = Sumario::create([
+        'servidor_id'    => ($this->servidor)(90)->id,
+        'motivo'         => 'Atraso reiterado',
+        'estado'         => EstadoSumario::CON_INFORME,
+        'fecha_apertura' => '2026-02-02',
+        'notificado_sn'  => true,
+        'fecha_informe'  => '2026-02-20',
+    ]);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'       => 'grave',
+            'tipo_sancion'     => 'multa',
+            'porcentaje_multa' => 7.5,
+            'fecha_efectiva'   => '2026-02-25',
+            'observaciones'    => 'Resolución 2026-014 de la autoridad nominadora.',
+        ])
+        ->assertStatus(200);
+
+    $sumario->refresh()->load('sancion');
+
+    expect($sumario->estado)->toBe(EstadoSumario::RESUELTO)
+        ->and($sumario->fecha_resolucion)->not->toBeNull()
+        ->and($sumario->sancion)->not->toBeNull()
+        ->and($sumario->sancion->tipo_sancion->value)->toBe('multa')
+        ->and((float) $sumario->sancion->porcentaje_multa)->toBe(7.5)
+        ->and($sumario->sancion->fecha_efectiva->toDateString())->toBe('2026-02-25');
+});
+
+test('un sumario ya resuelto no se vuelve a resolver', function () {
+    $sumario = Sumario::create([
+        'servidor_id'    => ($this->servidor)(91)->id,
+        'motivo'         => 'Falta grave',
+        'estado'         => EstadoSumario::RESUELTO,
+        'fecha_apertura' => '2026-02-02',
+        'notificado_sn'  => true,
+    ]);
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
+            'tipo_falta'   => 'leve',
+            'tipo_sancion' => 'amonestacion_escrita',
+        ])
+        ->assertStatus(422);
+});
+
 test('el filtro por estado recorta el listado y el total', function () {
     abrirSumarios($this->servidor, 4);
 

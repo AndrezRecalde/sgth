@@ -1,25 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Select, Stack, Text } from '@mantine/core'
+import { Button, Select, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconArrowRight, IconGavel, IconPlus } from '@tabler/icons-react'
-import type { DataTableColumn } from 'mantine-datatable'
 import {
-  DataState, PAGINACION_ES, SgthTable, StatusBadge, TableActions, Toolbar,
+  IconArrowRight, IconFolderOff, IconGavel, IconPlus, IconScaleOutline,
+} from '@tabler/icons-react'
+import {
+  DataState, PAGINACION_ES, SgthTable, Toolbar, confirmar, type TableAction,
 } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSumarios } from '../hooks/useDisciplinario'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
 import { SumarioModal } from './SumarioModal'
+import { ResolverSumarioModal } from './ResolverSumarioModal'
+import { columnasSumario } from './sumarios.columns'
 import {
-  TONO_SUMARIO,
   ESTADO_SUMARIO_LABELS,
-  SIGUIENTE_HITO_SUMARIO,
-  TIPO_SANCION_LABELS,
+  TRANSICIONES_SUMARIO,
   nombreServidor,
+  puedeResolverse,
+  siguienteHito,
 } from '../utils/etiquetas'
-import { formatFecha } from '@/lib/fecha'
 import type { EstadoSumario, Sumario } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_SUMARIO_LABELS) as EstadoSumario[])
@@ -32,6 +34,8 @@ export function SumariosTab() {
   const [estado, setEstado] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [modalOpened, { open, close }] = useDisclosure(false)
+  const [aResolver, setAResolver] = useState<Sumario | null>(null)
+  const [resolverOpened, { open: openResolver, close: closeResolver }] = useDisclosure(false)
 
   // Cambiar el filtro sin volver a la primera página consultaría esa misma
   // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
@@ -50,80 +54,72 @@ export function SumariosTab() {
 
   const { avanzarSumario } = useDisciplinarioMutations()
 
-  const columns: DataTableColumn<Sumario>[] = [
-    {
-      accessor: 'servidor',
-      title: 'Servidor',
-      render: (s) => (
-        <div>
-          <Text size="sm" fw={500}>{nombreServidor(s.servidor)}</Text>
-          <Text size="xs" c="dimmed">{s.servidor?.cedula ?? '—'}</Text>
-        </div>
-      ),
-    },
-    {
-      accessor: 'motivo',
-      title: 'Motivo',
-      render: (s) => (
-        <Text size="sm" lineClamp={2}>{s.motivo}</Text>
-      ),
-    },
-    {
-      accessor: 'fecha_apertura',
-      title: 'Apertura',
-      width: 110,
-      render: (s) => <Text size="sm">{formatFecha(s.fecha_apertura)}</Text>,
-    },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      width: 140,
-      render: (s) => (
-        <StatusBadge tone={TONO_SUMARIO[s.estado]}>
-          {ESTADO_SUMARIO_LABELS[s.estado]}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'sancion',
-      title: 'Sanción',
-      width: 150,
-      render: (s) => s.sancion
-        ? (
-          <StatusBadge
-            tone={s.sancion.tipo_sancion === 'destitucion' ? 'danger' : 'neutral'}
-          >
-            {TIPO_SANCION_LABELS[s.sancion.tipo_sancion]}
-          </StatusBadge>
-        )
-        : <Text size="sm" c="dimmed">—</Text>,
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (s) => {
-        const siguiente = SIGUIENTE_HITO_SUMARIO[s.estado]
+  const abrirResolucion = (sumario: Sumario) => {
+    setAResolver(sumario)
+    openResolver()
+  }
 
-        if (!siguiente) return null
+  const cerrar = (sumario: Sumario) => confirmar({
+    title: 'Cerrar el sumario',
+    message: (
+      <>
+        El sumario de <b>{nombreServidor(sumario.servidor)}</b> quedará cerrado
+        sin sanción y no admitirá más trámite. No se puede deshacer.
+      </>
+    ),
+    confirmLabel: 'Cerrar sumario',
+    destructiva: true,
+    onConfirm: () => avanzarSumario.mutate({
+      id: sumario.id,
+      data: { estado: 'cerrado' },
+    }),
+  })
 
-        return (
-          <TableActions
-            actions={[
-              {
-                label: `Avanzar a ${ESTADO_SUMARIO_LABELS[siguiente]}`,
-                icon: <IconArrowRight size={14} />,
-                onClick: () => avanzarSumario.mutate({
-                  id: s.id,
-                  data: { estado: siguiente },
-                }),
-              },
-            ]}
-          />
-        )
+  /**
+   * Las acciones salen del grafo de transiciones, no de una lista escrita
+   * aparte: avanzar al hito que sigue, resolver imponiendo la sanción, dejar
+   * constancia de la apelación, o cerrar sin sanción.
+   */
+  const accionesDe = (s: Sumario): TableAction[] => {
+    const siguiente = siguienteHito(s.estado)
+    const transiciones = TRANSICIONES_SUMARIO[s.estado]
+
+    return [
+      {
+        label: siguiente ? `Avanzar a ${ESTADO_SUMARIO_LABELS[siguiente]}` : 'Avanzar',
+        icon: <IconArrowRight size={14} />,
+        hidden: !siguiente,
+        disabled: avanzarSumario.isPending,
+        onClick: () => siguiente && avanzarSumario.mutate({
+          id: s.id,
+          data: { estado: siguiente },
+        }),
       },
-    },
-  ]
+      {
+        label: 'Resolver e imponer sanción',
+        icon: <IconScaleOutline size={14} />,
+        hidden: !puedeResolverse(s.estado),
+        onClick: () => abrirResolucion(s),
+      },
+      {
+        label: 'Registrar apelación',
+        icon: <IconArrowRight size={14} />,
+        hidden: !transiciones.includes('apelado'),
+        disabled: avanzarSumario.isPending,
+        onClick: () => avanzarSumario.mutate({ id: s.id, data: { estado: 'apelado' } }),
+      },
+      {
+        label: 'Cerrar sin sanción',
+        icon: <IconFolderOff size={14} />,
+        color: 'red',
+        hidden: !transiciones.includes('cerrado'),
+        disabled: avanzarSumario.isPending,
+        onClick: () => cerrar(s),
+      },
+    ]
+  }
+
+  const columns = columnasSumario(accionesDe)
 
   return (
     <Stack gap="md">
@@ -175,6 +171,11 @@ export function SumariosTab() {
       </DataState>
 
       <SumarioModal opened={modalOpened} onClose={close} />
+      <ResolverSumarioModal
+        opened={resolverOpened}
+        onClose={closeResolver}
+        sumario={aResolver}
+      />
     </Stack>
   )
 }

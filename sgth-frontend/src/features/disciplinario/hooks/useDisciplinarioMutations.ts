@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   disciplinarioService,
   type AvanzarSumarioData,
+  type ResolverSumarioData,
   type TransicionarVistoBuenoData,
 } from '../services/disciplinarioService'
 import type { SumarioFormData, VistoBuenoFormData } from '@/types/api'
@@ -43,6 +44,21 @@ export function useDisciplinarioMutations() {
     onError: notificar.alFallar('No se pudo registrar el avance del sumario'),
   })
 
+  const resolverSumario = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ResolverSumarioData }) =>
+      disciplinarioService.resolverSumario(id, data),
+    onSuccess: (_data, variables) => {
+      exito(
+        'Sumario resuelto',
+        variables.data.tipo_sancion === 'destitucion'
+          ? 'Se impuso la destitución y se generó la Cesación de Funciones en borrador para revisión de Talento Humano.'
+          : 'Se impuso la sanción y quedó registrada en el expediente.',
+      )
+      invalidarSumarios()
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo resolver el sumario'),
+  })
+
   const crearVistoBueno = useMutation({
     mutationFn: (data: VistoBuenoFormData) => disciplinarioService.crearVistoBueno(data),
     onSuccess: () => {
@@ -67,5 +83,11 @@ export function useDisciplinarioMutations() {
     onError: notificar.alFallar('No se pudo actualizar el trámite de visto bueno'),
   })
 
-  return { crearSumario, avanzarSumario, crearVistoBueno, transicionarVistoBueno }
+  return {
+    crearSumario,
+    avanzarSumario,
+    resolverSumario,
+    crearVistoBueno,
+    transicionarVistoBueno,
+  }
 }
