@@ -8,27 +8,24 @@ import {
 import type { SumarioFormData, VistoBuenoFormData } from '@/types/api'
 import { notificar } from '@/components/ui'
 
-function exito(title: string, message: string) {
-  notificar.exito(title, message)
-}
-
 export function useDisciplinarioMutations() {
   const qc = useQueryClient()
 
-  const invalidarSumarios = () => {
-    qc.invalidateQueries({ queryKey: ['sumarios'] })
-    qc.invalidateQueries({ queryKey: ['movimientos'] })
-  }
+  const invalidarSumarios = () => qc.invalidateQueries({ queryKey: ['sumarios'] })
 
-  const invalidarVistosBuenos = () => {
-    qc.invalidateQueries({ queryKey: ['vistos-buenos'] })
-    qc.invalidateQueries({ queryKey: ['movimientos'] })
-  }
+  const invalidarVistosBuenos = () => qc.invalidateQueries({ queryKey: ['vistos-buenos'] })
+
+  /**
+   * Las acciones de personal solo cambian cuando el acto genera una cesación:
+   * resolver un sumario con destitución y conceder un visto bueno. Abrir un
+   * sumario o avanzarlo de hito no toca ninguna, y antes las invalidaba igual.
+   */
+  const invalidarMovimientos = () => qc.invalidateQueries({ queryKey: ['movimientos'] })
 
   const crearSumario = useMutation({
     mutationFn: (data: SumarioFormData) => disciplinarioService.crearSumario(data),
     onSuccess: () => {
-      exito('Sumario abierto', 'El sumario administrativo fue registrado.')
+      notificar.exito('Sumario abierto', 'El sumario administrativo fue registrado.')
       invalidarSumarios()
     },
     onError: notificar.alFallar('No se pudo abrir el sumario'),
@@ -38,7 +35,7 @@ export function useDisciplinarioMutations() {
     mutationFn: ({ id, data }: { id: number; data: AvanzarSumarioData }) =>
       disciplinarioService.avanzarSumario(id, data),
     onSuccess: () => {
-      exito('Sumario actualizado', 'Se registró el avance procesal.')
+      notificar.exito('Sumario actualizado', 'Se registró el avance procesal.')
       invalidarSumarios()
     },
     onError: notificar.alFallar('No se pudo registrar el avance del sumario'),
@@ -48,13 +45,16 @@ export function useDisciplinarioMutations() {
     mutationFn: ({ id, data }: { id: number; data: ResolverSumarioData }) =>
       disciplinarioService.resolverSumario(id, data),
     onSuccess: (_data, variables) => {
-      exito(
+      const destituye = variables.data.tipo_sancion === 'destitucion'
+
+      notificar.exito(
         'Sumario resuelto',
-        variables.data.tipo_sancion === 'destitucion'
+        destituye
           ? 'Se impuso la destitución y se generó la Cesación de Funciones en borrador para revisión de Talento Humano.'
           : 'Se impuso la sanción y quedó registrada en el expediente.',
       )
       invalidarSumarios()
+      if (destituye) invalidarMovimientos()
     },
     onError: notificar.alFallarSalvoCampos('No se pudo resolver el sumario'),
   })
@@ -62,7 +62,7 @@ export function useDisciplinarioMutations() {
   const crearVistoBueno = useMutation({
     mutationFn: (data: VistoBuenoFormData) => disciplinarioService.crearVistoBueno(data),
     onSuccess: () => {
-      exito('Visto bueno solicitado', 'El trámite quedó registrado.')
+      notificar.exito('Visto bueno solicitado', 'El trámite quedó registrado.')
       invalidarVistosBuenos()
     },
     onError: notificar.alFallar('No se pudo solicitar el visto bueno'),
@@ -72,13 +72,17 @@ export function useDisciplinarioMutations() {
     mutationFn: ({ id, data }: { id: number; data: TransicionarVistoBuenoData }) =>
       disciplinarioService.transicionarVistoBueno(id, data),
     onSuccess: (_data, variables) => {
-      exito(
+      const concede = variables.data.estado === 'concedido'
+
+      notificar.exito(
         'Trámite actualizado',
-        variables.data.estado === 'concedido'
+        concede
           ? 'Se generó la Cesación de Funciones en borrador para revisión de Talento Humano.'
           : 'Se registró el avance del trámite.',
       )
       invalidarVistosBuenos()
+      // Impugnar también la toca: le deja el aviso en la descripción.
+      if (concede || variables.data.estado === 'impugnado') invalidarMovimientos()
     },
     onError: notificar.alFallar('No se pudo actualizar el trámite de visto bueno'),
   })

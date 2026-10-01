@@ -5,15 +5,12 @@ namespace App\Models\Disciplinario;
 use App\Enums\EstadoSumario;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
-use App\Observers\Disciplinario\SumarioObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[ObservedBy(SumarioObserver::class)]
 class Sumario extends Model
 {
     use HasFactory, SoftDeletes;

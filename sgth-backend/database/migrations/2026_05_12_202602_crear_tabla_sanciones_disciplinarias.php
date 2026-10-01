@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('sanciones_disciplinarias', function (Blueprint $table) {
             $table->id();
-            
+
             $table->foreignId('sumario_id')->unique()->constrained('sumarios')->onDelete('cascade');
-            
+
             $table->enum('tipo_falta', ['leve', 'grave', 'muy_grave']);
-            
+
             $table->enum('tipo_sancion', [
                 'amonestacion_verbal',
                 'amonestacion_escrita',
@@ -22,13 +22,13 @@ return new class extends Migration
                 'suspension',
                 'destitucion'
             ]);
-            
+
             $table->decimal('porcentaje_multa', 5, 2)->nullable(); // Max 10.00
             $table->integer('dias_suspension')->nullable(); // Max 30
-            
+
             $table->date('fecha_efectiva');
             $table->text('observaciones')->nullable();
-            
+
             // Campos estándar
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
