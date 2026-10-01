@@ -27,7 +27,7 @@ export function useFactorRiesgoMutations() {
       notificar.exito('Factor de riesgo registrado', 'El factor fue agregado al catálogo.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar el factor de riesgo'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el factor de riesgo'),
   })
 
   // Retirar un factor del catálogo sin borrarlo: el borrado está bloqueado en

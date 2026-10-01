@@ -29,7 +29,7 @@ export function useNormativaMutations() {
       notificar.exito('Normativa registrada', 'La normativa fue agregada al catálogo.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la normativa'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la normativa'),
   })
 
   // Retirar una normativa del catálogo sin borrar su historial: es lo que la

@@ -15,6 +15,7 @@ import {
 } from '../schemas/factorRiesgo.schema'
 import type { FactorRiesgoCatalogo } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -31,7 +32,7 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
   const { crear, cambiarActivo, eliminar } = useFactorRiesgoMutations()
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<FactorRiesgoFormData>({
     resolver: zodResolver(factorRiesgoSchema) as Resolver<FactorRiesgoFormData>,
@@ -42,7 +43,13 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     CATEGORIA_FACTOR_OPTIONS.find(o => o.value === valor)?.label ?? valor
 
   const onSubmit = (values: FactorRiesgoFormData) => {
-    crear.mutateAsync(values).then(() => reset({ nombre: '', categoria: values.categoria })).catch(() => {})
+    crear.mutateAsync(values).then(() => reset({ nombre: '', categoria: values.categoria })).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof FactorRiesgoFormData, { message: mensaje })
+      }
+    })
   }
 
   const columns: DataTableColumn<FactorRiesgoCatalogo>[] = [

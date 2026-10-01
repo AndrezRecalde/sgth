@@ -45,7 +45,7 @@ export function useProgramaDrogasMutations() {
       )
       invalidarActividades()
     },
-    onError: notificar.alFallar('No se pudo registrar la actividad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la actividad'),
   })
 
   // Retirar una actividad de la matriz sin borrar su seguimiento: es lo que la
@@ -87,7 +87,7 @@ export function useProgramaDrogasMutations() {
       notificar.exito('Seguimiento registrado', 'El estado de la actividad fue actualizado.')
       invalidarSeguimiento()
     },
-    onError: notificar.alFallar('No se pudo registrar el seguimiento'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el seguimiento'),
   })
 
   return { crearActividad, cambiarActivoActividad, eliminarActividad, registrarSeguimiento }

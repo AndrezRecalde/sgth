@@ -38,7 +38,7 @@ export function useEquipoProteccionMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar el equipo'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el equipo'),
   })
 
   const editar = useMutation({
@@ -48,7 +48,7 @@ export function useEquipoProteccionMutations() {
       notificar.exito('Equipo actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar el equipo'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar el equipo'),
   })
 
   const eliminar = useMutation({

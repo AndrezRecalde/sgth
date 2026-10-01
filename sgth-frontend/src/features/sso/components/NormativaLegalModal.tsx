@@ -17,6 +17,7 @@ import {
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { NormativaLegalSso } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -32,7 +33,7 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
   const { crear, cambiarActivo, eliminar } = useNormativaMutations()
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<NormativaLegalFormData>({
     resolver: zodResolver(normativaLegalSchema) as Resolver<NormativaLegalFormData>,
@@ -43,7 +44,13 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
     TIPO_NORMATIVA_OPTIONS.find(o => o.value === valor)?.label ?? valor
 
   const onSubmit = (values: NormativaLegalFormData) => {
-    crear.mutateAsync(values).then(() => reset({ nombre: '', tipo: values.tipo, fecha_vigencia: '', descripcion: '' })).catch(() => {})
+    crear.mutateAsync(values).then(() => reset({ nombre: '', tipo: values.tipo, fecha_vigencia: '', descripcion: '' })).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof NormativaLegalFormData, { message: mensaje })
+      }
+    })
   }
 
   const columns: DataTableColumn<NormativaLegalSso>[] = [

@@ -14,6 +14,7 @@ import {
   equipoProteccionSchema, type EquipoProteccionFormData, TIPO_EPP_OPTIONS,
 } from '../schemas/equipoProteccion.schema'
 import type { EquipoProteccion } from '../services/tipos'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -31,6 +32,7 @@ export function EquipoProteccionModal({ opened, onClose, equipo }: Props) {
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<EquipoProteccionFormData>({
     resolver: zodResolver(equipoProteccionSchema) as Resolver<EquipoProteccionFormData>,
@@ -64,7 +66,13 @@ export function EquipoProteccionModal({ opened, onClose, equipo }: Props) {
     const mutation = isEditing
       ? editar.mutateAsync({ id: equipo!.id, data: values })
       : crear.mutateAsync(values)
-    mutation.then(handleClose).catch(() => {})
+    mutation.then(handleClose).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof EquipoProteccionFormData, { message: mensaje })
+      }
+    })
   }
 
   const isPending = crear.isPending || editar.isPending

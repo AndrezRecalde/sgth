@@ -15,6 +15,7 @@ import {
 } from '../schemas/programaDrogas.schema'
 import type { ProgramaDrogaActividad } from '../services/programaDrogasService'
 import type { DataTableColumn } from 'mantine-datatable'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -31,7 +32,7 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
   const { crearActividad, cambiarActivoActividad, eliminarActividad } = useProgramaDrogasMutations()
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<ActividadProgramaFormData>({
     resolver: zodResolver(actividadProgramaSchema) as Resolver<ActividadProgramaFormData>,
@@ -42,7 +43,13 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
     FASE_PROGRAMA_DROGAS_OPTIONS.find(o => o.value === valor)?.label ?? valor
 
   const onSubmit = (values: ActividadProgramaFormData) => {
-    crearActividad.mutateAsync(values).then(() => reset({ nombre: '', fase: values.fase, descripcion: '' })).catch(() => {})
+    crearActividad.mutateAsync(values).then(() => reset({ nombre: '', fase: values.fase, descripcion: '' })).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof ActividadProgramaFormData, { message: mensaje })
+      }
+    })
   }
 
   const columns: DataTableColumn<ProgramaDrogaActividad>[] = [
