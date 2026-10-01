@@ -3,30 +3,19 @@
 import { useState } from 'react'
 import { Button, Select, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import {
-  IconArrowRight, IconFolderOff, IconGavel, IconPlus, IconScaleOutline,
-} from '@tabler/icons-react'
-import {
-  DataState, PAGINACION_ES, SgthTable, Toolbar, confirmar, type TableAction,
-} from '@/components/ui'
+import { IconGavel, IconPlus } from '@tabler/icons-react'
+import { DataState, PAGINACION_ES, SgthTable, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSumarios } from '../hooks/useDisciplinario'
-import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
+import { useAccionesSumario } from '../hooks/useAccionesSumario'
 import { SumarioModal } from './SumarioModal'
 import { ResolverSumarioModal } from './ResolverSumarioModal'
-import {
-  AvanzarHitoModal, esHitoConFecha, type HitoConFecha,
-} from './AvanzarHitoModal'
+import { AvanzarHitoModal } from './AvanzarHitoModal'
+import { SumarioDetalleDrawer } from './SumarioDetalleDrawer'
 import { columnasSumario } from './sumarios.columns'
-import {
-  ESTADO_SUMARIO_LABELS,
-  TRANSICIONES_SUMARIO,
-  nombreServidor,
-  puedeResolverse,
-  siguienteHito,
-} from '../utils/etiquetas'
+import { ESTADO_SUMARIO_LABELS } from '../utils/etiquetas'
 import classes from './filtros.module.css'
-import type { EstadoSumario, Sumario } from '@/types/api'
+import type { EstadoSumario } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_SUMARIO_LABELS) as EstadoSumario[])
   .map((e) => ({ value: e, label: ESTADO_SUMARIO_LABELS[e] }))
@@ -39,10 +28,9 @@ export function SumariosTab() {
   const [estado, setEstado] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [modalOpened, { open, close }] = useDisclosure(false)
-  const [aResolver, setAResolver] = useState<Sumario | null>(null)
-  const [resolverOpened, { open: openResolver, close: closeResolver }] = useDisclosure(false)
-  const [aAvanzar, setAAvanzar] = useState<{ sumario: Sumario; destino: HitoConFecha } | null>(null)
-  const [avanzarOpened, { open: openAvanzar, close: closeAvanzar }] = useDisclosure(false)
+
+  // Las acciones de la fila y los paneles que abre cada una viven en su hook.
+  const { accionesDe, detalle, resolucion, avance } = useAccionesSumario()
 
   // Cambiar el filtro sin volver a la primera página consultaría esa misma
   // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
@@ -58,77 +46,6 @@ export function SumariosTab() {
     per_page: POR_PAGINA,
   })
   const sumarios = data?.data ?? []
-
-  const { avanzarSumario } = useDisciplinarioMutations()
-
-  const abrirResolucion = (sumario: Sumario) => {
-    setAResolver(sumario)
-    openResolver()
-  }
-
-  const abrirAvance = (sumario: Sumario, destino: HitoConFecha) => {
-    setAAvanzar({ sumario, destino })
-    openAvanzar()
-  }
-
-  const cerrar = (sumario: Sumario) => confirmar({
-    title: 'Cerrar el sumario',
-    message: (
-      <>
-        El sumario de <b>{nombreServidor(sumario.servidor)}</b> quedará cerrado
-        sin sanción y no admitirá más trámite. No se puede deshacer.
-      </>
-    ),
-    confirmLabel: 'Cerrar sumario',
-    destructiva: true,
-    onConfirm: () => avanzarSumario.mutate({
-      id: sumario.id,
-      data: { estado: 'cerrado' },
-    }),
-  })
-
-  /**
-   * Las acciones salen del grafo de transiciones, no de una lista escrita
-   * aparte: avanzar al hito que sigue, resolver imponiendo la sanción, dejar
-   * constancia de la apelación, o cerrar sin sanción.
-   */
-  const accionesDe = (s: Sumario): TableAction[] => {
-    const siguiente = siguienteHito(s.estado)
-    const transiciones = TRANSICIONES_SUMARIO[s.estado]
-
-    return [
-      {
-        // Cada hito pide su fecha, que es de donde salen los plazos legales.
-        label: siguiente ? `Avanzar a ${ESTADO_SUMARIO_LABELS[siguiente]}` : 'Avanzar',
-        icon: <IconArrowRight size={14} />,
-        hidden: !siguiente || !esHitoConFecha(siguiente),
-        onClick: () => siguiente && esHitoConFecha(siguiente) && abrirAvance(s, siguiente),
-      },
-      {
-        label: 'Resolver e imponer sanción',
-        icon: <IconScaleOutline size={14} />,
-        hidden: !puedeResolverse(s.estado),
-        onClick: () => abrirResolucion(s),
-      },
-      {
-        label: 'Registrar apelación',
-        icon: <IconArrowRight size={14} />,
-        hidden: !transiciones.includes('apelado'),
-        disabled: avanzarSumario.isPending,
-        onClick: () => avanzarSumario.mutate({ id: s.id, data: { estado: 'apelado' } }),
-      },
-      {
-        label: 'Cerrar sin sanción',
-        icon: <IconFolderOff size={14} />,
-        color: 'red',
-        hidden: !transiciones.includes('cerrado'),
-        disabled: avanzarSumario.isPending,
-        onClick: () => cerrar(s),
-      },
-    ]
-  }
-
-  const columns = columnasSumario(accionesDe)
 
   const abrir = (
     <Button leftSection={<IconPlus size={16} />} variant="light" onClick={open}>
@@ -169,7 +86,7 @@ export function SumariosTab() {
         <SgthTable
           {...PAGINACION_ES}
           records={sumarios}
-          columns={columns}
+          columns={columnasSumario(accionesDe)}
           totalRecords={data?.total ?? sumarios.length}
           recordsPerPage={POR_PAGINA}
           page={page}
@@ -179,16 +96,21 @@ export function SumariosTab() {
       </DataState>
 
       <SumarioModal opened={modalOpened} onClose={close} />
+      <SumarioDetalleDrawer
+        opened={detalle.abierto}
+        onClose={detalle.cerrar}
+        sumario={detalle.sumario}
+      />
       <ResolverSumarioModal
-        opened={resolverOpened}
-        onClose={closeResolver}
-        sumario={aResolver}
+        opened={resolucion.abierto}
+        onClose={resolucion.cerrar}
+        sumario={resolucion.sumario}
       />
       <AvanzarHitoModal
-        opened={avanzarOpened}
-        onClose={closeAvanzar}
-        sumario={aAvanzar?.sumario ?? null}
-        destino={aAvanzar?.destino ?? null}
+        opened={avance.abierto}
+        onClose={avance.cerrar}
+        sumario={avance.sumario}
+        destino={avance.destino}
       />
     </Stack>
   )

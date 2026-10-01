@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button, Select, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconFileCheck, IconPencil, IconPlus } from '@tabler/icons-react'
+import { IconEye, IconFileCheck, IconPencil, IconPlus } from '@tabler/icons-react'
 import {
   DataState, PAGINACION_ES, SgthTable, Toolbar, type TableAction,
 } from '@/components/ui'
@@ -11,6 +11,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useVistosBuenos } from '../hooks/useDisciplinario'
 import { VistoBuenoModal } from './VistoBuenoModal'
 import { TransicionarVistoBuenoModal } from './TransicionarVistoBuenoModal'
+import { VistoBuenoDetalleDrawer } from './VistoBuenoDetalleDrawer'
 import { columnasVistoBueno } from './vistosBuenos.columns'
 import { ESTADO_VISTO_BUENO_LABELS, TRANSICIONES_VISTO_BUENO } from '../utils/etiquetas'
 import classes from './filtros.module.css'
@@ -29,6 +30,8 @@ export function VistosBuenosTab() {
   const [seleccionado, setSeleccionado] = useState<VistoBueno | null>(null)
   const [crearOpened, { open: openCrear, close: closeCrear }] = useDisclosure(false)
   const [editarOpened, { open: openEditar, close: closeEditar }] = useDisclosure(false)
+  const [aVer, setAVer] = useState<VistoBueno | null>(null)
+  const [detalleOpened, { open: openDetalle, close: closeDetalle }] = useDisclosure(false)
 
   // Cambiar el filtro sin volver a la primera página consultaría esa misma
   // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
@@ -51,6 +54,14 @@ export function VistosBuenosTab() {
   }
 
   const accionesDe = (t: VistoBueno): TableAction[] => [
+    {
+      label: 'Ver detalle',
+      icon: <IconEye size={14} />,
+      onClick: () => {
+        setAVer(t)
+        openDetalle()
+      },
+    },
     {
       label: 'Actualizar trámite',
       icon: <IconPencil size={14} />,
@@ -107,6 +118,11 @@ export function VistosBuenosTab() {
         />
       </DataState>
 
+      <VistoBuenoDetalleDrawer
+        opened={detalleOpened}
+        onClose={closeDetalle}
+        tramite={aVer}
+      />
       <VistoBuenoModal opened={crearOpened} onClose={closeCrear} />
       <TransicionarVistoBuenoModal
         opened={editarOpened}

@@ -1210,6 +1210,21 @@ export type ServidorResumen = {
   cedula?: string | null
 }
 
+/**
+ * La sanción tal como la devuelve el listado, que carga la relación entera.
+ * El tipo declaraba tres campos de los ocho, así que el resto llegaba al
+ * navegador y la pantalla no tenía forma de enseñarlo.
+ */
+export type SancionDisciplinaria = {
+  id: number
+  tipo_falta: TipoFalta
+  tipo_sancion: TipoSancion
+  porcentaje_multa?: string | number | null
+  dias_suspension?: number | null
+  fecha_efectiva?: string | null
+  observaciones?: string | null
+}
+
 export type Sumario = {
   id: number
   servidor_id: number
@@ -1222,7 +1237,7 @@ export type Sumario = {
   fecha_termino_prueba?: string | null
   fecha_informe?: string | null
   fecha_resolucion?: string | null
-  sancion?: { id: number; tipo_sancion: TipoSancion; tipo_falta?: string | null } | null
+  sancion?: SancionDisciplinaria | null
 }
 
 export type VistoBueno = {
@@ -1239,6 +1254,7 @@ export type VistoBueno = {
   fecha_resolucion?: string | null
   hechos: string
   resolucion_detalle?: string | null
+  documento_respaldo?: string | null
   movimiento_personal_id?: number | null
   movimiento_personal?: { id: number; codigo_registro?: string | null; estado?: string | null } | null
 }
