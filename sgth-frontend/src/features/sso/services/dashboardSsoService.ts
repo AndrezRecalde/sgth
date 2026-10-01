@@ -1,9 +1,15 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
-import type { IndicadoresReactivos } from './tipos'
+import type { AlcanceIndicador, IndicadoresProactivos, IndicadoresReactivos } from './tipos'
+
+/** Los bloques del resumen, cada uno con su alcance declarado. */
+export type BloqueResumenSso =
+  | 'riesgos' | 'accidentes' | 'epp' | 'cumplimiento'
+  | 'psicosocial' | 'assist' | 'programa_drogas' | 'ausentismo'
 
 export interface ResumenDashboardSso {
   periodo: string
+  unidad_administrativa_id: number | null
   riesgos: {
     total_activos: number
     por_nivel_intervencion: Record<string, number>
@@ -20,16 +26,8 @@ export interface ResumenDashboardSso {
   // El mismo cálculo que expone /sso/indicadores/reactivos: un solo tipo, para
   // que los campos nuevos no haya que agregarlos en dos sitios.
   indicadores_reactivos: IndicadoresReactivos
-  indicadores_proactivos: {
-    inspecciones_realizadas: number
-    capacitaciones_realizadas: number
-    horas_capacitacion_total: number
-    cobertura_epp: {
-      total_puestos_con_epp_requerido: number
-      puestos_con_entrega_en_periodo: number
-      porcentaje: number | null
-    }
-  }
+  // El mismo tipo que expone /sso/indicadores/proactivos, por lo mismo.
+  indicadores_proactivos: IndicadoresProactivos
   cumplimiento: {
     total: number
     cumple: number
@@ -60,6 +58,12 @@ export interface ResumenDashboardSso {
     servidores_afectados: number
     total_dias: number
   }
+  /**
+   * Sobre qué población está cada bloque. Seis filtran por la unidad pedida;
+   * el catálogo de EPP, la normativa legal y las actividades del programa de
+   * drogas no se registran por unidad y lo dicen.
+   */
+  alcances: Record<BloqueResumenSso, AlcanceIndicador>
 }
 
 export const dashboardSsoService = {

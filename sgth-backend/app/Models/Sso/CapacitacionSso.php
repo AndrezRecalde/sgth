@@ -25,6 +25,12 @@ class CapacitacionSso extends Model
     {
         return [
             'fecha' => 'date',
+            // `float` y no `decimal:2`: el cast decimal de Laravel devuelve una
+            // CADENA, y esta cifra se suma en `horas_capacitacion_total` de los
+            // índices proactivos. Sumar cadenas funciona en PHP por coerción,
+            // pero deja el tipo del API en `string` y obliga al frontend a
+            // convertir lo que debería llegar como número.
+            'duracion_horas' => 'float',
             'estado' => 'boolean',
         ];
     }

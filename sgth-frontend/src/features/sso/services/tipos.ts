@@ -188,8 +188,26 @@ export interface IndicadoresReactivos {
   tasa_riesgo: number | null
 }
 
+/**
+ * Sobre qué población está calculada una cifra.
+ *
+ * Los indicadores aceptan una unidad administrativa y no todos pueden
+ * honrarla: las capacitaciones no se registran por unidad, y la normativa
+ * legal aplica a toda la institución. Antes el alcance era implícito y la
+ * respuesta se titulaba con la unidad igual, así que una cifra institucional
+ * se presentaba como si fuera de la dirección consultada.
+ *
+ * `nota` solo viene cuando hay algo que advertir: se pidió una unidad y este
+ * indicador no puede darla.
+ */
+export interface AlcanceIndicador {
+  alcance: 'unidad' | 'institucional'
+  nota: string | null
+}
+
 export interface IndicadoresProactivos {
   periodo: string
+  unidad_administrativa_id: number | null
   inspecciones_realizadas: number
   capacitaciones_realizadas: number
   horas_capacitacion_total: number
@@ -198,6 +216,7 @@ export interface IndicadoresProactivos {
     puestos_con_entrega_en_periodo: number
     porcentaje: number | null
   }
+  alcances: Record<'inspecciones' | 'capacitaciones' | 'cobertura_epp', AlcanceIndicador>
 }
 
 export interface NormativaLegalSso {

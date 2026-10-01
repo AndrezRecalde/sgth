@@ -12,6 +12,7 @@ import {
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { DataState, StatCard } from '@/components/ui'
+import { AvisoAlcance } from './AvisoAlcance'
 import { useDashboardSso } from '../hooks/useDashboardSso'
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 
@@ -69,6 +70,22 @@ export function DashboardSsoTab() {
           >
             {resumen && (
               <Stack gap="lg">
+                {/* Seis de los nueve bloques filtran por la unidad pedida; el
+                    catálogo de EPP, la normativa legal y las actividades del
+                    programa no se registran por unidad y lo dicen. */}
+                <AvisoAlcance
+                  alcances={resumen.alcances}
+                  etiquetas={{
+                    riesgos: 'Riesgos',
+                    accidentes: 'Accidentes',
+                    epp: 'EPP',
+                    cumplimiento: 'Cumplimiento normativo',
+                    psicosocial: 'Psicosocial',
+                    assist: 'ASSIST',
+                    programa_drogas: 'Programa de drogas',
+                    ausentismo: 'Ausentismo',
+                  }}
+                />
                 <Box>
                   <Text fw={600} mb="xs">Riesgos y accidentes</Text>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">

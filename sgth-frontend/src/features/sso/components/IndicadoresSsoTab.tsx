@@ -16,6 +16,7 @@ import { useIndicadoresReactivos, useIndicadoresProactivos } from '../hooks/useI
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
 import { GestionarHorasTrabajadasModal } from './GestionarHorasTrabajadasModal'
 import { DataState, StatCard } from '@/components/ui'
+import { AvisoAlcance } from './AvisoAlcance'
 
 export function IndicadoresSsoTab() {
   const contained = useContainedInput()
@@ -156,7 +157,19 @@ export function IndicadoresSsoTab() {
             >
               {proactivos && (
                 <>
-                  <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
+                  {/* De los tres indicadores, dos filtran por unidad y las
+                      capacitaciones no pueden: `capacitaciones_sso` no tiene
+                      columna de unidad. Antes eso quedaba implícito y la
+                      cifra institucional se leía como si fuera de la unidad. */}
+                  <AvisoAlcance
+                    alcances={proactivos.alcances}
+                    etiquetas={{
+                      inspecciones: 'Inspecciones',
+                      capacitaciones: 'Capacitaciones',
+                      cobertura_epp: 'Cobertura EPP',
+                    }}
+                  />
+                  <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md" mt="md">
                     <StatCard label="Inspecciones realizadas" value={proactivos.inspecciones_realizadas} icon={IconClipboardList} />
                     <StatCard label="Capacitaciones realizadas" value={proactivos.capacitaciones_realizadas} icon={IconSchool} />
                     <StatCard label="Horas de capacitación" value={proactivos.horas_capacitacion_total} icon={IconClock} />
