@@ -18,6 +18,11 @@ enum EstadoVistoBueno: string
     case DESISTIDO        = 'desistido';
     case IMPUGNADO        = 'impugnado';
 
+    /**
+     * Espejada por `ESTADO_VISTO_BUENO_LABELS` en
+     * `features/disciplinario/utils/etiquetas.ts`, y fijada por
+     * `EnumsDisciplinarioTest`.
+     */
     public function etiqueta(): string
     {
         return match ($this) {

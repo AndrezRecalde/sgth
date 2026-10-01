@@ -7,6 +7,7 @@ use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
+use App\Helpers\DiasHabilesHelper;
 use App\Models\Disciplinario\VistoBueno;
 use App\Models\Expediente\Servidor;
 use App\Services\Expediente\MovimientoPersonalService;
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\Log;
  */
 class VistoBuenoService
 {
+    use DiasHabilesHelper;
+
     public function __construct(
         private readonly MovimientoPersonalService $movimientoPersonalService,
     ) {
@@ -48,6 +51,13 @@ class VistoBuenoService
      * investiga y resuelve dentro de los tres días siguientes. Se expresan en
      * días hábiles y se cuentan como alerta, no como bloqueo: el sistema no
      * puede impedir que el Ministerio se demore, solo advertirlo.
+     *
+     * Los cuentan `DiasHabilesHelper`, que saltea fines de semana y feriados.
+     * Antes esta clase traía su propia copia que ignoraba los feriados, con un
+     * comentario que decía que la tabla de feriados «vive en Asistencia» —y el
+     * trait que usa su vecino, DisciplinarioService, ya la consultaba—. Con dos
+     * cuentas distintas, el mismo plazo vencía en días distintos según qué
+     * procedimiento lo mirara.
      */
     private const DIAS_HABILES_NOTIFICACION = 1;
     private const DIAS_HABILES_RESOLUCION   = 3;
@@ -67,7 +77,7 @@ class VistoBuenoService
         $pendientesNotificacion = VistoBueno::where('estado', EstadoVistoBueno::SOLICITADO->value)->get();
 
         foreach ($pendientesNotificacion as $tramite) {
-            $limite = $this->sumarDiasHabiles(
+            $limite = $this->calcularDiasHabiles(
                 Carbon::parse($tramite->fecha_solicitud),
                 self::DIAS_HABILES_NOTIFICACION
             );
@@ -83,7 +93,7 @@ class VistoBuenoService
         ])->whereNotNull('fecha_notificacion')->get();
 
         foreach ($pendientesResolucion as $tramite) {
-            $limite = $this->sumarDiasHabiles(
+            $limite = $this->calcularDiasHabiles(
                 Carbon::parse($tramite->fecha_notificacion),
                 self::DIAS_HABILES_RESOLUCION
             );
@@ -113,26 +123,6 @@ class VistoBuenoService
             'fecha_limite'   => $limite->toDateString(),
             'dias_vencido'   => (int) $limite->diffInDays($hoy),
         ];
-    }
-
-    /**
-     * Suma días hábiles salteando sábados y domingos. No contempla feriados:
-     * el módulo de feriados vive en Asistencia y depende del año cargado, así
-     * que para una alerta (no un bloqueo) el fin de semana es suficiente.
-     */
-    private function sumarDiasHabiles(Carbon $desde, int $dias): Carbon
-    {
-        $fecha = $desde->copy();
-
-        while ($dias > 0) {
-            $fecha->addDay();
-
-            if (!$fecha->isWeekend()) {
-                $dias--;
-            }
-        }
-
-        return $fecha;
     }
 
     public function solicitar(int $servidorId, array $datos, int $userId): VistoBueno

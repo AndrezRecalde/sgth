@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Sumario extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'sumarios';
 
@@ -42,6 +44,28 @@ class Sumario extends Model
             'fecha_informe'        => 'date',
             'fecha_resolucion'     => 'date',
         ];
+    }
+
+    /**
+     * Auditoría: el sumario decide la destitución de un servidor LOSEP, que es
+     * lo mismo que decide el visto bueno para un obrero. `VistoBueno` se
+     * auditaba desde el principio y este no, aunque el acto tiene el mismo
+     * peso: se registran el estado, el motivo y las fechas de los hitos, que
+     * son las que sostienen los plazos legales.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'estado',
+                'motivo',
+                'fecha_notificacion',
+                'fecha_termino_prueba',
+                'fecha_informe',
+                'fecha_resolucion',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     public function servidor(): BelongsTo

@@ -33,6 +33,11 @@ enum CausalVistoBueno: string
         };
     }
 
+    /**
+     * El texto del numeral, resumido. Lo espeja `CAUSAL_LABELS` en
+     * `features/disciplinario/utils/etiquetas.ts` —hasta ahora con tres
+     * redacciones distintas de las siete— y lo fija `EnumsDisciplinarioTest`.
+     */
     public function etiqueta(): string
     {
         return match ($this) {
