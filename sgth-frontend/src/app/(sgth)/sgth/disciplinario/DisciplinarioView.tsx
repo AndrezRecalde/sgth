@@ -14,11 +14,13 @@ export function DisciplinarioView() {
         description="GAD Provincial de Esmeraldas"
       />
 
+      {/* Sin `mb`: el ritmo vertical entre los hijos de `PageShell` lo pone su
+          propio `gap`, y sumarle un margen dejaba este bloque más suelto que
+          los demás de la pantalla (regla 05). */}
       <Alert
         variant="light"
         color="ocean"
         icon={<IconInfoCircle size={16} />}
-        mb="md"
       >
         El procedimiento depende del régimen del servidor: el <strong>sumario
         administrativo</strong> aplica al personal LOSEP, y el <strong>visto

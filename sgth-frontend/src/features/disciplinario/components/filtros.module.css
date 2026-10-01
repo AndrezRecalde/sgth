@@ -1,0 +1,9 @@
+/* El filtro de estado de las dos pestañas del módulo.
+
+   Estaba escrito dos veces como `style={{ minWidth: 240 }}`, que la regla 09
+   reserva para un valor calculado. 15rem es lo que necesita la etiqueta más
+   larga del desplegable —«Notificado al trabajador»— para no cortarse dentro
+   del control, que es donde el patrón contained la dibuja. */
+.filtroEstado {
+  min-width: 15rem;
+}

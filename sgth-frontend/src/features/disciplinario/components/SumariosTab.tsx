@@ -25,6 +25,7 @@ import {
   puedeResolverse,
   siguienteHito,
 } from '../utils/etiquetas'
+import classes from './filtros.module.css'
 import type { EstadoSumario, Sumario } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_SUMARIO_LABELS) as EstadoSumario[])
@@ -33,7 +34,8 @@ const ESTADO_OPTIONS = (Object.keys(ESTADO_SUMARIO_LABELS) as EstadoSumario[])
 const POR_PAGINA = 15
 
 export function SumariosTab() {
-  const contained = useContainedInput()
+  // Variante compacta: es una barra de filtros, no un formulario de captura.
+  const contained = useContainedInput('sm')
   const [estado, setEstado] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [modalOpened, { open, close }] = useDisclosure(false)
@@ -128,19 +130,15 @@ export function SumariosTab() {
 
   const columns = columnasSumario(accionesDe)
 
+  const abrir = (
+    <Button leftSection={<IconPlus size={16} />} variant="light" onClick={open}>
+      Abrir sumario
+    </Button>
+  )
+
   return (
     <Stack gap="md">
-      <Toolbar
-        actions={
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={open}
-          >
-            Abrir sumario
-          </Button>
-        }
-      >
+      <Toolbar actions={abrir}>
         <Select
           label="Estado"
           placeholder="Todos"
@@ -149,7 +147,7 @@ export function SumariosTab() {
           onChange={cambiarEstado}
           clearable
           {...contained}
-          style={{ minWidth: 240 }}
+          className={classes.filtroEstado}
         />
       </Toolbar>
 
@@ -161,8 +159,11 @@ export function SumariosTab() {
           icon: IconGavel,
           title: 'Sin sumarios administrativos',
           description: estado
-            ? 'Ningún sumario se encuentra en ese estado.'
-            : 'No hay sumarios administrativos abiertos.',
+            ? 'Ningún sumario se encuentra en ese estado. Pruebe con otro o quite el filtro.'
+            : 'Aquí se instruyen los sumarios del personal LOSEP, hito por hito, hasta la resolución que impone la sanción.',
+          // Con el filtro puesto, lo que hace falta es quitarlo, no abrir un
+          // sumario: el botón de la barra sigue a la vista.
+          action: estado ? undefined : abrir,
         }}
       >
         <SgthTable
