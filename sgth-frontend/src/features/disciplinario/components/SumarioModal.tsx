@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  Alert, Stack, Textarea,
-} from '@mantine/core'
-import { ModalFooter, SgthModal } from '@/components/ui'
+import { Alert, Stack, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconInfoCircle } from '@tabler/icons-react'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { FormModal, notificar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import { fromDateValue, toDateValue } from '@/lib/fecha'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
-import { fromDateValueOrNull } from '@/lib/fecha'
+import { sumarioSchema, type SumarioFormValues } from '../schemas/sumario.schema'
 
 interface Props {
   opened: boolean
@@ -21,48 +22,56 @@ export function SumarioModal({ opened, onClose }: Props) {
   const contained = useContainedInput()
   const { crearSumario } = useDisciplinarioMutations()
 
-  const [servidorId, setServidorId] = useState<number | null>(null)
-  const [motivo, setMotivo] = useState('')
-  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
-  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
-  // dos formas, que es lo que `fromDateValue` sabe leer.
-  const [fechaApertura, setFechaApertura] = useState<Date | string | null>(new Date())
-  const [error, setError] = useState<string | null>(null)
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors },
+  } = useForm<SumarioFormValues>({
+    resolver: zodResolver(sumarioSchema),
+    // `servidor_id` se omite: lo elige quien abre el sumario (regla 09).
+    defaultValues: { motivo: '', fecha_apertura: fromDateValue(new Date()) },
+  })
 
-  const limpiar = () => {
-    setServidorId(null)
-    setMotivo('')
-    setFechaApertura(new Date())
-    setError(null)
-  }
-
-  const handleClose = () => {
-    limpiar()
+  const cerrar = () => {
+    reset()
     onClose()
   }
 
-  const submit = () => {
-    if (!servidorId) return setError('Seleccione el servidor sumariado.')
-    if (motivo.trim().length < 5) return setError('Describa el motivo del sumario.')
+  const guardar = async (valores: SumarioFormValues) => {
+    try {
+      await crearSumario.mutateAsync(valores)
+      cerrar()
+    } catch (error) {
+      const campos = erroresDeCampo(error)
+      if (!campos) return // el hook ya lo notificó
 
-    setError(null)
+      const sinCampo: string[] = []
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        if (campo in sumarioSchema.shape) {
+          setError(campo as keyof SumarioFormValues, { message: mensaje })
+        } else {
+          sinCampo.push(mensaje)
+        }
+      }
 
-    crearSumario
-      .mutateAsync({
-        servidor_id: servidorId,
-        motivo: motivo.trim(),
-        fecha_apertura: fromDateValueOrNull(fechaApertura),
-      })
-      .then(handleClose)
-      .catch(() => {})
+      if (sinCampo.length) {
+        notificar.error('No se pudo abrir el sumario', sinCampo.join(' '))
+      }
+    }
   }
 
   return (
-    <SgthModal
+    <FormModal
       opened={opened}
-      onClose={handleClose}
+      onClose={cerrar}
       title="Abrir sumario administrativo"
-      size="lg"
+      onSubmit={handleSubmit(guardar)}
+      submitLabel="Abrir sumario"
+      submitting={crearSumario.isPending}
+      closeOnClickOutside={false}
     >
       <Stack gap="sm">
         <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
@@ -71,38 +80,44 @@ export function SumarioModal({ opened, onClose }: Props) {
           del Trabajo.
         </Alert>
 
-        <BuscarServidorSelect
-          label="Servidor sumariado"
-          value={servidorId}
-          onChange={setServidorId}
-          required
+        <Controller
+          name="servidor_id"
+          control={control}
+          render={({ field }) => (
+            <BuscarServidorSelect
+              label="Servidor sumariado"
+              required
+              error={errors.servidor_id?.message}
+              value={field.value ?? null}
+              onChange={field.onChange}
+            />
+          )}
         />
 
-        <DatePickerInput
-          label="Fecha de apertura"
-          value={fechaApertura}
-          onChange={(v) => setFechaApertura(v)}
-          valueFormat="DD/MM/YYYY"
-          {...contained}
+        <Controller
+          name="fecha_apertura"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Fecha de apertura"
+              valueFormat="DD/MM/YYYY"
+              error={errors.fecha_apertura?.message}
+              {...contained}
+              value={toDateValue(field.value)}
+              onChange={(v) => field.onChange(fromDateValue(v))}
+            />
+          )}
         />
 
         <Textarea
           label="Motivo"
           placeholder="Describa los hechos que motivan la apertura del sumario"
           rows={4}
-          value={motivo}
-          onChange={(e) => setMotivo(e.currentTarget.value)}
+          error={errors.motivo?.message}
           {...contained}
+          {...register('motivo')}
         />
-
-        {error && <Alert variant="light" color="red">{error}</Alert>}
       </Stack>
-      <ModalFooter
-        onCancel={handleClose}
-        submitLabel="Abrir sumario"
-        submitting={crearSumario.isPending}
-        onSubmit={submit}
-      />
-    </SgthModal>
+    </FormModal>
   )
 }
