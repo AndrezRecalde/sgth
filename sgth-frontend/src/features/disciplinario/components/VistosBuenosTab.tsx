@@ -1,26 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Select, Stack, Text, Tooltip } from '@mantine/core'
+import { Button, Select, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconFileCheck, IconPencil, IconPlus } from '@tabler/icons-react'
-import type { DataTableColumn } from 'mantine-datatable'
 import {
-  DataState, PAGINACION_ES, SgthTable, StatusBadge, TableActions, Toolbar,
+  DataState, PAGINACION_ES, SgthTable, Toolbar, type TableAction,
 } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useVistosBuenos } from '../hooks/useDisciplinario'
 import { VistoBuenoModal } from './VistoBuenoModal'
 import { TransicionarVistoBuenoModal } from './TransicionarVistoBuenoModal'
-import {
-  CAUSAL_LABELS,
-  TONO_VISTO_BUENO,
-  ESTADO_VISTO_BUENO_LABELS,
-  TRANSICIONES_VISTO_BUENO,
-  nombreServidor,
-  referenciaLegal,
-} from '../utils/etiquetas'
-import { formatFecha } from '@/lib/fecha'
+import { columnasVistoBueno } from './vistosBuenos.columns'
+import { ESTADO_VISTO_BUENO_LABELS, TRANSICIONES_VISTO_BUENO } from '../utils/etiquetas'
+import classes from './filtros.module.css'
 import type { EstadoVistoBueno, VistoBueno } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_VISTO_BUENO_LABELS) as EstadoVistoBueno[])
@@ -29,7 +22,8 @@ const ESTADO_OPTIONS = (Object.keys(ESTADO_VISTO_BUENO_LABELS) as EstadoVistoBue
 const POR_PAGINA = 15
 
 export function VistosBuenosTab() {
-  const contained = useContainedInput()
+  // Variante compacta: es una barra de filtros, no un formulario de captura.
+  const contained = useContainedInput('sm')
   const [estado, setEstado] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [seleccionado, setSeleccionado] = useState<VistoBueno | null>(null)
@@ -56,97 +50,26 @@ export function VistosBuenosTab() {
     openEditar()
   }
 
-  const columns: DataTableColumn<VistoBueno>[] = [
+  const accionesDe = (t: VistoBueno): TableAction[] => [
     {
-      accessor: 'servidor',
-      title: 'Trabajador',
-      render: (t) => (
-        <div>
-          <Text size="sm" fw={500}>{nombreServidor(t.servidor)}</Text>
-          <Text size="xs" c="dimmed">{t.servidor?.cedula ?? '—'}</Text>
-        </div>
-      ),
-    },
-    {
-      accessor: 'causal',
-      title: 'Causal',
-      render: (t) => (
-        <Tooltip label={referenciaLegal(t.causal)} withArrow>
-          <Text size="sm" lineClamp={2}>{CAUSAL_LABELS[t.causal]}</Text>
-        </Tooltip>
-      ),
-    },
-    {
-      accessor: 'numero_tramite_mdt',
-      title: 'Trámite MDT',
-      width: 150,
-      render: (t) => (
-        <Text size="sm" ff="monospace">{t.numero_tramite_mdt ?? '—'}</Text>
-      ),
-    },
-    {
-      accessor: 'fecha_solicitud',
-      title: 'Solicitud',
-      width: 110,
-      render: (t) => <Text size="sm">{formatFecha(t.fecha_solicitud)}</Text>,
-    },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      width: 160,
-      render: (t) => (
-        <StatusBadge tone={TONO_VISTO_BUENO[t.estado]}>
-          {ESTADO_VISTO_BUENO_LABELS[t.estado]}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'movimiento_personal',
-      title: 'Cesación',
-      width: 130,
-      render: (t) => t.movimiento_personal
-        ? (
-          <StatusBadge>
-            {t.movimiento_personal.codigo_registro ?? 'En borrador'}
-          </StatusBadge>
-        )
-        : <Text size="sm" c="dimmed">—</Text>,
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (t) => {
-        if (TRANSICIONES_VISTO_BUENO[t.estado].length === 0) return null
-
-        return (
-          <TableActions
-            actions={[
-              {
-                label: 'Actualizar trámite',
-                icon: <IconPencil size={14} />,
-                onClick: () => abrirTransicion(t),
-              },
-            ]}
-          />
-        )
-      },
+      label: 'Actualizar trámite',
+      icon: <IconPencil size={14} />,
+      // Un trámite terminal no admite cambios: se muestra apagado en vez de
+      // desaparecer, para que se vea que la acción existe (regla 06).
+      disabled: TRANSICIONES_VISTO_BUENO[t.estado].length === 0,
+      onClick: () => abrirTransicion(t),
     },
   ]
 
+  const solicitar = (
+    <Button leftSection={<IconPlus size={16} />} variant="light" onClick={openCrear}>
+      Solicitar visto bueno
+    </Button>
+  )
+
   return (
     <Stack gap="md">
-      <Toolbar
-        actions={
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={openCrear}
-          >
-            Solicitar visto bueno
-          </Button>
-        }
-      >
+      <Toolbar actions={solicitar}>
         <Select
           label="Estado"
           placeholder="Todos"
@@ -155,7 +78,7 @@ export function VistosBuenosTab() {
           onChange={cambiarEstado}
           clearable
           {...contained}
-          style={{ minWidth: 240 }}
+          className={classes.filtroEstado}
         />
       </Toolbar>
 
@@ -167,14 +90,15 @@ export function VistosBuenosTab() {
           icon: IconFileCheck,
           title: 'Sin trámites de visto bueno',
           description: estado
-            ? 'Ningún trámite se encuentra en ese estado.'
-            : 'No hay trámites de visto bueno registrados.',
+            ? 'Ningún trámite se encuentra en ese estado. Pruebe con otro o quite el filtro.'
+            : 'Aquí se registran las solicitudes ante el Inspector del Trabajo para terminar con justa causa el contrato de un obrero.',
+          action: estado ? undefined : solicitar,
         }}
       >
         <SgthTable
           {...PAGINACION_ES}
           records={tramites}
-          columns={columns}
+          columns={columnasVistoBueno(accionesDe)}
           totalRecords={data?.total ?? tramites.length}
           recordsPerPage={POR_PAGINA}
           page={page}
