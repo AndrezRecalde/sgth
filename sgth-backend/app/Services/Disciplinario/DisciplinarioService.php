@@ -115,6 +115,27 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
             throw new ReglaNegocioException('El sumario ya se encuentra resuelto o cerrado.');
         }
 
+        // Un sumario apelado tampoco se vuelve a resolver: su única salida es
+        // el cierre. El guard de arriba lo dejaba pasar, y como
+        // `sanciones_disciplinarias.sumario_id` es único, la segunda sanción
+        // reventaba con un error de SQL en vez de un mensaje de negocio.
+        if ($sumario->estado === EstadoSumario::APELADO) {
+            throw new ReglaNegocioException(
+                'El sumario está apelado: lo que resuelve la apelación es el cierre del sumario, '
+                    .'no una sanción nueva. Si la sanción impuesta estaba equivocada, se anula el '
+                    .'acto y se emite otro.'
+            );
+        }
+
+        // Cinturón y tirantes: el índice único sigue ahí, y una sanción
+        // borrada lógicamente lo ocupa igual, así que un sumario que ya tuvo
+        // sanción no admite otra por mucho que su estado diga lo contrario.
+        if ($sumario->sancion()->withTrashed()->exists()) {
+            throw new ReglaNegocioException(
+                'El sumario ya tiene una sanción registrada.'
+            );
+        }
+
         $this->assertSancionAplicableAlRegimen($sumario, $datosSancion['tipo_sancion']);
 
         DB::beginTransaction();
