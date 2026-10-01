@@ -5,18 +5,16 @@ import { Group, TextInput, Button, Text, Alert, Accordion } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import {
-  IconSearch, IconList, IconAlertCircle, IconEdit, IconChecklist,
+  IconSearch, IconList, IconAlertCircle, IconChecklist,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
 import { useListaSeguimientoPrograma } from '@/features/sso/hooks/useProgramaDrogas'
 import { CatalogoActividadesProgramaModal } from '@/features/sso/components/CatalogoActividadesProgramaModal'
 import { RegistrarSeguimientoProgramaModal } from '@/features/sso/components/RegistrarSeguimientoProgramaModal'
-import { TONO_ACTIVIDAD_PROGRAMA, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '@/features/sso/schemas/programaDrogas.schema'
+import { columnasSeguimientoPrograma } from '@/features/sso/components/seguimientoPrograma.columns'
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
-import { formatFecha } from '@/lib/fecha'
 import type { FilaSeguimientoPrograma } from '@/features/sso/services/programaDrogasService'
-import type { DataTableColumn } from 'mantine-datatable'
 
 export function ProgramaDrogasView() {
   const contained = useContainedInput()
@@ -42,36 +40,6 @@ export function ProgramaDrogasView() {
     setFilaSeleccionada(fila)
     openSeguimiento()
   }
-
-  const columns: DataTableColumn<FilaSeguimientoPrograma>[] = [
-    { accessor: 'actividad.nombre', title: 'Actividad' },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      width: 130,
-      render: (fila) => (
-        <StatusBadge tone={TONO_ACTIVIDAD_PROGRAMA[fila.estado] ?? 'neutral'}>
-          {ESTADO_ACTIVIDAD_PROGRAMA_LABELS[fila.estado] ?? fila.estado}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'seguimiento.fecha_ejecucion',
-      title: 'Fecha',
-      width: 110,
-      render: (fila) => formatFecha(fila.seguimiento?.fecha_ejecucion),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 110,
-      render: (fila) => puedeGestionar ? (
-        <Button size="xs" variant="subtle" leftSection={<IconEdit size={14} />} onClick={() => handleEditar(fila)}>
-          Registrar
-        </Button>
-      ) : null,
-    },
-  ]
 
   return (
     <PageShell>
@@ -163,7 +131,7 @@ export function ProgramaDrogasView() {
                       <Accordion.Panel>
                         <SgthTable
                           records={fase.filas}
-                          columns={columns}
+                          columns={columnasSeguimientoPrograma(puedeGestionar ? handleEditar : undefined)}
                           idAccessor="actividad.id"
                           minHeight={80}
                           noRecordsText="Sin actividades registradas en esta fase."

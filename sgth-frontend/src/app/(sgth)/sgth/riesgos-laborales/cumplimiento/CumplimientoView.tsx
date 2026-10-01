@@ -5,18 +5,16 @@ import { Group, TextInput, Button, Text, Alert } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import {
-  IconSearch, IconList, IconAlertCircle, IconEdit, IconClipboardCheck,
+  IconSearch, IconList, IconAlertCircle, IconClipboardCheck,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
+import { DataState, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
 import { useListaVerificacion } from '@/features/sso/hooks/useCumplimiento'
 import { NormativaLegalModal } from '@/features/sso/components/NormativaLegalModal'
 import { RegistrarCumplimientoModal } from '@/features/sso/components/RegistrarCumplimientoModal'
-import { TIPO_NORMATIVA_OPTIONS } from '@/features/sso/schemas/normativaLegal.schema'
+import { columnasListaVerificacion } from '@/features/sso/components/listaVerificacion.columns'
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
-import { TONO_ESTADO_CUMPLIMIENTO, ESTADO_CUMPLIMIENTO_LABELS } from '@/features/sso/schemas/cumplimiento.schema'
 import type { FilaListaVerificacion } from '@/features/sso/services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 export function CumplimientoView() {
   const contained = useContainedInput()
@@ -34,9 +32,6 @@ export function CumplimientoView() {
 
   const { data: lista, isLoading, error, refetch } = useListaVerificacion(periodo)
 
-  const getTipoLabel = (valor: string) =>
-    TIPO_NORMATIVA_OPTIONS.find(o => o.value === valor)?.label ?? valor
-
   const handleConsultar = () => {
     if (esPeriodoValido(periodoInput)) {
       setPeriodo(periodoInput)
@@ -47,41 +42,6 @@ export function CumplimientoView() {
     setFilaSeleccionada(fila)
     openCumplimiento()
   }
-
-  const columns: DataTableColumn<FilaListaVerificacion>[] = [
-    { accessor: 'normativa.nombre', title: 'Normativa' },
-    {
-      accessor: 'normativa.tipo',
-      title: 'Tipo',
-      render: (fila) => (
-        <StatusBadge>{getTipoLabel(fila.normativa.tipo)}</StatusBadge>
-      ),
-    },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      render: (fila) => (
-        <StatusBadge tone={TONO_ESTADO_CUMPLIMIENTO[fila.estado] ?? 'neutral'}>
-          {ESTADO_CUMPLIMIENTO_LABELS[fila.estado] ?? fila.estado}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 120,
-      render: (fila) => puedeGestionar ? (
-        <Button
-          size="xs"
-          variant="subtle"
-          leftSection={<IconEdit size={14} />}
-          onClick={() => handleEditar(fila)}
-        >
-          Registrar
-        </Button>
-      ) : null,
-    },
-  ]
 
   return (
     <PageShell>
@@ -156,7 +116,7 @@ export function CumplimientoView() {
 
               <SgthTable
                 records={lista.filas}
-                columns={columns}
+                columns={columnasListaVerificacion(puedeGestionar ? handleEditar : undefined)}
                 idAccessor="normativa.id"
                 minHeight={150}
               />
