@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
+import type { EstadoCampaniaSso } from '../constants/campania'
 
 export interface CampaniaPsicosocial {
   id: number
@@ -10,6 +11,15 @@ export interface CampaniaPsicosocial {
   fecha_cierre: string | null
   activa: boolean
   creado_por: number
+  /**
+   * El estado real de la ventana, calculado en el servidor a partir de
+   * `activa`, `fecha_apertura` y `fecha_cierre`.
+   *
+   * La pantalla pintaba `activa ? 'Abierta' : 'Cerrada'`, y `activa` solo
+   * dice si alguien la cerró a mano: una campaña con la apertura en el
+   * futuro salía «Abierta» y el enlace público rechazaba a quien entraba.
+   */
+  estado_campania: EstadoCampaniaSso
   unidad_administrativa?: { id: number; nombre: string } | null
   respuestas_count?: number
 }

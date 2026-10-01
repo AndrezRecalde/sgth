@@ -14,6 +14,10 @@ import { useCampaniasAssist, useAssistMutations } from '../hooks/useAssist'
 import { CrearCampaniaAssistModal } from './CrearCampaniaAssistModal'
 import { ResultadosAssistModal } from './ResultadosAssistModal'
 import type { CampaniaAssist } from '../services/assistService'
+import {
+  ESTADO_CAMPANIA_LABELS, TONO_ESTADO_CAMPANIA,
+} from '../constants/campania'
+import { formatFecha } from '@/lib/fecha'
 import type { DataTableColumn } from 'mantine-datatable'
 
 export function AssistCampaniasTab() {
@@ -64,12 +68,29 @@ export function AssistCampaniasTab() {
       render: (c) => <Text ff="monospace" size="sm">{c.codigo_acceso}</Text>,
     },
     {
-      accessor: 'activa',
-      title: 'Estado',
-      width: 100,
+      accessor: 'fecha_apertura',
+      title: 'Ventana',
+      width: 180,
+      // Las dos fechas a la vista: el estado de abajo se deduce de ellas, y
+      // sin verlas no hay forma de entender por qué una campaña sale
+      // «Programada» ni hasta cuándo se puede repartir el enlace.
       render: (c) => (
-        <StatusBadge tone={c.activa ? 'success' : 'neutral'}>
-          {c.activa ? 'Abierta' : 'Cerrada'}
+        <Text size="sm">
+          {formatFecha(c.fecha_apertura)}
+          {c.fecha_cierre ? ` – ${formatFecha(c.fecha_cierre)}` : ' – sin cierre'}
+        </Text>
+      ),
+    },
+    {
+      accessor: 'estado_campania',
+      title: 'Estado',
+      width: 120,
+      // `estado_campania` y no `activa`: la columna pintaba «Abierta» para una
+      // campaña con la apertura en el futuro y para una con el cierre ya
+      // pasado, mientras el enlace público rechazaba a quien entraba.
+      render: (c) => (
+        <StatusBadge tone={TONO_ESTADO_CAMPANIA[c.estado_campania]}>
+          {ESTADO_CAMPANIA_LABELS[c.estado_campania]}
         </StatusBadge>
       ),
     },
@@ -90,6 +111,12 @@ export function AssistCampaniasTab() {
             {
               label: 'Copiar enlace público',
               icon: <IconLink size={14} />,
+              // `disabled` y no `hidden`: el enlace existe, lo que no admite
+              // respuestas todavía —o ya no— es la campaña. Repartirlo
+              // programada o cerrada manda a la gente a un formulario que la
+              // rechaza, que es exactamente lo que pasaba cuando la columna
+              // Estado decía «Abierta» sin mirar las fechas.
+              disabled: campania.estado_campania !== 'abierta',
               onClick: () => copiarLink(campania.codigo_acceso),
             },
             {
@@ -101,7 +128,7 @@ export function AssistCampaniasTab() {
               label: 'Cerrar campaña',
               icon: <IconLock size={14} />,
               color: 'red',
-              hidden: !campania.activa || !puedeGestionar,
+              hidden: campania.estado_campania === 'cerrada' || !puedeGestionar,
               onClick: () => confirmar({
                 title:   'Cerrar campaña',
                 message: (
