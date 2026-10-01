@@ -12,6 +12,8 @@
  * `cumplimientoService`—; los tipos, que sí se cruzan entre dominios, aquí.
  */
 
+import type { EstadoKitEpp } from '../constants/kitEpp'
+
 export interface PuestoResumen {
   id: number
   cargo?: { nombre: string } | null
@@ -123,6 +125,19 @@ export interface PuestoEpp {
   cantidad_requerida: number
   frecuencia_reposicion_meses?: number | null
   equipo_proteccion?: EquipoProteccion | null
+
+  /**
+   * Los tres campos que solo llegan desde `GET servidores/{id}/kit-epp`: el
+   * requerimiento del puesto no sabe de entregas, el kit de un servidor sí.
+   *
+   * El modal premarcaba TODO el kit siempre, así que entregarlo dos veces
+   * creaba filas duplicadas sin aviso. Ahora se premarca lo que toca —lo que
+   * falta y lo que cumplió su plazo— y lo vigente se ve desmarcado, con la
+   * fecha en que vuelve a tocar.
+   */
+  ultima_entrega?: string | null
+  estado_kit?: EstadoKitEpp
+  reponer_desde?: string | null
 }
 
 export interface EppEntrega {
