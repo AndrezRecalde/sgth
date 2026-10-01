@@ -8,6 +8,11 @@ import type {
 } from '@/types/api'
 import type { SemanticTone } from '@/config/design.tokens'
 
+/**
+ * Espeja `App\Enums\EstadoSumario::etiqueta()`. Mientras el API devuelva el
+ * modelo crudo y no un recurso con `estado_label`, el texto vive en dos sitios
+ * y `EnumsDisciplinarioTest` es la grapa que avisa si uno se mueve sin el otro.
+ */
 export const ESTADO_SUMARIO_LABELS: Record<EstadoSumario, string> = {
   abierto: 'Abierto',
   en_instruccion: 'En instrucción',
@@ -67,12 +72,14 @@ export function puedeResolverse(estado: EstadoSumario): boolean {
   return estado === 'con_informe'
 }
 
+/** Espeja `App\Enums\TipoFalta::etiqueta()`. */
 export const TIPO_FALTA_LABELS: Record<TipoFalta, string> = {
   leve: 'Leve',
   grave: 'Grave',
   muy_grave: 'Muy grave',
 }
 
+/** Espeja `App\Enums\TipoSancion::etiqueta()`. */
 export const TIPO_SANCION_LABELS: Record<TipoSancion, string> = {
   amonestacion_verbal: 'Amonestación verbal',
   amonestacion_escrita: 'Amonestación escrita',
@@ -81,6 +88,7 @@ export const TIPO_SANCION_LABELS: Record<TipoSancion, string> = {
   destitucion: 'Destitución',
 }
 
+/** Espeja `App\Enums\EstadoVistoBueno::etiqueta()`. */
 export const ESTADO_VISTO_BUENO_LABELS: Record<EstadoVistoBueno, string> = {
   solicitado: 'Solicitado',
   notificado: 'Notificado al trabajador',
@@ -112,16 +120,23 @@ export const TRANSICIONES_VISTO_BUENO: Record<EstadoVistoBueno, EstadoVistoBueno
   impugnado: [],
 }
 
+/**
+ * Espeja `App\Enums\CausalVistoBueno::etiqueta()`, al que tres de las siete se
+ * le habían separado: faltaban «repetidas», «internos» y «contra el empleador»,
+ * y la séptima se había quedado sin «prevención». El texto manda en el backend,
+ * que es el que lo escribe en la descripción de la cesación.
+ */
 export const CAUSAL_LABELS: Record<CausalVistoBueno, string> = {
-  faltas_puntualidad_asistencia: 'Faltas de puntualidad o asistencia, o abandono del trabajo',
-  indisciplina_desobediencia: 'Indisciplina o desobediencia graves a los reglamentos',
+  faltas_puntualidad_asistencia: 'Faltas repetidas de puntualidad o asistencia, o abandono del trabajo',
+  indisciplina_desobediencia: 'Indisciplina o desobediencia graves a los reglamentos internos',
   falta_probidad: 'Falta de probidad o conducta inmoral',
   injurias_graves: 'Injurias graves al empleador o su representante',
   ineptitud_manifiesta: 'Ineptitud manifiesta para la labor contratada',
-  denuncia_injustificada_iess: 'Denuncia injustificada ante el Seguro Social',
-  incumplimiento_seguridad: 'No acatar las medidas de seguridad e higiene',
+  denuncia_injustificada_iess: 'Denuncia injustificada contra el empleador ante el Seguro Social',
+  incumplimiento_seguridad: 'No acatar las medidas de seguridad, prevención e higiene',
 }
 
+/** Espeja `App\Enums\CausalVistoBueno::numeral()`. */
 export const CAUSAL_NUMERAL: Record<CausalVistoBueno, number> = {
   faltas_puntualidad_asistencia: 1,
   indisciplina_desobediencia: 2,
@@ -132,6 +147,7 @@ export const CAUSAL_NUMERAL: Record<CausalVistoBueno, number> = {
   incumplimiento_seguridad: 7,
 }
 
+/** Espeja `App\Enums\CausalVistoBueno::referenciaLegal()`. */
 export function referenciaLegal(causal: CausalVistoBueno): string {
   return `Art. 172 núm. ${CAUSAL_NUMERAL[causal]} del Código del Trabajo`
 }
