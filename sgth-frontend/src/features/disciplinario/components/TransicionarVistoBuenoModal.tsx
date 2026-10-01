@@ -158,6 +158,15 @@ function FormularioTransicion({
             />
           )}
 
+          {destino === 'impugnado' && tramite.movimiento_personal && (
+            <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
+              La Cesación de Funciones generada <strong>no se anula</strong>: la
+              impugnación no deja sin efecto la resolución del Inspector. Queda
+              marcada como impugnada en Acciones de Personal, para que Talento
+              Humano la revise con Asesoría Jurídica antes de continuar.
+            </Alert>
+          )}
+
           {destino === 'concedido' && (
             <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
               Al conceder el visto bueno se generará una Cesación de Funciones en
