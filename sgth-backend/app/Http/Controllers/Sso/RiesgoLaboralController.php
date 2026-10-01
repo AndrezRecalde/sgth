@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Sso\ListarRiesgosLaboralesRequest;
 use App\Http\Requests\Sso\StoreRiesgoLaboralRequest;
 use App\Http\Requests\Sso\UpdateRiesgoLaboralRequest;
 use App\Http\Resources\Sso\RiesgoLaboralResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Sso\SsoServiceInterface;
-use App\Models\Sso\RiesgoLaboral;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class RiesgoLaboralController extends Controller
 {
@@ -18,10 +17,12 @@ final class RiesgoLaboralController extends Controller
         private readonly SsoServiceInterface $ssoService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(ListarRiesgosLaboralesRequest $request): JsonResponse
     {
-        $this->authorize('viewAny', RiesgoLaboral::class);
-        $riesgos = $this->ssoService->listarRiesgosLaborales($request->all());
+        // La autorización vive en `ListarRiesgosLaboralesRequest::authorize()`, que Laravel
+        // ejecuta ANTES de validar: así un filtro inválido no delata el
+        // endpoint a quien no puede consultarlo (403 antes que 422).
+        $riesgos = $this->ssoService->listarRiesgosLaborales($request->filtros());
         return ApiResponse::paginado($riesgos, 'Riesgos laborales obtenidos exitosamente.');
     }
 
