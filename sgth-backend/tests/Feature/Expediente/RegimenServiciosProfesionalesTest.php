@@ -39,12 +39,18 @@ test('los otros dos regímenes sí generan vacaciones', function () {
         ->and($servicio->calcularDiasGenerados('codigo_trabajo', 20))->toBe(30.0);
 });
 
-test('solo LOSEP accede al módulo de permisos', function () {
+test('servicios profesionales no accede al módulo de permisos', function () {
     // La comprobación se hace en positivo justamente para que un régimen nuevo
     // no entre por omisión, que es lo que pasaba al descartar solo el CT.
-    expect(RegimenLaboral::LOSEP->accedeAPermisos())->toBeTrue()
-        ->and(RegimenLaboral::CODIGO_TRABAJO->accedeAPermisos())->toBeFalse()
-        ->and(RegimenLaboral::SERVICIOS_PROFESIONALES->accedeAPermisos())->toBeFalse();
+    //
+    // El Código del Trabajo estuvo fuera hasta el 2026-09-30, y esta prueba
+    // decía «solo LOSEP». Talento Humano confirmó que los obreros sí piden
+    // permisos, así que lo que queda fuera es el contrato civil: sin relación
+    // de dependencia no hay jornada que permisar. Ver
+    // `PermisoCodigoTrabajoTest`.
+    expect(RegimenLaboral::SERVICIOS_PROFESIONALES->accedeAPermisos())->toBeFalse()
+        ->and(RegimenLaboral::LOSEP->accedeAPermisos())->toBeTrue()
+        ->and(RegimenLaboral::CODIGO_TRABAJO->accedeAPermisos())->toBeTrue();
 });
 
 test('el nombramiento de servicios profesionales ya no se liquida como obrero', function () {

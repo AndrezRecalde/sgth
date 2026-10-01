@@ -982,10 +982,23 @@ class PeriodoVacacionService
     }
 
     /**
-     * ¿Los permisos personales de este servidor descuentan de sus vacaciones?
+     * ¿Descontaban vacaciones los permisos de este servidor ANTES de que
+     * existiera `permiso_descuentos`?
      *
-     * Espeja `PermisoService::descuentaVacaciones()`: solo LOSEP. El Código del
-     * Trabajo se rige por su contrato colectivo.
+     * OJO: esto NO espeja `PermisoService::descuentaVacaciones()`, aunque se
+     * parezcan. Aquel dice quién descuenta HOY —LOSEP y Código del Trabajo,
+     * desde que se les abrió el módulo el 2026-09-30—. Este describe quién
+     * descontaba en una ventana de tiempo ya cerrada: la anterior al
+     * 2026-09-11, cuando el descuento no dejaba tramo y hay que atribuirlo por
+     * fecha.
+     *
+     * En aquella ventana el Código del Trabajo ni siquiera podía registrar un
+     * permiso, así que sus permisos de entonces —los que entraron por el
+     * certificado médico del dispensario— no descontaron nada. Contarlos ahora
+     * sería atribuir días que nunca salieron de ningún saldo, que es justo el
+     * error que este método vino a corregir.
+     *
+     * Por eso se queda en LOSEP y no debe seguir al otro cuando el otro cambie.
      */
     private function descuentaPermisosDeVacaciones(Servidor $servidor): bool
     {

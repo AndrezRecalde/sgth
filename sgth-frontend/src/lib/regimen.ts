@@ -33,9 +33,18 @@ export function esRelacionLaboral(regimen?: string | null): boolean {
   return regimen !== 'servicios_profesionales'
 }
 
-/** Solo LOSEP accede al módulo de permisos. */
+/**
+ * ¿Accede al módulo de permisos?
+ *
+ * Espeja `RegimenLaboral::accedeAPermisos()`: LOSEP y Código del Trabajo. Un
+ * contrato civil no tiene jornada que permisar.
+ *
+ * El Código del Trabajo entró el 2026-09-30, cuando Talento Humano confirmó
+ * que los obreros piden permisos como el resto y que su permiso personal les
+ * descuenta de vacaciones igual que a un LOSEP.
+ */
 export function accedeAPermisos(regimen?: string | null): boolean {
-  return regimen === 'losep'
+  return regimen === 'losep' || regimen === 'codigo_trabajo'
 }
 
 /**
