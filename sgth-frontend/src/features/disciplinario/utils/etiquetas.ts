@@ -3,6 +3,7 @@ import type {
   EstadoSumario,
   EstadoVistoBueno,
   ServidorResumen,
+  TipoFalta,
   TipoSancion,
 } from '@/types/api'
 import type { SemanticTone } from '@/config/design.tokens'
@@ -28,14 +29,48 @@ export const TONO_SUMARIO: Record<EstadoSumario, SemanticTone> = {
 }
 
 /**
- * Siguiente hito procesal del sumario. Refleja el grafo de
- * DisciplinarioService::TRANSICIONES_SUMARIO — 'resuelto' se omite a
- * propósito: se alcanza por el endpoint de resolución, que aplica la sanción.
+ * Espeja DisciplinarioService::TRANSICIONES_SUMARIO, el grafo que acepta
+ * `PUT sumarios/{id}/avanzar`.
+ *
+ * 'resuelto' no figura como destino de nadie a propósito: se alcanza por
+ * `POST sumarios/{id}/resolver`, que además impone la sanción.
  */
-export const SIGUIENTE_HITO_SUMARIO: Partial<Record<EstadoSumario, EstadoSumario>> = {
-  abierto: 'en_instruccion',
-  en_instruccion: 'en_prueba',
-  en_prueba: 'con_informe',
+export const TRANSICIONES_SUMARIO: Record<EstadoSumario, EstadoSumario[]> = {
+  abierto: ['en_instruccion', 'cerrado'],
+  en_instruccion: ['en_prueba', 'cerrado'],
+  en_prueba: ['con_informe', 'cerrado'],
+  con_informe: ['cerrado'],
+  resuelto: ['apelado', 'cerrado'],
+  apelado: ['cerrado'],
+  cerrado: [],
+}
+
+/**
+ * El hito que sigue en la secuencia procesal, sin contar el cierre ni la
+ * apelación, que son salidas y no avances. Sale del grafo de arriba para que
+ * no haya dos listas que mantener de acuerdo.
+ */
+export function siguienteHito(estado: EstadoSumario): EstadoSumario | undefined {
+  return TRANSICIONES_SUMARIO[estado]
+    .find((destino) => destino !== 'cerrado' && destino !== 'apelado')
+}
+
+/**
+ * El sumario se resuelve sobre el informe del instructor, que es su sustento:
+ * de ahí que el plazo legal de resolución se cuente desde él y que
+ * `controlarPlazosLegales()` solo vigile este estado. El backend admite
+ * resolver desde cualquier estado no resuelto ni cerrado; la pantalla no lo
+ * ofrece antes para no imponer una sanción sin instrucción previa. Un sumario
+ * que termina sin sanción se cierra, no se resuelve.
+ */
+export function puedeResolverse(estado: EstadoSumario): boolean {
+  return estado === 'con_informe'
+}
+
+export const TIPO_FALTA_LABELS: Record<TipoFalta, string> = {
+  leve: 'Leve',
+  grave: 'Grave',
+  muy_grave: 'Muy grave',
 }
 
 export const TIPO_SANCION_LABELS: Record<TipoSancion, string> = {
