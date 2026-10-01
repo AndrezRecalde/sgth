@@ -77,13 +77,32 @@ export function DashboardSsoView() {
           >
             {resumen && (
               <Stack gap="lg">
+                {/* El tono va solo cuando la cifra tiene lectura (regla 06). Con
+                    el tono fijo, un período sin un solo accidente abría el
+                    tablero con tres indicadores en rojo y ámbar: cero
+                    accidentes es la buena noticia del período, no una alarma. */}
                 <Box>
                   <Text fw={600} mb="xs">Riesgos y accidentes</Text>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
                     <StatCard label="Riesgos activos" value={resumen.riesgos.total_activos} icon={IconShieldCheck} />
-                    <StatCard label="Accidentes en el período" value={resumen.accidentes.total} icon={IconAlertTriangle} tone="danger" />
-                    <StatCard label="Con atención médica" value={resumen.accidentes.con_atencion_medica} icon={IconStethoscope} tone="warning" />
-                    <StatCard label="Días de reposo" value={resumen.accidentes.dias_reposo_total} icon={IconBed} tone="warning" />
+                    <StatCard
+                      label="Accidentes en el período"
+                      value={resumen.accidentes.total}
+                      icon={IconAlertTriangle}
+                      tone={resumen.accidentes.total > 0 ? 'danger' : undefined}
+                    />
+                    <StatCard
+                      label="Con atención médica"
+                      value={resumen.accidentes.con_atencion_medica}
+                      icon={IconStethoscope}
+                      tone={resumen.accidentes.con_atencion_medica > 0 ? 'warning' : undefined}
+                    />
+                    <StatCard
+                      label="Días de reposo"
+                      value={resumen.accidentes.dias_reposo_total}
+                      icon={IconBed}
+                      tone={resumen.accidentes.dias_reposo_total > 0 ? 'warning' : undefined}
+                    />
                   </SimpleGrid>
                 </Box>
 
@@ -115,18 +134,52 @@ export function DashboardSsoView() {
                 <Box>
                   <Text fw={600} mb="xs">Cumplimiento y programa de drogas</Text>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-                    <StatCard label="Normativa cumple" value={resumen.cumplimiento.cumple} icon={IconClipboardCheck} tone="success" hint={`sobre ${resumen.cumplimiento.total}`} />
-                    <StatCard label="Normativa no cumple" value={resumen.cumplimiento.no_cumple} icon={IconClipboardCheck} tone="danger" />
-                    <StatCard label="Actividades ejecutadas" value={resumen.programa_drogas.ejecutada} icon={IconChecklist} tone="success" hint={`sobre ${resumen.programa_drogas.total}`} />
-                    <StatCard label="Actividades pendientes" value={resumen.programa_drogas.pendiente} icon={IconChecklist} tone="warning" />
+                    <StatCard
+                      label="Normativa cumple"
+                      value={resumen.cumplimiento.cumple}
+                      icon={IconClipboardCheck}
+                      tone={resumen.cumplimiento.cumple > 0 ? 'success' : undefined}
+                      hint={`sobre ${resumen.cumplimiento.total}`}
+                    />
+                    <StatCard
+                      label="Normativa no cumple"
+                      value={resumen.cumplimiento.no_cumple}
+                      icon={IconClipboardCheck}
+                      tone={resumen.cumplimiento.no_cumple > 0 ? 'danger' : undefined}
+                    />
+                    <StatCard
+                      label="Actividades ejecutadas"
+                      value={resumen.programa_drogas.ejecutada}
+                      icon={IconChecklist}
+                      tone={resumen.programa_drogas.ejecutada > 0 ? 'success' : undefined}
+                      hint={`sobre ${resumen.programa_drogas.total}`}
+                    />
+                    <StatCard
+                      label="Actividades pendientes"
+                      value={resumen.programa_drogas.pendiente}
+                      icon={IconChecklist}
+                      tone={resumen.programa_drogas.pendiente > 0 ? 'warning' : undefined}
+                    />
                   </SimpleGrid>
                 </Box>
 
                 <Box>
                   <Text fw={600} mb="xs">Tamizajes y ausentismo</Text>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-                    <StatCard label="ASSIST — riesgo alto" value={resumen.assist.riesgo_alto} icon={IconVaccine} tone="danger" hint={`sobre ${resumen.assist.total_respuestas} respuestas`} />
-                    <StatCard label="Psicosocial — riesgo alto" value={resumen.psicosocial.riesgo_alto} icon={IconMoodSmile} tone="danger" hint={`sobre ${resumen.psicosocial.total_respuestas} respuestas`} />
+                    <StatCard
+                      label="ASSIST — riesgo alto"
+                      value={resumen.assist.riesgo_alto}
+                      icon={IconVaccine}
+                      tone={resumen.assist.riesgo_alto > 0 ? 'danger' : undefined}
+                      hint={`sobre ${resumen.assist.total_respuestas} respuestas`}
+                    />
+                    <StatCard
+                      label="Psicosocial — riesgo alto"
+                      value={resumen.psicosocial.riesgo_alto}
+                      icon={IconMoodSmile}
+                      tone={resumen.psicosocial.riesgo_alto > 0 ? 'danger' : undefined}
+                      hint={`sobre ${resumen.psicosocial.total_respuestas} respuestas`}
+                    />
                     <StatCard label="Servidores con permiso por enfermedad" value={resumen.ausentismo.servidores_afectados} icon={IconUsers} />
                     <StatCard label="Días de ausentismo" value={resumen.ausentismo.total_dias} icon={IconCalendarOff} />
                   </SimpleGrid>

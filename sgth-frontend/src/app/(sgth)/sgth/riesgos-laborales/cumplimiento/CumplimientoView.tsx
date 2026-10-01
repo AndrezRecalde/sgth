@@ -13,11 +13,15 @@ import { useListaVerificacion } from '@/features/sso/hooks/useCumplimiento'
 import { NormativaLegalModal } from '@/features/sso/components/NormativaLegalModal'
 import { RegistrarCumplimientoModal } from '@/features/sso/components/RegistrarCumplimientoModal'
 import { columnasListaVerificacion } from '@/features/sso/components/listaVerificacion.columns'
+import { TONO_ESTADO_CUMPLIMIENTO } from '@/features/sso/schemas/cumplimiento.schema'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
 import type { FilaListaVerificacion } from '@/features/sso/services/tipos'
 
 export function CumplimientoView() {
-  const contained = useContainedInput()
+  // La variante compacta de 40 px: es una barra de filtros, no un formulario
+  // de captura (regla 06).
+  const contained = useContainedInput('sm')
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
   const [normativasOpened, { open: openNormativas, close: closeNormativas }] = useDisclosure(false)
@@ -106,11 +110,21 @@ export function CumplimientoView() {
         >
           {lista && (
             <>
+              {/* El color de cada total sale del mismo mapa que la insignia de
+                  su fila (regla 06): escritos a mano, «En proceso» era `amber.7`
+                  aquí y el ámbar del sistema tres centímetros más abajo, en la
+                  tabla. */}
               <Group gap="lg" mb="sm">
                 <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
-                <Text size="sm" c="emerald">Cumple: <Text span fw={600}>{lista.totales.cumple}</Text></Text>
-                <Text size="sm" c="red">No cumple: <Text span fw={600}>{lista.totales.no_cumple}</Text></Text>
-                <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ESTADO_CUMPLIMIENTO.cumple]}>
+                  Cumple: <Text span fw={600}>{lista.totales.cumple}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ESTADO_CUMPLIMIENTO.no_cumple]}>
+                  No cumple: <Text span fw={600}>{lista.totales.no_cumple}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ESTADO_CUMPLIMIENTO.en_proceso]}>
+                  En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text>
+                </Text>
                 <Text size="sm" c="dimmed">Sin registrar: <Text span fw={600}>{lista.totales.no_registrado}</Text></Text>
               </Group>
 

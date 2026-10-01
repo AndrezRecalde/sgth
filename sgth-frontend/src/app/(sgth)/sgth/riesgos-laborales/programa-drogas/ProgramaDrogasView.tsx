@@ -13,11 +13,15 @@ import { useListaSeguimientoPrograma } from '@/features/sso/hooks/useProgramaDro
 import { CatalogoActividadesProgramaModal } from '@/features/sso/components/CatalogoActividadesProgramaModal'
 import { RegistrarSeguimientoProgramaModal } from '@/features/sso/components/RegistrarSeguimientoProgramaModal'
 import { columnasSeguimientoPrograma } from '@/features/sso/components/seguimientoPrograma.columns'
+import { TONO_ACTIVIDAD_PROGRAMA } from '@/features/sso/schemas/programaDrogas.schema'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
 import type { FilaSeguimientoPrograma } from '@/features/sso/services/programaDrogasService'
 
 export function ProgramaDrogasView() {
-  const contained = useContainedInput()
+  // La variante compacta de 40 px: es una barra de filtros, no un formulario
+  // de captura (regla 06).
+  const contained = useContainedInput('sm')
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
   const [catalogoOpened, { open: openCatalogo, close: closeCatalogo }] = useDisclosure(false)
@@ -109,11 +113,20 @@ export function ProgramaDrogasView() {
         >
           {lista && (
             <>
+              {/* El color de cada total sale del mismo mapa que la insignia de
+                  su fila (regla 06): escritos a mano, «En proceso» era `amber.7`
+                  aquí y el ámbar del sistema en la tabla de cada fase. */}
               <Group gap="lg" mb="md">
                 <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
-                <Text size="sm" c="emerald">Ejecutadas: <Text span fw={600}>{lista.totales.ejecutada}</Text></Text>
-                <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
-                <Text size="sm" c="red">No ejecutadas: <Text span fw={600}>{lista.totales.no_ejecutada}</Text></Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ACTIVIDAD_PROGRAMA.ejecutada]}>
+                  Ejecutadas: <Text span fw={600}>{lista.totales.ejecutada}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ACTIVIDAD_PROGRAMA.en_proceso]}>
+                  En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ACTIVIDAD_PROGRAMA.no_ejecutada]}>
+                  No ejecutadas: <Text span fw={600}>{lista.totales.no_ejecutada}</Text>
+                </Text>
                 <Text size="sm" c="dimmed">Pendientes: <Text span fw={600}>{lista.totales.pendiente}</Text></Text>
               </Group>
 
