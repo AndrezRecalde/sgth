@@ -5,10 +5,7 @@ import { DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
 import { IconMoodSmile } from '@tabler/icons-react'
 import { useResultadosPsicosociales } from '../hooks/usePsicosocial'
 import { NIVEL_RIESGO_PSICOSOCIAL_LABELS, TONO_RIESGO_PSICOSOCIAL } from '../schemas/psicosocial.schema'
-import type { ResultadoDimensionAgregado } from '../services/psicosocialService'
-import type { DataTableColumn } from 'mantine-datatable'
-
-type FilaDimension = ResultadoDimensionAgregado & { key: string }
+import { columnasResultadoDimension } from './resultadoDimension.columns'
 
 interface Props {
   opened: boolean
@@ -18,13 +15,6 @@ interface Props {
 
 export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Props) {
   const { data: resultados, isLoading, error, refetch } = useResultadosPsicosociales(campaniaId)
-
-  const columns: DataTableColumn<FilaDimension>[] = [
-    { accessor: 'etiqueta', title: 'Dimensión' },
-    { accessor: 'bajo', title: 'Bajo', textAlign: 'center', width: 90 },
-    { accessor: 'medio', title: 'Medio', textAlign: 'center', width: 90 },
-    { accessor: 'alto', title: 'Alto', textAlign: 'center', width: 90 },
-  ]
 
   return (
     <SgthModal
@@ -66,7 +56,7 @@ export function ResultadosPsicosocialesModal({ opened, onClose, campaniaId }: Pr
 
             <SgthTable
               records={Object.entries(resultados.por_dimension).map(([key, d]) => ({ key, ...d }))}
-              columns={columns}
+              columns={columnasResultadoDimension}
               idAccessor="key"
               minHeight={120}
             />

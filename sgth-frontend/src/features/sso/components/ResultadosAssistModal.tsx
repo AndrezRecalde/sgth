@@ -1,14 +1,11 @@
 'use client'
 
 import { Stack, Text, Group, SimpleGrid, Paper } from '@mantine/core'
-import { CountBadge, DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
+import { DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
 import { IconVaccine } from '@tabler/icons-react'
 import { useResultadosAssist } from '../hooks/useAssist'
 import { NIVEL_RIESGO_ASSIST_LABELS, TONO_RIESGO_ASSIST } from '../schemas/assist.schema'
-import type { ResultadoSustanciaAgregado } from '../services/assistService'
-import type { DataTableColumn } from 'mantine-datatable'
-
-type FilaSustancia = ResultadoSustanciaAgregado & { key: string }
+import { columnasResultadoSustancia } from './resultadoSustancia.columns'
 
 interface Props {
   opened: boolean
@@ -18,32 +15,6 @@ interface Props {
 
 export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
   const { data: resultados, isLoading, error, refetch } = useResultadosAssist(campaniaId)
-
-  const columns: DataTableColumn<FilaSustancia>[] = [
-    { accessor: 'etiqueta', title: 'Sustancia' },
-    { accessor: 'total_consumieron', title: 'Consumieron', textAlign: 'center', width: 100 },
-    {
-      accessor: 'bajo',
-      title: 'Bajo',
-      textAlign: 'center',
-      width: 80,
-      render: (f) => <CountBadge tone={TONO_RIESGO_ASSIST.bajo}>{f.bajo}</CountBadge>,
-    },
-    {
-      accessor: 'moderado',
-      title: 'Moderado',
-      textAlign: 'center',
-      width: 90,
-      render: (f) => <CountBadge tone={TONO_RIESGO_ASSIST.moderado}>{f.moderado}</CountBadge>,
-    },
-    {
-      accessor: 'alto',
-      title: 'Alto',
-      textAlign: 'center',
-      width: 80,
-      render: (f) => <CountBadge tone={TONO_RIESGO_ASSIST.alto}>{f.alto}</CountBadge>,
-    },
-  ]
 
   return (
     <SgthModal
@@ -97,7 +68,7 @@ export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
 
             <SgthTable
               records={Object.entries(resultados.por_sustancia).map(([key, d]) => ({ key, ...d }))}
-              columns={columns}
+              columns={columnasResultadoSustancia}
               idAccessor="key"
               minHeight={200}
             />
