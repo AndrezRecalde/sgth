@@ -12,7 +12,7 @@ import { MOTIVO_ENTREGA_OPTIONS } from '../schemas/eppEntrega.schema'
 import { formatFecha } from '@/lib/fecha'
 import type { EppEntrega } from '../services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, SgthTable, StatusBadge } from '@/components/ui'
+import { DataState, PAGINACION_ES, SgthTable, StatusBadge } from '@/components/ui'
 
 export function EntregasEppTab() {
   const [page, setPage] = useState(1)
@@ -105,6 +105,7 @@ export function EntregasEppTab() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columns}
           totalRecords={data?.total ?? 0}

@@ -11,7 +11,7 @@ import { IconTrash, IconPlus, IconHelmet } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useEquiposPorPuesto, usePuestoEppMutations } from '../hooks/usePuestoEpp'
-import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
+import { useCatalogoEquiposProteccion } from '../hooks/useEquiposProteccion'
 import { puestoEppSchema, type PuestoEppFormData } from '../schemas/puestoEpp.schema'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import type { PuestoEpp } from '../services/tipos'
@@ -35,15 +35,19 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
 
   const { data: asignaciones = [], isLoading, error, refetch } = useEquiposPorPuesto(puestoId)
   const { asignar, eliminar } = usePuestoEppMutations(puestoId)
-  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
+  const { data: equipos = [], error: errorEquipos } = useCatalogoEquiposProteccion()
 
-  // Fuera los que este puesto ya requiere. `asignarEquipoAPuesto` es un
-  // `updateOrCreate`: volver a elegir uno ya asignado no daba error, pisaba su
-  // cantidad y dejaba la frecuencia de reposición en blanco, y la pantalla
-  // respondía «equipo asignado». La tabla de abajo ya los muestra; ofrecerlos
-  // otra vez en el desplegable solo servía para pisarlos sin querer.
+  // Fuera los que este puesto ya requiere: la tabla de abajo ya los muestra, y
+  // ofrecerlos otra vez solo lleva al rechazo del backend.
+  //
+  // `asignarEquipoAPuesto` FUE un `updateOrCreate` —volver a elegir uno ya
+  // asignado pisaba su cantidad y dejaba la frecuencia de reposición en blanco,
+  // y la pantalla respondía «equipo asignado»—, pero ya no: hoy rechaza el
+  // duplicado con un error en `equipo_proteccion_id`. El comentario se quedó
+  // describiendo el código viejo y contradecía al párrafo de abajo, que
+  // describe el nuevo.
   const yaAsignados = new Set(asignaciones.map(a => a.equipo_proteccion_id))
-  const equipoOptions = (equiposData?.data ?? [])
+  const equipoOptions = equipos
     .filter(e => !yaAsignados.has(e.id))
     .map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
 

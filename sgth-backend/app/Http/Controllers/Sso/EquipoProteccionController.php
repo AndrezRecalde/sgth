@@ -25,6 +25,23 @@ final class EquipoProteccionController extends Controller
         return ApiResponse::paginado($equipos, 'Equipos de protección obtenidos exitosamente.');
     }
 
+    /**
+     * El catálogo completo de equipos activos, para los desplegables.
+     *
+     * Va en su propia ruta y no como un parámetro de `index` porque `index`
+     * pagina y esto no: los tres formularios que eligen un equipo necesitan
+     * ofrecerlos todos, y leyendo la primera página se quedaban con quince.
+     */
+    public function catalogo(): JsonResponse
+    {
+        $this->authorize('viewAny', EquipoProteccion::class);
+
+        return ApiResponse::ok(
+            $this->ssoService->catalogoEquiposProteccion(),
+            'Catálogo de equipos de protección obtenido exitosamente.',
+        );
+    }
+
     public function store(StoreEquipoProteccionRequest $request): JsonResponse
     {
         $registro = $this->ssoService->registrarEquipoProteccion($request->validated());

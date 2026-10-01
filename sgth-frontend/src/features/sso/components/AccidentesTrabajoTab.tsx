@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, PAGINACION_ES, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
 import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -147,6 +147,7 @@ export function AccidentesTrabajoTab() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columns}
           totalRecords={data?.total ?? 0}

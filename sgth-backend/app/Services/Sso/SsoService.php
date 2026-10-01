@@ -20,6 +20,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Services\Sso\Indicadores\HorasTrabajadas;
 use App\Services\Sso\Indicadores\IndicesReactivos;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 
 final class SsoService implements SsoServiceInterface
@@ -153,6 +154,33 @@ final class SsoService implements SsoServiceInterface
             ->when(isset($filtros['estado']), fn($q) => $q->where('estado', $filtros['estado']))
             ->orderBy('nombre')
             ->paginate($filtros['por_pagina'] ?? 15);
+    }
+
+    /**
+     * El catálogo de equipos activos, sin paginar, para los desplegables.
+     *
+     * Existe porque los tres formularios que eligen un equipo —asignar EPP a
+     * un puesto, registrar un movimiento y entregar el kit— pedían
+     * `listarEquiposProteccion(['estado' => true])`, que PAGINA de 15 en 15.
+     * Leían `datos` y se quedaban con los quince primeros por nombre: con
+     * dieciséis equipos activos, el decimosexto no se podía asignar ni
+     * entregar, y el desplegable decía «Sin equipos en el catálogo».
+     *
+     * Subir el tope de `por_pagina` habría sido el mismo defecto aplazado a
+     * los 101 equipos. Esto es lo que ya hace `FactorRiesgoCatalogoController`
+     * para el catálogo de factores: un listado completo, de solo lectura.
+     *
+     * Devuelve las cuatro columnas que un desplegable necesita y no la fila
+     * entera: lo que se pinta es «EPP-014 — Respirador de media cara».
+     *
+     * @return Collection<int, EquipoProteccion>
+     */
+    public function catalogoEquiposProteccion(): Collection
+    {
+        return EquipoProteccion::query()
+            ->where('estado', true)
+            ->orderBy('nombre')
+            ->get(['id', 'codigo', 'nombre', 'tipo']);
     }
 
     public function obtenerEquipoProteccion(int $id): EquipoProteccion

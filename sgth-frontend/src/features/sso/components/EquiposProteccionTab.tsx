@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, PAGINACION_ES } from '@/components/ui'
 import { useState } from 'react'
 import { Button, Group, Text, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -129,6 +129,7 @@ export function EquiposProteccionTab() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columns}
           totalRecords={data?.total ?? 0}

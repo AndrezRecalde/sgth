@@ -93,6 +93,22 @@ export interface EquipoProteccion {
   estado: boolean
 }
 
+/**
+ * Lo que devuelve `GET /sso/catalogos/equipos-proteccion`: los equipos activos
+ * sin paginar, con las cuatro columnas que un desplegable necesita.
+ *
+ * Es un tipo propio y no `EquipoProteccion` porque el catálogo no trae la
+ * fila entera. Los tres formularios que eligen un equipo pedían el listado
+ * paginado y se quedaban con los quince primeros por nombre: con dieciséis
+ * equipos activos, el decimosexto no se podía asignar ni entregar.
+ */
+export interface EquipoProteccionCatalogo {
+  id: number
+  codigo: string
+  nombre: string
+  tipo: string
+}
+
 export interface InspeccionSso {
   id: number
   unidad_administrativa_id: number
