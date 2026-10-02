@@ -18,10 +18,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * El 401 del login no es una sesión caducada: es una contraseña mal escrita.
+ *
+ * Se trataba igual que cualquier otro 401, así que un intento fallido
+ * recargaba la pantalla de acceso. El aviso de credenciales incorrectas
+ * apenas llegaba a verse, y se perdía el `next` —el permiso del QR al que se
+ * venía—, de modo que al acertar la clave se acababa en el portal.
+ */
+const esIntentoDeLogin = (url: string | undefined) => url === '/auth/login'
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !esIntentoDeLogin(error.config?.url)) {
       if (typeof window !== 'undefined') {
         useAuthStore.getState().clearAuth();
         if (window.location.pathname !== '/login' || !window.location.search.includes('logout=true')) {
