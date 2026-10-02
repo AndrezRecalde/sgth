@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
 
-class FactorRiesgoCatalogoController extends Controller
+final class FactorRiesgoCatalogoController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
