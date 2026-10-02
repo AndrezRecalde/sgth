@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Stack, Group, Button, Text, Grid, Card, Alert,
-} from '@mantine/core'
+import { Group, Button, Text, Alert } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
   IconSearch,
@@ -17,9 +15,9 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { asistenciaService } from '@/features/asistencia/services/asistenciaService'
 import { guardarArchivo } from '@/lib/archivo'
 import { fromDateValue } from '@/lib/fecha'
-import { DataState, notificar, SgthTable } from '@/components/ui'
+import { DataState, notificar, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
 import { getConsolidadoColumns } from '@/features/asistencia/components/consolidado.columns'
-import { clavesSso } from '../constants/claves'
+import { clavesSso } from '@/features/sso/constants/claves'
 
 const TIPO_ENFERMEDAD = 'enfermedad'
 
@@ -27,8 +25,10 @@ const TIPO_ENFERMEDAD = 'enfermedad'
  * Ausentismo por enfermedad (Fase 10): sin backend propio — consume el mismo
  * ConsolidadoPermisoController de Asistencia, fijando tipo='enfermedad'.
  */
-export function AusentismoTab() {
-  const contained = useContainedInput()
+export function AusentismoView() {
+  // La variante compacta de 40 px: barra de filtros, no formulario de
+  // captura (regla 06).
+  const compacto = useContainedInput('sm')
 
   const [fechaInicio, setFechaInicio] = useState<Date | string | null>(null)
   const [fechaFin, setFechaFin] = useState<Date | string | null>(null)
@@ -79,49 +79,46 @@ export function AusentismoTab() {
   }
 
   return (
-    <Stack gap="md">
-      <Text size="sm" c="dimmed">
-        Ausentismo por enfermedad — consolidado de permisos médicos del módulo de Asistencia,
-        filtrado a permisos de tipo &quot;enfermedad&quot;. Indicador reactivo de Seguridad y Salud Ocupacional.
-      </Text>
+    <PageShell>
+      <PageHeader
+        title="Ausentismo por Enfermedad"
+        description="Consolidado de permisos médicos del período, como indicador reactivo de seguridad y salud"
+      />
 
-      <Card withBorder radius="md" p="md">
-        <Text fw={600} size="sm" mb="sm">Filtros</Text>
-        <Grid>
-          <Grid.Col span={{ base: 12, sm: 5 }}>
-            <DatePickerInput
-              label="Fecha inicio"
-              placeholder="Desde"
-              valueFormat="YYYY-MM-DD"
-              {...contained}
-              value={fechaInicio}
-              onChange={(v) => setFechaInicio(v)}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 5 }}>
-            <DatePickerInput
-              label="Fecha fin"
-              placeholder="Hasta"
-              valueFormat="YYYY-MM-DD"
-              {...contained}
-              value={fechaFin}
-              onChange={(v) => setFechaFin(v)}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 2 }} style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <Button
-              variant="light"
-              leftSection={<IconSearch size={16} />}
-              disabled={!canSearch}
-              loading={isLoading && buscar}
-              onClick={() => { setBuscar(true); refetch() }}
-              fullWidth
-            >
-              Consultar
-            </Button>
-          </Grid.Col>
-        </Grid>
-      </Card>
+      {/* En `Toolbar` y no en un `Card` con un `Text` que dice «Filtros»: eso
+          es exactamente lo que el componente del catálogo resuelve, con la
+          variante compacta de 40 px que la regla 06 pide para una barra de
+          filtros. */}
+      <Toolbar
+        actions={
+          <Button
+            variant="light"
+            leftSection={<IconSearch size={16} />}
+            disabled={!canSearch}
+            loading={isLoading && buscar}
+            onClick={() => { setBuscar(true); refetch() }}
+          >
+            Consultar
+          </Button>
+        }
+      >
+        <DatePickerInput
+          label="Fecha inicio"
+          placeholder="Desde"
+          valueFormat="YYYY-MM-DD"
+          {...compacto}
+          value={fechaInicio}
+          onChange={(v) => setFechaInicio(v)}
+        />
+        <DatePickerInput
+          label="Fecha fin"
+          placeholder="Hasta"
+          valueFormat="YYYY-MM-DD"
+          {...compacto}
+          value={fechaFin}
+          onChange={(v) => setFechaFin(v)}
+        />
+      </Toolbar>
 
       {buscar && consolidado.length > 0 && (
         <Group justify="flex-end" gap="sm">
@@ -173,6 +170,6 @@ export function AusentismoTab() {
           />
         </DataState>
       )}
-    </Stack>
+    </PageShell>
   )
 }

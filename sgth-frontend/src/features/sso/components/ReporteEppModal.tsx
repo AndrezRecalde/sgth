@@ -2,15 +2,14 @@
 
 import { useState } from 'react'
 import { Stack, Grid, Group, Button, Text } from '@mantine/core'
-import { CountBadge, DataState, SgthModal, SgthTable } from '@/components/ui'
+import { DataState, SgthModal, SgthTable } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
 import { IconSearch, IconTruckDelivery } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useReporteEppEntregas } from '../hooks/useEppEntregas'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
-import type { ReporteEppFila } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
+import { columnasReporteEpp } from './reporteEpp.columns'
 
 interface Props {
   opened: boolean
@@ -31,26 +30,6 @@ export function ReporteEppModal({ opened, onClose }: Props) {
     if (!fechaInicio || !fechaFin) return
     setFiltros({ fecha_inicio: fechaInicio, fecha_fin: fechaFin, puesto_id: puestoId ?? undefined })
   }
-
-  const columns: DataTableColumn<ReporteEppFila>[] = [
-    { accessor: 'servidor_nombre', title: 'Servidor' },
-    { accessor: 'puesto', title: 'Puesto' },
-    {
-      accessor: 'total_entregas',
-      title: 'Entregas',
-      render: (f) => <CountBadge>{f.total_entregas}</CountBadge>,
-    },
-    {
-      accessor: 'total_devoluciones',
-      title: 'Devoluciones',
-      render: (f) => <CountBadge>{f.total_devoluciones}</CountBadge>,
-    },
-    {
-      accessor: 'total_reposiciones',
-      title: 'Reposiciones',
-      render: (f) => <CountBadge>{f.total_reposiciones}</CountBadge>,
-    },
-  ]
 
   return (
     <SgthModal
@@ -133,7 +112,7 @@ export function ReporteEppModal({ opened, onClose }: Props) {
 
                 <SgthTable
                   records={reporte.consolidado}
-                  columns={columns}
+                  columns={columnasReporteEpp}
                   idAccessor="servidor_id"
                   minHeight={120}
                 />

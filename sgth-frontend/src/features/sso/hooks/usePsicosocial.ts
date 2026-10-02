@@ -39,7 +39,7 @@ export function usePsicosocialMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo crear la campaña psicosocial'),
+    onError: notificar.alFallarSalvoCampos('No se pudo crear la campaña psicosocial'),
   })
 
   const cerrarCampania = useMutation({
