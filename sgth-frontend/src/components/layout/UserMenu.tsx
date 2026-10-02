@@ -4,10 +4,11 @@ import {
   Avatar, Divider, Group, Menu, Stack, Switch, Text,
   UnstyledButton, useMantineColorScheme,
 } from '@mantine/core'
-import { IconLogout, IconMoon, IconSun } from '@tabler/icons-react'
+import { useDisclosure } from '@mantine/hooks'
+import { IconKey, IconLogout, IconMoon, IconSun } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
-import { ROUTES } from '@/config/routes'
-import { authService } from '@/features/auth/services/authService'
+import { CambiarContrasenaModal } from '@/features/auth/components/CambiarContrasenaModal'
+import { useCerrarSesion } from '@/features/auth/hooks/useCerrarSesion'
 
 /** Iniciales para el avatar: primer nombre + primer apellido. */
 function iniciales(nombre: string): string {
@@ -26,96 +27,97 @@ function iniciales(nombre: string): string {
  */
 export function UserMenu() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
-  const { usuario, clearAuth } = useAuth()
+  const { usuario, hasPermiso } = useAuth()
+  const { cerrarSesion } = useCerrarSesion()
+  const [cambiandoClave, cambioDeClave] = useDisclosure(false)
 
   const nombre = usuario?.nombre_completo || usuario?.usuario_ti || 'Usuario'
   const iniciada = iniciales(nombre)
   const primerNombre = nombre.split(' ')[0]
 
-  const cerrarSesion = async () => {
-    // Primero el servidor: revoca el token y deja al médico como no
-    // disponible en el Dispensario. Antes solo se borraba el estado local, y
-    // el token seguía valiendo hasta caducar mientras el médico aparecía
-    // disponible para recibir turnos. Si la llamada falla —sin red, token ya
-    // caducado— se sale igual: quedarse dentro no es una opción.
-    try {
-      await authService.logout()
-    } catch {
-      // Sin nada que hacer: la sesión local se cierra de todos modos.
-    }
-
-    clearAuth()
-    // Recarga completa a propósito: descarta la caché de TanStack Query, que
-    // guarda datos del servidor del usuario que sale.
-    window.location.href = `${ROUTES.AUTH.LOGIN}?logout=true`
-  }
-
   return (
-    <Menu width={280} position="bottom-end" transitionProps={{ transition: 'pop' }}>
-      <Menu.Target>
-        <UnstyledButton aria-label="Menú de usuario">
-          <Avatar variant="filled" color="var(--sgth-accent)" size={34} radius="xl" fw={600}>
-            {iniciada}
-          </Avatar>
-        </UnstyledButton>
-      </Menu.Target>
+    <>
+      <Menu width={280} position="bottom-end" transitionProps={{ transition: 'pop' }}>
+        <Menu.Target>
+          <UnstyledButton aria-label="Menú de usuario">
+            <Avatar variant="filled" color="var(--sgth-accent)" size={34} radius="xl" fw={600}>
+              {iniciada}
+            </Avatar>
+          </UnstyledButton>
+        </Menu.Target>
 
-      <Menu.Dropdown p="xs">
-        <Group gap="sm" wrap="nowrap" px="xs" py="sm">
-          <Avatar variant="filled" color="var(--sgth-accent)" size={42} radius="xl" fw={600}>
-            {iniciada}
-          </Avatar>
-          <Stack gap={0} style={{ minWidth: 0 }}>
-            <Text size="sm" fw={600} truncate>
-              {primerNombre}
-            </Text>
-            <Text size="xs" c="dimmed" truncate>
-              {usuario?.email}
-            </Text>
-          </Stack>
-        </Group>
+        <Menu.Dropdown p="xs">
+          <Group gap="sm" wrap="nowrap" px="xs" py="sm">
+            <Avatar variant="filled" color="var(--sgth-accent)" size={42} radius="xl" fw={600}>
+              {iniciada}
+            </Avatar>
+            <Stack gap={0} style={{ minWidth: 0 }}>
+              <Text size="sm" fw={600} truncate>
+                {primerNombre}
+              </Text>
+              <Text size="xs" c="dimmed" truncate>
+                {usuario?.email}
+              </Text>
+            </Stack>
+          </Group>
 
-        <Divider my={4} />
+          <Divider my={4} />
 
-        {/* Aquí iría "Gestionar mi cuenta". Se quitó porque /configuracion no
-            existe: el menú anterior ofrecía un botón que no llevaba a ninguna
-            parte. Cuando exista la pantalla, se agrega con su ruta en
-            config/routes.ts, no con la URL escrita aquí. */}
+          {/* Aquí iría "Gestionar mi cuenta". Se quitó porque /configuracion no
+              existe: el menú anterior ofrecía un botón que no llevaba a ninguna
+              parte. Cuando exista la pantalla, se agrega con su ruta en
+              config/routes.ts, no con la URL escrita aquí. */}
 
-        <Menu.Item
-          closeMenuOnClick={false}
-          onClick={toggleColorScheme}
-          leftSection={
-            colorScheme === 'dark' ? (
-              <IconSun size={17} stroke={1.6} />
-            ) : (
-              <IconMoon size={17} stroke={1.6} />
-            )
-          }
-          rightSection={
-            <Switch
-              checked={colorScheme === 'dark'}
-              size="xs"
-              readOnly
-              tabIndex={-1}
-              style={{ pointerEvents: 'none' }}
-              aria-hidden
-            />
-          }
-        >
-          Modo oscuro
-        </Menu.Item>
+          <Menu.Item
+            closeMenuOnClick={false}
+            onClick={toggleColorScheme}
+            leftSection={
+              colorScheme === 'dark' ? (
+                <IconSun size={17} stroke={1.6} />
+              ) : (
+                <IconMoon size={17} stroke={1.6} />
+              )
+            }
+            rightSection={
+              <Switch
+                checked={colorScheme === 'dark'}
+                size="xs"
+                readOnly
+                tabIndex={-1}
+                style={{ pointerEvents: 'none' }}
+                aria-hidden
+              />
+            }
+          >
+            Modo oscuro
+          </Menu.Item>
 
-        <Divider my={4} />
+          {/* Lo tienen todos los servidores; el permiso existe para poder
+              retirárselo a una cuenta compartida o de servicio. */}
+          {hasPermiso('cambiar-contrasena') && (
+            <Menu.Item
+              leftSection={<IconKey size={17} stroke={1.6} />}
+              onClick={cambioDeClave.open}
+            >
+              Cambiar contraseña
+            </Menu.Item>
+          )}
 
-        <Menu.Item
-          color="red"
-          leftSection={<IconLogout size={17} stroke={1.6} />}
-          onClick={cerrarSesion}
-        >
-          Cerrar sesión
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+          <Divider my={4} />
+
+          <Menu.Item
+            color="red"
+            leftSection={<IconLogout size={17} stroke={1.6} />}
+            onClick={cerrarSesion}
+          >
+            Cerrar sesión
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+
+      {/* Fuera del menú: su desplegable se desmonta al cerrarse, y con él
+          se iría el modal. */}
+      <CambiarContrasenaModal opened={cambiandoClave} onClose={cambioDeClave.close} />
+    </>
   )
 }

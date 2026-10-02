@@ -23,4 +23,12 @@ interface AuthServiceInterface
      * @param  string  $nuevaContrasena  La nueva contraseña
      */
     public function cambiarContrasenaInicial(User $user, string $nuevaContrasena): void;
+
+    /**
+     * Cambiar la contraseña y cerrar las demás sesiones del usuario.
+     *
+     * @param  User  $user  El usuario autenticado
+     * @param  string  $nuevaContrasena  La nueva contraseña, ya validada
+     */
+    public function cambiarContrasena(User $user, string $nuevaContrasena): void;
 }

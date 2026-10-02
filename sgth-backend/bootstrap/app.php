@@ -140,6 +140,25 @@ return Application::configure(basePath: dirname(__DIR__))
             return null; // no es una violación de unicidad: sigue al handler genérico
         });
 
+        // El `throttle` de las rutas responde «Too Many Attempts.», en inglés
+        // y sin decir cuánto esperar. Los límites propios —el del login—
+        // ya traen su mensaje y se respetan.
+        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e) {
+            if ($e->getMessage() !== 'Too Many Attempts.') {
+                return null;
+            }
+
+            $segundos = $e->getHeaders()['Retry-After'] ?? null;
+
+            return ApiResponse::error(
+                $segundos
+                    ? "Demasiados intentos. Intente nuevamente en {$segundos} segundos."
+                    : 'Demasiados intentos. Intente nuevamente en un momento.',
+                null,
+                429,
+            )->withHeaders($e->getHeaders());
+        });
+
         // Cualquier excepción HTTP no cubierta arriba (405, 400, 409, 429...)
         // debe responder con su código real, no caer al catch-all de 500.
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
