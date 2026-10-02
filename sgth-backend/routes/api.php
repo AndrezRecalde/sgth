@@ -32,6 +32,7 @@ use App\Http\Controllers\Dispensario\ConsultaMedicaController;
 use App\Http\Controllers\Dispensario\DashboardDispensarioController;
 use App\Http\Controllers\Dispensario\DiagnosticoCie10Controller;
 use App\Http\Controllers\Dispensario\DisponibilidadController;
+use App\Http\Controllers\Dispensario\CoberturaCertificacionController;
 use App\Http\Controllers\Dispensario\FemoPdfController;
 use App\Http\Controllers\Dispensario\FichaSaludOcupacionalController;
 use App\Http\Controllers\Dispensario\HistoriaClinicaController;
@@ -1378,6 +1379,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 // Quien la pidió la retira: cancelar no es un acto médico. El
                 // controlador comprueba `solicitar-certificacion-medica`.
                 Route::patch('{id}/cancelar', [SolicitudCertificacionController::class, 'cancelar']);
+            });
+
+        // El tablero de cobertura: una fila por servidor activo, no por
+        // solicitud. Es el único sitio desde donde se ve a quien nunca tuvo
+        // una evaluación, así que lo leen los mismos que el seguimiento.
+        Route::prefix('certificaciones/cobertura')
+            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath|analista-uath')
+            ->group(function () {
+                Route::get('/', [CoberturaCertificacionController::class, 'index']);
+                Route::get('excel', [CoberturaCertificacionController::class, 'excel']);
             });
 
         // Lectura del seguimiento: el médico trabaja sobre estas solicitudes y

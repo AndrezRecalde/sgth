@@ -9,13 +9,26 @@ import { DatePickerInput } from '@mantine/dates'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCrearSolicitudLote } from '@/features/dispensario/hooks/useSolicitudCertificacion'
-import type { ServidorConRelaciones } from '@/types/api'
 import { fromDateValueOrNull } from '@/lib/fecha'
+
+/**
+ * Lo único que el modal necesita de un servidor.
+ *
+ * Pedía un `ServidorConRelaciones` entero y usaba cuatro campos. El tablero de
+ * cobertura no trae expedientes completos —trae filas de un informe—, y con el
+ * tipo ancho habría que inventar un servidor a medias para abrirlo.
+ */
+export interface ServidorParaLote {
+  id:        number
+  cedula?:   string
+  nombre?:   string
+  apellido?: string
+}
 
 interface Props {
   opened:    boolean
   onClose:   () => void
-  servidores: ServidorConRelaciones[]
+  servidores: ServidorParaLote[]
 }
 
 const TIPO_EVENTO_LOTE_OPTIONS = [
@@ -82,7 +95,7 @@ export function SolicitarCertificacionLoteModal({
           <List size="sm" spacing={4}>
             {servidores.map(s => (
               <List.Item key={s.id}>
-                {s.nombre} {s.apellido}
+                {[s.nombre, s.apellido].filter(Boolean).join(' ')}
                 {' '}
                 <Text span size="xs" c="dimmed" ff="monospace">
                   ({s.cedula})

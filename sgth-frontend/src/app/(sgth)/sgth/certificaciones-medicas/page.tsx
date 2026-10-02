@@ -3,7 +3,7 @@ import { CertificacionesMedicasView } from './CertificacionesMedicasView'
 
 export const metadata: Metadata = {
   title: 'Certificaciones médicas',
-  description: 'Seguimiento de las solicitudes enviadas al Dispensario Médico',
+  description: 'Cobertura de las evaluaciones médicas ocupacionales de la plantilla',
 }
 
 export default function CertificacionesMedicasPage() {
