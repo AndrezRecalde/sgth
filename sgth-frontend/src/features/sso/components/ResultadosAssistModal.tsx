@@ -1,8 +1,10 @@
 'use client'
 
-import { Stack, Text, Group, SimpleGrid, Paper } from '@mantine/core'
-import { DataState, SgthModal, SgthTable, StatusBadge } from '@/components/ui'
-import { IconVaccine } from '@tabler/icons-react'
+import { Stack, Group, SimpleGrid } from '@mantine/core'
+import { DataState, SgthModal, SgthTable, StatCard, StatusBadge } from '@/components/ui'
+import {
+  IconAlertTriangle, IconMoodSmile, IconUsers, IconVaccine,
+} from '@tabler/icons-react'
 import { useResultadosAssist } from '../hooks/useAssist'
 import { NIVEL_RIESGO_ASSIST_LABELS, TONO_RIESGO_ASSIST } from '../schemas/assist.schema'
 import { columnasResultadoSustancia } from './resultadoSustancia.columns'
@@ -39,23 +41,37 @@ export function ResultadosAssistModal({ opened, onClose, campaniaId }: Props) {
       >
         {resultados && resultados.total_respuestas > 0 && (
           <Stack gap="md">
+            {/* `StatCard` y no cuatro `Paper` a mano: es el indicador numérico
+                del catálogo (regla 06), y escrito a mano salía con otro radio,
+                otro padding y sin el icono que llevan los del tablero.
+
+                El tono solo cuando la cifra tiene lectura: cero de riesgo alto
+                no es una mala noticia que haya que pintar de rojo. */}
             <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
-              <Paper withBorder p="sm" radius="md">
-                <Text size="xs" c="dimmed">Total de respuestas</Text>
-                <Text size="xl" fw={700}>{resultados.total_respuestas}</Text>
-              </Paper>
-              <Paper withBorder p="sm" radius="md">
-                <Text size="xs" c="dimmed">No reportan consumo</Text>
-                <Text size="xl" fw={700} c="emerald">{resultados.sin_consumo_reportado}</Text>
-              </Paper>
-              <Paper withBorder p="sm" radius="md">
-                <Text size="xs" c="dimmed">Riesgo alto en alguna sustancia</Text>
-                <Text size="xl" fw={700} c="red">{resultados.riesgo_alto_alguna_sustancia}</Text>
-              </Paper>
-              <Paper withBorder p="sm" radius="md">
-                <Text size="xs" c="dimmed">Uso inyectable reciente (P8)</Text>
-                <Text size="xl" fw={700} c="red">{resultados.uso_inyectable_reciente}</Text>
-              </Paper>
+              <StatCard
+                label="Total de respuestas"
+                value={resultados.total_respuestas}
+                icon={IconUsers}
+              />
+              <StatCard
+                label="No reportan consumo"
+                value={resultados.sin_consumo_reportado}
+                icon={IconMoodSmile}
+                tone={resultados.sin_consumo_reportado > 0 ? 'success' : undefined}
+              />
+              <StatCard
+                label="Riesgo alto en alguna sustancia"
+                value={resultados.riesgo_alto_alguna_sustancia}
+                icon={IconAlertTriangle}
+                tone={resultados.riesgo_alto_alguna_sustancia > 0 ? 'danger' : undefined}
+              />
+              <StatCard
+                label="Uso inyectable reciente"
+                value={resultados.uso_inyectable_reciente}
+                icon={IconVaccine}
+                tone={resultados.uso_inyectable_reciente > 0 ? 'danger' : undefined}
+                hint="pregunta 8 del ASSIST"
+              />
             </SimpleGrid>
 
             <Group gap="xs">
