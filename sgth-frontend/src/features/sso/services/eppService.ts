@@ -2,7 +2,7 @@ import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import { mapPaginado, type PaginadoParams, type RespuestaPaginada } from './paginado'
 import type {
-  EppEntrega, EquipoProteccion, EquipoProteccionCatalogo, PuestoEpp, ReporteEppEntregas,
+  EppEntrega, EquipoProteccion, EquipoProteccionCatalogo, FilaKitEpp, PuestoEpp, ReporteEppEntregas,
 } from './tipos'
 
 /** El catálogo de equipos de protección personal. */
@@ -60,7 +60,7 @@ export const eppEntregasService = {
       .then(r => r.data.datos),
 
   kitDelServidor: (servidorId: number) =>
-    api.get<ApiResponse<PuestoEpp[]>>(`/sso/servidores/${servidorId}/kit-epp`)
+    api.get<ApiResponse<FilaKitEpp[]>>(`/sso/servidores/${servidorId}/kit-epp`)
       .then(r => r.data.datos ?? []),
 
   registrarKit: (data: {

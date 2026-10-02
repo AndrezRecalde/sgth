@@ -18,6 +18,7 @@
  */
 
 import type { components } from '@/types/api.generated'
+import type { EstadoKitEpp } from '../constants/kitEpp'
 
 type Esquemas = components['schemas']
 
@@ -54,6 +55,29 @@ export type CategoriaFactorRiesgo = Esquemas['CategoriaFactorRiesgo']
 export type MotivoEntregaEpp      = Esquemas['MotivoEntregaEpp']
 
 // ── Respuestas compuestas de un servicio ─────
+
+/**
+ * Una fila del kit de un servidor: `GET servidores/{id}/kit-epp`.
+ *
+ * Es el requerimiento del puesto MÁS lo que ya se entregó, y por eso no es un
+ * `PuestoEpp` a secas: el requerimiento no sabe de entregas, el kit sí. Los
+ * tres campos de abajo solo llegan por esta ruta, que es la única que los
+ * calcula.
+ *
+ * El modal premarcaba TODO el kit siempre, así que entregarlo dos veces creaba
+ * filas duplicadas sin aviso. Ahora se premarca lo que toca —lo que falta y lo
+ * que cumplió su plazo— y lo vigente se ve desmarcado, con la fecha en que
+ * vuelve a tocar.
+ *
+ * Esta ruta es la que quedó fuera del barrido de recursos a propósito, porque
+ * este cambio le altera la forma.
+ */
+export interface FilaKitEpp extends PuestoEpp {
+  ultima_entrega?: string | null
+  estado_kit?: EstadoKitEpp
+  reponer_desde?: string | null
+}
+
 
 /**
  * Lo que devuelve `GET /sso/catalogos/equipos-proteccion`: los equipos activos
