@@ -2,21 +2,36 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { solicitudCertificacionService } from '../services/solicitudCertificacionService'
 import { notificar } from '@/components/ui'
 
-export function useSolicitudesCertificacion(params?: {
-  page?:        number
-  estado?:      string
-  tipo_evento?: string
-  servidor_id?: number
-  origen?:      string
-  unidad_administrativa_id?: number
-  anio?:        number
-  per_page?:    number
-}) {
+/** Cada cuánto se refresca la bandeja del médico mientras está abierta. */
+const REFRESCO_BANDEJA_MS = 1000 * 60
+
+export function useSolicitudesCertificacion(
+  params?: {
+    page?:        number
+    estado?:      string
+    tipo_evento?: string
+    servidor_id?: number
+    origen?:      string
+    unidad_administrativa_id?: number
+    anio?:        number
+    per_page?:    number
+  },
+  /**
+   * `enVivo` solo en Salud Ocupacional: ahí la lista es una bandeja de trabajo
+   * que Talento Humano alimenta desde otra pantalla, y quien evalúa necesita
+   * ver llegar lo nuevo sin recargar.
+   *
+   * Las demás son consultas —el seguimiento de Certificaciones médicas y el
+   * historial de una ficha— y reconsultaban solas cada minuto mientras la
+   * pestaña siguiera abierta, sin que nada pudiera haber cambiado desde ellas.
+   */
+  opciones?: { enVivo?: boolean },
+) {
   return useQuery({
     queryKey: ['solicitudes-certificacion', params],
     queryFn:  () => solicitudCertificacionService.listar(params),
     staleTime: 1000 * 30,
-    refetchInterval: 1000 * 60,
+    refetchInterval: opciones?.enVivo ? REFRESCO_BANDEJA_MS : false,
   })
 }
 

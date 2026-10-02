@@ -31,11 +31,16 @@ export function SsoView() {
   const [page, setPage] = useState(1)
   const [filtroEstado, setFiltroEstado] = useState<string>('pendiente')
 
-  const { data, isLoading, error } = useSolicitudesCertificacion({
-    page,
-    per_page: POR_PAGINA,
-    estado: filtroEstado || undefined,
-  })
+  const { data, isLoading, error } = useSolicitudesCertificacion(
+    {
+      page,
+      per_page: POR_PAGINA,
+      estado: filtroEstado || undefined,
+    },
+    // La bandeja de quien evalúa: Talento Humano añade solicitudes desde otra
+    // pantalla y aquí tienen que aparecer solas.
+    { enVivo: true },
+  )
 
   const solicitudes = data?.data ?? []
   const iniciar = useIniciarProceso()
