@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useEppEntregaMutations } from '../hooks/useEppEntregas'
-import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
+import { useCatalogoEquiposProteccion } from '../hooks/useEquiposProteccion'
 import {
   eppEntregaSchema, type EppEntregaFormData, MOTIVO_ENTREGA_OPTIONS,
 } from '../schemas/eppEntrega.schema'
@@ -36,8 +36,8 @@ export function EntregaEppIndividualForm({ onListo, onCancelar }: Props) {
   const contained = useContainedInput()
   const { registrar } = useEppEntregaMutations()
 
-  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
-  const equipoOptions = (equiposData?.data ?? []).map(e => ({
+  const { data: equipos = [], error: errorEquipos } = useCatalogoEquiposProteccion()
+  const equipoOptions = equipos.map(e => ({
     value: String(e.id), label: `${e.codigo} — ${e.nombre}`,
   }))
 

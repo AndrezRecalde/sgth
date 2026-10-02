@@ -56,7 +56,10 @@ final class EppEntregaController extends Controller
             'fecha_entrega' => ['required', 'date', 'before_or_equal:today'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
             'equipos' => ['required', 'array', 'min:1'],
-            'equipos.*.equipo_proteccion_id' => ['required', 'integer', 'exists:equipos_proteccion,id'],
+            // `distinct`: el mismo equipo repetido en el arreglo creaba dos
+            // filas de entrega del mismo equipo al mismo servidor el mismo
+            // día, que es un duplicado que después nadie sabe explicar.
+            'equipos.*.equipo_proteccion_id' => ['required', 'integer', 'distinct', 'exists:equipos_proteccion,id'],
             'equipos.*.cantidad' => ['nullable', 'integer', 'min:1'],
         ]);
 

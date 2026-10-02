@@ -10,6 +10,21 @@ interface Params {
   estado?: boolean
 }
 
+/**
+ * El catálogo de equipos activos, completo.
+ *
+ * Para los desplegables. `useEquiposProteccion` sirve a la TABLA del catálogo,
+ * que sí pagina; usarlo para un `Select` dejaba fuera todo lo que no cupiera
+ * en la primera página.
+ */
+export function useCatalogoEquiposProteccion() {
+  return useQuery({
+    queryKey: clavesSso.epp.equipos.catalogo,
+    queryFn: () => equiposProteccionService.catalogo(),
+    staleTime: 1000 * 60 * 10,
+  })
+}
+
 export function useEquiposProteccion(params?: Params) {
   return useQuery({
     queryKey: clavesSso.epp.equipos.lista(params),

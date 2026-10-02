@@ -4,8 +4,10 @@ namespace App\Services\Sso;
 
 use App\Contracts\Sso\SsoServiceInterface;
 use App\Enums\AlcanceIndicadorSso;
+use App\Enums\EstadoPermiso;
 use App\Enums\NivelRiesgoAssist;
 use App\Enums\NivelRiesgoPsicosocial;
+use App\Enums\TipoPermiso;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Sso\AccidenteTrabajo;
 use App\Models\Sso\EppEntrega;
@@ -218,10 +220,18 @@ final class DashboardSsoService
         // Los minutos se suman en la base: `hora_inicio` y `hora_fin` son
         // columnas `time` obligatorias, así que la resta es un intervalo y da
         // lo mismo que restarlas con Carbon una por una.
+        //
+        // El filtro de estados es el MISMO que usa el consolidado de permisos
+        // de Asistencia, que es de donde sale la pantalla de Ausentismo de este
+        // módulo. Aquí estaba escrito en negativo —«todos menos anulado y
+        // pendiente»—, y así entraban `rechazado` y `falta_injustificada`: dos
+        // permisos que no se concedieron sumando días de ausencia. El tablero y
+        // la pantalla de Ausentismo daban cifras distintas del mismo período, y
+        // la del tablero era la más alta. Ver `EstadoPermiso::concedidos()`.
         $fila = PermisoServidor::query()
             ->whereBetween('fecha', [$inicio, $fin])
-            ->where('tipo', 'enfermedad')
-            ->whereNotIn('estado', ['anulado', 'pendiente'])
+            ->where('tipo', TipoPermiso::ENFERMEDAD->value)
+            ->whereIn('estado', EstadoPermiso::concedidos())
             ->when(
                 $unidadAdministrativaId,
                 fn($q) => $q->whereHas(

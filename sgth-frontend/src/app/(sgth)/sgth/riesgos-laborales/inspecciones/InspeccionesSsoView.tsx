@@ -6,9 +6,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconEdit, IconTrash, IconClipboardList } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import {
-  confirmar, DataState, PageHeader, PageShell, SgthTable, Toolbar, type TableAction,
-} from '@/components/ui'
+import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar, confirmar, type TableAction } from '@/components/ui'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { useInspecciones, useInspeccionMutations } from '@/features/sso/hooks/useInspecciones'
 import { InspeccionSsoModal } from '@/features/sso/components/InspeccionSsoModal'
@@ -138,6 +136,7 @@ export function InspeccionesSsoView() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columnasInspeccion(accionesDe)}
           totalRecords={data?.total ?? 0}

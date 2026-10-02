@@ -2,6 +2,8 @@
 
 namespace App\Services\Sso;
 
+use App\Enums\EstadoKitEpp;
+use App\Enums\MotivoEntregaEpp;
 use App\Models\Sso\PuestoEpp;
 use App\Models\Sso\EppEntrega;
 use App\Models\Expediente\Servidor;
@@ -92,8 +94,27 @@ final class EppService
     }
 
     /**
-     * Kit de EPP requerido para el puesto del servidor (para precargar el modo
-     * "entregar kit completo" en el frontend). Vacío si el servidor no tiene puesto asignado.
+     * Kit de EPP requerido para el puesto del servidor, con lo que ya se le
+     * entregó. Vacío si el servidor no tiene puesto asignado.
+     *
+     * Antes devolvía el requerimiento del puesto a secas, y el modal
+     * «Entregar kit completo» lo premarcaba entero, siempre. No sabía nada de
+     * lo ya entregado: entregar el mismo kit dos veces creaba filas duplicadas
+     * en `epp_entregas` sin un aviso. La comprobación manual que quedó
+     * pendiente en `docs/pendientes-sso.md` —«los equipos entregados ya no
+     * deben aparecer pendientes»— no estaba implementada; invalidar la caché
+     * del kit, que es lo que se hizo entonces, no podía arreglarlo, porque
+     * este endpoint no tenía noción de «pendiente».
+     *
+     * Cada fila llega con tres campos calculados: `ultima_entrega`,
+     * `estado_kit` y `reponer_desde`. El plazo sale de
+     * `frecuencia_reposicion_meses` del puesto y, si no la fijó, de la
+     * `vida_util_meses` del equipo — dos columnas que existían y no leía
+     * nadie. La decisión vive en `EstadoKitEpp`, que se prueba sin base de
+     * datos.
+     *
+     * Devoluciones aparte: una devolución no es una entrega, así que no cuenta
+     * para el plazo. Se miran `entrega` y `reposicion`.
      */
     public function listarKitParaServidor(int $servidorId): Collection
     {
@@ -103,7 +124,42 @@ final class EppService
             return new Collection();
         }
 
-        return $this->listarEquiposPorPuesto($servidor->puesto_id);
+        $requeridos = $this->listarEquiposPorPuesto($servidor->puesto_id);
+
+        if ($requeridos->isEmpty()) {
+            return $requeridos;
+        }
+
+        // Una consulta para todo el kit, no una por equipo: el modal lo abre
+        // quien está entregando y cada fila serían dos viajes a la base.
+        $ultimasEntregas = EppEntrega::query()
+            ->where('servidor_id', $servidorId)
+            ->whereIn('equipo_proteccion_id', $requeridos->pluck('equipo_proteccion_id'))
+            ->whereIn('motivo', [
+                MotivoEntregaEpp::ENTREGA->value,
+                MotivoEntregaEpp::REPOSICION->value,
+            ])
+            ->groupBy('equipo_proteccion_id')
+            ->selectRaw('equipo_proteccion_id, MAX(fecha_entrega) AS ultima')
+            ->pluck('ultima', 'equipo_proteccion_id');
+
+        return $requeridos->each(function (PuestoEpp $requerido) use ($ultimasEntregas) {
+            $ultima = $ultimasEntregas->get($requerido->equipo_proteccion_id);
+            $ultima = $ultima !== null ? Carbon::parse($ultima) : null;
+
+            $frecuencia = $requerido->frecuencia_reposicion_meses;
+            $vidaUtil = $requerido->equipoProteccion?->vida_util_meses;
+
+            $requerido->setAttribute('ultima_entrega', $ultima?->toDateString());
+            $requerido->setAttribute(
+                'estado_kit',
+                EstadoKitEpp::desde($ultima, $frecuencia, $vidaUtil)->value,
+            );
+            $requerido->setAttribute(
+                'reponer_desde',
+                EstadoKitEpp::reponerDesde($ultima, $frecuencia, $vidaUtil)?->toDateString(),
+            );
+        });
     }
 
     /**

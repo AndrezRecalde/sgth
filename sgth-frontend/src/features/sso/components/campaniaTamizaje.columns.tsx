@@ -2,6 +2,10 @@
 
 import { Text } from '@mantine/core'
 import { StatusBadge, TableActions, type TableAction } from '@/components/ui'
+import {
+  ESTADO_CAMPANIA_LABELS, TONO_ESTADO_CAMPANIA, type EstadoCampaniaSso,
+} from '../constants/campania'
+import { formatFecha } from '@/lib/fecha'
 import type { DataTableColumn } from 'mantine-datatable'
 
 /**
@@ -17,7 +21,12 @@ export interface CampaniaTamizaje {
   id: number
   periodo: string
   codigo_acceso: string
+  fecha_apertura: string
+  fecha_cierre: string | null
+  /** Si alguien la cerró a mano. Lo que se pinta es `estado_campania`. */
   activa: boolean
+  /** La ventana real, calculada por el backend a partir de las dos fechas. */
+  estado_campania: EstadoCampaniaSso
   unidad_administrativa?: { id: number; nombre: string } | null
   respuestas_count?: number
 }
@@ -46,12 +55,29 @@ export function columnasCampaniaTamizaje<T extends CampaniaTamizaje>(
       render: (c) => <Text ff="monospace" size="sm">{c.codigo_acceso}</Text>,
     },
     {
-      accessor: 'activa',
-      title: 'Estado',
-      width: 100,
+      accessor: 'fecha_apertura',
+      title: 'Ventana',
+      width: 180,
+      // Las dos fechas a la vista: el estado de al lado se deduce de ellas, y
+      // sin verlas no hay forma de entender por qué una campaña sale
+      // «Programada» ni hasta cuándo se puede repartir el enlace.
       render: (c) => (
-        <StatusBadge tone={c.activa ? 'success' : 'neutral'}>
-          {c.activa ? 'Abierta' : 'Cerrada'}
+        <Text size="sm">
+          {formatFecha(c.fecha_apertura)}
+          {c.fecha_cierre ? ` – ${formatFecha(c.fecha_cierre)}` : ' – sin cierre'}
+        </Text>
+      ),
+    },
+    {
+      accessor: 'estado_campania',
+      title: 'Estado',
+      width: 120,
+      // `estado_campania` y no `activa`: la columna pintaba «Abierta» para una
+      // campaña con la apertura en el futuro y para una con el cierre ya
+      // pasado, mientras el enlace público rechazaba a quien entraba.
+      render: (c) => (
+        <StatusBadge tone={TONO_ESTADO_CAMPANIA[c.estado_campania]}>
+          {ESTADO_CAMPANIA_LABELS[c.estado_campania]}
         </StatusBadge>
       ),
     },

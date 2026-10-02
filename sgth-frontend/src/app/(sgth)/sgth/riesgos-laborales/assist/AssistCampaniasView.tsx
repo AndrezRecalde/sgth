@@ -54,6 +54,12 @@ export function AssistCampaniasView() {
     {
       label: 'Copiar enlace público',
       icon: <IconLink size={14} />,
+      // `disabled` y no `hidden`: el enlace existe, lo que no admite
+      // respuestas todavía —o ya no— es la campaña. Repartirlo programada o
+      // cerrada manda a la gente a un formulario que la rechaza, que es
+      // exactamente lo que pasaba cuando la columna Estado decía «Abierta»
+      // sin mirar las fechas.
+      disabled: campania.estado_campania !== 'abierta',
       onClick: () => copiarLink(campania.codigo_acceso),
     },
     {
@@ -65,7 +71,7 @@ export function AssistCampaniasView() {
       label: 'Cerrar campaña',
       icon: <IconLock size={14} />,
       color: 'red',
-      hidden: !campania.activa || !puedeGestionar,
+      hidden: campania.estado_campania === 'cerrada' || !puedeGestionar,
       onClick: () => confirmar({
         title:   'Cerrar campaña',
         message: (
