@@ -30,6 +30,20 @@ export function useFactorRiesgoMutations() {
     onError: notificar.alFallar('No se pudo registrar el factor de riesgo'),
   })
 
+  // Corregir el nombre o la categoría de un factor ya creado. El endpoint
+  // existe desde que existe el catálogo; sin esto, un nombre mal escrito solo
+  // se podía desactivar y volver a crear, y los riesgos ya valorados se
+  // quedaban colgando del factor viejo.
+  const editar = useMutation({
+    mutationFn: ({ id, ...data }: { id: number; nombre: string; categoria: string }) =>
+      factoresRiesgoService.actualizar(id, data),
+    onSuccess: () => {
+      notificar.exito('Factor actualizado', 'Los cambios se aplican a los riesgos que ya lo usan.')
+      invalidar()
+    },
+    onError: notificar.alFallar('No se pudo actualizar el factor de riesgo'),
+  })
+
   // Retirar un factor del catálogo sin borrarlo: el borrado está bloqueado en
   // cuanto algún riesgo lo usa —incluido uno en la papelera—, así que esta era
   // la salida que faltaba en la pantalla.
@@ -57,5 +71,5 @@ export function useFactorRiesgoMutations() {
     onError: notificar.alFallar('No se pudo eliminar el factor de riesgo'),
   })
 
-  return { crear, cambiarActivo, eliminar }
+  return { crear, editar, cambiarActivo, eliminar }
 }

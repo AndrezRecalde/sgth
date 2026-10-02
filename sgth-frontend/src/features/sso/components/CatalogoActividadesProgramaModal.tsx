@@ -7,7 +7,9 @@ import {
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconChecklist, IconEyeOff, IconEye } from '@tabler/icons-react'
+import {
+  IconTrash, IconPlus, IconChecklist, IconEyeOff, IconEye, IconEdit, IconDeviceFloppy,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useActividadesPrograma, useProgramaDrogasMutations } from '../hooks/useProgramaDrogas'
 import {
@@ -28,7 +30,11 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
   const [verInactivas, setVerInactivas] = useState(false)
   const { data: actividades = [], isLoading, error, refetch } =
     useActividadesPrograma({ solo_activas: !verInactivas })
-  const { crearActividad, cambiarActivoActividad, eliminarActividad } = useProgramaDrogasMutations()
+  const {
+    crearActividad, editarActividad, cambiarActivoActividad, eliminarActividad,
+  } = useProgramaDrogasMutations()
+  // Null es «alta»; con una actividad dentro, el mismo formulario edita esa.
+  const [editando, setEditando] = useState<ProgramaDrogaActividad | null>(null)
 
   const {
     register, control, handleSubmit, reset,
@@ -38,11 +44,34 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', fase: 'fase_1_preparacion', descripcion: '' },
   })
 
+  const empezarEdicion = (actividad: ProgramaDrogaActividad) => {
+    setEditando(actividad)
+    reset({
+      nombre: actividad.nombre,
+      fase: actividad.fase as ActividadProgramaFormData['fase'],
+      descripcion: actividad.descripcion ?? '',
+    })
+  }
+
+  const cancelarEdicion = () => {
+    setEditando(null)
+    reset({ nombre: '', fase: 'fase_1_preparacion', descripcion: '' })
+  }
+
   const onSubmit = (values: ActividadProgramaFormData) => {
+    if (editando) {
+      editarActividad.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      return
+    }
     crearActividad.mutateAsync(values).then(() => reset({ nombre: '', fase: values.fase, descripcion: '' })).catch(() => {})
   }
 
   const accionesDe = (a: ProgramaDrogaActividad): TableAction[] => [
+    {
+      label: 'Editar actividad',
+      icon: <IconEdit size={14} />,
+      onClick: () => empezarEdicion(a),
+    },
     {
       label: a.activo ? 'Desactivar' : 'Reactivar',
       icon: a.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
@@ -115,13 +144,18 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
             </Grid.Col>
             <Grid.Col span={12}>
               <Group justify="flex-end">
+                {editando && (
+                  <Button variant="subtle" h={48} onClick={cancelarEdicion}>
+                    Cancelar
+                  </Button>
+                )}
                 <Button
                   type="submit"
                   h={48}
-                  leftSection={<IconPlus size={16} />}
-                  loading={crearActividad.isPending}
+                  leftSection={editando ? <IconDeviceFloppy size={16} /> : <IconPlus size={16} />}
+                  loading={crearActividad.isPending || editarActividad.isPending}
                 >
-                  Agregar
+                  {editando ? 'Guardar cambios' : 'Agregar'}
                 </Button>
               </Group>
             </Grid.Col>
