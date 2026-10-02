@@ -1,4 +1,5 @@
-import { Stack, Text } from '@mantine/core'
+import { Button, Stack, Text } from '@mantine/core'
+import { IconFileCertificate } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge } from '@/components/ui'
 import { formatFechaHora } from '@/lib/fecha'
@@ -14,22 +15,29 @@ import {
 const etiquetaTipo = (tipo: string) =>
   TIPO_EVENTO_OPTIONS.find((o) => o.value === tipo)?.label ?? tipo
 
+interface Acciones {
+  /** `null` cuando no hay ninguna descarga en curso. */
+  descargandoId: number | null
+  onDescargarCertificado: (solicitud: SolicitudCertificacion) => void
+}
+
 /*
 | El historial de evaluaciones tal como lo ve Talento Humano.
 |
-| Sin columna de descarga: el PDF de la ficha es el formulario 028 del MSP
-| completo —motivo de consulta, antecedentes, examen físico y diagnóstico
-| CIE-10—, y eso es historia clínica. Lo que el expediente administrativo
-| recibe es la aptitud y sus restricciones, que es el acuerdo con la UATH del
-| 2026-09-26 y lo que se pinta en la última columna.
+| Lo que se descarga es el CERTIFICADO DE APTITUD, no la ficha. El PDF del FEMO
+| es el formulario 028 del MSP completo —motivo de consulta, antecedentes,
+| examen físico y diagnóstico CIE-10—, o sea historia clínica, y por el acuerdo
+| con la UATH del 2026-09-26 no entra al expediente administrativo: su ruta
+| pide `role:medico|admin-dispensario` y a Talento Humano le respondía 403
+| disfrazado de «No se pudo generar el PDF».
 |
-| El botón existía y nunca funcionó: `fichas-sso/{id}/pdf` pide
-| `role:medico|admin-dispensario`, así que a Talento Humano le respondía 403 y
-| el `catch` del hook lo mostraba como «No se pudo generar el PDF». Quien
-| evalúa sigue teniéndolo en Salud Ocupacional y en el detalle de la ficha.
+| El certificado lleva solo lo que condiciona un puesto —aptitud,
+| restricciones, vigencia y la firma del profesional con su registro—, que es
+| justo lo que esta tabla ya enseña en pantalla.
 */
-export const getSaludOcupacionalColumns =
-  (): DataTableColumn<SolicitudCertificacion>[] => [
+export const getSaludOcupacionalColumns = (
+  { descargandoId, onDescargarCertificado }: Acciones,
+): DataTableColumn<SolicitudCertificacion>[] => [
   {
     accessor: 'tipo_evento',
     title: 'Tipo de evaluación',
@@ -75,5 +83,27 @@ export const getSaludOcupacionalColumns =
         </Stack>
       )
     },
+  },
+  {
+    accessor: 'acciones',
+    title: '',
+    width: 130,
+    // Sin ficha no hay acto médico firmado y el API responde 422: la columna
+    // no ofrece una descarga que no se puede emitir.
+    render: (s) =>
+      s.ficha_salud_ocupacional ? (
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<IconFileCertificate size={13} />}
+          loading={descargandoId === s.id}
+          disabled={descargandoId !== null && descargandoId !== s.id}
+          onClick={() => onDescargarCertificado(s)}
+        >
+          Certificado
+        </Button>
+      ) : (
+        <Text size="xs" c="dimmed">—</Text>
+      ),
   },
 ]

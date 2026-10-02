@@ -2,7 +2,8 @@
 
 import { Stack, Text } from '@mantine/core'
 import {
-  IconBan, IconDownload, IconFileText, IconPlayerPlay, IconUserCheck,
+  IconBan, IconDownload, IconFileCertificate, IconFileText, IconPlayerPlay,
+  IconUserCheck,
 } from '@tabler/icons-react'
 import { confirmar, StatusBadge, TableActions } from '@/components/ui'
 import {
@@ -161,9 +162,12 @@ export function getSolicitudesSsoColumns(acciones: AccionesSso): Columna[] {
 }
 
 interface AccionesCertificaciones {
-  /** `false` oculta el menú entero: sin `solicitar-certificacion-medica`. */
+  /** `false` oculta la cancelación: sin `solicitar-certificacion-medica`. */
   puedeCancelar: boolean
+  /** `null` cuando no hay ninguna descarga en curso. */
+  descargandoId: number | null
   onCancelar: (solicitud: SolicitudCertificacion) => void
+  onDescargarCertificado: (solicitud: SolicitudCertificacion) => void
 }
 
 /** Certificaciones médicas: el seguimiento de Talento Humano. */
@@ -188,15 +192,25 @@ export function getCertificacionesColumns(
       width: 50,
       render: (s) => (
         <TableActions
-          actions={[{
-            label: 'Cancelar solicitud',
-            icon: <IconBan size={14} />,
-            color: 'red',
-            // Iniciada ya hay un FEMO en curso, y completada ya tiene
-            // dictamen: solo se retira lo que nadie ha tocado.
-            hidden: !acciones.puedeCancelar || s.estado !== 'pendiente',
-            onClick: () => acciones.onCancelar(s),
-          }]}
+          actions={[
+            {
+              label: 'Certificado de aptitud',
+              icon: <IconFileCertificate size={14} />,
+              // Sin ficha no hay acto médico firmado y el API responde 422.
+              hidden: !s.ficha_salud_ocupacional,
+              disabled: acciones.descargandoId !== null,
+              onClick: () => acciones.onDescargarCertificado(s),
+            },
+            {
+              label: 'Cancelar solicitud',
+              icon: <IconBan size={14} />,
+              color: 'red',
+              // Iniciada ya hay un FEMO en curso, y completada ya tiene
+              // dictamen: solo se retira lo que nadie ha tocado.
+              hidden: !acciones.puedeCancelar || s.estado !== 'pendiente',
+              onClick: () => acciones.onCancelar(s),
+            },
+          ]}
         />
       ),
     },

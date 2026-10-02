@@ -10,6 +10,7 @@ import {
   useCancelarSolicitud,
   useSolicitudesCertificacion,
 } from '../hooks/useSolicitudCertificacion'
+import { useCertificadoAptitud } from '../hooks/useCertificadoAptitud'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { getCertificacionesColumns } from './solicitudes-certificacion.columns'
 import {
@@ -83,8 +84,12 @@ export function SeguimientoSolicitudesTab() {
     setPage(1)
   }
 
+  const certificado = useCertificadoAptitud()
+
   const columns = getCertificacionesColumns({
     puedeCancelar: hasPermiso('solicitar-certificacion-medica'),
+    descargandoId: certificado.descargandoId,
+    onDescargarCertificado: (s) => certificado.descargar(s.id, s.cedula_paciente),
     onCancelar: (solicitud) => {
       setCancelando(solicitud)
       abrirCancelar()

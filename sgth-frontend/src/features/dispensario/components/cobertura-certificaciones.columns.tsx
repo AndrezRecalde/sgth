@@ -1,11 +1,13 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
+import { IconFileCertificate } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { StatusBadge } from '@/components/ui'
+import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFechaMes } from '@/lib/fecha'
 import {
   DICTAMEN_LABELS,
+  ESTADO_SOLICITUD_LABELS,
   TONO_DICTAMEN,
 } from '../services/solicitudCertificacionService'
 import {
@@ -16,20 +18,21 @@ import {
 
 type Columna = DataTableColumn<FilaCobertura>
 
-const ESTADO_SOLICITUD_ACTIVA: Record<string, string> = {
-  pendiente:  'Pendiente',
-  en_proceso: 'En proceso',
-}
-
 /*
 | El tablero de cobertura: una fila por servidor activo.
 |
-| No reutiliza `solicitudes-certificacion.columns.tsx` a propósito. Aquello
-| describe un trámite —tipo de evento, origen, quién lo pidió, fecha límite— y
-| esto describe a una persona frente a una obligación. Compartir columnas
-| obligaría a que las dos tablas hablaran del mismo registro, y no lo hacen.
+| No reutiliza `solicitudes-certificacion.columns.tsx` a propósito: aquello
+| describe un trámite y esto describe a una persona frente a una obligación.
+| Compartir columnas obligaría a que las dos tablas hablaran del mismo
+| registro, y no lo hacen.
 */
-export function getCoberturaColumns(): Columna[] {
+interface AccionesCobertura {
+  /** `null` cuando no hay ninguna descarga en curso. */
+  descargandoId: number | null
+  onDescargarCertificado: (fila: FilaCobertura) => void
+}
+
+export function getCoberturaColumns(acciones: AccionesCobertura): Columna[] {
   return [
     {
       accessor: 'servidor',
@@ -69,7 +72,7 @@ export function getCoberturaColumns(): Columna[] {
                 {DICTAMEN_LABELS[f.ultimo_dictamen] ?? f.ultimo_dictamen}
               </StatusBadge>
             )}
-            {/* Las restricciones son lo que condiciona el puesto: es el dato
+            {/* Las restricciones condicionan el puesto: es el dato
                 administrativo que el Dispensario sí entrega a RRHH. */}
             {f.restricciones && (
               <Text size="xs" c="dimmed" lineClamp={2}>{f.restricciones}</Text>
@@ -116,7 +119,7 @@ export function getCoberturaColumns(): Columna[] {
           ? (
               <Stack gap={0}>
                 <StatusBadge size="xs" tone="info">
-                  {ESTADO_SOLICITUD_ACTIVA[f.solicitud_activa_estado]
+                  {ESTADO_SOLICITUD_LABELS[f.solicitud_activa_estado]
                     ?? f.solicitud_activa_estado}
                 </StatusBadge>
                 {f.solicitud_activa_fecha_limite && (
@@ -127,6 +130,24 @@ export function getCoberturaColumns(): Columna[] {
               </Stack>
             )
           : <Text size="sm" c="dimmed">—</Text>,
+    },
+    {
+      accessor: 'acciones',
+      title: '',
+      width: 50,
+      render: (f) => (
+        <TableActions
+          actions={[{
+            label: 'Certificado de aptitud',
+            icon: <IconFileCertificate size={14} />,
+            // Hace falta la última evaluación Y su ficha: sin acto médico
+            // firmado el API responde 422.
+            hidden: !f.ultima_solicitud_id || !f.ultima_ficha_id,
+            disabled: acciones.descargandoId !== null,
+            onClick: () => acciones.onDescargarCertificado(f),
+          }]}
+        />
+      ),
     },
   ]
 }
