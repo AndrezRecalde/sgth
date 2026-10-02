@@ -2,6 +2,7 @@
 
 namespace App\Services\Asistencia;
 
+use App\Enums\EstadoPermiso;
 use App\Enums\TipoPermiso;
 use App\Models\Asistencia\PermisoServidor;
 use App\Services\Estructura\ArbolUnidades;
@@ -25,18 +26,6 @@ use Illuminate\Support\Collection;
  */
 class ConsolidadoPermisoService
 {
-    /**
-     * Los estados que cuentan como tiempo de permiso concedido.
-     *
-     * Se dice en positivo y no como «todos menos anulado y pendiente». Con
-     * aquella forma, `falta_injustificada` y `rechazado` entraban en el
-     * informe: una falta injustificada es exactamente el permiso que NO se
-     * concedió, y sumaba horas.
-     *
-     * @var list<string>
-     */
-    private const ESTADOS_CONCEDIDOS = ['activo', 'validado_trabajo_social'];
-
     /**
      * @return array{consolidado: Collection<int, array<string, mixed>>, totales: array<string, mixed>}
      */
@@ -100,7 +89,10 @@ class ConsolidadoPermisoService
             )
             ->whereBetween('permisos_servidor.fecha', [$fechaInicio, $fechaFin])
             ->where('permisos_servidor.tipo', $tipo)
-            ->whereIn('permisos_servidor.estado', self::ESTADOS_CONCEDIDOS)
+            // Los estados en los que el permiso se concedió, y el motivo de
+            // decirlo en positivo, viven en `EstadoPermiso::concedidos()`: este
+            // informe y el indicador de ausentismo del SSO tienen que coincidir.
+            ->whereIn('permisos_servidor.estado', EstadoPermiso::concedidos())
             // Opcional: sin servidor, el informe es de toda la institución.
             ->when($servidorId, fn ($q) => $q->where('servidores.id', $servidorId))
             /*

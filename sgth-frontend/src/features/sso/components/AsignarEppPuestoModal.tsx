@@ -1,6 +1,6 @@
 'use client'
 
-import { DataState, SectionHeading, SgthModal, SgthTable, TableActions, confirmar } from '@/components/ui'
+import { DataState, SectionHeading, SgthModal, SgthTable, confirmar, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Select, NumberInput, Button,
@@ -11,11 +11,11 @@ import { IconTrash, IconPlus, IconHelmet } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { useEquiposPorPuesto, usePuestoEppMutations } from '../hooks/usePuestoEpp'
-import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
+import { useCatalogoEquiposProteccion } from '../hooks/useEquiposProteccion'
 import { puestoEppSchema, type PuestoEppFormData } from '../schemas/puestoEpp.schema'
+import { columnasPuestoEpp } from './puestoEpp.columns'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import type { PuestoEpp } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 const VALORES_INICIALES: PuestoEppFormData = {
   equipo_proteccion_id: 0,
@@ -35,15 +35,19 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
 
   const { data: asignaciones = [], isLoading, error, refetch } = useEquiposPorPuesto(puestoId)
   const { asignar, eliminar } = usePuestoEppMutations(puestoId)
-  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
+  const { data: equipos = [], error: errorEquipos } = useCatalogoEquiposProteccion()
 
-  // Fuera los que este puesto ya requiere. `asignarEquipoAPuesto` es un
-  // `updateOrCreate`: volver a elegir uno ya asignado no daba error, pisaba su
-  // cantidad y dejaba la frecuencia de reposición en blanco, y la pantalla
-  // respondía «equipo asignado». La tabla de abajo ya los muestra; ofrecerlos
-  // otra vez en el desplegable solo servía para pisarlos sin querer.
+  // Fuera los que este puesto ya requiere: la tabla de abajo ya los muestra, y
+  // ofrecerlos otra vez solo lleva al rechazo del backend.
+  //
+  // `asignarEquipoAPuesto` FUE un `updateOrCreate` —volver a elegir uno ya
+  // asignado pisaba su cantidad y dejaba la frecuencia de reposición en blanco,
+  // y la pantalla respondía «equipo asignado»—, pero ya no: hoy rechaza el
+  // duplicado con un error en `equipo_proteccion_id`. El comentario se quedó
+  // describiendo el código viejo y contradecía al párrafo de abajo, que
+  // describe el nuevo.
   const yaAsignados = new Set(asignaciones.map(a => a.equipo_proteccion_id))
-  const equipoOptions = (equiposData?.data ?? [])
+  const equipoOptions = equipos
     .filter(e => !yaAsignados.has(e.id))
     .map(e => ({ value: String(e.id), label: `${e.codigo} — ${e.nombre}` }))
 
@@ -84,44 +88,22 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
       })
   }
 
-  const columns: DataTableColumn<PuestoEpp>[] = [
+  const accionesDe = (a: PuestoEpp): TableAction[] => [
     {
-      accessor: 'equipo_proteccion',
-      title: 'Equipo',
-      render: (a) => a.equipo_proteccion?.nombre ?? `Equipo ${a.equipo_proteccion_id}`,
-    },
-    { accessor: 'cantidad_requerida', title: 'Cantidad' },
-    {
-      accessor: 'frecuencia_reposicion_meses',
-      title: 'Reposición',
-      render: (a) => a.frecuencia_reposicion_meses ? `Cada ${a.frecuencia_reposicion_meses} meses` : '—',
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (a) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Quitar del kit',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar asignación',
-                message: (
-                  <>
-                    Se quitará <b>{a.equipo_proteccion?.nombre ?? 'el equipo'}</b> del EPP
-                    requerido de este puesto. No se puede deshacer.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(a.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Quitar del kit',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar asignación',
+        message: (
+          <>
+            Se quitará <b>{a.equipo_proteccion?.nombre ?? 'el equipo'}</b> del EPP
+            requerido de este puesto. No se puede deshacer.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(a.id),
+      }),
     },
   ]
 
@@ -244,7 +226,7 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
             >
               <SgthTable
                 records={asignaciones}
-                columns={columns}
+                columns={columnasPuestoEpp(accionesDe)}
                 minHeight={120}
               />
             </DataState>

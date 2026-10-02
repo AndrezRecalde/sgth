@@ -47,6 +47,36 @@ final class ApiResponse
     }
 
     /**
+     * Respuesta paginada cuyos elementos pasan por un recurso.
+     *
+     * `paginado()` entrega los modelos crudos, así que el listado y el detalle
+     * de la misma entidad devolvían formas distintas y el tipo generado solo
+     * describía la del detalle. Esta variante recibe el paginador —de donde
+     * salen los metadatos— y aparte los elementos ya transformados, que es lo
+     * que permite escribir `XResource::collection($paginador->items())` en la
+     * llamada y que el generador de tipos lo vea.
+     */
+    public static function paginadoDe(
+        LengthAwarePaginator $paginador,
+        mixed $datos,
+        string $mensaje = 'Consulta exitosa.',
+    ): JsonResponse {
+        return response()->json([
+            'exito'   => true,
+            'mensaje' => $mensaje,
+            'datos'   => $datos,
+            'meta'    => [
+                'pagina_actual' => $paginador->currentPage(),
+                'por_pagina'    => $paginador->perPage(),
+                'total'         => $paginador->total(),
+                'ultima_pagina' => $paginador->lastPage(),
+                'desde'         => $paginador->firstItem(),
+                'hasta'         => $paginador->lastItem(),
+            ],
+        ], 200);
+    }
+
+    /**
      * Recurso creado exitosamente.
      */
     public static function created(

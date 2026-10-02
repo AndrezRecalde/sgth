@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { RiesgosLaboralesTab } from '@/features/sso/components/RiesgosLaboralesTab'
-import { PageHeader, PageShell } from '@/components/ui'
+import { RiesgosLaboralesView } from './RiesgosLaboralesView'
 
 export const metadata: Metadata = {
   title: 'Factores de Riesgo Laboral',
-  description: 'Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas',
+  description: 'Matriz de riesgos por puesto, valorada con la NTP 330',
 }
 
 export default function FactoresRiesgoPage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Factores de Riesgo Laboral"
-        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-      />
-      <RiesgosLaboralesTab />
-    </PageShell>
-  )
+  return <RiesgosLaboralesView />
 }

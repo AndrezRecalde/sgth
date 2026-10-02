@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Sso\ListarInspeccionesSsoRequest;
 use App\Http\Requests\Sso\StoreInspeccionSsoRequest;
 use App\Http\Requests\Sso\UpdateInspeccionSsoRequest;
 use App\Http\Resources\Sso\InspeccionSsoResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Sso\SsoServiceInterface;
-use App\Models\Sso\InspeccionSso;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class InspeccionSsoController extends Controller
 {
@@ -18,11 +17,17 @@ final class InspeccionSsoController extends Controller
         private readonly SsoServiceInterface $ssoService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(ListarInspeccionesSsoRequest $request): JsonResponse
     {
-        $this->authorize('viewAny', InspeccionSso::class);
-        $inspecciones = $this->ssoService->listarInspecciones($request->all());
-        return ApiResponse::paginado($inspecciones, 'Inspecciones SSO obtenidas exitosamente.');
+        // La autorización vive en `ListarInspeccionesSsoRequest::authorize()`, que Laravel
+        // ejecuta ANTES de validar: así un filtro inválido no delata el
+        // endpoint a quien no puede consultarlo (403 antes que 422).
+        $inspecciones = $this->ssoService->listarInspecciones($request->filtros());
+        return ApiResponse::paginadoDe(
+            $inspecciones,
+            InspeccionSsoResource::collection($inspecciones->items()),
+            'Inspecciones SSO obtenidas exitosamente.',
+        );
     }
 
     public function store(StoreInspeccionSsoRequest $request): JsonResponse

@@ -2,25 +2,27 @@
 
 import { useState } from 'react'
 import {
-  Alert, Button, Checkbox, Group, NumberInput, Select, Stack, Text, Textarea,
+  Alert, Button, Group, Select, Stack, Text, Textarea,
 } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { ModalFooter, SectionHeading } from '@/components/ui'
+import { ModalFooter, SectionHeading, SgthTable } from '@/components/ui'
 import { useFieldArray, useForm, useWatch, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconAlertTriangle, IconInfoCircle, IconPlus } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useEppEntregaMutations, useKitEppServidor } from '../hooks/useEppEntregas'
-import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
+import { useCatalogoEquiposProteccion } from '../hooks/useEquiposProteccion'
 import {
   entregaKitEppSchema, type EntregaKitEppFormData,
 } from '../schemas/entregaKitEpp.schema'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
-import type { PuestoEpp } from '../services/tipos'
+import { tocaEntregar } from '../constants/kitEpp'
+import { columnasKitEpp } from './kitEpp.columns'
+import type { FilaKitEpp } from '../services/tipos'
 
-const KIT_EPP_VACIO: PuestoEpp[] = []
+const KIT_EPP_VACIO: FilaKitEpp[] = []
 
 const VALORES_INICIALES: EntregaKitEppFormData = {
   servidor_id: 0,
@@ -47,8 +49,8 @@ export function EntregaKitEppForm({ onListo, onCancelar }: Props) {
   const contained = useContainedInput()
   const { registrarKit } = useEppEntregaMutations()
 
-  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
-  const equipoOptions = (equiposData?.data ?? []).map(e => ({
+  const { data: catalogoEquipos = [], error: errorEquipos } = useCatalogoEquiposProteccion()
+  const equipoOptions = catalogoEquipos.map(e => ({
     value: String(e.id), label: `${e.codigo} — ${e.nombre}`,
   }))
 
@@ -83,7 +85,16 @@ export function EntregaKitEppForm({ onListo, onCancelar }: Props) {
       equipo_proteccion_id: item.equipo_proteccion_id,
       nombre: item.equipo_proteccion?.nombre ?? `Equipo ${item.equipo_proteccion_id}`,
       cantidad: item.cantidad_requerida,
-      incluido: true,
+      // Premarcado solo lo que toca: lo que nunca se entregó y lo que ya
+      // cumplió su plazo de reposición. Antes se premarcaba el kit entero
+      // siempre, así que entregarlo dos veces duplicaba las filas de la
+      // bitácora sin que nada lo advirtiera. Lo vigente se deja a la vista y
+      // desmarcado —se puede marcar a mano: un equipo se pierde o se rompe
+      // antes de su plazo—, con la fecha en que vuelve a tocar.
+      incluido: tocaEntregar(item.estado_kit),
+      estado: item.estado_kit,
+      reponerDesde: item.reponer_desde ?? null,
+      ultimaEntrega: item.ultima_entrega ?? null,
     })))
   }
 
@@ -204,38 +215,18 @@ export function EntregaKitEppForm({ onListo, onCancelar }: Props) {
 
         {!!servidorId && fields.length > 0 && (
           <Stack gap={6}>
-            <Text size="sm" fw={600}>Equipos a entregar</Text>
-            {fields.map((campo, indice) => (
-              <Group key={campo.id} wrap="nowrap" align="center">
-                <Controller
-                  name={`equipos.${indice}.incluido`}
-                  control={control}
-                  render={({ field }) => (
-                    <Checkbox
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.currentTarget.checked)}
-                      label={equipos[indice]?.nombre ?? campo.nombre}
-                      style={{ flex: 1 }}
-                    />
-                  )}
-                />
-                <Controller
-                  name={`equipos.${indice}.cantidad`}
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      aria-label={`Cantidad de ${equipos[indice]?.nombre ?? campo.nombre}`}
-                      min={1}
-                      w={80}
-                      disabled={!equipos[indice]?.incluido}
-                      value={field.value}
-                      onChange={(v) => field.onChange(typeof v === 'number' ? v : 1)}
-                      error={errors.equipos?.[indice]?.cantidad?.message}
-                    />
-                  )}
-                />
-              </Group>
-            ))}
+            <SectionHeading title="Equipos a entregar" />
+            {/* En `SgthTable` y no en una lista de `Group` a mano: son filas
+                que se capturan, que es justo lo que la regla 06 manda aquí, y
+                así cada columna lleva encabezado. La cantidad era un
+                `NumberInput` con `aria-label` y sin etiqueta visible porque en
+                una fila suelta no había dónde ponerla. */}
+            <SgthTable
+              records={fields.map((campo, indice) => ({ ...campo, indice }))}
+              idAccessor="id"
+              minHeight={80}
+              columns={columnasKitEpp({ control, equipos, errors })}
+            />
           </Stack>
         )}
 
