@@ -1,8 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import type { AxiosError } from 'axios'
 import { authService } from '../services/authService'
-import type { ApiResponse } from '@/types/api'
+import { getApiErrorMessage } from '@/types/api'
 import type { CambiarPasswordFormData } from '../schemas/cambiarPassword.schema'
 import { notificar } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
@@ -27,10 +26,12 @@ export function useCambiarPassword() {
       )
       router.push(ROUTES.PORTAL.HOME)
     },
-    onError: (error: AxiosError<ApiResponse>) => {
+    // El motivo concreto —la cédula, la misma clave— viaja en `errores`; el
+    // `mensaje` de un 422 es el genérico «Los datos enviados no son válidos».
+    onError: (error) => {
       notificar.error(
         'No se pudo cambiar la contraseña',
-        error.response?.data?.mensaje ?? 'Error inesperado.',
+        getApiErrorMessage(error, 'Error inesperado.'),
       )
     },
   })
