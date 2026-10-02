@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { borrarCookie, escribirCookie, leerCookie } from '@/lib/cookies'
 
 export interface UsuarioAuth {
   id:               number
@@ -49,32 +50,7 @@ interface AuthState {
  * entera: `proxy.ts` decide con la cookie, así que cuando expira ya no se
  * puede abrir ninguna pantalla.
  */
-const DURACION_SESION_DIAS = 1
-
-const setCookie = (name: string, value: string, days = DURACION_SESION_DIAS) => {
-  if (typeof document === 'undefined') return
-  const expires = new Date(Date.now() + days * 864e5).toUTCString()
-  document.cookie = `${name}=${value}; expires=${expires}; path=/`
-}
-
-const leerCookie = (name: string): string | null => {
-  if (typeof document === 'undefined') return null
-  const valor = document.cookie
-    .split('; ')
-    .find(c => c.startsWith(`${name}=`))
-    ?.slice(name.length + 1)
-
-  return valor && valor !== 'undefined' && valor !== 'null' && valor.trim() !== ''
-    ? valor
-    : null
-}
-
-const deleteCookie = (name: string) => {
-  if (typeof document === 'undefined') return
-  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`
-  document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`
-  document.cookie = `${name}=; path=/; domain=.${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`
-}
+export const DURACION_SESION_DIAS = 1
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -87,7 +63,7 @@ export const useAuthStore = create<AuthState>()(
         set({ token, usuario, isAuthenticated: true })
         if (typeof window !== 'undefined') {
           localStorage.setItem('sgth_token', token)
-          setCookie('sgth_token', token)
+          escribirCookie('sgth_token', token, DURACION_SESION_DIAS)
         }
       },
 
@@ -95,8 +71,8 @@ export const useAuthStore = create<AuthState>()(
         set({ token: null, usuario: null, isAuthenticated: false })
         if (typeof window !== 'undefined') {
           localStorage.removeItem('sgth_token')
-          deleteCookie('sgth_token')
-          deleteCookie('sgth_primer_login')
+          borrarCookie('sgth_token')
+          borrarCookie('sgth_primer_login')
         }
       },
 
