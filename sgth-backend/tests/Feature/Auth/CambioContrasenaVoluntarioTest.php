@@ -51,10 +51,15 @@ function usuarioQueCambiaSuClave(bool $conPermiso = true): User
 
 function iniciarSesionVoluntario(): string
 {
-    return test()->postJson('/api/v1/auth/login', [
+    $respuesta = test()->postJson('/api/v1/auth/login', [
         'usuario'    => 'lcaicedo',
         'contrasena' => CLAVE_ACTUAL_VOLUNTARIO,
-    ])->json('datos.token');
+    ]);
+
+    // El token puede venir en el cuerpo o, cuando el login lo deja en una
+    // cookie HttpOnly, solo ahí. Vale para las dos formas.
+    return $respuesta->json('datos.token')
+        ?? $respuesta->getCookie('sgth_token', decrypt: false)?->getValue();
 }
 
 function cambiarClaveCon(string $token, array $datos): TestResponse
