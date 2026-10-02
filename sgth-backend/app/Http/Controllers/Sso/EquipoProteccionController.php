@@ -9,6 +9,11 @@ use App\Http\Requests\Sso\UpdateEquipoProteccionRequest;
 use App\Http\Resources\Sso\EquipoProteccionResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Sso\SsoServiceInterface;
+// Lo usa `catalogo()` en su `authorize()`. Sin el import, `EquipoProteccion::class`
+// se resuelve contra ESTE namespace y apunta a una clase que no existe: la
+// policy no se encuentra, `authorize()` deniega y el catálogo responde 403.
+// `php -l` no lo ve, porque `::class` no exige que la clase exista.
+use App\Models\Sso\EquipoProteccion;
 use Illuminate\Http\JsonResponse;
 
 final class EquipoProteccionController extends Controller
