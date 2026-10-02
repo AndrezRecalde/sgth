@@ -2,36 +2,63 @@
 
 import { useMemo, useState } from 'react'
 import {
-  Box, Container, Stack, Stepper, Title, Text, Radio, Group, Button,
-  Select, Skeleton, Alert, Paper, Divider,
+  Box, Container, Stack, Stepper, Title, Text, Group, Button,
+  Skeleton, Alert, Paper,
 } from '@mantine/core'
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useCuestionarioPsicosocial, useEnviarRespuestaPsicosocial } from '../hooks/usePsicosocial'
-import { OPCIONES_LIKERT_PSICOSOCIAL } from '../schemas/psicosocial.schema'
+import { PsicosocialDatosGenerales } from './PsicosocialDatosGenerales'
+import { PsicosocialDimension } from './PsicosocialDimension'
+import {
+  cargaUtilPsicosocial, esquemaCuestionarioPsicosocial, VALORES_INICIALES_PSICOSOCIAL,
+  type CuestionarioPsicosocialFormData,
+} from '../schemas/cuestionarioPsicosocial.schema'
 import { getApiErrorMessage } from '@/types/api'
-import type { RespuestaPsicosocialPayload } from '../services/psicosocialService'
 import { notificar } from '@/components/ui'
 
 interface Props {
   codigo: string
 }
 
+/**
+ * El cuestionario de riesgo psicosocial que responde el personal, por enlace y
+ * sin sesión (Guía MDT, octubre 2018: 58 ítems en 8 dimensiones).
+ *
+ * Estaba capturado con cuatro `useState` y validado a mano, con una
+ * notificación que decía cuántos ítems faltaban pero no cuáles. Ahora es
+ * React Hook Form + Zod como el resto del sistema (regla 07), y cada hueco se
+ * señala en su pregunta.
+ */
 export function CuestionarioPsicosocialPublico({ codigo }: Props) {
-  const contained = useContainedInput()
   const { data: cuestionario, isLoading, isError, error } = useCuestionarioPsicosocial(codigo)
   const enviar = useEnviarRespuestaPsicosocial(codigo)
 
-  const [step, setStep] = useState(0)
-  const [respuestas, setRespuestas] = useState<Record<number, number>>({})
-  const [datosGenerales, setDatosGenerales] = useState<Record<string, string | null>>({})
-  const [enviado, setEnviado] = useState(false)
+  const [paso, setPaso] = useState(0)
 
-  const dimensionKeys = useMemo(
-    () => (cuestionario ? Object.keys(cuestionario.dimensiones) : []),
-    [cuestionario]
+  const resolver = useMemo(
+    () => cuestionario
+      ? zodResolver(
+        esquemaCuestionarioPsicosocial(cuestionario.datos_generales_opciones),
+      ) as Resolver<CuestionarioPsicosocialFormData>
+      : undefined,
+    [cuestionario],
   )
 
+  const {
+    control, handleSubmit, trigger, formState: { errors },
+  } = useForm<CuestionarioPsicosocialFormData>({
+    resolver,
+    defaultValues: VALORES_INICIALES_PSICOSOCIAL,
+  })
+
+  const dimensiones = useMemo(
+    () => (cuestionario ? Object.entries(cuestionario.dimensiones) : []),
+    [cuestionario],
+  )
+
+  /** Los ítems de cada dimensión, en orden, derivados de las preguntas. */
   const itemsPorDimension = useMemo(() => {
     if (!cuestionario) return {} as Record<string, number[]>
     const mapa: Record<string, number[]> = {}
@@ -39,7 +66,7 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
       mapa[pregunta.dimension] = mapa[pregunta.dimension] ?? []
       mapa[pregunta.dimension].push(Number(numero))
     }
-    for (const key of Object.keys(mapa)) mapa[key].sort((a, b) => a - b)
+    for (const clave of Object.keys(mapa)) mapa[clave].sort((a, b) => a - b)
     return mapa
   }, [cuestionario])
 
@@ -64,7 +91,7 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
     )
   }
 
-  if (enviado) {
+  if (enviar.isSuccess) {
     return (
       <Container size="sm" py="xl">
         <Paper withBorder radius="lg" p="xl">
@@ -81,175 +108,81 @@ export function CuestionarioPsicosocialPublico({ codigo }: Props) {
     )
   }
 
-  const esUltimoPaso = step === dimensionKeys.length
-  const dimensionActualKey = step > 0 ? dimensionKeys[step - 1] : null
-  const itemsActuales = dimensionActualKey ? itemsPorDimension[dimensionActualKey] ?? [] : []
+  const esUltimoPaso = paso === dimensiones.length
+  const dimensionActual = paso > 0 ? dimensiones[paso - 1] : null
+  const itemsActuales = dimensionActual ? itemsPorDimension[dimensionActual[0]] ?? [] : []
 
-  const validarPasoActual = (): boolean => {
-    if (!dimensionActualKey) return true
-    const faltantes = itemsActuales.filter((n) => respuestas[n] === undefined)
-    if (faltantes.length > 0) {
-      notificar.error(
-        'Faltan respuestas',
-        `Debe responder todos los ítems de esta sección (faltan ${faltantes.length}).`,
-      )
-      return false
-    }
-    return true
-  }
-
-  const siguiente = () => {
-    if (!validarPasoActual()) return
-    setStep((s) => Math.min(s + 1, dimensionKeys.length))
-  }
-
-  const anterior = () => setStep((s) => Math.max(s - 1, 0))
-
-  const handleEnviar = () => {
-    if (Object.keys(respuestas).length !== 58) {
-      notificar.error(
-        'Cuestionario incompleto',
-        'Debe responder los 58 ítems del cuestionario antes de enviar.',
-      )
-      return
-    }
-
-    const payload: RespuestaPsicosocialPayload = {
-      ...datosGenerales,
-      respuestas,
-    }
-
-    enviar.mutate(payload, {
-      onSuccess: () => setEnviado(true),
-      onError: (err) => {
-        notificar.error('No se pudo enviar el cuestionario', getApiErrorMessage(err))
-      },
+  const enviarFormulario = (datos: CuestionarioPsicosocialFormData) => {
+    enviar.mutate(cargaUtilPsicosocial(datos), {
+      onError: (err) => notificar.error('No se pudo enviar el cuestionario', getApiErrorMessage(err)),
     })
   }
 
-  const opciones = cuestionario.datos_generales_opciones
-  const opcionesSelect = (grupo: string) =>
-    Object.entries(opciones[grupo] ?? {}).map(([value, label]) => ({ value, label }))
+  const siguiente = async () => {
+    // Solo los ítems de ESTA dimensión: validar el formulario entero marcaría
+    // en rojo las que todavía no se han visto.
+    const campos = itemsActuales.map((n) => `respuestas.${n}` as const)
+    if (campos.length && !(await trigger(campos))) return
+    setPaso(Math.min(paso + 1, dimensiones.length))
+  }
+
+  const atras = () => setPaso(Math.max(paso - 1, 0))
 
   return (
     <Container size="sm" py="xl">
-      <Stack gap="lg">
-        <Box>
-          <Title order={2}>Evaluación de riesgo psicosocial</Title>
-          <Text size="sm" c="dimmed">
-            Cuestionario anónimo y confidencial — Ministerio del Trabajo del Ecuador.
-            No se solicita información que le identifique. Complete todos los ítems; no
-            existen respuestas correctas o incorrectas.
-          </Text>
-        </Box>
-
-        <Stepper active={step} size="sm" iconSize={28} allowNextStepsSelect={false}>
-          <Stepper.Step label="Datos generales" />
-          {dimensionKeys.map((key) => (
-            <Stepper.Step key={key} label={cuestionario.dimensiones[key].etiqueta} />
-          ))}
-        </Stepper>
-
-        {step === 0 && (
-          <Stack gap="sm">
-            <Title order={4}>Datos generales</Title>
+      <form onSubmit={handleSubmit(enviarFormulario)} noValidate>
+        <Stack gap="lg">
+          <Box>
+            <Title order={2}>Evaluación de riesgo psicosocial</Title>
             <Text size="sm" c="dimmed">
-              Estos datos son opcionales, agregados y no permiten identificarle.
+              Cuestionario anónimo y confidencial — Ministerio del Trabajo del Ecuador.
+              No se solicita información que le identifique. Complete todos los ítems; no
+              existen respuestas correctas o incorrectas.
             </Text>
-            <Select
-              label="Área de trabajo"
-              data={opcionesSelect('area_trabajo')}
-              clearable
-              {...contained}
-              value={datosGenerales.area_trabajo ?? null}
-              onChange={(v) => setDatosGenerales((d) => ({ ...d, area_trabajo: v }))}
-            />
-            <Select
-              label="Nivel de instrucción"
-              data={opcionesSelect('nivel_instruccion')}
-              clearable
-              {...contained}
-              value={datosGenerales.nivel_instruccion ?? null}
-              onChange={(v) => setDatosGenerales((d) => ({ ...d, nivel_instruccion: v }))}
-            />
-            <Select
-              label="Antigüedad en la institución"
-              data={opcionesSelect('antiguedad')}
-              clearable
-              {...contained}
-              value={datosGenerales.antiguedad ?? null}
-              onChange={(v) => setDatosGenerales((d) => ({ ...d, antiguedad: v }))}
-            />
-            <Select
-              label="Rango de edad"
-              data={opcionesSelect('rango_edad')}
-              clearable
-              {...contained}
-              value={datosGenerales.rango_edad ?? null}
-              onChange={(v) => setDatosGenerales((d) => ({ ...d, rango_edad: v }))}
-            />
-            <Select
-              label="Auto-identificación étnica"
-              data={opcionesSelect('autoidentificacion_etnica')}
-              clearable
-              {...contained}
-              value={datosGenerales.autoidentificacion_etnica ?? null}
-              onChange={(v) => setDatosGenerales((d) => ({ ...d, autoidentificacion_etnica: v }))}
-            />
-            <Select
-              label="Género"
-              data={opcionesSelect('genero')}
-              clearable
-              {...contained}
-              value={datosGenerales.genero ?? null}
-              onChange={(v) => setDatosGenerales((d) => ({ ...d, genero: v }))}
-            />
-          </Stack>
-        )}
+          </Box>
 
-        {dimensionActualKey && (
-          <Stack gap="lg">
-            <Title order={4}>{cuestionario.dimensiones[dimensionActualKey].etiqueta}</Title>
-            {itemsActuales.map((numero) => (
-              <Box key={numero}>
-                <Radio.Group
-                  label={cuestionario.preguntas[numero].texto}
-                  value={respuestas[numero]?.toString() ?? ''}
-                  onChange={(v) => setRespuestas((r) => ({ ...r, [numero]: Number(v) }))}
-                >
-                  <Group mt="xs" gap="md">
-                    {OPCIONES_LIKERT_PSICOSOCIAL.map((op) => (
-                      <Radio key={op.value} value={String(op.value)} label={op.label} />
-                    ))}
-                  </Group>
-                </Radio.Group>
-                <Divider mt="md" />
-              </Box>
+          <Stepper active={paso} size="sm" iconSize={28} allowNextStepsSelect={false}>
+            <Stepper.Step label="Datos generales" />
+            {dimensiones.map(([clave, dimension]) => (
+              <Stepper.Step key={clave} label={dimension.etiqueta} />
             ))}
-          </Stack>
-        )}
+          </Stepper>
 
-        <Group justify="space-between" mt="md">
-          <Button variant="default" onClick={anterior} disabled={step === 0}>
-            Atrás
-          </Button>
-          {esUltimoPaso ? (
-            <Button
-              loading={enviar.isPending}
-              onClick={() => {
-                if (!validarPasoActual()) return
-                handleEnviar()
-              }}
-            >
-              Enviar cuestionario
-            </Button>
-          ) : (
-            <Button onClick={siguiente}>
-              Siguiente
-            </Button>
+          {paso === 0 && (
+            <PsicosocialDatosGenerales
+              opciones={cuestionario.datos_generales_opciones}
+              control={control}
+              errors={errors}
+            />
           )}
-        </Group>
-      </Stack>
+
+          {dimensionActual && (
+            <PsicosocialDimension
+              etiqueta={dimensionActual[1].etiqueta}
+              items={itemsActuales}
+              preguntas={cuestionario.preguntas}
+              control={control}
+              errors={errors}
+              trigger={trigger}
+            />
+          )}
+
+          <Group justify="space-between" mt="md">
+            <Button variant="default" onClick={atras} disabled={paso === 0}>
+              Atrás
+            </Button>
+            {esUltimoPaso ? (
+              <Button type="submit" loading={enviar.isPending}>
+                Enviar cuestionario
+              </Button>
+            ) : (
+              <Button onClick={siguiente}>
+                Siguiente
+              </Button>
+            )}
+          </Group>
+        </Stack>
+      </form>
     </Container>
   )
 }

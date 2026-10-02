@@ -14,6 +14,23 @@ class StoreAccidenteTrabajoRequest extends FormRequest
         return $this->user()->can('create', \App\Models\Sso\AccidenteTrabajo::class);
     }
 
+    /**
+     * `dias_reposo_medico` acepta null del formulario, pero la columna es
+     * `integer NOT NULL DEFAULT 0`: un null explícito no daba un 422, daba un
+     * 500 con `23502`. La regla `nullable` prometía algo que el esquema no
+     * cumple.
+     *
+     * Para este campo «vacío» y «cero días» son lo mismo, así que se normaliza
+     * en vez de rechazarse: el `NumberInput` del formulario se puede limpiar y
+     * eso significa que no hubo reposo.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->exists('dias_reposo_medico') && $this->input('dias_reposo_medico') === null) {
+            $this->merge(['dias_reposo_medico' => 0]);
+        }
+    }
+
     public function rules(): array
     {
         return [

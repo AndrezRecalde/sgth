@@ -39,16 +39,6 @@ final class HorasTrabajadasController extends Controller
         return ApiResponse::created($registro, 'Horas trabajadas registradas exitosamente.');
     }
 
-    public function update(Request $request, int $id): JsonResponse
-    {
-        $validated = $request->validate([
-            'total_horas' => ['required', 'integer', 'min:1'],
-        ]);
-
-        $registro = $this->ssoService->actualizarHorasTrabajadas($id, $validated);
-        return ApiResponse::ok($registro, 'Horas trabajadas actualizadas exitosamente.');
-    }
-
     public function destroy(int $id): JsonResponse
     {
         $this->ssoService->eliminarHorasTrabajadas($id);
