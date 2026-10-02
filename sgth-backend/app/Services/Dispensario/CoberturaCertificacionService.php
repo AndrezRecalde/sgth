@@ -179,6 +179,10 @@ final class CoberturaCertificacionService
                 cargos.nombre as cargo,
                 ultima.id as ultima_solicitud_id,
                 ultima.dictamen as ultimo_dictamen,
+                -- Sin ficha no hay acto médico firmado y no se puede emitir el
+                -- certificado de aptitud: la fila lo tiene que saber para no
+                -- ofrecer una descarga que devolvería un 422.
+                ficha.id as ultima_ficha_id,
                 ficha.restricciones,
                 $fechaEvaluacion as fecha_evaluacion,
                 case when ultima.id is null then null else $vence end as vence_el,

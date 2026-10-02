@@ -17,6 +17,8 @@ export interface FilaCobertura {
   unidad:           string | null
   cargo:            string | null
   ultima_solicitud_id: number | null
+  /** `null` si la evaluación se cerró sin ficha: no hay certificado posible. */
+  ultima_ficha_id:  number | null
   ultimo_dictamen:  string | null
   restricciones:    string | null
   /** `null` si nunca se le evaluó. */

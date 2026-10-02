@@ -238,6 +238,17 @@ export const solicitudCertificacionService = {
       data
     ).then(r => r.data.datos),
 
+  /**
+   * El certificado de aptitud de una evaluación: aptitud, restricciones,
+   * vigencia y firma, sin texto clínico. No es el PDF del FEMO, que es el
+   * formulario 028 completo y no sale del Dispensario.
+   */
+  descargarCertificadoAptitud: (id: number) =>
+    api.get<Blob>(
+      `/dispensario/solicitudes-certificacion/${id}/certificado-aptitud`,
+      { responseType: 'blob' }
+    ).then(r => r.data),
+
   cancelar: (id: number, motivo: string) =>
     api.patch<ApiResponse<SolicitudCertificacion>>(
       `/dispensario/solicitudes-certificacion/${id}/cancelar`, { motivo }

@@ -7,6 +7,7 @@ import { IconStethoscope } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, SectionCard, SgthTable } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
+import { useCertificadoAptitud } from '@/features/dispensario/hooks/useCertificadoAptitud'
 import { getSaludOcupacionalColumns } from '../saludOcupacional.columns'
 import { AptitudVigentePanel } from '../AptitudVigentePanel'
 import { AusentismoSaludPanel } from '../AusentismoSaludPanel'
@@ -44,7 +45,12 @@ export function SaludOcupacionalTab({ servidor }: Props) {
   })
   const aptitud = aptitudVigente(ultimas?.data?.[0])
 
-  const columns = getSaludOcupacionalColumns()
+  const certificado = useCertificadoAptitud()
+
+  const columns = getSaludOcupacionalColumns({
+    descargandoId: certificado.descargandoId,
+    onDescargarCertificado: (s) => certificado.descargar(s.id, s.cedula_paciente),
+  })
 
   return (
     <Stack gap="md">

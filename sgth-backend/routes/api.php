@@ -32,6 +32,7 @@ use App\Http\Controllers\Dispensario\ConsultaMedicaController;
 use App\Http\Controllers\Dispensario\DashboardDispensarioController;
 use App\Http\Controllers\Dispensario\DiagnosticoCie10Controller;
 use App\Http\Controllers\Dispensario\DisponibilidadController;
+use App\Http\Controllers\Dispensario\CertificadoAptitudController;
 use App\Http\Controllers\Dispensario\CoberturaCertificacionController;
 use App\Http\Controllers\Dispensario\FemoPdfController;
 use App\Http\Controllers\Dispensario\FichaSaludOcupacionalController;
@@ -1403,6 +1404,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath|analista-uath')
             ->group(function () {
                 Route::get('/', [SolicitudCertificacionController::class, 'index']);
+                // El certificado de aptitud: la aptitud, sus restricciones y
+                // quién firma. Va con la lectura porque es justo el documento
+                // que el expediente administrativo sí puede recibir, al revés
+                // que el PDF del FEMO.
+                Route::get('{id}/certificado-aptitud', [CertificadoAptitudController::class, 'generar']);
                 Route::get('{id}', [SolicitudCertificacionController::class, 'show']);
             });
 
