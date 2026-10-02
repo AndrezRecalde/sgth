@@ -6276,6 +6276,22 @@ export interface components {
             medidas_correctivas: string | null;
             estado: boolean;
             investigado_por: number | null;
+            /**
+             * @description Las dos relaciones que el listado ya trae cargadas. Sin
+             *     declararlas, pasar el `index` por este recurso habría dejado la
+             *     columna Servidor con el id en vez del nombre.
+             */
+            servidor?: {
+                id: number;
+                cedula: string;
+                nombre: string;
+                apellido: string;
+            };
+            investigador?: {
+                id: number;
+                usuario_ti: string | null;
+                nombre_completo: string;
+            };
             created_by: number | null;
             updated_by: number | null;
             /** Format: date-time */
@@ -6647,7 +6663,7 @@ export interface components {
             tema: string;
             /** Format: date-time */
             fecha: string;
-            duracion_horas: number;
+            duracion_horas: string;
             instructor: string;
             lugar: string | null;
             estado: boolean;
@@ -7269,6 +7285,40 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** EppEntregaResource */
+        EppEntregaResource: {
+            id: number;
+            servidor_id: number;
+            equipo_proteccion_id: number;
+            /** Format: date-time */
+            fecha_entrega: string;
+            cantidad: number;
+            motivo: components["schemas"]["MotivoEntregaEpp"];
+            entregado_por: number;
+            observaciones: string | null;
+            /** @description Las tres relaciones que el listado ya trae cargadas. */
+            servidor?: {
+                id: number;
+                cedula: string;
+                nombre: string;
+                apellido: string;
+            };
+            equipo_proteccion?: {
+                id: number;
+                codigo: string;
+                nombre: string;
+                tipo: string;
+            };
+            entregador?: {
+                id: number;
+                usuario_ti: string | null;
+                nombre_completo: string;
+            };
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** EquipoProteccionResource */
         EquipoProteccionResource: {
             id: number;
@@ -7352,6 +7402,7 @@ export interface components {
         EstadoSubrogacion: "pendiente" | "activa" | "finalizada" | "cancelada";
         /**
          * EstadoSumario
+         * @description Estados del sumario administrativo (LOSEP). A diferencia del visto bueno, lo resuelve la autoridad nominadora de la institución, y cada estado deja la fecha de su hito para que se puedan vigilar los plazos procesales.
          * @enum {string}
          */
         EstadoSumario: "abierto" | "en_instruccion" | "en_prueba" | "con_informe" | "resuelto" | "apelado" | "cerrado";
@@ -7623,6 +7674,27 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** HorasTrabajadasPeriodoResource */
+        HorasTrabajadasPeriodoResource: {
+            id: number;
+            periodo: string;
+            unidad_administrativa_id: number | null;
+            total_horas: number;
+            registrado_por: number;
+            /**
+             * @description La unidad que el listado ya trae cargada. La tabla la pinta como
+             *     «Total institucional» cuando no viene, que es lo que significa
+             *     una fila sin unidad.
+             */
+            unidad_administrativa?: {
+                id: number;
+                nombre: string;
+            };
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** InformeActividad */
         InformeActividad: {
             id: number;
@@ -7664,6 +7736,16 @@ export interface components {
             recomendaciones: string | null;
             estado: boolean;
             inspector_id: number;
+            /** @description Las dos relaciones que el listado ya trae cargadas. */
+            unidad_administrativa?: {
+                id: number;
+                nombre: string;
+            };
+            inspector?: {
+                id: number;
+                usuario_ti: string | null;
+                nombre_completo: string;
+            };
             created_by: number | null;
             updated_by: number | null;
             /** Format: date-time */
@@ -8130,7 +8212,6 @@ export interface components {
             dias_saldo: string;
             saldo_acumulado: string;
             estado: string;
-            alerta_enviada: boolean;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
@@ -8350,6 +8431,25 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** PuestoEppResource */
+        PuestoEppResource: {
+            id: number;
+            puesto_id: number;
+            equipo_proteccion_id: number;
+            cantidad_requerida: number;
+            frecuencia_reposicion_meses: number | null;
+            equipo_proteccion?: {
+                id: number;
+                codigo: string;
+                nombre: string;
+                tipo: string;
+                vida_util_meses: number | null;
+            };
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** PuestoResource */
         PuestoResource: {
             id: number;
@@ -8490,17 +8590,11 @@ export interface components {
         };
         /** ResolverSumarioRequest */
         ResolverSumarioRequest: {
-            /** @enum {string} */
-            tipo_falta: "leve" | "grave" | "muy_grave";
-            /** @enum {string} */
-            tipo_sancion: "amonestacion_verbal" | "amonestacion_escrita" | "multa" | "suspension" | "destitucion";
+            tipo_falta: components["schemas"]["TipoFalta"];
+            tipo_sancion: components["schemas"]["TipoSancion"];
             porcentaje_multa?: number | null;
-            /** @description LOSEP max 10% */
             dias_suspension?: number | null;
-            /**
-             * Format: date-time
-             * @description LOSEP max 30 días
-             */
+            /** Format: date-time */
             fecha_efectiva?: string | null;
             observaciones?: string | null;
         };
@@ -8586,6 +8680,24 @@ export interface components {
             nivel_riesgo_valor: number | null;
             nivel_intervencion: components["schemas"]["NivelIntervencionRiesgo"] | null;
             estado: boolean;
+            /**
+             * @description Las dos relaciones que el listado ya trae cargadas. Sin
+             *     declararlas, pasar el `index` por este recurso habría vaciado
+             *     las columnas Puesto y Factor de riesgo de la matriz.
+             */
+            puesto?: {
+                id: number;
+                cargo: {
+                    id: number;
+                    nombre: string;
+                } | null;
+            };
+            factor_riesgo?: {
+                id: number;
+                nombre: string;
+                categoria: components["schemas"]["CategoriaFactorRiesgo"];
+                activo: boolean;
+            };
             created_by: number | null;
             updated_by: number | null;
             /** Format: date-time */
@@ -9536,7 +9648,12 @@ export interface components {
         StoreSumarioRequest: {
             servidor_id: number;
             motivo: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Un sumario no se abre en el futuro, y si se abriera, el límite
+             *     de notificación quedaría también en el futuro y
+             *     `controlarPlazosLegales()` no lo vería caducar nunca.
+             */
             fecha_apertura?: string | null;
         };
         /** StoreTriajeRequest */
@@ -9602,7 +9719,6 @@ export interface components {
             observacion?: string | null;
             unidad_administrativa_id?: number | null;
             persona_reemplaza_id?: number | null;
-            periodo_vacacion_id?: number | null;
         };
         /**
          * StoreVinculacionInicialRequest
@@ -9675,7 +9791,13 @@ export interface components {
             servidor_id: number;
             causal: components["schemas"]["CausalVistoBueno"];
             hechos: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description La solicitud se presenta y luego se registra, nunca al
+             *     contrario: con una fecha futura el plazo del Art. 183 se contaría
+             *     desde un día que no ha llegado y el trámite no aparecería jamás
+             *     en las alertas.
+             */
             fecha_solicitud: string;
             numero_tramite_mdt?: string | null;
             inspectoria?: string | null;
@@ -9816,6 +9938,12 @@ export interface components {
          */
         TipoExamenFemo: "laboratorio" | "imagen" | "otro";
         /**
+         * TipoFalta
+         * @description Gravedad de la falta disciplinaria — Art. 42 de la LOSEP.
+         * @enum {string}
+         */
+        TipoFalta: "leve" | "grave" | "muy_grave";
+        /**
          * TipoFichaFemo
          * @enum {string}
          */
@@ -9850,6 +9978,12 @@ export interface components {
          * @enum {string}
          */
         TipoProcesoConvocatoria: "formal" | "express";
+        /**
+         * TipoSancion
+         * @description Sanciones disciplinarias del Art. 43 de la LOSEP, en orden de gravedad. La destitución es la única que termina el vínculo, y por eso es la única que genera una Cesación de Funciones.
+         * @enum {string}
+         */
+        TipoSancion: "amonestacion_verbal" | "amonestacion_escrita" | "multa" | "suspension" | "destitucion";
         /**
          * TipoSubrogacion
          * @enum {string}
@@ -10519,7 +10653,6 @@ export interface components {
             creado_por: number | null;
             unidad_administrativa_id: number | null;
             persona_reemplaza_id: number | null;
-            periodo_vacacion_id: number | null;
             anulado_por: number | null;
             /** Format: date-time */
             anulado_en: string | null;
@@ -10671,9 +10804,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Accidentes de trabajo obtenidos exitosamente.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["AccidenteTrabajoResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;
@@ -13326,9 +13457,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Capacitaciones SSO obtenidas exitosamente.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["CapacitacionSsoResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;
@@ -14486,13 +14615,22 @@ export interface operations {
                             }[];
                             totales: {
                                 total_permisos: string;
-                                total_minutos: string;
+                                total_minutos: number;
+                                /**
+                                 * @description El pie de la columna «Tiempo» era un guion, en la tabla y en
+                                 *     el PDF, teniendo los minutos justo al lado. Es la cifra que
+                                 *     Talento Humano lee al cerrar el mes: cuántas horas de
+                                 *     ausencia suma el período.
+                                 */
+                                tiempo_total: string;
                                 total_dias: number;
                             };
                             filtros: {
                                 fecha_inicio: string;
                                 fecha_fin: string;
                                 tipo: string;
+                                servidor_id: string;
+                                unidad_administrativa_id: string;
                             };
                         };
                         meta: null;
@@ -16105,7 +16243,10 @@ export interface operations {
                             ausentismo: {
                                 total_permisos: number;
                                 servidores_afectados: number;
-                                /** @description 480 minutos es la jornada de ocho horas. */
+                                /**
+                                 * @description La jornada vive en `JornadaLaboral`; aquí se presenta con dos
+                                 *     decimales y no con cuatro, que es lo que pide un consolidado.
+                                 */
                                 total_dias: number;
                             };
                         };
@@ -16894,7 +17035,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -17994,9 +18134,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Entregas de EPP obtenidas exitosamente.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["EppEntregaResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;
@@ -18136,9 +18274,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Equipos de protección obtenidos exitosamente.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["EquipoProteccionResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;
@@ -18733,7 +18869,7 @@ export interface operations {
             query?: {
                 search?: string | null;
                 categoria?: components["schemas"]["CategoriaFactorRiesgo"];
-                solo_activos?: boolean | null;
+                solo_activos?: "1" | "0" | "true" | "false" | null;
             };
             header?: never;
             path?: never;
@@ -19667,9 +19803,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Horas trabajadas obtenidas exitosamente.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["HorasTrabajadasPeriodoResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;
@@ -19929,9 +20063,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Inspecciones SSO obtenidas exitosamente.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["InspeccionSsoResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;
@@ -21272,7 +21404,7 @@ export interface operations {
         parameters: {
             query?: {
                 tipo?: components["schemas"]["TipoNormativaLegal"];
-                solo_activas?: boolean | null;
+                solo_activas?: "1" | "0" | "true" | "false" | null;
             };
             header?: never;
             path?: never;
@@ -21865,13 +21997,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    anio?: string;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -22008,13 +22134,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    anio?: string;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -23390,7 +23510,7 @@ export interface operations {
         parameters: {
             query?: {
                 fase?: components["schemas"]["FaseProgramaDrogas"];
-                solo_activas?: boolean | null;
+                solo_activas?: "1" | "0" | "true" | "false" | null;
             };
             header?: never;
             path?: never;
@@ -23968,7 +24088,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Equipos de protección requeridos obtenidos exitosamente.";
-                        datos: components["schemas"]["PuestoEpp"][];
+                        datos: components["schemas"]["PuestoEppResource"][];
                         meta: null;
                     };
                 };
@@ -24004,7 +24124,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Equipo de protección asignado al puesto exitosamente.";
-                        datos: components["schemas"]["PuestoEpp"];
+                        datos: components["schemas"]["PuestoEppResource"];
                         meta: null;
                     };
                 };
@@ -25138,9 +25258,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Riesgos laborales obtenidos exitosamente.";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        datos: components["schemas"]["RiesgoLaboralResource"][];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;

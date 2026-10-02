@@ -12,7 +12,7 @@ import { IconAlertTriangle, IconInfoCircle, IconPlus } from '@tabler/icons-react
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useEppEntregaMutations, useKitEppServidor } from '../hooks/useEppEntregas'
-import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
+import { useCatalogoEquiposProteccion } from '../hooks/useEquiposProteccion'
 import {
   entregaKitEppSchema, type EntregaKitEppFormData,
 } from '../schemas/entregaKitEpp.schema'
@@ -47,8 +47,8 @@ export function EntregaKitEppForm({ onListo, onCancelar }: Props) {
   const contained = useContainedInput()
   const { registrarKit } = useEppEntregaMutations()
 
-  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
-  const equipoOptions = (equiposData?.data ?? []).map(e => ({
+  const { data: catalogoEquipos = [], error: errorEquipos } = useCatalogoEquiposProteccion()
+  const equipoOptions = catalogoEquipos.map(e => ({
     value: String(e.id), label: `${e.codigo} — ${e.nombre}`,
   }))
 

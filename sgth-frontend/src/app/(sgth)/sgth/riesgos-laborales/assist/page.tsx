@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { AssistCampaniasTab } from '@/features/sso/components/AssistCampaniasTab'
-import { PageHeader, PageShell } from '@/components/ui'
+import { AssistCampaniasView } from './AssistCampaniasView'
 
 export const metadata: Metadata = {
   title: 'Tamizaje ASSIST',
-  description: 'Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas',
+  description: 'Campañas de tamizaje anónimo de consumo de sustancias (OMS/OPS) y sus resultados',
 }
 
 export default function TamizajeAssistPage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Tamizaje ASSIST"
-        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-      />
-      <AssistCampaniasTab />
-    </PageShell>
-  )
+  return <AssistCampaniasView />
 }

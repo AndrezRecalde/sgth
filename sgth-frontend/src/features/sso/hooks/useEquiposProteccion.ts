@@ -10,6 +10,21 @@ interface Params {
   estado?: boolean
 }
 
+/**
+ * El catálogo de equipos activos, completo.
+ *
+ * Para los desplegables. `useEquiposProteccion` sirve a la TABLA del catálogo,
+ * que sí pagina; usarlo para un `Select` dejaba fuera todo lo que no cupiera
+ * en la primera página.
+ */
+export function useCatalogoEquiposProteccion() {
+  return useQuery({
+    queryKey: clavesSso.epp.equipos.catalogo,
+    queryFn: () => equiposProteccionService.catalogo(),
+    staleTime: 1000 * 60 * 10,
+  })
+}
+
 export function useEquiposProteccion(params?: Params) {
   return useQuery({
     queryKey: clavesSso.epp.equipos.lista(params),
@@ -38,7 +53,7 @@ export function useEquipoProteccionMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar el equipo'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el equipo'),
   })
 
   const editar = useMutation({
@@ -48,7 +63,7 @@ export function useEquipoProteccionMutations() {
       notificar.exito('Equipo actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar el equipo'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar el equipo'),
   })
 
   const eliminar = useMutation({

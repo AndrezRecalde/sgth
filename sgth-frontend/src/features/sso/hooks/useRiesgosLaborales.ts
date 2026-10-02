@@ -35,7 +35,7 @@ export function useRiesgoLaboralMutations() {
       notificar.exito('Riesgo laboral registrado', 'El riesgo fue registrado correctamente.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar el riesgo laboral'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el riesgo laboral'),
   })
 
   const editar = useMutation({
@@ -45,7 +45,7 @@ export function useRiesgoLaboralMutations() {
       notificar.exito('Riesgo laboral actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar el riesgo laboral'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar el riesgo laboral'),
   })
 
   const eliminar = useMutation({

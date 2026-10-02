@@ -1054,6 +1054,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::middleware('permission:ver-reportes-sso|gestionar-sso')->group(function () {
                 Route::get('dashboard/resumen', [DashboardSsoController::class, 'resumen']);
                 Route::get('factores-riesgo', [FactorRiesgoCatalogoController::class, 'index']);
+
+                // `catalogos/equipos-proteccion` y no `equipos-proteccion/catalogo`:
+                // el `apiResource('equipos-proteccion')` de arriba ya registró
+                // `GET equipos-proteccion/{id}`, y Laravel resuelve por orden
+                // de registro, así que el segundo nombre quedaría capturado
+                // como un id. Un prefijo distinto no depende del orden del
+                // archivo.
+                Route::get('catalogos/equipos-proteccion', [EquipoProteccionController::class, 'catalogo']);
                 Route::get('puestos/{puestoId}/equipos-proteccion', [PuestoEppController::class, 'index']);
                 Route::get('epp-entregas/reporte', [EppEntregaController::class, 'reporte']);
                 Route::get('epp-entregas', [EppEntregaController::class, 'index']);

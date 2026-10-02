@@ -37,6 +37,16 @@ interface SsoServiceInterface
     // ── Equipos de protección personal ────────────────────────────
     public function listarEquiposProteccion(array $filtros): LengthAwarePaginator;
 
+    /**
+     * El catálogo de equipos activos SIN paginar, para los desplegables que
+     * tienen que ofrecerlos todos. `listarEquiposProteccion` pagina de 15 en
+     * 15 y los tres formularios que eligen un equipo se quedaban con los
+     * quince primeros.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, EquipoProteccion>
+     */
+    public function catalogoEquiposProteccion(): \Illuminate\Database\Eloquent\Collection;
+
     public function obtenerEquipoProteccion(int $id): EquipoProteccion;
 
     public function registrarEquipoProteccion(array $datos): EquipoProteccion;

@@ -83,6 +83,12 @@ export const clavesSso = {
     equipos: {
       todos: ['sso', 'epp', 'equipos'] as const,
       lista: (params: Filtros) => ['sso', 'epp', 'equipos', 'lista', params] as const,
+      /**
+       * El catálogo completo de activos, para los desplegables. Hija de
+       * `equipos` a propósito: al crear o editar un equipo, `epp.todo` ya la
+       * alcanza y el desplegable no se queda con el nombre anterior.
+       */
+      catalogo: ['sso', 'epp', 'equipos', 'catalogo'] as const,
     },
 
     entregas: {
@@ -155,6 +161,18 @@ export const clavesSso = {
       todo: ['sso', 'programa-drogas', 'seguimiento'] as const,
       lista: (periodo: string | null) => ['sso', 'programa-drogas', 'seguimiento', periodo] as const,
     },
+  },
+
+  // ── Índices proactivos: lo que los alimenta ─────────────────────────
+
+  inspecciones: {
+    todas: ['sso', 'inspecciones'] as const,
+    lista: (params: Filtros) => ['sso', 'inspecciones', 'lista', params] as const,
+  },
+
+  capacitaciones: {
+    todas: ['sso', 'capacitaciones'] as const,
+    lista: (params: Filtros) => ['sso', 'capacitaciones', 'lista', params] as const,
   },
 
   // ── Adjuntos y ausentismo ───────────────────────────────────────────

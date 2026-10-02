@@ -40,7 +40,7 @@ export function useAccidenteTrabajoMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar el accidente'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el accidente'),
   })
 
   const editar = useMutation({
@@ -50,7 +50,7 @@ export function useAccidenteTrabajoMutations() {
       notificar.exito('Accidente actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar el accidente'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar el accidente'),
   })
 
   const eliminar = useMutation({

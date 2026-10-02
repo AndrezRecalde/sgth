@@ -30,8 +30,14 @@ class PeriodoVacacionController extends Controller
      *
      * El margen es holgado a propósito: hay que poder corregir un período viejo
      * y abrir el del año que viene.
+     *
+     * Pública y no privada por el generador del contrato: Scramble lee las
+     * reglas del `validate()` resolviendo la constante, y desde fuera de la
+     * clase no puede. Con ella privada, el aviso de que no pudo evaluarlas
+     * acababa escrito dentro de la descripción del endpoint en
+     * `api.generated.ts`.
      */
-    private const REGLA_ANIO = ['integer', 'min:2000', 'max:2100'];
+    public const REGLA_ANIO = ['integer', 'min:2000', 'max:2100'];
 
     public function __construct(
         private PeriodoVacacionService $periodoService,

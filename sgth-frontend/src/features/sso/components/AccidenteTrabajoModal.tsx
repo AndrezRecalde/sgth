@@ -18,6 +18,7 @@ import {
 } from '../schemas/accidenteTrabajo.schema'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { AccidenteTrabajo } from '../services/tipos'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened:     boolean
@@ -35,6 +36,7 @@ export function AccidenteTrabajoModal({ opened, onClose, accidente }: Props) {
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<AccidenteTrabajoFormData>({
     resolver: zodResolver(accidenteTrabajoSchema) as Resolver<AccidenteTrabajoFormData>,
@@ -80,7 +82,13 @@ export function AccidenteTrabajoModal({ opened, onClose, accidente }: Props) {
     const mutation = isEditing
       ? editar.mutateAsync({ id: accidente!.id, data: values })
       : crear.mutateAsync(values)
-    mutation.then(handleClose).catch(() => {})
+    mutation.then(handleClose).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof AccidenteTrabajoFormData, { message: mensaje })
+      }
+    })
   }
 
   const isPending = crear.isPending || editar.isPending

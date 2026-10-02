@@ -25,7 +25,7 @@ export function useDocumentoSsoMutations(tipo: TipoDocumentableSso, documentable
       notificar.exito('Documento subido', 'El archivo fue adjuntado exitosamente.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo subir el documento'),
+    onError: notificar.alFallarSalvoCampos('No se pudo subir el documento'),
   })
 
   const eliminar = useMutation({
