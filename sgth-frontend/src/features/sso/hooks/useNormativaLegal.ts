@@ -29,7 +29,23 @@ export function useNormativaMutations() {
       notificar.exito('Normativa registrada', 'La normativa fue agregada al catálogo.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la normativa'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la normativa'),
+  })
+
+  // Corregir una normativa ya registrada. El endpoint existe desde que existe
+  // el catálogo; sin esto, el título mal escrito de un reglamento solo se podía
+  // desactivar y volver a crear, y el cumplimiento ya registrado se quedaba
+  // colgando de la normativa vieja —que es justo lo que el aviso de borrado
+  // advierte—.
+  const editar = useMutation({
+    mutationFn: ({ id, ...data }: {
+      id: number; nombre: string; tipo: string; fecha_vigencia?: string; descripcion?: string
+    }) => normativaLegalService.actualizar(id, data),
+    onSuccess: () => {
+      notificar.exito('Normativa actualizada', 'Los cambios se aplican al cumplimiento ya registrado.')
+      invalidar()
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la normativa'),
   })
 
   // Retirar una normativa del catálogo sin borrar su historial: es lo que la
@@ -60,5 +76,5 @@ export function useNormativaMutations() {
     onError: notificar.alFallar('No se pudo eliminar la normativa'),
   })
 
-  return { crear, cambiarActivo, eliminar }
+  return { crear, editar, cambiarActivo, eliminar }
 }

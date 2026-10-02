@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Services\Sso\FiltroBooleanoSso;
 use App\Enums\CategoriaFactorRiesgo;
 use App\Models\Sso\FactorRiesgoCatalogo;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,7 @@ final class FactorRiesgoCatalogoController extends Controller
         $request->validate([
             'search' => ['nullable', 'string', 'max:150'],
             'categoria' => ['nullable', new Enum(CategoriaFactorRiesgo::class)],
-            'solo_activos' => ['nullable', 'boolean'],
+            'solo_activos' => FiltroBooleanoSso::reglas(),
         ]);
 
         $factores = FactorRiesgoCatalogo::query()

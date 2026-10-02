@@ -27,7 +27,7 @@ export function useCumplimientoMutations() {
       // El tablero trae los totales de la lista de verificación.
       qc.invalidateQueries({ queryKey: clavesSso.tablero.todo })
     },
-    onError: notificar.alFallar('No se pudo registrar el cumplimiento'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el cumplimiento'),
   })
 
   return { registrar }

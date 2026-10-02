@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { CumplimientoTab } from '@/features/sso/components/CumplimientoTab'
-import { PageHeader, PageShell } from '@/components/ui'
+import { CumplimientoView } from './CumplimientoView'
 
 export const metadata: Metadata = {
   title: 'Cumplimiento Normativo',
-  description: 'Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas',
+  description: 'Lista de verificación de la normativa legal de seguridad y salud por período',
 }
 
 export default function CumplimientoNormativoPage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Cumplimiento Normativo"
-        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-      />
-      <CumplimientoTab />
-    </PageShell>
-  )
+  return <CumplimientoView />
 }

@@ -8,6 +8,11 @@ import { noEsFutura } from '@/lib/fecha'
  * `incluido` y `nombre` no viajan al servidor —el primero decide qué filas se
  * envían, el segundo es la etiqueta de la casilla—, pero viven en el
  * formulario porque son lo que la persona marca y lee.
+ *
+ * Lo mismo vale para `estado`, `reponerDesde` y `ultimaEntrega`: los calcula
+ * el backend al devolver el kit del servidor y la fila los muestra para
+ * explicar por qué viene marcada o no. El servidor no los recibe de vuelta
+ * porque los acaba de calcular él.
  */
 export const entregaKitEppSchema = z.object({
   servidor_id: z
@@ -30,6 +35,9 @@ export const entregaKitEppSchema = z.object({
           .int('La cantidad va en números enteros')
           .min(1, 'Mínimo 1'),
         incluido: z.boolean(),
+        estado: z.enum(['pendiente', 'por_reponer', 'vigente']).optional(),
+        reponerDesde: z.string().nullable().optional(),
+        ultimaEntrega: z.string().nullable().optional(),
       }),
     )
     .refine(
