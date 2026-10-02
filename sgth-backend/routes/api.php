@@ -1372,19 +1372,43 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Creación de solicitudes en lote desde Expediente (RRHH, no médico)
         // NOTA: debe registrarse antes que GET {id} de la ruta wildcard.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:admin-uath|analista-uath|admin-dispensario')
+            ->middleware('role:admin-uath|asistente-uath|analista-uath|admin-dispensario')
             ->group(function () {
                 Route::post('lote', [SolicitudCertificacionController::class, 'storeLote']);
             });
 
-        // Solicitudes de certificación médica
+        // Lectura del seguimiento: el médico trabaja sobre estas solicitudes y
+        // Talento Humano las consulta.
+        //
+        // `asistente-uath` lleva `solicitar-certificacion-medica` desde el
+        // seeder, y ese es justo el permiso con el que `nav.ts` pinta
+        // «Certificaciones médicas»: sin el rol declarado aquí veía el ítem en
+        // el menú y recibía un 403 al abrirlo. Lo mismo le pasaba con el lote
+        // desde Expediente, que el controlador ya le autoriza por permiso.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:medico|admin-dispensario|admin-uath|analista-uath')
+            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath|analista-uath')
             ->group(function () {
                 Route::get('/', [SolicitudCertificacionController::class, 'index']);
                 Route::get('{id}', [SolicitudCertificacionController::class, 'show']);
+            });
+
+        // El acto médico. Iniciar el FEMO y cerrar la solicitud con un dictamen
+        // de aptitud lo hace quien evalúa, y nadie más: iban en el mismo grupo
+        // que la lectura, así que Talento Humano podía emitir el dictamen.
+        Route::prefix('solicitudes-certificacion')
+            ->middleware('role:medico|admin-dispensario')
+            ->group(function () {
                 Route::patch('{id}/iniciar', [SolicitudCertificacionController::class, 'iniciarProceso']);
                 Route::patch('{id}/completar', [SolicitudCertificacionController::class, 'completar']);
+            });
+
+        // La incorporación del candidato la confirma Talento Humano
+        // (`gestionar-onboarding`, que el controlador vuelve a comprobar): crea
+        // el expediente del servidor y el borrador del ingreso, no es un acto
+        // clínico.
+        Route::prefix('solicitudes-certificacion')
+            ->middleware('role:admin-uath|analista-uath')
+            ->group(function () {
                 Route::post('{id}/confirmar-incorporacion', [SolicitudCertificacionController::class, 'confirmarIncorporacion']);
             });
 
