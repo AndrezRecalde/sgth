@@ -9,6 +9,7 @@ import {
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { DataState, PageHeader, PageShell, StatCard, Toolbar } from '@/components/ui'
+import { AvisoAlcance } from '@/features/sso/components/AvisoAlcance'
 import { useDashboardSso } from '@/features/sso/hooks/useDashboardSso'
 import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
 
@@ -77,6 +78,22 @@ export function DashboardSsoView() {
           >
             {resumen && (
               <Stack gap="lg">
+                {/* Seis de los nueve bloques filtran por la unidad pedida; el
+                    catálogo de EPP, la normativa legal y las actividades del
+                    programa no se registran por unidad y lo dicen. */}
+                <AvisoAlcance
+                  alcances={resumen.alcances}
+                  etiquetas={{
+                    riesgos: 'Riesgos',
+                    accidentes: 'Accidentes',
+                    epp: 'EPP',
+                    cumplimiento: 'Cumplimiento normativo',
+                    psicosocial: 'Psicosocial',
+                    assist: 'ASSIST',
+                    programa_drogas: 'Programa de drogas',
+                    ausentismo: 'Ausentismo',
+                  }}
+                />
                 {/* El tono va solo cuando la cifra tiene lectura (regla 06). Con
                     el tono fijo, un período sin un solo accidente abría el
                     tablero con tres indicadores en rojo y ámbar: cero
