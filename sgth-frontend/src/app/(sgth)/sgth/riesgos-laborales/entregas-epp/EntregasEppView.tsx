@@ -1,18 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Text } from '@mantine/core'
+import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconReportAnalytics, IconTruckDelivery } from '@tabler/icons-react'
 import { useEppEntregas } from '@/features/sso/hooks/useEppEntregas'
 import { RegistrarEntregaEppModal } from '@/features/sso/components/RegistrarEntregaEppModal'
 import { ReporteEppModal } from '@/features/sso/components/ReporteEppModal'
-import { MOTIVO_ENTREGA_OPTIONS } from '@/features/sso/schemas/eppEntrega.schema'
-import { formatFecha } from '@/lib/fecha'
-import type { EppEntrega } from '@/features/sso/services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, PageHeader, PageShell, SgthTable, StatusBadge } from '@/components/ui'
+import { columnasEppEntrega } from '@/features/sso/components/eppEntrega.columns'
+import { DataState, PageHeader, PageShell, SgthTable } from '@/components/ui'
 
 export function EntregasEppView() {
   const [page, setPage] = useState(1)
@@ -27,43 +24,6 @@ export function EntregasEppView() {
 
   const { data, isLoading, error, refetch } = useEppEntregas({ page })
   const records = data?.data ?? []
-
-  const getMotivoLabel = (valor: string) =>
-    MOTIVO_ENTREGA_OPTIONS.find(o => o.value === valor)?.label ?? valor
-
-  const columns: DataTableColumn<EppEntrega>[] = [
-    {
-      accessor: 'servidor',
-      title: 'Servidor',
-      render: (e) => (
-        <Text size="sm" fw={500}>
-          {e.servidor ? `${e.servidor.nombre} ${e.servidor.apellido}` : `Servidor ${e.servidor_id}`}
-        </Text>
-      ),
-    },
-    {
-      accessor: 'equipo_proteccion',
-      title: 'Equipo',
-      render: (e) => e.equipo_proteccion?.nombre ?? `Equipo ${e.equipo_proteccion_id}`,
-    },
-    {
-      accessor: 'fecha_entrega',
-      title: 'Fecha',
-      width: 110,
-      render: (e) => formatFecha(e.fecha_entrega),
-    },
-    { accessor: 'cantidad', title: 'Cantidad', width: 90 },
-    {
-      accessor: 'motivo',
-      title: 'Motivo',
-      width: 130,
-      render: (e) => (
-        <StatusBadge>
-          {getMotivoLabel(e.motivo)}
-        </StatusBadge>
-      ),
-    },
-  ]
 
   return (
     <PageShell>
@@ -115,7 +75,7 @@ export function EntregasEppView() {
       >
         <SgthTable
           records={records}
-          columns={columns}
+          columns={columnasEppEntrega}
           totalRecords={data?.total ?? 0}
           recordsPerPage={15}
           page={page}

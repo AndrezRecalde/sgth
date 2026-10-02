@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Group, TextInput, Select, Textarea, Button, Switch,
@@ -14,9 +14,9 @@ import { useNormativas, useNormativaMutations } from '../hooks/useNormativaLegal
 import {
   normativaLegalSchema, type NormativaLegalFormData, TIPO_NORMATIVA_OPTIONS,
 } from '../schemas/normativaLegal.schema'
+import { columnasNormativaLegal } from './normativaLegal.columns'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { NormativaLegalSso } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
   opened: boolean
@@ -39,63 +39,32 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', tipo: 'reglamento', fecha_vigencia: '', descripcion: '' },
   })
 
-  const getTipoLabel = (valor: string) =>
-    TIPO_NORMATIVA_OPTIONS.find(o => o.value === valor)?.label ?? valor
-
   const onSubmit = (values: NormativaLegalFormData) => {
     crear.mutateAsync(values).then(() => reset({ nombre: '', tipo: values.tipo, fecha_vigencia: '', descripcion: '' })).catch(() => {})
   }
 
-  const columns: DataTableColumn<NormativaLegalSso>[] = [
-    { accessor: 'nombre', title: 'Normativa' },
+  const accionesDe = (n: NormativaLegalSso): TableAction[] => [
     {
-      accessor: 'tipo',
-      title: 'Tipo',
-      width: 160,
-      render: (n) => <StatusBadge>{getTipoLabel(n.tipo)}</StatusBadge>,
+      label: n.activo ? 'Desactivar' : 'Reactivar',
+      icon: n.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+      onClick: () => cambiarActivo.mutate({ id: n.id, activo: !n.activo }),
     },
     {
-      accessor: 'activo',
-      title: 'Estado',
-      width: 100,
-      render: (n) => (
-        <StatusBadge tone={n.activo ? 'success' : 'neutral'}>
-          {n.activo ? 'Activa' : 'Inactiva'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (n) => (
-        <TableActions
-          actions={[
-            {
-              label: n.activo ? 'Desactivar' : 'Reactivar',
-              icon: n.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
-              onClick: () => cambiarActivo.mutate({ id: n.id, activo: !n.activo }),
-            },
-            {
-              label: 'Eliminar normativa',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar normativa',
-                message: (
-                  <>
-                    Se eliminará la normativa <b>{n.nombre}</b>. No se puede deshacer.
-                    Si ya tiene cumplimiento registrado, desactívela en vez de borrarla:
-                    eliminarla se llevaría ese historial.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(n.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar normativa',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar normativa',
+        message: (
+          <>
+            Se eliminará la normativa <b>{n.nombre}</b>. No se puede deshacer.
+            Si ya tiene cumplimiento registrado, desactívela en vez de borrarla:
+            eliminarla se llevaría ese historial.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(n.id),
+      }),
     },
   ]
 
@@ -205,7 +174,7 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
         >
           <SgthTable
             records={normativas}
-            columns={columns}
+            columns={columnasNormativaLegal(accionesDe)}
             minHeight={120}
           />
         </DataState>

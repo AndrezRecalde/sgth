@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Group, TextInput, Select, Button, Switch,
@@ -13,8 +13,8 @@ import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactore
 import {
   factorRiesgoSchema, type FactorRiesgoFormData, CATEGORIA_FACTOR_OPTIONS,
 } from '../schemas/factorRiesgo.schema'
+import { columnasFactorRiesgo } from './factorRiesgo.columns'
 import type { FactorRiesgoCatalogo } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
   opened: boolean
@@ -38,62 +38,31 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', categoria: 'fisico' },
   })
 
-  const getCategoriaLabel = (valor: string) =>
-    CATEGORIA_FACTOR_OPTIONS.find(o => o.value === valor)?.label ?? valor
-
   const onSubmit = (values: FactorRiesgoFormData) => {
     crear.mutateAsync(values).then(() => reset({ nombre: '', categoria: values.categoria })).catch(() => {})
   }
 
-  const columns: DataTableColumn<FactorRiesgoCatalogo>[] = [
-    { accessor: 'nombre', title: 'Factor' },
+  const accionesDe = (f: FactorRiesgoCatalogo): TableAction[] => [
     {
-      accessor: 'categoria',
-      title: 'Categoría',
-      width: 160,
-      render: (f) => <StatusBadge>{getCategoriaLabel(f.categoria)}</StatusBadge>,
+      label: f.activo ? 'Desactivar' : 'Reactivar',
+      icon: f.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+      onClick: () => cambiarActivo.mutate({ id: f.id, activo: !f.activo }),
     },
     {
-      accessor: 'activo',
-      title: 'Estado',
-      width: 100,
-      render: (f) => (
-        <StatusBadge tone={f.activo ? 'success' : 'neutral'}>
-          {f.activo ? 'Activo' : 'Inactivo'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (f) => (
-        <TableActions
-          actions={[
-            {
-              label: f.activo ? 'Desactivar' : 'Reactivar',
-              icon: f.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
-              onClick: () => cambiarActivo.mutate({ id: f.id, activo: !f.activo }),
-            },
-            {
-              label: 'Eliminar factor',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar factor de riesgo',
-                message: (
-                  <>
-                    Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.
-                    Si algún riesgo lo usa, desactívelo en vez de borrarlo.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(f.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar factor',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar factor de riesgo',
+        message: (
+          <>
+            Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.
+            Si algún riesgo lo usa, desactívelo en vez de borrarlo.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(f.id),
+      }),
     },
   ]
 
@@ -172,7 +141,7 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
         >
           <SgthTable
             records={factores}
-            columns={columns}
+            columns={columnasFactorRiesgo(accionesDe)}
             minHeight={120}
           />
         </DataState>

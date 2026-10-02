@@ -1,19 +1,15 @@
 'use client'
 
-import { confirmar, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, PageHeader, PageShell, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Text } from '@mantine/core'
+import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconAlertTriangle } from '@tabler/icons-react'
 import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '@/features/sso/hooks/useAccidentesTrabajo'
 import { AccidenteTrabajoModal } from '@/features/sso/components/AccidenteTrabajoModal'
-import {
-  TONO_GRAVEDAD, TONO_TIPO_EVENTO_ACCIDENTE, TIPO_EVENTO_ACCIDENTE_OPTIONS, GRAVEDAD_OPTIONS,
-} from '@/features/sso/schemas/accidenteTrabajo.schema'
-import { formatFecha } from '@/lib/fecha'
+import { columnasAccidenteTrabajo } from '@/features/sso/components/accidenteTrabajo.columns'
 import type { AccidenteTrabajo } from '@/features/sso/services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 export function AccidentesTrabajoView() {
   const [page, setPage] = useState(1)
@@ -40,85 +36,24 @@ export function AccidentesTrabajoView() {
     close()
   }
 
-  const columns: DataTableColumn<AccidenteTrabajo>[] = [
+  const accionesDe = (accidente: AccidenteTrabajo): TableAction[] => [
     {
-      accessor: 'servidor',
-      title: 'Servidor',
-      render: (a) => (
-        <Text size="sm" fw={500}>
-          {a.servidor ? `${a.servidor.nombre} ${a.servidor.apellido}` : `Servidor ${a.servidor_id}`}
-        </Text>
-      ),
+      label: 'Editar accidente',
+      icon: <IconEdit size={14} />,
+      hidden: !puedeGestionar,
+      onClick: () => handleEdit(accidente),
     },
     {
-      accessor: 'tipo_evento',
-      title: 'Tipo',
-      width: 110,
-      render: (a) => (
-        <StatusBadge tone={TONO_TIPO_EVENTO_ACCIDENTE[a.tipo_evento] ?? 'neutral'}>
-          {TIPO_EVENTO_ACCIDENTE_OPTIONS.find(o => o.value === a.tipo_evento)?.label.split(' ')[0] ?? a.tipo_evento}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'fecha_accidente',
-      title: 'Fecha',
-      width: 110,
-      render: (a) => formatFecha(a.fecha_accidente),
-    },
-    { accessor: 'lugar_accidente', title: 'Lugar' },
-    {
-      accessor: 'gravedad',
-      title: 'Gravedad',
-      width: 120,
-      // La etiqueta, no el valor crudo: la columna pintaba «leve» y «mortal»
-      // en minúscula, como vienen de la base, mientras las demás columnas del
-      // módulo sí traducen. El texto sin traducir se conserva por si alguna
-      // fila anterior a la validación trae algo fuera de la escala.
-      render: (a) => (
-        <StatusBadge tone={TONO_GRAVEDAD[a.gravedad] ?? 'neutral'}>
-          {GRAVEDAD_OPTIONS.find(o => o.value === a.gravedad)?.label ?? a.gravedad}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'estado',
-      title: 'Investigación',
-      width: 130,
-      render: (a) => (
-        <StatusBadge tone={a.estado ? 'warning' : 'success'}>
-          {a.estado ? 'Abierta' : 'Cerrada'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (accidente) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Editar accidente',
-              icon: <IconEdit size={14} />,
-              hidden: !puedeGestionar,
-              onClick: () => handleEdit(accidente),
-            },
-            {
-              label: 'Eliminar accidente',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              hidden: !puedeGestionar,
-              onClick: () => confirmar({
-                title:   'Eliminar accidente de trabajo',
-                message: 'Se eliminará este registro de accidente de trabajo. No se puede deshacer.',
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(accidente.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar accidente',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      hidden: !puedeGestionar,
+      onClick: () => confirmar({
+        title:   'Eliminar accidente de trabajo',
+        message: 'Se eliminará este registro de accidente de trabajo. No se puede deshacer.',
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(accidente.id),
+      }),
     },
   ]
 
@@ -155,7 +90,7 @@ export function AccidentesTrabajoView() {
       >
         <SgthTable
           records={records}
-          columns={columns}
+          columns={columnasAccidenteTrabajo(accionesDe)}
           totalRecords={data?.total ?? 0}
           recordsPerPage={15}
           page={page}

@@ -1,20 +1,20 @@
 'use client'
 
-import { confirmar, notificar, PageHeader, PageShell } from '@/components/ui'
+import { confirmar, notificar, PageHeader, PageShell, type TableAction } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Text } from '@mantine/core'
+import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
-import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { DataState, SgthTable } from '@/components/ui'
 import { useCampaniasAssist, useAssistMutations } from '@/features/sso/hooks/useAssist'
 import { CrearCampaniaAssistModal } from '@/features/sso/components/CrearCampaniaAssistModal'
 import { ResultadosAssistModal } from '@/features/sso/components/ResultadosAssistModal'
 import type { CampaniaAssist } from '@/features/sso/services/assistService'
-import type { DataTableColumn } from 'mantine-datatable'
+import { columnasCampaniaTamizaje } from '@/features/sso/components/campaniaTamizaje.columns'
 
 export function AssistCampaniasView() {
   const { data: campanias = [], isLoading, error } = useCampaniasAssist()
@@ -50,74 +50,34 @@ export function AssistCampaniasView() {
     openResultados()
   }
 
-  const columns: DataTableColumn<CampaniaAssist>[] = [
-    { accessor: 'periodo', title: 'Período', width: 100 },
+  const accionesDe = (campania: CampaniaAssist): TableAction[] => [
     {
-      accessor: 'unidad_administrativa',
-      title: 'Unidad',
-      render: (c) => c.unidad_administrativa?.nombre ?? 'Toda la institución',
+      label: 'Copiar enlace público',
+      icon: <IconLink size={14} />,
+      onClick: () => copiarLink(campania.codigo_acceso),
     },
     {
-      accessor: 'codigo_acceso',
-      title: 'Código',
-      width: 120,
-      render: (c) => <Text ff="monospace" size="sm">{c.codigo_acceso}</Text>,
+      label: 'Ver resultados',
+      icon: <IconChartBar size={14} />,
+      onClick: () => verResultados(campania),
     },
     {
-      accessor: 'activa',
-      title: 'Estado',
-      width: 100,
-      render: (c) => (
-        <StatusBadge tone={c.activa ? 'success' : 'neutral'}>
-          {c.activa ? 'Abierta' : 'Cerrada'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'respuestas_count',
-      title: 'Respuestas',
-      width: 100,
-      textAlign: 'center',
-      render: (c) => c.respuestas_count ?? 0,
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (campania) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Copiar enlace público',
-              icon: <IconLink size={14} />,
-              onClick: () => copiarLink(campania.codigo_acceso),
-            },
-            {
-              label: 'Ver resultados',
-              icon: <IconChartBar size={14} />,
-              onClick: () => verResultados(campania),
-            },
-            {
-              label: 'Cerrar campaña',
-              icon: <IconLock size={14} />,
-              color: 'red',
-              hidden: !campania.activa || !puedeGestionar,
-              onClick: () => confirmar({
-                title:   'Cerrar campaña',
-                message: (
-                  <>
-                    Se cerrará la campaña del período <b>{campania.periodo}</b>.
-                    Ya no se podrán registrar más respuestas.
-                  </>
-                ),
-                destructiva: true,
-                confirmLabel: 'Cerrar campaña',
-                onConfirm: () => cerrarCampania.mutate(campania.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Cerrar campaña',
+      icon: <IconLock size={14} />,
+      color: 'red',
+      hidden: !campania.activa || !puedeGestionar,
+      onClick: () => confirmar({
+        title:   'Cerrar campaña',
+        message: (
+          <>
+            Se cerrará la campaña del período <b>{campania.periodo}</b>.
+            Ya no se podrán registrar más respuestas.
+          </>
+        ),
+        destructiva: true,
+        confirmLabel: 'Cerrar campaña',
+        onConfirm: () => cerrarCampania.mutate(campania.id),
+      }),
     },
   ]
 
@@ -149,7 +109,7 @@ export function AssistCampaniasView() {
       >
         <SgthTable
           records={campanias}
-          columns={columns}
+          columns={columnasCampaniaTamizaje(accionesDe)}
           minHeight={200}
         />
       </DataState>

@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Group, TextInput, Select, Textarea, Button, Switch,
@@ -13,8 +13,8 @@ import { useActividadesPrograma, useProgramaDrogasMutations } from '../hooks/use
 import {
   actividadProgramaSchema, type ActividadProgramaFormData, FASE_PROGRAMA_DROGAS_OPTIONS,
 } from '../schemas/programaDrogas.schema'
+import { columnasActividadPrograma } from './actividadPrograma.columns'
 import type { ProgramaDrogaActividad } from '../services/programaDrogasService'
-import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
   opened: boolean
@@ -38,63 +38,32 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', fase: 'fase_1_preparacion', descripcion: '' },
   })
 
-  const getFaseLabel = (valor: string) =>
-    FASE_PROGRAMA_DROGAS_OPTIONS.find(o => o.value === valor)?.label ?? valor
-
   const onSubmit = (values: ActividadProgramaFormData) => {
     crearActividad.mutateAsync(values).then(() => reset({ nombre: '', fase: values.fase, descripcion: '' })).catch(() => {})
   }
 
-  const columns: DataTableColumn<ProgramaDrogaActividad>[] = [
-    { accessor: 'nombre', title: 'Actividad' },
+  const accionesDe = (a: ProgramaDrogaActividad): TableAction[] => [
     {
-      accessor: 'fase',
-      title: 'Fase',
-      width: 200,
-      render: (a) => <StatusBadge>{getFaseLabel(a.fase)}</StatusBadge>,
+      label: a.activo ? 'Desactivar' : 'Reactivar',
+      icon: a.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+      onClick: () => cambiarActivoActividad.mutate({ id: a.id, activo: !a.activo }),
     },
     {
-      accessor: 'activo',
-      title: 'Estado',
-      width: 100,
-      render: (a) => (
-        <StatusBadge tone={a.activo ? 'success' : 'neutral'}>
-          {a.activo ? 'Activa' : 'Inactiva'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (a) => (
-        <TableActions
-          actions={[
-            {
-              label: a.activo ? 'Desactivar' : 'Reactivar',
-              icon: a.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
-              onClick: () => cambiarActivoActividad.mutate({ id: a.id, activo: !a.activo }),
-            },
-            {
-              label: 'Eliminar actividad',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar actividad',
-                message: (
-                  <>
-                    Se eliminará la actividad <b>{a.nombre}</b>. No se puede deshacer.
-                    Si ya tiene seguimiento registrado, desactívela en vez de borrarla:
-                    eliminarla se llevaría ese historial.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminarActividad.mutate(a.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar actividad',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar actividad',
+        message: (
+          <>
+            Se eliminará la actividad <b>{a.nombre}</b>. No se puede deshacer.
+            Si ya tiene seguimiento registrado, desactívela en vez de borrarla:
+            eliminarla se llevaría ese historial.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminarActividad.mutate(a.id),
+      }),
     },
   ]
 
@@ -183,7 +152,7 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
         >
           <SgthTable
             records={actividades}
-            columns={columns}
+            columns={columnasActividadPrograma(accionesDe)}
             minHeight={120}
           />
         </DataState>

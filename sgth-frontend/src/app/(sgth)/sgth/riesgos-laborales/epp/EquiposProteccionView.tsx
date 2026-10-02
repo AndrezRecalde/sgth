@@ -1,18 +1,17 @@
 'use client'
 
-import { confirmar, PageHeader, PageShell } from '@/components/ui'
+import { confirmar, PageHeader, PageShell, type TableAction } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Text } from '@mantine/core'
+import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconClipboardList, IconShieldCheck } from '@tabler/icons-react'
-import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { DataState, SgthTable } from '@/components/ui'
 import { useEquiposProteccion, useEquipoProteccionMutations } from '@/features/sso/hooks/useEquiposProteccion'
 import { EquipoProteccionModal } from '@/features/sso/components/EquipoProteccionModal'
 import { AsignarEppPuestoModal } from '@/features/sso/components/AsignarEppPuestoModal'
-import { TIPO_EPP_OPTIONS } from '@/features/sso/schemas/equipoProteccion.schema'
+import { columnasEquipoProteccion } from '@/features/sso/components/equipoProteccion.columns'
 import type { EquipoProteccion } from '@/features/sso/services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 export function EquiposProteccionView() {
   const [page, setPage] = useState(1)
@@ -30,9 +29,6 @@ export function EquiposProteccionView() {
   const { data, isLoading, error } = useEquiposProteccion({ page })
   const records = data?.data ?? []
 
-  const getTipoLabel = (tipo: string) =>
-    TIPO_EPP_OPTIONS.find(o => o.value === tipo)?.label ?? tipo
-
   const handleEdit = (equipo: EquipoProteccion) => {
     setEditEquipo(equipo)
     open()
@@ -43,57 +39,24 @@ export function EquiposProteccionView() {
     close()
   }
 
-  const columns: DataTableColumn<EquipoProteccion>[] = [
-    { accessor: 'codigo', title: 'Código', width: 110 },
+  const accionesDe = (equipo: EquipoProteccion): TableAction[] => [
     {
-      accessor: 'nombre',
-      title: 'Equipo',
-      render: (e) => <Text size="sm" fw={500}>{e.nombre}</Text>,
+      label: 'Editar equipo',
+      icon: <IconEdit size={14} />,
+      hidden: !puedeGestionar,
+      onClick: () => handleEdit(equipo),
     },
     {
-      accessor: 'tipo',
-      title: 'Tipo',
-      render: (e) => getTipoLabel(e.tipo),
-    },
-    { accessor: 'vida_util_meses', title: 'Vida útil (meses)', width: 150 },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      width: 90,
-      render: (e) => (
-        <StatusBadge tone={e.estado ? 'success' : 'neutral'}>
-          {e.estado ? 'Activo' : 'Inactivo'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (equipo) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Editar equipo',
-              icon: <IconEdit size={14} />,
-              hidden: !puedeGestionar,
-              onClick: () => handleEdit(equipo),
-            },
-            {
-              label: 'Eliminar equipo',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              hidden: !puedeGestionar,
-              onClick: () => confirmar({
-                title:   'Eliminar equipo',
-                message: <>Se eliminará el equipo <b>{equipo.nombre}</b>. No se puede deshacer.</>,
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(equipo.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar equipo',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      hidden: !puedeGestionar,
+      onClick: () => confirmar({
+        title:   'Eliminar equipo',
+        message: <>Se eliminará el equipo <b>{equipo.nombre}</b>. No se puede deshacer.</>,
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(equipo.id),
+      }),
     },
   ]
 
@@ -137,7 +100,7 @@ export function EquiposProteccionView() {
       >
         <SgthTable
           records={records}
-          columns={columns}
+          columns={columnasEquipoProteccion(accionesDe)}
           totalRecords={data?.total ?? 0}
           recordsPerPage={15}
           page={page}

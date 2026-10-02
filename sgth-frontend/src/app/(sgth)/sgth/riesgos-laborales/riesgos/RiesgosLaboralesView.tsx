@@ -1,17 +1,16 @@
 'use client'
 
-import { confirmar, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, PageHeader, PageShell, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Text } from '@mantine/core'
+import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconList, IconAlertTriangle } from '@tabler/icons-react'
 import { useRiesgosLaborales, useRiesgoLaboralMutations } from '@/features/sso/hooks/useRiesgosLaborales'
 import { RiesgoLaboralModal } from '@/features/sso/components/RiesgoLaboralModal'
 import { FactoresRiesgoModal } from '@/features/sso/components/FactoresRiesgoModal'
-import { NIVEL_INTERVENCION_CORTO, TONO_NIVEL_INTERVENCION } from '@/features/sso/schemas/riesgoLaboral.schema'
+import { columnasRiesgoLaboral } from '@/features/sso/components/riesgoLaboral.columns'
 import type { RiesgoLaboral } from '@/features/sso/services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 export function RiesgosLaboralesView() {
   const [page, setPage] = useState(1)
@@ -39,75 +38,24 @@ export function RiesgosLaboralesView() {
     close()
   }
 
-  const columns: DataTableColumn<RiesgoLaboral>[] = [
+  const accionesDe = (riesgo: RiesgoLaboral): TableAction[] => [
     {
-      accessor: 'puesto',
-      title: 'Puesto',
-      render: (r) => (
-        <Text size="sm" fw={500}>{r.puesto?.cargo?.nombre ?? `Puesto ${r.puesto_id}`}</Text>
-      ),
+      label: 'Editar riesgo',
+      icon: <IconEdit size={14} />,
+      hidden: !puedeGestionar,
+      onClick: () => handleEdit(riesgo),
     },
     {
-      accessor: 'factor_riesgo',
-      title: 'Factor de riesgo',
-      render: (r) => r.factor_riesgo?.nombre ?? `Factor ${r.factor_riesgo_id}`,
-    },
-    {
-      accessor: 'nivel_riesgo_valor',
-      title: 'NR',
-      width: 70,
-      render: (r) => r.nivel_riesgo_valor ?? '—',
-    },
-    {
-      accessor: 'nivel_intervencion',
-      title: 'Nivel de intervención',
-      width: 200,
-      // Los riesgos identificados antes de la matriz NTP 330 tienen los tres
-      // niveles en NULL: la insignia salía vacía, como un dato que no llegó.
-      render: (r) => (
-        <StatusBadge tone={TONO_NIVEL_INTERVENCION[r.nivel_intervencion ?? ''] ?? 'neutral'}>
-          {NIVEL_INTERVENCION_CORTO[r.nivel_intervencion ?? ''] ?? 'Sin valorar'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      width: 90,
-      render: (r) => (
-        <StatusBadge tone={r.estado ? 'success' : 'neutral'}>
-          {r.estado ? 'Activo' : 'Inactivo'}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (riesgo) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Editar riesgo',
-              icon: <IconEdit size={14} />,
-              hidden: !puedeGestionar,
-              onClick: () => handleEdit(riesgo),
-            },
-            {
-              label: 'Eliminar riesgo',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              hidden: !puedeGestionar,
-              onClick: () => confirmar({
-                title:   'Eliminar riesgo laboral',
-                message: 'Se eliminará este riesgo laboral y su valoración. No se puede deshacer.',
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(riesgo.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar riesgo',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      hidden: !puedeGestionar,
+      onClick: () => confirmar({
+        title:   'Eliminar riesgo laboral',
+        message: 'Se eliminará este riesgo laboral y su valoración. No se puede deshacer.',
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(riesgo.id),
+      }),
     },
   ]
 
@@ -151,7 +99,7 @@ export function RiesgosLaboralesView() {
       >
         <SgthTable
           records={records}
-          columns={columns}
+          columns={columnasRiesgoLaboral(accionesDe)}
           totalRecords={data?.total ?? 0}
           recordsPerPage={15}
           page={page}
