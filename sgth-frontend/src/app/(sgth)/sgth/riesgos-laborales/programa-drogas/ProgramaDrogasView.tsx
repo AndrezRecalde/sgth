@@ -1,25 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { Group, TextInput, Button, Text, Alert, Accordion, Stack } from '@mantine/core'
+import { Group, TextInput, Button, Text, Alert, Accordion } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import {
-  IconSearch, IconList, IconAlertCircle, IconEdit, IconChecklist,
+  IconSearch, IconList, IconAlertCircle, IconChecklist,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { DataState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
-import { useListaSeguimientoPrograma } from '../hooks/useProgramaDrogas'
-import { CatalogoActividadesProgramaModal } from './CatalogoActividadesProgramaModal'
-import { RegistrarSeguimientoProgramaModal } from './RegistrarSeguimientoProgramaModal'
-import { TONO_ACTIVIDAD_PROGRAMA, ESTADO_ACTIVIDAD_PROGRAMA_LABELS } from '../schemas/programaDrogas.schema'
-import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
-import { formatFecha } from '@/lib/fecha'
-import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
-import type { DataTableColumn } from 'mantine-datatable'
+import { DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
+import { useListaSeguimientoPrograma } from '@/features/sso/hooks/useProgramaDrogas'
+import { CatalogoActividadesProgramaModal } from '@/features/sso/components/CatalogoActividadesProgramaModal'
+import { RegistrarSeguimientoProgramaModal } from '@/features/sso/components/RegistrarSeguimientoProgramaModal'
+import { columnasSeguimientoPrograma } from '@/features/sso/components/seguimientoPrograma.columns'
+import { TONO_ACTIVIDAD_PROGRAMA } from '@/features/sso/schemas/programaDrogas.schema'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
+import type { FilaSeguimientoPrograma } from '@/features/sso/services/programaDrogasService'
 
-export function ProgramaDrogasTab() {
-  const contained = useContainedInput()
+export function ProgramaDrogasView() {
+  // La variante compacta de 40 px: es una barra de filtros, no un formulario
+  // de captura (regla 06).
+  const contained = useContainedInput('sm')
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
   const [catalogoOpened, { open: openCatalogo, close: closeCatalogo }] = useDisclosure(false)
@@ -43,54 +45,30 @@ export function ProgramaDrogasTab() {
     openSeguimiento()
   }
 
-  const columns: DataTableColumn<FilaSeguimientoPrograma>[] = [
-    { accessor: 'actividad.nombre', title: 'Actividad' },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      width: 130,
-      render: (fila) => (
-        <StatusBadge tone={TONO_ACTIVIDAD_PROGRAMA[fila.estado] ?? 'neutral'}>
-          {ESTADO_ACTIVIDAD_PROGRAMA_LABELS[fila.estado] ?? fila.estado}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'seguimiento.fecha_ejecucion',
-      title: 'Fecha',
-      width: 110,
-      render: (fila) => formatFecha(fila.seguimiento?.fecha_ejecucion),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 110,
-      render: (fila) => puedeGestionar ? (
-        <Button size="xs" variant="subtle" leftSection={<IconEdit size={14} />} onClick={() => handleEditar(fila)}>
-          Registrar
-        </Button>
-      ) : null,
-    },
-  ]
-
   return (
-    <Stack gap="md">
+    <PageShell>
+      <PageHeader
+        title="Programa de Prevención de Drogas"
+        description="Matriz de seguimiento de las seis fases del programa (Instructivo MDT-MSP-2019-038)"
+        // El catálogo sale de la `Toolbar`: las acciones de la barra son las
+        // ligadas al filtro —aquí, Consultar—, y abrir el catálogo es la
+        // acción principal de la pantalla (regla 06).
+        actions={puedeGestionar ? (
+          <Button leftSection={<IconList size={16} />} variant="light" onClick={openCatalogo}>
+            Catálogo de actividades
+          </Button>
+        ) : undefined}
+      />
+
       <Toolbar
         actions={
-          <>
-            <Button
-              leftSection={<IconSearch size={16} />}
-              onClick={handleConsultar}
-              disabled={!esPeriodoValido(periodoInput)}
-            >
-              Consultar
-            </Button>
-            {puedeGestionar && (
-              <Button leftSection={<IconList size={16} />} variant="default" onClick={openCatalogo}>
-                Catálogo de actividades
-              </Button>
-            )}
-          </>
+          <Button
+            leftSection={<IconSearch size={16} />}
+            onClick={handleConsultar}
+            disabled={!esPeriodoValido(periodoInput)}
+          >
+            Consultar
+          </Button>
         }
       >
           <TextInput
@@ -135,11 +113,20 @@ export function ProgramaDrogasTab() {
         >
           {lista && (
             <>
+              {/* El color de cada total sale del mismo mapa que la insignia de
+                  su fila (regla 06): escritos a mano, «En proceso» era `amber.7`
+                  aquí y el ámbar del sistema en la tabla de cada fase. */}
               <Group gap="lg" mb="md">
                 <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
-                <Text size="sm" c="emerald">Ejecutadas: <Text span fw={600}>{lista.totales.ejecutada}</Text></Text>
-                <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
-                <Text size="sm" c="red">No ejecutadas: <Text span fw={600}>{lista.totales.no_ejecutada}</Text></Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ACTIVIDAD_PROGRAMA.ejecutada]}>
+                  Ejecutadas: <Text span fw={600}>{lista.totales.ejecutada}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ACTIVIDAD_PROGRAMA.en_proceso]}>
+                  En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ACTIVIDAD_PROGRAMA.no_ejecutada]}>
+                  No ejecutadas: <Text span fw={600}>{lista.totales.no_ejecutada}</Text>
+                </Text>
                 <Text size="sm" c="dimmed">Pendientes: <Text span fw={600}>{lista.totales.pendiente}</Text></Text>
               </Group>
 
@@ -157,7 +144,7 @@ export function ProgramaDrogasTab() {
                       <Accordion.Panel>
                         <SgthTable
                           records={fase.filas}
-                          columns={columns}
+                          columns={columnasSeguimientoPrograma(puedeGestionar ? handleEditar : undefined)}
                           idAccessor="actividad.id"
                           minHeight={80}
                           noRecordsText="Sin actividades registradas en esta fase."
@@ -178,6 +165,6 @@ export function ProgramaDrogasTab() {
         fila={filaSeleccionada}
         periodo={periodo ?? ''}
       />
-    </Stack>
+    </PageShell>
   )
 }

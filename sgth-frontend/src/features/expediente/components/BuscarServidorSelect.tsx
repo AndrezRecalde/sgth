@@ -7,7 +7,7 @@ import {
   Text, Stack, Loader,
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { useContainedInput, type ContainedSize } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse, ServidorConRelaciones } from '@/types/api'
 
@@ -32,12 +32,14 @@ interface Props {
   onSelect?: (servidor: ServidorConRelaciones) => void
   required?: boolean
   error?:    string
+  /** `sm` para la variante compacta de una barra de filtros (regla 06). */
+  size?:     ContainedSize
 }
 
 export function BuscarServidorSelect({
-  label, value, onChange, onSelect, required, error,
+  label, value, onChange, onSelect, required, error, size = 'md',
 }: Props) {
-  const contained   = useContainedInput()
+  const contained   = useContainedInput(size)
   const combobox    = useCombobox()
   const queryClient = useQueryClient()
   // `null` significa que el usuario no ha escrito nada: entonces el campo

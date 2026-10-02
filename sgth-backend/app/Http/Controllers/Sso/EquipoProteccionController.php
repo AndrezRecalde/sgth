@@ -23,7 +23,11 @@ final class EquipoProteccionController extends Controller
         // ejecuta ANTES de validar: así un filtro inválido no delata el
         // endpoint a quien no puede consultarlo (403 antes que 422).
         $equipos = $this->ssoService->listarEquiposProteccion($request->filtros());
-        return ApiResponse::paginado($equipos, 'Equipos de protección obtenidos exitosamente.');
+        return ApiResponse::paginadoDe(
+            $equipos,
+            EquipoProteccionResource::collection($equipos->items()),
+            'Equipos de protección obtenidos exitosamente.',
+        );
     }
 
     public function store(StoreEquipoProteccionRequest $request): JsonResponse

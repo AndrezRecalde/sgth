@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Group, TextInput, Select, Textarea, Button, Switch,
@@ -8,15 +8,17 @@ import {
 import { DatePickerInput } from '@mantine/dates'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconGavel, IconEyeOff, IconEye } from '@tabler/icons-react'
+import {
+  IconTrash, IconPlus, IconGavel, IconEyeOff, IconEye, IconEdit, IconDeviceFloppy,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useNormativas, useNormativaMutations } from '../hooks/useNormativaLegal'
 import {
   normativaLegalSchema, type NormativaLegalFormData, TIPO_NORMATIVA_OPTIONS,
 } from '../schemas/normativaLegal.schema'
+import { columnasNormativaLegal } from './normativaLegal.columns'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { NormativaLegalSso } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
   opened: boolean
@@ -29,7 +31,9 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
   // la única forma de volver a activar una.
   const [verInactivas, setVerInactivas] = useState(false)
   const { data: normativas = [], isLoading, error, refetch } = useNormativas({ solo_activas: !verInactivas })
-  const { crear, cambiarActivo, eliminar } = useNormativaMutations()
+  const { crear, editar, cambiarActivo, eliminar } = useNormativaMutations()
+  // Null es «alta»; con una normativa dentro, el mismo formulario edita esa.
+  const [editando, setEditando] = useState<NormativaLegalSso | null>(null)
 
   const {
     register, control, handleSubmit, reset,
@@ -39,63 +43,56 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', tipo: 'reglamento', fecha_vigencia: '', descripcion: '' },
   })
 
-  const getTipoLabel = (valor: string) =>
-    TIPO_NORMATIVA_OPTIONS.find(o => o.value === valor)?.label ?? valor
+  const empezarEdicion = (normativa: NormativaLegalSso) => {
+    setEditando(normativa)
+    reset({
+      nombre: normativa.nombre,
+      tipo: normativa.tipo as NormativaLegalFormData['tipo'],
+      fecha_vigencia: normativa.fecha_vigencia ?? '',
+      descripcion: normativa.descripcion ?? '',
+    })
+  }
+
+  const cancelarEdicion = () => {
+    setEditando(null)
+    reset({ nombre: '', tipo: 'reglamento', fecha_vigencia: '', descripcion: '' })
+  }
 
   const onSubmit = (values: NormativaLegalFormData) => {
+    if (editando) {
+      editar.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      return
+    }
     crear.mutateAsync(values).then(() => reset({ nombre: '', tipo: values.tipo, fecha_vigencia: '', descripcion: '' })).catch(() => {})
   }
 
-  const columns: DataTableColumn<NormativaLegalSso>[] = [
-    { accessor: 'nombre', title: 'Normativa' },
+  const accionesDe = (n: NormativaLegalSso): TableAction[] => [
     {
-      accessor: 'tipo',
-      title: 'Tipo',
-      width: 160,
-      render: (n) => <StatusBadge>{getTipoLabel(n.tipo)}</StatusBadge>,
+      label: 'Editar normativa',
+      icon: <IconEdit size={14} />,
+      onClick: () => empezarEdicion(n),
     },
     {
-      accessor: 'activo',
-      title: 'Estado',
-      width: 100,
-      render: (n) => (
-        <StatusBadge tone={n.activo ? 'success' : 'neutral'}>
-          {n.activo ? 'Activa' : 'Inactiva'}
-        </StatusBadge>
-      ),
+      label: n.activo ? 'Desactivar' : 'Reactivar',
+      icon: n.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+      onClick: () => cambiarActivo.mutate({ id: n.id, activo: !n.activo }),
     },
     {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (n) => (
-        <TableActions
-          actions={[
-            {
-              label: n.activo ? 'Desactivar' : 'Reactivar',
-              icon: n.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
-              onClick: () => cambiarActivo.mutate({ id: n.id, activo: !n.activo }),
-            },
-            {
-              label: 'Eliminar normativa',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar normativa',
-                message: (
-                  <>
-                    Se eliminará la normativa <b>{n.nombre}</b>. No se puede deshacer.
-                    Si ya tiene cumplimiento registrado, desactívela en vez de borrarla:
-                    eliminarla se llevaría ese historial.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(n.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar normativa',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar normativa',
+        message: (
+          <>
+            Se eliminará la normativa <b>{n.nombre}</b>. No se puede deshacer.
+            Si ya tiene cumplimiento registrado, desactívela en vez de borrarla:
+            eliminarla se llevaría ese historial.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(n.id),
+      }),
     },
   ]
 
@@ -168,13 +165,18 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
             </Grid.Col>
             <Grid.Col span={12}>
               <Group justify="flex-end">
+                {editando && (
+                  <Button variant="subtle" h={48} onClick={cancelarEdicion}>
+                    Cancelar
+                  </Button>
+                )}
                 <Button
                   type="submit"
                   h={48}
-                  leftSection={<IconPlus size={16} />}
-                  loading={crear.isPending}
+                  leftSection={editando ? <IconDeviceFloppy size={16} /> : <IconPlus size={16} />}
+                  loading={crear.isPending || editar.isPending}
                 >
-                  Agregar
+                  {editando ? 'Guardar cambios' : 'Agregar'}
                 </Button>
               </Group>
             </Grid.Col>
@@ -205,7 +207,7 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
         >
           <SgthTable
             records={normativas}
-            columns={columns}
+            columns={columnasNormativaLegal(accionesDe)}
             minHeight={120}
           />
         </DataState>

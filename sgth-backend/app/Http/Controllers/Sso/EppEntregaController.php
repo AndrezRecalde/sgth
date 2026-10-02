@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Sso\EppEntregaResource;
 use App\Http\Responses\ApiResponse;
 use App\Enums\MotivoEntregaEpp;
 use App\Http\Requests\Sso\ListarEppEntregasRequest;
@@ -20,7 +21,11 @@ final class EppEntregaController extends Controller
     public function index(ListarEppEntregasRequest $request): JsonResponse
     {
         $entregas = $this->eppService->listarEntregas($request->filtros());
-        return ApiResponse::paginado($entregas, 'Entregas de EPP obtenidas exitosamente.');
+        return ApiResponse::paginadoDe(
+            $entregas,
+            EppEntregaResource::collection($entregas->items()),
+            'Entregas de EPP obtenidas exitosamente.',
+        );
     }
 
     public function store(Request $request): JsonResponse

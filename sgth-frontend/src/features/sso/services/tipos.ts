@@ -1,143 +1,59 @@
 /**
- * Los tipos del módulo SSO, tal como los devuelve el API.
+ * Los tipos del módulo SSO.
  *
- * Estaban al principio de `ssoService.ts`, un archivo de 399 líneas con los
- * tipos de ocho dominios y las cuarenta llamadas de todos ellos. Cada pantalla
- * importaba de ahí, así que tocar el reporte de EPP recompilaba la matriz de
- * riesgos y leer un tipo obligaba a bajar por cuarenta funciones que no venían
- * al caso.
+ * Los de las entidades **no se escriben aquí**: son un alias del esquema que
+ * `api.generated.ts` produce a partir del recurso del backend, como en el
+ * resto del sistema (`Puesto`, `ExtensionTelefonica`…). Escritos a mano
+ * decían lo que creíamos que devolvía el API, no lo que devuelve: `motivo` y
+ * `categoria` eran `string` donde el backend tiene un enum cerrado, el tipo de
+ * la entrega de EPP declaraba relaciones que el listado no mandaba, y nada de
+ * eso lo podía detectar el compilador.
  *
- * Las llamadas viven ahora en un archivo por dominio —`riesgosService`,
- * `accidentesService`, `eppService`, `indicadoresService`,
- * `cumplimientoService`—; los tipos, que sí se cruzan entre dominios, aquí.
+ * Para regenerar, desde `sgth-frontend`: `npm run types:sync`.
+ *
+ * Lo que sigue escrito a mano son las respuestas **compuestas**: el reporte de
+ * EPP, los dos juegos de índices y la lista de verificación no son entidades,
+ * las arma un servicio y no tienen recurso del que inferirlas. El día que lo
+ * tengan, bajan también de `api.generated.ts`.
  */
 
-export interface PuestoResumen {
-  id: number
-  cargo?: { nombre: string } | null
-}
+import type { components } from '@/types/api.generated'
 
-export interface UsuarioResumen {
-  id: number
-  usuario_ti?: string
-  nombre_completo?: string
-}
+type Esquemas = components['schemas']
 
-export interface ServidorResumen {
-  id: number
-  nombre?: string
-  apellido?: string
-}
+// ── Entidades: del recurso del backend ───────
 
-export interface UnidadAdministrativaResumen {
-  id: number
-  nombre: string
-}
+export type RiesgoLaboral          = Esquemas['RiesgoLaboralResource']
+export type AccidenteTrabajo       = Esquemas['AccidenteTrabajoResource']
+export type EquipoProteccion       = Esquemas['EquipoProteccionResource']
+export type InspeccionSso          = Esquemas['InspeccionSsoResource']
+export type CapacitacionSso        = Esquemas['CapacitacionSsoResource']
+export type EppEntrega             = Esquemas['EppEntregaResource']
+export type PuestoEpp              = Esquemas['PuestoEppResource']
+export type HorasTrabajadasPeriodo = Esquemas['HorasTrabajadasPeriodoResource']
+export type FactorRiesgoCatalogo   = Esquemas['FactorRiesgoCatalogo']
+export type NormativaLegalSso      = Esquemas['NormativaLegalSso']
+export type CumplimientoNormativa  = Esquemas['CumplimientoNormativa']
 
-export interface FactorRiesgoCatalogo {
-  id: number
-  nombre: string
-  categoria: string
-  activo: boolean
-}
+// ── Lo que aceptan los endpoints de escritura ─
 
-export interface RiesgoLaboral {
-  id: number
-  puesto_id: number
-  factor_riesgo_id: number
-  descripcion: string
-  /**
-   * Los seis campos de la valoración son nullable: la migración que trajo la
-   * matriz NTP 330 reemplazó el esquema anterior sin rellenar datos, así que un
-   * riesgo identificado antes de ella los tiene en NULL. La pantalla lo muestra
-   * como «Sin valorar» y el modal obliga a completarlos al editarlo.
-   */
-  nivel_deficiencia: string | null
-  nivel_exposicion: string | null
-  nivel_consecuencias: string | null
-  nivel_probabilidad: number | null
-  nivel_riesgo_valor: number | null
-  nivel_intervencion: string | null
-  medidas_preventivas?: string | null
-  estado: boolean
-  puesto?: PuestoResumen | null
-  factor_riesgo?: FactorRiesgoCatalogo | null
-}
+/**
+ * Para escribir se usa el tipo de la **petición**, no el del recurso: no son
+ * la misma forma. El caso que lo deja claro es `duracion_horas`, que el
+ * `StoreCapacitacionSsoRequest` recibe como número y el recurso devuelve hoy
+ * como cadena, porque la columna es `decimal` y el modelo no la castea
+ * (lo arregla #248). Con `Partial<CapacitacionSso>` el formulario no habría
+ * compilado, y con un `as` habría compilado mintiendo.
+ */
+export type InspeccionPayload   = Esquemas['StoreInspeccionSsoRequest']
+export type CapacitacionPayload = Esquemas['StoreCapacitacionSsoRequest']
 
-export interface AccidenteTrabajo {
-  id: number
-  servidor_id: number
-  tipo_evento: string
-  fecha_accidente: string
-  hora_accidente: string
-  lugar_accidente: string
-  descripcion_hechos: string
-  gravedad: string
-  requirio_atencion_medica: boolean
-  dias_reposo_medico?: number | null
-  causa_raiz?: string | null
-  medidas_correctivas?: string | null
-  estado: boolean
-  investigado_por?: number | null
-  servidor?: ServidorResumen | null
-  investigador?: UsuarioResumen | null
-}
+// ── Enums del dominio ────────────────────────
 
-export interface EquipoProteccion {
-  id: number
-  codigo: string
-  nombre: string
-  tipo: string
-  norma_tecnica?: string | null
-  vida_util_meses?: number | null
-  estado: boolean
-}
+export type CategoriaFactorRiesgo = Esquemas['CategoriaFactorRiesgo']
+export type MotivoEntregaEpp      = Esquemas['MotivoEntregaEpp']
 
-export interface InspeccionSso {
-  id: number
-  unidad_administrativa_id: number
-  fecha_inspeccion: string
-  tipo_inspeccion: string
-  hallazgos?: string | null
-  recomendaciones?: string | null
-  estado: boolean
-  inspector_id: number
-  unidad_administrativa?: UnidadAdministrativaResumen | null
-  inspector?: UsuarioResumen | null
-}
-
-export interface CapacitacionSso {
-  id: number
-  tema: string
-  fecha: string
-  duracion_horas: number
-  instructor: string
-  lugar?: string | null
-  estado: boolean
-}
-
-export interface PuestoEpp {
-  id: number
-  puesto_id: number
-  equipo_proteccion_id: number
-  cantidad_requerida: number
-  frecuencia_reposicion_meses?: number | null
-  equipo_proteccion?: EquipoProteccion | null
-}
-
-export interface EppEntrega {
-  id: number
-  servidor_id: number
-  equipo_proteccion_id: number
-  fecha_entrega: string
-  cantidad: number
-  motivo: string
-  entregado_por: number
-  observaciones?: string | null
-  servidor?: ServidorResumen | null
-  equipo_proteccion?: EquipoProteccion | null
-  entregador?: UsuarioResumen | null
-}
+// ── Respuestas compuestas de un servicio ─────
 
 export interface ReporteEppFila {
   servidor_id: number
@@ -152,15 +68,6 @@ export interface ReporteEppFila {
 export interface ReporteEppEntregas {
   consolidado: ReporteEppFila[]
   totales: { total_registros: number; total_servidores: number }
-}
-
-export interface HorasTrabajadasPeriodo {
-  id: number
-  periodo: string
-  unidad_administrativa_id: number | null
-  total_horas: number
-  registrado_por: number
-  unidad_administrativa?: UnidadAdministrativaResumen | null
 }
 
 /** De dónde salieron las horas del denominador (ver HorasTrabajadas en el backend). */
@@ -198,24 +105,6 @@ export interface IndicadoresProactivos {
     puestos_con_entrega_en_periodo: number
     porcentaje: number | null
   }
-}
-
-export interface NormativaLegalSso {
-  id: number
-  nombre: string
-  tipo: string
-  fecha_vigencia?: string | null
-  descripcion?: string | null
-  activo: boolean
-}
-
-export interface CumplimientoNormativa {
-  id: number
-  normativa_legal_sso_id: number
-  periodo: string
-  estado: string
-  observaciones?: string | null
-  registrado_por: number
 }
 
 export interface FilaListaVerificacion {

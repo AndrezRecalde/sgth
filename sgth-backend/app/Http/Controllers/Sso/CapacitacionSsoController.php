@@ -23,7 +23,11 @@ final class CapacitacionSsoController extends Controller
         // ejecuta ANTES de validar: así un filtro inválido no delata el
         // endpoint a quien no puede consultarlo (403 antes que 422).
         $capacitaciones = $this->ssoService->listarCapacitaciones($request->filtros());
-        return ApiResponse::paginado($capacitaciones, 'Capacitaciones SSO obtenidas exitosamente.');
+        return ApiResponse::paginadoDe(
+            $capacitaciones,
+            CapacitacionSsoResource::collection($capacitaciones->items()),
+            'Capacitaciones SSO obtenidas exitosamente.',
+        );
     }
 
     public function store(StoreCapacitacionSsoRequest $request): JsonResponse

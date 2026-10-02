@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sso\ListarHorasTrabajadasRequest;
+use App\Http\Resources\Sso\HorasTrabajadasPeriodoResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Sso\SsoServiceInterface;
 use App\Services\Sso\PeriodoSso;
@@ -19,7 +20,11 @@ final class HorasTrabajadasController extends Controller
     public function index(ListarHorasTrabajadasRequest $request): JsonResponse
     {
         $registros = $this->ssoService->listarHorasTrabajadas($request->filtros());
-        return ApiResponse::paginado($registros, 'Horas trabajadas obtenidas exitosamente.');
+        return ApiResponse::paginadoDe(
+            $registros,
+            HorasTrabajadasPeriodoResource::collection($registros->items()),
+            'Horas trabajadas obtenidas exitosamente.',
+        );
     }
 
     public function store(Request $request): JsonResponse

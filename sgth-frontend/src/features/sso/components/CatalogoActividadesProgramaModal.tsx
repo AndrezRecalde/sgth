@@ -1,20 +1,22 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Group, TextInput, Select, Textarea, Button, Switch,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconChecklist, IconEyeOff, IconEye } from '@tabler/icons-react'
+import {
+  IconTrash, IconPlus, IconChecklist, IconEyeOff, IconEye, IconEdit, IconDeviceFloppy,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useActividadesPrograma, useProgramaDrogasMutations } from '../hooks/useProgramaDrogas'
 import {
   actividadProgramaSchema, type ActividadProgramaFormData, FASE_PROGRAMA_DROGAS_OPTIONS,
 } from '../schemas/programaDrogas.schema'
+import { columnasActividadPrograma } from './actividadPrograma.columns'
 import type { ProgramaDrogaActividad } from '../services/programaDrogasService'
-import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
   opened: boolean
@@ -28,7 +30,11 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
   const [verInactivas, setVerInactivas] = useState(false)
   const { data: actividades = [], isLoading, error, refetch } =
     useActividadesPrograma({ solo_activas: !verInactivas })
-  const { crearActividad, cambiarActivoActividad, eliminarActividad } = useProgramaDrogasMutations()
+  const {
+    crearActividad, editarActividad, cambiarActivoActividad, eliminarActividad,
+  } = useProgramaDrogasMutations()
+  // Null es «alta»; con una actividad dentro, el mismo formulario edita esa.
+  const [editando, setEditando] = useState<ProgramaDrogaActividad | null>(null)
 
   const {
     register, control, handleSubmit, reset,
@@ -38,63 +44,55 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', fase: 'fase_1_preparacion', descripcion: '' },
   })
 
-  const getFaseLabel = (valor: string) =>
-    FASE_PROGRAMA_DROGAS_OPTIONS.find(o => o.value === valor)?.label ?? valor
+  const empezarEdicion = (actividad: ProgramaDrogaActividad) => {
+    setEditando(actividad)
+    reset({
+      nombre: actividad.nombre,
+      fase: actividad.fase as ActividadProgramaFormData['fase'],
+      descripcion: actividad.descripcion ?? '',
+    })
+  }
+
+  const cancelarEdicion = () => {
+    setEditando(null)
+    reset({ nombre: '', fase: 'fase_1_preparacion', descripcion: '' })
+  }
 
   const onSubmit = (values: ActividadProgramaFormData) => {
+    if (editando) {
+      editarActividad.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      return
+    }
     crearActividad.mutateAsync(values).then(() => reset({ nombre: '', fase: values.fase, descripcion: '' })).catch(() => {})
   }
 
-  const columns: DataTableColumn<ProgramaDrogaActividad>[] = [
-    { accessor: 'nombre', title: 'Actividad' },
+  const accionesDe = (a: ProgramaDrogaActividad): TableAction[] => [
     {
-      accessor: 'fase',
-      title: 'Fase',
-      width: 200,
-      render: (a) => <StatusBadge>{getFaseLabel(a.fase)}</StatusBadge>,
+      label: 'Editar actividad',
+      icon: <IconEdit size={14} />,
+      onClick: () => empezarEdicion(a),
     },
     {
-      accessor: 'activo',
-      title: 'Estado',
-      width: 100,
-      render: (a) => (
-        <StatusBadge tone={a.activo ? 'success' : 'neutral'}>
-          {a.activo ? 'Activa' : 'Inactiva'}
-        </StatusBadge>
-      ),
+      label: a.activo ? 'Desactivar' : 'Reactivar',
+      icon: a.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+      onClick: () => cambiarActivoActividad.mutate({ id: a.id, activo: !a.activo }),
     },
     {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (a) => (
-        <TableActions
-          actions={[
-            {
-              label: a.activo ? 'Desactivar' : 'Reactivar',
-              icon: a.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
-              onClick: () => cambiarActivoActividad.mutate({ id: a.id, activo: !a.activo }),
-            },
-            {
-              label: 'Eliminar actividad',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar actividad',
-                message: (
-                  <>
-                    Se eliminará la actividad <b>{a.nombre}</b>. No se puede deshacer.
-                    Si ya tiene seguimiento registrado, desactívela en vez de borrarla:
-                    eliminarla se llevaría ese historial.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminarActividad.mutate(a.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar actividad',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar actividad',
+        message: (
+          <>
+            Se eliminará la actividad <b>{a.nombre}</b>. No se puede deshacer.
+            Si ya tiene seguimiento registrado, desactívela en vez de borrarla:
+            eliminarla se llevaría ese historial.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminarActividad.mutate(a.id),
+      }),
     },
   ]
 
@@ -146,13 +144,18 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
             </Grid.Col>
             <Grid.Col span={12}>
               <Group justify="flex-end">
+                {editando && (
+                  <Button variant="subtle" h={48} onClick={cancelarEdicion}>
+                    Cancelar
+                  </Button>
+                )}
                 <Button
                   type="submit"
                   h={48}
-                  leftSection={<IconPlus size={16} />}
-                  loading={crearActividad.isPending}
+                  leftSection={editando ? <IconDeviceFloppy size={16} /> : <IconPlus size={16} />}
+                  loading={crearActividad.isPending || editarActividad.isPending}
                 >
-                  Agregar
+                  {editando ? 'Guardar cambios' : 'Agregar'}
                 </Button>
               </Group>
             </Grid.Col>
@@ -183,7 +186,7 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
         >
           <SgthTable
             records={actividades}
-            columns={columns}
+            columns={columnasActividadPrograma(accionesDe)}
             minHeight={120}
           />
         </DataState>

@@ -23,7 +23,11 @@ final class InspeccionSsoController extends Controller
         // ejecuta ANTES de validar: así un filtro inválido no delata el
         // endpoint a quien no puede consultarlo (403 antes que 422).
         $inspecciones = $this->ssoService->listarInspecciones($request->filtros());
-        return ApiResponse::paginado($inspecciones, 'Inspecciones SSO obtenidas exitosamente.');
+        return ApiResponse::paginadoDe(
+            $inspecciones,
+            InspeccionSsoResource::collection($inspecciones->items()),
+            'Inspecciones SSO obtenidas exitosamente.',
+        );
     }
 
     public function store(StoreInspeccionSsoRequest $request): JsonResponse

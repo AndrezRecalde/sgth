@@ -23,7 +23,11 @@ final class AccidenteTrabajoController extends Controller
         // ejecuta ANTES de validar: así un filtro inválido no delata el
         // endpoint a quien no puede consultarlo (403 antes que 422).
         $accidentes = $this->ssoService->listarAccidentes($request->filtros());
-        return ApiResponse::paginado($accidentes, 'Accidentes de trabajo obtenidos exitosamente.');
+        return ApiResponse::paginadoDe(
+            $accidentes,
+            AccidenteTrabajoResource::collection($accidentes->items()),
+            'Accidentes de trabajo obtenidos exitosamente.',
+        );
     }
 
     public function store(StoreAccidenteTrabajoRequest $request): JsonResponse

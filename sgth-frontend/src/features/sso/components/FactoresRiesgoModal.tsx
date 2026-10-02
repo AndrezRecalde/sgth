@@ -1,20 +1,22 @@
 'use client'
 
-import { confirmar, DataState, SgthModal, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, SgthModal, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Group, TextInput, Select, Button, Switch,
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconShieldCheck, IconEyeOff, IconEye } from '@tabler/icons-react'
+import {
+  IconTrash, IconPlus, IconShieldCheck, IconEyeOff, IconEye, IconEdit, IconDeviceFloppy,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactoresRiesgo'
 import {
   factorRiesgoSchema, type FactorRiesgoFormData, CATEGORIA_FACTOR_OPTIONS,
 } from '../schemas/factorRiesgo.schema'
+import { columnasFactorRiesgo } from './factorRiesgo.columns'
 import type { FactorRiesgoCatalogo } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 interface Props {
   opened: boolean
@@ -28,7 +30,9 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
   const [verInactivos, setVerInactivos] = useState(false)
   const { data: factores = [], isLoading, error, refetch } =
     useFactoresRiesgo({ solo_activos: !verInactivos })
-  const { crear, cambiarActivo, eliminar } = useFactorRiesgoMutations()
+  const { crear, editar, cambiarActivo, eliminar } = useFactorRiesgoMutations()
+  // Null es «alta»; con un factor dentro, el mismo formulario edita ese.
+  const [editando, setEditando] = useState<FactorRiesgoCatalogo | null>(null)
 
   const {
     register, control, handleSubmit, reset,
@@ -38,62 +42,50 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', categoria: 'fisico' },
   })
 
-  const getCategoriaLabel = (valor: string) =>
-    CATEGORIA_FACTOR_OPTIONS.find(o => o.value === valor)?.label ?? valor
+  const empezarEdicion = (factor: FactorRiesgoCatalogo) => {
+    setEditando(factor)
+    reset({ nombre: factor.nombre, categoria: factor.categoria as FactorRiesgoFormData['categoria'] })
+  }
+
+  const cancelarEdicion = () => {
+    setEditando(null)
+    reset({ nombre: '', categoria: 'fisico' })
+  }
 
   const onSubmit = (values: FactorRiesgoFormData) => {
+    if (editando) {
+      editar.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      return
+    }
     crear.mutateAsync(values).then(() => reset({ nombre: '', categoria: values.categoria })).catch(() => {})
   }
 
-  const columns: DataTableColumn<FactorRiesgoCatalogo>[] = [
-    { accessor: 'nombre', title: 'Factor' },
+  const accionesDe = (f: FactorRiesgoCatalogo): TableAction[] => [
     {
-      accessor: 'categoria',
-      title: 'Categoría',
-      width: 160,
-      render: (f) => <StatusBadge>{getCategoriaLabel(f.categoria)}</StatusBadge>,
+      label: 'Editar factor',
+      icon: <IconEdit size={14} />,
+      onClick: () => empezarEdicion(f),
     },
     {
-      accessor: 'activo',
-      title: 'Estado',
-      width: 100,
-      render: (f) => (
-        <StatusBadge tone={f.activo ? 'success' : 'neutral'}>
-          {f.activo ? 'Activo' : 'Inactivo'}
-        </StatusBadge>
-      ),
+      label: f.activo ? 'Desactivar' : 'Reactivar',
+      icon: f.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
+      onClick: () => cambiarActivo.mutate({ id: f.id, activo: !f.activo }),
     },
     {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (f) => (
-        <TableActions
-          actions={[
-            {
-              label: f.activo ? 'Desactivar' : 'Reactivar',
-              icon: f.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
-              onClick: () => cambiarActivo.mutate({ id: f.id, activo: !f.activo }),
-            },
-            {
-              label: 'Eliminar factor',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar factor de riesgo',
-                message: (
-                  <>
-                    Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.
-                    Si algún riesgo lo usa, desactívelo en vez de borrarlo.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(f.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar factor',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar factor de riesgo',
+        message: (
+          <>
+            Se eliminará el factor <b>{f.nombre}</b>. No se puede deshacer.
+            Si algún riesgo lo usa, desactívelo en vez de borrarlo.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(f.id),
+      }),
     },
   ]
 
@@ -139,16 +131,24 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
                 type="submit"
                 h={48}
                 fullWidth
-                leftSection={<IconPlus size={16} />}
-                loading={crear.isPending}
+                leftSection={editando ? <IconDeviceFloppy size={16} /> : <IconPlus size={16} />}
+                loading={crear.isPending || editar.isPending}
               >
-                Agregar
+                {editando ? 'Guardar cambios' : 'Agregar'}
               </Button>
             </Grid.Col>
           </Grid>
         </form>
 
-        <Group justify="flex-end">
+        <Group justify="space-between">
+          {/* La salida de la edición: sin ella, el formulario se queda
+              apuntando a un factor y el siguiente «Guardar cambios» lo
+              pisa en vez de dar de alta uno nuevo. */}
+          {editando ? (
+            <Button variant="subtle" size="xs" onClick={cancelarEdicion}>
+              Cancelar la edición de «{editando.nombre}»
+            </Button>
+          ) : <span />}
           <Switch
             label="Ver inactivos"
             checked={verInactivos}
@@ -172,7 +172,7 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
         >
           <SgthTable
             records={factores}
-            columns={columns}
+            columns={columnasFactorRiesgo(accionesDe)}
             minHeight={120}
           />
         </DataState>
