@@ -1,8 +1,8 @@
 'use client'
 
-import { confirmar, notificar } from '@/components/ui'
+import { confirmar, notificar, PageHeader, PageShell } from '@/components/ui'
 import { useState } from 'react'
-import { Group, Button, Text, Stack } from '@mantine/core'
+import { Button, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
@@ -10,31 +10,31 @@ import {
   IconPlus, IconChartBar, IconLink, IconLock, IconClipboardList,
 } from '@tabler/icons-react'
 import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
-import { useCampaniasAssist, useAssistMutations } from '../hooks/useAssist'
-import { CrearCampaniaAssistModal } from './CrearCampaniaAssistModal'
-import { ResultadosAssistModal } from './ResultadosAssistModal'
-import type { CampaniaAssist } from '../services/assistService'
+import { useCampaniasPsicosocial, usePsicosocialMutations } from '@/features/sso/hooks/usePsicosocial'
+import { CrearCampaniaPsicosocialModal } from '@/features/sso/components/CrearCampaniaPsicosocialModal'
+import { ResultadosPsicosocialesModal } from '@/features/sso/components/ResultadosPsicosocialesModal'
+import type { CampaniaPsicosocial } from '@/features/sso/services/psicosocialService'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function AssistCampaniasTab() {
-  const { data: campanias = [], isLoading, error } = useCampaniasAssist()
+export function CampaniasPsicosocialView() {
+  const { data: campanias = [], isLoading, error } = useCampaniasPsicosocial()
   // Las acciones siguen la misma matriz que la API: el módulo se abre con
   // `ver-reportes-sso` o con `gestionar-sso`, pero solo el segundo escribe.
   // Ofrecerlas a quien solo lee serviría para que recibiera un 403.
   const { hasPermiso } = useAuth()
   const puedeGestionar = hasPermiso('gestionar-sso')
 
-  const { cerrarCampania } = useAssistMutations()
+  const { cerrarCampania } = usePsicosocialMutations()
   const [crearOpened, { open: openCrear, close: closeCrear }] = useDisclosure(false)
   const [resultadosOpened, { open: openResultados, close: closeResultados }] = useDisclosure(false)
   const [campaniaSeleccionada, setCampaniaSeleccionada] = useState<number | null>(null)
 
   const copiarLink = (codigo: string) => {
-    const url = `${window.location.origin}${ROUTES.PUBLICO.ASSIST(codigo)}`
+    const url = `${window.location.origin}${ROUTES.PUBLICO.PSICOSOCIAL(codigo)}`
     navigator.clipboard.writeText(url).then(() => {
       notificar.exito(
         'Enlace copiado',
-        'Comparta este enlace con el personal para que responda el tamizaje.',
+        'Comparta este enlace con el personal para que responda el cuestionario.',
       )
     }).catch(() => {
       // El portapapeles no está disponible en contexto no seguro y el permiso
@@ -45,12 +45,12 @@ export function AssistCampaniasTab() {
     })
   }
 
-  const verResultados = (campania: CampaniaAssist) => {
+  const verResultados = (campania: CampaniaPsicosocial) => {
     setCampaniaSeleccionada(campania.id)
     openResultados()
   }
 
-  const columns: DataTableColumn<CampaniaAssist>[] = [
+  const columns: DataTableColumn<CampaniaPsicosocial>[] = [
     { accessor: 'periodo', title: 'Período', width: 100 },
     {
       accessor: 'unidad_administrativa',
@@ -122,18 +122,20 @@ export function AssistCampaniasTab() {
   ]
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" mb="md">
-        <Text size="sm" c="dimmed">
-          Tamizaje anónimo de consumo de sustancias (ASSIST v3.1, OMS/OPS) — Fase 4 del programa de
-          prevención de drogas.
-        </Text>
-        {puedeGestionar && (
-          <Button leftSection={<IconPlus size={16} />} onClick={openCrear}>
-            Nueva campaña
-          </Button>
-        )}
-      </Group>
+    <PageShell>
+      <PageHeader
+        title="Evaluación Psicosocial"
+        description="Campañas del cuestionario anónimo del Ministerio del Trabajo (58 ítems) y sus resultados"
+        // El texto que describía la pantalla vivía en un `Text` suelto sobre
+        // la tabla; su sitio es la descripción de la cabecera. Y el botón
+        // `variant="light"`, como el resto de acciones principales del
+        // sistema: era el único del módulo en `filled` (regla 06).
+        actions={puedeGestionar ? (
+        <Button leftSection={<IconPlus size={16} />} variant="light" onClick={openCrear}>
+          Nueva campaña
+        </Button>
+        ) : undefined}
+      />
 
       <DataState
         loading={isLoading}
@@ -141,8 +143,8 @@ export function AssistCampaniasTab() {
         empty={!campanias.length}
         emptyProps={{
           icon: IconClipboardList,
-          title: 'Sin campañas ASSIST',
-          description: 'Aún no se ha abierto ninguna campaña de tamizaje.',
+          title: 'Sin campañas psicosociales',
+          description: 'Aún no se ha abierto ninguna campaña de evaluación.',
         }}
       >
         <SgthTable
@@ -152,12 +154,12 @@ export function AssistCampaniasTab() {
         />
       </DataState>
 
-      <CrearCampaniaAssistModal opened={crearOpened} onClose={closeCrear} />
-      <ResultadosAssistModal
+      <CrearCampaniaPsicosocialModal opened={crearOpened} onClose={closeCrear} />
+      <ResultadosPsicosocialesModal
         opened={resultadosOpened}
         onClose={() => { setCampaniaSeleccionada(null); closeResultados() }}
         campaniaId={campaniaSeleccionada}
       />
-    </Stack>
+    </PageShell>
   )
 }

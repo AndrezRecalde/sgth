@@ -1,21 +1,21 @@
 'use client'
 
-import { confirmar, DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Group, Text, Stack } from '@mantine/core'
+import { Button, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconAlertTriangle } from '@tabler/icons-react'
-import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '../hooks/useAccidentesTrabajo'
-import { AccidenteTrabajoModal } from './AccidenteTrabajoModal'
+import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '@/features/sso/hooks/useAccidentesTrabajo'
+import { AccidenteTrabajoModal } from '@/features/sso/components/AccidenteTrabajoModal'
 import {
   TONO_GRAVEDAD, TONO_TIPO_EVENTO_ACCIDENTE, TIPO_EVENTO_ACCIDENTE_OPTIONS, GRAVEDAD_OPTIONS,
-} from '../schemas/accidenteTrabajo.schema'
+} from '@/features/sso/schemas/accidenteTrabajo.schema'
 import { formatFecha } from '@/lib/fecha'
-import type { AccidenteTrabajo } from '../services/tipos'
+import type { AccidenteTrabajo } from '@/features/sso/services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function AccidentesTrabajoTab() {
+export function AccidentesTrabajoView() {
   const [page, setPage] = useState(1)
   const [editAccidente, setEditAccidente] = useState<AccidenteTrabajo | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
@@ -123,18 +123,25 @@ export function AccidentesTrabajoTab() {
   ]
 
   return (
-    <Stack gap="md">
-      {puedeGestionar && (
-        <Group justify="flex-end" mb="md">
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={() => { setEditAccidente(null); open() }}
-          >
-            Nuevo accidente
-          </Button>
-        </Group>
-      )}
+    <PageShell>
+      <PageHeader
+        title="Accidentes de Trabajo"
+        description="Registro e investigación de accidentes e incidentes laborales"
+        // La acción principal de la pantalla va aquí y no flotando sobre la
+        // tabla, que es donde estaba (regla 05).
+        actions={puedeGestionar ? (
+          <>
+            <Button
+              leftSection={<IconPlus size={16} />}
+              variant="light"
+              onClick={() => { setEditAccidente(null); open() }}
+            >
+              Nuevo accidente
+            </Button>
+          </>
+        ) : undefined}
+      />
+
       <DataState
         loading={isLoading}
         error={error}
@@ -161,6 +168,6 @@ export function AccidentesTrabajoTab() {
         onClose={handleClose}
         accidente={editAccidente}
       />
-    </Stack>
+    </PageShell>
   )
 }

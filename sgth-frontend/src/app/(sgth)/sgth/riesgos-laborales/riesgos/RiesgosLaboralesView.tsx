@@ -1,19 +1,19 @@
 'use client'
 
-import { confirmar, DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { confirmar, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Group, Text, Stack } from '@mantine/core'
+import { Button, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconList, IconAlertTriangle } from '@tabler/icons-react'
-import { useRiesgosLaborales, useRiesgoLaboralMutations } from '../hooks/useRiesgosLaborales'
-import { RiesgoLaboralModal } from './RiesgoLaboralModal'
-import { FactoresRiesgoModal } from './FactoresRiesgoModal'
-import { NIVEL_INTERVENCION_CORTO, TONO_NIVEL_INTERVENCION } from '../schemas/riesgoLaboral.schema'
-import type { RiesgoLaboral } from '../services/tipos'
+import { useRiesgosLaborales, useRiesgoLaboralMutations } from '@/features/sso/hooks/useRiesgosLaborales'
+import { RiesgoLaboralModal } from '@/features/sso/components/RiesgoLaboralModal'
+import { FactoresRiesgoModal } from '@/features/sso/components/FactoresRiesgoModal'
+import { NIVEL_INTERVENCION_CORTO, TONO_NIVEL_INTERVENCION } from '@/features/sso/schemas/riesgoLaboral.schema'
+import type { RiesgoLaboral } from '@/features/sso/services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function RiesgosLaboralesTab() {
+export function RiesgosLaboralesView() {
   const [page, setPage] = useState(1)
   const [editRiesgo, setEditRiesgo] = useState<RiesgoLaboral | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
@@ -112,25 +112,32 @@ export function RiesgosLaboralesTab() {
   ]
 
   return (
-    <Stack gap="md">
-      {puedeGestionar && (
-        <Group justify="flex-end" mb="md">
-          <Button
-            leftSection={<IconList size={16} />}
-            variant="default"
-            onClick={openFactores}
-          >
-            Catálogo de factores
-          </Button>
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={() => { setEditRiesgo(null); open() }}
-          >
-            Nuevo riesgo
-          </Button>
-        </Group>
-      )}
+    <PageShell>
+      <PageHeader
+        title="Factores de Riesgo Laboral"
+        description="Matriz de riesgos por puesto, valorada con la NTP 330"
+        // La acción principal de la pantalla va aquí y no flotando sobre la
+        // tabla, que es donde estaba (regla 05).
+        actions={puedeGestionar ? (
+          <>
+            <Button
+              leftSection={<IconList size={16} />}
+              variant="default"
+              onClick={openFactores}
+            >
+              Catálogo de factores
+            </Button>
+            <Button
+              leftSection={<IconPlus size={16} />}
+              variant="light"
+              onClick={() => { setEditRiesgo(null); open() }}
+            >
+              Nuevo riesgo
+            </Button>
+          </>
+        ) : undefined}
+      />
+
       <DataState
         loading={isLoading}
         error={error}
@@ -161,6 +168,6 @@ export function RiesgosLaboralesTab() {
         opened={factoresOpened}
         onClose={closeFactores}
       />
-    </Stack>
+    </PageShell>
   )
 }

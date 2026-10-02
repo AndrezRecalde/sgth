@@ -1,26 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Group, TextInput, Button, Text, Stack, Alert,
-} from '@mantine/core'
+import { Group, TextInput, Button, Text, Alert } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import {
   IconSearch, IconList, IconAlertCircle, IconEdit, IconClipboardCheck,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { DataState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
-import { useListaVerificacion } from '../hooks/useCumplimiento'
-import { NormativaLegalModal } from './NormativaLegalModal'
-import { RegistrarCumplimientoModal } from './RegistrarCumplimientoModal'
-import { TIPO_NORMATIVA_OPTIONS } from '../schemas/normativaLegal.schema'
-import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
-import { TONO_ESTADO_CUMPLIMIENTO, ESTADO_CUMPLIMIENTO_LABELS } from '../schemas/cumplimiento.schema'
-import type { FilaListaVerificacion } from '../services/tipos'
+import { DataState, PageHeader, PageShell, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
+import { useListaVerificacion } from '@/features/sso/hooks/useCumplimiento'
+import { NormativaLegalModal } from '@/features/sso/components/NormativaLegalModal'
+import { RegistrarCumplimientoModal } from '@/features/sso/components/RegistrarCumplimientoModal'
+import { TIPO_NORMATIVA_OPTIONS } from '@/features/sso/schemas/normativaLegal.schema'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
+import { TONO_ESTADO_CUMPLIMIENTO, ESTADO_CUMPLIMIENTO_LABELS } from '@/features/sso/schemas/cumplimiento.schema'
+import type { FilaListaVerificacion } from '@/features/sso/services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function CumplimientoTab() {
+export function CumplimientoView() {
   const contained = useContainedInput()
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
@@ -86,23 +84,29 @@ export function CumplimientoTab() {
   ]
 
   return (
-    <Stack gap="md">
+    <PageShell>
+      <PageHeader
+        title="Cumplimiento Normativo"
+        description="Lista de verificación de la normativa legal de seguridad y salud por período"
+        // El catálogo sale de la `Toolbar`: las acciones de la barra son las
+        // ligadas al filtro —aquí, Consultar—, y abrir el catálogo es la
+        // acción principal de la pantalla (regla 06).
+        actions={puedeGestionar ? (
+          <Button leftSection={<IconList size={16} />} variant="light" onClick={openNormativas}>
+            Catálogo de normativas
+          </Button>
+        ) : undefined}
+      />
+
       <Toolbar
         actions={
-          <>
-            <Button
-              leftSection={<IconSearch size={16} />}
-              onClick={handleConsultar}
-              disabled={!esPeriodoValido(periodoInput)}
-            >
-              Consultar
-            </Button>
-            {puedeGestionar && (
-              <Button leftSection={<IconList size={16} />} variant="default" onClick={openNormativas}>
-                Catálogo de normativas
-              </Button>
-            )}
-          </>
+          <Button
+            leftSection={<IconSearch size={16} />}
+            onClick={handleConsultar}
+            disabled={!esPeriodoValido(periodoInput)}
+          >
+            Consultar
+          </Button>
         }
       >
           <TextInput
@@ -168,6 +172,6 @@ export function CumplimientoTab() {
         fila={filaSeleccionada}
         periodo={periodo ?? ''}
       />
-    </Stack>
+    </PageShell>
   )
 }

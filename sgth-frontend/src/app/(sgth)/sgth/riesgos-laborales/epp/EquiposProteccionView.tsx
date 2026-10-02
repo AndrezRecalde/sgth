@@ -1,20 +1,20 @@
 'use client'
 
-import { confirmar } from '@/components/ui'
+import { confirmar, PageHeader, PageShell } from '@/components/ui'
 import { useState } from 'react'
-import { Button, Group, Text, Stack } from '@mantine/core'
+import { Button, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconClipboardList, IconShieldCheck } from '@tabler/icons-react'
 import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
-import { useEquiposProteccion, useEquipoProteccionMutations } from '../hooks/useEquiposProteccion'
-import { EquipoProteccionModal } from './EquipoProteccionModal'
-import { AsignarEppPuestoModal } from './AsignarEppPuestoModal'
-import { TIPO_EPP_OPTIONS } from '../schemas/equipoProteccion.schema'
-import type { EquipoProteccion } from '../services/tipos'
+import { useEquiposProteccion, useEquipoProteccionMutations } from '@/features/sso/hooks/useEquiposProteccion'
+import { EquipoProteccionModal } from '@/features/sso/components/EquipoProteccionModal'
+import { AsignarEppPuestoModal } from '@/features/sso/components/AsignarEppPuestoModal'
+import { TIPO_EPP_OPTIONS } from '@/features/sso/schemas/equipoProteccion.schema'
+import type { EquipoProteccion } from '@/features/sso/services/tipos'
 import type { DataTableColumn } from 'mantine-datatable'
 
-export function EquiposProteccionTab() {
+export function EquiposProteccionView() {
   const [page, setPage] = useState(1)
   const [editEquipo, setEditEquipo] = useState<EquipoProteccion | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
@@ -98,25 +98,32 @@ export function EquiposProteccionTab() {
   ]
 
   return (
-    <Stack gap="md">
-      {puedeGestionar && (
-        <Group justify="flex-end" mb="md">
-          <Button
-            leftSection={<IconClipboardList size={16} />}
-            variant="default"
-            onClick={openAsignar}
-          >
-            EPP por puesto
-          </Button>
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={() => { setEditEquipo(null); open() }}
-          >
-            Nuevo equipo
-          </Button>
-        </Group>
-      )}
+    <PageShell>
+      <PageHeader
+        title="Equipos de Protección Personal"
+        description="Catálogo de equipos y el EPP que requiere cada puesto"
+        // La acción principal de la pantalla va aquí y no flotando sobre la
+        // tabla, que es donde estaba (regla 05).
+        actions={puedeGestionar ? (
+          <>
+            <Button
+              leftSection={<IconClipboardList size={16} />}
+              variant="default"
+              onClick={openAsignar}
+            >
+              EPP por puesto
+            </Button>
+            <Button
+              leftSection={<IconPlus size={16} />}
+              variant="light"
+              onClick={() => { setEditEquipo(null); open() }}
+            >
+              Nuevo equipo
+            </Button>
+          </>
+        ) : undefined}
+      />
+
       <DataState
         loading={isLoading}
         error={error}
@@ -147,6 +154,6 @@ export function EquiposProteccionTab() {
         opened={asignarOpened}
         onClose={closeAsignar}
       />
-    </Stack>
+    </PageShell>
   )
 }

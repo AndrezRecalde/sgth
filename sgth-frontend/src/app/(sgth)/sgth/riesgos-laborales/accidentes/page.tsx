@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { AccidentesTrabajoTab } from '@/features/sso/components/AccidentesTrabajoTab'
-import { PageHeader, PageShell } from '@/components/ui'
+import { AccidentesTrabajoView } from './AccidentesTrabajoView'
 
 export const metadata: Metadata = {
   title: 'Accidentes de Trabajo',
-  description: 'Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas',
+  description: 'Registro e investigación de accidentes e incidentes laborales',
 }
 
 export default function AccidentesTrabajoPage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Accidentes de Trabajo"
-        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-      />
-      <AccidentesTrabajoTab />
-    </PageShell>
-  )
+  return <AccidentesTrabajoView />
 }
